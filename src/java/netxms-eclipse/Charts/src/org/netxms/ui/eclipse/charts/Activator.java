@@ -38,8 +38,8 @@ public class Activator extends AbstractUIPlugin
 	// The shared instance
 	private static Activator plugin;
 	
-	private Font chartTitleFont;
-	private Font chartFont;
+	private Font chartTitleFont = null;
+	private Font chartFont = null;
 
 	/*
 	 * (non-Javadoc)

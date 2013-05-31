@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.networkmaps.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -31,7 +30,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -39,8 +40,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class CreateNetworkMapDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text textName;
 	private Combo mapType;
 	private ObjectSelector seedObjectSelector;
@@ -63,7 +62,7 @@ public class CreateNetworkMapDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Network Map");
+		newShell.setText(Messages.CreateNetworkMapDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -79,22 +78,20 @@ public class CreateNetworkMapDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Name", "",
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.CreateNetworkMapDialog_Name, "", //$NON-NLS-2$ //$NON-NLS-1$
                                                 WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
       
-      mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Map type", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      mapType.add("Custom");
-      mapType.add("Layer 2 Topology");
-      mapType.add("IP Topology");
+      mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.CreateNetworkMapDialog_MapType, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      mapType.add(Messages.CreateNetworkMapDialog_Custom);
+      mapType.add(Messages.CreateNetworkMapDialog_L2Topology);
+      mapType.add(Messages.CreateNetworkMapDialog_IpTopology);
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       mapType.getParent().setLayoutData(gd);
       mapType.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -109,7 +106,7 @@ public class CreateNetworkMapDialog extends Dialog
       });
       
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      seedObjectSelector.setLabel("Seed node");
+      seedObjectSelector.setLabel(Messages.CreateNetworkMapDialog_SeedNode);
       seedObjectSelector.setObjectClass(Node.class);
       seedObjectSelector.setEnabled(false);
       gd = new GridData();
@@ -129,7 +126,7 @@ public class CreateNetworkMapDialog extends Dialog
 		name = textName.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter non-empty object name");
+			MessageDialogHelper.openWarning(getShell(), Messages.CreateNetworkMapDialog_Warning, Messages.CreateNetworkMapDialog_PleaseEnterName);
 			return;
 		}
 		
@@ -139,7 +136,7 @@ public class CreateNetworkMapDialog extends Dialog
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)
 			{
-				MessageDialog.openWarning(getShell(), "Warning", "Please select seed node");
+				MessageDialogHelper.openWarning(getShell(), Messages.CreateNetworkMapDialog_Warning, Messages.CreateNetworkMapDialog_PleaseSelectSeed);
 				return;
 			}
 		}

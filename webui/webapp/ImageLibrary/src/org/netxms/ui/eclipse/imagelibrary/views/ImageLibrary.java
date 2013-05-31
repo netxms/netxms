@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -19,11 +20,14 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
@@ -38,8 +42,10 @@ import org.netxms.nebula.widgets.gallery.Gallery;
 import org.netxms.nebula.widgets.gallery.GalleryItem;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
+import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImagePropertiesDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -47,9 +53,9 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 /**
  * Image library configurator
  */
-public class ImageLibrary extends ViewPart
+public class ImageLibrary extends ViewPart implements ImageUpdateListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary";
+	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary"; //$NON-NLS-1$
 
 	protected static final int MIN_GRID_ICON_SIZE = 48;
 	protected static final int MAX_GRID_ICON_SIZE = 256;
@@ -65,6 +71,7 @@ public class ImageLibrary extends ViewPart
 
 	protected MenuDetectEvent menuEvent;
 
+	private Display display;
 	private NXCSession session;
 
 	private Set<String> knownCategories;
@@ -80,6 +87,7 @@ public class ImageLibrary extends ViewPart
 		final FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
 
+		display = getSite().getShell().getDisplay();
 		session = (NXCSession)ConsoleSharedData.getSession();
 
 		gallery = new Gallery(parent, SWT.V_SCROLL | SWT.MULTI);
@@ -101,8 +109,6 @@ public class ImageLibrary extends ViewPart
 		contributeToActionBars();
 
 		gallery.addMenuDetectListener(new MenuDetectListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void menuDetected(MenuDetectEvent e)
 			{
@@ -118,6 +124,15 @@ public class ImageLibrary extends ViewPart
 		{
 			e1.printStackTrace();
 		}
+
+		ImageProvider.getInstance(display).addUpdateListener(this);
+		parent.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				ImageProvider.getInstance(display).removeUpdateListener(ImageLibrary.this);
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -133,9 +148,7 @@ public class ImageLibrary extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionNew = new Action("&Upload New Image") {
-			private static final long serialVersionUID = 1L;
-
+		actionNew = new Action(Messages.ImageLibrary_ActionUpload) {
 			@Override
 			public void run()
 			{
@@ -155,9 +168,7 @@ public class ImageLibrary extends ViewPart
 		};
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-		actionEdit = new Action("&Edit") {
-			private static final long serialVersionUID = 1L;
-
+		actionEdit = new Action(Messages.ImageLibrary_ActionEdit) {
 			@Override
 			public void run()
 			{
@@ -177,9 +188,7 @@ public class ImageLibrary extends ViewPart
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 
-		actionDelete = new Action("&Delete") {
-			private static final long serialVersionUID = 1L;
-
+		actionDelete = new Action(Messages.ImageLibrary_ActionDelete) {
 			@Override
 			public void run()
 			{
@@ -189,9 +198,7 @@ public class ImageLibrary extends ViewPart
 		};
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 
-		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -201,14 +208,12 @@ public class ImageLibrary extends ViewPart
 				}
 				catch(Exception e)
 				{
-					Activator.logError("ImageLibrary view: Exception in refresh action", e);
+					Activator.logError("ImageLibrary view: Exception in refresh action", e); //$NON-NLS-1$
 				}
 			}
 		};
 
-		actionZoomIn = new Action("Zoom In") {
-			private static final long serialVersionUID = 1L;
-
+		actionZoomIn = new Action(Messages.ImageLibrary_ActionZoomIn) {
 			@Override
 			public void run()
 			{
@@ -222,10 +227,7 @@ public class ImageLibrary extends ViewPart
 			}
 		};
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
-		
-		actionZoomOut = new Action("Zoom Out") {
-			private static final long serialVersionUID = 1L;
-
+		actionZoomOut = new Action(Messages.ImageLibrary_ActionZoomOut) {
 			@Override
 			public void run()
 			{
@@ -250,8 +252,8 @@ public class ImageLibrary extends ViewPart
 	protected void editImage(final GalleryItem galleryItem, final String name, final String category, final String fileName)
 	{
 		final LibraryImage image = (LibraryImage)galleryItem.getData();
-		
-		new ConsoleJob("Update image", this, Activator.PLUGIN_ID, null) {
+
+		new ConsoleJob(Messages.ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -285,7 +287,7 @@ public class ImageLibrary extends ViewPart
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask("Update image file", (int)workTotal);
+						monitor.beginTask(Messages.ImageLibrary_UpdateImage, (int)workTotal);
 					}
 					
 					@Override
@@ -305,7 +307,7 @@ public class ImageLibrary extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update image";
+				return Messages.ImageLibrary_UpdateError;
 			}
 		}.start();
 	}
@@ -317,7 +319,7 @@ public class ImageLibrary extends ViewPart
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-		new ConsoleJob("Upload image file", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -330,7 +332,7 @@ public class ImageLibrary extends ViewPart
 					stream = new FileInputStream(fileName);
 					byte imageData[] = new byte[(int)fileSize];
 					stream.read(imageData);
-
+	
 					image.setBinaryData(imageData);
 					image.setName(name);
 					image.setCategory(category);
@@ -347,7 +349,7 @@ public class ImageLibrary extends ViewPart
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask("Upload image file", (int)workTotal);
+						monitor.beginTask(Messages.ImageLibrary_UploadImage, (int)workTotal);
 					}
 					
 					@Override
@@ -368,7 +370,7 @@ public class ImageLibrary extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update image";
+				return Messages.ImageLibrary_UploadError;
 			}
 		}.start();
 	}
@@ -413,8 +415,6 @@ public class ImageLibrary extends ViewPart
 		MenuManager menuManager = new MenuManager();
 		menuManager.setRemoveAllWhenShown(true);
 		menuManager.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager manager)
 			{
 				fillContextMenu(manager);
@@ -476,7 +476,7 @@ public class ImageLibrary extends ViewPart
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null, getSite().getShell().getDisplay()) {
+		new ConsoleJob(Messages.ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -493,7 +493,7 @@ public class ImageLibrary extends ViewPart
 						}
 						catch(Exception e)
 						{
-							Activator.logError("Exception in ImageLibrary.refreshImages()", e);
+							Activator.logError("Exception in ImageLibrary.refreshImages()", e); //$NON-NLS-1$
 						}
 					}
 				}
@@ -509,12 +509,12 @@ public class ImageLibrary extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load image library";
+				return Messages.ImageLibrary_LoadError;
 			}
-			
+
 		}.start();
 	}
-	
+
 	/**
 	 * Refresh UI after retrieving imaqe library from server
 	 */
@@ -565,5 +565,22 @@ public class ImageLibrary extends ViewPart
 		}
 
 		gallery.redraw();
+	}
+
+	@Override
+	public void imageUpdated(UUID guid)
+	{
+		try
+		{
+			refreshImages();
+		}
+		catch(NetXMSClientException e)
+		{
+			Activator.logError("Exception in ImageLibrary.imageUpdated()", e); //$NON-NLS-1$
+		}
+		catch(IOException e)
+		{
+			Activator.logError("Exception in ImageLibrary.imageUpdated()", e); //$NON-NLS-1$
+		}
 	}
 }

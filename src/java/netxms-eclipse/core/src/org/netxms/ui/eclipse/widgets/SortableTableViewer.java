@@ -144,6 +144,4 @@ public class SortableTableViewer extends TableViewer
 	{
 		return super.getViewerRowFromItem(item);
 	}
-	
-	
 }

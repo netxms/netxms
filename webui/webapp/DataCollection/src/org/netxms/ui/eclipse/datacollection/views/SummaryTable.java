@@ -41,6 +41,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.TableContentProvider;
 import org.netxms.ui.eclipse.datacollection.views.helpers.TableItemComparator;
 import org.netxms.ui.eclipse.datacollection.views.helpers.TableLabelProvider;
@@ -54,7 +55,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class SummaryTable extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.datacollection.views.SummaryTable";
+	public static final String ID = "org.netxms.ui.eclipse.datacollection.views.SummaryTable"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private int tableId;
@@ -75,9 +76,9 @@ public class SummaryTable extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		// Secondary ID must by in form nodeId&pollType
-		String[] parts = site.getSecondaryId().split("&");
+		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length != 2)
-			throw new PartInitException("Internal error");
+			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		tableId = Integer.parseInt(parts[0]);
 		baseObjectId = Long.parseLong(parts[1]);
@@ -194,7 +195,7 @@ public class SummaryTable extends ViewPart
 	public void refreshTable()
 	{
 		viewer.setInput(null);
-		new ConsoleJob("Reloading DCI summary table data", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SummaryTable_JobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -211,7 +212,7 @@ public class SummaryTable extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot read data for DCI summary table";
+				return Messages.SummaryTable_JobError;
 			}
 		}.start();
 	}
@@ -229,12 +230,12 @@ public class SummaryTable extends ViewPart
 			final int[] widths = new int[names.length];
 			Arrays.fill(widths, 100);
 			viewer.createColumns(names, widths, 0, SWT.UP);
-			WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SummaryTable." + Integer.toString(tableId));
+			WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SummaryTable." + Integer.toString(tableId)); //$NON-NLS-1$
 			viewer.getTable().addDisposeListener(new DisposeListener() {
 				@Override
 				public void widgetDisposed(DisposeEvent e)
 				{
-					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SummaryTable." + Integer.toString(tableId));
+					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SummaryTable." + Integer.toString(tableId)); //$NON-NLS-1$
 				}
 			});
 			viewer.setComparator(new TableItemComparator(table.getColumnFormats()));
@@ -248,7 +249,7 @@ public class SummaryTable extends ViewPart
 	public void setTable(Table table)
 	{
 		AbstractObject object = session.findObjectById(baseObjectId);
-		setPartName(table.getTitle() + " - " + ((object != null) ? object.getObjectName() : ("[" + baseObjectId + "]"))); 
+		setPartName(table.getTitle() + " - " + ((object != null) ? object.getObjectName() : ("[" + baseObjectId + "]")));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		updateViewer(table);
 	}
 }

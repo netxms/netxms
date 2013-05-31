@@ -37,8 +37,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Filter extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private ObjectToolDetails objectTool;
 	private Button checkAgent;
 	private Button checkSNMP;
@@ -83,8 +81,6 @@ public class Filter extends PropertyPage
 		checkMatchOID.setText("Node SNMP OID should match with the following template:");
 		checkMatchOID.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_OID_MATCH) != 0);
 		checkMatchOID.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

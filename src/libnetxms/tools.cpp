@@ -1863,6 +1863,20 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 #ifdef _WIN32
 	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
 
+   DWORD mode;
+   if (!GetConsoleMode(out, &mode))
+   {
+      // Assume output is redirected
+#ifdef UNICODE
+      char *mbText = MBStringFromWideString(text);
+      WriteFile(out, mbText, (DWORD)strlen(mbText), &mode, NULL);
+      free(mbText);
+#else
+      WriteFile(out, text, (DWORD)strlen(text), &mode, NULL);
+#endif
+      return;
+   }
+
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(out, &csbi);
 	

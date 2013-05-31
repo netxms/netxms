@@ -74,8 +74,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MapLabelProvider extends LabelProvider implements IFigureProvider, ISelfStyleProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private NXCSession session;
 	private ExtendedGraphViewer viewer;
 	private Image[] statusImages;

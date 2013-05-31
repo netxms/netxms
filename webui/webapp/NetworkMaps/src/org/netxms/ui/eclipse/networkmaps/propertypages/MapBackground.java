@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.networkmaps.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -45,6 +44,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -53,8 +53,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class MapBackground extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private NetworkMap object;
 	private Button radioTypeNone;
 	private Button radioTypeImage;
@@ -94,8 +92,6 @@ public class MapBackground extends PropertyPage
       typeGroup.setLayout(layout);
       
       final SelectionListener listener = new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -189,8 +185,6 @@ public class MapBackground extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       zoomScale.setLayoutData(gd);
       zoomScale.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -209,8 +203,6 @@ public class MapBackground extends PropertyPage
       zoomSpinner.setMaximum(18);
       zoomSpinner.setSelection(object.getBackgroundZoom());
       zoomSpinner.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -285,7 +277,7 @@ public class MapBackground extends PropertyPage
 			}
 			catch(GeoLocationFormatException e)
 			{
-				MessageDialog.openError(getShell(), "Error", "Geolocation format error");
+				MessageDialogHelper.openError(getShell(), "Error", "Geolocation format error");
 				return false;
 			}
 			md.setMapBackground(NetworkMap.GEOMAP_BACKGROUND, location, zoomSpinner.getSelection(), ColorConverter.rgbToInt(backgroundColor.getColorValue()));

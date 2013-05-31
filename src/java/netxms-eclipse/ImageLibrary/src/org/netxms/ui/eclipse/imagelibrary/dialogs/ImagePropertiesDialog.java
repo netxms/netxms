@@ -31,6 +31,10 @@ public class ImagePropertiesDialog extends Dialog
 	private Set<String> categories;
 	private Shell shell;
 
+	/**
+	 * @param parentShell
+	 * @param knownCategories
+	 */
 	public ImagePropertiesDialog(Shell parentShell, Set<String> knownCategories)
 	{
 		super(parentShell);
@@ -38,6 +42,9 @@ public class ImagePropertiesDialog extends Dialog
 		this.categories = knownCategories;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -48,8 +55,7 @@ public class ImagePropertiesDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		dialogArea.setLayout(layout);
 
-		WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, new WidgetFactory()
-		{
+		WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, new WidgetFactory() {
 			@Override
 			public Control createControl(Composite parent, int style)
 			{
@@ -106,11 +112,6 @@ public class ImagePropertiesDialog extends Dialog
 				return composite;
 			}
 		}, Messages.ImagePropertiesDialog_ImageFile, WidgetHelper.DEFAULT_LAYOUT_DATA);
-
-		// nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE
-		// | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "File Name",
-		// fileName == null ? "n/a" : fileName, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		// nameInputField.getShell().setMinimumSize(300, 0);
 
 		nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.ImagePropertiesDialog_ImageName,
 				name == null ? "" : name, WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$

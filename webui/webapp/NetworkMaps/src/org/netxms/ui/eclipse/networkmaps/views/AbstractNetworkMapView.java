@@ -443,8 +443,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -453,8 +451,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		
 		actionShowStatusBackground = new Action("Show status &background", Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -469,8 +465,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusBackground.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 	
 		actionShowStatusIcon = new Action("Show status &icon", Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -485,8 +479,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusIcon.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 		
 		actionShowStatusFrame = new Action("Show status &frame", Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -501,8 +493,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 	
 		actionZoomIn = new Action("Zoom &in") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -512,8 +502,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action("Zoom &out") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -529,8 +517,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		{
 			final int alg = i;
 			actionSetAlgorithm[i] = new Action(layoutAlgorithmNames[i], Action.AS_RADIO_BUTTON) {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void run()
 				{
@@ -547,8 +533,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		{
 			final int alg = i + 1;
 			actionSetRouter[i] = new Action(connectionRouterNames[i], Action.AS_RADIO_BUTTON) {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void run()
 				{
@@ -559,8 +543,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 		
 		actionEnableAutomaticLayout = new Action("Enable &automatic layout", Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -578,8 +560,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
 		
 		actionSaveLayout = new Action("&Save layout") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -591,8 +571,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
 		
 		actionOpenSubmap = new Action("Open s&ubmap") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -602,8 +580,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionOpenSubmap.setEnabled(false);
 		
 		actionFiguresIcons = new Action("&Icons", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -619,8 +595,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 		
 		actionFiguresSmallLabels = new Action("&Small labels", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -636,8 +610,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.SMALL_LABEL);
 		
 		actionFiguresLargeLabels = new Action("&Large labels", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -653,8 +625,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
 		
 		actionShowGrid = new Action("Show &grid", Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -665,8 +635,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowGrid.setChecked(viewer.isGridVisible());
 		
 		actionSnapToGrid = new Action("S&nap to grid", Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -677,8 +645,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionSnapToGrid.setChecked(viewer.isSnapToGrid());
 		
 		actionAlignToGrid = new Action("&Align to grid", Activator.getImageDescriptor("icons/align_to_grid.gif")) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -688,8 +654,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 
 		actionShowObjectDetails = new Action("Show object details") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -802,8 +766,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager manager)
 			{
 				int selType = analyzeSelection(currentSelection);

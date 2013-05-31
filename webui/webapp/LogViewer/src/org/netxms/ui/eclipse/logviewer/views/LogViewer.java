@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.logviewer.views;
 
 import java.util.Collection;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
@@ -104,7 +105,7 @@ public class LogViewer extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		logName = site.getSecondaryId();
-		setPartName(Messages.getString(Messages.LogViewer_2 + logName));
+		setPartName(Messages.getString("LogViewer_" + logName)); //$NON-NLS-1$
 		final ImageDescriptor img = Activator.getImageDescriptor("icons/" + logName + ".png"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (img != null)
 		{
@@ -145,8 +146,6 @@ public class LogViewer extends ViewPart
 		gd.grabExcessVerticalSpace = true;
 		viewer.getControl().setLayoutData(gd);
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -173,11 +172,11 @@ public class LogViewer extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		new ConsoleJob(Messages.LogViewer_7 + logName + Messages.LogViewer_8, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(String.format(Messages.LogViewer_OpenLogJobName, logName), this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LogViewer_9 + logName + Messages.LogViewer_10;
+				return String.format(Messages.LogViewer_OpenLogError, logName);
 			}
 
 			@Override
@@ -198,8 +197,6 @@ public class LogViewer extends ViewPart
 		
 		filterBuilder.setExecuteAction(actionExecute);
 		filterBuilder.setCloseAction(new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -318,8 +315,6 @@ public class LogViewer extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -354,8 +349,6 @@ public class LogViewer extends ViewPart
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -365,8 +358,6 @@ public class LogViewer extends ViewPart
 		actionRefresh.setEnabled(false);
 
 		actionExecute = new Action(Messages.LogViewer_ActionExec, SharedIcons.EXECUTE) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -377,8 +368,6 @@ public class LogViewer extends ViewPart
 		handlerService.activateHandler(actionExecute.getActionDefinitionId(), new ActionHandler(actionExecute));
 
 		actionClearFilter = new Action(Messages.LogViewer_ActionClearFilter, SharedIcons.CLEAR_LOG) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -386,9 +375,7 @@ public class LogViewer extends ViewPart
 			}
 		};
 
-		actionGetMoreData = new Action(Messages.LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-2$
-			private static final long serialVersionUID = 1L;
-
+		actionGetMoreData = new Action(Messages.LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -400,8 +387,6 @@ public class LogViewer extends ViewPart
 		handlerService.activateHandler(actionGetMoreData.getActionDefinitionId(), new ActionHandler(actionGetMoreData));
 
 		actionShowFilter = new Action(Messages.LogViewer_ActionShowFilter, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{

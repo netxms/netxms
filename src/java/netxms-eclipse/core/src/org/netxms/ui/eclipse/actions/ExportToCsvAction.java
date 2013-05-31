@@ -68,7 +68,7 @@ public class ExportToCsvAction extends Action
 
 		// "Object Details" view can contain multiple widgets
 		// with "Export to CSV" action defined, so binding it to handler service
-		// will cause handler cvonflict
+		// will cause handler conflict
 		if (viewPart.getViewSite().getId().equals("org.netxms.ui.eclipse.objectview.view.tabbed_object_view")) //$NON-NLS-1$
 			return;
 		
@@ -182,7 +182,7 @@ public class ExportToCsvAction extends Action
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ExportToCsvAction_SaveError; //$NON-NLS-1$
+				return Messages.ExportToCsvAction_SaveError;
 			}
 		}.start();
 	}

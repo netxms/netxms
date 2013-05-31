@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class TableItemComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	private Integer[] formats;
 	
 	/**

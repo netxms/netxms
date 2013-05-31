@@ -77,8 +77,8 @@ public class ChartDciConfig
 		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
 		area = false;
-		instance = "";
-		column = "";
+		instance = ""; //$NON-NLS-1$
+		column = ""; //$NON-NLS-1$
 	}
 
 	/**
@@ -113,8 +113,8 @@ public class ChartDciConfig
 		color = UNSET_COLOR;
 		lineWidth = 2;
 		area = false;
-		instance = "";
-		column = "";
+		instance = ""; //$NON-NLS-1$
+		column = ""; //$NON-NLS-1$
 	}
 
 	/**

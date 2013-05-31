@@ -31,8 +31,6 @@ import org.netxms.ui.eclipse.charts.Messages;
  */
 public class GeneralChartPrefs extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */

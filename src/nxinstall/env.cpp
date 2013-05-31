@@ -49,7 +49,6 @@ static NXSL_ExtFunction s_nxslInstallerFunctions[] =
  */
 NXSL_InstallerEnvironment::NXSL_InstallerEnvironment() : NXSL_Environment()
 {
-	setIO(stdin, stdout);
 	registerFunctionSet(sizeof(s_nxslInstallerFunctions) / sizeof(NXSL_ExtFunction), s_nxslInstallerFunctions);
 }
 

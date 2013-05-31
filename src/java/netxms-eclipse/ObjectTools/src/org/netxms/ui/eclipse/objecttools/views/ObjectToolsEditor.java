@@ -298,7 +298,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private void refreshToolList()
 	{
 		new ConsoleJob("Get object tools configuration", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public abstract class ConditionEditor extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	protected FormToolkit toolkit;
 	private Runnable deleteHandler;
 	private Label logicalOperation;
@@ -71,8 +69,6 @@ public abstract class ConditionEditor extends Composite
 			operation.add(s);
 		operation.select(0);
 		operation.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

@@ -5,6 +5,7 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.console.messages"; //$NON-NLS-1$
+	
 	public static String AbstractSelector_ClearSelection;
 	public static String AbstractSelector_CopyToClipboard;
 	public static String AbstractSelector_Select;

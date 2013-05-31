@@ -31,8 +31,6 @@ import org.netxms.client.log.OrderingColumn;
  */
 public class OrderingColumnEditingSupport extends EditingSupport
 {
-	private static final long serialVersionUID = 1L;
-
 	private CellEditor editor;
 	
 	/**

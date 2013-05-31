@@ -21,12 +21,10 @@ package org.netxms.ui.eclipse.objecttools;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
@@ -38,6 +36,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Adapter factory for object tools
@@ -78,7 +77,7 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot load object tool details: " + e.getLocalizedMessage());
+						MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot load object tool details: " + e.getLocalizedMessage());
 						return Status.OK_STATUS;
 					}
 				}.schedule();

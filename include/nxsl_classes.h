@@ -358,19 +358,12 @@ private:
 
    NXSL_Library *m_pLibrary;
 
-   FILE *m_pStdIn;
-   FILE *m_pStdOut;
-
 public:
    NXSL_Environment();
    ~NXSL_Environment();
 
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
-
-   void setIO(FILE *pIn, FILE *pOut) { m_pStdIn = pIn; m_pStdOut = pOut; }
-   FILE *getStdIn() { return m_pStdIn; }
-   FILE *getStdOut() { return m_pStdOut; }
 
    void setLibrary(NXSL_Library *pLib) { m_pLibrary = pLib; }
 
@@ -380,11 +373,9 @@ public:
    BOOL useModule(NXSL_Program *main, const TCHAR *name);
 };
 
-
-//
-// Runtime variable information
-//
-
+/**
+ * Runtime variable information
+ */
 class LIBNXSL_EXPORTABLE NXSL_Variable
 {
 protected:

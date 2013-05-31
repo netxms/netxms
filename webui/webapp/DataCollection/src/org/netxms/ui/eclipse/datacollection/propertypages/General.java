@@ -182,8 +182,8 @@ public class General extends PropertyPage
       origin.add(Messages.General_SourceSNMP);
       origin.add(Messages.General_SourceCPSNMP);
       origin.add(Messages.General_SourcePush);
-      origin.add("Windows Performance Counters");
-      origin.add("SM-CLP");
+      origin.add(Messages.General_WinPerf);
+      origin.add(Messages.General_SMCLP);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
@@ -290,7 +290,7 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
-      sampleCount = WidgetHelper.createLabeledSpinner(groupData, SWT.BORDER, "Sample count for average value calculation (0 to disable)", 0, 65535, fd);
+      sampleCount = WidgetHelper.createLabeledSpinner(groupData, SWT.BORDER, Messages.General_SampleCountForAvg, 0, 65535, fd);
       sampleCount.setSelection(dci.getSampleCount());
 		sampleCount.setEnabled(dci.getOrigin() == DataCollectionItem.WINPERF);
       

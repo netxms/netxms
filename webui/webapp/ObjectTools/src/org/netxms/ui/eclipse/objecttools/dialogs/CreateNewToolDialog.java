@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateNewToolDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private int type;
 	private String name;
 	

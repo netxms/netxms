@@ -42,8 +42,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class MapContentProvider implements IGraphEntityRelationshipContentProvider
 {
-	private static final long serialVersionUID = 1L;
-	
 	private ExtendedGraphViewer viewer;
 	private NetworkMapPage page;
 	private Map<Long, DciValue[]> cachedDciValues = new HashMap<Long, DciValue[]>();

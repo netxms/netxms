@@ -57,6 +57,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
@@ -69,7 +70,6 @@ import org.netxms.ui.eclipse.tools.ColorCache;
  */
 public class ExtendedGraphViewer extends GraphViewer
 {
-	private static final long serialVersionUID = 1L;
 	private static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 4.00 };
 	
 	private BackgroundFigure backgroundFigure;
@@ -109,8 +109,6 @@ public class ExtendedGraphViewer extends GraphViewer
 		
 		mapLoader = new MapLoader(composite.getDisplay());
 		graph.addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -133,7 +131,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		getZoomManager().setZoomLevels(zoomLevels);
 		
 		for(Object f : rootLayer.getChildren())
-			if (f.getClass().getName().equals("org.eclipse.zest.core.widgets.internal.ZestRootLayer"))
+			if (f.getClass().getName().equals("org.eclipse.zest.core.widgets.internal.ZestRootLayer")) //$NON-NLS-1$
 				zestRootLayer = (IFigure)f;
 
 		final Runnable timer = new Runnable() {
@@ -180,8 +178,6 @@ public class ExtendedGraphViewer extends GraphViewer
 		backgroundFigure.addMouseListener(backgroundMouseListener);
 		
 		graph.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -385,7 +381,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		graph.setBackground(c);
 		graph.getLightweightSystem().getRootFigure().setBackgroundColor(c);		
 	}
-	
+
 	/**
 	 * Set background image for graph
 	 * 
@@ -432,7 +428,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		final Rectangle controlSize = graph.getClientArea();
 		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
 		final Point mapSize = new Point(Math.min(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
-		ConsoleJob job = new ConsoleJob("Download map tiles", null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.ExtendedGraphViewer_DownloadTilesJob, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -463,7 +459,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot download map tiles";
+				return Messages.ExtendedGraphViewer_DownloadTilesError;
 			}
 		};
 		job.setUser(false);

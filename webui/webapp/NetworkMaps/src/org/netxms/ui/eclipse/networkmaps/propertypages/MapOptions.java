@@ -31,8 +31,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MapOptions extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private NetworkMap object;
 	private Button checkShowStatusIcon;
 	private Button checkShowStatusFrame;
@@ -105,8 +103,6 @@ public class MapOptions extends PropertyPage
 		routingAlgorithm.select(object.getDefaultLinkRouting() - 1);
 
 		final SelectionListener listener = new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -161,8 +157,6 @@ public class MapOptions extends PropertyPage
 	      checkCustomRadius.setText("Custom discovery &radius");
 	      checkCustomRadius.setSelection(object.getDiscoveryRadius() > 0);
 	      checkCustomRadius.addSelectionListener(new SelectionListener() {
-	      	private static final long serialVersionUID = 1L;
-
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{

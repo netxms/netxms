@@ -30,6 +30,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class EditColumnDialog extends Dialog
 {
 	private static final String[] formatNames = { "String", "Integer", "Float", "IP Address", "MAC Address", "Interface Index" };
+
 	private boolean create;
 	private boolean snmpColumn;
 	private ObjectToolTableColumn columnObject;

@@ -28,7 +28,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -44,6 +43,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -66,6 +66,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * View for predefined map
@@ -84,7 +85,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private Action actionMapProperties;
 	private Action actionLinkProperties;
 	private Color defaultLinkColor = null;
-	private ImageProvider imageProvider;
+	private Display display;
 
 	/**
 	 * Create predefined map view
@@ -131,6 +132,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
+		
+		display = parent.getDisplay();
+		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -142,17 +146,16 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		if (mapObject.getMapType() == org.netxms.client.objects.NetworkMap.TYPE_CUSTOM)
 			addDropSupport();
 			
-		imageProvider = ImageProvider.getInstance(parent.getDisplay());
-		imageProvider.addUpdateListener(this);
+		ImageProvider.getInstance(display).addUpdateListener(this);
 		
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 		{
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
 				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
 			else
-				viewer.setBackgroundImage(imageProvider.getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
 		}
-		
+
 		setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
 		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 		
@@ -180,8 +183,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
 		final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
 		viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer) {
-			private static final long serialVersionUID = 1L;
-
 			private int x;
 			private int y;
 
@@ -253,8 +254,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 
 		actionAddObject = new Action("&Add object...") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -267,8 +266,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
 
 		actionAddGroupBox = new Action("&Group box...") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -277,8 +274,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		};
 
 		actionAddImage = new Action("&Image...") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -287,8 +282,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		};
 
 		actionLinkObjects = new Action("&Link selected objects", Activator.getImageDescriptor("icons/link_add.png")) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -301,8 +294,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		handlerService.activateHandler(actionLinkObjects.getActionDefinitionId(), linkObjectHandler);
 
 		actionRemove = new Action("&Remove from map", SharedIcons.DELETE_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -315,8 +306,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		handlerService.activateHandler(actionRemove.getActionDefinitionId(), removeHandler);
 
 		actionMapProperties = new Action("Map &properties") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -325,8 +314,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		};
 
 		actionLinkProperties = new Action("&Properties") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -526,7 +513,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-		if (!MessageDialog.openQuestion(getSite().getShell(), "Confirm Removal", "Are you sure to remove selected element"
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Removal", "Are you sure to remove selected element"
 				+ (selection.size() == 1 ? "" : "s") + " from map?"))
 			return;
 
@@ -628,7 +615,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 					@Override
 					public void run()
 					{
-						viewer.refresh();
+						viewer.setInput(mapPage);
 					}
 				});
 			}
@@ -646,6 +633,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	 */
 	private void showMapProperties()
 	{
+		updateObjectPositions();
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, mapObject);
 		dlg.open();
 	}
@@ -674,7 +662,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			public void run()
 			{
 				if (guid.equals(mapObject.getBackground()))
-					viewer.setBackgroundImage(imageProvider.getImage(guid));
+					viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(guid));
 				
 				final String guidText = guid.toString();
 				for(NetworkMapElement e : mapPage.getElements())
@@ -697,7 +685,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	public void dispose()
 	{
-		imageProvider.removeUpdateListener(this);
+		ImageProvider.getInstance(display).removeUpdateListener(this);
 		if (defaultLinkColor != null)
 			defaultLinkColor.dispose();
 		super.dispose();
@@ -728,11 +716,12 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else
 			{
-				viewer.setBackgroundImage(imageProvider.getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
 			}
 		}
 
 		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
+
 		setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
 
 		if (defaultLinkColor != null)
@@ -752,7 +741,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
 				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
 			else
-				viewer.setBackgroundImage(imageProvider.getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
 		}
 
 		setLayoutAlgorithm(mapObject.getLayout(), false);
@@ -769,6 +758,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	 */
 	private void showLinkProperties()
 	{
+		updateObjectPositions();
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink))
 			return;

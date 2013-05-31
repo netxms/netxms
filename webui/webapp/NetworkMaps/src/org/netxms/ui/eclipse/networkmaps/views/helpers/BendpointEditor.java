@@ -136,7 +136,7 @@ public class BendpointEditor
 		if (connection.isDisposed())
 			return;
 		
-		ConnectionRouter router = (ConnectionRouter)connection.getData("ROUTER");
+		ConnectionRouter router = (ConnectionRouter)connection.getData("ROUTER"); //$NON-NLS-1$
 		router.setConstraint(connectionFigure, bendpoints);
 		connectionFigure.setRoutingConstraint(bendpoints);
 	}

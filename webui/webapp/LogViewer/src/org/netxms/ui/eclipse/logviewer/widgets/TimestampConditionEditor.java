@@ -28,14 +28,14 @@ import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.ui.eclipse.logviewer.Messages;
 
 /**
  * Condition editor for timestamp columns
  */
 public class TimestampConditionEditor extends ConditionEditor
 {
-	private static final long serialVersionUID = 1L;
-	private static final String[] OPERATIONS = { "BETWEEN", "BEFORE", "AFTER" };
+	private static final String[] OPERATIONS = { Messages.TimestampConditionEditor_Between, Messages.TimestampConditionEditor_Before, Messages.TimestampConditionEditor_After };
 	
 	private DateTime datePicker1;
 	private DateTime timePicker1;
@@ -91,7 +91,7 @@ public class TimestampConditionEditor extends ConditionEditor
 		timePicker1 = new DateTime(group, SWT.TIME);
 		timePicker1.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
 		
-		andLabel = toolkit.createLabel(group, "  and  ");
+		andLabel = toolkit.createLabel(group, Messages.TimestampConditionEditor_And);
 
 		datePicker2 = new DateTime(group, SWT.DATE | SWT.DROP_DOWN);
 		datePicker2.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));

@@ -119,26 +119,20 @@ NXSL_Environment::NXSL_Environment()
 {
    m_dwNumFunctions = sizeof(m_builtinFunctions) / sizeof(NXSL_ExtFunction);
    m_pFunctionList = (NXSL_ExtFunction *)nx_memdup(m_builtinFunctions, sizeof(m_builtinFunctions));
-   m_pStdIn = NULL;
-   m_pStdOut = NULL;
    m_pLibrary = NULL;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Environment::~NXSL_Environment()
 {
    safe_free(m_pFunctionList);
 }
 
-
-//
-// Find function by name
-//
-
+/**
+ * Find function by name
+ */
 NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *pszName)
 {
    DWORD i;
@@ -149,11 +143,9 @@ NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *pszName)
    return NULL;
 }
 
-
-//
-// Register function set
-//
-
+/**
+ * Register function set
+ */
 void NXSL_Environment::registerFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList)
 {
    m_pFunctionList = (NXSL_ExtFunction *)realloc(m_pFunctionList, sizeof(NXSL_ExtFunction) * (m_dwNumFunctions + dwNumFunctions));
@@ -217,26 +209,13 @@ void NXSL_Environment::trace(int level, const TCHAR *text)
  */
 void NXSL_Environment::print(NXSL_Value *value)
 {
-	if (m_pStdOut == NULL)
-		return;
-
-   const TCHAR *pszText;
-   DWORD dwLen;
-   pszText = value->getValueAsString(&dwLen);
-   if (pszText != NULL)
+   const TCHAR *text = value->getValueAsCString();
+   if (text != NULL)
 	{
-#ifdef UNICODE
-		int reqLen = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, dwLen, NULL, 0, NULL, NULL);
-		char *mbText = (char *)malloc(reqLen);
-		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, dwLen, mbText, reqLen, NULL, NULL);
-      fwrite(mbText, reqLen, 1, m_pStdOut);
-		free(mbText);
-#else
-      fwrite(pszText, dwLen, 1, m_pStdOut);
-#endif
+      WriteToTerminal(text);
 	}
    else
 	{
-      fputs("(null)", m_pStdOut);
+      WriteToTerminal(_T("(null)"));
 	}
 }

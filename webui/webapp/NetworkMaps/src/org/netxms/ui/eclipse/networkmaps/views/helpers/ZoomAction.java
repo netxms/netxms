@@ -28,8 +28,6 @@ import org.eclipse.zest.core.widgets.zooming.ZoomManager;
  */
 public class ZoomAction extends Action implements ZoomListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private double zoomLevel;
 	private ZoomManager zoomManager;
 	
@@ -40,7 +38,7 @@ public class ZoomAction extends Action implements ZoomListener
 	 */
 	public ZoomAction(double zoomLevel, ZoomManager zoomManager)
 	{
-		super(Integer.toString((int)(zoomLevel * 100)) + "%", Action.AS_RADIO_BUTTON);
+		super(Integer.toString((int)(zoomLevel * 100)) + "%", Action.AS_RADIO_BUTTON); //$NON-NLS-1$
 		this.zoomLevel = zoomLevel;
 		this.zoomManager = zoomManager;
 		zoomManager.addZoomListener(this);

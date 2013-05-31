@@ -26,6 +26,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.api.client.images.LibraryImage;
 import org.netxms.base.NXCommon;
+import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
@@ -36,8 +37,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ImageSelector extends AbstractSelector implements ImageUpdateListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private UUID imageGuid = NXCommon.EMPTY_GUID;
 	
 	/**
@@ -49,8 +48,6 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		super(parent, style, SHOW_CLEAR_BUTTON);
 		ImageProvider.getInstance(getDisplay()).addUpdateListener(this);
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -77,7 +74,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 			}
 			else
 			{
-				setText("<default>");
+				setText(Messages.ImageSelector_Default);
 				setImage(null);
 				imageGuid = NXCommon.EMPTY_GUID;
 			}
@@ -91,7 +88,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	@Override
 	protected void clearButtonHandler()
 	{
-		setText("<default>");
+		setText(Messages.ImageSelector_Default);
 		setImage(null);
 		imageGuid = NXCommon.EMPTY_GUID;
 		getParent().layout();
@@ -103,7 +100,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
-		return "Select image from image library";
+		return Messages.ImageSelector_SelectImage;
 	}
 
 	/**
@@ -125,7 +122,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		this.imageGuid = imageGuid;
 		if (imageGuid.equals(NXCommon.EMPTY_GUID))
 		{
-			setText("<default>");
+			setText(Messages.ImageSelector_Default);
 			setImage(null);
 		}
 		else
@@ -138,7 +135,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 			}
 			else
 			{
-				setText("<?>" + imageGuid.toString());
+				setText("<?>" + imageGuid.toString()); //$NON-NLS-1$
 				setImage(null);
 			}
 		}

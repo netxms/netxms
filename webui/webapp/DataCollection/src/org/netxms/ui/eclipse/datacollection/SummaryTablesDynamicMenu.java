@@ -113,7 +113,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 			@Override
 			public int compare(DciSummaryTableDescriptor arg0, DciSummaryTableDescriptor arg1)
 			{
-				return arg0.getMenuPath().replace("&", "").compareToIgnoreCase(arg1.getMenuPath().replace("&", ""));
+				return arg0.getMenuPath().replace("&", "").compareToIgnoreCase(arg1.getMenuPath().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			}
 		});
 		
@@ -121,12 +121,12 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 		int added = 0;
 		for(int i = 0; i < tables.length; i++)
 		{
-			String[] path = tables[i].getMenuPath().split("\\-\\>");
+			String[] path = tables[i].getMenuPath().split("\\-\\>"); //$NON-NLS-1$
 		
 			Menu rootMenu = tablesMenu;
 			for(int j = 0; j < path.length - 1; j++)
 			{
-				String key = path[j].replace("&", "");
+				String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
 				Menu currMenu = menus.get(key);
 				if (currMenu == null)
 				{
@@ -156,7 +156,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 		if (added > 0)
 		{
 			MenuItem tablesMenuItem = new MenuItem(menu, SWT.CASCADE, index);
-			tablesMenuItem.setText("S&ummary tables");
+			tablesMenuItem.setText(Messages.SummaryTablesDynamicMenu_MenuName);
 			tablesMenuItem.setMenu(tablesMenu);
 		}
 		else
@@ -174,7 +174,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 	private void queryTable(final long baseObjectId, final int tableId)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Query DCI summary table", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SummaryTablesDynamicMenu_QueryTableJob, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -183,7 +183,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 					@Override
 					public void run()
 					{
-						String secondaryId = Integer.toString(tableId) + "&" + Long.toString(baseObjectId);
+						String secondaryId = Integer.toString(tableId) + "&" + Long.toString(baseObjectId); //$NON-NLS-1$
 						IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 						try
 						{
@@ -192,7 +192,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 						}
 						catch(PartInitException e)
 						{
-							MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open view: %s", e.getLocalizedMessage()));
+							MessageDialogHelper.openError(window.getShell(), Messages.SummaryTablesDynamicMenu_Error, String.format(Messages.SummaryTablesDynamicMenu_CannotOpenView, e.getLocalizedMessage()));
 						}
 					}
 				});
@@ -201,7 +201,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot read data for DCI summary table";
+				return Messages.SummaryTablesDynamicMenu_CannotReadData;
 			}
 		}.start();
 	}

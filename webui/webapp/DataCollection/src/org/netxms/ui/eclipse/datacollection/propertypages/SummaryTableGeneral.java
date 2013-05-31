@@ -28,6 +28,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -59,12 +60,12 @@ public class SummaryTableGeneral extends PropertyPage
       dialogArea.setLayout(layout);
       
       menuPath = new LabeledText(dialogArea, SWT.NONE);
-      menuPath.setLabel("Menu path");
+      menuPath.setLabel(Messages.SummaryTableGeneral_MenuPath);
       menuPath.setText(table.getMenuPath());
       menuPath.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
       title = new LabeledText(dialogArea, SWT.NONE);
-      title.setLabel("Title");
+      title.setLabel(Messages.SummaryTableGeneral_Title);
       title.setText(table.getTitle());
       title.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
@@ -85,7 +86,7 @@ public class SummaryTableGeneral extends PropertyPage
 		table.setTitle(title.getText());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update DCI summary table configuration", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SummaryTableGeneral_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -99,7 +100,7 @@ public class SummaryTableGeneral extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update DCI summary table configuration";
+				return Messages.SummaryTableGeneral_JobError;
 			}
 
 			/* (non-Javadoc)

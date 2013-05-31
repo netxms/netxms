@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005-2010 Victor Kirhenshtein
+** Copyright (C) 2005-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,11 +35,9 @@ int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
    return 0;
 }
 
-
-//
-// main()
-//
-
+/**
+ * Entry point
+ */
 int main(int argc, char *argv[])
 {
    TCHAR *pszSource, szError[1024], entryPoint[256] = _T("");
@@ -57,12 +55,12 @@ int main(int argc, char *argv[])
 
    m_pTestClass = new NXSL_TestClass;
 
-   _tprintf(_T("NetXMS Scripting Host  Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2005-2012 Victor Kirhenshtein\n\n"));
+   WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
+                   _T("Copyright (c) 2005-2013 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "de:r")) != -1)
+	while((ch = getopt(argc, argv, "de:ru")) != -1)
    {
       switch(ch)
       {
@@ -114,7 +112,6 @@ int main(int argc, char *argv[])
 			if (dump)
 				pScript->dump(stdout);
 			pEnv = new NXSL_Environment;
-			pEnv->setIO(stdin, stdout);
 			pEnv->registerFunctionSet(1, &func);
 
 			// Prepare arguments
@@ -133,18 +130,18 @@ int main(int argc, char *argv[])
 			{
 				NXSL_Value *result = pScript->getResult();
 				if (printResult)
-					_tprintf(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
+               WriteToTerminalEx(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
 			}
 			else
 			{
-				_tprintf(_T("%s\n"), pScript->getErrorText());
+				WriteToTerminalEx(_T("%s\n"), pScript->getErrorText());
 			}
 			delete pScript;
 			safe_free(ppArgs);
 		}
 		else
 		{
-			_tprintf(_T("%s\n"), szError);
+			WriteToTerminalEx(_T("%s\n"), szError);
 		}
 	}
 	else

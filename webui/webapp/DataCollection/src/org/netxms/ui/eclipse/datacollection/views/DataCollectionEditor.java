@@ -401,7 +401,7 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
+		actionEdit = new Action(Messages.DataCollectionEditor_ActionEdit, SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
@@ -698,7 +698,7 @@ public class DataCollectionEditor extends ViewPart
 		if (selection.size() != 1)
 			return;
 		
-		ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, selection.getFirstElement(), "");
+		ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, selection.getFirstElement(), ""); //$NON-NLS-1$
 		dlg.createAllPages();
 		dlg.open();
 	}

@@ -35,6 +35,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.logviewer.Activator;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -42,9 +43,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LogLabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-	public static final String[] ALARM_STATE_TEXTS = { "Outstanding", "Acknowledged", "Resolved", "Terminated" };
-	public static final String[] ALARM_HD_STATE_TEXTS = { "Ignored", "Open", "Closed" };
+	public static final String[] ALARM_STATE_TEXTS = { Messages.LogLabelProvider_Outstanding, Messages.LogLabelProvider_Acknowledged, Messages.LogLabelProvider_Resolved, Messages.LogLabelProvider_Terminated };
+	public static final String[] ALARM_HD_STATE_TEXTS = { Messages.LogLabelProvider_Ignored, Messages.LogLabelProvider_Open, Messages.LogLabelProvider_Closed };
 	
 	private LogColumn[] columns;
 	private NXCSession session;
@@ -58,10 +58,10 @@ public class LogLabelProvider implements ITableLabelProvider
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		alarmStateImages = new Image[4];
-		alarmStateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
-		alarmStateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
-		alarmStateImages[Alarm.STATE_RESOLVED] = Activator.getImageDescriptor("icons/resolved.png").createImage();
-		alarmStateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage();
+		alarmStateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
+		alarmStateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
+		alarmStateImages[Alarm.STATE_RESOLVED] = Activator.getImageDescriptor("icons/resolved.png").createImage(); //$NON-NLS-1$
+		alarmStateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
 		
 		wbLabelProvider = new WorkbenchLabelProvider();
 	}
@@ -142,20 +142,20 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(NumberFormatException e)
 				{
-					return "<error>";
+					return Messages.LogLabelProvider_Error;
 				}
 			case LogColumn.LC_OBJECT_ID:
 				try
 				{
 					long id = Long.parseLong(value);
 					if (id == 0)
-						return "";
+						return ""; //$NON-NLS-1$
 					AbstractObject object = session.findObjectById(id);
-					return (object != null) ? object.getObjectName() : ("[" + id + "]");
+					return (object != null) ? object.getObjectName() : ("[" + id + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				catch(NumberFormatException e)
 				{
-					return "<error>";
+					return Messages.LogLabelProvider_Error;
 				}
 			case LogColumn.LC_SEVERITY:
 				try
@@ -165,7 +165,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(NumberFormatException e)
 				{
-					return "<error>";
+					return Messages.LogLabelProvider_Error;
 				}
 			case LogColumn.LC_USER_ID:
 				try
@@ -183,7 +183,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					long code = Long.parseLong(value);
 					EventTemplate evt = session.findEventTemplateByCode(code);
-					return (evt != null) ? evt.getName() : ("[" + code + "]");
+					return (evt != null) ? evt.getName() : ("[" + code + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				catch(NumberFormatException e)
 				{
@@ -197,7 +197,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(Exception e)
 				{
-					return "<error>";
+					return Messages.LogLabelProvider_Error;
 				}
 			case LogColumn.LC_ALARM_HD_STATE:
 				try
@@ -207,7 +207,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(Exception e)
 				{
-					return "<error>";
+					return Messages.LogLabelProvider_Error;
 				}
 			default:
 				return value;

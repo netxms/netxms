@@ -39,8 +39,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class General extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private ObjectToolDetails objectTool;
 	private LabeledText textName;
 	private LabeledText textDescription;
@@ -182,8 +180,6 @@ public class General extends PropertyPage
 		checkConfirmation.setText("This tool requires confirmation before execution");
 		checkConfirmation.setSelection((objectTool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0);
 		checkConfirmation.addSelectionListener(new SelectionListener()	{
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

@@ -29,7 +29,6 @@ import org.netxms.client.objecttools.ObjectToolTableColumn;
  */
 public class ToolColumnLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
 	private static final String[] formatName = { "String", "Integer", "Float", "IP Address", "MAC Address", "IfIndex" };
 	
 	private boolean snmpTable;

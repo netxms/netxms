@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.networkmaps.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -28,7 +27,9 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.PredefinedMap;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Open predefined map object
@@ -62,7 +63,7 @@ public class OpenMapObject implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenMapObject_Error, String.format(Messages.OpenMapObject_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

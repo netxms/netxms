@@ -45,7 +45,6 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.base.NXCommon;
@@ -178,8 +177,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private void addDropSupport()
 	{
 		final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-		viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer)
-		{
+		viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer) {
 			private int x;
 			private int y;
 
@@ -250,8 +248,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		super.createActions();
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 
-		actionAddObject = new Action("&Add object...")
-		{
+		actionAddObject = new Action("&Add object...") {
 			@Override
 			public void run()
 			{
@@ -655,7 +652,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	public void imageUpdated(final UUID guid)
 	{
-		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+		getSite().getShell().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run()
 			{

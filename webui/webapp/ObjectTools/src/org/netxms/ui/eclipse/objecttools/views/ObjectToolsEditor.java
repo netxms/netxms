@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objecttools.views;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -33,7 +32,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -69,6 +67,7 @@ import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsComparator;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -142,8 +141,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -166,8 +163,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -176,8 +171,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		};
 		
 		actionNew = new Action("&New...") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -187,8 +180,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
 		actionEdit = new PropertyDialogAction(getSite(), viewer) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -214,8 +205,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
 		actionDelete = new Action("&Delete") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -273,10 +262,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
-			private static final long serialVersionUID = 1L;
-
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -311,7 +297,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void refreshToolList()
 	{
-		new ConsoleJob("Get object tools configuration", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID, getSite().getShell().getDisplay()) {
+		new ConsoleJob("Get object tools configuration", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -381,7 +367,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		if (selection.isEmpty())
 			return;
 		
-		if (!MessageDialog.openConfirm(getSite().getShell(), "Confirmation", "Do you really want to delete selected tools?"))
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Confirmation", "Do you really want to delete selected tools?"))
 			return;
 		
 		final Object[] objects = selection.toArray();

@@ -47,7 +47,7 @@ public class TableItemComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID");
+		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		final int format = (column < formats.length) ? formats[column] : DataCollectionItem.DT_STRING;
 		
 		final String value1 = ((List<String>)e1).get(column);

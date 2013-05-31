@@ -27,8 +27,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
- *
+ * Composite widget - text with label
  */
 public class LabeledText extends Composite
 {

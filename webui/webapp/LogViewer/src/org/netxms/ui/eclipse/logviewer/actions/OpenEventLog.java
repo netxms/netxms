@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.logviewer.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -27,6 +26,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.LogViewer;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Open event log
@@ -66,7 +66,7 @@ public class OpenEventLog implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenEventLog_Error, Messages.OpenEventLog_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenEventLog_Error, Messages.OpenEventLog_ErrorText + e.getMessage());
 			}
 		}
 	}

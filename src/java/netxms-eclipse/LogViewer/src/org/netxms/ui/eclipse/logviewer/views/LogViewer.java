@@ -107,7 +107,7 @@ public class LogViewer extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		logName = site.getSecondaryId();
-		setPartName(Messages.getString(Messages.LogViewer_2 + logName));
+		setPartName(Messages.getString("LogViewer_" + logName)); //$NON-NLS-1$
 		final ImageDescriptor img = Activator.getImageDescriptor("icons/" + logName + ".png"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (img != null)
 		{
@@ -174,11 +174,11 @@ public class LogViewer extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		new ConsoleJob(Messages.LogViewer_7 + logName + Messages.LogViewer_8, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(String.format(Messages.LogViewer_OpenLogJobName, logName), this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LogViewer_9 + logName + Messages.LogViewer_10;
+				return String.format(Messages.LogViewer_OpenLogError, logName);
 			}
 
 			@Override
@@ -378,7 +378,7 @@ public class LogViewer extends ViewPart
 			}
 		};
 
-		actionGetMoreData = new Action(Messages.LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-1$
+		actionGetMoreData = new Action(Messages.LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{

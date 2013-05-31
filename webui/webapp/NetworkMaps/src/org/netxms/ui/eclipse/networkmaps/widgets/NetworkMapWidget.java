@@ -41,8 +41,6 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
  */
 public class NetworkMapWidget extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	protected static final int LAYOUT_SPRING = 0;
 	protected static final int LAYOUT_RADIAL = 1;
 	protected static final int LAYOUT_HTREE = 2;
@@ -112,8 +110,6 @@ public class NetworkMapWidget extends Composite
 			case LAYOUT_SPARSE_VTREE:
 				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				viewer.setComparator(new ViewerComparator() {
-					private static final long serialVersionUID = 1L;
-
 					@Override
 					public int compare(Viewer viewer, Object e1, Object e2)
 					{

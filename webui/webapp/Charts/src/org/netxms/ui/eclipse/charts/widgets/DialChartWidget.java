@@ -53,8 +53,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class DialChartWidget extends GenericChart implements DialChart, PaintListener, DisposeListener
 {
-	private static final long serialVersionUID = 1L;
-	
 	private static final int OUTER_MARGIN_WIDTH = 5;
 	private static final int OUTER_MARGIN_HEIGHT = 5;
 	private static final int INNER_MARGIN_WIDTH = 5;
@@ -96,8 +94,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		addPaintListener(this);
 		addDisposeListener(this);
 		addControlListener(new ControlListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void controlResized(ControlEvent e)
 			{
@@ -118,11 +114,11 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	{
 		scaleFonts = new Font[16];
 		for(int i = 0; i < scaleFonts.length; i++)
-			scaleFonts[i] = new Font(getDisplay(), "Verdana", i + 6, SWT.NORMAL);
+			scaleFonts[i] = new Font(getDisplay(), "Verdana", i + 6, SWT.NORMAL); //$NON-NLS-1$
 
 		valueFonts = new Font[16];
 		for(int i = 0; i < valueFonts.length; i++)
-			valueFonts[i] = new Font(getDisplay(), "Verdana", i + 6, SWT.BOLD);
+			valueFonts[i] = new Font(getDisplay(), "Verdana", i + 6, SWT.BOLD); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -392,7 +388,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
 		if (legendVisible && !legendInside)
 		{
-			rect.height -= gc.textExtent("MMM").y - 4;
+			rect.height -= gc.textExtent("MMM").y - 4; //$NON-NLS-1$
 		}
 		if (rect.height > rect.width)
 		{
@@ -412,7 +408,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		
 		int cx = rect.x + rect.width / 2 + 1;
 		int cy = rect.y + rect.height / 2 + 1;
-		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
 		gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
 		
 		// Draw zones
@@ -424,7 +420,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		startAngle = drawZone(gc, rect, cx, cy, startAngle, rightRedZone, maxValue, angleValue, RED_ZONE_COLOR);
 		
 		// Draw center part and border
-		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
 		gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_SCALE, getDisplay()));
 		gc.fillArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, 0, 360);
 		gc.setLineWidth(2);
@@ -432,13 +428,13 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		gc.setLineWidth(1);
 		
 		// Draw scale
-		gc.setForeground(getColorFromPreferences("Chart.Axis.X.Color"));
+		gc.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
 		int textOffset = ((rect.width / 2) * SCALE_OFFSET / 200);
 		double arcLength = (outerRadius - scaleOuterOffset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
 		int step = (arcLength >= 200) ? 27 : 54;
 		double valueStep = Math.abs((maxValue - minValue) / ((arcLength >= 200) ? 10 : 20)); 
 		int textWidth = (int)(Math.sqrt((outerRadius - scaleOuterOffset) * (outerRadius - scaleOuterOffset) / 2) * 0.7);
-		final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", textWidth, outerRadius - scaleOuterOffset);
+		final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", textWidth, outerRadius - scaleOuterOffset); //$NON-NLS-1$
 		gc.setFont(markFont);
 		for(int i = 225; i >= -45; i -= step)
 		{
@@ -571,7 +567,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		double absValue = Math.abs(value);
 		if (absValue >= 10000000000L)
 		{
-			return Long.toString(Math.round(value / 1000000000)) + "G";
+			return Long.toString(Math.round(value / 1000000000)) + Messages.DialChartWidget_G;
 		}
 		else if (absValue >= 1000000000)
 		{
@@ -579,7 +575,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue >= 10000000)
 		{
-			return Long.toString(Math.round(value / 1000000)) + "M";
+			return Long.toString(Math.round(value / 1000000)) + Messages.DialChartWidget_M;
 		}
 		else if (absValue >= 1000000)
 		{
@@ -587,7 +583,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue >= 10000)
 		{
-			return Long.toString(Math.round(value / 1000)) + "K";
+			return Long.toString(Math.round(value / 1000)) + Messages.DialChartWidget_K;
 		}
 		else if (absValue >= 1000)
 		{
@@ -599,19 +595,19 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue == 0)
 		{
-			return "0";
+			return "0"; //$NON-NLS-1$
 		}
 		else
 		{
 			if (step < 0.00001)
 				return Double.toString(value);
 			if (step < 0.0001)
-				return new DecimalFormat("#.#####").format(value);
+				return new DecimalFormat("#.#####").format(value); //$NON-NLS-1$
 			if (step < 0.001)
-				return new DecimalFormat("#.####").format(value);
+				return new DecimalFormat("#.####").format(value); //$NON-NLS-1$
 			if (step < 0.01)
-				return new DecimalFormat("#.###").format(value);
-			return new DecimalFormat("#.##").format(value);
+				return new DecimalFormat("#.###").format(value); //$NON-NLS-1$
+			return new DecimalFormat("#.##").format(value); //$NON-NLS-1$
 		}
 	}
 

@@ -108,6 +108,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		return super.close();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -139,6 +142,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		return dialogArea;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+	 */
 	@Override
 	protected void cancelPressed()
 	{
@@ -197,6 +203,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		getButton(IDialogConstants.OK_ID).setEnabled(false);
 	}
 
+	/**
+	 * 
+	 */
 	private void refreshImages()
 	{
 		final ImageProvider provider = ImageProvider.getInstance();

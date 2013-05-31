@@ -31,8 +31,6 @@ import org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor;
  */
 public class ObjectToolsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final String[] toolTypes = { 
 		"Internal", 
 		"Action", 

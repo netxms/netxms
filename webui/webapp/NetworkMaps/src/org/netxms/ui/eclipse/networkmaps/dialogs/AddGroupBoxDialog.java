@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -38,8 +39,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AddGroupBoxDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final RGB DEFAULT_COLOR = new RGB(64, 105, 156);
 	
 	private String title;
@@ -68,7 +67,7 @@ public class AddGroupBoxDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Group Box");
+		newShell.setText(Messages.AddGroupBoxDialog_DialogTitle);
 	}
 
 	/* (non-Javadoc)
@@ -87,7 +86,7 @@ public class AddGroupBoxDialog extends Dialog
 		
 		/* title */
 		textTitle = new LabeledText(dialogArea, SWT.NONE);
-		textTitle.setLabel("Title");
+		textTitle.setLabel(Messages.AddGroupBoxDialog_Title);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -117,12 +116,12 @@ public class AddGroupBoxDialog extends Dialog
 				return spinner;
 			}
 		};
-		spinnerWidth = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, "Width", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		spinnerWidth = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, Messages.AddGroupBoxDialog_Width, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerWidth.setSelection(250);
-		spinnerHeight = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, "Height", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		spinnerHeight = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, Messages.AddGroupBoxDialog_Height, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerHeight.setSelection(100);
 		
-		colorSelector = WidgetHelper.createLabeledColorSelector(attrArea, "Color", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		colorSelector = WidgetHelper.createLabeledColorSelector(attrArea, Messages.AddGroupBoxDialog_Color, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		colorSelector.setColorValue(DEFAULT_COLOR);
 		
 		return dialogArea;

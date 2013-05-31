@@ -170,7 +170,7 @@ public class ResourceFigure extends Figure
 			case NetworkMapResource.CLUSTER_RESOURCE:
 				return ((ClusterResource)element.getData()).getName();
 			default:
-				return "";
+				return ""; //$NON-NLS-1$
 		}
 	}
 	

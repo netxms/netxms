@@ -56,8 +56,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Columns extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private ObjectToolDetails objectTool;
 	private List<ObjectToolTableColumn> columns = new ArrayList<ObjectToolTableColumn>();
 	private TableViewer viewer;
@@ -135,8 +133,6 @@ public class Columns extends PropertyPage
       buttonAdd = new Button(buttons, SWT.PUSH);
       buttonAdd.setText("&Add...");
       buttonAdd.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -156,8 +152,6 @@ public class Columns extends PropertyPage
       buttonEdit = new Button(buttons, SWT.PUSH);
       buttonEdit.setText("&Edit...");
       buttonEdit.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -177,8 +171,6 @@ public class Columns extends PropertyPage
       buttonRemove = new Button(buttons, SWT.PUSH);
       buttonRemove.setText("&Delete");
       buttonRemove.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

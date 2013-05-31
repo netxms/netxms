@@ -142,6 +142,9 @@ public class ImageProvider
 		return image;
 	}
 
+	/**
+	 * @param guid
+	 */
 	private void loadImageFromServer(final UUID guid)
 	{
 		LibraryImage libraryImage;
@@ -157,16 +160,19 @@ public class ImageProvider
 			}
 			catch(SWTException e)
 			{
-				Activator.logError(Messages.ImageProvider_DecodeError, e);
+				Activator.logError("Cannot decode image", e);
 				cache.put(guid, missingImage);
 			}
 		}
 		catch(Exception e)
 		{
-			Activator.logError(Messages.ImageProvider_ReadError, e);
+			Activator.logError("Cannot retrive image from server", e);
 		}
 	}
 
+	/**
+	 * @param guid
+	 */
 	private void notifySubscribers(final UUID guid)
 	{
 		for(final ImageUpdateListener listener : updateListeners)

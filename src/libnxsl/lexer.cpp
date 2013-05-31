@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,11 +24,9 @@
 #include "libnxsl.h"
 #include "parser.tab.hpp"
 
-
-//
-// Constructor for our lexer class
-//
-
+/**
+ * Constructor for our lexer class
+ */
 NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
 {
 #ifdef UNICODE
@@ -43,21 +41,17 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
    m_bErrorState = FALSE;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Lexer::~NXSL_Lexer()
 {
    safe_free(m_pszSourceCode);
 }
 
-
-//
-// Alternative input method
-//
-
+/**
+ * Alternative input method
+ */
 int NXSL_Lexer::lexerInput(char *pBuffer, int nMaxSize)
 {
    int nBytes;

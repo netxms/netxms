@@ -33,9 +33,9 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -49,7 +49,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 public class ObjectTooltip extends Figure
 {
 	private NodeLastValuesFigure lastValuesFigure = null;
-	
+
 	/**
 	 * @param object
 	 */
@@ -59,13 +59,13 @@ public class ObjectTooltip extends Figure
 		GridLayout layout = new GridLayout(2, false);
 		layout.horizontalSpacing = 10;
 		setLayoutManager(layout);
-		
+
 		Label title = new Label();
 		title.setIcon(labelProvider.getWorkbenchIcon(object));
 		title.setText(object.getObjectName());
 		title.setFont(JFaceResources.getBannerFont());
 		add(title);
-		
+
 		Label status = new Label();
 		status.setIcon(StatusDisplayInfo.getStatusImage(object.getStatus()));
 		status.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
@@ -84,17 +84,17 @@ public class ObjectTooltip extends Figure
 				sb.append(mac.toString());
 				sb.append(')');
 			}
-			
+
 			Label iface = new Label();
 			iface.setIcon(SharedIcons.IMG_IP_ADDRESS);
 			iface.setText(sb.toString());
 			add(iface);
-			
+
 			gd = new GridData();
 			gd.horizontalSpan = 2;
 			setConstraint(iface, gd);
 		}
-		
+
 		if (object instanceof Node)
 		{
 			DciValue[] values = labelProvider.getNodeLastValues(object.getObjectId());
@@ -108,10 +108,10 @@ public class ObjectTooltip extends Figure
 				setConstraint(lastValuesFigure, gd);
 			}
 		}
-		
+
 		if (object instanceof Container)
 			addStatusChart(object, labelProvider);
-		
+
 		if (object instanceof AccessPoint)
 		{
 			StringBuilder sb = new StringBuilder(((AccessPoint)object).getModel());
@@ -121,7 +121,7 @@ public class ObjectTooltip extends Figure
 				sb.append('\n');
 				sb.append(mac.toString());
 			}
-			
+
 			for(RadioInterface rif : ((AccessPoint)object).getRadios())
 			{
 				sb.append("\nRadio ");
@@ -134,16 +134,16 @@ public class ObjectTooltip extends Figure
 				sb.append(rif.getPowerMW());
 				sb.append(" mW");
 			}
-			
+
 			Label info = new Label();
 			info.setText(sb.toString());
 			add(info);
-			
+
 			gd = new GridData();
 			gd.horizontalSpan = 2;
 			setConstraint(info, gd);
 		}
-		
+
 		if (!object.getComments().isEmpty())
 		{
 			FlowPage page = new FlowPage();
@@ -151,13 +151,13 @@ public class ObjectTooltip extends Figure
 			gd = new GridData();
 			gd.horizontalSpan = 2;
 			setConstraint(page, gd);
-			
+
 			TextFlow text = new TextFlow();
 			text.setText("\n" + object.getComments());
 			page.add(text);
 		}
 	}
-	
+
 	/**
 	 * Status chart
 	 */
@@ -186,7 +186,8 @@ public class ObjectTooltip extends Figure
 
 		for(int i = 0; i <= Severity.UNKNOWN; i++)
 		{
-			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i)), objectCount[i]);
+			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i)),
+					objectCount[i]);
 			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
 		}
 		chart.initializationComplete();

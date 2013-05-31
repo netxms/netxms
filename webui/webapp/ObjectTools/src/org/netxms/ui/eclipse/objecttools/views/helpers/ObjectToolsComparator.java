@@ -31,8 +31,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ObjectToolsComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -41,7 +39,7 @@ public class ObjectToolsComparator extends ViewerComparator
 	{
 		ObjectTool tool1 = (ObjectTool)e1;
 		ObjectTool tool2 = (ObjectTool)e2;
-		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID");
+		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 
 		int result;
 		switch(column)

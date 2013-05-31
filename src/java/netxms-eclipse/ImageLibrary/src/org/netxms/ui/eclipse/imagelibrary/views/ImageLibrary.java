@@ -27,7 +27,6 @@ import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
@@ -77,12 +76,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 
 	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets
-	 * .Composite)
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(final Composite parent)
@@ -110,9 +105,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		createPopupMenu();
 		contributeToActionBars();
 
-		gallery.addMenuDetectListener(new MenuDetectListener()
-		{
-
+		gallery.addMenuDetectListener(new MenuDetectListener() {
 			@Override
 			public void menuDetected(MenuDetectEvent e)
 			{
@@ -140,9 +133,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -155,8 +146,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void createActions()
 	{
-		actionNew = new Action(Messages.ImageLibrary_ActionUpload)
-		{
+		actionNew = new Action(Messages.ImageLibrary_ActionUpload) {
 			@Override
 			public void run()
 			{
@@ -220,7 +210,6 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				}
 			}
 		};
-		actionRefresh.setImageDescriptor(SharedIcons.REFRESH);
 
 		actionZoomIn = new Action(Messages.ImageLibrary_ActionZoomIn) {
 			@Override
@@ -236,8 +225,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			}
 		};
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
-		actionZoomOut = new Action(Messages.ImageLibrary_ActionZoomOut)
-		{
+		actionZoomOut = new Action(Messages.ImageLibrary_ActionZoomOut) {
 			@Override
 			public void run()
 			{
@@ -263,8 +251,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	{
 		final LibraryImage image = (LibraryImage)galleryItem.getData();
 
-		new ConsoleJob(Messages.ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob(Messages.ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -292,16 +279,15 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					image.setCategory(category);
 				}
 
-				session.modifyImage(image, new ProgressListener()
-				{
+				session.modifyImage(image, new ProgressListener() {
 					private long prevDone = 0;
-
+					
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
 						monitor.beginTask(Messages.ImageLibrary_UpdateImage, (int)workTotal);
 					}
-
+					
 					@Override
 					public void markProgress(long workDone)
 					{
@@ -332,8 +318,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-		new ConsoleJob(Messages.ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob(Messages.ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -357,16 +342,15 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 						stream.close();
 				}
 
-				session.createImage(image, new ProgressListener()
-				{
+				session.createImage(image, new ProgressListener() {
 					private long prevDone = 0;
-
+					
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
 						monitor.beginTask(Messages.ImageLibrary_UploadImage, (int)workTotal);
 					}
-
+					
 					@Override
 					public void markProgress(long workDone)
 					{
@@ -430,8 +414,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	{
 		MenuManager menuManager = new MenuManager();
 		menuManager.setRemoveAllWhenShown(true);
-		menuManager.addMenuListener(new IMenuListener()
-		{
+		menuManager.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager manager)
 			{
 				fillContextMenu(manager);
@@ -493,8 +476,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		new ConsoleJob(Messages.ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob(Messages.ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -566,7 +548,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					final ByteArrayInputStream stream = new ByteArrayInputStream(binaryData);
 					try
 					{
-						imageItem.setImage(new Image(Display.getDefault(), stream));
+						imageItem.setImage(new Image(getSite().getShell().getDisplay(), stream));
 					}
 					catch(SWTException e)
 					{

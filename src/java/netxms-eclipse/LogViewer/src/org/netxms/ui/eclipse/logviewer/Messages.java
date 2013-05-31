@@ -44,27 +44,19 @@ public class Messages extends NLS
 	public static String LogLabelProvider_Outstanding;
 	public static String LogLabelProvider_Resolved;
 	public static String LogLabelProvider_Terminated;
-	public static String LogViewer_10;
-	public static String LogViewer_2;
-	public static String LogViewer_7;
-	public static String LogViewer_8;
-	public static String LogViewer_9;
 	public static String LogViewer_ActionClearFilter;
 	public static String LogViewer_ActionCopy;
 	public static String LogViewer_ActionExec;
 	public static String LogViewer_ActionGetMoreData;
 	public static String LogViewer_ActionShowFilter;
-	public static String LogViewer_AlarmLog;
-	public static String LogViewer_AuditLog;
-	public static String LogViewer_EventLog;
 	public static String LogViewer_GetDataJob;
+	public static String LogViewer_OpenLogError;
+	public static String LogViewer_OpenLogJobName;
 	public static String LogViewer_QueryError;
 	public static String LogViewer_QueryJob;
 	public static String LogViewer_QueryJobError;
 	public static String LogViewer_RefreshError;
 	public static String LogViewer_RefreshJob;
-	public static String LogViewer_SnmpTrapLog;
-	public static String LogViewer_syslog;
 	public static String ObjectConditionEditor_Is;
 	public static String ObjectConditionEditor_IsNot;
 	public static String ObjectConditionEditor_None;
@@ -105,6 +97,10 @@ public class Messages extends NLS
 	{
 	}
 
+	/**
+	 * This is intentional mix between old and new approach. getString
+	 * used to read log display name based on log name. 
+	 */
 	public static String getString(String key)
 	{
 		try

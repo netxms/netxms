@@ -124,9 +124,9 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		ChartWithAxes chart = ChartWithAxesImpl.create();
 		chart.setDimension(is3DModeEnabled() ? ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL : ChartDimension.TWO_DIMENSIONAL_LITERAL);
 		chart.setTransposed(transposed);
-		chart.getBlock().setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+		chart.getBlock().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
+		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
+		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
 
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
@@ -140,7 +140,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.getLegend().setItemType(LegendItemType.CATEGORIES_LITERAL);
 		chart.getLegend().setVisible(isLegendVisible());
 		chart.getLegend().setPosition(positionFromInt(legendPosition));
-		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
 		chart.getLegend().getText().getFont().setName(CHART_FONT_NAME);
 		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE_LEGEND);
 		chart.getLegend().getText().getFont().setBold(false);
@@ -154,7 +154,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		yAxis = chart.getPrimaryOrthogonalAxis(xAxis);
 		yAxis.getTitle().setVisible(false);
 		yAxis.getScale().setMin(NumberDataElementImpl.create(0));
-		yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Grid.Y.Color"), LineStyle.DOTTED_LITERAL, 0));
+		yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Grid.Y.Color"), LineStyle.DOTTED_LITERAL, 0)); //$NON-NLS-1$
 		yAxis.setType(useLogScale ? AxisType.LOGARITHMIC_LITERAL : AxisType.LINEAR_LITERAL);
 		yAxis.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
 		yAxis.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
@@ -188,10 +188,10 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
 		chart.setDimension(is3DModeEnabled() ? ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL : ChartDimension.TWO_DIMENSIONAL_LITERAL);
-		chart.getBlock().setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getBlock().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
+		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
 		// For chart without axes, we wish to paint plot area with same background color as other chart parts
-		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
 
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
@@ -205,7 +205,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.getLegend().setItemType(LegendItemType.CATEGORIES_LITERAL);
 		chart.getLegend().setVisible(isLegendVisible());
 		chart.getLegend().setPosition(positionFromInt(legendPosition));
-		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
 		chart.getLegend().getText().getFont().setName(CHART_FONT_NAME);
 		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE_LEGEND);
 		chart.getLegend().getText().getFont().setBold(false);

@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
@@ -74,7 +75,6 @@ import org.swtchart.Range;
  */
 public class LineChart extends Chart implements HistoricalDataChart
 {
-	private static final long serialVersionUID = 1L;
 	private static final int MAX_ZOOM_LEVEL = 16;
 	
 	private List<GraphItem> items = new ArrayList<GraphItem>();
@@ -182,8 +182,6 @@ public class LineChart extends Chart implements HistoricalDataChart
 		}
 		
 		zoomMouseListener = new MouseListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -205,8 +203,6 @@ public class LineChart extends Chart implements HistoricalDataChart
 		};
 		
 		zoomPaintListener = new PaintListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -218,8 +214,6 @@ public class LineChart extends Chart implements HistoricalDataChart
 		setZoomEnabled(zoomEnabled);
 		
 		((IPlotArea)plotArea).addCustomPaintListener(new ICustomPaintListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -235,8 +229,6 @@ public class LineChart extends Chart implements HistoricalDataChart
 		});
 		
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -261,8 +253,6 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		final Composite plotArea = getPlotArea();
 		moveListener = new MouseMoveListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void mouseMove(MouseEvent e)
 			{

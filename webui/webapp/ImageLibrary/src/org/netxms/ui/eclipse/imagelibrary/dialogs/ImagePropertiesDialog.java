@@ -15,13 +15,12 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public class ImagePropertiesDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private String name;
 	private String category;
 	private String fileName;
@@ -77,15 +76,13 @@ public class ImagePropertiesDialog extends Dialog
 
 				final Button button = new Button(composite, SWT.NONE);
 				button.addSelectionListener(new SelectionListener() {
-					private static final long serialVersionUID = 1L;
-
 					@Override
 					public void widgetSelected(SelectionEvent e)
 					{
 						FileDialog dialog = new FileDialog(shell, SWT.OPEN);
-						dialog.setText("Select Image");
-						dialog.setFilterNames(new String[] { "Image Files (*.jpg;*.jpeg;*.png;*.bmp)", "All Files (*.*)" });
-						dialog.setFilterExtensions(new String[] { "*.jpg;*.jpeg;*.png;*.bmp", "*.*" });
+						dialog.setText(Messages.ImagePropertiesDialog_Title);
+						dialog.setFilterNames(new String[] { Messages.ImagePropertiesDialog_ImageFiles, Messages.ImagePropertiesDialog_AllFiles });
+						dialog.setFilterExtensions(new String[] { "*.jpg;*.jpeg;*.png;*.bmp", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
 						final String selectedFile = dialog.open();
 						if (selectedFile != null)
 						{
@@ -111,16 +108,16 @@ public class ImagePropertiesDialog extends Dialog
 						widgetSelected(e);
 					}
 				});
-				button.setText("...");
+				button.setText("..."); //$NON-NLS-1$
 				return composite;
 			}
-		}, "Image File", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		}, Messages.ImagePropertiesDialog_ImageFile, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
-		nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Image name",
-				name == null ? "" : name, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.ImagePropertiesDialog_ImageName,
+				name == null ? "" : name, WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		nameInputField.getShell().setMinimumSize(300, 0);
 
-		categoryCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.BORDER, "Category",
+		categoryCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.BORDER, Messages.ImagePropertiesDialog_Category,
 				WidgetHelper.DEFAULT_LAYOUT_DATA);
 		categoryCombo.getShell().setMinimumSize(300, 0);
 
@@ -157,7 +154,7 @@ public class ImagePropertiesDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Upload New Image");
+		newShell.setText(Messages.ImagePropertiesDialog_Upload);
 	}
 
 	public void setDefaultCategory(String category)

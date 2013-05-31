@@ -54,8 +54,6 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
  */
 public class AccessControl extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-	
 	private ObjectToolDetails objectTool;
 	private Set<AbstractUserObject> acl = new HashSet<AbstractUserObject>();
 	private TableViewer viewer;
@@ -128,8 +126,6 @@ public class AccessControl extends PropertyPage
       buttonAdd = new Button(buttons, SWT.PUSH);
       buttonAdd.setText("Add...");
       buttonAdd.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -149,8 +145,6 @@ public class AccessControl extends PropertyPage
       buttonRemove = new Button(buttons, SWT.PUSH);
       buttonRemove.setText("Delete");
       buttonRemove.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

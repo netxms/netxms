@@ -40,7 +40,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for log viewer
- *
  */
 public class LogLabelProvider implements ITableLabelProvider
 {

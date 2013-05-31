@@ -13,8 +13,6 @@ import org.netxms.client.Table;
  */
 public class TableContentProvider implements IStructuredContentProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private Table table = null;
 	
 	/* (non-Javadoc)

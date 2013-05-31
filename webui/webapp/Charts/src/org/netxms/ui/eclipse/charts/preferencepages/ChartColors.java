@@ -36,8 +36,6 @@ import org.netxms.ui.eclipse.charts.Messages;
  */
 public class ChartColors extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
-	private static final long serialVersionUID = 1L;
-
 	private Group lineColors;
 	private Label filler;
 	

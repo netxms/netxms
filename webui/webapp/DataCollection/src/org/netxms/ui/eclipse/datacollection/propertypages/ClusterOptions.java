@@ -120,7 +120,7 @@ public class ClusterOptions extends PropertyPage
       if (editor.getObject() instanceof DataCollectionItem)
       {
       	Group aggregationGroup = new Group(dialogArea, SWT.NONE);
-      	aggregationGroup.setText("Data aggregation");
+      	aggregationGroup.setText(Messages.ClusterOptions_DataAggregation);
       	aggregationGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
       	
       	layout = new GridLayout();
@@ -129,7 +129,7 @@ public class ClusterOptions extends PropertyPage
    		aggregationGroup.setLayout(layout);
       	
       	checkAggregate = new Button(aggregationGroup, SWT.CHECK);
-      	checkAggregate.setText("&Aggregate values from cluster nodes");
+      	checkAggregate.setText(Messages.ClusterOptions_AggregateFromNodes);
       	checkAggregate.setSelection(editor.getObjectAsItem().isAggregateOnCluster());
       	checkAggregate.addSelectionListener(new SelectionListener() {
 				@Override
@@ -145,11 +145,11 @@ public class ClusterOptions extends PropertyPage
 				}
 			});
       	
-      	aggregationFunction = WidgetHelper.createLabeledCombo(aggregationGroup, SWT.BORDER | SWT.READ_ONLY, "Aggregation function", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      	aggregationFunction.add("Total");
-      	aggregationFunction.add("Average");
-      	aggregationFunction.add("Min");
-      	aggregationFunction.add("Max");
+      	aggregationFunction = WidgetHelper.createLabeledCombo(aggregationGroup, SWT.BORDER | SWT.READ_ONLY, Messages.ClusterOptions_AggrFunction, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      	aggregationFunction.add(Messages.ClusterOptions_Total);
+      	aggregationFunction.add(Messages.ClusterOptions_Average);
+      	aggregationFunction.add(Messages.ClusterOptions_Min);
+      	aggregationFunction.add(Messages.ClusterOptions_Max);
       	aggregationFunction.select(editor.getObjectAsItem().getAggregationFunction());
       	aggregationFunction.setEnabled(editor.getObjectAsItem().isAggregateOnCluster());
       }

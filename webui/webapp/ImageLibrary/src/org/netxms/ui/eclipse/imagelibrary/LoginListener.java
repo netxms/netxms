@@ -20,13 +20,9 @@ public class LoginListener implements ConsoleLoginListener
 {
 	private final class ImageLibraryListener implements SessionListener
 	{
-		private final Display display;
-
-		/**
-		 * @param display
-		 * @param session
-		 */
-		private ImageLibraryListener(Display display)
+		private Display display;
+		
+		private ImageLibraryListener(Display display, NXCSession session)
 		{
 			this.display = display;
 		}
@@ -50,14 +46,14 @@ public class LoginListener implements ConsoleLoginListener
 	public void afterLogin(final NXCSession session, final Display display)
 	{
 		ImageProvider.createInstance(display, session);
-		Job job = new Job("Initialize image library") {
+		Job job = new Job(Messages.LoginListener_JobName) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
 				try
 				{
 					ImageProvider.getInstance(display).syncMetaData();
-					session.addListener(new ImageLibraryListener(display));
+					session.addListener(new ImageLibraryListener(display, session));
 				}
 				catch(Exception e)
 				{

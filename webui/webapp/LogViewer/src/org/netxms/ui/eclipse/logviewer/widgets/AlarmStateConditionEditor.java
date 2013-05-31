@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 
 /**
@@ -32,8 +33,7 @@ import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
  */
 public class AlarmStateConditionEditor extends ConditionEditor
 {
-	private static final long serialVersionUID = 1L;
-	private static final String[] OPERATIONS = { "IS", "IS NOT" };
+	private static final String[] OPERATIONS = { Messages.AlarmStateConditionEditor_Is, Messages.AlarmStateConditionEditor_IsNot };
 	
 	private Combo state;
 	

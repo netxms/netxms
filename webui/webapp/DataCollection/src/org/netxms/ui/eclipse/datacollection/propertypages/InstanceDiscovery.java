@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
@@ -41,7 +42,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class InstanceDiscovery extends PropertyPage
 {
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$
+	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$ //$NON-NLS-2$
 	
 	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
@@ -66,13 +67,13 @@ public class InstanceDiscovery extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      discoveryMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Instance discovery method",
+      discoveryMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.InstanceDiscovery_Method,
                                                          WidgetHelper.DEFAULT_LAYOUT_DATA);
-      discoveryMethod.add("None");
-      discoveryMethod.add("Agent List");
-      discoveryMethod.add("Agent Table");
-      discoveryMethod.add("SNMP Walk - Values");
-      discoveryMethod.add("SNMP Walk - OIDs");
+      discoveryMethod.add(Messages.InstanceDiscovery_None);
+      discoveryMethod.add(Messages.InstanceDiscovery_AgentList);
+      discoveryMethod.add(Messages.InstanceDiscovery_AgentTable);
+      discoveryMethod.add(Messages.InstanceDiscovery_SnmpWalkValues);
+      discoveryMethod.add(Messages.InstanceDiscovery_SnmpWalkOids);
       discoveryMethod.select(dci.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
@@ -115,7 +116,7 @@ public class InstanceDiscovery extends PropertyPage
 			}
       };
       filterScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,
-                                                                             factory, "Instance discovery filter script", gd);
+                                                                             factory, Messages.InstanceDiscovery_FilterScript, gd);
       filterScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       filterScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();
@@ -141,16 +142,16 @@ public class InstanceDiscovery extends PropertyPage
 		switch(method)
 		{
 			case DataCollectionItem.IDM_NONE:
-				return "Discovery data";
+				return Messages.InstanceDiscovery_DiscoveryData;
 			case DataCollectionItem.IDM_AGENT_LIST:
-				return "List name";
+				return Messages.InstanceDiscovery_ListName;
 			case DataCollectionItem.IDM_AGENT_TABLE:
-				return "List name";
+				return Messages.InstanceDiscovery_TableName;
 			case DataCollectionItem.IDM_SNMP_WALK_VALUES:
 			case DataCollectionItem.IDM_SNMP_WALK_OIDS:
-				return "Base SNMP OID";
+				return Messages.InstanceDiscovery_BaseOid;
 		}
-		return "";
+		return ""; //$NON-NLS-1$
 	}
 	
 	/**

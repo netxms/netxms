@@ -4,7 +4,6 @@
 package org.netxms.ui.eclipse.objecttools.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -20,6 +19,7 @@ import org.netxms.client.objecttools.ObjectToolTableColumn;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.snmp.dialogs.MibSelectionDialog;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -29,7 +29,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditColumnDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
 	private static final String[] formatNames = { "String", "Integer", "Float", "IP Address", "MAC Address", "Interface Index" };
 
 	private boolean create;
@@ -133,8 +132,6 @@ public class EditColumnDialog extends Dialog
 			gd.verticalAlignment = SWT.BOTTOM;
 			selectButton.setLayoutData(gd);
 			selectButton.addSelectionListener(new SelectionListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
@@ -185,7 +182,7 @@ public class EditColumnDialog extends Dialog
 			}
 			catch(NumberFormatException e)
 			{
-				MessageDialog.openWarning(getShell(), "Warning", "Please enter valid substring number");
+				MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid substring number");
 				return;
 			}
 		}

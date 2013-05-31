@@ -28,6 +28,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -72,7 +73,7 @@ public class SummaryTableFilter extends PropertyPage
 				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL);
 			}
       };
-      filter = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, "Filter script", gd);
+      filter = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, Messages.SummaryTableFilter_FilterScript, gd);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -97,7 +98,7 @@ public class SummaryTableFilter extends PropertyPage
 		table.setNodeFilter(filter.getText());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update DCI summary table configuration", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SummaryTableFilter_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -111,7 +112,7 @@ public class SummaryTableFilter extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update DCI summary table configuration";
+				return Messages.SummaryTableFilter_JobError;
 			}
 
 			/* (non-Javadoc)

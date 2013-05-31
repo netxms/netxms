@@ -39,6 +39,10 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 {
 	private UUID imageGuid = NXCommon.EMPTY_GUID;
 	
+	/**
+	 * @param parent
+	 * @param style
+	 */
 	public ImageSelector(Composite parent, int style)
 	{
 		super(parent, style, SHOW_CLEAR_BUTTON);

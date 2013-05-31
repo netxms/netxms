@@ -43,7 +43,6 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
  */
 public class UserConditionEditor extends ConditionEditor
 {
-	private static final long serialVersionUID = 1L;
 	private static final String[] OPERATIONS = { Messages.UserConditionEditor_Is, Messages.UserConditionEditor_IsNot };
 	private static final String EMPTY_SELECTION_TEXT = Messages.UserConditionEditor_None;
 	
@@ -62,8 +61,6 @@ public class UserConditionEditor extends ConditionEditor
 
 		labelProvider = new WorkbenchLabelProvider();
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

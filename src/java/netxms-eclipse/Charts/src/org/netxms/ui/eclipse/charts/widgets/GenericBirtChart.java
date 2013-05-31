@@ -202,9 +202,9 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 				generatedChartState = generator.build(deviceRenderer.getDisplayServer(), chart, bounds, null, null, null);
 				generator.render(deviceRenderer, generatedChartState);
 			}
-			catch(ChartException e)
+			catch(Exception e)
 			{
-				// TODO: add logging and/or user notification
+				/* TODO: add logging and/or user notification */
 				e.printStackTrace();
 			}
 			
@@ -324,6 +324,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	
 	/**
 	 * Get Position object from int constant
+	 * 
 	 * @param value
 	 * @return
 	 */

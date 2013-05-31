@@ -49,6 +49,7 @@ import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.SummaryTableComparator;
 import org.netxms.ui.eclipse.datacollection.views.helpers.SummaryTableLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -63,7 +64,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 @SuppressWarnings("restriction")
 public class SummaryTableManager extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.datacollection.views.SummaryTableManager";
+	public static final String ID = "org.netxms.ui.eclipse.datacollection.views.SummaryTableManager"; //$NON-NLS-1$
 	
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_MENU_PATH = 1;
@@ -85,7 +86,7 @@ public class SummaryTableManager extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "ID", "Menu Path", "Title" };
+		final String[] names = { Messages.SummaryTableManager_ID, Messages.SummaryTableManager_MenuPath, Messages.SummaryTableManager_Title };
 		final int[] widths = { 90, 250, 200 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MENU_PATH, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -181,7 +182,7 @@ public class SummaryTableManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI summary tables from server";
+				return Messages.SummaryTableManager_JobError;
 			}
 		}.start();
 	}
@@ -201,7 +202,7 @@ public class SummaryTableManager extends ViewPart
 		};
 
 		// create add action
-		actionCreate = new Action("&Create new table...", SharedIcons.ADD_OBJECT) {
+		actionCreate = new Action(Messages.SummaryTableManager_ActionNew, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -210,7 +211,7 @@ public class SummaryTableManager extends ViewPart
 		};
 
 		// create edit action
-		actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
+		actionEdit = new Action(Messages.SummaryTableManager_ActionEdit, SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
@@ -220,7 +221,7 @@ public class SummaryTableManager extends ViewPart
 		actionEdit.setEnabled(false);
 
 		// create delete action
-		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+		actionDelete = new Action(Messages.SummaryTableManager_ActionDelete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -294,11 +295,11 @@ public class SummaryTableManager extends ViewPart
 	 */
 	private void createSummaryTable()
 	{
-		DciSummaryTable t = new DciSummaryTable("", "");
+		DciSummaryTable t = new DciSummaryTable("", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, t);
 		if (dlg != null)
 		{
-			dlg.getShell().setText("Create DCI Summary Table");
+			dlg.getShell().setText(Messages.SummaryTableManager_TitleCreate);
 			dlg.open();
 			if (t.getId() != 0)
 			{
@@ -321,7 +322,7 @@ public class SummaryTableManager extends ViewPart
 			return;
 		
 		final DciSummaryTableDescriptor d = (DciSummaryTableDescriptor)selection.getFirstElement();
-		new ConsoleJob("Read DCI summary table config", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SummaryTableManager_ReadJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -331,7 +332,7 @@ public class SummaryTableManager extends ViewPart
 					public void run()
 					{
 						PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, t);
-						dlg.getShell().setText("Edit DCI Summary Table");
+						dlg.getShell().setText(Messages.SummaryTableManager_TitleEdit);
 						dlg.open();
 						d.updateFromTable(t);
 						viewer.update(d, null);
@@ -342,7 +343,7 @@ public class SummaryTableManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot read DCI summary table config";
+				return Messages.SummaryTableManager_ReadJobError;
 			}
 		}.start();
 	}
@@ -356,7 +357,7 @@ public class SummaryTableManager extends ViewPart
 		if (selection.size() == 0)
 			return;
 		
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Delete", "Selected DCI summary tables will be deleted. Are you really sure?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.SummaryTableManager_ConfirmDelete, Messages.SummaryTableManager_Confirmation))
 			return;
 	
 		final int[] idList = new int[selection.size()];
@@ -364,7 +365,7 @@ public class SummaryTableManager extends ViewPart
 		for(Object o : selection.toList())
 			idList[i++] = ((DciSummaryTableDescriptor)o).getId();
 		
-		new ConsoleJob("Delete DCI summary tables from server", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SummaryTableManager_DeleteJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -384,7 +385,7 @@ public class SummaryTableManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete DCI summary table";
+				return Messages.SummaryTableManager_DeleteJobError;
 			}
 		}.start();
 	}

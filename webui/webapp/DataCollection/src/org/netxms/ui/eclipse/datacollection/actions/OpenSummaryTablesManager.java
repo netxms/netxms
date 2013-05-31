@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.SummaryTableManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -64,7 +65,7 @@ public class OpenSummaryTablesManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open view: %s", e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenSummaryTablesManager_Error, String.format(Messages.OpenSummaryTablesManager_CannotOpenView, e.getLocalizedMessage()));
 			}
 		}
 	}

@@ -36,7 +36,6 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.
- *
  */
 public abstract class ConsoleJob extends Job
 {

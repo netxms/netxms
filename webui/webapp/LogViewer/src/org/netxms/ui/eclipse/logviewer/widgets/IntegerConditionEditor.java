@@ -27,14 +27,14 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.ui.eclipse.logviewer.Messages;
 
 /**
  * Condition editor for timestamp columns
  */
 public class IntegerConditionEditor extends ConditionEditor
 {
-	private static final long serialVersionUID = 1L;
-	private static final String[] OPERATIONS = { "EQUAL", "NOT EQUAL", "<", "<=", ">=", ">", "BETWEEN" };
+	private static final String[] OPERATIONS = { Messages.IntegerConditionEditor_Equal, Messages.IntegerConditionEditor_NotEqual, "<", "<=", ">=", ">", Messages.IntegerConditionEditor_Between };  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
 	private Text value1;
 	private Text value2;
@@ -79,13 +79,13 @@ public class IntegerConditionEditor extends ConditionEditor
 		gd.grabExcessHorizontalSpace = true;
 		group.setLayoutData(gd);
 
-		value1 = toolkit.createText(group, "0");
+		value1 = toolkit.createText(group, "0"); //$NON-NLS-1$
 		RowData rd = new RowData();
 		rd.width = 90;
 		value1.setLayoutData(rd);
-		andLabel = toolkit.createLabel(group, "  and  ");
+		andLabel = toolkit.createLabel(group, Messages.IntegerConditionEditor_And);
 		andLabel.setVisible(false);
-		value2 = toolkit.createText(group, "0");
+		value2 = toolkit.createText(group, "0"); //$NON-NLS-1$
 		rd = new RowData();
 		rd.width = 90;
 		value2.setLayoutData(rd);

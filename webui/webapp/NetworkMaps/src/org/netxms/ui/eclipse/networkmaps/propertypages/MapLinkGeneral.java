@@ -27,8 +27,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class MapLinkGeneral extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private LinkEditor object;
 	private LabeledText name;
 	private LabeledText connector1;
@@ -92,8 +90,6 @@ public class MapLinkGeneral extends PropertyPage
 		colorGroup.setLayoutData(gd);
 		
 		final SelectionListener listener = new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

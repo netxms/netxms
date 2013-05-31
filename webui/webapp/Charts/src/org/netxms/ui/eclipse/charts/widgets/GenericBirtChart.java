@@ -56,12 +56,10 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Abstract base class for all BIRT-based charts
- * 
+ *
  */
 public abstract class GenericBirtChart extends GenericChart implements PaintListener, ControlListener
 {
-	private static final long serialVersionUID = 1L;
-	
 	private Chart chart = null;
 	private boolean fullRepaint = true;
 	private IDeviceRenderer deviceRenderer = null;
@@ -71,25 +69,23 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	private ColorCache colors;
 	private Set<String> errors = new HashSet<String>(0);
 	private Image errorImage = null;
-
+	
 	/**
 	 * Create chart widget
 	 * 
-	 * @param parent
-	 *           parent widget
-	 * @param style
-	 *           widget style
+	 * @param parent parent widget
+	 * @param style widget style
 	 */
 	public GenericBirtChart(Composite parent, int style)
 	{
 		super(parent, style | SWT.NO_BACKGROUND);
-
+		
 		colors = new ColorCache(this);
 		
 		try
 		{
 			PlatformConfig config = new PlatformConfig();
-			config.setBIRTHome("");
+			config.setBIRTHome(""); //$NON-NLS-1$
 			final ChartEngine chartEngine = ChartEngine.instance(config);
 			deviceRenderer = chartEngine.getRenderer("dv.PNG");
 			generator = chartEngine.getGenerator();
@@ -99,14 +95,12 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			/* TODO: implement logging or error reporting */
 			e.printStackTrace();
 		}
-
+		
 		addPaintListener(this);
 		addControlListener(this);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#initializationComplete()
 	 */
 	@Override
@@ -116,7 +110,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		fullRepaint = true;
 		redraw();
 	}
-
+	
 	/**
 	 * Force chart recreation (for example, after chart type change).
 	 */
@@ -144,12 +138,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		return chart;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.ControlListener#controlMoved(org.eclipse.swt.events
-	 * .ControlEvent)
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.ControlListener#controlMoved(org.eclipse.swt.events.ControlEvent)
 	 */
 	@Override
 	public void controlMoved(ControlEvent arg0)
@@ -157,12 +147,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		fullRepaint = true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.ControlListener#controlResized(org.eclipse.swt.
-	 * events.ControlEvent)
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.ControlListener#controlResized(org.eclipse.swt.events.ControlEvent)
 	 */
 	@Override
 	public void controlResized(ControlEvent arg0)
@@ -170,19 +156,15 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		fullRepaint = true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events
-	 * .PaintEvent)
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
 	 */
 	@Override
 	public final void paintControl(PaintEvent event)
 	{
 		if (chart == null)
 			return;
-
+		
 		Rectangle clientArea = this.getClientArea();
 		if ((clientArea.width == 0) || (clientArea.height == 0))
 			return;
@@ -224,17 +206,15 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 				/* TODO: add logging and/or user notification */
 				e.printStackTrace();
 			}
-
+			
 			fullRepaint = false;
 		}
 
 		event.gc.drawImage(imgChart, clientArea.x, clientArea.y);
 		paintErrorIndicator(event.gc);
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
+	
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#refresh()
 	 */
 	@Override
@@ -242,7 +222,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	{
 		fullRepaint = true;
 		redraw();
-	}
+	}	
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#rebuild()
@@ -253,9 +233,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		recreateChart();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTitle(java.lang.String)
 	 */
 	@Override
@@ -269,9 +247,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendVisible(boolean)
 	 */
 	@Override
@@ -285,9 +261,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTitleVisible(boolean)
 	 */
 	@Override
@@ -298,9 +272,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			chart.getTitle().setVisible(visible);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#set3DModeEnabled(boolean)
 	 */
 	@Override
@@ -310,10 +282,9 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		if (chart != null)
 			recreateChart();
 	}
-
+	
 	/**
 	 * Get palette usable by BIRT
-	 * 
 	 * @return BIRT palette object
 	 */
 	protected Palette getBirtPalette()
@@ -324,11 +295,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		return birtPalette;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.charts.api.DataChart#setLogScaleEnabled(boolean)
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLogScaleEnabled(boolean)
 	 */
 	@Override
 	public void setLogScaleEnabled(boolean enabled)
@@ -343,9 +311,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 
 	/**
 	 * Create BIRT color definition object from preference string
-	 * 
-	 * @param name
-	 *           Preference name
+	 *  
+	 * @param name Preference name
 	 * @return color definition object
 	 */
 	protected ColorDefinition getColorFromPreferences(final String name)
@@ -353,7 +320,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		RGB rgb = PreferenceConverter.getColor(preferenceStore, name);
 		return ColorDefinitionImpl.create(rgb.red, rgb.green, rgb.blue);
 	}
-
+	
 	/**
 	 * Get Position object from int constant
 	 * 
@@ -376,11 +343,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		return Position.RIGHT_LITERAL;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.charts.widgets.GenericChart#setLegendPosition(int)
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.widgets.GenericChart#setLegendPosition(int)
 	 */
 	@Override
 	public void setLegendPosition(int position)
@@ -390,11 +354,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			recreateChart();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.charts.widgets.GenericChart#setTranslucent(boolean)
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.widgets.GenericChart#setTranslucent(boolean)
 	 */
 	@Override
 	public void setTranslucent(boolean translucent)

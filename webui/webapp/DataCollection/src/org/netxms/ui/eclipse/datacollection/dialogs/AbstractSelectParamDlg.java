@@ -93,7 +93,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(selectTables ? "Table Selection" : Messages.AbstractSelectParamDlg_Title);
+		newShell.setText(selectTables ? Messages.AbstractSelectParamDlg_TableSelection : Messages.AbstractSelectParamDlg_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		final String prefix = getConfigurationPrefix();
 		try
@@ -120,7 +120,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   dialogArea.setLayout(layout);
 	   
 	   Label label = new Label(dialogArea, SWT.NONE);
-	   label.setText(selectTables ? "Available tables" : Messages.AbstractSelectParamDlg_AvailableParameters);
+	   label.setText(selectTables ? Messages.AbstractSelectParamDlg_AvailTables : Messages.AbstractSelectParamDlg_AvailableParameters);
 	   
 	   filterText = new Text(dialogArea, SWT.BORDER);
 	   GridData gd = new GridData();
@@ -136,7 +136,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 			}
 	   });
 		
-		final String[] names = { Messages.AbstractSelectParamDlg_Name, selectTables ? "Instance Column" : Messages.AbstractSelectParamDlg_Type, Messages.AbstractSelectParamDlg_Description };
+		final String[] names = { Messages.AbstractSelectParamDlg_Name, selectTables ? Messages.AbstractSelectParamDlg_InstanceColumn : Messages.AbstractSelectParamDlg_Type, Messages.AbstractSelectParamDlg_Description };
 		final int[] widths = { 150, selectTables ? 150 : 100, 350 };
 	   viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.BORDER);
 	   WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), getConfigurationPrefix() + ".viewer"); //$NON-NLS-1$
@@ -248,7 +248,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	@Override
 	public String getInstanceColumn()
 	{
-		return selectTables ? ((AgentTable)selection).getInstanceColumn() : "";
+		return selectTables ? ((AgentTable)selection).getInstanceColumn() : ""; //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)

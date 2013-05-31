@@ -33,6 +33,7 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -42,9 +43,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectConditionEditor extends ConditionEditor
 {
-	private static final long serialVersionUID = 1L;
-	private static final String[] OPERATIONS = { "IS", "IS NOT", "WITHIN", "NOT WITHIN" };
-	private static final String EMPTY_SELECTION_TEXT = "<none>";
+	private static final String[] OPERATIONS = { Messages.ObjectConditionEditor_Is, Messages.ObjectConditionEditor_IsNot, Messages.ObjectConditionEditor_Within, Messages.ObjectConditionEditor_NotWithin };
+	private static final String EMPTY_SELECTION_TEXT = Messages.ObjectConditionEditor_None;
 	
 	private WorkbenchLabelProvider labelProvider;
 	private long objectId = 0;
@@ -61,8 +61,6 @@ public class ObjectConditionEditor extends ConditionEditor
 
 		labelProvider = new WorkbenchLabelProvider();
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

@@ -34,6 +34,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogColumn;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
@@ -42,8 +43,6 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 public class ColumnFilterEditor extends DashboardComposite
 {
-	private static final long serialVersionUID = 1L;
-
 	private FormToolkit toolkit;
 	private LogColumn column;
 	private FilterBuilder filterBuilder;
@@ -96,11 +95,9 @@ public class ColumnFilterEditor extends DashboardComposite
 		gd.grabExcessHorizontalSpace = true;
 		buttons.setLayoutData(gd);
 
-		final Button radioAnd = toolkit.createButton(buttons, "&AND condition", SWT.RADIO);
+		final Button radioAnd = toolkit.createButton(buttons, Messages.ColumnFilterEditor_AndCondition, SWT.RADIO);
 		radioAnd.setSelection(booleanOperation == ColumnFilter.AND);
 		radioAnd.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -114,11 +111,9 @@ public class ColumnFilterEditor extends DashboardComposite
 			}
 		});
 		
-		final Button radioOr = toolkit.createButton(buttons, "&OR condition", SWT.RADIO);
+		final Button radioOr = toolkit.createButton(buttons, Messages.ColumnFilterEditor_OrCondition, SWT.RADIO);
 		radioOr.setSelection(booleanOperation == ColumnFilter.OR);
 		radioOr.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -160,7 +155,7 @@ public class ColumnFilterEditor extends DashboardComposite
 	private void setBooleanOperation(int op)
 	{
 		booleanOperation = op;
-		final String opName = (op == ColumnFilter.AND) ? "AND" : "OR";
+		final String opName = (op == ColumnFilter.AND) ? Messages.ColumnFilterEditor_And : Messages.ColumnFilterEditor_Or;
 		for(int i = 1; i < conditions.size(); i++)
 		{
 			conditions.get(i).setLogicalOperation(opName);
@@ -179,7 +174,7 @@ public class ColumnFilterEditor extends DashboardComposite
 			{
 				conditions.remove(ce);
 				if (conditions.size() > 0)
-					conditions.get(0).setLogicalOperation("");
+					conditions.get(0).setLogicalOperation(""); //$NON-NLS-1$
 				filterBuilder.updateLayout();
 			}
 		});
@@ -190,7 +185,7 @@ public class ColumnFilterEditor extends DashboardComposite
 		ce.setLayoutData(gd);
 		conditions.add(ce);
 		if (conditions.size() > 1)
-			ce.setLogicalOperation((booleanOperation == ColumnFilter.AND) ? "AND" : "OR");
+			ce.setLogicalOperation((booleanOperation == ColumnFilter.AND) ? Messages.ColumnFilterEditor_And : Messages.ColumnFilterEditor_Or);
 
 		filterBuilder.updateLayout();
 	}

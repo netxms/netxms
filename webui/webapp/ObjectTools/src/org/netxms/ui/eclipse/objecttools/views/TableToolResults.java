@@ -114,8 +114,6 @@ public class TableToolResults extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -243,8 +241,6 @@ public class TableToolResults extends ViewPart
 			viewer.createColumns(names, widths, 0, SWT.UP);
 			WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableToolResults." + Long.toString(tool.getId()));
 			viewer.getTable().addDisposeListener(new DisposeListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void widgetDisposed(DisposeEvent e)
 				{
