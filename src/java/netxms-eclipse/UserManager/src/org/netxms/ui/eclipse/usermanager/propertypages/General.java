@@ -30,6 +30,7 @@ import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -73,30 +74,30 @@ public class General extends PropertyPage
       dialogArea.setLayout(layout);
       
       // Object ID
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Object ID",
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.General_ObjectID,
                                      Long.toString(object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object name
       initialName = new String(object.getName());
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Login name",
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.General_LoginName,
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Full name
       if (object instanceof User)
       {
 	      initialFullName = new String(((User)object).getFullName());
-	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Full name",
+	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.General_FullName,
 	      		                                        initialFullName, WidgetHelper.DEFAULT_LAYOUT_DATA);
       }
       else
       {
-      	initialFullName = "";
+      	initialFullName = ""; //$NON-NLS-1$
       }
       
 		// Description
       initialDescription = new String(object.getDescription());
       textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-                                                       "Description", initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
+                                                       Messages.General_Description, initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		return dialogArea;
 	}
@@ -110,7 +111,7 @@ public class General extends PropertyPage
 	{
 		final String newName = new String(textName.getText());
 		final String newDescription = new String(textDescription.getText());
-		final String newFullName = (object instanceof User) ? new String(textFullName.getText()) : "";
+		final String newFullName = (object instanceof User) ? new String(textFullName.getText()) : ""; //$NON-NLS-1$
 		
 		if (newName.equals(initialName) && 
 		    newDescription.equals(initialDescription) &&
@@ -120,7 +121,7 @@ public class General extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new ConsoleJob("Update user database object", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.General_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -157,7 +158,7 @@ public class General extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update user account";
+				return Messages.General_JobError;
 			}
 		}.start();
 	}
