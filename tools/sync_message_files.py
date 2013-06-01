@@ -24,6 +24,10 @@ def processDirectory(directory, prefix):
     for locale in locales:
         translationFileName = os.path.join(directory, "%s_%s.properties" % (prefix, locale, ))
         translation = readPropertyFile(translationFileName)
+        filteredTranslation = {}
+        for e in translation.iteritems():
+            filteredTranslation[e[0].replace('.', '_')] = e[1]
+        translation = filteredTranslation
         for k in set(translation.keys()) - set(source.keys()):
             del translation[k]
         translation = dict(source.items() + translation.items())
