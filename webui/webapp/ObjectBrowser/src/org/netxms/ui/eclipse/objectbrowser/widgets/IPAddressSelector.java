@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class IPAddressSelector extends AbstractSelector
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractNode node;
 	private InetAddress address;
 	private NXCSession session;

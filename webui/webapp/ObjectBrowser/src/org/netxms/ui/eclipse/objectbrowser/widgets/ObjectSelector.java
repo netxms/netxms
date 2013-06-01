@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ObjectSelector extends AbstractSelector
 {
-	private static final long serialVersionUID = 1L;
-
 	private long objectId = 0;
 	private Class<? extends AbstractObject> objectClass = Node.class;
 	private Set<Integer> classFilter = null;

@@ -29,8 +29,6 @@ import org.netxms.client.objects.AbstractObject;
  */
 public class ObjectTreeContentProvider extends TreeNodeContentProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private NXCSession session = null;
 	private long[] rootObjects = null;
 	

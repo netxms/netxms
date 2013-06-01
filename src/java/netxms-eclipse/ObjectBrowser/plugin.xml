@@ -10,7 +10,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Objects"
+            name="%view.ObjectBrowser.name"
             allowMultiple="false"
             icon="icons/object_browser.gif"
             class="org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser"
@@ -21,32 +21,32 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            name="Object Browser"
-            description="Open Object Browser"
+            name="%command.ObjectBrowser.name"
+            description="%command.ObjectBrowser.description"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
       </command>
       <command
-            description="Toggle Object Filter"
+            description="%command.ToggleFilter.description"
             id="org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"
-            name="Toggle Object Filter">
+            name="%command.ToggleFilter.name">
       </command>
       <command
-            description="Toggle Object Status Indicator"
+            description="%command.ToggleStatusInd.description"
             id="org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"
-            name="Toggle Object Status Indicator">
+            name="%command.ToggleStatusInd.name">
       </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.action_set.object_browser"
-		   label="Object Browser"
+		   label="%actionSet.ObjectBrowser.label"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.objectbrowser.actions.open"
 			   menubarPath="view/primary"
 			   toolbarPath="view/additions"
-			   label="Object Browser"
-			   tooltip="Open Object Browser"
+			   label="%action.ObjectBrowser.label"
+			   tooltip="%action.ObjectBrowser.tooltip"
 			   icon="icons/object_browser.gif"
 			   class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectBrowser"
 			   definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
@@ -79,7 +79,7 @@
      point="org.eclipse.ui.decorators">
        <decorator
           id="org.netxms.ui.eclipse.decorators.NXCObject"
-          label="NetXMS Objects Decorator"
+          label="%decorator.Objects.label"
           state="true"
           lightweight= "true"
           class="org.netxms.ui.eclipse.objectbrowser.ObjectDecorator">
@@ -87,7 +87,7 @@
            <objectClass name="org.netxms.client.objects.AbstractObject"/>
          </enablement>
          <description>
-            Decorate NetXMS objects (nodes, containers, etc.) with current status indicators
+            %decorator.Objects.description
          </description>
     </decorator>
   </extension>
@@ -95,7 +95,7 @@
         point="org.eclipse.ui.contexts">
      <context
            id="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
-           name="Object Browser"
+           name="%context.ObjectBrowser.name"
            parentId="org.eclipse.ui.contexts.window">
      </context>
   </extension>

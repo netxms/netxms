@@ -54,8 +54,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectList extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	// Options
 	public static final int NONE = 0;
 	public static final int CHECKBOXES = 0x01;
@@ -99,8 +97,6 @@ public class ObjectList extends Composite
 		filterText = new Text(filterArea, SWT.BORDER);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		filterText.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -154,8 +150,6 @@ public class ObjectList extends Composite
 
 		// Set dispose listener
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

@@ -1644,6 +1644,7 @@ src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/fragment.xml -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ObjectBrowser/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser/icons/access_point.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/business_service.png -text
@@ -3274,6 +3275,7 @@ webui/webapp/ObjectBrowser.AdapterFactory/META-INF/MANIFEST.MF -text
 webui/webapp/ObjectBrowser.AdapterFactory/build.properties -text
 webui/webapp/ObjectBrowser.AdapterFactory/fragment.xml -text
 webui/webapp/ObjectBrowser/META-INF/MANIFEST.MF -text
+webui/webapp/ObjectBrowser/OSGI-INF/l10n/bundle.properties -text
 webui/webapp/ObjectBrowser/build.properties -text
 webui/webapp/ObjectBrowser/icons/access_point.png -text
 webui/webapp/ObjectBrowser/icons/business_service.png -text
@@ -3335,6 +3337,7 @@ webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/Objec
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages.properties -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages_es.properties -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages_ru.properties -text
+webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages_zh_CN.properties -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/views/ObjectBrowser.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/IPAddressSelector.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/ObjectList.java -text

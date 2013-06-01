@@ -46,6 +46,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class ObjectSelectionDialog extends Dialog
 {
+	private NXCSession session;
 	private ObjectTree objectTree;
 	private long[] rootObjects;
 	private long[] selectedObjects;
@@ -180,6 +181,7 @@ public class ObjectSelectionDialog extends Dialog
 		this.rootObjects = rootObjects;
 		this.classFilter = classFilter;
 		multiSelection = true;
+		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 
 	/*
@@ -299,7 +301,7 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new ArrayList<AbstractObject>(0);
 
-		return ((NXCSession)ConsoleSharedData.getSession()).findMultipleObjects(selectedObjects, false);
+		return session.findMultipleObjects(selectedObjects, false);
 	}
 
 	/**
@@ -313,7 +315,6 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new AbstractObject[0];
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Set<AbstractObject> resultSet = new HashSet<AbstractObject>(selectedObjects.length);
 		for(int i = 0; i < selectedObjects.length; i++)
 		{

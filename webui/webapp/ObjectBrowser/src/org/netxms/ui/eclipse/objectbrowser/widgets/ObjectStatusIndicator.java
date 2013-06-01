@@ -48,8 +48,6 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeViewer;
  */
 public class ObjectStatusIndicator extends Canvas implements PaintListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private ObjectTreeViewer objectTree = null;
 	private boolean showIcons = false;
 	private boolean hideNormal = true;
@@ -80,8 +78,6 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		hideDisabled = ps.getBoolean("ObjectStatusIndicator.hideDisabled"); //$NON-NLS-1$
 		
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -98,8 +94,6 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		MenuManager manager = new MenuManager();
 		manager.setRemoveAllWhenShown(true);
 		manager.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -114,8 +108,6 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	private void createActions()
 	{
 		actionShowIcons = new Action(Messages.ObjectStatusIndicator_ShowIcons, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -126,8 +118,6 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		actionShowIcons.setChecked(showIcons);
 
 		actionHideDisabled = new Action(Messages.ObjectStatusIndicator_HideDisabled, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -138,8 +128,6 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		actionHideDisabled.setChecked(hideDisabled);
 
 		actionHideNormal = new Action(Messages.ObjectStatusIndicator_HideNormal, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -150,8 +138,6 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		actionHideNormal.setChecked(hideNormal);
 
 		actionHideUnknown = new Action(Messages.ObjectStatusIndicator_HideUnknown, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -162,8 +148,6 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		actionHideUnknown.setChecked(hideUnknown);
 
 		actionHideUnmanaged = new Action(Messages.ObjectStatusIndicator_HideUnmanaged, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{

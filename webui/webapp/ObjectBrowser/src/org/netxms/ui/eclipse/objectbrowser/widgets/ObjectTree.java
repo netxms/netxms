@@ -74,8 +74,6 @@ import org.netxms.ui.eclipse.widgets.FilterText;
  */
 public class ObjectTree extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	// Options
 	public static final int NONE = 0;
 	public static final int CHECKBOXES = 0x01;
@@ -112,8 +110,6 @@ public class ObjectTree extends Composite
 		// Create filter area
 		filterText = new FilterText(this, SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -121,8 +117,6 @@ public class ObjectTree extends Composite
 			}
 		});
 		filterText.setCloseAction(new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -157,8 +151,6 @@ public class ObjectTree extends Composite
 		});
 		
 		objectTree.getControl().addListener(SWT.Selection, new Listener() {
-			private static final long serialVersionUID = 1L;
-
 			void checkItems(TreeItem item, boolean isChecked)
 			{
 				if (item.getData() == null)
@@ -280,8 +272,6 @@ public class ObjectTree extends Composite
 		
 		// Set dispose listener
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -307,8 +297,6 @@ public class ObjectTree extends Composite
 		Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
 		//objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new TreeDragSourceEffect(objectTree.getTree()));
 		objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void dragStart(DragSourceEvent event)
 			{
@@ -585,8 +573,6 @@ public class ObjectTree extends Composite
 			fd.left = new FormAttachment(statusIndicator);
 			
 			statusIndicatorSelectionListener = new SelectionListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
@@ -602,8 +588,6 @@ public class ObjectTree extends Composite
 			objectTree.getTree().getVerticalBar().addSelectionListener(statusIndicatorSelectionListener);
 			
 			statusIndicatorTreeListener = new TreeListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void treeCollapsed(TreeEvent e)
 				{

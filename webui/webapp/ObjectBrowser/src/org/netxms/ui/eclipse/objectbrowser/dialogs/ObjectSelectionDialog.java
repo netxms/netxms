@@ -22,10 +22,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
@@ -40,6 +38,7 @@ import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Object selection dialog
@@ -47,8 +46,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectSelectionDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private NXCSession session;
 	private ObjectTree objectTree;
 	private long[] rootObjects;
@@ -272,7 +269,7 @@ public class ObjectSelectionDialog extends Dialog
 			}
 			else
 			{
-				MessageDialog.openWarning(getShell(), Messages.ObjectSelectionDialog_Warning, Messages.ObjectSelectionDialog_WarningText);
+				MessageDialogHelper.openWarning(getShell(), Messages.ObjectSelectionDialog_Warning, Messages.ObjectSelectionDialog_WarningText);
 				return;
 			}
 		}

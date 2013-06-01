@@ -105,7 +105,7 @@ public class ObjectBrowser extends ViewPart
 	private boolean initHideUnmanaged = false;
 	private boolean initHideTemplateChecks = false;
 	private boolean initShowFilter = true;
-	private boolean initShowStatus = true;
+	private boolean initShowStatus = false;
 	private String initialObjectSelection = null;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	private ObjectActionValidator[] actionValidators;
@@ -231,11 +231,11 @@ public class ObjectBrowser extends ViewPart
 				sb.append('/');
 				sb.append(((AbstractObject)path.getSegment(i)).getObjectId());
 			}
-			memento.putString("ObjectBrowser.selectedObject", sb.toString());
+			memento.putString("ObjectBrowser.selectedObject", sb.toString()); //$NON-NLS-1$
 		}
 		else
 		{
-			memento.putString("ObjectBrowser.selectedObject", "");
+			memento.putString("ObjectBrowser.selectedObject", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
@@ -244,11 +244,11 @@ public class ObjectBrowser extends ViewPart
 	 */
 	private void restoreSelection()
 	{		
-		if ((initialObjectSelection == null) || initialObjectSelection.isEmpty() || !initialObjectSelection.startsWith("/"))
+		if ((initialObjectSelection == null) || initialObjectSelection.isEmpty() || !initialObjectSelection.startsWith("/")) //$NON-NLS-1$
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final String[] parts = initialObjectSelection.split("/");
+		final String[] parts = initialObjectSelection.split("/"); //$NON-NLS-1$
 		final Object[] elements = new Object[parts.length - 1];
 		for(int i = 1; i < parts.length; i++)
 		{
@@ -553,15 +553,15 @@ public class ObjectBrowser extends ViewPart
 	{
 		// Read all registered extensions and create tabs
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers");
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			try
 			{
 				final OpenHandlerData h = new OpenHandlerData();
-				h.handler = (ObjectOpenHandler)elements[i].createExecutableExtension("class");
-				h.priority = safeParseInt(elements[i].getAttribute("priority"));
-				final String className = elements[i].getAttribute("enabledFor");
+				h.handler = (ObjectOpenHandler)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
+				h.priority = safeParseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
+				final String className = elements[i].getAttribute("enabledFor"); //$NON-NLS-1$
 				try
 				{
 					h.enabledFor = (className != null) ? Class.forName(className) : null;
@@ -598,14 +598,14 @@ public class ObjectBrowser extends ViewPart
 		
 		// Read all registered extensions and create validators
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectbrowser.objectActionValidators");
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectbrowser.objectActionValidators"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			try
 			{
 				final ActionValidatorData v = new ActionValidatorData();
-				v.validator = (ObjectActionValidator)elements[i].createExecutableExtension("class");
-				v.priority = safeParseInt(elements[i].getAttribute("priority"));
+				v.validator = (ObjectActionValidator)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
+				v.priority = safeParseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
 				list.add(v);
 			}
 			catch(CoreException e)

@@ -28,8 +28,6 @@ import org.eclipse.swt.widgets.TreeItem;
  */
 public class ObjectTreeViewer extends TreeViewer
 {
-	private static final long serialVersionUID = 1L;
-
 	/**
 	 * @param parent
 	 * @param style

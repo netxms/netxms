@@ -1,13 +1,13 @@
 package org.netxms.ui.eclipse.objectbrowser.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 public class OpenObjectBrowser implements IWorkbenchWindowActionDelegate
 {
@@ -46,7 +46,7 @@ public class OpenObjectBrowser implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenObjectBrowser_Error, Messages.OpenObjectBrowser_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenObjectBrowser_Error, Messages.OpenObjectBrowser_ErrorText + e.getMessage());
 			}
 		}
 	}
@@ -57,7 +57,5 @@ public class OpenObjectBrowser implements IWorkbenchWindowActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 }
