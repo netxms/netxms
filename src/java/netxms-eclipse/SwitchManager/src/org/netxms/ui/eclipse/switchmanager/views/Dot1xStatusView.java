@@ -108,12 +108,12 @@ public class Dot1xStatusView extends ViewPart
 		viewer.setLabelProvider(new Dot1xPortListLabelProvider());
 		viewer.setComparator(new Dot1xPortComparator());
 
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView");
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView");
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView"); //$NON-NLS-1$
 			}
 		});
 		

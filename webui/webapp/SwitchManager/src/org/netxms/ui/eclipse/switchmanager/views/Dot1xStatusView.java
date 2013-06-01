@@ -108,14 +108,12 @@ public class Dot1xStatusView extends ViewPart
 		viewer.setLabelProvider(new Dot1xPortListLabelProvider());
 		viewer.setComparator(new Dot1xPortComparator());
 
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView");
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView");
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView"); //$NON-NLS-1$
 			}
 		});
 		
@@ -132,8 +130,6 @@ public class Dot1xStatusView extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -189,8 +185,6 @@ public class Dot1xStatusView extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

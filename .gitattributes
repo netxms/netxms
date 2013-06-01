@@ -2076,6 +2076,7 @@ src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widget
 src/java/netxms-eclipse/SwitchManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/SwitchManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SwitchManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/SwitchManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/SwitchManager/build.properties -text
 src/java/netxms-eclipse/SwitchManager/icons/pae.png -text
 src/java/netxms-eclipse/SwitchManager/plugin.xml -text
@@ -3654,6 +3655,7 @@ webui/webapp/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/S
 webui/webapp/SwitchManager/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/SwitchManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/SwitchManager/META-INF/MANIFEST.MF -text
+webui/webapp/SwitchManager/OSGI-INF/l10n/bundle.properties -text
 webui/webapp/SwitchManager/build.properties -text
 webui/webapp/SwitchManager/icons/pae.png -text
 webui/webapp/SwitchManager/plugin.xml -text
@@ -3662,6 +3664,8 @@ webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/Messages.java
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/actions/OpenDot1xStateView.java -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/messages.properties -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/messages_es.properties -text
+webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/messages_ru.properties -text
+webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/messages_zh_CN.properties -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/Dot1xStatusView.java -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortComparator.java -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortListLabelProvider.java -text

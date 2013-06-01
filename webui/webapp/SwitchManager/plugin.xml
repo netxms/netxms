@@ -9,7 +9,7 @@
             class="org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView"
             icon="icons/pae.png"
             id="org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView"
-            name="802.1x Port State"
+            name="%view.PaePortState.name"
             restorable="true">
       </view>
    </extension>
@@ -23,7 +23,7 @@
                class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
                icon="icons/pae.png"
                id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_Node"
-               label="802.1x port state"
+               label="%action.PaePortState.label"
                menubarPath="topology">
          </action>
       </objectContribution>
@@ -35,7 +35,7 @@
                class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
                icon="icons/pae.png"
                id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_Container"
-               label="802.1x port state"
+               label="%action.PaePortState.label"
                menubarPath="topology">
          </action>
       </objectContribution>
@@ -47,7 +47,7 @@
                class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
                icon="icons/pae.png"
                id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_ServiceRoot"
-               label="802.1x port state"
+               label="%action.PaePortState.label"
                menubarPath="topology">
          </action>
       </objectContribution>
@@ -59,7 +59,7 @@
                class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
                icon="icons/pae.png"
                id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_Subnet"
-               label="802.1x port state"
+               label="%action.PaePortState.label"
                menubarPath="topology">
          </action>
       </objectContribution>
@@ -71,7 +71,7 @@
                class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
                icon="icons/pae.png"
                id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_EntireNetwork"
-               label="802.1x port state"
+               label="%action.PaePortState.label"
                menubarPath="topology">
          </action>
       </objectContribution>
