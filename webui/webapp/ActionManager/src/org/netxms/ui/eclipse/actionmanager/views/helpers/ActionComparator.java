@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
  */
 public class ActionComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */

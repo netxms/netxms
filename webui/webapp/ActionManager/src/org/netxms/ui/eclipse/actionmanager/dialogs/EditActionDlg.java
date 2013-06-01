@@ -42,8 +42,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditActionDlg extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private ServerAction action;
 	private boolean createNew;
 	private Text name;
@@ -64,8 +62,6 @@ public class EditActionDlg extends Dialog
 	 */
 	class TypeButtonSelectionListener implements SelectionListener
 	{
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public void widgetDefaultSelected(SelectionEvent e)
 		{

@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="%view.AlarmBrowser"
+            name="%view.AlarmBrowser.name"
             allowMultiple="false"
             icon="icons/alarm_browser.png"
             class="org.netxms.ui.eclipse.alarmviewer.views.AlarmBrowser"
@@ -15,7 +15,7 @@
             class="org.netxms.ui.eclipse.alarmviewer.views.AlarmComments"
             icon="icons/comments.png"
             id="org.netxms.ui.eclipse.alarmviewer.views.AlarmComments"
-            name="Alarm Comments"
+            name="%view.AlarmComments.name"
             restorable="false">
       </view>
       <view
@@ -23,7 +23,7 @@
             class="org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"
             icon="icons/alarm_browser.png"
             id="org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"
-            name="%view.AlarmBrowser"
+            name="%view.AlarmBrowser.name"
             restorable="true">
       </view>
       <view
@@ -31,7 +31,7 @@
             class="org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails"
             icon="icons/alarm_browser.png"
             id="org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails"
-            name="Alarm Details"
+            name="%view.AlarmDetails.name"
             restorable="false">
       </view>
    </extension>
@@ -48,7 +48,7 @@
    
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.action_set.alarm_browser"
-		   label="Alarm Browser"
+		   label="%actionSet.AlarmBrowser.label"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.alarmviewer.actions.open"
 			   menubarPath="view/primary"
@@ -99,7 +99,7 @@
       <page
             class="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
             id="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
-            name="Alarms">
+            name="%page.Alarms.name">
       </page>
    </extension>
    <extension
@@ -112,7 +112,7 @@
                enablesFor="1"
                icon="icons/alarm_browser.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Node"
-               label="Alarms"
+               label="%action.Alarms.label"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -124,7 +124,7 @@
                enablesFor="1"
                icon="icons/alarm_browser.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Subnet"
-               label="Alarms"
+               label="%action.Alarms.label"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -136,7 +136,7 @@
                enablesFor="1"
                icon="icons/alarm_browser.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_EntireNetwork"
-               label="Alarms"
+               label="%action.Alarms.label"
                menubarPath="aditions">
          </action>
       </objectContribution>
@@ -148,7 +148,7 @@
                enablesFor="1"
                icon="icons/alarm_browser.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_ServiceRoot"
-               label="Alarms"
+               label="%action.Alarms.label"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -160,7 +160,7 @@
                enablesFor="1"
                icon="icons/alarm_browser.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Cluster"
-               label="Alarms"
+               label="%action.Alarms.label"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -172,7 +172,7 @@
                enablesFor="1"
                icon="icons/alarm_browser.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Zone"
-               label="Alarms"
+               label="%action.Alarms.label"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -184,7 +184,7 @@
                enablesFor="1"
                icon="icons/alarm_browser.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Container"
-               label="Alarms"
+               label="%action.Alarms.label"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -193,7 +193,7 @@
          point="org.netxms.ui.eclipse.objectview.objectDetailsProvider">
       <provider
             class="org.netxms.ui.eclipse.alarmviewer.AlarmDetailsProvider"
-            name="Alarm Details Provider"
+            name="%provider.AlarmDetails.name"
             priority="255">
       </provider>
    </extension>

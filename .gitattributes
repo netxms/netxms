@@ -2478,6 +2478,7 @@ webui/webapp/ActionManager/META-INF/MANIFEST.MF -text
 webui/webapp/ActionManager/OSGI-INF/l10n/bundle.properties -text
 webui/webapp/ActionManager/OSGI-INF/l10n/bundle_es.properties -text
 webui/webapp/ActionManager/OSGI-INF/l10n/bundle_ru.properties -text
+webui/webapp/ActionManager/OSGI-INF/l10n/bundle_zh_CN.properties -text
 webui/webapp/ActionManager/build.properties -text
 webui/webapp/ActionManager/icons/actionmgr.png -text
 webui/webapp/ActionManager/icons/disabled_overlay.png -text
@@ -2496,6 +2497,8 @@ webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/actions/OpenA
 webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/dialogs/EditActionDlg.java -text
 webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages.properties -text
 webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages_es.properties -text
+webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages_ru.properties -text
+webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages_zh_CN.properties -text
 webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/ActionManager.java -text
 webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionComparator.java -text
 webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionLabelProvider.java -text

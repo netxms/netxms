@@ -128,8 +128,6 @@ public class ActionManager extends ViewPart implements SessionListener
 			}
 		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -241,8 +239,6 @@ public class ActionManager extends ViewPart implements SessionListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -254,8 +250,6 @@ public class ActionManager extends ViewPart implements SessionListener
 		};
 		
 		actionNew = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -269,8 +263,6 @@ public class ActionManager extends ViewPart implements SessionListener
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 		
 		actionEdit = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -284,8 +276,6 @@ public class ActionManager extends ViewPart implements SessionListener
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
 		actionDelete = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -309,8 +299,6 @@ public class ActionManager extends ViewPart implements SessionListener
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener()
 		{
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

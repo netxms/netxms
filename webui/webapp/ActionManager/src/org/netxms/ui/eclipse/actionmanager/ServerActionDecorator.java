@@ -30,8 +30,6 @@ import org.netxms.client.ServerAction;
  */
 public class ServerActionDecorator implements ILightweightLabelDecorator
 {
-	private static final long serialVersionUID = 1L;
-
 	private ImageDescriptor disabledMark;
 	
 	/**

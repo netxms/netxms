@@ -33,7 +33,6 @@ import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
  */
 public class ActionLabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
 	private static final String[] ACTION_TYPE = { Messages.ActionLabelProvider_ActionTypeExecute, Messages.ActionLabelProvider_ActionTypeRemoteExec, Messages.ActionLabelProvider_ActionTypeMail, Messages.ActionLabelProvider_ActionTypeSMS, Messages.ActionLabelProvider_ActionTypeForward };
 	
 	private ILabelProvider workbenchLabelProvider;

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: org.netxms.ui.eclipse.actionmanager
 Bundle-SymbolicName: org.netxms.ui.eclipse.actionmanager;singleton:=true
-Bundle-Version: 1.1.10
+Bundle-Version: 1.2.8
 Bundle-Activator: org.netxms.ui.eclipse.actionmanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui;bundle-version="1.4.1",
