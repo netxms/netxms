@@ -95,8 +95,6 @@ public class ObjectAlarmBrowser extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{

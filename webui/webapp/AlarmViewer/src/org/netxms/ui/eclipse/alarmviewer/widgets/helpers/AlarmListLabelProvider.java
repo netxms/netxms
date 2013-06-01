@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class AlarmListLabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-	
 	private final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
 	
 	private NXCSession session;

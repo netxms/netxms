@@ -148,8 +148,6 @@ public class AlarmDetails extends ViewPart
 		formContainer.setLayout(containerLayout);
 		scroller.setContent(formContainer);
 		scroller.addControlListener(new ControlAdapter() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void controlResized(ControlEvent e)
 			{
@@ -190,9 +188,7 @@ public class AlarmDetails extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -268,8 +264,6 @@ public class AlarmDetails extends ViewPart
 		sep.setLayoutData(gd);
 		
 		final ScrolledComposite textContainer = new ScrolledComposite(clientArea, SWT.H_SCROLL | SWT.V_SCROLL) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public Point computeSize(int wHint, int hHint, boolean changed)
 			{
@@ -288,8 +282,6 @@ public class AlarmDetails extends ViewPart
 		gd.verticalSpan = 3;
 		textContainer.setLayoutData(gd);
 		textContainer.addControlListener(new ControlAdapter() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void controlResized(ControlEvent e)
 			{

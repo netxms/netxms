@@ -29,8 +29,6 @@ import org.netxms.client.events.EventInfo;
  */
 public class EventTreeContentProvider implements ITreeContentProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */

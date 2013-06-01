@@ -44,8 +44,6 @@ import org.netxms.ui.eclipse.tools.ImageCache;
  */
 public class AlarmCommentsEditor extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text text;
 	
 	/**

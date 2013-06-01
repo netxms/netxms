@@ -80,7 +80,7 @@ public class Messages extends NLS
 	public String TerminateAlarm_ErrorMessage;
 	public String TerminateAlarm_JobTitle;
 	public String TerminateAlarm_TaskName;
-
+	
 	private Messages()
 	{
 	}

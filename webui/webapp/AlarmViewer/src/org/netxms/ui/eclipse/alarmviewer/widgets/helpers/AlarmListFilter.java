@@ -30,8 +30,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmListFilter extends ViewerFilter
 {
-	private static final long serialVersionUID = 1L;
-
 	private long rootObject = 0;
 	private int stateFilter = -1;
 	

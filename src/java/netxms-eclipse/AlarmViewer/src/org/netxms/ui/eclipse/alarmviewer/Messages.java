@@ -5,6 +5,7 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.alarmviewer.messages"; //$NON-NLS-1$
+
 	public static String AcknowledgeAlarm_ErrorMessage;
 	public static String AcknowledgeAlarm_JobName;
 	public static String AcknowledgeAlarm_TaskName;

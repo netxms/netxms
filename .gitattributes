@@ -2529,6 +2529,7 @@ webui/webapp/AlarmViewer/META-INF/MANIFEST.MF -text
 webui/webapp/AlarmViewer/OSGI-INF/l10n/bundle.properties -text
 webui/webapp/AlarmViewer/OSGI-INF/l10n/bundle_es.properties -text
 webui/webapp/AlarmViewer/OSGI-INF/l10n/bundle_ru.properties -text
+webui/webapp/AlarmViewer/OSGI-INF/l10n/bundle_zh_CN.properties -text
 webui/webapp/AlarmViewer/build.properties -text
 webui/webapp/AlarmViewer/icons/acknowledged.png -text
 webui/webapp/AlarmViewer/icons/acknowledged_sticky.png -text
@@ -2548,6 +2549,8 @@ webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/ShowObjec
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/dialogs/EditCommentDialog.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages.properties -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_es.properties -text
+webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_ru.properties -text
+webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_zh_CN.properties -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmComments.java -text

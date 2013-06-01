@@ -72,7 +72,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class AlarmList extends Composite
 {
-	private static final long serialVersionUID = 1L;
 	public static final String JOB_FAMILY = "AlarmViewJob"; //$NON-NLS-1$
 	
 	// Columns
@@ -127,8 +126,6 @@ public class AlarmList extends Composite
 		alarmFilter = new AlarmListFilter();
 		alarmViewer.addFilter(alarmFilter);
 		alarmViewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -147,8 +144,6 @@ public class AlarmList extends Composite
 		createPopupMenu();
 
 		addListener(SWT.Resize, new Listener() {
-			private static final long serialVersionUID = 1L;
-
 			public void handleEvent(Event e)
 			{
 				alarmViewer.getControl().setBounds(AlarmList.this.getClientArea());
@@ -188,8 +183,6 @@ public class AlarmList extends Composite
 		session.addListener(clientListener);
 		
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -272,8 +265,6 @@ public class AlarmList extends Composite
 		};
 
 		actionShowAlarmDetails = new Action(Messages.get().AlarmList_ActionAlarmDetails) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -282,8 +273,6 @@ public class AlarmList extends Composite
 		};
 
 		actionAcknowledge = new Action(Messages.get().AlarmList_Acknowledge, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -292,8 +281,6 @@ public class AlarmList extends Composite
 		};
 
 		actionStickyAcknowledge = new Action(Messages.get().AlarmList_StickyAck, Activator.getImageDescriptor("icons/acknowledged_sticky.png")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -302,8 +289,6 @@ public class AlarmList extends Composite
 		};
 
 		actionResolve = new Action(Messages.get().AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -312,8 +297,6 @@ public class AlarmList extends Composite
 		};
 
 		actionTerminate = new Action(Messages.get().AlarmList_Terminate, Activator.getImageDescriptor("icons/terminated.png")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -322,8 +305,6 @@ public class AlarmList extends Composite
 		};
 		
 		actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -343,8 +324,6 @@ public class AlarmList extends Composite
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -464,6 +443,14 @@ public class AlarmList extends Composite
 		{
 			MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error, Messages.get().AlarmList_ErrorText + e.getLocalizedMessage());
 		}
+	}
+	
+	/**
+	 * @param filter
+	 */
+	public void setStateFilter(int filter)
+	{
+		alarmFilter.setStateFilter(filter);
 	}
 	
 	/**
