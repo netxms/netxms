@@ -1576,6 +1576,9 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/algori
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/dialogs/AddGroupBoxDialog.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/dialogs/CreateNetworkMapDialog.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/messages.properties -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/messages_es.properties -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/messages_ru.properties -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/messages_zh_CN.properties -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/preferencepages/GeneralMapPreferences.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapBackground.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapLinkGeneral.java -text
@@ -2120,6 +2123,9 @@ src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/help
 src/java/netxms-eclipse/UserManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/UserManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/UserManager/OSGI-INF/l10n/bundle.properties -text
+src/java/netxms-eclipse/UserManager/OSGI-INF/l10n/bundle_es.properties -text
+src/java/netxms-eclipse/UserManager/OSGI-INF/l10n/bundle_ru.properties -text
+src/java/netxms-eclipse/UserManager/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/UserManager/build.properties -text
 src/java/netxms-eclipse/UserManager/icons/change_password.png -text
 src/java/netxms-eclipse/UserManager/icons/group.png -text
