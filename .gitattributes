@@ -3671,6 +3671,7 @@ webui/webapp/Topology/src/org/netxms/ui/eclipse/topology/views/helpers/RadioInte
 webui/webapp/Topology/src/org/netxms/ui/eclipse/topology/views/helpers/RadioInterfaceLabelProvider.java -text
 webui/webapp/UserManager/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/UserManager/META-INF/MANIFEST.MF -text
+webui/webapp/UserManager/OSGI-INF/l10n/bundle.properties -text
 webui/webapp/UserManager/build.properties -text
 webui/webapp/UserManager/icons/change_password.png -text
 webui/webapp/UserManager/icons/group.png -text

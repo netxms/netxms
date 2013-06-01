@@ -35,6 +35,7 @@ import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.Messages;
 
 /**
  * "System Rights" property page for user object
@@ -61,30 +62,30 @@ public class SystemRights extends PropertyPage
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 		
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, "Delete alarms");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, "Configure server actions");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, "Configure event templates");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, "View event templates configuration");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SITUATIONS, "Configure situations");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EPP, "Edit event processing policy");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, "Manage script library");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, "Configure object tools");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, "Configure SNMP traps");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, "Manage agent configurations");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, "Manage packages");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, "View event log");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, "View audit log");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, "View SNMP trap log");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, "Manage mapping tables");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, "Edit server configuration variables");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, "Read server files");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_FILES, "Manage server files");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, "Access server console");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, "Control user sessions");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, "Manage users");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SEND_SMS, "Send SMS");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, "Register agents");
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, "Login as mobile device");
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, Messages.SystemRights_DeleteAlarms);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.SystemRights_ConfigureActions);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.SystemRights_ConfigureEvents);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.SystemRights_ViewEventConfig);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SITUATIONS, Messages.SystemRights_ConfigureSituations);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EPP, Messages.SystemRights_EditEPP);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, Messages.SystemRights_ManageScripts);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, Messages.SystemRights_ConfigureObjTools);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, Messages.SystemRights_ConfigureTraps);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, Messages.SystemRights_ManageAgents);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, Messages.SystemRights_ManagePackages);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, Messages.SystemRights_ViewEventLog);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, Messages.SystemRights_ViewAuditLog);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.SystemRights_ViewTrapLog);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, Messages.SystemRights_ManageMappingTables);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, Messages.SystemRights_EditServerConfig);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, Messages.SystemRights_ReadFiles);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_FILES, Messages.SystemRights_ManageFiles);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, Messages.SystemRights_AccessConsole);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, Messages.SystemRights_ControlSessions);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, Messages.SystemRights_ManageUsers);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SEND_SMS, Messages.SystemRights_SendSMS);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, Messages.SystemRights_RegisterAgents);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.SystemRights_LoginAsMobile);
 		
 		return dialogArea;
 	}
@@ -121,7 +122,7 @@ public class SystemRights extends PropertyPage
 		
 		object.setSystemRights(systemRights);
 		
-		new ConsoleJob("Update user database object", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SystemRights_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -131,7 +132,7 @@ public class SystemRights extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update user object";
+				return Messages.SystemRights_JobError;
 			}
 
 			@Override

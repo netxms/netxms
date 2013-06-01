@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.usermanager.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -45,7 +43,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
@@ -57,6 +54,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
 import org.netxms.ui.eclipse.usermanager.UserLabelProvider;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
@@ -65,12 +63,11 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * User management view
- * 
  */
 public class UserManagementView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.usermanager.view.user_manager";
-	public static final String JOB_FAMILY = "UserManagerJob";
+	public static final String ID = "org.netxms.ui.eclipse.usermanager.view.user_manager"; //$NON-NLS-1$
+	public static final String JOB_FAMILY = "UserManagerJob"; //$NON-NLS-1$
 
 	// Columns
 	public static final int COLUMN_NAME = 0;
@@ -101,7 +98,7 @@ public class UserManagementView extends ViewPart
 		session = ConsoleSharedData.getSession();
 		userManager = (UserManager)ConsoleSharedData.getSession();
 
-		final String[] names = { "Name", "Type", "Full Name", "Description", "GUID" };
+		final String[] names = { Messages.UserManagementView_Name, Messages.UserManagementView_Type, Messages.UserManagementView_FullName, Messages.UserManagementView_Description, Messages.UserManagementView_GUID };
 		final int[] widths = { 100, 80, 180, 250, 250 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -140,10 +137,9 @@ public class UserManagementView extends ViewPart
 			{
 				if (n.getCode() == SessionNotification.USER_DB_CHANGED)
 				{
-					new UIJob(viewer.getControl().getDisplay(), "Update user list")
-					{
+					viewer.getControl().getDisplay().asyncExec(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							viewer.setInput(userManager.getUserDatabaseObjects());
 							if (editNewUser && (n.getSubCode() == SessionNotification.USER_DB_OBJECT_CREATED))
@@ -152,15 +148,14 @@ public class UserManagementView extends ViewPart
 								viewer.setSelection(new StructuredSelection(n.getObject()), true);
 								actionEditUser.run();
 							}
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}
 		};
 
 		// Request server to lock user database, and on success refresh view
-		new ConsoleJob("Open user database", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.UserManagementView_OpenJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -191,7 +186,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot lock user database";
+				return Messages.UserManagementView_OpenJobError;
 			}
 		}.start();
 	}
@@ -267,8 +262,8 @@ public class UserManagementView extends ViewPart
 				addUser();
 			}
 		};
-		actionAddUser.setText("Create new &user");
-		actionAddUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_add.png"));
+		actionAddUser.setText(Messages.UserManagementView_CreateNewUser);
+		actionAddUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_add.png")); //$NON-NLS-1$
 
 		actionAddGroup = new Action()
 		{
@@ -281,12 +276,12 @@ public class UserManagementView extends ViewPart
 				addGroup();
 			}
 		};
-		actionAddGroup.setText("Create new &group");
-		actionAddGroup.setImageDescriptor(Activator.getImageDescriptor("icons/group_add.png"));
+		actionAddGroup.setText(Messages.UserManagementView_CreateNewGroup);
+		actionAddGroup.setImageDescriptor(Activator.getImageDescriptor("icons/group_add.png")); //$NON-NLS-1$
 
 		actionEditUser = new PropertyDialogAction(getSite(), viewer);
-		actionEditUser.setText("&Properties");
-		actionEditUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_edit.png"));
+		actionEditUser.setText(Messages.UserManagementView_Properties);
+		actionEditUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_edit.png")); //$NON-NLS-1$
 		actionEditUser.setEnabled(false);
 
 		actionDeleteUser = new Action()
@@ -300,8 +295,8 @@ public class UserManagementView extends ViewPart
 				deleteUser();
 			}
 		};
-		actionDeleteUser.setText("&Delete");
-		actionDeleteUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_delete.png"));
+		actionDeleteUser.setText(Messages.UserManagementView_Delete);
+		actionDeleteUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_delete.png")); //$NON-NLS-1$
 		actionDeleteUser.setEnabled(false);
 
 		actionChangePassword = new Action() {
@@ -323,14 +318,14 @@ public class UserManagementView extends ViewPart
 						}
 						catch(Exception e)
 						{
-							MessageDialogHelper.openError(getSite().getShell(), "Unable to change password", e.getMessage());
+							MessageDialogHelper.openError(getSite().getShell(), Messages.UserManagementView_CannotChangePassword, e.getMessage());
 						}
 					}
 				}
 			}
 		};
-		actionChangePassword.setText("Change Password");
-		actionChangePassword.setImageDescriptor(Activator.getImageDescriptor("icons/change_password.png"));
+		actionChangePassword.setText(Messages.UserManagementView_ChangePassword);
+		actionChangePassword.setImageDescriptor(Activator.getImageDescriptor("icons/change_password.png")); //$NON-NLS-1$
 		actionChangePassword.setEnabled(false);
 	}
 
@@ -401,7 +396,7 @@ public class UserManagementView extends ViewPart
 			session.removeListener(sessionListener);
 		if (databaseLocked)
 		{
-			new ConsoleJob("Unlock user database", null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.UserManagementView_UnlockJobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -411,7 +406,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot unlock user database";
+					return Messages.UserManagementView_UnlockJobError;
 				}
 			}.start();
 		}
@@ -426,7 +421,7 @@ public class UserManagementView extends ViewPart
 		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), true);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Create user", this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+			new ConsoleJob(Messages.UserManagementView_CreateUserJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -437,7 +432,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create user";
+					return Messages.UserManagementView_CreateUserJobError;
 				}
 			}.start();
 		}
@@ -451,7 +446,7 @@ public class UserManagementView extends ViewPart
 		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Create group", this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+			new ConsoleJob(Messages.UserManagementView_CreateGroupJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -462,7 +457,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create group";
+					return Messages.UserManagementView_CreateGroupJobError;
 				}
 			}.start();
 		}
@@ -475,14 +470,14 @@ public class UserManagementView extends ViewPart
 	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-		final String message = "Do you really wish to delete selected user" + ((selection.size() > 1) ? "s?" : "?");
+		final String message = (selection.size() == 1) ? Messages.UserManagementView_ConfirmDeleteSingular : Messages.UserManagementView_ConfirmDeletePlural;
 		final Shell shell = getViewSite().getShell();
-		if (!MessageDialogHelper.openQuestion(shell, "Confirm user deletion", message))
+		if (!MessageDialogHelper.openQuestion(shell, Messages.UserManagementView_ConfirmDeleteTitle, message))
 		{
 			return;
 		}
 
-		new ConsoleJob("Delete user database objects", this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+		new ConsoleJob(Messages.UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -495,7 +490,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete user database object";
+				return Messages.UserManagementView_DeleteJobError;
 			}
 		}.start();
 	}

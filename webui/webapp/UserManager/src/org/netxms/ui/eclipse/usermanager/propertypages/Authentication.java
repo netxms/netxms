@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.Messages;
 
 /**
  * User's "authentication" property page
@@ -77,7 +78,7 @@ public class Authentication extends PropertyPage
       dialogArea.setLayout(layout);
 
       Group groupFlags = new Group(dialogArea, SWT.NONE);
-      groupFlags.setText("Account Options");
+      groupFlags.setText(Messages.Authentication_AccountOptions);
       GridLayout groupFlagsLayout = new GridLayout();
       groupFlags.setLayout(groupFlagsLayout);
 		GridData gridData = new GridData();
@@ -86,19 +87,19 @@ public class Authentication extends PropertyPage
 		groupFlags.setLayoutData(gridData);
 		
       checkDisabled = new Button(groupFlags, SWT.CHECK);
-      checkDisabled.setText("Account &disabled");
+      checkDisabled.setText(Messages.Authentication_AccountDisabled);
       checkDisabled.setSelection(object.isDisabled());
 		
       checkChangePassword = new Button(groupFlags, SWT.CHECK);
-      checkChangePassword.setText("User must &change password at next logon");
+      checkChangePassword.setText(Messages.Authentication_MustChangePassword);
       checkChangePassword.setSelection(object.isPasswordChangeNeeded());
 		
       checkFixedPassword = new Button(groupFlags, SWT.CHECK);
-      checkFixedPassword.setText("User cannot change &password");
+      checkFixedPassword.setText(Messages.Authentication_CannotChangePassword);
       checkFixedPassword.setSelection(object.isPasswordChangeForbidden());
 		
       Group groupMethod = new Group(dialogArea, SWT.NONE);
-      groupMethod.setText("Authentication Method");
+      groupMethod.setText(Messages.Authentication_AuthMethod_Group);
       GridLayout groupMethodLayout = new GridLayout();
       groupMethodLayout.numColumns = 2;
       groupMethod.setLayout(groupMethodLayout);
@@ -108,13 +109,13 @@ public class Authentication extends PropertyPage
 		groupMethod.setLayoutData(gridData);
 		
 		Label label = new Label(groupMethod, SWT.NONE);
-		label.setText("Authentication method:");
+		label.setText(Messages.Authentication_AuthMethod_Label);
 		comboAuthMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
-		comboAuthMethod.add("NetXMS password");
-		comboAuthMethod.add("RADIUS");
-		comboAuthMethod.add("Certificate");
-		comboAuthMethod.add("Certificate or Password");
-		comboAuthMethod.add("Certificate or RADIUS");
+		comboAuthMethod.add(Messages.Authentication_Password);
+		comboAuthMethod.add(Messages.Authentication_RADIUS);
+		comboAuthMethod.add(Messages.Authentication_Certificate);
+		comboAuthMethod.add(Messages.Authentication_CertificateOrPassword);
+		comboAuthMethod.add(Messages.Authentication_CertificateOrRADIUS);
 		comboAuthMethod.select(object.getAuthMethod());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
@@ -122,10 +123,10 @@ public class Authentication extends PropertyPage
 		comboAuthMethod.setLayoutData(gridData);
 		
 		label = new Label(groupMethod, SWT.NONE);
-		label.setText("Certificate mapping method:");
+		label.setText(Messages.Authentication_CertMapping);
 		comboMappingMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
-		comboMappingMethod.add("Subject");
-		comboMappingMethod.add("Public key");
+		comboMappingMethod.add(Messages.Authentication_Subject);
+		comboMappingMethod.add(Messages.Authentication_PublicKey);
 		comboMappingMethod.select(object.getCertMappingMethod());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
@@ -137,7 +138,7 @@ public class Authentication extends PropertyPage
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalSpan = 2;
 		gridData.widthHint = 300;
-      textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Certificate mapping data",
+      textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.Authentication_MappingData,
                                                        object.getCertMappingData(), gridData);
 		
 		return dialogArea;
@@ -168,7 +169,7 @@ public class Authentication extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new ConsoleJob("Update user database object", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.Authentication_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -193,7 +194,7 @@ public class Authentication extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update user account";
+				return Messages.Authentication_JobError;
 			}
 		}.start();
 	}
