@@ -2081,6 +2081,9 @@ src/java/netxms-eclipse/SwitchManager/.settings/org.eclipse.core.resources.prefs
 src/java/netxms-eclipse/SwitchManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SwitchManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SwitchManager/OSGI-INF/l10n/bundle.properties -text
+src/java/netxms-eclipse/SwitchManager/OSGI-INF/l10n/bundle_es.properties -text
+src/java/netxms-eclipse/SwitchManager/OSGI-INF/l10n/bundle_ru.properties -text
+src/java/netxms-eclipse/SwitchManager/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/SwitchManager/build.properties -text
 src/java/netxms-eclipse/SwitchManager/icons/pae.png -text
 src/java/netxms-eclipse/SwitchManager/plugin.xml -text
