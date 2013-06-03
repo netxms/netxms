@@ -3388,10 +3388,9 @@ DWORD Node::getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize,
    const TCHAR *login = getCustomAttribute(_T("iLO.login"));
    const TCHAR *password = getCustomAttribute(_T("iLO.password"));
 
-   SMCLP_Connection *connection = new SMCLP_Connection(this->IpAddr(), 23);
-
    if (!(m_dwDynamicFlags & NDF_UNREACHABLE) && login != NULL && password != NULL)
    {
+      SMCLP_Connection *connection = new SMCLP_Connection(this->IpAddr(), 23);
       if (connection->connect(login, password))
       {
          TCHAR *value = connection->get(path, param);
@@ -3406,6 +3405,7 @@ DWORD Node::getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize,
             result = DCE_NOT_SUPPORTED;
          }
       }
+      delete connection;
    }
 
    DbgPrintf(7, _T("Node(%s)->GetItemFromILO(%s, %s): result=%d"), m_szName, path, param, result);

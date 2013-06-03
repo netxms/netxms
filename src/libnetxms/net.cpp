@@ -76,14 +76,14 @@ SocketConnection::~SocketConnection()
  */
 bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, DWORD timeout)
 {
-   return connectTCP(ResolveHostName(hostName), port, timeout);
+   return connectTCP(ntohl(ResolveHostName(hostName)), port, timeout);
 }
 
 /**
  * Establish TCP connection to given host and port
  *
- * @param hostName host name or IP address
- * @param port port number
+ * @param hostName host name or IP address in host byte order
+ * @param port port number in host byte order
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
@@ -95,13 +95,14 @@ bool SocketConnection::connectTCP(DWORD ip, WORD port, DWORD timeout)
 		struct sockaddr_in sa;
 		sa.sin_family = AF_INET;
 		sa.sin_port = htons(port);
-		sa.sin_addr.s_addr = ip;
+		sa.sin_addr.s_addr = htonl(ip);
 
 		if (ConnectEx(m_socket, (struct sockaddr*)&sa, sizeof(sa), (timeout != 0) ? timeout : 30000) < 0)
 		{
 			closesocket(m_socket);
 			m_socket = INVALID_SOCKET;
 		}
+      SetSocketNonBlocking(m_socket);
 	}
 
 	return m_socket != INVALID_SOCKET;
@@ -219,20 +220,20 @@ bool SocketConnection::waitForText(const char *text, int timeout)
  * Establish TCP connection to given host and port
  *
  * @param hostName host name or IP address
- * @param port port number
+ * @param port port number in host byte order
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
 bool TelnetConnection::connect(const TCHAR *hostName, WORD port, DWORD timeout)
 {
-   return connect(ResolveHostName(hostName), port, timeout);
+   return connect(ntohl(ResolveHostName(hostName)), port, timeout);
 }
 
 /**
  * Establish TCP connection to given host and port
  *
- * @param hostName host name or IP address
- * @param port port number
+ * @param hostName host name or IP address in host byte order
+ * @param port port number in host byte order
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
@@ -258,6 +259,7 @@ bool TelnetConnection::connect(DWORD ip, WORD port, DWORD timeout)
  */
 int TelnetConnection::read(char *pBuff, int nSize, DWORD timeout)
 {
+retry:
 	int bytesRead = RecvEx(m_socket, pBuff, nSize, 0, timeout);
    if (bytesRead > 0)
    {
@@ -312,6 +314,10 @@ int TelnetConnection::read(char *pBuff, int nSize, DWORD timeout)
             i--;
          }
       }
+
+      // Only control sequence was received, read more data
+      if (bytesRead == 0)
+         goto retry;
    }
 
    return bytesRead;

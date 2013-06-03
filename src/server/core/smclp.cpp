@@ -29,7 +29,7 @@
 SMCLP_Connection::SMCLP_Connection(DWORD ip, WORD port)
 {
 	m_ip = ip;
-	m_port = htons(port);
+	m_port = port;
 	m_timeout = 5000;
 	m_conn = NULL;
 }
@@ -54,8 +54,8 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
 		delete m_conn;
    }
 
-   TelnetConnection *m_conn = new TelnetConnection();
-   if (m_conn->connect(htonl(m_ip), m_port, m_timeout))
+   m_conn = new TelnetConnection();
+   if (m_conn->connect(m_ip, m_port, m_timeout))
    {
 #ifdef UNICODE
       char *_login = UTF8StringFromWideString(login);
@@ -68,9 +68,11 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
       if (m_conn->waitForText(":", m_timeout))
       {
          m_conn->writeLine(_login);
-         if (m_conn->waitForText(":", m_timeout)) {
+         if (m_conn->waitForText(":", m_timeout)) 
+         {
             m_conn->writeLine(_password);
-            if (m_conn->waitForText("iLO->", m_timeout)) {
+            if (m_conn->waitForText("iLO->", m_timeout)) 
+            {
                success = true;
             }
          }
@@ -100,7 +102,6 @@ void SMCLP_Connection::disconnect()
 	}
 }
 
-
 /**
  * Get parameter from target
  */
@@ -113,7 +114,7 @@ TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
    const char *_path = path;
 #endif
    char buffer[1024];
-   snprintf(buffer, 1024, "show -o format=text %s", path);
+   snprintf(buffer, 1024, "show -o format=text %s", _path);
    m_conn->writeLine(buffer);
 #ifdef UNICODE
    free(_path);
