@@ -127,13 +127,12 @@ TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
       }
 
 #ifdef UNICODE
-      TCHAR _buffer;
-      char *_buffer = WideStringFromUTF8String(buffer);
+      TCHAR *_buffer = WideStringFromUTF8String(buffer);
 #else
       char *_buffer = buffer;
 #endif
 
-      StrStripA(_buffer);
+      StrStrip(_buffer);
       int numStrings = 0;
       TCHAR **splitted = SplitString(_buffer, _T('='), &numStrings);
       if (numStrings == 2 && !_tcsicmp(splitted[0], parameter))

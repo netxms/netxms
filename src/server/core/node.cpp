@@ -3385,8 +3385,8 @@ DWORD Node::getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize,
 {
    DWORD result = DCE_COMM_ERROR;
 
-   const char *login = getCustomAttribute(_T("iLO.login"));
-   const char *password = getCustomAttribute(_T("iLO.password"));
+   const TCHAR *login = getCustomAttribute(_T("iLO.login"));
+   const TCHAR *password = getCustomAttribute(_T("iLO.password"));
 
    SMCLP_Connection *connection = new SMCLP_Connection(this->IpAddr(), 23);
 
