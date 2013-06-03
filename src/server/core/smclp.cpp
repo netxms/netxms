@@ -26,11 +26,10 @@
 /**
  * Constructor
  */
-SMCLP_Connection::SMCLP_Connection(const TCHAR *host, WORD port, int protocol)
+SMCLP_Connection::SMCLP_Connection(DWORD ip, WORD port)
 {
-	m_host = _tcsdup(host);
+	m_ip = ip;
 	m_port = htons(port);
-	m_protocol = protocol;
 	m_timeout = 5000;
 	m_conn = NULL;
 }
@@ -41,7 +40,6 @@ SMCLP_Connection::SMCLP_Connection(const TCHAR *host, WORD port, int protocol)
 SMCLP_Connection::~SMCLP_Connection()
 {
 	disconnect();
-	safe_free(m_host);
 }
 
 /**
@@ -51,34 +49,46 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
 {
 	bool success = false;
 
+   nx_strncpy(m_login, login, sizeof(m_login));
+   nx_strncpy(m_password, password, sizeof(m_login));
+
 	if (m_conn != NULL)
+   {
 		delete m_conn;
+   }
 
-	m_conn = SocketConnection::createTCPConnection(m_host, m_port, 30000);
-	if (m_conn != NULL)
-	{
-		if (m_conn->waitForText("username:", m_timeout))
-		{
-//			m_conn->writeLine(login);
-			if (m_conn->waitForText("password:", m_timeout))
-			{
-//				m_conn->writeLine(password);
-				if (m_conn->waitForText("-> ", m_timeout))
-				{
-					success = true;
-				}
-			}
-		}
+   TelnetConnection *m_conn = new TelnetConnection();
+   if (m_conn->connect(htonl(m_ip), m_port, m_timeout))
+   {
+#ifdef UNICODE
+      char *_login = UTF8StringFromWideString(m_lo);
+      char *_password = UTF8StringFromWideString(password);
+#else
+      char *_login = m_login;
+      char *_password = m_password;
+#endif
 
-		if (!success)
-		{
-			m_conn->disconnect();
-			delete_and_null(m_conn);
-		}
-	}
+      if (m_conn->waitForText(":", m_timeout))
+      {
+         m_conn->writeLine(_login);
+         if (m_conn->waitForText(":", m_timeout)) {
+            m_conn->writeLine(_password);
+            if (m_conn->waitForText("iLO->", m_timeout)) {
+               success = true;
+            }
+         }
+      }
 
-	return success;
+#ifdef UNICODE
+      safe_free(_login);
+      safe_free(_password);
+#endif
+   }
+
+
+   return success;
 }
+
 
 /**
  * Disconnect from target
@@ -87,7 +97,58 @@ void SMCLP_Connection::disconnect()
 {
 	if (m_conn != NULL)
 	{
+      m_conn->writeLine("quit");
 		m_conn->disconnect();
-		delete m_conn;
+      delete_and_null(m_conn);
 	}
+}
+
+
+/**
+ * Get parameter from target
+ */
+TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
+{
+   TCHAR *ret = NULL;
+#ifdef UNICODE
+   char *_path = UTF8StringFromWideString(path);
+#else
+   const char *_path = path;
+#endif
+   char buffer[1024];
+   snprintf(buffer, 1024, "show -o format=text %s", path);
+   m_conn->writeLine(buffer);
+#ifdef UNICODE
+   free(_path);
+#endif
+
+   while (m_conn->readLine(buffer, 1024, m_timeout / 10) > 0)
+   {
+      if (strstr(buffer, "iLO->") != NULL)
+      {
+         break;
+      }
+
+#ifdef UNICODE
+      TCHAR _buffer;
+      char *_buffer = WideStringFromUTF8String(buffer);
+#else
+      char *_buffer = buffer;
+#endif
+
+      StrStripA(_buffer);
+      int numStrings = 0;
+      TCHAR **splitted = SplitString(_buffer, _T('='), &numStrings);
+      if (numStrings == 2 && !_tcsicmp(splitted[0], parameter))
+      {
+         ret = _tcsdup(splitted[1]);
+         break;
+      }
+
+#ifdef UNICODE
+      free(_buffer);
+#endif
+   }
+
+   return ret;
 }

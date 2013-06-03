@@ -32,18 +32,21 @@
 class NXCORE_EXPORTABLE SMCLP_Connection
 {
 private:
-	TCHAR *m_host;
+	DWORD m_ip;
 	WORD m_port;
-	int m_protocol;
 	DWORD m_timeout;
-	SocketConnection *m_conn;
+	TelnetConnection *m_conn;
+   TCHAR *m_login;
+   TCHAR *m_password;
 
 public:
-	SMCLP_Connection(const TCHAR *host, WORD port, int protocol);
+	SMCLP_Connection(DWORD ip, WORD port);
 	~SMCLP_Connection();
 
 	bool connect(const TCHAR *login, const TCHAR *password);
 	void disconnect();
+
+   TCHAR *get(const TCHAR *path, const TCHAR *parameter);
 };
 
 #endif
