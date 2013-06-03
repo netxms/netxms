@@ -36,8 +36,6 @@ private:
 	WORD m_port;
 	DWORD m_timeout;
 	TelnetConnection *m_conn;
-   TCHAR *m_login;
-   TCHAR *m_password;
 
 public:
 	SMCLP_Connection(DWORD ip, WORD port);

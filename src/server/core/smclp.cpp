@@ -49,9 +49,6 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
 {
 	bool success = false;
 
-   nx_strncpy(m_login, login, sizeof(m_login));
-   nx_strncpy(m_password, password, sizeof(m_login));
-
 	if (m_conn != NULL)
    {
 		delete m_conn;
@@ -61,11 +58,11 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
    if (m_conn->connect(htonl(m_ip), m_port, m_timeout))
    {
 #ifdef UNICODE
-      char *_login = UTF8StringFromWideString(m_lo);
+      char *_login = UTF8StringFromWideString(login);
       char *_password = UTF8StringFromWideString(password);
 #else
-      char *_login = m_login;
-      char *_password = m_password;
+      char *_login = login;
+      char *_password = password;
 #endif
 
       if (m_conn->waitForText(":", m_timeout))
