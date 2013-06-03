@@ -145,14 +145,14 @@ public class DataCollectionTest extends SessionTest
 		final NXCSession session = connect();
 		
 		DciSummaryTable t = new DciSummaryTable("test", "Test Table");
-		t.getColumns().add(new DciSummaryTableColumn("Idle", "System.CPU.Idle"));
-		t.getColumns().add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait"));
+		t.getColumns().add(new DciSummaryTableColumn("Idle", "System.CPU.Idle", 0));
+		t.getColumns().add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait", 0));
 		
 		int id = session.modifyDciSummaryTable(t);
 		System.out.println("Assigned ID: " + id);
 		t.setId(id);
 
-		t.getColumns().add(new DciSummaryTableColumn("System", "System.CPU.System"));
+		t.getColumns().add(new DciSummaryTableColumn("System", "^System\\.CPU\\.Sys.*", DciSummaryTableColumn.REGEXP_MATCH));
 		session.modifyDciSummaryTable(t);
 		
 		List<DciSummaryTableDescriptor> list = session.listDciSummaryTables();

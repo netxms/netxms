@@ -105,11 +105,23 @@ SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
    {
       *ptr = 0;
       ptr += 3;
+      TCHAR *opt = _tcsstr(ptr, _T("^#^"));
+      if (opt != NULL)
+      {
+         *opt = 0;
+         opt += 3;
+         m_flags = _tcstoul(opt, NULL, 10);
+      }
+      else
+      {
+         m_flags = 0;
+      }
       nx_strncpy(m_dciName, ptr, MAX_PARAM_NAME);
    }
    else
    {
       nx_strncpy(m_dciName, configStr, MAX_PARAM_NAME);
+      m_flags = 0;
    }
    nx_strncpy(m_name, configStr, MAX_DB_STRING);
 }

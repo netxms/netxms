@@ -250,6 +250,11 @@ public:
 };
 
 /**
+ * Summary table column flags
+ */
+#define COLUMN_DEFINITION_REGEXP_MATCH    0x0001
+
+/**
  * Column definition for DCI summary table
  */
 class NXCORE_EXPORTABLE SummaryTableColumn
@@ -257,6 +262,7 @@ class NXCORE_EXPORTABLE SummaryTableColumn
 public:
    TCHAR m_name[MAX_DB_STRING];
    TCHAR m_dciName[MAX_PARAM_NAME];
+   DWORD m_flags;
 
    SummaryTableColumn(TCHAR *configStr);
 };

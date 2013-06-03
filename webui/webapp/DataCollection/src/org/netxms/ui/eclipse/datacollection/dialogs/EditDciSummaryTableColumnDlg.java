@@ -22,6 +22,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -38,6 +39,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
 	private DciSummaryTableColumn column;
 	private LabeledText name;
 	private LabeledText dciName;
+	private Button checkRegexpMatch;
 
 	/**
 	 * @param parentShell
@@ -82,6 +84,10 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       dciName.setLayoutData(gd);
       dciName.setText(column.getDciName());
       
+      checkRegexpMatch = new Button(dialogArea, SWT.CHECK);
+      checkRegexpMatch.setText("Use regular expression for parameter name matching");
+      checkRegexpMatch.setSelection(column.isRegexpMatch());
+      
 		return dialogArea;
 	}
 
@@ -103,6 +109,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
 	{
 		column.setName(name.getText());
 		column.setDciName(dciName.getText());
+		column.setRegexpMatch(checkRegexpMatch.getSelection());
 		super.okPressed();
 	}
 }

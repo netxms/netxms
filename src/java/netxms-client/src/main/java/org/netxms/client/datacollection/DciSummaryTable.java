@@ -72,7 +72,20 @@ public class DciSummaryTable
 				String[] data = parts[i].split("\\^\\#\\^");
 				if (data.length == 2)
 				{
-					columns.add(new DciSummaryTableColumn(data[0], data[1]));
+					columns.add(new DciSummaryTableColumn(data[0], data[1], 0));
+				}
+				else if (data.length == 3)
+				{
+					int flags;
+					try
+					{
+						flags = Integer.parseInt(data[2]);
+					}
+					catch(NumberFormatException e)
+					{
+						flags = 0;
+					}
+					columns.add(new DciSummaryTableColumn(data[0], data[1], flags));
 				}
 			}
 		}
@@ -103,6 +116,8 @@ public class DciSummaryTable
 			sb.append(c.getName());
 			sb.append("^#^");
 			sb.append(c.getDciName());
+			sb.append("^#^");
+			sb.append(c.getFlags());
 		}
 		msg.setVariable(NXCPCodes.VID_COLUMNS, sb.toString());
 	}

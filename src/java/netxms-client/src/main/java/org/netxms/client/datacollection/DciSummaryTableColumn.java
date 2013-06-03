@@ -23,18 +23,21 @@ package org.netxms.client.datacollection;
  */
 public class DciSummaryTableColumn
 {
+	public static int REGEXP_MATCH = 0x0001;
+	
 	private String name;
 	private String dciName;
+	private int flags;
 
 	/**
 	 * @param name
 	 * @param dciName
 	 */
-	public DciSummaryTableColumn(String name, String dciName)
+	public DciSummaryTableColumn(String name, String dciName, int flags)
 	{
-		super();
 		this.name = name;
 		this.dciName = dciName;
+		this.flags = flags;
 	}
 	
 	/**
@@ -46,6 +49,7 @@ public class DciSummaryTableColumn
 	{
 		name = src.name;
 		dciName = src.dciName;
+		flags = src.flags;
 	}
 
 	/**
@@ -78,5 +82,32 @@ public class DciSummaryTableColumn
 	public void setDciName(String dciName)
 	{
 		this.dciName = dciName;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isRegexpMatch()
+	{
+		return (flags & REGEXP_MATCH) != 0;
+	}
+	
+	/**
+	 * @param enable
+	 */
+	public void setRegexpMatch(boolean enable)
+	{
+		if (enable)
+			flags |= REGEXP_MATCH;
+		else
+			flags &= ~REGEXP_MATCH;
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
 	}
 }

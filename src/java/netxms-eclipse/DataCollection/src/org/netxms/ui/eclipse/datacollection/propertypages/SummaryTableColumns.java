@@ -481,7 +481,7 @@ public class SummaryTableColumns extends PropertyPage
 	 */
 	private void addColumn()
 	{
-		DciSummaryTableColumn column = new DciSummaryTableColumn("", ""); //$NON-NLS-1$ //$NON-NLS-2$
+		DciSummaryTableColumn column = new DciSummaryTableColumn("", "", 0); //$NON-NLS-1$ //$NON-NLS-2$
 		EditDciSummaryTableColumnDlg dlg = new EditDciSummaryTableColumnDlg(getShell(), column);
 		if (dlg.open() == Window.OK)
 		{
@@ -502,7 +502,7 @@ public class SummaryTableColumns extends PropertyPage
 		if (dialog.open() == Dialog.OK)
 		{
 			final DciValue selection = dialog.getSelection();
-			DciSummaryTableColumn column = new DciSummaryTableColumn(selection.getDescription(), selection.getName());
+			DciSummaryTableColumn column = new DciSummaryTableColumn(selection.getDescription(), selection.getName(), 0);
 			columns.add(column);
 			viewer.setInput(columns.toArray());
 			viewer.setSelection(new StructuredSelection(column));
