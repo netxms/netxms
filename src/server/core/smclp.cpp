@@ -61,8 +61,8 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
       char *_login = UTF8StringFromWideString(login);
       char *_password = UTF8StringFromWideString(password);
 #else
-      char *_login = login;
-      char *_password = password;
+      const char *_login = login;
+      const char *_password = password;
 #endif
 
       if (m_conn->waitForText(":", m_timeout))
