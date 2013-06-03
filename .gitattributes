@@ -1645,6 +1645,9 @@ src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/fragment.xml -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/OSGI-INF/l10n/bundle.properties -text
+src/java/netxms-eclipse/ObjectBrowser/OSGI-INF/l10n/bundle_es.properties -text
+src/java/netxms-eclipse/ObjectBrowser/OSGI-INF/l10n/bundle_ru.properties -text
+src/java/netxms-eclipse/ObjectBrowser/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser/icons/access_point.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/business_service.png -text
