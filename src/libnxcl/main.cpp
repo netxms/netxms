@@ -364,9 +364,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Encryption error"),
 		_T("Invalid mapping table ID"),
       _T("No software package data"),
-		_T("Invalid DCI summary table ID")
+		_T("Invalid DCI summary table ID"),
+      _T("User is logged in")
    };
-	return (dwError <= RCC_INVALID_SUMMARY_TABLE_ID) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_USER_LOGGED_IN) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

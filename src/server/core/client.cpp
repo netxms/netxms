@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -377,4 +377,21 @@ int GetSessionCount()
          nCount++;
    RWLockUnlock(m_rwlockSessionListAccess);
    return nCount;
+}
+
+/**
+ * Check if given user is currenly logged in
+ */
+bool IsLoggedIn(DWORD dwUserId)
+{
+   bool result = false;
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if (m_pSessionList[i] != NULL && m_pSessionList[i]->getUserId() == dwUserId)
+      {
+         result = true;
+         break;
+      }
+   RWLockUnlock(m_rwlockSessionListAccess);
+   return result;
 }

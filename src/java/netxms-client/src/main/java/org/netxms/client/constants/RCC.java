@@ -95,6 +95,7 @@ public final class RCC extends CommonRCC
 	public static final int INVALID_MAPPING_TABLE_ID = 99;
 	public static final int NO_SOFTWARE_PACKAGE_DATA = 100;
 	public static final int INVALID_SUMMARY_TABLE_ID = 101;
+	public static final int USER_LOGGED_IN = 102;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

@@ -109,6 +109,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 		table->addColumn(_T("SIZE.AVAIL.PCT"), DCI_DT_FLOAT);
 		table->addColumn(_T("SIZE.USED"), DCI_DT_UINT64);
 		table->addColumn(_T("SIZE.USED.PCT"), DCI_DT_FLOAT);
+      table->setInstanceColumn(_T("MOUNTPOINT"));
 
 		do
 		{

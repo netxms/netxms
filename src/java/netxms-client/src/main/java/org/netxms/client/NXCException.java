@@ -131,7 +131,8 @@ public class NXCException extends NetXMSClientException
 		"Encryption error",
 		"Invalid mapping table ID",
 		"No software package data",
-		"Invalid DCI summary table ID"
+		"Invalid DCI summary table ID",
+		"User is logged in"
 	};
 	private static final String[] extendedErrorTexts_en =
 	{
@@ -242,7 +243,8 @@ public class NXCException extends NetXMSClientException
       "Error de cifrado",
       "ID de tabla de asignación inválido",
 		"No software package data",	// TODO: translate
-		"Invalid DCI summary table ID"
+		"Invalid DCI summary table ID",
+		"User is logged in"
 	};
 	private static final String[] extendedErrorTexts_es =
 	{

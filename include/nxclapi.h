@@ -526,6 +526,7 @@ enum
 #define RCC_INVALID_MAPPING_TABLE_ID ((DWORD)99)
 #define RCC_NO_SOFTWARE_PACKAGE_DATA ((DWORD)100)
 #define RCC_INVALID_SUMMARY_TABLE_ID ((DWORD)101)
+#define RCC_USER_LOGGED_IN           ((DWORD)102)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

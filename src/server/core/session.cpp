@@ -2646,14 +2646,19 @@ void ClientSession::deleteUser(CSCPMessage *pRequest)
 
       if ((dwUserId != 0) && (dwUserId != GROUP_EVERYONE))
       {
-         DWORD dwResult;
-
-         dwResult = DeleteUserDatabaseObject(dwUserId);
-         msg.SetVariable(VID_RCC, dwResult);
+         if (!IsLoggedIn(dwUserId))
+         {
+            msg.SetVariable(VID_RCC, DeleteUserDatabaseObject(dwUserId));
+         }
+         else
+         {
+            // logger in users cannot be deleted
+            msg.SetVariable(VID_RCC, RCC_USER_LOGGED_IN);
+         }
       }
       else
       {
-         // System administrator account and _T("everyone") group cannot be deleted
+         // System administrator account and everyone group cannot be deleted
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
    }

@@ -801,6 +801,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags, WORD a
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
 int GetSessionCount();
+bool IsLoggedIn(DWORD dwUserId);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 DWORD GetLocalIpAddr();

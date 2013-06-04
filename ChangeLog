@@ -2,6 +2,7 @@
 * 1.2.8
 *
 
+- Support for data collection using SM-CLP protocol
 - Aggregated DCI values on cluster objects
 - Transformation scripts for table DCIs
 - Configurable DCI summary tables
