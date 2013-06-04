@@ -69,6 +69,7 @@ public class LastValues extends ObjectTab
 	public void objectChanged(AbstractObject object)
 	{
 		dataView.setDataCollectionTarget(object);
+		dataView.refresh();
 	}
 
 	/* (non-Javadoc)

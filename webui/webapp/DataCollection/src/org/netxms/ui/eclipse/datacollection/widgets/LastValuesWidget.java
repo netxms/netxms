@@ -115,7 +115,7 @@ public class LastValuesWidget extends Composite
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
-		this.dcTarget = dcTarget;
+		setDataCollectionTarget(dcTarget);
 		
 		registerOpenHandlers();
 		
@@ -356,7 +356,6 @@ public class LastValuesWidget extends Composite
 			this.dcTarget = dcTarget;
 		else
 			this.dcTarget = null;
-		getDataFromServer();
 	}
 	
 	/**
