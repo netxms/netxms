@@ -846,10 +846,10 @@ typedef struct tagICMPHDR
 /**
  * Check if given string is NULL and always return valid pointer
  */
-#define CHECK_NULL(x)      ((x) == NULL ? ((TCHAR *)_T("(null)")) : (x))
-#define CHECK_NULL_A(x)    ((x) == NULL ? ((char *)"(null)") : (x))
-#define CHECK_NULL_EX(x)   ((x) == NULL ? ((TCHAR *)_T("")) : (x))
-#define CHECK_NULL_EX_A(x) ((x) == NULL ? ((char *)"") : (x))
+#define CHECK_NULL(x)      ((x) == NULL ? _T("(null)") : (x))
+#define CHECK_NULL_A(x)    ((x) == NULL ? "(null)" : (x))
+#define CHECK_NULL_EX(x)   ((x) == NULL ? _T("") : (x))
+#define CHECK_NULL_EX_A(x) ((x) == NULL ? "" : (x))
 
 /**
  * Free memory block if it isn't NULL

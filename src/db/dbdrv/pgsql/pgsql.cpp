@@ -422,7 +422,8 @@ extern "C" DWORD EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR *e
          else
 		   {
             const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
-            if ((PQstatus(pConn->pHandle) != CONNECTION_BAD) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
+            if ((PQstatus(pConn->pHandle) != CONNECTION_BAD) && 
+                (sqlState != NULL) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
             {
                ThreadSleep(500);
                retry = true;
@@ -432,7 +433,7 @@ extern "C" DWORD EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR *e
             {
 			      if (errorText != NULL)
 			      {
-				      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+				      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
                   int len = (int)wcslen(errorText);
                   if (len > 0)
                   {
@@ -503,7 +504,8 @@ retry:
 	if (PQresultStatus(pResult) != PGRES_COMMAND_OK)
 	{
       const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
-      if ((PQstatus(pConn->pHandle) != CONNECTION_BAD) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
+      if ((PQstatus(pConn->pHandle) != CONNECTION_BAD) && 
+          (sqlState != NULL) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
       {
          ThreadSleep(500);
          retryCount--;
@@ -514,7 +516,7 @@ retry:
       {
 	      if (errorText != NULL)
 	      {
-		      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+		      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
             int len = (int)wcslen(errorText);
             if (len > 0)
             {
@@ -580,7 +582,8 @@ retry:
 	    (PQresultStatus(pResult) != PGRES_TUPLES_OK))
 	{	
       const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
-      if ((PQstatus(pConn->pHandle) != CONNECTION_BAD) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
+      if ((PQstatus(pConn->pHandle) != CONNECTION_BAD) && 
+          (sqlState != NULL) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
       {
          ThreadSleep(500);
          retryCount--;
@@ -591,7 +594,7 @@ retry:
       {
 	      if (errorText != NULL)
 	      {
-		      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+		      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
             int len = (int)wcslen(errorText);
             if (len > 0)
             {
@@ -663,7 +666,8 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(PG_CONN *pConn, PG_STATEMENT *h
 		   else
 		   {
             const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
-            if ((PQstatus(pConn->pHandle) != CONNECTION_BAD) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
+            if ((PQstatus(pConn->pHandle) != CONNECTION_BAD) && 
+                (sqlState != NULL) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
             {
                ThreadSleep(500);
                retry = true;
@@ -673,7 +677,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(PG_CONN *pConn, PG_STATEMENT *h
             {
 			      if (errorText != NULL)
 			      {
-				      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+				      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
                   int len = (int)wcslen(errorText);
                   if (len > 0)
                   {
