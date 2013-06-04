@@ -47,7 +47,7 @@ static MP_OBJECT *CreateObject(const char *pszName, DWORD dwId)
 /**
  * Create builtin object
  */
-static MP_OBJECT *CreateBuiltinObject(char *pszName)
+static MP_OBJECT *CreateBuiltinObject(const char *pszName)
 {
    MP_OBJECT *pObject = NULL;
 
@@ -65,7 +65,7 @@ static MP_OBJECT *CreateBuiltinObject(char *pszName)
 /**
  * Find module by name
  */
-static MP_MODULE *FindModuleByName(DynArray *pModuleList, char *pszName)
+static MP_MODULE *FindModuleByName(DynArray *pModuleList, const char *pszName)
 {
    int i, iNumModules;
 
@@ -79,7 +79,7 @@ static MP_MODULE *FindModuleByName(DynArray *pModuleList, char *pszName)
 /**
  * Find object in module
  */
-static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, char *pszName, int *pnIndex)
+static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, const char *pszName, int *pnIndex)
 {
    int i, iNumObjects;
 	MP_OBJECT *pObject;
@@ -103,8 +103,7 @@ static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, char *pszName, int *pnInd
 /**
  * Find imported object in module
  */
-static MP_OBJECT *FindImportedObjectByName(MP_MODULE *pModule, char *pszName,
-                                           MP_MODULE **ppImportModule)
+static MP_OBJECT *FindImportedObjectByName(MP_MODULE *pModule, const char *pszName, MP_MODULE **ppImportModule)
 {
    int i, j, iNumImports, iNumSymbols;
    MP_IMPORT_MODULE *pImport;
@@ -127,7 +126,7 @@ static MP_OBJECT *FindImportedObjectByName(MP_MODULE *pModule, char *pszName,
 /**
  * Find next module in chain, if symbol is imported and then re-exported
  */
-static MP_MODULE *FindNextImportModule(DynArray *pModuleList, MP_MODULE *pModule, char *pszSymbol)
+static MP_MODULE *FindNextImportModule(DynArray *pModuleList, MP_MODULE *pModule, const char *pszSymbol)
 {
    int i, j, iNumImports, iNumSymbols;
    MP_IMPORT_MODULE *pImport;

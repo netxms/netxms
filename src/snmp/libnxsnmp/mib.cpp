@@ -167,7 +167,7 @@ void SNMP_MIBObject::print(int nIndent)
 /**
  * Write string to file
  */
-static void WriteStringToFile(ZFile *pFile, TCHAR *pszStr)
+static void WriteStringToFile(ZFile *pFile, const TCHAR *pszStr)
 {
    WORD wLen, wTemp;
 #ifdef UNICODE
