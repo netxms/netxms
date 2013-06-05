@@ -195,3 +195,28 @@ void StringList::merge(const StringList *src, bool matchCase)
          add(src->m_values[i]);
    }
 }
+
+/**
+ * Join all elements into single string. Resulted string is dynamically allocated
+ * and must be destroyed by caller with free() call. For empty list empty string will be returned.
+ *
+ * @param separator separator string
+ * @return string with all list elements concatenated
+ */
+TCHAR *StringList::join(const TCHAR *separator)
+{
+   if (m_count == 0)
+      return _tcsdup(_T(""));
+
+   int len = 0;
+   for(int i = 0; i < m_count; i++)
+      len += (int)_tcslen(m_values[i]);
+   TCHAR *result = (TCHAR *)malloc((len + _tcslen(separator) * (m_count - 1) + 1) * sizeof(TCHAR));
+   _tcscpy(result, m_values[0]);
+   for(int i = 1; i < m_count; i++)
+   {
+      _tcscat(result, separator);
+      _tcscat(result, m_values[i]);
+   }
+   return result;
+}
