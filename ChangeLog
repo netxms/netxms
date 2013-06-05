@@ -7,6 +7,7 @@
 - Transformation scripts for table DCIs
 - Configurable DCI summary tables
 - Default background color for new network maps made configurable
+- Logged in users cannot be deleted
 - Management console:
 	- Charts can be created from table data
 

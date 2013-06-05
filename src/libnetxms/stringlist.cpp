@@ -183,3 +183,15 @@ void StringList::remove(int index)
 	m_count--;
 	memmove(&m_values[index], &m_values[index + 1], (m_count - index) * sizeof(TCHAR *));
 }
+
+/**
+ * Merge with another list
+ */
+void StringList::merge(const StringList *src, bool matchCase)
+{
+   for(int i = 0; i < src->m_count; i++)
+   {
+      if ((matchCase ? getIndex(src->m_values[i]) : getIndexIgnoreCase(src->m_values[i])) == -1)
+         add(src->m_values[i]);
+   }
+}

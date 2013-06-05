@@ -405,6 +405,7 @@ public:
 	int getIndex(const TCHAR *value);
 	int getIndexIgnoreCase(const TCHAR *value);
 	void remove(int index);
+   void merge(const StringList *src, bool matchCase);
 };
 
 /**
