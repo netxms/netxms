@@ -431,6 +431,9 @@ src/agent/subagents/oracle/oracle.vcproj -text
 src/agent/subagents/oracle/oracle_subagent.h -text
 src/agent/subagents/ping/ping.vcproj -text
 src/agent/subagents/portCheck/portcheck.vcproj -text
+src/agent/subagents/rpi/Makefile.am -text
+src/agent/subagents/rpi/htsensor.cpp -text
+src/agent/subagents/rpi/rpi.cpp -text
 src/agent/subagents/sms/sms.vcproj -text
 src/agent/subagents/ups/doc/apc_protocol_files/nut-banner.png -text
 src/agent/subagents/ups/doc/apc_protocol_files/vh401.png -text
