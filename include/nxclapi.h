@@ -758,7 +758,7 @@ enum
 #define DS_CHECKPOINT_AGENT   3
 #define DS_PUSH_AGENT         4
 #define DS_WINPERF            5
-#define DS_ILO                6
+#define DS_SMCLP              6
 
 /**
  * Item status

@@ -59,9 +59,11 @@ Node::Node() : DataCollectionTarget()
 	m_tDownSince = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
+   m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
 	m_mutexTopoAccess = MutexCreate();
    m_pAgentConnection = NULL;
+   m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -131,9 +133,11 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_tDownSince = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
+   m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
 	m_mutexTopoAccess = MutexCreate();
    m_pAgentConnection = NULL;
+   m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -183,9 +187,11 @@ Node::~Node()
 		m_driver->destroyDriverData(m_driverData);
    MutexDestroy(m_hPollerMutex);
    MutexDestroy(m_hAgentAccessMutex);
+   MutexDestroy(m_hSmclpAccessMutex);
    MutexDestroy(m_mutexRTAccess);
 	MutexDestroy(m_mutexTopoAccess);
    delete m_pAgentConnection;
+   delete m_smclpConnection;
    delete m_paramList;
 	delete m_tableList;
 	safe_free(m_sysDescription);
@@ -2841,6 +2847,41 @@ void Node::updateInstances(DCItem *root, StringList *instances)
 }
 
 /**
+ * Connect to SM-CLP agent. Assumes that access to SM-CLP connection is already locked.
+ */
+bool Node::connectToSMCLP()
+{
+   // Create new connection object if needed
+   if (m_smclpConnection == NULL)
+	{
+      m_smclpConnection = new SMCLP_Connection(m_dwIpAddr, 23);
+		DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): new connection created"), m_szName, m_dwId);
+	}
+	else
+	{
+		// Check if we already connected
+		if (m_smclpConnection->checkConnection())
+		{
+			DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): already connected"), m_szName, m_dwId);
+			return true;
+		}
+
+		// Close current connection or clean up after broken connection
+		m_smclpConnection->disconnect();
+      delete m_smclpConnection;
+      m_smclpConnection = new SMCLP_Connection(m_dwIpAddr, 23);
+		DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): existing connection reset"), m_szName, m_dwId);
+	}
+
+   const TCHAR *login = getCustomAttribute(_T("iLO.login"));
+   const TCHAR *password = getCustomAttribute(_T("iLO.password"));
+
+   if ((login != NULL) && (password != NULL))
+      return m_smclpConnection->connect(login, password);
+   return false;
+}
+
+/**
  * Connect to native agent. Assumes that access to agent connection is already locked.
  */
 BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
@@ -3246,6 +3287,58 @@ end_loop:
 }
 
 /**
+ * Get item's value via SM-CLP protocol
+ */
+DWORD Node::getItemFromSMCLP(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
+{
+   DWORD result = DCE_COMM_ERROR;
+
+   if (m_dwDynamicFlags & NDF_UNREACHABLE)
+      return DCE_COMM_ERROR;
+
+   smclpLock();
+
+   // Establish connection if needed
+   if (m_smclpConnection == NULL)
+      if (!connectToSMCLP())
+         goto end_loop;
+
+   int tries = 3;
+   while(tries-- > 0)
+   {
+      // Get parameter
+      TCHAR path[MAX_PARAM_NAME];
+      nx_strncpy(path, param, MAX_PARAM_NAME);
+      TCHAR *attr = _tcsrchr(path, _T('/'));
+      if (attr != NULL)
+      {
+         *attr = 0;
+         attr++;
+      }
+      TCHAR *value = m_smclpConnection->get(path, attr);
+      if (value != NULL)
+      {
+         nx_strncpy(buffer, value, bufSize);
+         free(value);
+         result = DCE_SUCCESS;
+         break;
+      }
+      else
+      {
+         if (!connectToSMCLP())
+            result = DCE_COMM_ERROR;
+         else
+            result = DCE_NOT_SUPPORTED;
+      }
+   }
+
+end_loop:
+   smclpUnlock();
+   DbgPrintf(7, _T("Node(%s)->GetItemFromSMCLP(%s): result=%d"), m_szName, param, result);
+   return result;
+}
+
+/**
  * Get value for server's internal parameter
  */
 DWORD Node::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
@@ -3376,41 +3469,6 @@ DWORD Node::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
    }
 
    return rc;
-}
-
-/**
- * Get value from iLO board
- */
-DWORD Node::getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize, TCHAR *buffer)
-{
-   DWORD result = DCE_COMM_ERROR;
-
-   const TCHAR *login = getCustomAttribute(_T("iLO.login"));
-   const TCHAR *password = getCustomAttribute(_T("iLO.password"));
-
-   if (!(m_dwDynamicFlags & NDF_UNREACHABLE) && login != NULL && password != NULL)
-   {
-      SMCLP_Connection *connection = new SMCLP_Connection(this->IpAddr(), 23);
-      if (connection->connect(login, password))
-      {
-         TCHAR *value = connection->get(path, param);
-         if (value != NULL)
-         {
-            nx_strncpy(buffer, value, bufSize);
-            free(value);
-            result = DCE_SUCCESS;
-         }
-         else
-         {
-            result = DCE_NOT_SUPPORTED;
-         }
-      }
-      delete connection;
-   }
-
-   DbgPrintf(7, _T("Node(%s)->GetItemFromILO(%s, %s): result=%d"), m_szName, path, param, result);
-
-   return result;
 }
 
 /**

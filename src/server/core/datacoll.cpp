@@ -99,18 +99,10 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 				   *error = DCE_NOT_SUPPORTED;
 			   }
             break;
-         case DS_ILO:
+         case DS_SMCLP:
             if (dcTarget->Type() == OBJECT_NODE)
             {
-				   TCHAR path[MAX_PARAM_NAME];
-               nx_strncpy(path, pItem->getName(), MAX_PARAM_NAME);
-               TCHAR *param = _tcsrchr(path, _T('/'));
-               if (param != NULL)
-               {
-                  *param = 0;
-                  param++;
-               }
-	            *error = ((Node *)dcTarget)->getItemFromILO(path, param, MAX_LINE_SIZE, pBuffer);
+	            *error = ((Node *)dcTarget)->getItemFromSMCLP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
             }
             else
             {

@@ -246,7 +246,7 @@ bool TelnetConnection::connect(DWORD ip, WORD port, DWORD timeout)
       // disable echo
       unsigned char out[3]; 
       out[0] = TELNET_IAC;
-      out[1] = TELNET_WILL;
+      out[1] = TELNET_WONT;
       out[2] = 0x01; // echo
       write((char *)out, 3);
    }

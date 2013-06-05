@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 
-
 /**
  * Constructor
  */
@@ -71,7 +70,7 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
          if (m_conn->waitForText(":", m_timeout)) 
          {
             m_conn->writeLine(_password);
-            if (m_conn->waitForText("iLO->", m_timeout)) 
+            if (m_conn->waitForText("->", m_timeout)) 
             {
                success = true;
             }
@@ -84,10 +83,8 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
 #endif
    }
 
-
    return success;
 }
-
 
 /**
  * Disconnect from target
@@ -122,7 +119,7 @@ TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
 
    while (m_conn->readLine(buffer, 1024, m_timeout / 10) > 0)
    {
-      if (strstr(buffer, "iLO->") != NULL)
+      if ((strstr(buffer, "->") != NULL) && (strstr(buffer, "show -o format=text") == NULL))
       {
          break;
       }
@@ -148,4 +145,14 @@ TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
    }
 
    return ret;
+}
+
+/**
+ * Check connection
+ */
+bool SMCLP_Connection::checkConnection()
+{
+   if (!m_conn->writeLine("cd /"))
+      return false;
+   return m_conn->waitForText("->", m_timeout);
 }

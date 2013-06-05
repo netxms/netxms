@@ -45,6 +45,7 @@ public:
 	void disconnect();
 
    TCHAR *get(const TCHAR *path, const TCHAR *parameter);
+   bool checkConnection();
 };
 
 #endif

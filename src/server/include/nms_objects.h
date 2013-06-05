@@ -949,9 +949,11 @@ protected:
 	time_t m_tDownSince;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
+   MUTEX m_hSmclpAccessMutex;
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
    AgentConnectionEx *m_pAgentConnection;
+   SMCLP_Connection *m_smclpConnection;
 	QWORD m_lastAgentTrapId;	// ID of last received agent trap
    DWORD m_dwPollerNode;      // Node used for network service polling
    DWORD m_dwProxyNode;       // Node used as proxy for agent connection
@@ -978,6 +980,9 @@ protected:
 
    void agentLock() { MutexLock(m_hAgentAccessMutex); }
    void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }
+
+   void smclpLock() { MutexLock(m_hSmclpAccessMutex); }
+   void smclpUnlock() { MutexUnlock(m_hSmclpAccessMutex); }
 
    void routingTableLock() { MutexLock(m_mutexRTAccess); }
    void routingTableUnlock() { MutexUnlock(m_mutexRTAccess); }
@@ -1120,6 +1125,8 @@ public:
    BOOL connectToAgent(DWORD *error = NULL, DWORD *socketError = NULL);
 	bool checkAgentTrapId(QWORD id);
 
+   bool connectToSMCLP();
+
 	virtual DWORD getInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
    DWORD getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer, int interpretRawValue);
    DWORD getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
@@ -1130,7 +1137,7 @@ public:
 	DWORD getListFromAgent(const TCHAR *name, StringList **list);
    DWORD getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
    DWORD getTableForClient(const TCHAR *name, Table **table);
-   DWORD getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize, TCHAR *buffer);
+   DWORD getItemFromSMCLP(const TCHAR *param, DWORD bufSize, TCHAR *buffer);
 
 	virtual NXSL_Array *getParentsForNXSL();
 	NXSL_Array *getInterfacesForNXSL();
