@@ -22,6 +22,12 @@
 #include <nms_agent.h>
 
 /**
+ * 
+ */
+BOOL StartSensorCollector();
+void StopSensorCollector();
+
+/**
  * Sensor data
  */
 extern float g_sensorData[];
@@ -47,6 +53,22 @@ static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 }
 
 /**
+ * Startup handler
+ */
+static BOOL SubagentInit(Config *config)
+{
+	return StartSensorCollector();
+}
+
+/**
+ * Shutdown handler
+ */
+static void SubagentShutdown()
+{
+	StopSensorCollector();
+}
+
+/**
  * Parameters
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
@@ -62,7 +84,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("RPI"), NETXMS_VERSION_STRING,
-	NULL, NULL, NULL,
+	SubagentInit,
+	SubagentShutdown,
+	NULL, // command handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, NULL,		// lists

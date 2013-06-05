@@ -28,6 +28,12 @@
 #define MAXTIMINGS 100
 
 /**
+ * Collector Thread data
+ */
+static bool volatile m_stopCollectorThread = false;
+static THREAD m_collector = INVALID_THREAD_HANDLE;
+
+/**
  * Sensor data 
  */
 float g_sensorData[2];
@@ -47,9 +53,11 @@ static bool ReadSensor()
 	bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_OUTP);
 
 	bcm2835_gpio_write(PIN, HIGH);
-	usleep(500000);  // 500 ms
+	//usleep(500000);
+	ThreadSleepMs(500);
 	bcm2835_gpio_write(PIN, LOW);
-	usleep(20000);
+	ThreadSleepMs(20);
+	//usleep(20000);
 
 	bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_INPT);
 
@@ -59,12 +67,19 @@ static bool ReadSensor()
 	counter = 0;
 	while (bcm2835_gpio_lev(PIN) == 1 && counter < 1000) 
 	{
-		usleep(1);
+		struct timespec ts;
+		ts.tv_sec = 0;
+		ts.tv_nsec = 1000;
+		nanosleep(&ts, NULL);
+		//usleep(1);
+		//ThreadSleepMs(1);
 		counter++;
 	}
 
 	if (counter == 1000)
+	{
 		return false;
+	}
 
 	// read data
 	for(int i = 0; i< MAXTIMINGS; i++) 
@@ -101,6 +116,8 @@ static bool ReadSensor()
 			
 		g_sensorData[0] = h;
 		g_sensorData[1] = t;
+
+		printf("t=%f, h=%f\n", t, h);
 		return true;
 	}
 
@@ -112,20 +129,37 @@ static bool ReadSensor()
  */
 THREAD_RESULT THREAD_CALL SensorPollingThread(void *)
 {
-	if (!bcm2835_init()) 
-	{
-		AgentWriteLog(NXLOG_ERROR, _T("RPI: call to bcm2835_init failed"));
-		return THREAD_OK;
-	}
-
 	AgentWriteDebugLog(1, _T("RPI: sensor polling thread started"));
 
-	while(1) 
+	while(!m_stopCollectorThread) 
 	{
 		if (ReadSensor())
+		{
 			g_sensorUpdateTime = time(NULL);
-		ThreadSleepMs(500);
+		}
+		ThreadSleepMs(1500);
 	}
 	
 	return THREAD_OK;
+}
+
+BOOL StartSensorCollector()
+{
+	if (!bcm2835_init()) 
+	{
+		AgentWriteLog(NXLOG_ERROR, _T("RPI: call to bcm2835_init failed"));
+		return FALSE;
+	}
+	m_collector = ThreadCreateEx(SensorPollingThread, 0, NULL);
+	return TRUE;
+}
+
+void StopSensorCollector()
+{
+	m_stopCollectorThread = true;
+	if (m_collector != INVALID_THREAD_HANDLE)
+	{
+		ThreadJoin(m_collector);
+		bcm2835_close();
+	}
 }

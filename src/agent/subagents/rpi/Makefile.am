@@ -1,10 +1,10 @@
 SUBAGENT = rpi
 
 pkglib_LTLIBRARIES = rpi.la
-ecs_la_SOURCES = htsensor.cpp rpi.cpp
-ecs_la_CPPFLAGS=-I@top_srcdir@/include
-ecs_la_LDFLAGS = -module -avoid-version
-ecs_la_LIBADD = ../../../libnetxms/libnetxms.la -lbcm2835
+rpi_la_SOURCES = htsensor.cpp rpi.cpp
+rpi_la_CPPFLAGS=-I@top_srcdir@/include
+rpi_la_LDFLAGS = -module -avoid-version
+rpi_la_LIBADD = ../../../libnetxms/libnetxms.la -lbcm2835
 
 if !STATIC_BUILD
 install-exec-hook:
