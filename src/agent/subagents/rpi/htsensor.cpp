@@ -117,7 +117,6 @@ static bool ReadSensor()
 		g_sensorData[0] = h;
 		g_sensorData[1] = t;
 
-		printf("t=%f, h=%f\n", t, h);
 		return true;
 	}
 
