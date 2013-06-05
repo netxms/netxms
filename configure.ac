@@ -371,6 +371,12 @@ AC_ARG_WITH(dist,
 	SERVER_TOOLS="nxconfig"
 )
 
+AC_ARG_WITH(rpi-agent,
+[AS_HELP_STRING(--with-rpi-agent,build Raspberry Pi agent)],
+[
+	COMPONENTS="$COMPONENTS raspberrypi"
+])
+
 
 #--------------------------------------------------------------------
 # Validate command line parameters and set various checking options
@@ -580,6 +586,11 @@ if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS informix"
 fi
 
+check_substr "$COMPONENTS" "raspberrypi"
+if test $? = 0; then
+	NEED_ZLIB="yes"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS rpi"
+fi
 
 #--------------------------------------------------------------------
 # Check for programs
@@ -2133,7 +2144,6 @@ AC_SUBST(SQLFLAGS)
 NETXMS_LIBRARY_VERSION=1:0:0
 AC_SUBST(NETXMS_LIBRARY_VERSION)
 
-
 #--------------------------------------------------------------------
 # Generate output files
 #--------------------------------------------------------------------
@@ -2190,7 +2200,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
 	src/agent/subagents/lmsensors/Makefile
-	src/agent/subagents/darwin//Makefile
+	src/agent/subagents/darwin/Makefile
+	src/agent/subagents/rpi/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
