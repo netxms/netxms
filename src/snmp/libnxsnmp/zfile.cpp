@@ -71,7 +71,7 @@ ZFile::~ZFile()
 /**
  * Write block to compressed file
  */
-int ZFile::zwrite(void *pBuf, int nLen)
+int ZFile::zwrite(const void *pBuf, int nLen)
 {
    int nBytes, nSrcPos, nRet;
 

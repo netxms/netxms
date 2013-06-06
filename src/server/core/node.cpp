@@ -3292,6 +3292,7 @@ end_loop:
 DWORD Node::getItemFromSMCLP(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
 {
    DWORD result = DCE_COMM_ERROR;
+   int tries = 3;
 
    if (m_dwDynamicFlags & NDF_UNREACHABLE)
       return DCE_COMM_ERROR;
@@ -3303,7 +3304,6 @@ DWORD Node::getItemFromSMCLP(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
       if (!connectToSMCLP())
          goto end_loop;
 
-   int tries = 3;
    while(tries-- > 0)
    {
       // Get parameter

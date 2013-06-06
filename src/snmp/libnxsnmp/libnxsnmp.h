@@ -93,7 +93,7 @@ private:
    BYTE *m_pCompBuffer;
    BYTE *m_pBufferPos;
 
-   int zwrite(void *pBuf, int nLen);
+   int zwrite(const void *pBuf, int nLen);
    int zputc(int ch);
    int zread(void *pBuf, int nLen);
    int zgetc();
@@ -105,7 +105,7 @@ public:
    ZFile(FILE *pFile, BOOL bCompress, BOOL bWrite);
    ~ZFile();
 
-   size_t write(void *pBuf, int nLen) { return m_bCompress ? zwrite(pBuf, nLen) : fwrite(pBuf, 1, nLen, m_pFile); }
+   size_t write(const void *pBuf, int nLen) { return m_bCompress ? zwrite(pBuf, nLen) : fwrite(pBuf, 1, nLen, m_pFile); }
    int fputc(int ch) { return m_bCompress ? zputc(ch) : ::fputc(ch, m_pFile); }
 
    size_t read(void *pBuf, int nLen) { return m_bCompress ? zread(pBuf, nLen) : fread(pBuf, 1, nLen, m_pFile); }
