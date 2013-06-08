@@ -206,20 +206,14 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL Container::DeleteFromDB()
+bool Container::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-   BOOL bSuccess;
-
-   bSuccess = NetObj::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM containers WHERE id=%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM containers WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
+   return success;
 }
 
 /**

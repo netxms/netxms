@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 NetXMS Team
+** Copyright (C) 2003-2013 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,9 +83,9 @@ BOOL ServiceContainer::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL ServiceContainer::DeleteFromDB()
+bool ServiceContainer::deleteFromDB(DB_HANDLE hdb)
 {
-	return Container::DeleteFromDB();
+	return Container::deleteFromDB(hdb);
 }
 
 /**

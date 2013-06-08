@@ -168,19 +168,13 @@ fail:
 /**
  * Delete object from database
  */
-BOOL Dashboard::DeleteFromDB()
+bool Dashboard::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR query[256];
-   BOOL success;
-
-   success = Container::DeleteFromDB();
+   bool success = Container::deleteFromDB(hdb);
    if (success)
-   {
-      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dashboards WHERE id=%d"), (int)m_dwId);
-      QueueSQLRequest(query);
-      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dashboard_elements WHERE dashboard_id=%d"), (int)m_dwId);
-      QueueSQLRequest(query);
-   }
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dashboards WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
    return success;
 }
 

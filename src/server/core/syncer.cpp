@@ -63,9 +63,18 @@ void SaveObjects(DB_HANDLE hdb)
       {
          if (object->getRefCount() == 0)
          {
-            DbgPrintf(4, _T("* Syncer * Object %d \"%s\" deleted"), object->Id(), object->Name());
-            object->DeleteFromDB();
-            NetObjDelete(object);
+   		   DBBegin(hdb);
+            if (object->deleteFromDB(hdb))
+            {
+               DbgPrintf(4, _T("Object %d \"%s\" deleted from database"), object->Id(), object->Name());
+               DBCommit(hdb);
+               NetObjDelete(object);
+            }
+            else
+            {
+               DBRollback(hdb);
+               DbgPrintf(4, _T("Call to deleteFromDB() failed for object %s [%d], transaction rollback"), object->Name(), object->Id());
+            }
          }
          else
          {

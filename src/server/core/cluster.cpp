@@ -323,22 +323,18 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL Cluster::DeleteFromDB()
+bool Cluster::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-   BOOL bSuccess;
-
-   bSuccess = DataCollectionTarget::DeleteFromDB();
-   if (bSuccess)
+   bool success = DataCollectionTarget::deleteFromDB(hdb);
+   if (success)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM clusters WHERE id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
+      success = executeQueryOnObject(hdb, _T("DELETE FROM clusters WHERE id=?"));
+      if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_members WHERE cluster_id=?"));
+      if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=?"));
    }
-   return bSuccess;
+   return success;
 }
 
 /**

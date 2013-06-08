@@ -104,18 +104,12 @@ BOOL Rack::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL Rack::DeleteFromDB()
+bool Rack::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-   BOOL bSuccess;
-
-   bSuccess = Container::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM racks WHERE id=%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = Container::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM racks WHERE id=?"));
+   return success;
 }
 
 /**

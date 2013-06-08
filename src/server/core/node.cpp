@@ -485,20 +485,14 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL Node::DeleteFromDB()
+bool Node::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-   BOOL bSuccess;
-
-   bSuccess = DataCollectionTarget::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DELETE FROM nsmap WHERE node_id=%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = DataCollectionTarget::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM nodes WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM nsmap WHERE node_id=?"));
+   return success;
 }
 
 /**
@@ -3923,7 +3917,7 @@ DWORD Node::checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
 /**
  * Handler for object deletion
  */
-void Node::OnObjectDelete(DWORD dwObjectId)
+void Node::onObjectDelete(DWORD dwObjectId)
 {
 	LockData();
    if (dwObjectId == m_dwPollerNode)
@@ -4339,7 +4333,7 @@ static bool NodeQueueComparator(void *key, void *element)
 /**
  * Prepare node object for deletion
  */
-void Node::PrepareForDeletion()
+void Node::prepareForDeletion()
 {
    // Prevent node from being queued for polling
    LockData();
@@ -4398,7 +4392,7 @@ void Node::PrepareForDeletion()
       ThreadSleepMs(100);
    }
 	DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_szName, (int)m_dwId);
-	DataCollectionTarget::PrepareForDeletion();
+	DataCollectionTarget::prepareForDeletion();
 }
 
 /**

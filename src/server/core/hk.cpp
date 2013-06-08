@@ -64,6 +64,20 @@ void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId)
 }
 
 /**
+ * Delete realted events for alarm
+ */
+void DeleteAlarmEvents(DB_HANDLE hdb, DWORD alarmId)
+{
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_events WHERE alarm_id=?"));
+	if (hStmt == NULL)
+		return;
+
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+	DBExecute(hStmt);
+	DBFreeStatement(hStmt);
+}
+
+/**
  * Remove outdated alarm records
  */
 static void CleanAlarmHistory(DB_HANDLE hdb)
@@ -84,7 +98,11 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				DeleteAlarmNotes(hdb, DBGetFieldULong(hResult, i, 0));
+         {
+            DWORD alarmId = DBGetFieldULong(hResult, i, 0);
+				DeleteAlarmNotes(hdb, alarmId);
+            DeleteAlarmEvents(hdb, alarmId);
+         }
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);

@@ -143,25 +143,20 @@ fail:
 	return FALSE;
 }
 
-
-//
-// Delete from database
-//
-
-BOOL Report::DeleteFromDB()
+/**
+ * Delete from database
+ */
+bool Report::deleteFromDB(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-
-	_sntprintf(query, 256, _T("DELETE FROM reports WHERE id=%d"), m_dwId);
-	QueueSQLRequest(query);
-	return TRUE;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM reports WHERE id=?"));
+	return success;
 }
 
-
-//
-// Load from database
-//
-
+/**
+ * Load from database
+ */
 BOOL Report::CreateFromDB(DWORD dwId)
 {
 	m_dwId = dwId;

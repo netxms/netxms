@@ -227,32 +227,22 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    return TRUE;
 }
 
-
-//
-// Delete VPN connector object from database
-//
-
-BOOL VPNConnector::DeleteFromDB()
+/**
+ * Delete VPN connector object from database
+ */
+bool VPNConnector::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[128];
-   BOOL bSuccess;
-
-   bSuccess = NetObj::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, 128, _T("DELETE FROM vpn_connectors WHERE id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 128, _T("DELETE FROM vpn_connector_networks WHERE vpn_id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM vpn_connectors WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM vpn_connector_networks WHERE vpn_id=?"));
+   return success;
 }
 
-
-//
-// Get connector's parent node
-//
-
+/**
+ * Get connector's parent node
+ */
 Node *VPNConnector::GetParentNode()
 {
    DWORD i;

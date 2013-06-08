@@ -515,13 +515,14 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
 /**
  * Delete alarm with given ID
  */
-void AlarmManager::deleteAlarm(DWORD dwAlarmId)
+void AlarmManager::deleteAlarm(DWORD dwAlarmId, bool objectCleanup)
 {
    DWORD i, dwObject;
    TCHAR szQuery[256];
 
    // Delete alarm from in-memory list
-   lock();
+   if (!objectCleanup)  // otherwise already locked
+      lock();
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
@@ -531,19 +532,77 @@ void AlarmManager::deleteAlarm(DWORD dwAlarmId)
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
          break;
       }
-   unlock();
+   if (!objectCleanup)
+      unlock();
 
    // Delete from database
-   _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), (int)dwAlarmId);
-   QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)dwAlarmId);
-   QueueSQLRequest(szQuery);
+   if (!objectCleanup)
+   {
+      _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), (int)dwAlarmId);
+      QueueSQLRequest(szQuery);
+      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)dwAlarmId);
+      QueueSQLRequest(szQuery);
 
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DeleteAlarmNotes(hdb, dwAlarmId);
-	DBConnectionPoolReleaseConnection(hdb);
+	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	   DeleteAlarmNotes(hdb, dwAlarmId);
+	   DBConnectionPoolReleaseConnection(hdb);
 
-   updateObjectStatus(dwObject);
+      updateObjectStatus(dwObject);
+   }
+}
+
+/**
+ * Delete all alarms of given object. Intended to be called only
+ * on final stage of object deletion.
+ */
+bool AlarmManager::deleteObjectAlarms(DWORD objectId, DB_HANDLE hdb)
+{
+	lock();
+
+	// go through from end because m_dwNumAlarms is decremented by deleteAlarm()
+	for (int i = (int)m_dwNumAlarms; i >= 0; i--) 
+   {
+		if (m_pAlarmList[i].dwSourceObject == objectId)
+      {
+			deleteAlarm(m_pAlarmList[i].dwAlarmId, true);
+      }
+	}
+
+	unlock();
+
+   // Delete all object alarms from database
+   bool success = false;
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT alarm_id FROM alarms WHERE source_object_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+         success = true;
+			int count = DBGetNumRows(hResult);
+			for(int i = 0; i < count; i++)
+         {
+            DWORD alarmId = DBGetFieldULong(hResult, i, 0);
+				DeleteAlarmNotes(hdb, alarmId);
+            DeleteAlarmEvents(hdb, alarmId);
+         }
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+
+   if (success)
+   {
+	   hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE source_object_id=?"));
+	   if (hStmt != NULL)
+	   {
+		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
+         success = DBExecute(hStmt) ? true : false;
+         DBFreeStatement(hStmt);
+      }
+   }
+   return success;
 }
 
 /**

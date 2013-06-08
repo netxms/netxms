@@ -215,18 +215,12 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
 /**
  * Delete object from database
  */
-BOOL NetworkService::DeleteFromDB()
+bool NetworkService::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[128];
-   BOOL bSuccess;
-
-   bSuccess = NetObj::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, 128, _T("DELETE FROM network_services WHERE id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_services WHERE id=?"));
+   return success;
 }
 
 /**
@@ -423,7 +417,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
 /**
  * Handler for object deletion
  */
-void NetworkService::OnObjectDelete(DWORD dwObjectId)
+void NetworkService::onObjectDelete(DWORD dwObjectId)
 {
 	LockData();
    if (dwObjectId == m_dwPollerNode)

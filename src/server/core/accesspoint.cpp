@@ -178,18 +178,12 @@ BOOL AccessPoint::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL AccessPoint::DeleteFromDB()
+bool AccessPoint::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-   BOOL bSuccess;
-
-   bSuccess = DataCollectionTarget::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM access_points WHERE id=%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = DataCollectionTarget::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM access_points WHERE id=?"));
+   return success;
 }
 
 /**

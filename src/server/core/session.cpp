@@ -4807,7 +4807,7 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
       if ((pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
           (m_dwSystemAccess & SYSTEM_ACCESS_DELETE_ALARMS))
       {
-         g_alarmMgr.deleteAlarm(dwAlarmId);
+         g_alarmMgr.deleteAlarm(dwAlarmId, false);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
       else

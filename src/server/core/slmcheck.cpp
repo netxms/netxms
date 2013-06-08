@@ -277,32 +277,20 @@ finish:
 	return ret;
 }
 
-
-//
-// Delete object from database
-//
-
-BOOL SlmCheck::DeleteFromDB()
+/**
+ * Delete object from database
+ */
+bool SlmCheck::deleteFromDB(DB_HANDLE hdb)
 {
-	BOOL bSuccess;
-
-	bSuccess = NetObj::DeleteFromDB();
-	if (bSuccess)
-	{
-		TCHAR szQuery[256];
-
-		_sntprintf(szQuery, 256, _T("DELETE FROM slm_checks WHERE id=%d"), m_dwId);
-		QueueSQLRequest(szQuery);
-	}
-
-	return bSuccess;
+	bool success = NetObj::deleteFromDB(hdb);
+	if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM slm_checks WHERE id=?"));
+	return success;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void SlmCheck::CreateMessage(CSCPMessage *pMsg)
 {
 	NetObj::CreateMessage(pMsg);
@@ -576,12 +564,10 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 	return (value != NULL) ? value : new NXSL_Value;
 }
 
-
-//
-// Object deletion handler
-//
-
-void SlmCheck::OnObjectDelete(DWORD objectId)
+/**
+ * Object deletion handler
+ */
+void SlmCheck::onObjectDelete(DWORD objectId)
 {
 	// Delete itself if object curemtly being deleted is
 	// a template used to create this check
@@ -590,4 +576,5 @@ void SlmCheck::OnObjectDelete(DWORD objectId)
 		DbgPrintf(4, _T("SlmCheck %s [%d] delete itself because of template deletion"), m_szName, (int)m_dwId);
 		deleteObject();
 	}
+   NetObj::onObjectDelete(objectId);
 }

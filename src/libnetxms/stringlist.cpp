@@ -26,7 +26,7 @@
 #define ALLOCATION_STEP		16
 
 /**
- * Constructor
+ * Constructor: create empty string list
  */
 StringList::StringList()
 {
@@ -34,6 +34,18 @@ StringList::StringList()
 	m_allocated = ALLOCATION_STEP;
 	m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
 	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+}
+
+/**
+ * Constructor: create string list by splitting source string at separators
+ */
+StringList::StringList(const TCHAR *src, const TCHAR *separator)
+{
+	m_count = 0;
+	m_allocated = ALLOCATION_STEP;
+	m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
+	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+   splitAndAdd(src, separator);
 }
 
 /**
@@ -219,4 +231,38 @@ TCHAR *StringList::join(const TCHAR *separator)
       _tcscat(result, m_values[i]);
    }
    return result;
+}
+
+/**
+ * Split source string into pieces using given separator and add all
+ * resulting substrings to the list.
+ */
+void StringList::splitAndAdd(const TCHAR *src, const TCHAR *separator)
+{
+   int slen = (int)_tcslen(separator);
+   if (slen == 0)
+   {
+      add(src);
+      return;
+   }
+
+   const TCHAR *curr = src;
+   while(curr != NULL)
+   {
+      const TCHAR *next = _tcsstr(curr, separator);
+      if (next != NULL)
+      {
+         int len = (int)(next - curr);
+         TCHAR *value = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+         memcpy(value, curr, len * sizeof(TCHAR));
+         value[len] = 0;
+         addPreallocated(value);
+         next += slen;
+      }
+      else
+      {
+         add(curr);
+      }
+      curr = next;
+   }
 }

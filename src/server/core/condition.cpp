@@ -220,32 +220,22 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    return TRUE;
 }
 
-
-//
-// Delete object from database
-//
-
-BOOL Condition::DeleteFromDB()
+/**
+ * Delete object from database
+ */
+bool Condition::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[128];
-   BOOL bSuccess;
-
-   bSuccess = NetObj::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, 128, _T("DELETE FROM conditions WHERE id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 128, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM conditions WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM cond_dci_map WHERE condition_id=?"));
+   return success;
 }
 
-
-//
-// Create NXCP message from object
-//
-
+/**
+ * Create NXCP message from object
+ */
 void Condition::CreateMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwId;

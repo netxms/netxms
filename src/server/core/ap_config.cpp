@@ -96,28 +96,22 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
    return success;
 }
 
-
-//
-// Delete from database
-//
-
-BOOL AgentPolicyConfig::DeleteFromDB()
+/**
+ * Delete from database
+ */
+bool AgentPolicyConfig::deleteFromDB(DB_HANDLE hdb)
 {
-	AgentPolicy::DeleteFromDB();
-
-	TCHAR query[256];
-
-	_sntprintf(query, 256, _T("DELETE FROM ap_config_files WHERE policy_id=%d"), m_dwId);
-	QueueSQLRequest(query);
-
-	return TRUE;
+	bool success = AgentPolicy::deleteFromDB(hdb);
+   if (success)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_config_files WHERE policy_id=?"));
+   }
+   return success;
 }
 
-
-//
-// Load from database
-//
-
+/**
+ * Load from database
+ */
 BOOL AgentPolicyConfig::CreateFromDB(DWORD dwId)
 {
 	BOOL success = FALSE;

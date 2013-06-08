@@ -103,18 +103,42 @@ BOOL NetObj::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL NetObj::DeleteFromDB()
+bool NetObj::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-
    // Delete ACL
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM acl WHERE object_id=%d"), m_dwId);
-   QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_properties WHERE object_id=%d"), m_dwId);
-   QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_dwId);
-   QueueSQLRequest(szQuery);
-   return TRUE;
+   bool success = executeQueryOnObject(hdb, _T("DELETE FROM acl WHERE object_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM object_properties WHERE object_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM object_custom_attributes WHERE object_id=?"));
+
+   // Delete events
+   if (success && ConfigReadInt(_T("DeleteEventsOfDeletedObject"), 1)) 
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM event_log WHERE event_source=?"));
+   }
+
+   // Delete alarms
+   if (success && ConfigReadInt(_T("DeleteAlarmsOfDeletedObject"), 1)) 
+   {
+      success = g_alarmMgr.deleteObjectAlarms(m_dwId, hdb);
+   }
+
+   return success;
+}
+
+/**
+ * Prepare and execute SQL query with single binding - object ID.
+ */
+bool NetObj::executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt == NULL)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+   bool success = DBExecute(hStmt) ? true : false;
+   DBFreeStatement(hStmt);
+   return success;
 }
 
 /**
@@ -449,7 +473,7 @@ void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
 {
 	DWORD currId = ((NetObj *)data)->Id();
 	if ((object->Id() != currId) && !object->isDeleted())
-		object->OnObjectDelete(currId);
+		object->onObjectDelete(currId);
 }
 
 /**
@@ -475,7 +499,7 @@ void NetObj::deleteObject()
 			g_pModuleList[i].pfPreObjectDelete(this);
 	}
 
-   PrepareForDeletion();
+   prepareForDeletion();
 
    // Remove references to this object from parent objects
    DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_dwId);
@@ -525,7 +549,7 @@ void NetObj::deleteObject()
 /**
  * Default handler for object deletion notification
  */
-void NetObj::OnObjectDelete(DWORD dwObjectId)
+void NetObj::onObjectDelete(DWORD dwObjectId)
 {
 }
 
@@ -1290,7 +1314,7 @@ int NetObj::getPropagatedStatus()
  * Prepare object for deletion. Method should return only
  * when object deletion is safe
  */
-void NetObj::PrepareForDeletion()
+void NetObj::prepareForDeletion()
 {
 }
 

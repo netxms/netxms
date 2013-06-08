@@ -140,27 +140,24 @@ BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
    return success;
 }
 
-
-//
-// Delete from database
-//
-
-BOOL AgentPolicy::DeleteFromDB()
+/**
+ * Delete from database
+ */
+bool AgentPolicy::deleteFromDB(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-
-	_sntprintf(query, 256, _T("DELETE FROM ap_common WHERE id=%d"), m_dwId);
-	QueueSQLRequest(query);
-	_sntprintf(query, 256, _T("DELETE FROM ap_bindings WHERE policy_id=%d"), m_dwId);
-	QueueSQLRequest(query);
-	return TRUE;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_common WHERE id=?"));
+      if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM ap_bindings WHERE policy_id=?"));
+   }
+   return success;
 }
 
-
-//
-// Load from database
-//
-
+/**
+ * Load from database
+ */
 BOOL AgentPolicy::CreateFromDB(DWORD dwId)
 {
 	m_dwId = dwId;

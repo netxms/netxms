@@ -297,23 +297,15 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    return success;
 }
 
-
-//
-// Delete interface object from database
-//
-
-BOOL Interface::DeleteFromDB()
+/**
+ * Delete interface object from database
+ */
+bool Interface::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[128];
-   BOOL bSuccess;
-
-   bSuccess = NetObj::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, 128, _T("DELETE FROM interfaces WHERE id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM interfaces WHERE id=?"));
+   return success;
 }
 
 /**
@@ -828,12 +820,10 @@ void Interface::updateZoneId()
 	}
 }
 
-
-//
-// Handler for object deletion notification
-//
-
-void Interface::OnObjectDelete(DWORD dwObjectId)
+/**
+ * Handler for object deletion notification
+ */
+void Interface::onObjectDelete(DWORD dwObjectId)
 {
 	if ((m_peerNodeId == dwObjectId) || (m_peerInterfaceId == dwObjectId))
 	{
@@ -843,5 +833,5 @@ void Interface::OnObjectDelete(DWORD dwObjectId)
 		Modify();
 		UnlockData();
 	}
-	NetObj::OnObjectDelete(dwObjectId);
+	NetObj::onObjectDelete(dwObjectId);
 }

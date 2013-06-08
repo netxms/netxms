@@ -46,20 +46,21 @@ DataCollectionTarget::~DataCollectionTarget()
 /**
  * Delete object from database
  */
-BOOL DataCollectionTarget::DeleteFromDB()
+bool DataCollectionTarget::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-   BOOL bSuccess;
-
-   bSuccess = Template::DeleteFromDB();
-   if (bSuccess)
+   bool success = Template::deleteFromDB(hdb);
+   if (success)
    {
-      _sntprintf(szQuery, 256, _T("DROP TABLE idata_%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DROP TABLE tdata_%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("DROP TABLE idata_%d"), (int)m_dwId);
+      success = DBQuery(hdb, query) ? true : false;
+      if (success)
+      {
+         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_dwId);
+         success = DBQuery(hdb, query) ? true : false;
+      }
    }
-   return bSuccess;
+   return success;
 }
 
 /**

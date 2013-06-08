@@ -147,31 +147,22 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 	return ServiceContainer::SaveToDB(hdb);
 }
 
-
-//
-// Delete object from database
-//
-
-BOOL BusinessService::DeleteFromDB()
+/**
+ * Delete object from database
+ */
+bool BusinessService::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[QUERY_LENGTH];
-   BOOL bSuccess;
-
-   bSuccess = ServiceContainer::DeleteFromDB();
-   if (bSuccess)
+   bool success = ServiceContainer::deleteFromDB(hdb);
+   if (success)
    {
-      _sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM business_services WHERE service_id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
+      success = executeQueryOnObject(hdb, _T("DELETE FROM business_services WHERE service_id=?"));
    }
-
-   return bSuccess;
+   return success;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void BusinessService::CreateMessage(CSCPMessage *pMsg)
 {
    ServiceContainer::CreateMessage(pMsg);

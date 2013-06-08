@@ -120,11 +120,9 @@ BOOL Zone::CreateFromDB(DWORD dwId)
    return TRUE;
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL Zone::SaveToDB(DB_HANDLE hdb)
 {
    BOOL bNewObject = TRUE;
@@ -164,30 +162,20 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
    return TRUE;
 }
 
-
-//
-// Delete zone object from database
-//
-
-BOOL Zone::DeleteFromDB()
+/**
+ * Delete zone object from database
+ */
+bool Zone::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-   BOOL bSuccess;
-
-   bSuccess = NetObj::DeleteFromDB();
-   if (bSuccess)
-   {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM zones WHERE id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-   }
-   return bSuccess;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM zones WHERE id=?"));
+   return success;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void Zone::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);

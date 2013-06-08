@@ -206,17 +206,16 @@ fail:
 /**
  * Delete from database
  */
-BOOL NetworkMap::DeleteFromDB()
+bool NetworkMap::deleteFromDB(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-
-	_sntprintf(query, 256, _T("DELETE FROM network_maps WHERE id=%d"), m_dwId);
-	QueueSQLRequest(query);
-	_sntprintf(query, 256, _T("DELETE FROM network_map_elements WHERE map_id=%d"), m_dwId);
-	QueueSQLRequest(query);
-	_sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d"), m_dwId);
-	QueueSQLRequest(query);
-	return TRUE;
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_maps WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_elements WHERE map_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_links WHERE map_id=?"));
+   return success;
 }
 
 /**

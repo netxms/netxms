@@ -310,6 +310,18 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V278 to V279
+ */
+static BOOL H_UpgradeFromV278(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("DeleteEventsOfDeletedObject"), _T("1"), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("DeleteAlarmsOfDeletedObject"), _T("1"), 1, 0));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='279' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V277 to V278
  */
 static BOOL H_UpgradeFromV277(int currVersion, int newVersion)
@@ -6868,6 +6880,7 @@ static struct
    { 275, 276, H_UpgradeFromV275 },
    { 276, 277, H_UpgradeFromV276 },
    { 277, 278, H_UpgradeFromV277 },
+   { 278, 279, H_UpgradeFromV278 },
    { 0, 0, NULL }
 };
 

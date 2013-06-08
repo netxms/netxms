@@ -23,8 +23,6 @@
 #include "nxcore.h"
 #include "nms_objects.h"
 
-#define QUERY_LENGTH		(512)
-
 /**
  * NodeLink default constructor
  */
@@ -152,19 +150,12 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL NodeLink::DeleteFromDB()
+bool NodeLink::deleteFromDB(DB_HANDLE hdb)
 {
-	TCHAR szQuery[QUERY_LENGTH];
-	BOOL bSuccess;
-
-	bSuccess = ServiceContainer::DeleteFromDB();
-	if (bSuccess)
-	{
-		_sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM node_links WHERE nodelink_id=%d"), m_dwId);
-		QueueSQLRequest(szQuery);
-	}
-
-	return bSuccess;
+	bool success = ServiceContainer::deleteFromDB(hdb);
+	if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM node_links WHERE nodelink_id=?"));
+	return success;
 }
 
 /**
@@ -283,7 +274,7 @@ static THREAD_RESULT THREAD_CALL DeleteThread(void *arg)
 /**
  * Object deletion handler
  */
-void NodeLink::OnObjectDelete(DWORD dwObjectId)
+void NodeLink::onObjectDelete(DWORD dwObjectId)
 {
 	if (dwObjectId == m_nodeId)
 	{
@@ -294,4 +285,5 @@ void NodeLink::OnObjectDelete(DWORD dwObjectId)
 		DbgPrintf(4, _T("Scheduling deletion of nodelink object %s [%u] due to linked node deletion"), m_szName, m_dwId);
 		ThreadCreate(DeleteThread, 0, this);
 	}
+   ServiceContainer::onObjectDelete(dwObjectId);
 }

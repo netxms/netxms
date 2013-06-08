@@ -51,7 +51,7 @@ const TCHAR *SymbolDriver::getVersion()
  */
 int SymbolDriver::isPotentialDevice(const TCHAR *oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.388.14"), 19) == 0) ? 127 : 0;
+   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.388."), 17) == 0) ? 127 : 0;
 }
 
 /**
@@ -62,7 +62,8 @@ int SymbolDriver::isPotentialDevice(const TCHAR *oid)
  */
 bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
-   return true;
+   TCHAR buffer[1024];
+   return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.1.6.1.10.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -76,7 +77,6 @@ bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 void SymbolDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
 {
 }
-
 
 /**
  * Get cluster mode for device (standalone / active / standby)
@@ -368,7 +368,6 @@ ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp
    return apList;
 }
 
-
 /**
  * Handler for mobile units enumeration
  */
@@ -433,7 +432,6 @@ static DWORD HandlerWirelessStationList(DWORD version, SNMP_Variable *var, SNMP_
 
    return ret;
 }
-
 
 /*
  *

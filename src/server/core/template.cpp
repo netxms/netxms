@@ -316,32 +316,27 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-BOOL Template::DeleteFromDB()
+bool Template::deleteFromDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256];
-   BOOL bSuccess;
-
-   bSuccess = NetObj::DeleteFromDB();
-   if (bSuccess)
+   bool success = NetObj::deleteFromDB(hdb);
+   if (success)
    {
       if (Type() == OBJECT_TEMPLATE)
       {
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM templates WHERE id=%d"), m_dwId);
-         QueueSQLRequest(szQuery);
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_node_map WHERE template_id=%d"), m_dwId);
-         QueueSQLRequest(szQuery);
+         success = executeQueryOnObject(hdb, _T("DELETE FROM templates WHERE id=?"));
+         if (success)
+            success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
       }
       else
       {
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_node_map WHERE node_id=%d"), m_dwId);
-         QueueSQLRequest(szQuery);
+         success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE node_id=?"));
       }
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM items WHERE node_id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE items SET template_id=0 WHERE template_id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
+      if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM items WHERE node_id=?"));
+      if (success)
+         success = executeQueryOnObject(hdb, _T("UPDATE items SET template_id=0 WHERE template_id=?"));
    }
-   return bSuccess;
+   return success;
 }
 
 /**
@@ -964,7 +959,7 @@ void Template::associateItems()
 /**
  * Prepare template for deletion
  */
-void Template::PrepareForDeletion()
+void Template::prepareForDeletion()
 {
 	if (Type() == OBJECT_TEMPLATE)
 	{
@@ -978,7 +973,7 @@ void Template::PrepareForDeletion()
 		}
 		UnlockChildList();
 	}
-	NetObj::PrepareForDeletion();
+	NetObj::prepareForDeletion();
 }
 
 /**

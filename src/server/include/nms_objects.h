@@ -374,11 +374,12 @@ protected:
    BOOL saveCommonProperties(DB_HANDLE hdb);
 	BOOL loadTrustedNodes();
 	BOOL saveTrustedNodes(DB_HANDLE hdb);
+   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query);
 
    void sendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...);
 
-   virtual void PrepareForDeletion();
-   virtual void OnObjectDelete(DWORD dwObjectId);
+   virtual void prepareForDeletion();
+   virtual void onObjectDelete(DWORD dwObjectId);
 
 public:
    NetObj();
@@ -423,7 +424,7 @@ public:
    void unhide();
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    void setId(DWORD dwId) { m_dwId = dwId; Modify(); }
@@ -516,7 +517,7 @@ protected:
 	NXSL_Program *m_applyFilter;
 	MUTEX m_mutexDciAccess;
 
-   virtual void PrepareForDeletion();
+   virtual void prepareForDeletion();
 
    void loadItemsFromDB();
    void destroyItems();
@@ -533,7 +534,7 @@ public:
    virtual int Type() { return OBJECT_TEMPLATE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -609,7 +610,7 @@ protected:
 	void paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transport *pTransport, Node *node);
 
 protected:
-   virtual void OnObjectDelete(DWORD dwObjectId);
+   virtual void onObjectDelete(DWORD dwObjectId);
 
 public:
    Interface();
@@ -619,7 +620,7 @@ public:
 
    virtual int Type() { return OBJECT_INTERFACE; }
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    Node *getParentNode();
@@ -694,7 +695,7 @@ protected:
 	int m_iPollCount;
 	int m_iRequiredPollCount;
 
-   virtual void OnObjectDelete(DWORD dwObjectId);
+   virtual void onObjectDelete(DWORD dwObjectId);
 
 public:
    NetworkService();
@@ -706,7 +707,7 @@ public:
    virtual int Type() { return OBJECT_NETWORKSERVICE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode, Queue *pEventQueue);
@@ -737,7 +738,7 @@ public:
    virtual int Type() { return OBJECT_VPNCONNECTOR; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -761,7 +762,7 @@ public:
    DataCollectionTarget(const TCHAR *name);
    virtual ~DataCollectionTarget();
 
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -808,7 +809,7 @@ public:
 
    virtual BOOL CreateFromDB(DWORD dwId);
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -843,7 +844,7 @@ public:
 
    virtual BOOL CreateFromDB(DWORD dwId);
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -879,7 +880,7 @@ public:
 
    virtual int Type() { return OBJECT_CLUSTER; }
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1020,8 +1021,8 @@ protected:
 
 	virtual bool isDataCollectionDisabled();
 
-   virtual void PrepareForDeletion();
-   virtual void OnObjectDelete(DWORD dwObjectId);
+   virtual void prepareForDeletion();
+   virtual void onObjectDelete(DWORD dwObjectId);
 
 public:
    Node();
@@ -1031,7 +1032,7 @@ public:
    virtual int Type() { return OBJECT_NODE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
 	TCHAR *expandText(const TCHAR *pszTemplate);
@@ -1325,7 +1326,7 @@ public:
    virtual int Type() { return OBJECT_SUBNET; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
@@ -1408,7 +1409,7 @@ public:
    virtual int Type(void) { return OBJECT_CONTAINER; }
   
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1460,7 +1461,7 @@ public:
    virtual int Type() { return OBJECT_RACK; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1489,7 +1490,7 @@ public:
    virtual int Type() { return OBJECT_ZONE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1565,7 +1566,7 @@ public:
    virtual int Type() { return OBJECT_CONDITION; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1607,7 +1608,7 @@ public:
    virtual int Type() { return OBJECT_AGENTPOLICY; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1636,7 +1637,7 @@ public:
    virtual int Type() { return OBJECT_AGENTPOLICY_CONFIG; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1739,7 +1740,7 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1797,7 +1798,7 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1852,7 +1853,7 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
+   virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1880,7 +1881,7 @@ protected:
 	DWORD m_templateId;
 	DWORD m_currentTicketId;
 
-   virtual void OnObjectDelete(DWORD objectId);
+   virtual void onObjectDelete(DWORD objectId);
 
 	void setScript(const TCHAR *script);
 	DWORD getOwnerId();
@@ -1901,7 +1902,7 @@ public:
 	virtual int Type() { return OBJECT_SLMCHECK; }
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual BOOL DeleteFromDB();
+	virtual bool deleteFromDB(DB_HANDLE hdb);
 	virtual BOOL CreateFromDB(DWORD dwId);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1951,7 +1952,7 @@ public:
 
 	virtual BOOL CreateFromDB(DWORD dwId);
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual BOOL DeleteFromDB();
+	virtual bool deleteFromDB(DB_HANDLE hdb);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -2006,7 +2007,7 @@ public:
 
 	virtual BOOL CreateFromDB(DWORD dwId);
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual BOOL DeleteFromDB();
+	virtual bool deleteFromDB(DB_HANDLE hdb);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -2018,17 +2019,15 @@ public:
 	void getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates);
 };
 
-
-//
-// Node link object for business service
-//
-
+/**
+ * Node link object for business service
+ */
 class NXCORE_EXPORTABLE NodeLink : public ServiceContainer
 {
 protected:
 	DWORD m_nodeId;
 
-   virtual void OnObjectDelete(DWORD dwObjectId);
+   virtual void onObjectDelete(DWORD dwObjectId);
 
 	void applyTemplate(SlmCheck *tmpl);
 
@@ -2040,7 +2039,7 @@ public:
 	virtual int Type() { return OBJECT_NODELINK; }
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual BOOL DeleteFromDB();
+	virtual bool deleteFromDB(DB_HANDLE hdb);
 	virtual BOOL CreateFromDB(DWORD dwId);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);

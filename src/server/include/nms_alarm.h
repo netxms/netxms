@@ -58,7 +58,8 @@ public:
    DWORD ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky);
    DWORD resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate);
    void resolveByKey(const TCHAR *key, bool useRegexp, bool terminate);
-   void deleteAlarm(DWORD dwAlarmId);
+   void deleteAlarm(DWORD dwAlarmId, bool objectCleanup);
+   bool deleteObjectAlarms(DWORD objectId, DB_HANDLE hdb);
 	DWORD updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId);
 
    DWORD getAlarm(DWORD dwAlarmId, CSCPMessage *msg);
@@ -78,6 +79,7 @@ public:
  */
 void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm);
 void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId);
+void DeleteAlarmEvents(DB_HANDLE hdb, DWORD alarmId);
 
 /**
  * Global instance of alarm manager
