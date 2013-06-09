@@ -1,4 +1,5 @@
 0000 .. 0FFF	Core system commands
 1000 .. 100F	NXVS
+1100 .. 11FF	Reporting
 5000 .. 5FFF    TTC Marconi
 6000 .. 60FF    FIS/IST
