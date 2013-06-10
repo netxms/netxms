@@ -369,6 +369,7 @@ images/f9105c54-8dcf-483a-b387-b4587dfd3cba -text
 include/netxms_isc.h -text
 include/nxdbapi.h -text
 include/nxlpapi.h -text
+include/uthash.h -text
 packages/hp-ux/defaults -text
 packages/hp-ux/nxagent.psf -text
 packages/hp-ux/nxagent/etc/nxagentd.conf -text

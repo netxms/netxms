@@ -46,4 +46,5 @@ include_HEADERS = \
 	nxwinui.h \
 	rwlock.h \
 	unicode.h \
+	uthash.h \
 	uuid.h
