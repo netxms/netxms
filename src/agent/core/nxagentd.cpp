@@ -1114,6 +1114,15 @@ int main(int argc, char *argv[])
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
 #endif
 
+#ifdef __sun
+   signal(SIGPIPE, SIG_IGN);
+   signal(SIGHUP, SIG_IGN);
+   signal(SIGINT, SIG_IGN);
+   signal(SIGQUIT, SIG_IGN);
+   signal(SIGUSR1, SIG_IGN);
+   signal(SIGUSR2, SIG_IGN);
+#endif
+
    InitThreadLibrary();
 
 #ifdef NETXMS_MEMORY_DEBUG
