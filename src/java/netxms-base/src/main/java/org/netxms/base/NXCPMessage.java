@@ -577,4 +577,11 @@ public class NXCPMessage
 	{
 		this.controlData = controlData;
 	}
+
+	@Override
+	public String toString()
+	{
+		return "NXCPMessage [messageCode=" + messageCode + ", messageFlags=" + messageFlags + ", messageId=" + messageId
+				+ ", variableMap=" + variableMap + ", timestamp=" + timestamp + "]";
+	}
 }
