@@ -71,6 +71,7 @@ extern Queue *g_pItemQueue;
 
 void UnregisterClientSession(DWORD dwIndex);
 void ResetDiscoveryPoller();
+CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request);
 
 /**
  * Node poller start data
@@ -167,6 +168,7 @@ DEFINE_THREAD_STARTER(getNetworkPath)
 DEFINE_THREAD_STARTER(queryParameter)
 DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(getAlarmEvents)
+DEFINE_THREAD_STARTER(forwardToReportingServer)
 
 /**
  * Client communication read thread starter
@@ -1334,6 +1336,13 @@ void ClientSession::processingThread()
             querySummaryTable(pMsg);
             break;
          default:
+            if ((m_wCurrentCmd >> 8) == 0x11)
+            {
+               // Reporting Server range (0x1100 - 0x11FF)
+               CALL_IN_NEW_THREAD(forwardToReportingServer, pMsg);
+               break;
+            }
+
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
 				{
@@ -12471,4 +12480,24 @@ void ClientSession::querySummaryTable(CSCPMessage *request)
 
    // Send response
    sendMessage(&msg);
+}
+
+/**
+ * Forward event to Reporting Server
+ */
+void ClientSession::forwardToReportingServer(CSCPMessage *request)
+{
+   TCHAR buffer[256];
+   debugPrintf(7, _T("RS: Forwarding message %s"), NXCPMessageCodeName(request->GetCode(), buffer));
+
+   CSCPMessage *msg = ForwardMessageToReportingServer(request);
+   if (msg == NULL)
+   {
+      msg = new CSCPMessage();
+      msg->SetCode(CMD_REQUEST_COMPLETED);
+      msg->SetVariable(VID_RCC, RCC_COMM_FAILURE);
+   }
+
+   sendMessage(msg);
+   delete msg;
 }

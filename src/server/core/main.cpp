@@ -94,6 +94,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *);
 THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
+THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
 
 /**
  * Global variables
@@ -788,6 +789,10 @@ retry_db_lock:
 	// Start inter-server communication listener
 	if (ConfigReadInt(_T("EnableISCListener"), 0))
 		ThreadCreate(ISCListener, 0, NULL);
+
+	// Start reporting server connector
+	if (ConfigReadInt(_T("EnableReportingServer"), 0))
+		ThreadCreate(ReportingServerConnector, 0, NULL);
 
 	// Allow clients to connect
 	InitClientListeners();

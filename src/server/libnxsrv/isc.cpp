@@ -445,6 +445,11 @@ BOOL ISC::SendMessage(CSCPMessage *pMsg)
 	if (!(m_flags & ISCF_IS_CONNECTED))
 		return FALSE;
 
+   if (pMsg->GetId() == 0)
+   {
+      pMsg->SetId(m_requestId++);
+   }
+
    pRawMsg = pMsg->CreateMessage();
    if (m_ctx != NULL)
    {

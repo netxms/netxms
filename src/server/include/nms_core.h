@@ -444,6 +444,7 @@ private:
 	DECLARE_THREAD_STARTER(renderReport)
 	DECLARE_THREAD_STARTER(getNetworkPath)
 	DECLARE_THREAD_STARTER(getAlarmEvents)
+	DECLARE_THREAD_STARTER(forwardToReportingServer)
 
    void readThread();
    void writeThread();
@@ -642,6 +643,7 @@ private:
    void modifySummaryTable(CSCPMessage *request);
    void deleteSummaryTable(CSCPMessage *request);
    void querySummaryTable(CSCPMessage *request);
+   void forwardToReportingServer(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
