@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
    TCHAR *pszEnv;
 #endif
 
-#ifdef __sun
+#if defined(__sun) || defined(_AIX) || defined(__hpux)
    signal(SIGPIPE, SIG_IGN);
    signal(SIGHUP, SIG_IGN);
    signal(SIGINT, SIG_IGN);
