@@ -1417,6 +1417,8 @@ public:
 
 	virtual bool showThresholdSummary();
 
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
    DWORD getCategory() { return m_dwCategory; }
 
    void linkChildObjects();

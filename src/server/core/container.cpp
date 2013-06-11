@@ -245,6 +245,22 @@ void Container::linkChildObjects()
 }
 
 /**
+ * Calculate status for compound object based on childs' status
+ */
+void Container::calculateCompoundStatus(BOOL bForcedRecalc) 
+{
+	NetObj::calculateCompoundStatus(bForcedRecalc);
+
+	if (m_iStatus == STATUS_UNKNOWN && m_dwChildIdListSize == 0) 
+   {
+		LockData();
+		m_iStatus = STATUS_NORMAL;
+		Modify();
+		UnlockData();
+	}
+}
+
+/**
  * Create NXCP message with object's data
  */
 void Container::CreateMessage(CSCPMessage *pMsg)

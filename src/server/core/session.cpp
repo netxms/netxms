@@ -4160,6 +4160,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 							case OBJECT_CONTAINER:
 								pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));
 								NetObjInsert(pObject, TRUE);
+								pObject->calculateCompoundStatus();	// Force status change to NORMAL
 								break;
 							case OBJECT_RACK:
 								pObject = new Rack(szObjectName, (int)pRequest->GetVariableShort(VID_HEIGHT));
@@ -4505,6 +4506,7 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                pParent->DeleteChild(pChild);
                pChild->DeleteParent(pParent);
                ObjectTransactionEnd();
+               pParent->calculateCompoundStatus();
                if ((pParent->Type() == OBJECT_TEMPLATE) &&
                    ((pChild->Type() == OBJECT_NODE) || (pChild->Type() == OBJECT_MOBILEDEVICE)))
                {

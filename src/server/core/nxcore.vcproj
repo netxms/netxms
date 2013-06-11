@@ -725,6 +725,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\reporting.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rootobj.cpp"
 				>
 			</File>

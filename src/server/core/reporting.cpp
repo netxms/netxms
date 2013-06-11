@@ -25,7 +25,7 @@
 class RSConnector : public ISC
 {
 public:
-   RSConnector(DWORD addr, DWORD port) : ISC(addr, port)
+   RSConnector(DWORD addr, WORD port) : ISC(addr, port)
    {
    }
 
@@ -44,7 +44,7 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
 {
 	TCHAR hostname[256];
 	ConfigReadStr(_T("ReportingServerHostname"), hostname, 256, _T("localhost"));
-   DWORD port = ConfigReadInt(_T("ReportingServerPort"), 4710);
+   WORD port = (WORD)ConfigReadInt(_T("ReportingServerPort"), 4710);
 
 	DbgPrintf(1, _T("Reporting Server connector started (%s:%d)"), hostname, port);
 
