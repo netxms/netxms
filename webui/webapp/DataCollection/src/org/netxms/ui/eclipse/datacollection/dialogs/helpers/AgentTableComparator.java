@@ -31,7 +31,7 @@ public class AgentTableComparator extends ViewerComparator
 				result = p1.getName().compareToIgnoreCase(p2.getName());
 				break;
 			case AbstractSelectParamDlg.COLUMN_TYPE:
-				result = p1.getInstanceColumn().compareToIgnoreCase(p2.getInstanceColumn());
+				result = p1.getInstanceColumnsAsList().compareToIgnoreCase(p2.getInstanceColumnsAsList());
 				break;
 			case AbstractSelectParamDlg.COLUMN_DESCRIPTION:
 				result = p1.getDescription().compareToIgnoreCase(p2.getDescription());

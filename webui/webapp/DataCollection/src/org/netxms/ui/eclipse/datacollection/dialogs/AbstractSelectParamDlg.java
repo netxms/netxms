@@ -248,7 +248,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	@Override
 	public String getInstanceColumn()
 	{
-		return selectTables ? ((AgentTable)selection).getInstanceColumn() : ""; //$NON-NLS-1$
+		return selectTables ? ((AgentTable)selection).getInstanceColumnsAsList() : ""; //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
