@@ -388,71 +388,52 @@ BOOL InitDataCollector()
    return TRUE;
 }
 
-/**
- * Write full list of supported parameters (from all nodes) to message
- */
-struct __param_list
-{
-	DWORD size;
-	NXC_AGENT_PARAM *data;
-};
-
 static void UpdateParamList(NetObj *object, void *data)
 {
-	struct __param_list *fullList = (struct __param_list *)data;
+	ObjectArray<AgentParameterDefinition> *fullList = (ObjectArray<AgentParameterDefinition> *)data;
 
-	StructArray<NXC_AGENT_PARAM> *paramList;
+	ObjectArray<AgentParameterDefinition> *paramList;
 	((Node *)object)->openParamList(&paramList);
 	if ((paramList != NULL) && (paramList->size() > 0))
 	{
-		fullList->data = (NXC_AGENT_PARAM *)realloc(fullList->data, sizeof(NXC_AGENT_PARAM) * (fullList->size + paramList->size()));
 		for(int i = 0; i < paramList->size(); i++)
 		{
-			DWORD j;
-			for(j = 0; j < fullList->size; j++)
+			int j;
+			for(j = 0; j < fullList->size(); j++)
 			{
-				if (!_tcsicmp(paramList->get(i)->szName, fullList->data[j].szName))
+				if (!_tcsicmp(paramList->get(i)->getName(), fullList->get(j)->getName()))
 					break;
 			}
 
-			if (j == fullList->size)
+			if (j == fullList->size())
 			{
-				memcpy(&fullList->data[j], paramList->get(i), sizeof(NXC_AGENT_PARAM));
-				fullList->size++;
+            fullList->add(new AgentParameterDefinition(paramList->get(i)));
 			}
 		}
 	}
 	((Node *)object)->closeParamList();
 }
 
-struct __table_list
-{
-	DWORD size;
-	NXC_AGENT_TABLE *data;
-};
-
 static void UpdateTableList(NetObj *object, void *data)
 {
-	struct __table_list *fullList = (struct __table_list *)data;
+	ObjectArray<AgentTableDefinition> *fullList = (ObjectArray<AgentTableDefinition> *)data;
 
-	StructArray<NXC_AGENT_TABLE> *tableList;
+   ObjectArray<AgentTableDefinition> *tableList;
 	((Node *)object)->openTableList(&tableList);
 	if ((tableList != NULL) && (tableList->size() > 0))
 	{
-		fullList->data = (NXC_AGENT_TABLE *)realloc(fullList->data, sizeof(NXC_AGENT_TABLE) * (fullList->size + tableList->size()));
 		for(int i = 0; i < tableList->size(); i++)
 		{
-			DWORD j;
-			for(j = 0; j < fullList->size; j++)
+			int j;
+			for(j = 0; j < fullList->size(); j++)
 			{
-				if (!_tcsicmp(tableList->get(i)->name, fullList->data[j].name))
+				if (!_tcsicmp(tableList->get(i)->getName(), fullList->get(j)->getName()))
 					break;
 			}
 
-			if (j == fullList->size)
+			if (j == fullList->size())
 			{
-				memcpy(&fullList->data[j], tableList->get(i), sizeof(NXC_AGENT_TABLE));
-				fullList->size++;
+            fullList->add(new AgentTableDefinition(tableList->get(i)));
 			}
 		}
 	}
@@ -464,40 +445,30 @@ void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
    // Gather full parameter list
 	if (flags & 0x01)
 	{
-		struct __param_list fullList;
-		fullList.size = 0;
-		fullList.data = NULL;
+		ObjectArray<AgentParameterDefinition> fullList(64, 64, true);
 		g_idxNodeById.forEach(UpdateParamList, &fullList);
 
 		// Put list into the message
-		pMsg->SetVariable(VID_NUM_PARAMETERS, fullList.size);
-		for(DWORD i = 0, varId = VID_PARAM_LIST_BASE; i < fullList.size; i++)
+		pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)fullList.size());
+      DWORD varId = VID_PARAM_LIST_BASE;
+		for(int i = 0; i < fullList.size(); i++)
 		{
-			pMsg->SetVariable(varId++, fullList.data[i].szName);
-			pMsg->SetVariable(varId++, fullList.data[i].szDescription);
-			pMsg->SetVariable(varId++, (WORD)fullList.data[i].iDataType);
+         varId += fullList.get(i)->fillMessage(pMsg, varId);
 		}
-
-		safe_free(fullList.data);
 	}
 
    // Gather full table list
 	if (flags & 0x02)
 	{
-		struct __table_list fullList;
-		fullList.size = 0;
-		fullList.data = NULL;
+		ObjectArray<AgentTableDefinition> fullList(64, 64, true);
 		g_idxNodeById.forEach(UpdateTableList, &fullList);
 
 		// Put list into the message
-		pMsg->SetVariable(VID_NUM_TABLES, fullList.size);
-		for(DWORD i = 0, varId = VID_TABLE_LIST_BASE; i < fullList.size; i++)
+		pMsg->SetVariable(VID_NUM_TABLES, (DWORD)fullList.size());
+      DWORD varId = VID_TABLE_LIST_BASE;
+		for(int i = 0; i < fullList.size(); i++)
 		{
-			pMsg->SetVariable(varId++, fullList.data[i].name);
-			pMsg->SetVariable(varId++, fullList.data[i].instanceColumn);
-			pMsg->SetVariable(varId++, fullList.data[i].description);
+         varId += fullList.get(i)->fillMessage(pMsg, varId);
 		}
-
-		safe_free(fullList.data);
 	}
 }

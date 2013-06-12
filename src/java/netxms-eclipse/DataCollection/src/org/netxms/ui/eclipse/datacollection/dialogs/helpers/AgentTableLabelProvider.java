@@ -51,7 +51,7 @@ public class AgentTableLabelProvider extends LabelProvider implements ITableLabe
 			case AbstractSelectParamDlg.COLUMN_NAME:
 				return p.getName();
 			case AbstractSelectParamDlg.COLUMN_TYPE:
-				return p.getInstanceColumn();
+				return p.getInstanceColumnsAsList();
 			case AbstractSelectParamDlg.COLUMN_DESCRIPTION:
 				return p.getDescription();
 			default:

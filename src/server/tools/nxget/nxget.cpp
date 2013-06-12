@@ -158,26 +158,24 @@ static int CheckService(AgentConnection *pConn, int iServiceType, DWORD dwServic
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
-
-//
-// List supported parameters
-//
-
+/**
+ * List supported parameters
+ */
 static int ListParameters(AgentConnection *pConn)
 {
    static const TCHAR *pszDataType[] = { _T("INT"), _T("UINT"), _T("INT64"), _T("UINT64"), _T("STRING"), _T("FLOAT"), _T("UNKNOWN") };
 
-   StructArray<NXC_AGENT_PARAM> *paramList;
-   StructArray<NXC_AGENT_TABLE> *tableList;
+   ObjectArray<AgentParameterDefinition> *paramList;
+   ObjectArray<AgentTableDefinition> *tableList;
    DWORD dwError = pConn->getSupportedParameters(&paramList, &tableList);
    if (dwError == ERR_SUCCESS)
    {
       for(int i = 0; i < paramList->size(); i++)
       {
-			NXC_AGENT_PARAM *p = paramList->get(i);
-         _tprintf(_T("%s %s \"%s\"\n"), p->szName,
-            pszDataType[(p->iDataType < 6) && (p->iDataType >= 0) ? p->iDataType : 6],
-            p->szDescription);
+			AgentParameterDefinition *p = paramList->get(i);
+         _tprintf(_T("%s %s \"%s\"\n"), p->getName(),
+            pszDataType[(p->getDataType() < 6) && (p->getDataType() >= 0) ? p->getDataType() : 6],
+            p->getDescription());
       }
       delete paramList;
 		delete tableList;

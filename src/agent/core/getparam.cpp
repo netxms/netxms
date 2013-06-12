@@ -406,7 +406,7 @@ void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, S
  * Add table
  */ 
 void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg,
-				  const TCHAR *instanceColumn, const TCHAR *description)
+				  const TCHAR *instanceColumns, const TCHAR *description)
 {
    int i;
 
@@ -419,15 +419,17 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
       // Replace existing handler and arg
       m_pTableList[i].handler = handler;
       m_pTableList[i].arg = arg;
+      nx_strncpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
+		nx_strncpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
    }
    else
    {
-      // Add new enum
+      // Add new table
       m_pTableList = (NETXMS_SUBAGENT_TABLE *)realloc(m_pTableList, sizeof(NETXMS_SUBAGENT_TABLE) * (m_iNumTables + 1));
       nx_strncpy(m_pTableList[m_iNumTables].name, name, MAX_PARAM_NAME);
       m_pTableList[m_iNumTables].handler = handler;
       m_pTableList[m_iNumTables].arg = arg;
-		nx_strncpy(m_pTableList[m_iNumTables].instanceColumn, instanceColumn, MAX_COLUMN_NAME);
+      nx_strncpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
 		nx_strncpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
       m_iNumTables++;
    }
@@ -611,7 +613,7 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
          {
             case SYSINFO_RC_SUCCESS:
                if (pValue->getInstanceColumn()[0] == 0)
-                  pValue->setInstanceColumn(m_pTableList[i].instanceColumn);
+                  pValue->setInstanceColumn(m_pTableList[i].instanceColumns);
                dwErrorCode = ERR_SUCCESS;
                m_dwProcessedRequests++;
                break;
@@ -700,7 +702,7 @@ void GetParameterList(CSCPMessage *pMsg)
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
       pMsg->SetVariable(dwId++, m_pTableList[i].name);
-		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumn);
+		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumns);
 		pMsg->SetVariable(dwId++, m_pTableList[i].description);
    }
 	ListTablesFromExtSubagents(pMsg, &dwId, &count);
@@ -718,7 +720,7 @@ void GetTableList(CSCPMessage *pMsg)
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
       pMsg->SetVariable(dwId++, m_pTableList[i].name);
-		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumn);
+		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumns);
 		pMsg->SetVariable(dwId++, m_pTableList[i].description);
    }
 	ListTablesFromExtSubagents(pMsg, &dwId, &count);

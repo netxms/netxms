@@ -37,6 +37,18 @@ StringList::StringList()
 }
 
 /**
+ * Constructor: create copy of existing string list
+ */
+StringList::StringList(StringList *src)
+{
+	m_count = 0;
+   m_allocated = src->m_allocated;
+	m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
+	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+   addAll(src);
+}
+
+/**
  * Constructor: create string list by splitting source string at separators
  */
 StringList::StringList(const TCHAR *src, const TCHAR *separator)
@@ -194,6 +206,15 @@ void StringList::remove(int index)
 	safe_free(m_values[index]);
 	m_count--;
 	memmove(&m_values[index], &m_values[index + 1], (m_count - index) * sizeof(TCHAR *));
+}
+
+/**
+ * Add all values from another list
+ */
+void StringList::addAll(const StringList *src)
+{
+   for(int i = 0; i < src->m_count; i++)
+      add(src->m_values[i]);
 }
 
 /**

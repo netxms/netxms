@@ -938,8 +938,8 @@ protected:
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
 	NetworkDeviceDriver *m_driver;
 	void *m_driverData;
-   StructArray<NXC_AGENT_PARAM> *m_paramList; // List of supported parameters
-   StructArray<NXC_AGENT_TABLE> *m_tableList; // List of supported tables
+   ObjectArray<AgentParameterDefinition> *m_paramList; // List of supported parameters
+   ObjectArray<AgentTableDefinition> *m_tableList; // List of supported tables
    time_t m_tLastDiscoveryPoll;
    time_t m_tLastStatusPoll;
    time_t m_tLastConfigurationPoll;
@@ -1143,10 +1143,10 @@ public:
 	virtual NXSL_Array *getParentsForNXSL();
 	NXSL_Array *getInterfacesForNXSL();
 
-   void openParamList(StructArray<NXC_AGENT_PARAM> **paramList);
+   void openParamList(ObjectArray<AgentParameterDefinition> **paramList);
    void closeParamList() { UnlockData(); }
 
-	void openTableList(StructArray<NXC_AGENT_TABLE> **tableList);
+   void openTableList(ObjectArray<AgentTableDefinition> **tableList);
    void closeTableList() { UnlockData(); }
 
    AgentConnectionEx *createAgentConnection();

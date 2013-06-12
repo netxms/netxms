@@ -942,22 +942,18 @@ enum
 
 #define TRAP_VARBIND_FORCE_TEXT     0x0001
 
-
-//
-// IP network
-//
-
+/**
+ * IP network
+ */
 typedef struct
 {
    DWORD dwAddr;
    DWORD dwMask;
 } IP_NETWORK;
 
-
-//
-// Agent's parameter information
-//
-
+/**
+ * Agent's parameter information
+ */
 typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
@@ -965,23 +961,9 @@ typedef struct
    int iDataType;
 } NXC_AGENT_PARAM;
 
-
-//
-// Agent's table information
-//
-
-typedef struct
-{
-   TCHAR name[MAX_PARAM_NAME];
-   TCHAR instanceColumn[MAX_COLUMN_NAME];
-   TCHAR description[MAX_DB_STRING];
-} NXC_AGENT_TABLE;
-
-
-//
-// Action structure
-//
-
+/**
+ * Server action definition structure
+ */
 typedef struct
 {
    DWORD dwId;

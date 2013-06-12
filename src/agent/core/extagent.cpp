@@ -251,7 +251,7 @@ NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(DWORD *count)
 				for(DWORD i = 0; i < *count; i++)
 				{
 					response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
-					response->GetVariableStr(varId++, result[i].instanceColumn, MAX_COLUMN_NAME);
+					response->GetVariableStr(varId++, result[i].instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
 					response->GetVariableStr(varId++, result[i].description, MAX_DB_STRING);
 				}
 			}
@@ -349,7 +349,7 @@ void ExternalSubagent::listTables(CSCPMessage *msg, DWORD *baseId, DWORD *count)
 		for(DWORD i = 0; i < paramCount; i++)
 		{
 			msg->SetVariable(id++, list[i].name);
-			msg->SetVariable(id++, list[i].instanceColumn);
+			msg->SetVariable(id++, list[i].instanceColumns);
 			msg->SetVariable(id++, list[i].description);
 		}
 		*baseId = id;

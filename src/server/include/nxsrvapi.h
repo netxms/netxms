@@ -343,6 +343,65 @@ public:
 };
 
 /**
+ * Agent parameter definition
+ */
+class LIBNXSRV_EXPORTABLE AgentParameterDefinition
+{
+private:
+   TCHAR *m_name;
+   TCHAR *m_description;
+   int m_dataType;
+
+public:
+   AgentParameterDefinition(CSCPMessage *msg, DWORD baseId);
+   AgentParameterDefinition(AgentParameterDefinition *src);
+   ~AgentParameterDefinition();
+
+   DWORD fillMessage(CSCPMessage *msg, DWORD baseId);
+
+   const TCHAR *getName() { return m_name; }
+   const TCHAR *getDescription() { return m_description; }
+   int getDataType() { return m_dataType; }
+};
+
+/**
+ * Agent table column definition
+ */
+struct AgentTableColumnDefinition
+{
+   TCHAR m_name[MAX_COLUMN_NAME];
+   int m_dataType;
+
+   AgentTableColumnDefinition(AgentTableColumnDefinition *src)
+   {
+      nx_strncpy(m_name, src->m_name, MAX_COLUMN_NAME);
+      m_dataType = src->m_dataType;
+   }
+};
+
+/**
+ * Agent table definition
+ */
+class LIBNXSRV_EXPORTABLE AgentTableDefinition
+{
+private:
+   TCHAR *m_name;
+   TCHAR *m_description;
+   StringList *m_instanceColumns;
+   ObjectArray<AgentTableColumnDefinition> *m_columns;
+
+public:
+   AgentTableDefinition(CSCPMessage *msg, DWORD baseId);
+   AgentTableDefinition(AgentTableDefinition *src);
+   ~AgentTableDefinition();
+
+   DWORD fillMessage(CSCPMessage *msg, DWORD baseId);
+
+   const TCHAR *getName() { return m_name; }
+   const TCHAR *getDescription() { return m_description; }
+};
+
+/**
  * Agent connection
  */
 class LIBNXSRV_EXPORTABLE AgentConnection
@@ -431,7 +490,7 @@ public:
    DWORD startUpgrade(const TCHAR *pszPkgName);
    DWORD checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 
                              WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL);
-   DWORD getSupportedParameters(StructArray<NXC_AGENT_PARAM> **paramList, StructArray<NXC_AGENT_TABLE> **tableList);
+   DWORD getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    DWORD getConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD updateConfigFile(const TCHAR *pszConfig);
    DWORD enableTraps();

@@ -389,6 +389,7 @@ private:
 
 public:
 	StringList();
+	StringList(StringList *src);
 	StringList(const TCHAR *src, const TCHAR *separator);
 	~StringList();
 
@@ -406,6 +407,7 @@ public:
 	int getIndex(const TCHAR *value);
 	int getIndexIgnoreCase(const TCHAR *value);
 	void remove(int index);
+   void addAll(const StringList *src);
    void merge(const StringList *src, bool matchCase);
    TCHAR *join(const TCHAR *separator);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);

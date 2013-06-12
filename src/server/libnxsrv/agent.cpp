@@ -1155,9 +1155,9 @@ DWORD AgentConnection::checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
 }
 
 /**
- * Get list of supported parameters from subagent
+ * Get list of supported parameters from agent
  */
-DWORD AgentConnection::getSupportedParameters(StructArray<NXC_AGENT_PARAM> **paramList, StructArray<NXC_AGENT_TABLE> **tableList)
+DWORD AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
@@ -1183,25 +1183,23 @@ DWORD AgentConnection::getSupportedParameters(StructArray<NXC_AGENT_PARAM> **par
          if (dwResult == ERR_SUCCESS)
          {
             DWORD count = pResponse->GetVariableLong(VID_NUM_PARAMETERS);
-            NXC_AGENT_PARAM *plist = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * count);
+            ObjectArray<AgentParameterDefinition> *plist = new ObjectArray<AgentParameterDefinition>(count, 16, true);
             for(DWORD i = 0, dwId = VID_PARAM_LIST_BASE; i < count; i++)
             {
-               pResponse->GetVariableStr(dwId++, plist[i].szName, MAX_PARAM_NAME);
-               pResponse->GetVariableStr(dwId++, plist[i].szDescription, MAX_DB_STRING);
-               plist[i].iDataType = (int)pResponse->GetVariableShort(dwId++);
+               plist->add(new AgentParameterDefinition(pResponse, dwId));
+               dwId += 3;
             }
-				*paramList = new StructArray<NXC_AGENT_PARAM>(plist, (int)count);
+				*paramList = plist;
 				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d parameters received from agent"), count);
 
             count = pResponse->GetVariableLong(VID_NUM_TABLES);
-            NXC_AGENT_TABLE *tlist = (NXC_AGENT_TABLE *)malloc(sizeof(NXC_AGENT_TABLE) * count);
+            ObjectArray<AgentTableDefinition> *tlist = new ObjectArray<AgentTableDefinition>(count, 16, true);
             for(DWORD i = 0, dwId = VID_TABLE_LIST_BASE; i < count; i++)
             {
-               pResponse->GetVariableStr(dwId++, tlist[i].name, MAX_PARAM_NAME);
-               pResponse->GetVariableStr(dwId++, tlist[i].instanceColumn, MAX_DB_STRING);
-               pResponse->GetVariableStr(dwId++, tlist[i].description, MAX_DB_STRING);
+               tlist->add(new AgentTableDefinition(pResponse, dwId));
+               dwId += 3;
             }
-				*tableList = new StructArray<NXC_AGENT_TABLE>(tlist, (int)count);
+				*tableList = tlist;
 				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d tables received from agent"), count);
 			}
          delete pResponse;
@@ -1692,11 +1690,9 @@ DWORD AgentConnection::uninstallPolicy(uuid_t guid)
    return rcc;
 }
 
-
-//
-// Acquire encryption context
-//
-
+/**
+ * Acquire encryption context
+ */
 NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
 {
 	lock();
@@ -1705,4 +1701,114 @@ NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
 		ctx->incRefCount();
 	unlock();
 	return ctx;
+}
+
+/**
+ * Create new agent parameter definition from NXCP message
+ */
+AgentParameterDefinition::AgentParameterDefinition(CSCPMessage *msg, DWORD baseId)
+{
+   m_name = msg->GetVariableStr(baseId);
+   m_description = msg->GetVariableStr(baseId + 1);
+   m_dataType = (int)msg->GetVariableShort(baseId + 2);
+}
+
+/**
+ * Create new agent parameter definition from another definition object
+ */
+AgentParameterDefinition::AgentParameterDefinition(AgentParameterDefinition *src)
+{
+   m_name = (src->m_name != NULL) ? _tcsdup(src->m_name) : NULL;
+   m_description = (src->m_description != NULL) ? _tcsdup(src->m_description) : NULL;
+   m_dataType = src->m_dataType;
+}
+
+/**
+ * Destructor for agent parameter definition
+ */
+AgentParameterDefinition::~AgentParameterDefinition()
+{
+   safe_free(m_name);
+   safe_free(m_description);
+}
+
+/**
+ * Fill NXCP message
+ */
+DWORD AgentParameterDefinition::fillMessage(CSCPMessage *msg, DWORD baseId)
+{
+   msg->SetVariable(baseId, m_name);
+   msg->SetVariable(baseId + 1, m_description);
+   msg->SetVariable(baseId + 2, (WORD)m_dataType);
+   return 3;
+}
+
+/**
+ * Create new agent table definition from NXCP message
+ */
+AgentTableDefinition::AgentTableDefinition(CSCPMessage *msg, DWORD baseId)
+{
+   m_name = msg->GetVariableStr(baseId);
+   m_description = msg->GetVariableStr(baseId + 2);
+
+   TCHAR *instanceColumns = msg->GetVariableStr(baseId + 1);
+   if (instanceColumns != NULL)
+   {
+      m_instanceColumns = new StringList(instanceColumns, _T("|"));
+      free(instanceColumns);
+   }
+   else
+   {
+      m_instanceColumns = new StringList;
+   }
+
+   m_columns = new ObjectArray<AgentTableColumnDefinition>(16, 16, true);
+}
+
+/**
+ * Create new agent table definition from another definition object
+ */
+AgentTableDefinition::AgentTableDefinition(AgentTableDefinition *src)
+{
+   m_name = (src->m_name != NULL) ? _tcsdup(src->m_name) : NULL;
+   m_description = (src->m_description != NULL) ? _tcsdup(src->m_description) : NULL;
+   m_instanceColumns = new StringList(src->m_instanceColumns);
+   m_columns = new ObjectArray<AgentTableColumnDefinition>(16, 16, true);
+   for(int i = 0; i < src->m_columns->size(); i++)
+   {
+      m_columns->add(new AgentTableColumnDefinition(src->m_columns->get(i)));
+   }
+}
+/**
+ * Destructor for agent table definition
+ */
+AgentTableDefinition::~AgentTableDefinition()
+{
+   safe_free(m_name);
+   safe_free(m_description);
+   delete m_instanceColumns;
+   delete m_columns;
+}
+
+/**
+ * Fill NXCP message
+ */
+DWORD AgentTableDefinition::fillMessage(CSCPMessage *msg, DWORD baseId)
+{
+   msg->SetVariable(baseId + 1, m_name);
+   msg->SetVariable(baseId + 2, m_description);
+
+   TCHAR *instanceColumns = m_instanceColumns->join(_T("|"));
+   msg->SetVariable(baseId + 3, instanceColumns);
+   free(instanceColumns);
+
+   DWORD varId = baseId + 4;
+   for(int i = 0; i < m_columns->size(); i++)
+   {
+      msg->SetVariable(varId++, m_columns->get(i)->m_name);
+      msg->SetVariable(varId++, (WORD)m_columns->get(i)->m_dataType);
+   }
+
+   msg->SetVariable(baseId, varId - baseId);
+   return varId - baseId;
 }

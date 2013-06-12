@@ -41,17 +41,16 @@
 #define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL DECLSPEC_EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #endif
 
-
-//
-// Some constants
-//
-
+/**
+ * Constants
+ */
 #define AGENT_LISTEN_PORT        4700
 #define AGENT_PROTOCOL_VERSION   2
 #define MAX_RESULT_LENGTH        256
 #define MAX_CMD_LEN              256
 #define COMMAND_TIMEOUT          60
 #define MAX_SUBAGENT_NAME        64
+#define MAX_INSTANCE_COLUMNS     8
 
 /**
  * Agent policy types
@@ -383,7 +382,7 @@ typedef struct
    TCHAR name[MAX_PARAM_NAME];
    LONG (* handler)(const TCHAR *, const TCHAR *, Table *);
    const TCHAR *arg;
-	TCHAR instanceColumn[MAX_COLUMN_NAME];
+	TCHAR instanceColumns[MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS];
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_TABLE;
 

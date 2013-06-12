@@ -18,6 +18,8 @@
  */
 package org.netxms.client;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -27,7 +29,8 @@ public class AgentTable
 {
 	private String name;
 	private String description;
-	private String instanceColumn;
+	private String[] instanceColumns;
+	private TableColumnDefinition[] columns;
 	
 	/**
 	 * Create agent table info from NXCP message
@@ -37,9 +40,27 @@ public class AgentTable
 	 */
 	protected AgentTable(final NXCPMessage msg, final long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
-		instanceColumn = msg.getVariableAsString(baseId + 1);
+		name = msg.getVariableAsString(baseId + 1);
 		description = msg.getVariableAsString(baseId + 2);
+		
+		String t = msg.getVariableAsString(baseId + 3);
+		instanceColumns = (t != null) ? t.split("\\|") : new String[0];
+		Arrays.sort(instanceColumns, new Comparator<String>() {
+			@Override
+			public int compare(String s1, String s2)
+			{
+				return s1.compareToIgnoreCase(s2);
+			}
+		});
+		
+		int count = msg.getVariableAsInteger(baseId) - 4;
+		columns = new TableColumnDefinition[count];
+		long varId = baseId + 4;
+		for(int i = 0; i < count; i++)
+		{
+			columns[i] = new TableColumnDefinition(msg, varId);
+			varId += 2;
+		}
 	}
 	
 	/**
@@ -49,11 +70,11 @@ public class AgentTable
 	 * @param description
 	 * @param instanceColumn
 	 */
-	public AgentTable(String name, String description, String instanceColumn)
+	public AgentTable(String name, String description, String[] instanceColumns)
 	{
 		this.name = name;
 		this.description = description;
-		this.instanceColumn = instanceColumn;
+		this.instanceColumns = instanceColumns;
 	}
 
 	/**
@@ -75,8 +96,50 @@ public class AgentTable
 	/**
 	 * @return the instanceColumn
 	 */
-	public final String getInstanceColumn()
+	public final String[] getInstanceColumns()
 	{
-		return instanceColumn;
+		return instanceColumns;
+	}
+	
+	/**
+	 * Get all instance columns as comma separated list
+	 * 
+	 * @return
+	 */
+	public String getInstanceColumnsAsList()
+	{
+		if (instanceColumns.length == 0)
+			return "";
+		StringBuilder sb = new StringBuilder();
+		sb.append(instanceColumns[0]);
+		for(int i = 1; i < instanceColumns.length; i++)
+		{
+			sb.append(", ");
+			sb.append(instanceColumns[i]);
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * @return the columns
+	 */
+	public TableColumnDefinition[] getColumns()
+	{
+		return columns;
+	}
+
+	/**
+	 * Table column definition
+	 */
+	public class TableColumnDefinition
+	{
+		public String name;
+		public int dataType;
+		
+		TableColumnDefinition(NXCPMessage msg, long baseId)
+		{
+			name = msg.getVariableAsString(baseId);
+			dataType = msg.getVariableAsInteger(baseId + 1);
+		}
 	}
 }

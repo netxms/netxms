@@ -1867,8 +1867,8 @@ bool Node::confPollAgent(DWORD dwRqId)
          UnlockData();
 		}
 
-		StructArray<NXC_AGENT_PARAM> *plist;
-		StructArray<NXC_AGENT_TABLE> *tlist;
+		ObjectArray<AgentParameterDefinition> *plist;
+      ObjectArray<AgentTableDefinition> *tlist;
       DWORD rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
 		if (rcc == ERR_SUCCESS)
 		{
@@ -1882,7 +1882,7 @@ bool Node::confPollAgent(DWORD dwRqId)
 			m_dwFlags &= ~NF_HAS_AGENT_IFXCOUNTERS;
 			for(int i = 0; i < plist->size(); i++)
 			{
-				if (!_tcsicmp(plist->get(i)->szName, _T("Net.Interface.BytesIn64(*)")))
+				if (!_tcsicmp(plist->get(i)->getName(), _T("Net.Interface.BytesIn64(*)")))
 				{
 					m_dwFlags |= NF_HAS_AGENT_IFXCOUNTERS;
 				}
@@ -3804,10 +3804,7 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		DWORD dwId;
       for(i = 0, dwId = VID_PARAM_LIST_BASE; i < m_paramList->size(); i++)
       {
-			NXC_AGENT_PARAM *p = m_paramList->get(i);
-         pMsg->SetVariable(dwId++, p->szName);
-         pMsg->SetVariable(dwId++, p->szDescription);
-         pMsg->SetVariable(dwId++, (WORD)p->iDataType);
+         dwId += m_paramList->get(i)->fillMessage(pMsg, dwId);
       }
 		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d parameters"), m_szName, m_paramList->size());
    }
@@ -3825,10 +3822,7 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		DWORD dwId;
       for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_tableList->size(); i++)
       {
-			NXC_AGENT_TABLE *t = m_tableList->get(i);
-         pMsg->SetVariable(dwId++, t->name);
-         pMsg->SetVariable(dwId++, t->instanceColumn);
-         pMsg->SetVariable(dwId++, t->description);
+         dwId += m_tableList->get(i)->fillMessage(pMsg, dwId);
       }
 		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d tables"), m_szName, m_tableList->size());
    }
@@ -3872,7 +3866,7 @@ void Node::writeWinPerfObjectsToMessage(CSCPMessage *msg)
 /**
  * Open list of supported parameters for reading
  */
-void Node::openParamList(StructArray<NXC_AGENT_PARAM> **paramList)
+void Node::openParamList(ObjectArray<AgentParameterDefinition> **paramList)
 {
    LockData();
    *paramList = m_paramList;
@@ -3881,7 +3875,7 @@ void Node::openParamList(StructArray<NXC_AGENT_PARAM> **paramList)
 /**
  * Open list of supported tables for reading
  */
-void Node::openTableList(StructArray<NXC_AGENT_TABLE> **tableList)
+void Node::openTableList(ObjectArray<AgentTableDefinition> **tableList)
 {
    LockData();
    *tableList = m_tableList;
