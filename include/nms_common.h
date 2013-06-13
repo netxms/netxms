@@ -140,7 +140,7 @@ typedef int bool;
  */
 #ifdef ORACLE_PROC
 #undef BYTE
-#undef UINT32
+#undef DWORD
 #endif
 
 
@@ -221,7 +221,7 @@ typedef int bool;
 
 typedef UINT64 QWORD;   // for compatibility
 typedef int socklen_t;
-typedef UINT32 pid_t;
+typedef DWORD pid_t;
 typedef LONG ssize_t;
 
 typedef signed __int8 int8_t;
@@ -343,7 +343,7 @@ typedef unsigned long UINT32;
 typedef unsigned int UINT32;
 #endif
 typedef INT32 LONG;
-typedef UINT32 UINT32;
+typedef UINT32 DWORD;
 typedef unsigned short UINT16;
 typedef UINT16 WORD;
 typedef unsigned char BYTE;
@@ -503,7 +503,7 @@ typedef unsigned short UINT16;
 typedef short INT16;
 typedef unsigned char BYTE;
 typedef INT32 LONG;  // for compatibility
-typedef UINT32 UINT32;  // for compatibility
+typedef UINT32 DWORD;  // for compatibility
 typedef UINT16 WORD;  // for compatibility
 typedef void * HANDLE;
 typedef void * HMODULE;
