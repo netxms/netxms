@@ -59,10 +59,10 @@ typedef int wint_t;
  * alphabets and digits are each contiguous.
  */
 
-QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base)
+UINT64 LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base)
 {
 	const WCHAR *s;
-	QWORD acc, cutoff;
+	UINT64 acc, cutoff;
    wint_t c;
 	int neg, any, cutlim;
 
@@ -90,8 +90,8 @@ QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base)
 	if (base == 0)
 		base = c == L'0' ? 8 : 10;
 
-	cutoff = ULLONG_MAX / (QWORD)base;
-	cutlim = (int)(ULLONG_MAX % (QWORD)base);
+	cutoff = ULLONG_MAX / (UINT64)base;
+	cutlim = (int)(ULLONG_MAX % (UINT64)base);
 	for (acc = 0, any = 0;; c = *s++) {
 		if (iswdigit(c))
 			c -= L'0';
@@ -111,7 +111,7 @@ QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base)
 #endif
 		} else {
 			any = 1;
-			acc *= (QWORD)base;
+			acc *= (UINT64)base;
 			acc += c;
 		}
 	}

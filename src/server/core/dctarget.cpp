@@ -74,7 +74,7 @@ void DataCollectionTarget::CreateMessage(CSCPMessage *msg)
 /**
  * Modify object from message
  */
-DWORD DataCollectionTarget::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 DataCollectionTarget::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -112,9 +112,9 @@ void DataCollectionTarget::cleanDCIData()
 /**
  * Get last collected values of given table
  */
-DWORD DataCollectionTarget::getTableLastValues(DWORD dciId, CSCPMessage *msg)
+UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, CSCPMessage *msg)
 {
-	DWORD rcc = RCC_INVALID_DCI_ID;
+	UINT32 rcc = RCC_INVALID_DCI_ID;
 
    lockDciAccess();
 
@@ -137,7 +137,7 @@ DWORD DataCollectionTarget::getTableLastValues(DWORD dciId, CSCPMessage *msg)
  * Apply DCI from template
  * pItem passed to this method should be a template's DCI
  */
-bool DataCollectionTarget::applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject)
+bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject)
 {
    bool bResult = true;
 
@@ -207,16 +207,16 @@ bool DataCollectionTarget::applyTemplateItem(DWORD dwTemplateId, DCObject *dcObj
  * Arguments is template id and list of valid template item ids.
  * all items related to given template and not presented in list should be deleted.
  */
-void DataCollectionTarget::cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList)
+void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList)
 {
-   DWORD i, j, dwNumDeleted, *pdwDeleteList;
+   UINT32 i, j, dwNumDeleted, *pdwDeleteList;
 
    lockDciAccess();  // write lock
 
-   pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dcObjects->size());
+   pdwDeleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
    dwNumDeleted = 0;
 
-   for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
+   for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
       if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
       {
          for(j = 0; j < dwNumItems; j++)
@@ -239,18 +239,18 @@ void DataCollectionTarget::cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD d
  * Unbind data collection target from template, i.e either remove DCI 
  * association with template or remove these DCIs at all
  */
-void DataCollectionTarget::unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
+void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI)
 {
-   DWORD i;
+   UINT32 i;
 
    if (bRemoveDCI)
    {
       lockDciAccess();  // write lock
 
-		DWORD *pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dcObjects->size());
-		DWORD dwNumDeleted = 0;
+		UINT32 *pdwDeleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
+		UINT32 dwNumDeleted = 0;
 
-      for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
+      for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
          if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
          {
             pdwDeleteList[dwNumDeleted++] = m_dcObjects->get(i)->getId();
@@ -280,11 +280,11 @@ void DataCollectionTarget::unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDC
 /**
  * Get list of DCIs to be shown on performance tab
  */
-DWORD DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
+UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
 {
 	lockDciAccess();
 
-	DWORD dwId = VID_SYSDCI_LIST_BASE, dwCount = 0;
+	UINT32 dwId = VID_SYSDCI_LIST_BASE, dwCount = 0;
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
@@ -317,13 +317,13 @@ DWORD DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
 /**
  * Get threshold violation summary into NXCP message
  */
-DWORD DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, DWORD baseId)
+UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId)
 {
-	DWORD varId = baseId;
+	UINT32 varId = baseId;
 
 	msg->SetVariable(varId++, m_dwId);
-	DWORD countId = varId++;
-	DWORD count = 0;
+	UINT32 countId = varId++;
+	UINT32 count = 0;
 
 	lockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -390,9 +390,9 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
 /**
  * Get value for server's internal parameter
  */
-DWORD DataCollectionTarget::getInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
+UINT32 DataCollectionTarget::getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
-   DWORD dwError = DCE_SUCCESS;
+   UINT32 dwError = DCE_SUCCESS;
 
    if (!_tcsicmp(szParam, _T("Status")))
    {
@@ -405,7 +405,7 @@ DWORD DataCollectionTarget::getInternalItem(const TCHAR *szParam, DWORD dwBufSiz
    else if (MatchString(_T("ChildStatus(*)"), szParam, FALSE))
    {
       TCHAR *pEnd, szArg[256];
-      DWORD i, dwId;
+      UINT32 i, dwId;
       NetObj *pObject = NULL;
 
       AgentGetParameterArg(szParam, 1, szArg, 256);
@@ -441,7 +441,7 @@ DWORD DataCollectionTarget::getInternalItem(const TCHAR *szParam, DWORD dwBufSiz
    else if (MatchString(_T("ConditionStatus(*)"), szParam, FALSE))
    {
       TCHAR *pEnd, szArg[256];
-      DWORD dwId;
+      UINT32 dwId;
       NetObj *pObject = NULL;
 
       AgentGetParameterArg(szParam, 1, szArg, 256);
@@ -509,7 +509,7 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
                rowAdded = true;
             }
             tableData->set(i + 1, ((DCItem *)object)->getLastValue());
-            tableData->setColumnFormat(i + 1, ((DCItem *)object)->getDataType());
+            tableData->getColumnDefinitions()->get(i + 1)->setDataType(((DCItem *)object)->getDataType());
          }
       }
    }

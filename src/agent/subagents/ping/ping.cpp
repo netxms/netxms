@@ -30,11 +30,11 @@ static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
 #endif
 static BOOL m_bShutdown = FALSE;
-static DWORD m_dwNumTargets = 0;
+static UINT32 m_dwNumTargets = 0;
 static PING_TARGET *m_pTargetList = NULL;
-static DWORD m_dwTimeout = 3000;    // Default timeout is 3 seconds
-static DWORD m_dwDefPacketSize = 46;
-static DWORD m_dwPollsPerMinute = 4;
+static UINT32 m_dwTimeout = 3000;    // Default timeout is 3 seconds
+static UINT32 m_dwDefPacketSize = 46;
+static UINT32 m_dwPollsPerMinute = 4;
 
 /**
  * Poller thread
@@ -42,7 +42,7 @@ static DWORD m_dwPollsPerMinute = 4;
 static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 {
 	QWORD qwStartTime;
-	DWORD i, dwSum, dwLost, dwCount, dwInterval, dwElapsedTime, dwStdDev;
+	UINT32 i, dwSum, dwLost, dwCount, dwInterval, dwElapsedTime, dwStdDev;
 	BOOL bUnreachable;
 	PING_TARGET *target = (PING_TARGET *)arg;
 	while(!m_bShutdown)
@@ -52,7 +52,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 retry:
 		if (IcmpPing(target->ipAddr, 1, m_dwTimeout, &target->lastRTT, target->packetSize) != ICMP_SUCCESS)
 		{
-			DWORD ip = ResolveHostName(target->dnsName);
+			UINT32 ip = ResolveHostName(target->dnsName);
 			if (ip != target->ipAddr)
 			{
 				TCHAR ip1[16], ip2[16];
@@ -74,7 +74,7 @@ retry:
 			target->ipAddrAge++;
 			if (target->ipAddrAge >= 1)
 			{
-				DWORD ip = ResolveHostName(target->dnsName);
+				UINT32 ip = ResolveHostName(target->dnsName);
 				if (ip != target->ipAddr)
 				{
 					TCHAR ip1[16], ip2[16];
@@ -107,14 +107,14 @@ retry:
 
 		if (dwCount > 0)
 		{
-			target->stdDevRTT = (DWORD)sqrt((double)dwStdDev / (double)dwCount);
+			target->stdDevRTT = (UINT32)sqrt((double)dwStdDev / (double)dwCount);
 		}
 		else
 		{
 			target->stdDevRTT = 0;
 		}
 		
-		dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
+		dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
 		dwInterval = 60000 / m_dwPollsPerMinute;
 
 		if (ConditionWait(m_hCondShutdown, (dwInterval > dwElapsedTime + 1000) ? dwInterval - dwElapsedTime : 1000))
@@ -129,7 +129,7 @@ retry:
 static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
-	DWORD dwAddr, dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
+	UINT32 dwAddr, dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
 
 	if (!AgentGetParameterArg(pszParam, 1, szHostName, 256))
 		return SYSINFO_RC_UNSUPPORTED;
@@ -167,7 +167,7 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	TCHAR szTarget[MAX_DB_STRING];
-	DWORD i, dwIpAddr;
+	UINT32 i, dwIpAddr;
 	BOOL bUseName = FALSE;
 
 	if (!AgentGetParameterArg(pszParam, 1, szTarget, MAX_DB_STRING))
@@ -221,7 +221,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
  */
 static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
-	DWORD i;
+	UINT32 i;
 	TCHAR szBuffer[MAX_DB_STRING + 64], szIpAddr[16];
 
 	for(i = 0; i < m_dwNumTargets; i++)
@@ -240,7 +240,7 @@ static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
  */
 static void SubagentShutdown()
 {
-	DWORD i;
+	UINT32 i;
 
 	m_bShutdown = TRUE;
 	if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
@@ -264,7 +264,7 @@ static void SubagentShutdown()
 static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 {
 	TCHAR *ptr, *pszLine, *pszName = NULL;
-	DWORD dwIpAddr, dwPacketSize = m_dwDefPacketSize;
+	UINT32 dwIpAddr, dwPacketSize = m_dwDefPacketSize;
 	BOOL bResult = FALSE;
 
 	pszLine = _tcsdup(pszCfg);
@@ -327,7 +327,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 static BOOL SubagentInit(Config *config)
 {
-	DWORD i;
+	UINT32 i;
 	bool success;
 
 	// Parse configuration

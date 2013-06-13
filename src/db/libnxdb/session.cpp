@@ -456,10 +456,10 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
 // Get field's value as unsigned long
 //
 
-DWORD LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
+UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
 {
-   LONG iVal;
-   DWORD dwVal;
+   INT32 iVal;
+   UINT32 dwVal;
    TCHAR *pszVal, szBuffer[256];
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
@@ -469,7 +469,7 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColum
 	if (*pszVal == _T('-'))
 	{
 		iVal = _tcstol(pszVal, NULL, 10);
-		memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
+		memcpy(&dwVal, &iVal, sizeof(INT32));   // To prevent possible conversion
 	}
 	else
 	{
@@ -483,10 +483,10 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColum
 // Get field's value as unsigned 64-bit int
 //
 
-QWORD LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iColumn)
+UINT64 LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iColumn)
 {
    INT64 iVal;
-   QWORD qwVal;
+   UINT64 qwVal;
    TCHAR *pszVal, szBuffer[256];
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
@@ -510,7 +510,7 @@ QWORD LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iColu
 // Get field's value as signed long
 //
 
-LONG LIBNXDB_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
+INT32 LIBNXDB_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR *pszVal, szBuffer[256];
 
@@ -549,7 +549,7 @@ double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iCol
 // Get field's value as IP address
 //
 
-DWORD LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
+UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR *pszVal, szBuffer[256];
 
@@ -767,7 +767,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
    }
    else
    {
-      LONG nLen;
+      INT32 nLen;
       WCHAR *pszTemp;
 
       nLen = hResult->m_driver->m_fpDrvGetFieldLengthAsync(hResult->m_data, iColumn);
@@ -838,10 +838,10 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
 // Get field's value as unsigned long from asynchronous SELECT result
 //
 
-DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn)
+UINT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn)
 {
-   LONG iVal;
-   DWORD dwVal;
+   INT32 iVal;
+   UINT32 dwVal;
    TCHAR szBuffer[64];
 
    if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
@@ -850,7 +850,7 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColu
 	if (szBuffer[0] == _T('-'))
 	{
 		iVal = _tcstol(szBuffer, NULL, 10);
-		memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
+		memcpy(&dwVal, &iVal, sizeof(INT32));   // To prevent possible conversion
 	}
 	else
 	{
@@ -864,10 +864,10 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColu
 // Get field's value as unsigned 64-bit int from asynchronous SELECT result
 //
 
-QWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iColumn)
+UINT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iColumn)
 {
    INT64 iVal;
-   QWORD qwVal;
+   UINT64 qwVal;
    TCHAR szBuffer[64];
 
    if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
@@ -890,7 +890,7 @@ QWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iCol
 // Get field's value as signed long from asynchronous SELECT result
 //
 
-LONG LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_ASYNC_RESULT hResult, int iColumn)
+INT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_ASYNC_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
    
@@ -926,7 +926,7 @@ double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_ASYNC_RESULT hResult, int iCo
 // Get field's value as IP address from asynchronous SELECT result
 //
 
-DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iColumn)
+UINT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
    
@@ -1075,16 +1075,16 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 			switch(cType)
 			{
 				case DB_CTYPE_INT32:
-					_sntprintf(text, 64, _T("%d"), *((LONG *)buffer));
+					_sntprintf(text, 64, _T("%d"), *((INT32 *)buffer));
 					break;
 				case DB_CTYPE_UINT32:
-					_sntprintf(text, 64, _T("%u"), *((DWORD *)buffer));
+					_sntprintf(text, 64, _T("%u"), *((UINT32 *)buffer));
 					break;
 				case DB_CTYPE_INT64:
 					_sntprintf(text, 64, INT64_FMT, *((INT64 *)buffer));
 					break;
 				case DB_CTYPE_UINT64:
-					_sntprintf(text, 64, UINT64_FMT, *((QWORD *)buffer));
+					_sntprintf(text, 64, UINT64_FMT, *((UINT64 *)buffer));
 					break;
 				case DB_CTYPE_DOUBLE:
 					_sntprintf(text, 64, _T("%f"), *((double *)buffer));
@@ -1108,12 +1108,12 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const T
 		DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, (void *)_T(""), DB_BIND_STATIC);
 }
 
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, LONG value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT32 value)
 {
 	DBBind(hStmt, pos, sqlType, DB_CTYPE_INT32, &value, DB_BIND_TRANSIENT);
 }
 
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, DWORD value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, UINT32 value)
 {
 	// C type intentionally set to INT32 - unsigned numbers will be written as negatives
 	// and correctly parsed on read by DBGetFieldULong
@@ -1126,7 +1126,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT64 v
 	DBBind(hStmt, pos, sqlType, DB_CTYPE_INT64, &value, DB_BIND_TRANSIENT);
 }
 
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, QWORD value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, UINT64 value)
 {
 	DBBind(hStmt, pos, sqlType, DB_CTYPE_UINT64, &value, DB_BIND_TRANSIENT);
 }
@@ -1136,11 +1136,9 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, double 
 	DBBind(hStmt, pos, sqlType, DB_CTYPE_DOUBLE, &value, DB_BIND_TRANSIENT);
 }
 
-
-//
-// Execute prepared statement (non-SELECT)
-//
-
+/**
+ * Execute prepared statement (non-SELECT)
+ */
 BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 {
 #ifdef UNICODE
@@ -1148,7 +1146,7 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
-	QWORD ms;
+	UINT64 ms;
 
 	DB_HANDLE hConn = hStmt->m_connection;
 	MutexLock(hConn->m_mutexTransLock);

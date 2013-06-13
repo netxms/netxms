@@ -55,7 +55,7 @@ BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform)
 // Check if given package ID is valid
 //
 
-BOOL IsValidPackageId(DWORD dwPkgId)
+BOOL IsValidPackageId(UINT32 dwPkgId)
 {
    DB_RESULT hResult;
    TCHAR szQuery[256];
@@ -92,11 +92,11 @@ BOOL IsPackageFileExist(const TCHAR *pszFileName)
 // Uninstall (remove) package from server
 //
 
-DWORD UninstallPackage(DWORD dwPkgId)
+UINT32 UninstallPackage(UINT32 dwPkgId)
 {
    TCHAR szQuery[256], szFileName[MAX_PATH], szBuffer[MAX_DB_STRING];
    DB_RESULT hResult;
-   DWORD dwResult;
+   UINT32 dwResult;
 
    _sntprintf(szQuery, 256, _T("SELECT pkg_file FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -147,7 +147,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    BOOL bSuccess;
    AgentConnection *pAgentConn;
    const TCHAR *pszErrorMsg;
-   DWORD dwMaxWait;
+   UINT32 dwMaxWait;
 
    // Read configuration
    dwMaxWait = ConfigReadULong(_T("AgentUpgradeWaitTime"), 600);
@@ -220,7 +220,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                   if (pAgentConn->startUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
                   {
                      BOOL bConnected = FALSE;
-                     DWORD i;
+                     UINT32 i;
 
                      // Disconnect from agent
                      pAgentConn->disconnect();

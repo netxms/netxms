@@ -67,7 +67,7 @@ void LoadScripts()
 /**
  * Reload script from database
  */
-void ReloadScript(DWORD dwScriptId)
+void ReloadScript(UINT32 dwScriptId)
 {
    TCHAR *pszCode, szQuery[256], szError[1024], szBuffer[MAX_DB_STRING];
    DB_RESULT hResult;
@@ -103,7 +103,7 @@ void ReloadScript(DWORD dwScriptId)
 /**
  * Check if script ID is valid
  */
-BOOL IsValidScriptId(DWORD dwId)
+BOOL IsValidScriptId(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;

@@ -27,7 +27,7 @@
  *
  * @return RCC ready to be sent to client
  */
-DWORD ModifySummaryTable(CSCPMessage *msg, LONG *newId)
+UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId)
 {
    LONG id = msg->GetVariableLong(VID_SUMMARY_TABLE_ID);
    if (id == 0)
@@ -39,7 +39,7 @@ DWORD ModifySummaryTable(CSCPMessage *msg, LONG *newId)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    
    DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), (DWORD)id))
+   if (IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), (UINT32)id))
    {
       hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=? WHERE id=?"));
    }
@@ -48,7 +48,7 @@ DWORD ModifySummaryTable(CSCPMessage *msg, LONG *newId)
       hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,id) VALUES (?,?,?,?,?,?)"));
    }
 
-   DWORD rcc;
+   UINT32 rcc;
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg->GetVariableStr(VID_MENU_PATH), DB_BIND_DYNAMIC);
@@ -60,7 +60,7 @@ DWORD ModifySummaryTable(CSCPMessage *msg, LONG *newId)
 
       rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
       if (rcc == RCC_SUCCESS)
-         NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (DWORD)id);
+         NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);
 
       DBFreeStatement(hStmt);
    }
@@ -76,10 +76,10 @@ DWORD ModifySummaryTable(CSCPMessage *msg, LONG *newId)
 /**
  * Delete DCI summary table
  */
-DWORD DeleteSummaryTable(LONG tableId)
+UINT32 DeleteSummaryTable(LONG tableId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DWORD rcc = RCC_DB_FAILURE;
+   UINT32 rcc = RCC_DB_FAILURE;
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM dci_summary_tables WHERE id=?"));
    if (hStmt != NULL)
    {
@@ -87,7 +87,7 @@ DWORD DeleteSummaryTable(LONG tableId)
       if (DBExecute(hStmt))
       {
          rcc = RCC_SUCCESS;
-         NotifyClientSessions(NX_NOTIFY_DCISUMTBL_DELETED, (DWORD)tableId);
+         NotifyClientSessions(NX_NOTIFY_DCISUMTBL_DELETED, (UINT32)tableId);
       }
       DBFreeStatement(hStmt);
    }
@@ -192,7 +192,7 @@ SummaryTable::SummaryTable(DB_RESULT hResult)
 /**
  * Load summary table object from database
  */
-SummaryTable *SummaryTable::loadFromDB(LONG id, DWORD *rcc)
+SummaryTable *SummaryTable::loadFromDB(LONG id, UINT32 *rcc)
 {
    DbgPrintf(4, _T("Loading configuration for DCI summary table %d"), id);
    SummaryTable *table = NULL;
@@ -276,7 +276,7 @@ Table *SummaryTable::createEmptyResultTable()
 /**
  * Query summary table
  */
-Table *QuerySummaryTable(LONG tableId, DWORD baseObjectId, DWORD userId, DWORD *rcc)
+Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc)
 {
    NetObj *object = FindObjectById(baseObjectId);
    if (object == NULL)

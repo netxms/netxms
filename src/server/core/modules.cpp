@@ -26,7 +26,7 @@
  * List of loaded modules
  */
 TCHAR *g_pszModLoadList = NULL;
-DWORD g_dwNumModules = 0;
+UINT32 g_dwNumModules = 0;
 NXMODULE *g_pModuleList = NULL;
 
 /**

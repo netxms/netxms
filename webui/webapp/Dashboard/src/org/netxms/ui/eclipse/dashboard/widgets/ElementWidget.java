@@ -31,8 +31,6 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 class ElementWidget extends DashboardComposite implements ControlListener
 {
-	private static final long serialVersionUID = 1L;
-
 	protected DashboardElement element;
 	protected IViewPart viewPart;
 	

@@ -78,7 +78,7 @@ bool BayStackDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  */
 void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
 {
-	DWORD slotSize;
+	UINT32 slotSize;
 	
 	if (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.74"), 20) ||	// 56xx
 	    !_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.65"), 20))	// 5530-24TFD
@@ -99,11 +99,11 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
 
 	attributes->set(_T(".baystack.slotSize"), slotSize);
 
-	DWORD numVlans;
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), NULL, 0, &numVlans, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
+	UINT32 numVlans;
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), NULL, 0, &numVlans, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
 		attributes->set(_T(".baystack.rapidCity.vlan"), numVlans);
 	else
-		attributes->set(_T(".baystack.rapidCity.vlan"), (DWORD)0);
+		attributes->set(_T(".baystack.rapidCity.vlan"), (UINT32)0);
 }
 
 /**
@@ -112,7 +112,7 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
  * @param attributes object's custom attributes
  * @return slot size
  */
-DWORD BayStackDriver::getSlotSize(StringMap *attributes)
+UINT32 BayStackDriver::getSlotSize(StringMap *attributes)
 {
 	return attributes->getULong(_T(".baystack.slotSize"), 64);
 }
@@ -163,10 +163,10 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
    }
 	
 	// Calculate slot/port pair from ifIndex
-	DWORD slotSize = attributes->getULong(_T(".baystack.slotSize"), 64);
+	UINT32 slotSize = attributes->getULong(_T(".baystack.slotSize"), 64);
 	for(int i = 0; i < ifList->getSize(); i++)
 	{
-		DWORD slot = ifList->get(i)->dwIndex / slotSize + 1;
+		UINT32 slot = ifList->get(i)->dwIndex / slotSize + 1;
 		if ((slot > 0) && (slot <= 8))
 		{
 			ifList->get(i)->dwSlotNumber = slot;
@@ -178,9 +178,9 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	if (attributes->getULong(_T(".baystack.rapidCity.vlan"), 0) > 0)
 		getVlanInterfaces(snmp, ifList);
 
-	DWORD mgmtIpAddr, mgmtNetMask;
-	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS) &&
-	    (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), NULL, 0, &mgmtNetMask, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS))
+	UINT32 mgmtIpAddr, mgmtNetMask;
+	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS) &&
+	    (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), NULL, 0, &mgmtNetMask, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS))
 	{
 		// Get switch base MAC address
 		BYTE baseMacAddr[MAC_ADDR_LENGTH];

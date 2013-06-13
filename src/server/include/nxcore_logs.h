@@ -73,7 +73,7 @@ struct NXCORE_LOG
 	const TCHAR *name;
 	const TCHAR *table;
 	const TCHAR *idColumn;
-	DWORD requiredAccess;
+	UINT32 requiredAccess;
 	LOG_COLUMN columns[32];
 };
 
@@ -114,7 +114,7 @@ private:
 	} m_value;
 
 public:
-	ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId);
+	ColumnFilter(CSCPMessage *msg, const TCHAR *column, UINT32 baseId);
 	~ColumnFilter();
 
 	int getVariableCount() { return m_varCount; }
@@ -165,7 +165,7 @@ private:
 	LogFilter *m_filter;
 	MUTEX m_lock;
    String m_queryColumns;
-	DWORD m_rowCountLimit;
+	UINT32 m_rowCountLimit;
 	INT64 m_maxRecordId;
 	DB_RESULT m_resultSet;
 
@@ -192,8 +192,8 @@ public:
 //
 
 void InitLogAccess();
-int OpenLog(const TCHAR *name, ClientSession *session, DWORD *rcc);
-DWORD CloseLog(ClientSession *session, int logHandle);
+int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc);
+UINT32 CloseLog(ClientSession *session, int logHandle);
 LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle);
 
 

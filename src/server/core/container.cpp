@@ -25,9 +25,9 @@
 /**
  * Find container category by id
  */
-CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId)
+CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(UINT32 dwId)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < g_dwNumCategories; i++)
       if (g_pContainerCatList[i].dwCatId == dwId)
@@ -51,7 +51,7 @@ Container::Container() : NetObj()
 /**
  * "Normal" container class constructor
  */
-Container::Container(const TCHAR *pszName, DWORD dwCategory) : NetObj()
+Container::Container(const TCHAR *pszName, UINT32 dwCategory) : NetObj()
 {
    nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
    m_pdwChildIdList = NULL;
@@ -78,11 +78,11 @@ Container::~Container()
  *
  * @param dwId object ID
  */
-BOOL Container::CreateFromDB(DWORD dwId)
+BOOL Container::CreateFromDB(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
-   DWORD i;
+   UINT32 i;
 
    m_dwId = dwId;
 
@@ -131,7 +131,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
          m_dwChildIdListSize = DBGetNumRows(hResult);
          if (m_dwChildIdListSize > 0)
          {
-            m_pdwChildIdList = (DWORD *)malloc(sizeof(DWORD) * m_dwChildIdListSize);
+            m_pdwChildIdList = (UINT32 *)malloc(sizeof(UINT32) * m_dwChildIdListSize);
             for(i = 0; i < m_dwChildIdListSize; i++)
                m_pdwChildIdList[i] = DBGetFieldULong(hResult, i, 0);
          }
@@ -185,7 +185,7 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 		_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
 		DBQuery(hdb, query);
 		LockChildList(FALSE);
-		for(DWORD i = 0; i < m_dwChildCount; i++)
+		for(UINT32 i = 0; i < m_dwChildCount; i++)
 		{
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
 			DBQuery(hdb, query);
@@ -223,7 +223,7 @@ bool Container::deleteFromDB(DB_HANDLE hdb)
 void Container::linkChildObjects()
 {
    NetObj *pObject;
-   DWORD i;
+   UINT32 i;
 
    if (m_dwChildIdListSize > 0)
    {
@@ -274,7 +274,7 @@ void Container::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-DWORD Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();

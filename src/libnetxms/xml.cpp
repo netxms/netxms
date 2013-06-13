@@ -121,7 +121,7 @@ int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int
 	return (value != NULL) ? strtol(value, NULL, 0) : defVal;
 }
 
-DWORD LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal)
+UINT32 LIBNETXMS_EXPORTABLE XMLGetAttrUINT32(const char **attrs, const char *name, UINT32 defVal)
 {
 	const char *value;
 

@@ -27,7 +27,7 @@
 /**
  * Handler for VLAN enumeration on Cisco device
  */
-static DWORD HandlerVlanList(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
 
@@ -48,7 +48,7 @@ static DWORD HandlerVlanList(DWORD version, SNMP_Variable *var, SNMP_Transport *
  * @param map VLAN membership map
  * @param offset VLAN ID offset from 0
  */
-static void ParseVlanMap(VlanList *vlanList, DWORD ifIndex, BYTE *map, int offset)
+static void ParseVlanMap(VlanList *vlanList, UINT32 ifIndex, BYTE *map, int offset)
 {
 	// VLAN map description from Cisco MIB:
 	// ======================================
@@ -82,17 +82,17 @@ static void ParseVlanMap(VlanList *vlanList, DWORD ifIndex, BYTE *map, int offse
 /**
  * Handler for trunk port enumeration on Cisco device
  */
-static DWORD HandlerTrunkPorts(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerTrunkPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-   DWORD nameLen = var->GetName()->getLength();
-	DWORD ifIndex = var->GetName()->getValue()[nameLen - 1];
+   UINT32 nameLen = var->GetName()->getLength();
+	UINT32 ifIndex = var->GetName()->getValue()[nameLen - 1];
 
 	// Check if port is acting as trunk
-	DWORD oidName[256], value;
-   memcpy(oidName, var->GetName()->getValue(), nameLen * sizeof(DWORD));
+	UINT32 oidName[256], value;
+   memcpy(oidName, var->GetName()->getValue(), nameLen * sizeof(UINT32));
    oidName[nameLen - 2] = 14;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.14
-	if (SnmpGet(version, transport, NULL, oidName, nameLen, &value, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
+	if (SnmpGet(version, transport, NULL, oidName, nameLen, &value, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 	   return SNMP_ERR_SUCCESS;	// Cannot get trunk state, ignore port
 	if (value != 1)
 	   return SNMP_ERR_SUCCESS;	// Not a trunk port, ignore
@@ -134,14 +134,14 @@ static DWORD HandlerTrunkPorts(DWORD version, SNMP_Variable *var, SNMP_Transport
 /**
  * Handler for access port enumeration on Cisco device
  */
-static DWORD HandlerAccessPorts(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerAccessPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-   DWORD nameLen = var->GetName()->getLength();
-	DWORD ifIndex = var->GetName()->getValue()[nameLen - 1];
+   UINT32 nameLen = var->GetName()->getLength();
+	UINT32 ifIndex = var->GetName()->getValue()[nameLen - 1];
 
-	DWORD oidName[256];
-   memcpy(oidName, var->GetName()->getValue(), nameLen * sizeof(DWORD));
+	UINT32 oidName[256];
+   memcpy(oidName, var->GetName()->getValue(), nameLen * sizeof(UINT32));
 
 	// Entry type: 3=multi-vlan
 	if (var->GetValueAsInt() == 3)
@@ -175,8 +175,8 @@ static DWORD HandlerAccessPorts(DWORD version, SNMP_Variable *var, SNMP_Transpor
 	{
 		// Port is in just one VLAN, it's ID must be in vmVlan
 	   oidName[nameLen - 2] = 2;	// .1.3.6.1.4.1.9.9.68.1.2.2.1.2
-		DWORD vlanId = 0;
-		if (SnmpGet(version, transport, NULL, oidName, nameLen, &vlanId, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
+		UINT32 vlanId = 0;
+		if (SnmpGet(version, transport, NULL, oidName, nameLen, &vlanId, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
 		{
 			if (vlanId != 0)
 				vlanList->addMemberPort((int)vlanId, ifIndex);

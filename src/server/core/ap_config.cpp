@@ -112,7 +112,7 @@ bool AgentPolicyConfig::deleteFromDB(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL AgentPolicyConfig::CreateFromDB(DWORD dwId)
+BOOL AgentPolicyConfig::CreateFromDB(UINT32 dwId)
 {
 	BOOL success = FALSE;
 
@@ -151,7 +151,7 @@ void AgentPolicyConfig::CreateMessage(CSCPMessage *msg)
 // Modify policy from message
 //
 
-DWORD AgentPolicyConfig::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AgentPolicyConfig::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -180,10 +180,10 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 
 #ifdef UNICODE
 	char *fd = MBStringFromWideString(m_fileContent);
-	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)fd, (DWORD)strlen(fd));
+	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)fd, (UINT32)strlen(fd));
 	free(fd);
 #else
-	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (DWORD)strlen(m_fileContent));
+	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (UINT32)strlen(m_fileContent));
 #endif
 	return true;
 }

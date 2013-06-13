@@ -33,8 +33,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class WebPage extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private WebPageConfig config;
 	private LabeledText url;
 	private LabeledText title;

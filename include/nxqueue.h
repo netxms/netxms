@@ -38,11 +38,11 @@ private:
    MUTEX m_mutexQueueAccess;
    CONDITION m_condWakeup;
    void **m_pElements;
-   DWORD m_dwNumElements;
-   DWORD m_dwBufferSize;
-   DWORD m_dwFirst;
-   DWORD m_dwLast;
-   DWORD m_dwBufferIncrement;
+   UINT32 m_dwNumElements;
+   UINT32 m_dwBufferSize;
+   UINT32 m_dwFirst;
+   UINT32 m_dwLast;
+   UINT32 m_dwBufferIncrement;
 	BOOL m_bShutdownFlag;
 
 	void CommonInit();
@@ -51,7 +51,7 @@ private:
 
 public:
    Queue();
-   Queue(DWORD dwInitialSize, DWORD dwBufferIncrement = 32);
+   Queue(UINT32 dwInitialSize, UINT32 dwBufferIncrement = 32);
    ~Queue();
 
    void Put(void *pObject);
@@ -59,7 +59,7 @@ public:
 	void SetShutdownMode();
    void *Get();
    void *GetOrBlock();
-   DWORD Size() { return m_dwNumElements; }
+   UINT32 Size() { return m_dwNumElements; }
    void Clear();
 	void *find(void *key, QUEUE_COMPARATOR comparator);
 	bool remove(void *key, QUEUE_COMPARATOR comparator);

@@ -42,13 +42,13 @@ double g_dAvgIDataWriterQueueSize = 0;
 double g_dAvgDBAndIDataWriterQueueSize = 0;
 double g_dAvgStatusPollerQueueSize = 0;
 double g_dAvgConfigPollerQueueSize = 0;
-DWORD g_dwAvgDCIQueuingTime = 0;
+UINT32 g_dwAvgDCIQueuingTime = 0;
 Queue *g_pItemQueue = NULL;
 
 /**
  * Collect data for DCI
  */
-static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *pBuffer, DWORD *error)
+static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *pBuffer, UINT32 *error)
 {
    if (dcTarget->Type() == OBJECT_CLUSTER)
    {
@@ -120,7 +120,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 /**
  * Collect data for table
  */
-static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, DWORD *error)
+static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32 *error)
 {
 	Table *result = NULL;
    switch(table->getDataSource())
@@ -143,7 +143,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, DWORD 
  */
 static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 {
-   DWORD dwError;
+   UINT32 dwError;
 
    TCHAR *pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
    while(!IsShutdownInProgress())
@@ -270,12 +270,12 @@ static void QueueItems(NetObj *object, void *data)
  */
 static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
-   DWORD dwSum, dwWatchdogId, dwCurrPos = 0;
-   DWORD dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
+   UINT32 dwSum, dwWatchdogId, dwCurrPos = 0;
+   UINT32 dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
    INT64 qwStart;
 
    dwWatchdogId = WatchdogAddThread(_T("Item Poller"), 20);
-   memset(dwTimingHistory, 0, sizeof(DWORD) * (60 / ITEM_POLLING_INTERVAL));
+   memset(dwTimingHistory, 0, sizeof(UINT32) * (60 / ITEM_POLLING_INTERVAL));
 
    while(!IsShutdownInProgress())
    {
@@ -290,7 +290,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 		g_idxMobileDeviceById.forEach(QueueItems, NULL);
 
       // Save last poll time
-      dwTimingHistory[dwCurrPos] = (DWORD)(GetCurrentTimeMs() - qwStart);
+      dwTimingHistory[dwCurrPos] = (UINT32)(GetCurrentTimeMs() - qwStart);
       dwCurrPos++;
       if (dwCurrPos == (60 / ITEM_POLLING_INTERVAL))
          dwCurrPos = 0;
@@ -310,18 +310,18 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
  */
 static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
-   DWORD i, dwCurrPos = 0;
-   DWORD dwPollerQS[12], dwDBWriterQS[12];
-   DWORD dwIDataWriterQS[12], dwDBAndIDataWriterQS[12];
-   DWORD dwStatusPollerQS[12], dwConfigPollerQS[12];
+   UINT32 i, dwCurrPos = 0;
+   UINT32 dwPollerQS[12], dwDBWriterQS[12];
+   UINT32 dwIDataWriterQS[12], dwDBAndIDataWriterQS[12];
+   UINT32 dwStatusPollerQS[12], dwConfigPollerQS[12];
    double dSum1, dSum2, dSum3, dSum4, dSum5, dSum6;
 
-   memset(dwPollerQS, 0, sizeof(DWORD) * 12);
-   memset(dwDBWriterQS, 0, sizeof(DWORD) * 12);
-   memset(dwIDataWriterQS, 0, sizeof(DWORD) * 12);
-   memset(dwDBAndIDataWriterQS, 0, sizeof(DWORD) * 12);
-   memset(dwStatusPollerQS, 0, sizeof(DWORD) * 12);
-   memset(dwConfigPollerQS, 0, sizeof(DWORD) * 12);
+   memset(dwPollerQS, 0, sizeof(UINT32) * 12);
+   memset(dwDBWriterQS, 0, sizeof(UINT32) * 12);
+   memset(dwIDataWriterQS, 0, sizeof(UINT32) * 12);
+   memset(dwDBAndIDataWriterQS, 0, sizeof(UINT32) * 12);
+   memset(dwStatusPollerQS, 0, sizeof(UINT32) * 12);
+   memset(dwConfigPollerQS, 0, sizeof(UINT32) * 12);
    g_dAvgPollerQueueSize = 0;
    g_dAvgDBWriterQueueSize = 0;
    g_dAvgIDataWriterQueueSize = 0;
@@ -449,8 +449,8 @@ void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		g_idxNodeById.forEach(UpdateParamList, &fullList);
 
 		// Put list into the message
-		pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)fullList.size());
-      DWORD varId = VID_PARAM_LIST_BASE;
+		pMsg->SetVariable(VID_NUM_PARAMETERS, (UINT32)fullList.size());
+      UINT32 varId = VID_PARAM_LIST_BASE;
 		for(int i = 0; i < fullList.size(); i++)
 		{
          varId += fullList.get(i)->fillMessage(pMsg, varId);
@@ -464,8 +464,8 @@ void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		g_idxNodeById.forEach(UpdateTableList, &fullList);
 
 		// Put list into the message
-		pMsg->SetVariable(VID_NUM_TABLES, (DWORD)fullList.size());
-      DWORD varId = VID_TABLE_LIST_BASE;
+		pMsg->SetVariable(VID_NUM_TABLES, (UINT32)fullList.size());
+      UINT32 varId = VID_TABLE_LIST_BASE;
 		for(int i = 0; i < fullList.size(); i++)
 		{
          varId += fullList.get(i)->fillMessage(pMsg, varId);

@@ -25,21 +25,21 @@
 /**
  * Handler for walking local port table
  */
-static DWORD PortLocalInfoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LLDP_LOCAL_PORT_INFO *port = new LLDP_LOCAL_PORT_INFO;
 	port->localIdLen = var->getRawValue(port->localId, 256);
 
 	SNMP_ObjectId *oid = var->GetName();
-	DWORD newOid[128];
-	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(DWORD));
+	UINT32 newOid[128];
+	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
 
 	newOid[oid->getLength() - 2] = 4;	// lldpLocPortDescr
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
 	SNMP_PDU *pRespPDU = NULL;
-   DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -78,7 +78,7 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
  * @param idLen port ID length in bytes
  * @param nbs link layer neighbors list which is being built
  */
-static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t idLen, LinkLayerNeighbors *nbs)
+static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_t idLen, LinkLayerNeighbors *nbs)
 {
 	TCHAR ifName[130];
 	Interface *ifc;
@@ -90,8 +90,8 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 		case 4:	// Network address
 			if (id[0] == 1)	// IPv4
 			{
-				DWORD ipAddr;
-				memcpy(&ipAddr, &id[1], sizeof(DWORD));
+				UINT32 ipAddr;
+				memcpy(&ipAddr, &id[1], sizeof(UINT32));
 				return node->findInterfaceByIP(ntohl(ipAddr));
 			}
 			return NULL;
@@ -135,15 +135,15 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 /**
  * Topology table walker's callback for LLDP topology table
  */
-static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LinkLayerNeighbors *nbs = (LinkLayerNeighbors *)arg;
 	Node *node = (Node *)nbs->getData();
 	SNMP_ObjectId *oid = var->GetName();
 
 	// Get additional info for current record
-	DWORD newOid[128];
-	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(DWORD));
+	UINT32 newOid[128];
+	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
 
 	newOid[oid->getLength() - 4] = 4;	// lldpRemChassisIdSubtype
@@ -156,7 +156,7 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
 	SNMP_PDU *pRespPDU = NULL;
-   DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -182,7 +182,7 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 			info.protocol = LL_PROTO_LLDP;
 
 			// Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
-			DWORD localPort = oid->getValue()[oid->getLength() - 2];
+			UINT32 localPort = oid->getValue()[oid->getLength() - 2];
 
 			// Determine interface index from local port number. It can be
 			// either ifIndex or dot1dBasePort, as described in LLDP MIB:

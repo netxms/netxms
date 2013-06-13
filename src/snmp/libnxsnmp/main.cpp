@@ -26,9 +26,9 @@
 /**
  * Convert OID to text
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, const DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize)
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(UINT32 dwLength, const UINT32 *pdwValue, TCHAR *pszBuffer, UINT32 dwBufferSize)
 {
-   DWORD i, dwBufPos, dwNumChars;
+   UINT32 i, dwBufPos, dwNumChars;
 
    pszBuffer[0] = 0;
    for(i = 0, dwBufPos = 0; (i < dwLength) && (dwBufPos < dwBufferSize); i++)
@@ -41,13 +41,13 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, const DWORD *pd
 
 /**
  * Parse OID in text into binary format
- * Will return 0 if OID is invalid or empty, and OID length (in DWORDs) on success
- * Buffer size should be given in number of DWORDs
+ * Will return 0 if OID is invalid or empty, and OID length (in UINT32s) on success
+ * Buffer size should be given in number of UINT32s
  */
-DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize)
+UINT32 LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, UINT32 *pdwBuffer, UINT32 dwBufferSize)
 {
    TCHAR *pCurr = (TCHAR *)pszText, *pEnd, szNumber[32];
-   DWORD dwLength = 0;
+   UINT32 dwLength = 0;
    int iNumLen;
 
    if (*pCurr == 0)
@@ -74,9 +74,9 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, 
  */
 BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText)
 {
-   DWORD dwLength, *pdwBuffer;
+   UINT32 dwLength, *pdwBuffer;
 
-   pdwBuffer = (DWORD *)malloc(sizeof(DWORD) * MAX_OID_LEN);
+   pdwBuffer = (UINT32 *)malloc(sizeof(UINT32) * MAX_OID_LEN);
    dwLength = SNMPParseOID(pszText, pdwBuffer, MAX_OID_LEN);
    free(pdwBuffer);
    return (dwLength > 0);
@@ -85,7 +85,7 @@ BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText)
 /**
  * Get text for libnxsnmp error code
  */
-const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
+const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 dwError)
 {
    static const TCHAR *pszErrorText[] =
    {
@@ -119,12 +119,12 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
 /**
  * Resolve text representation of data type to integer value
  */
-DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType)
+UINT32 LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType)
 {
 	static struct
 	{
 		const TCHAR *pszName;
-		DWORD dwValue;
+		UINT32 dwValue;
 	} typeList[] =
 	{
 		{ _T("INT"), ASN_INTEGER },
@@ -153,12 +153,12 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType)
 /**
  * Get type name
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(DWORD type, TCHAR *buffer, size_t bufferSize)
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(UINT32 type, TCHAR *buffer, size_t bufferSize)
 {
 	static struct
 	{
 		const TCHAR *pszName;
-		DWORD dwValue;
+		UINT32 dwValue;
 	} typeList[] =
 	{
 		{ _T("INTEGER"), ASN_INTEGER },

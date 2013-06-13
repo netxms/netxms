@@ -46,7 +46,7 @@ Zone::Zone()
 // Constructor for new zone object
 //
 
-Zone::Zone(DWORD zoneId, const TCHAR *name)
+Zone::Zone(UINT32 zoneId, const TCHAR *name)
      :NetObj()
 {
    m_dwId = 0;
@@ -77,7 +77,7 @@ Zone::~Zone()
 // Create object from database data
 //
 
-BOOL Zone::CreateFromDB(DWORD dwId)
+BOOL Zone::CreateFromDB(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -190,7 +190,7 @@ void Zone::CreateMessage(CSCPMessage *pMsg)
 // Modify object from message
 //
 
-DWORD Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -210,7 +210,7 @@ DWORD Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 /**
  * Update interface index
  */
-void Zone::updateInterfaceIndex(DWORD oldIp, DWORD newIp, Interface *iface)
+void Zone::updateInterfaceIndex(UINT32 oldIp, UINT32 newIp, Interface *iface)
 {
 	m_idxInterfaceByAddr->remove(oldIp);
 	m_idxInterfaceByAddr->put(newIp, iface);

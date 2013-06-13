@@ -36,7 +36,7 @@ NXSL_FileClass g_nxslFileClass;
 int main(int argc, char *argv[])
 {
    TCHAR *pszSource, szError[1024];
-   DWORD dwSize;
+   UINT32 dwSize;
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;

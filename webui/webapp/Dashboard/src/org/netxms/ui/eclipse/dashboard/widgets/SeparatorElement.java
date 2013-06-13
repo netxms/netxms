@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class SeparatorElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	private SeparatorConfig config;
 	private Color bkColor;
 	private Color fgColor;
@@ -65,8 +63,6 @@ public class SeparatorElement extends ElementWidget
 		setBackground(bkColor);
 		
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

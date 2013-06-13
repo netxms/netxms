@@ -46,7 +46,7 @@ NetworkService::NetworkService() : NetObj()
  */
 NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
                                TCHAR *pszRequest, TCHAR *pszResponse,
-										 Node *pHostNode, DWORD dwPollerNode) : NetObj()
+										 Node *pHostNode, UINT32 dwPollerNode) : NetObj()
 {
    m_iServiceType = iServiceType;
    m_pHostNode = pHostNode;
@@ -103,8 +103,8 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_pHostNode->Id());
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_iServiceType);
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, szIpAddr), DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (DWORD)m_wProto);
-		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (DWORD)m_wPort);
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_wProto);
+		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_wPort);
 		DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_pszRequest, DB_BIND_STATIC);
 		DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_pszResponse, DB_BIND_STATIC);
 		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_dwPollerNode);
@@ -128,11 +128,11 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 /**
  * Load properties from database
  */
-BOOL NetworkService::CreateFromDB(DWORD dwId)
+BOOL NetworkService::CreateFromDB(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
-   DWORD dwHostNodeId;
+   UINT32 dwHostNodeId;
    NetObj *pObject;
    BOOL bResult = FALSE;
 
@@ -241,7 +241,7 @@ void NetworkService::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -249,7 +249,7 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
    // Polling node
    if (pRequest->IsVariableExist(VID_POLLER_NODE_ID))
    {
-      DWORD dwNodeId;
+      UINT32 dwNodeId;
 
       dwNodeId = pRequest->GetVariableLong(VID_POLLER_NODE_ID);
       if (dwNodeId == 0)
@@ -321,7 +321,7 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
 /**
  * Perform status poll on network service
  */
-void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode, Queue *pEventQueue)
+void NetworkService::StatusPoll(ClientSession *pSession, UINT32 dwRqId, Node *pPollerNode, Queue *pEventQueue)
 {
    int oldStatus = m_iStatus, newStatus;
    Node *pNode;
@@ -352,7 +352,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
    if (pNode != NULL)
    {
       TCHAR szBuffer[16];
-      DWORD dwStatus;
+      UINT32 dwStatus;
 
       sendPollerMsg(dwRqId, _T("      Polling service from node %s [%s]\r\n"),
                     pNode->Name(), IpToStr(pNode->IpAddr(), szBuffer));
@@ -417,7 +417,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
 /**
  * Handler for object deletion
  */
-void NetworkService::onObjectDelete(DWORD dwObjectId)
+void NetworkService::onObjectDelete(UINT32 dwObjectId)
 {
 	LockData();
    if (dwObjectId == m_dwPollerNode)

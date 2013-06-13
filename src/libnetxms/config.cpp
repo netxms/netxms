@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -182,13 +182,13 @@ const TCHAR *ConfigEntry::getValue(int index)
 	return m_values[index];
 }
 
-LONG ConfigEntry::getValueInt(int index, LONG defaultValue)
+INT32 ConfigEntry::getValueInt(int index, INT32 defaultValue)
 {
 	const TCHAR *value = getValue(index);
 	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-DWORD ConfigEntry::getValueUInt(int index, DWORD defaultValue)
+UINT32 ConfigEntry::getValueUInt(int index, UINT32 defaultValue)
 {
 	const TCHAR *value = getValue(index);
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -200,7 +200,7 @@ INT64 ConfigEntry::getValueInt64(int index, INT64 defaultValue)
 	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-QWORD ConfigEntry::getValueUInt64(int index, QWORD defaultValue)
+UINT64 ConfigEntry::getValueUInt64(int index, UINT64 defaultValue)
 {
 	const TCHAR *value = getValue(index);
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -287,13 +287,13 @@ const TCHAR *ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const T
 	return (value != NULL) ? value : defaultValue;
 }
 
-LONG ConfigEntry::getSubEntryValueInt(const TCHAR *name, int index, LONG defaultValue)
+INT32 ConfigEntry::getSubEntryValueInt(const TCHAR *name, int index, INT32 defaultValue)
 {
 	const TCHAR *value = getSubEntryValue(name, index);
 	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-DWORD ConfigEntry::getSubEntryValueUInt(const TCHAR *name, int index, DWORD defaultValue)
+UINT32 ConfigEntry::getSubEntryValueUInt(const TCHAR *name, int index, UINT32 defaultValue)
 {
 	const TCHAR *value = getSubEntryValue(name, index);
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -305,7 +305,7 @@ INT64 ConfigEntry::getSubEntryValueInt64(const TCHAR *name, int index, INT64 def
 	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-QWORD ConfigEntry::getSubEntryValueUInt64(const TCHAR *name, int index, QWORD defaultValue)
+UINT64 ConfigEntry::getSubEntryValueUInt64(const TCHAR *name, int index, UINT64 defaultValue)
 {
 	const TCHAR *value = getSubEntryValue(name, index);
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -503,11 +503,11 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) ||
                    !_tcsicmp(value, _T("on")) || !_tcsicmp(value, _T("1")))
                {
-                  *((DWORD *)cfgTemplate[i].pBuffer) |= cfgTemplate[i].dwBufferSize;
+                  *((UINT32 *)cfgTemplate[i].pBuffer) |= cfgTemplate[i].dwBufferSize;
                }
                else
                {
-                  *((DWORD *)cfgTemplate[i].pBuffer) &= ~(cfgTemplate[i].dwBufferSize);
+                  *((UINT32 *)cfgTemplate[i].pBuffer) &= ~(cfgTemplate[i].dwBufferSize);
                }
                break;
             case CT_STRING:
@@ -565,13 +565,13 @@ const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
 	return value;
 }
 
-LONG Config::getValueInt(const TCHAR *path, LONG defaultValue)
+INT32 Config::getValueInt(const TCHAR *path, INT32 defaultValue)
 {
 	const TCHAR *value = getValue(path);
 	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-DWORD Config::getValueUInt(const TCHAR *path, DWORD defaultValue)
+UINT32 Config::getValueUInt(const TCHAR *path, UINT32 defaultValue)
 {
 	const TCHAR *value = getValue(path);
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -583,7 +583,7 @@ INT64 Config::getValueInt64(const TCHAR *path, INT64 defaultValue)
 	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-QWORD Config::getValueUInt64(const TCHAR *path, QWORD defaultValue)
+UINT64 Config::getValueUInt64(const TCHAR *path, UINT64 defaultValue)
 {
 	const TCHAR *value = getValue(path);
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -754,14 +754,14 @@ bool Config::setValue(const TCHAR *path, const TCHAR *value)
 	return true;
 }
 
-bool Config::setValue(const TCHAR *path, LONG value)
+bool Config::setValue(const TCHAR *path, INT32 value)
 {
 	TCHAR buffer[32];
 	_sntprintf(buffer, 32, _T("%ld"), (long)value);
 	return setValue(path, buffer);
 }
 
-bool Config::setValue(const TCHAR *path, DWORD value)
+bool Config::setValue(const TCHAR *path, UINT32 value)
 {
 	TCHAR buffer[32];
 	_sntprintf(buffer, 32, _T("%lu"), (unsigned long)value);
@@ -775,7 +775,7 @@ bool Config::setValue(const TCHAR *path, INT64 value)
 	return setValue(path, buffer);
 }
 
-bool Config::setValue(const TCHAR *path, QWORD value)
+bool Config::setValue(const TCHAR *path, UINT64 value)
 {
 	TCHAR buffer[32];
 	_sntprintf(buffer, 32, UINT64_FMT, value);
@@ -954,7 +954,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		{
 			TCHAR entryName[MAX_PATH];
 
-			DWORD id = XMLGetAttrDWORD(attrs, "id", 0);
+			UINT32 id = XMLGetAttrUINT32(attrs, "id", 0);
 #ifdef UNICODE
 			if (id != 0)
 			{
@@ -1046,7 +1046,7 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
 bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
 {
 	BYTE *xml;
-	DWORD size;
+	UINT32 size;
 	bool success;
 
 	xml = LoadFile(file, &size);

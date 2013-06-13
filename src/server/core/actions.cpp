@@ -25,10 +25,10 @@
 /**
  * Static data
  */
-static DWORD m_dwNumActions = 0;
+static UINT32 m_dwNumActions = 0;
 static NXC_ACTION *m_pActionList = NULL;
 static RWLOCK m_rwlockActionListAccess;
-static DWORD m_dwUpdateCode;
+static UINT32 m_dwUpdateCode;
 
 /**
  * Send updates to all connected clients
@@ -43,7 +43,7 @@ static void SendActionDBUpdate(ClientSession *pSession, void *pArg)
  */
 static void DestroyActionList()
 {
-   DWORD i;
+   UINT32 i;
 
    RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
    if (m_pActionList != NULL)
@@ -64,7 +64,7 @@ static BOOL LoadActions()
 {
    DB_RESULT hResult;
    BOOL bResult = FALSE;
-   DWORD i;
+   UINT32 i;
 
    hResult = DBSelect(g_hCoreDB, _T("SELECT action_id,action_name,action_type,")
                                  _T("is_disabled,rcpt_addr,email_subject,action_data ")
@@ -72,7 +72,7 @@ static BOOL LoadActions()
    if (hResult != NULL)
    {
       DestroyActionList();
-      m_dwNumActions = (DWORD)DBGetNumRows(hResult);
+      m_dwNumActions = (UINT32)DBGetNumRows(hResult);
       m_pActionList = (NXC_ACTION *)malloc(sizeof(NXC_ACTION) * m_dwNumActions);
       memset(m_pActionList, 0, sizeof(NXC_ACTION) * m_dwNumActions);
       for(i = 0; i < m_dwNumActions; i++)
@@ -173,8 +173,8 @@ static void SaveActionToDB(NXC_ACTION *pAction)
 
 static int CompareId(const void *key, const void *elem)
 {
-   return CAST_FROM_POINTER(key, DWORD) < ((NXC_ACTION *)elem)->dwId ? -1 : 
-            (CAST_FROM_POINTER(key, DWORD) > ((NXC_ACTION *)elem)->dwId ? 1 : 0);
+   return CAST_FROM_POINTER(key, UINT32) < ((NXC_ACTION *)elem)->dwId ? -1 : 
+            (CAST_FROM_POINTER(key, UINT32) > ((NXC_ACTION *)elem)->dwId ? 1 : 0);
 }
 
 
@@ -197,7 +197,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 {
    Node *pNode;
    AgentConnection *pConn;
-   DWORD dwAddr, dwError;
+   UINT32 dwAddr, dwError;
    int i, nLen, nState, nCount = 0;
    TCHAR *pCmd[128], *pTmp;
 
@@ -283,7 +283,7 @@ static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
 static BOOL ForwardEvent(const TCHAR *server, Event *event)
 {
 	ISC *isc;
-	DWORD i, addr, rcc;
+	UINT32 i, addr, rcc;
 
 	addr = ResolveHostName(server);
 	if (addr == INADDR_NONE)
@@ -353,7 +353,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 		// Pass event's parameters as arguments
 		NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * event->getParametersCount());
 		memset(ppValueList, 0, sizeof(NXSL_Value *) * event->getParametersCount());
-		for(DWORD i = 0; i < event->getParametersCount(); i++)
+		for(UINT32 i = 0; i < event->getParametersCount(); i++)
 			ppValueList[i] = new NXSL_Value(event->getParameter(i));
 
 		if (script->run(pEnv, event->getParametersCount(), ppValueList) == 0)
@@ -379,7 +379,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 /**
  * Execute action on specific event
  */
-BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
+BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 {
    NXC_ACTION *pAction;
    BOOL bSuccess = FALSE;
@@ -465,9 +465,9 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 /**
  * Create new action
  */
-DWORD CreateNewAction(const TCHAR *pszName, DWORD *pdwId)
+UINT32 CreateNewAction(const TCHAR *pszName, UINT32 *pdwId)
 {
-   DWORD i, dwResult = RCC_SUCCESS;
+   UINT32 i, dwResult = RCC_SUCCESS;
 
    RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
 
@@ -507,9 +507,9 @@ DWORD CreateNewAction(const TCHAR *pszName, DWORD *pdwId)
 /**
  * Delete action
  */
-DWORD DeleteActionFromDB(DWORD dwActionId)
+UINT32 DeleteActionFromDB(UINT32 dwActionId)
 {
-   DWORD i, dwResult = RCC_INVALID_ACTION_ID;
+   UINT32 i, dwResult = RCC_INVALID_ACTION_ID;
    TCHAR szQuery[256];
 
    RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
@@ -537,10 +537,10 @@ DWORD DeleteActionFromDB(DWORD dwActionId)
 /**
  * Modify action record from message
  */
-DWORD ModifyActionFromMessage(CSCPMessage *pMsg)
+UINT32 ModifyActionFromMessage(CSCPMessage *pMsg)
 {
-   DWORD i, dwResult = RCC_INVALID_ACTION_ID;
-   DWORD dwActionId;
+   UINT32 i, dwResult = RCC_INVALID_ACTION_ID;
+   UINT32 dwActionId;
 	TCHAR name[MAX_OBJECT_NAME];
 
    pMsg->GetVariableStr(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
@@ -593,9 +593,9 @@ void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction)
 // Send all actions to client
 //
 
-void SendActionsToClient(ClientSession *pSession, DWORD dwRqId)
+void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId)
 {
-   DWORD i;
+   UINT32 i;
    CSCPMessage msg;
 
    // Prepare message
@@ -615,6 +615,6 @@ void SendActionsToClient(ClientSession *pSession, DWORD dwRqId)
    RWLockUnlock(m_rwlockActionListAccess);
 
    // Send end-of-list flag
-   msg.SetVariable(VID_ACTION_ID, (DWORD)0);
+   msg.SetVariable(VID_ACTION_ID, (UINT32)0);
    pSession->sendMessage(&msg);
 }

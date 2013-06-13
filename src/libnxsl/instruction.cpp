@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -69,7 +69,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int 
    m_nStackItems = nStackItems;
 }
 
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, DWORD dwAddr)
+NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;

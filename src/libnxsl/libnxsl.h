@@ -45,7 +45,7 @@ typedef void *yyscan_t;
 // Various defines
 //
 
-#define INVALID_ADDRESS    ((DWORD)0xFFFFFFFF)
+#define INVALID_ADDRESS    ((UINT32)0xFFFFFFFF)
 #define MAX_STRING_SIZE    8192
 
 /**
@@ -171,11 +171,11 @@ public:
 
    const TCHAR *getErrorText() { return CHECK_NULL(m_pszErrorText); }
 
-   void pushAddr(DWORD dwAddr) { m_pAddrStack->push(CAST_TO_POINTER(dwAddr, void *)); }
-   DWORD popAddr();
-   DWORD peekAddr();
+   void pushAddr(UINT32 dwAddr) { m_pAddrStack->push(CAST_TO_POINTER(dwAddr, void *)); }
+   UINT32 popAddr();
+   UINT32 peekAddr();
 
-	void addBreakAddr(DWORD dwAddr);
+	void addBreakAddr(UINT32 dwAddr);
 	void closeBreakLevel(NXSL_Program *pScript);
 	BOOL canUseBreak() { return m_pBreakStack->getSize() > 0; }
 	void newBreakLevel() { m_pBreakStack->push(new Queue); }

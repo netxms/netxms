@@ -49,7 +49,7 @@ static MUTEX m_mutexStoreAccess = INVALID_MUTEX_HANDLE;
 
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
 {
-	DWORD dwLen;
+	UINT32 dwLen;
 	BYTE *pData;
 	OPENSSL_CONST BYTE *p;
 	X509 *pCert = NULL;
@@ -100,7 +100,7 @@ static BOOL CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
 //
 
 BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature,
-									  DWORD dwSigLen, int nMappingMethod, const TCHAR *pszMappingData)
+									  UINT32 dwSigLen, int nMappingMethod, const TCHAR *pszMappingData)
 {
 	EVP_PKEY *pKey;
 	BYTE hash[SHA1_DIGEST_SIZE];
@@ -203,7 +203,7 @@ void ReloadCertificates()
 	OPENSSL_CONST BYTE *p;
 	DB_RESULT hResult;
 	int i, nRows, nLoaded;
-	DWORD dwLen;
+	UINT32 dwLen;
 	X509 *pCert;
 	TCHAR szBuffer[256], szSubject[256], *pszCertData;
 
@@ -225,7 +225,7 @@ void ReloadCertificates()
 				pszCertData = DBGetField(hResult, i, 0, NULL, 0);
 				if (pszCertData != NULL)
 				{
-					dwLen = (DWORD)_tcslen(pszCertData);
+					dwLen = (UINT32)_tcslen(pszCertData);
 					pBinCert = (BYTE *)malloc(dwLen);
 					StrToBin(pszCertData, pBinCert, dwLen);
 					free(pszCertData);

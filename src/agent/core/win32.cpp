@@ -98,18 +98,17 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 	HANDLE hVol = FindFirstVolume(volName, MAX_PATH);
 	if (hVol != INVALID_HANDLE_VALUE)
 	{
-		table->addColumn(_T("MOUNTPOINT"), DCI_DT_STRING);
-		table->addColumn(_T("VOLUME"), DCI_DT_STRING);
-		table->addColumn(_T("LABEL"), DCI_DT_STRING);
-		table->addColumn(_T("FSTYPE"), DCI_DT_STRING);
-		table->addColumn(_T("SIZE.TOTAL"), DCI_DT_UINT64);
-		table->addColumn(_T("SIZE.FREE"), DCI_DT_UINT64);
-		table->addColumn(_T("SIZE.FREE.PCT"), DCI_DT_FLOAT);
-		table->addColumn(_T("SIZE.AVAIL"), DCI_DT_UINT64);
-		table->addColumn(_T("SIZE.AVAIL.PCT"), DCI_DT_FLOAT);
-		table->addColumn(_T("SIZE.USED"), DCI_DT_UINT64);
-		table->addColumn(_T("SIZE.USED.PCT"), DCI_DT_FLOAT);
-      table->setInstanceColumn(_T("MOUNTPOINT"));
+		table->addColumn(_T("MOUNTPOINT"), DCI_DT_STRING, true, _T("Mount Point"));
+		table->addColumn(_T("VOLUME"), DCI_DT_STRING, false, _T("Volume"));
+		table->addColumn(_T("LABEL"), DCI_DT_STRING, false, _T("Label"));
+		table->addColumn(_T("FSTYPE"), DCI_DT_STRING, false, _T("FS Type"));
+		table->addColumn(_T("SIZE.TOTAL"), DCI_DT_UINT64, false, _T("Total"));
+		table->addColumn(_T("SIZE.FREE"), DCI_DT_UINT64, false, _T("Free"));
+		table->addColumn(_T("SIZE.FREE.PCT"), DCI_DT_FLOAT, false, _T("Free %"));
+		table->addColumn(_T("SIZE.AVAIL"), DCI_DT_UINT64, false, _T("Available"));
+		table->addColumn(_T("SIZE.AVAIL.PCT"), DCI_DT_FLOAT, false, _T("Available %"));
+		table->addColumn(_T("SIZE.USED"), DCI_DT_UINT64, false, _T("Used"));
+		table->addColumn(_T("SIZE.USED.PCT"), DCI_DT_FLOAT, false, _T("Used %"));
 
 		do
 		{

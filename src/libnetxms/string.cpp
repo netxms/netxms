@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -47,7 +47,7 @@ String::String(const String &src)
 
 String::String(const TCHAR *init)
 {
-   m_dwBufSize = (DWORD)_tcslen(init) + 1;
+   m_dwBufSize = (UINT32)_tcslen(init) + 1;
    m_pszBuffer = _tcsdup(init);
 }
 
@@ -70,7 +70,7 @@ const String& String::operator =(const TCHAR *pszStr)
 {
    safe_free(m_pszBuffer);
    m_pszBuffer = _tcsdup(CHECK_NULL_EX(pszStr));
-   m_dwBufSize = (DWORD)_tcslen(CHECK_NULL_EX(pszStr)) + 1;
+   m_dwBufSize = (UINT32)_tcslen(CHECK_NULL_EX(pszStr)) + 1;
    return *this;
 }
 
@@ -89,11 +89,11 @@ const String& String::operator =(const String &src)
  */
 const String& String::operator +=(const TCHAR *pszStr)
 {
-   DWORD dwLen;
+   UINT32 dwLen;
 
 	if (pszStr != NULL)
 	{
-   	dwLen = (DWORD)_tcslen(pszStr);
+   	dwLen = (UINT32)_tcslen(pszStr);
    	m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwLen) * sizeof(TCHAR));
    	_tcscpy(&m_pszBuffer[m_dwBufSize - 1], pszStr);
    	m_dwBufSize += dwLen;
@@ -181,12 +181,10 @@ void String::addFormattedStringV(const TCHAR *format, va_list args)
    free(buffer);
 }
 
-
-//
-// Add string to the end of buffer
-//
-
-void String::addString(const TCHAR *pStr, DWORD dwSize)
+/**
+ * Add string to the end of buffer
+ */
+void String::addString(const TCHAR *pStr, UINT32 dwSize)
 {
    m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
    memcpy(&m_pszBuffer[m_dwBufSize - 1], pStr, dwSize * sizeof(TCHAR));
@@ -199,7 +197,7 @@ void String::addString(const TCHAR *pStr, DWORD dwSize)
 // Add multibyte string to the end of buffer
 //
 
-void String::addMultiByteString(const char *pStr, DWORD dwSize, int nCodePage)
+void String::addMultiByteString(const char *pStr, UINT32 dwSize, int nCodePage)
 {
 #ifdef UNICODE
    m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
@@ -215,7 +213,7 @@ void String::addMultiByteString(const char *pStr, DWORD dwSize, int nCodePage)
 // Add widechar string to the end of buffer
 //
 
-void String::addWideCharString(const WCHAR *pStr, DWORD dwSize)
+void String::addWideCharString(const WCHAR *pStr, UINT32 dwSize)
 {
 #ifdef UNICODE
 	addString(pStr, dwSize);
@@ -233,7 +231,7 @@ void String::addWideCharString(const WCHAR *pStr, DWORD dwSize)
 void String::escapeCharacter(int ch, int esc)
 {
    int nCount;
-   DWORD i;
+   UINT32 i;
 
    if (m_pszBuffer == NULL)
       return;
@@ -262,7 +260,7 @@ void String::setBuffer(TCHAR *pszBuffer)
 {
    safe_free(m_pszBuffer);
    m_pszBuffer = pszBuffer;
-   m_dwBufSize = (m_pszBuffer != NULL) ? (DWORD)_tcslen(m_pszBuffer) + 1 : 1;
+   m_dwBufSize = (m_pszBuffer != NULL) ? (UINT32)_tcslen(m_pszBuffer) + 1 : 1;
 }
 
 /**
@@ -290,16 +288,16 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
             memcpy(&m_pszBuffer[i], pszDst, lenDst * sizeof(TCHAR));
             i += lenDst;
             int delta = lenSrc - lenDst;
-            m_dwBufSize -= (DWORD)delta;
-            memmove(&m_pszBuffer[i], &m_pszBuffer[i + delta], (m_dwBufSize - (DWORD)i) * sizeof(TCHAR));
+            m_dwBufSize -= (UINT32)delta;
+            memmove(&m_pszBuffer[i], &m_pszBuffer[i + delta], (m_dwBufSize - (UINT32)i) * sizeof(TCHAR));
             i--;
          }
          else
          {
             int delta = lenDst - lenSrc;
-            m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + (DWORD)delta) * sizeof(TCHAR));
+            m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + (UINT32)delta) * sizeof(TCHAR));
             memmove(&m_pszBuffer[i + lenDst], &m_pszBuffer[i + lenSrc], ((int)m_dwBufSize - i - lenSrc) * sizeof(TCHAR));
-            m_dwBufSize += (DWORD)delta;
+            m_dwBufSize += (UINT32)delta;
             memcpy(&m_pszBuffer[i], pszDst, lenDst * sizeof(TCHAR));
             i += lenDst - 1;
          }
@@ -363,7 +361,7 @@ void String::trim()
 	if (m_pszBuffer != NULL)
 	{
 		Trim(m_pszBuffer);
-		m_dwBufSize = (DWORD)_tcslen(m_pszBuffer) + 1;
+		m_dwBufSize = (UINT32)_tcslen(m_pszBuffer) + 1;
 	}
 }
 
@@ -376,7 +374,7 @@ void String::shrink(int chars)
 {
 	if (m_dwBufSize > 1)
 	{
-		m_dwBufSize -= min(m_dwBufSize - 1, (DWORD)chars);
+		m_dwBufSize -= min(m_dwBufSize - 1, (UINT32)chars);
 		if (m_pszBuffer != NULL)
 			m_pszBuffer[m_dwBufSize - 1] = 0;
 	}

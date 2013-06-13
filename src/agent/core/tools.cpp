@@ -40,12 +40,10 @@ void ConsolePrintf(const TCHAR *pszFormat, ...)
    }
 }
 
-
-//
-// Print debug messages
-//
-
-void DebugPrintf(DWORD dwSessionId, int level, const TCHAR *pszFormat, ...)
+/**
+ * Print debug messages
+ */
+void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
 {
    if (level <= (int)g_debugLevel)
    {
@@ -97,7 +95,7 @@ BOOL WaitForProcess(const TCHAR *name)
 {
 	TCHAR param[MAX_PATH], value[MAX_RESULT_LENGTH];
 	BOOL success = FALSE;
-	DWORD rc;
+	UINT32 rc;
 
 	_sntprintf(param, MAX_PATH, _T("Process.Count(%s)"), name);
 	while(1)

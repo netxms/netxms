@@ -38,7 +38,7 @@ static RWLOCK m_rwlockSessionListAccess;
  */
 static BOOL RegisterClientSession(ClientSession *pSession)
 {
-   DWORD i;
+   UINT32 i;
 
    RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
@@ -58,7 +58,7 @@ static BOOL RegisterClientSession(ClientSession *pSession)
 /**
  * Unregister session
  */
-void UnregisterClientSession(DWORD dwIndex)
+void UnregisterClientSession(UINT32 dwIndex)
 {
    RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
    m_pSessionList[dwIndex] = NULL;
@@ -85,7 +85,7 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
       if (SleepAndCheckForShutdown(iSleepTime))
          break;
 
-      msg.SetVariable(VID_TIMESTAMP, (DWORD)time(NULL));
+      msg.SetVariable(VID_TIMESTAMP, (UINT32)time(NULL));
       RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
       for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
          if (m_pSessionList[i] != NULL)
@@ -339,7 +339,7 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
 /**
  * Send user database update notification to all clients
  */
-void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object)
+void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 {
    int i;
 
@@ -353,7 +353,7 @@ void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object)
 /**
  * Send notification to all active user sessions
  */
-void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData)
+void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 {
    int i;
 
@@ -382,7 +382,7 @@ int GetSessionCount()
 /**
  * Check if given user is currenly logged in
  */
-bool IsLoggedIn(DWORD dwUserId)
+bool IsLoggedIn(UINT32 dwUserId)
 {
    bool result = false;
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);

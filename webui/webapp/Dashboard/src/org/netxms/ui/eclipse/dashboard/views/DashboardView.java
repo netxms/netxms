@@ -23,7 +23,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -39,6 +38,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dashboard view
@@ -114,14 +114,12 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
 				if (dbc.isModified())
 				{
-					if (!MessageDialog.openConfirm(getSite().getShell(), Messages.DashboardView_Refresh, 
+					if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.DashboardView_Refresh, 
 							Messages.DashboardView_Confirmation))
 						return;
 				}
@@ -130,8 +128,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		
 		actionSave = new Action(Messages.DashboardView_Save) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -142,8 +138,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionSave.setEnabled(false);
 		
 		actionEditMode = new Action(Messages.DashboardView_EditMode, Action.AS_CHECK_BOX) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -157,8 +151,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionEditMode.setChecked(dbc.isEditMode());
 		
 		actionAddAlarmBrowser = new Action(Messages.DashboardView_AddAlarmBrowser) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -167,8 +159,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		
 		actionAddLabel = new Action(Messages.DashboardView_AddLabel) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -177,8 +167,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		
 		actionAddBarChart = new Action(Messages.DashboardView_AddBarChart) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -187,8 +175,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddPieChart = new Action(Messages.DashboardView_AddPieChart) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -197,8 +183,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddTubeChart = new Action(Messages.DashboardView_AddTubeChart) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -207,8 +191,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddLineChart = new Action(Messages.DashboardView_AddLineChart) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -217,8 +199,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddAvailabilityChart = new Action(Messages.DashboardView_AddAvailChart) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -227,8 +207,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddDashboard = new Action(Messages.DashboardView_AddDashboard) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -237,8 +215,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddStatusIndicator = new Action(Messages.DashboardView_AddStatusIndicator) {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{

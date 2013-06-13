@@ -51,8 +51,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LineChartElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	private HistoricalDataChart chart;
 	private LineChartConfig config;
 	private int refreshInterval;

@@ -106,7 +106,7 @@ void SaveObjects(DB_HANDLE hdb)
 THREAD_RESULT THREAD_CALL Syncer(void *arg)
 {
    int iSyncInterval;
-   DWORD dwWatchdogId;
+   UINT32 dwWatchdogId;
    DB_HANDLE hdb;
 
    // Establish separate connection to database if needed

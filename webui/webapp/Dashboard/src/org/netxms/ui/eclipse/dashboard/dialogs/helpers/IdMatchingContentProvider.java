@@ -28,8 +28,6 @@ import org.eclipse.jface.viewers.Viewer;
  */
 public class IdMatchingContentProvider implements ITreeContentProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private Map<Long, ObjectIdMatchingData> objects = null;
 	Map<Long, DciIdMatchingData> dcis = null;
 	

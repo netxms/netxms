@@ -28,28 +28,28 @@
 // Decode BER-encoded variable
 //
 
-BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, 
-                          DWORD *pdwLength, BYTE **pData, DWORD *pdwIdLength)
+BOOL BER_DecodeIdentifier(BYTE *pRawData, UINT32 dwRawSize, UINT32 *pdwType, 
+                          UINT32 *pdwLength, BYTE **pData, UINT32 *pdwIdLength)
 {
    BOOL bResult = FALSE;
    BYTE *pbCurrPos = pRawData;
-   DWORD dwIdLength = 0;
+   UINT32 dwIdLength = 0;
 
-   *pdwType = (DWORD)(*pbCurrPos);
+   *pdwType = (UINT32)(*pbCurrPos);
    pbCurrPos++;
    dwIdLength++;
 
    // Get length
    if ((*pbCurrPos & 0x80) == 0)
    {
-      *pdwLength = (DWORD)(*pbCurrPos);
+      *pdwLength = (UINT32)(*pbCurrPos);
       pbCurrPos++;
       dwIdLength++;
       bResult = TRUE;
    }
    else
    {
-      DWORD dwLength = 0;
+      UINT32 dwLength = 0;
       BYTE *pbTemp;
       int iNumBytes;
 
@@ -81,7 +81,7 @@ BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType,
 // Decode content of specified types
 //
 
-BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
+BOOL BER_DecodeContent(UINT32 dwType, BYTE *pData, UINT32 dwLength, BYTE *pBuffer)
 {
    BOOL bResult = TRUE;
 
@@ -94,7 +94,7 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
       case ASN_UINTEGER32:
          if ((dwLength >= 1) && (dwLength <= 5))
          {
-            DWORD dwValue;
+            UINT32 dwValue;
             BYTE *pbTemp;
 
             // Pre-fill buffer with 1's for negative values and 0's for positive
@@ -115,7 +115,7 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
                dwLength--;
             }
             dwValue = ntohl(dwValue);
-            memcpy(pBuffer, &dwValue, sizeof(DWORD));
+            memcpy(pBuffer, &dwValue, sizeof(UINT32));
          }
          else
          {
@@ -157,10 +157,10 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
          if (dwLength > 0)
          {
             SNMP_OID *oid;
-            DWORD dwValue;
+            UINT32 dwValue;
 
             oid = (SNMP_OID *)pBuffer;
-            oid->pdwValue = (DWORD *)malloc(sizeof(DWORD) * (dwLength + 1));
+            oid->pdwValue = (UINT32 *)malloc(sizeof(UINT32) * (dwLength + 1));
 
             // First octet need special handling
             oid->pdwValue[0] = *pData / 40;
@@ -204,10 +204,10 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
 // Encode content
 //
 
-static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *pResult)
+static LONG EncodeContent(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, BYTE *pResult)
 {
    LONG nBytes = 0;
-   DWORD dwTemp;
+   UINT32 dwTemp;
    QWORD qwTemp;
    BYTE *pTemp, sign;
    int i, iOidLength;
@@ -217,7 +217,7 @@ static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *p
       case ASN_NULL:
          break;
       case ASN_INTEGER:
-         dwTemp = htonl(*((DWORD *)pData));
+         dwTemp = htonl(*((UINT32 *)pData));
          pTemp = (BYTE *)&dwTemp;
          sign = (*pTemp & 0x80) ? 0xFF : 0;
          for(nBytes = 4; (*pTemp == sign) && (nBytes > 1); pTemp++, nBytes--);
@@ -236,7 +236,7 @@ static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *p
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         dwTemp = htonl(*((DWORD *)pData));
+         dwTemp = htonl(*((UINT32 *)pData));
          pTemp = (BYTE *)&dwTemp;
          for(nBytes = 4; (*pTemp == 0) && (nBytes > 1); pTemp++, nBytes--);
          if (*pTemp & 0x80)
@@ -266,12 +266,12 @@ static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *p
          }
          break;
       case ASN_OBJECT_ID:
-         iOidLength = dwDataLength / sizeof(DWORD);
+         iOidLength = dwDataLength / sizeof(UINT32);
          if (iOidLength > 1)
          {
             BYTE *pbCurrPos = pResult;
-            DWORD j, dwValue, dwSize, *pdwCurrId = (DWORD *)pData;
-            static DWORD dwLengthMask[5] = { 0x0000007F, 0x00003FFF, 0x001FFFFF, 0x0FFFFFFF, 0xFFFFFFFF };
+            UINT32 j, dwValue, dwSize, *pdwCurrId = (UINT32 *)pData;
+            static UINT32 dwLengthMask[5] = { 0x0000007F, 0x00003FFF, 0x001FFFFF, 0x0FFFFFFF, 0xFFFFFFFF };
 
             // First two ids encoded in one byte
             *pbCurrPos = (BYTE)pdwCurrId[0] * 40 + (BYTE)pdwCurrId[1];
@@ -309,7 +309,7 @@ static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *p
          }
 			else if (iOidLength == 1)
 			{
-				*pResult = (BYTE)(*((DWORD *)pData)) * 40;
+				*pResult = (BYTE)(*((UINT32 *)pData)) * 40;
 				nBytes++;
 			}
          break;
@@ -328,10 +328,10 @@ static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *p
 // or 0 if there are not enough place in buffer or type is unknown
 //
 
-DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength,
-                 BYTE *pBuffer, DWORD dwBufferSize)
+UINT32 BER_Encode(UINT32 dwType, BYTE *pData, UINT32 dwDataLength,
+                 BYTE *pBuffer, UINT32 dwBufferSize)
 {
-   DWORD dwBytes = 0;
+   UINT32 dwBytes = 0;
    BYTE *pbCurrPos = pBuffer, *pEncodedData;
    LONG nDataBytes;
 
@@ -357,13 +357,13 @@ DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength,
       LONG nHdrBytes;
       int i;
 
-      *((DWORD *)bLength) = htonl((DWORD)nDataBytes);
+      *((UINT32 *)bLength) = htonl((UINT32)nDataBytes);
       for(i = 0, nHdrBytes = 4; (bLength[i] == 0) && (nHdrBytes > 1); i++, nHdrBytes--);
       if (i > 0)
          memmove(bLength, &bLength[i], nHdrBytes);
 
       // Check for available buffer size
-      if (dwBufferSize < (DWORD)nHdrBytes + dwBytes + 1)
+      if (dwBufferSize < (UINT32)nHdrBytes + dwBytes + 1)
       {
          free(pEncodedData);
          return 0;

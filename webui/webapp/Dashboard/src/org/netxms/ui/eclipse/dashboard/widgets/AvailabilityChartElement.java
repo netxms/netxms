@@ -42,8 +42,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AvailabilityChartElement extends ElementWidget implements DisposeListener, SessionListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private AvailabilityChartConfig config;
 	private DataComparisonChart chart;
 

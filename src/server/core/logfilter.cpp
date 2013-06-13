@@ -29,7 +29,7 @@ LogFilter::LogFilter(CSCPMessage *msg)
 {
 	m_numColumnFilters = (int)msg->GetVariableLong(VID_NUM_FILTERS);
 	m_columnFilters = (ColumnFilter **)malloc(sizeof(ColumnFilter *) * m_numColumnFilters);
-	DWORD varId = VID_COLUMN_FILTERS_BASE;
+	UINT32 varId = VID_COLUMN_FILTERS_BASE;
 	for(int i = 0; i < m_numColumnFilters; i++)
 	{
 		TCHAR column[256];

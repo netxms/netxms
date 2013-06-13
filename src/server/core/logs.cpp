@@ -99,7 +99,7 @@ static NXCORE_LOG s_logs[] =
 struct LOG_HANDLE_REGISTRATION
 {
 	LogHandle *handle;
-	DWORD sessionId;	
+	UINT32 sessionId;	
 };
 int s_regListSize = 0;
 LOG_HANDLE_REGISTRATION *s_regList = NULL;
@@ -144,7 +144,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
  * 
  * @return log handle on success, -1 on error, -2 if log not found
  */
-static int OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *session, DWORD *rcc)
+static int OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *session, UINT32 *rcc)
 {
 	for(int i = 0; logs[i].name != NULL; i++)
 	{	
@@ -169,14 +169,14 @@ static int OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *s
 /**
  * Open log by name
  */
-int OpenLog(const TCHAR *name, ClientSession *session, DWORD *rcc)
+int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc)
 {
    int rc = OpenLogInternal(s_logs, name, session, rcc);
    if (rc != -2)
       return rc;
 
    // Try to find log definition in loaded modules
-   for(DWORD i = 0; i < g_dwNumModules; i++)
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
 		if (g_pModuleList[i].logs != NULL)
 		{
@@ -193,9 +193,9 @@ int OpenLog(const TCHAR *name, ClientSession *session, DWORD *rcc)
 /**
  * Close log
  */
-DWORD CloseLog(ClientSession *session, int logHandle)
+UINT32 CloseLog(ClientSession *session, int logHandle)
 {
-	DWORD rcc = RCC_INVALID_LOG_HANDLE;
+	UINT32 rcc = RCC_INVALID_LOG_HANDLE;
 
 	MutexLock(s_regListMutex);
 

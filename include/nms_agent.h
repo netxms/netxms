@@ -61,37 +61,37 @@
 /**
  * Error codes
  */
-#define ERR_SUCCESS                 ((DWORD)0)
-#define ERR_UNKNOWN_COMMAND         ((DWORD)400)
-#define ERR_AUTH_REQUIRED           ((DWORD)401)
-#define ERR_ACCESS_DENIED           ((DWORD)403)
-#define ERR_UNKNOWN_PARAMETER       ((DWORD)404)
-#define ERR_REQUEST_TIMEOUT         ((DWORD)408)
-#define ERR_AUTH_FAILED             ((DWORD)440)
-#define ERR_ALREADY_AUTHENTICATED   ((DWORD)441)
-#define ERR_AUTH_NOT_REQUIRED       ((DWORD)442)
-#define ERR_INTERNAL_ERROR          ((DWORD)500)
-#define ERR_NOT_IMPLEMENTED         ((DWORD)501)
-#define ERR_OUT_OF_RESOURCES        ((DWORD)503)
-#define ERR_NOT_CONNECTED           ((DWORD)900)
-#define ERR_CONNECTION_BROKEN       ((DWORD)901)
-#define ERR_BAD_RESPONSE            ((DWORD)902)
-#define ERR_IO_FAILURE              ((DWORD)903)
-#define ERR_RESOURCE_BUSY           ((DWORD)904)
-#define ERR_EXEC_FAILED             ((DWORD)905)
-#define ERR_ENCRYPTION_REQUIRED     ((DWORD)906)
-#define ERR_NO_CIPHERS              ((DWORD)907)
-#define ERR_INVALID_PUBLIC_KEY      ((DWORD)908)
-#define ERR_INVALID_SESSION_KEY     ((DWORD)909)
-#define ERR_CONNECT_FAILED          ((DWORD)910)
-#define ERR_MALFORMED_COMMAND       ((DWORD)911)
-#define ERR_SOCKET_ERROR            ((DWORD)912)
-#define ERR_BAD_ARGUMENTS           ((DWORD)913)
-#define ERR_SUBAGENT_LOAD_FAILED    ((DWORD)914)
-#define ERR_FILE_OPEN_ERROR         ((DWORD)915)
-#define ERR_FILE_STAT_FAILED        ((DWORD)916)
-#define ERR_MEM_ALLOC_FAILED        ((DWORD)917)
-#define ERR_FILE_DELETE_FAILED      ((DWORD)918)
+#define ERR_SUCCESS                 ((UINT32)0)
+#define ERR_UNKNOWN_COMMAND         ((UINT32)400)
+#define ERR_AUTH_REQUIRED           ((UINT32)401)
+#define ERR_ACCESS_DENIED           ((UINT32)403)
+#define ERR_UNKNOWN_PARAMETER       ((UINT32)404)
+#define ERR_REQUEST_TIMEOUT         ((UINT32)408)
+#define ERR_AUTH_FAILED             ((UINT32)440)
+#define ERR_ALREADY_AUTHENTICATED   ((UINT32)441)
+#define ERR_AUTH_NOT_REQUIRED       ((UINT32)442)
+#define ERR_INTERNAL_ERROR          ((UINT32)500)
+#define ERR_NOT_IMPLEMENTED         ((UINT32)501)
+#define ERR_OUT_OF_RESOURCES        ((UINT32)503)
+#define ERR_NOT_CONNECTED           ((UINT32)900)
+#define ERR_CONNECTION_BROKEN       ((UINT32)901)
+#define ERR_BAD_RESPONSE            ((UINT32)902)
+#define ERR_IO_FAILURE              ((UINT32)903)
+#define ERR_RESOURCE_BUSY           ((UINT32)904)
+#define ERR_EXEC_FAILED             ((UINT32)905)
+#define ERR_ENCRYPTION_REQUIRED     ((UINT32)906)
+#define ERR_NO_CIPHERS              ((UINT32)907)
+#define ERR_INVALID_PUBLIC_KEY      ((UINT32)908)
+#define ERR_INVALID_SESSION_KEY     ((UINT32)909)
+#define ERR_CONNECT_FAILED          ((UINT32)910)
+#define ERR_MALFORMED_COMMAND       ((UINT32)911)
+#define ERR_SOCKET_ERROR            ((UINT32)912)
+#define ERR_BAD_ARGUMENTS           ((UINT32)913)
+#define ERR_SUBAGENT_LOAD_FAILED    ((UINT32)914)
+#define ERR_FILE_OPEN_ERROR         ((UINT32)915)
+#define ERR_FILE_STAT_FAILED        ((UINT32)916)
+#define ERR_MEM_ALLOC_FAILED        ((UINT32)917)
+#define ERR_FILE_DELETE_FAILED      ((UINT32)918)
 
 /**
  * Parameter handler return codes
@@ -103,8 +103,8 @@
 /**
  * WinPerf features
  */
-#define WINPERF_AUTOMATIC_SAMPLE_COUNT    ((DWORD)0x00000001)
-#define WINPERF_REMOTE_COUNTER_CONFIG     ((DWORD)0x00000002)
+#define WINPERF_AUTOMATIC_SAMPLE_COUNT    ((UINT32)0x00000001)
+#define WINPERF_REMOTE_COUNTER_CONFIG     ((UINT32)0x00000002)
 
 /**
  * Descriptions for common parameters
@@ -400,28 +400,28 @@ typedef struct
 /**
  * Subagent initialization structure
  */
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20110301)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
 
 class CSCPMessage;
 
 typedef struct
 {
-   DWORD magic;    // Magic number to check if subagent uses correct version of this structure
+   UINT32 magic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR name[MAX_SUBAGENT_NAME];
    TCHAR version[32];
 	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
-   BOOL (* commandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
+   BOOL (* commandHandler)(UINT32 dwCommand, CSCPMessage *pRequest,
                            CSCPMessage *pResponse, void *session);
-   DWORD numParameters;
+   UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
-   DWORD numLists;
+   UINT32 numLists;
    NETXMS_SUBAGENT_LIST *lists;
-   DWORD numTables;
+   UINT32 numTables;
    NETXMS_SUBAGENT_TABLE *tables;
-   DWORD numActions;
+   UINT32 numActions;
    NETXMS_SUBAGENT_ACTION *actions;
-	DWORD numPushParameters;
+	UINT32 numPushParameters;
 	NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
 } NETXMS_SUBAGENT_INFO;
 
@@ -462,7 +462,7 @@ inline void ret_int(TCHAR *rbuf, LONG value)
 #endif
 }
 
-inline void ret_uint(TCHAR *rbuf, DWORD value)
+inline void ret_uint(TCHAR *rbuf, UINT32 value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%lu"), (unsigned long)value);
@@ -515,12 +515,12 @@ void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
-void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
-void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
-BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset);
+void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
+void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
+BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, DWORD value);
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, UINT32 value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);

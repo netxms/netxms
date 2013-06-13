@@ -33,8 +33,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig;
  */
 public class DialChartElement extends ComparisonChartElement
 {
-	private static final long serialVersionUID = 1L;
-
 	private DialChartConfig config;
 	
 	/**

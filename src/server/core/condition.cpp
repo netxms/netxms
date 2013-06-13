@@ -80,11 +80,11 @@ Condition::~Condition()
 // Load object from database
 //
 
-BOOL Condition::CreateFromDB(DWORD dwId)
+BOOL Condition::CreateFromDB(UINT32 dwId)
 {
    TCHAR szQuery[512];
    DB_RESULT hResult;
-   DWORD i;
+   UINT32 i;
 
    m_dwId = dwId;
 
@@ -156,7 +156,7 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    TCHAR *pszEscScript, *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
-   DWORD i;
+   UINT32 i;
 
    LockData();
 
@@ -238,7 +238,7 @@ bool Condition::deleteFromDB(DB_HANDLE hdb)
  */
 void Condition::CreateMessage(CSCPMessage *pMsg)
 {
-   DWORD i, dwId;
+   UINT32 i, dwId;
 
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
@@ -263,9 +263,9 @@ void Condition::CreateMessage(CSCPMessage *pMsg)
 // Modify object from NXCP message
 //
 
-DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
-   DWORD i, dwId;
+   UINT32 i, dwId;
    NetObj *pObject;
 
    if (!bAlreadyLocked)
@@ -377,7 +377,7 @@ void Condition::check()
    NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NetObj *pObject;
-   DWORD i, dwNumValues;
+   UINT32 i, dwNumValues;
    int iOldStatus = m_iStatus;
 
    if ((m_pCompiledScript == NULL) || (m_iStatus == STATUS_UNMANAGED))
@@ -514,9 +514,9 @@ void Condition::check()
 // Determine DCI cache size required by condition object
 //
 
-int Condition::getCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock)
+int Condition::getCacheSizeForDCI(UINT32 dwItemId, BOOL bNoLock)
 {
-   DWORD i;
+   UINT32 i;
    int nSize = 0;
 
    if (!bNoLock)

@@ -32,9 +32,7 @@ public class Table
 {
 	private int source;
 	private String title;
-	private String instanceColumn;
-	private List<String> columnNames;
-	private List<Integer> columnFormats;
+	private List<TableColumnDefinition> columns;
 	private List<List<String>> data;
 
 	/**
@@ -43,10 +41,8 @@ public class Table
 	public Table()
 	{
 		title = "untitled";
-		instanceColumn = null;
 		source = DataCollectionObject.AGENT;
-		columnNames = new ArrayList<String>(0);
-		columnFormats = new ArrayList<Integer>(0);
+		columns = new ArrayList<TableColumnDefinition>(0);
 		data = new ArrayList<List<String>>(0);
 	}
 
@@ -58,17 +54,14 @@ public class Table
 	public Table(final NXCPMessage msg)
 	{
 		title = msg.getVariableAsString(NXCPCodes.VID_TABLE_TITLE);
-		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE_COLUMN);
 		source = msg.getVariableAsInteger(NXCPCodes.VID_DCI_SOURCE_TYPE);
 		
 		final int columnCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_COLS);
-		columnNames = new ArrayList<String>(columnCount);
-		columnFormats = new ArrayList<Integer>(columnCount);
+		columns = new ArrayList<TableColumnDefinition>(columnCount);
 		long varId = NXCPCodes.VID_TABLE_COLUMN_INFO_BASE;
-		for(int i = 0; i < columnCount; i++, varId += 8L)
+		for(int i = 0; i < columnCount; i++, varId += 10L)
 		{
-			columnNames.add(msg.getVariableAsString(varId++));
-			columnFormats.add(msg.getVariableAsInteger(varId++));
+			columns.add(new TableColumnDefinition(msg, varId));
 		}
 
 		final int totalRowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
@@ -97,9 +90,8 @@ public class Table
 		long varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{
-			final List<String> row = new ArrayList<String>(columnNames.size());
-         //noinspection ForLoopReplaceableByForEach
-         for(int j = 0; j < columnNames.size(); j++)
+			final List<String> row = new ArrayList<String>(columns.size());
+         for(int j = 0; j < columns.size(); j++)
          {
              row.add(msg.getVariableAsString(varId++));
          }
@@ -115,16 +107,13 @@ public class Table
 	public void fillMessage(final NXCPMessage msg)
 	{
 		msg.setVariable(NXCPCodes.VID_TABLE_TITLE, title);
-		if (instanceColumn != null)
-			msg.setVariable(NXCPCodes.VID_INSTANCE_COLUMN, instanceColumn);
 		
-		int columnCount = columnNames.size();
-		msg.setVariableInt32(NXCPCodes.VID_TABLE_NUM_COLS, columnCount);
+		msg.setVariableInt32(NXCPCodes.VID_TABLE_NUM_COLS, columns.size());
 		long varId = NXCPCodes.VID_TABLE_COLUMN_INFO_BASE;
-		for(int i = 0; i < columnCount; i++, varId += 8L)
+		for(TableColumnDefinition c : columns)
 		{
-			msg.setVariable(varId++, columnNames.get(i));
-			msg.setVariableInt32(varId++, columnFormats.get(i));
+			c.fillMessage(msg, varId);
+			varId += 10;
 		}
 		
 		msg.setVariableInt32(NXCPCodes.VID_TABLE_NUM_ROWS, data.size());
@@ -132,7 +121,7 @@ public class Table
 		for(int row = 0; row < data.size(); row++)
 		{
 			final List<String> rowData = data.get(row);
-			for(int col = 0; col < columnCount; col++)
+			for(int col = 0; col < rowData.size(); col++)
 			{
 				msg.setVariable(varId++, rowData.get(col));
 			}
@@ -146,7 +135,7 @@ public class Table
 	 */
 	public int getColumnCount()
 	{
-		return columnNames.size();
+		return columns.size();
 	}
 
 	/**
@@ -160,6 +149,18 @@ public class Table
 	}
 
 	/**
+	 * Get column definition
+	 *
+	 * @param column Column index (zero-based)
+	 * @return Column name
+	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
+	 */
+	public TableColumnDefinition getColumnDefinition(final int column) throws IndexOutOfBoundsException
+	{
+		return columns.get(column);
+	}
+
+	/**
 	 * Get column name
 	 *
 	 * @param column Column index (zero-based)
@@ -168,7 +169,7 @@ public class Table
 	 */
 	public String getColumnName(final int column) throws IndexOutOfBoundsException
 	{
-		return columnNames.get(column);
+		return columns.get(column).getName();
 	}
 
 	/**
@@ -178,9 +179,10 @@ public class Table
 	 * @return Column format
 	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
 	 */
+	@Deprecated
 	public int getColumnFormat(final int column) throws IndexOutOfBoundsException
 	{
-		return columnFormats.get(column);
+		return columns.get(column).getDataType();
 	}
 
 	/**
@@ -191,7 +193,10 @@ public class Table
 	 */
 	public int getColumnIndex(final String name)
 	{
-		return columnNames.indexOf(name);
+		for(int i = 0; i < columns.size(); i++)
+			if (columns.get(i).getName().equalsIgnoreCase(name))
+				return i;
+		return -1;
 	}
 
 	/**
@@ -199,21 +204,11 @@ public class Table
 	 * 
 	 * @return array of column names
 	 */
-	public String[] getColumnNames()
+	public TableColumnDefinition[] getColumns()
 	{
-		return columnNames.toArray(new String[columnNames.size()]);
+		return columns.toArray(new TableColumnDefinition[columns.size()]);
 	}
 	
-	/**
-	 * Get formats of all columns
-	 * 
-	 * @return
-	 */
-	public Integer[] getColumnFormats()
-	{
-		return columnFormats.toArray(new Integer[columnFormats.size()]);
-	}
-
 	/**
 	 * Get cell value at given row and column
 	 *
@@ -279,28 +274,12 @@ public class Table
 	{
 		final StringBuilder sb = new StringBuilder();
 		sb.append("Table");
-		sb.append("{columns=").append(columnNames);
+		sb.append("{columns=").append(columns);
 		sb.append(", data=").append(data);
 		sb.append('}');
 		return sb.toString();
 	}
 
-	/**
-	 * @return the instanceColumn
-	 */
-	public String getInstanceColumn()
-	{
-		return instanceColumn;
-	}
-
-	/**
-	 * @param instanceColumn the instanceColumn to set
-	 */
-	public void setInstanceColumn(String instanceColumn)
-	{
-		this.instanceColumn = instanceColumn;
-	}
-	
 	/**
 	 * Append all records from given table to this table. Source table must have same column set.
 	 * 
@@ -316,8 +295,8 @@ public class Table
 	 */
 	public void addRow()
 	{
-		List<String> row = new ArrayList<String>(columnNames.size());
-		for(int i = 0; i < columnNames.size(); i++)
+		List<String> row = new ArrayList<String>(columns.size());
+		for(int i = 0; i < columns.size(); i++)
 			row.add("");
 		data.add(row);
 	}
@@ -331,7 +310,7 @@ public class Table
 	 */
 	public void setCell(int row, int col, String value)
 	{
-		if ((row >= 0) && (row < data.size()) && (col >= 0) && (col < columnNames.size()))
+		if ((row >= 0) && (row < data.size()) && (col >= 0) && (col < columns.size()))
 			data.get(row).set(col, value);
 	}
 
@@ -349,5 +328,31 @@ public class Table
 	public void setSource(int source)
 	{
 		this.source = source;
+	}
+
+	/**
+	 * Get display names of all columns
+	 * 
+	 * @return
+	 */
+	public String[] getColumnDisplayNames()
+	{
+		String[] names = new String[columns.size()];
+		for(int i = 0; i < names.length; i++)
+			names[i] = columns.get(i).getDisplayName();
+		return names;
+	}
+
+	/**
+	 * Get display names of all columns
+	 * 
+	 * @return
+	 */
+	public int[] getColumnDataTypes()
+	{
+		int[] types = new int[columns.size()];
+		for(int i = 0; i < types.length; i++)
+			types[i] = columns.get(i).getDataType();
+		return types;
 	}
 }

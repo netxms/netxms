@@ -59,7 +59,7 @@ static BOOL m_bVerbose = TRUE;
 
 static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
 {
-   DWORD dwError;
+   UINT32 dwError;
    TCHAR szBuffer[1024];
 
    dwError = pConn->getParameter(pszParam, 1024, szBuffer);
@@ -85,7 +85,7 @@ static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
 
 static int List(AgentConnection *pConn, const TCHAR *pszParam)
 {
-   DWORD i, dwNumLines, dwError;
+   UINT32 i, dwNumLines, dwError;
 
    dwError = pConn->getList(pszParam);
    if (dwError == ERR_SUCCESS)
@@ -110,7 +110,7 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
 {
 	Table *table;
 
-   DWORD rcc = pConn->getTable(pszParam, &table);
+   UINT32 rcc = pConn->getTable(pszParam, &table);
    if (rcc == ERR_SUCCESS)
    {
 		for(int c = 0; c < table->getNumColumns(); c++)
@@ -140,10 +140,10 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
 // Check network service state
 //
 
-static int CheckService(AgentConnection *pConn, int iServiceType, DWORD dwServiceAddr,
+static int CheckService(AgentConnection *pConn, int iServiceType, UINT32 dwServiceAddr,
                         WORD wProto, WORD wPort, const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
-   DWORD dwStatus, dwError;
+   UINT32 dwStatus, dwError;
 
    dwError = pConn->checkNetworkService(&dwStatus, dwServiceAddr, iServiceType, wPort,
                                         wProto, pszRequest, pszResponse);
@@ -167,7 +167,7 @@ static int ListParameters(AgentConnection *pConn)
 
    ObjectArray<AgentParameterDefinition> *paramList;
    ObjectArray<AgentTableDefinition> *tableList;
-   DWORD dwError = pConn->getSupportedParameters(&paramList, &tableList);
+   UINT32 dwError = pConn->getSupportedParameters(&paramList, &tableList);
    if (dwError == ERR_SUCCESS)
    {
       for(int i = 0; i < paramList->size(); i++)
@@ -194,7 +194,7 @@ static int ListParameters(AgentConnection *pConn)
 
 static int GetConfig(AgentConnection *pConn)
 {
-   DWORD dwError, dwSize;
+   UINT32 dwError, dwSize;
    TCHAR *pszFile;
 
    dwError = pConn->getConfigFile(&pszFile, &dwSize);
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
 #endif
    WORD wAgentPort = AGENT_LISTEN_PORT, wProxyPort = AGENT_LISTEN_PORT;
    WORD wServicePort = 0, wServiceProto = 0;
-   DWORD dwTimeout = 5000, dwConnTimeout = 30000, dwServiceAddr = 0, dwError, dwAddr, dwProxyAddr;
+   UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwServiceAddr = 0, dwError, dwAddr, dwProxyAddr;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T(""), szRequest[MAX_DB_STRING] = _T("");
    TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = _T("");
    char szProxy[MAX_OBJECT_NAME] = "";
@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               dwTimeout = (DWORD)i * 1000;  // Convert to milliseconds
+               dwTimeout = (UINT32)i * 1000;  // Convert to milliseconds
             }
             break;
          case 'W':   // Connection timeout
@@ -484,7 +484,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               dwConnTimeout = (DWORD)i * 1000;  // Convert to milliseconds
+               dwConnTimeout = (UINT32)i * 1000;  // Convert to milliseconds
             }
             break;
 #ifdef _WITH_ENCRYPTION

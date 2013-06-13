@@ -38,8 +38,8 @@
  */
 typedef struct
 {
-   DWORD dwLength;
-   DWORD *pdwValue;
+   UINT32 dwLength;
+   UINT32 *pdwValue;
 } SNMP_OID;
 
 /**
@@ -52,7 +52,7 @@ typedef struct
    BYTE bVersion;
    WORD wFlags;
    BYTE bReserved[2];
-   DWORD dwTimeStamp;   // Server's timestamp
+   UINT32 dwTimeStamp;   // Server's timestamp
 } SNMP_MIB_HEADER;
 
 /**
@@ -72,7 +72,7 @@ typedef struct
 #define MIB_TAG_TYPE               0x06
 #define MIB_TAG_BYTE_OID           0x07     /* Used if OID < 256 */
 #define MIB_TAG_WORD_OID           0x08     /* Used if OID < 65536 */
-#define MIB_TAG_DWORD_OID          0x09
+#define MIB_TAG_UINT32_OID          0x09
 #define MIB_TAG_TEXTUAL_CONVENTION 0x0A
 
 #define MIB_END_OF_TAG             0x80
@@ -119,10 +119,10 @@ public:
 /**
  * Functions
  */
-BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, 
-                          DWORD *pdwLength, BYTE **pData, DWORD *pdwIdLength);
-BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer);
-DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength, 
-                 BYTE *pBuffer, DWORD dwBufferSize);
+BOOL BER_DecodeIdentifier(BYTE *pRawData, UINT32 dwRawSize, UINT32 *pdwType, 
+                          UINT32 *pdwLength, BYTE **pData, UINT32 *pdwIdLength);
+BOOL BER_DecodeContent(UINT32 dwType, BYTE *pData, UINT32 dwLength, BYTE *pBuffer);
+UINT32 BER_Encode(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, 
+                 BYTE *pBuffer, UINT32 dwBufferSize);
 
 #endif   /* _libnxsnmp_h_ */

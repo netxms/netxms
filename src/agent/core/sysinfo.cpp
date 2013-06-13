@@ -71,7 +71,7 @@ LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   ret_uint(value, (DWORD)(time(NULL) - g_tmAgentStartTime));
+   ret_uint(value, (UINT32)(time(NULL) - g_tmAgentStartTime));
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -273,7 +273,7 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
 	TCHAR szHashText[MD5_DIGEST_SIZE * 2 + 1];
    BYTE hash[MD5_DIGEST_SIZE];
-   DWORD i;
+   UINT32 i;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
@@ -303,7 +303,7 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH]; 
 	TCHAR szHashText[SHA1_DIGEST_SIZE * 2 + 1];
    BYTE hash[SHA1_DIGEST_SIZE];
-   DWORD i;
+   UINT32 i;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
@@ -323,15 +323,13 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Calculate CRC32 for file
-//
-
+/**
+ * Calculate CRC32 for file
+ */
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
-   DWORD dwCRC32;
+   UINT32 dwCRC32;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;

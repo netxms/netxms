@@ -69,8 +69,7 @@ public class DashboardDynamicView extends ViewPart
 		contributeToActionBars();
 
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
-		selectionListener = new ISelectionListener()
-		{
+		selectionListener = new ISelectionListener() {
 			@Override
 			public void selectionChanged(IWorkbenchPart part, ISelection selection)
 			{

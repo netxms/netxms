@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@
 // Global variables
 //
 
-DWORD g_dwAcceptErrors = 0;
-DWORD g_dwAcceptedConnections = 0;
-DWORD g_dwRejectedConnections = 0;
+UINT32 g_dwAcceptErrors = 0;
+UINT32 g_dwAcceptedConnections = 0;
+UINT32 g_dwRejectedConnections = 0;
 CommSession **g_pSessionList = NULL;
 MUTEX g_hSessionListAccess;
 
@@ -59,9 +59,9 @@ void InitSessionList()
 // Validates server's address
 //
 
-static BOOL IsValidServerAddr(DWORD dwAddr, BOOL *pbMasterServer, BOOL *pbControlServer)
+static BOOL IsValidServerAddr(UINT32 dwAddr, BOOL *pbMasterServer, BOOL *pbControlServer)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i=0; i < g_dwServerCount; i++)
 	{
@@ -82,7 +82,7 @@ static BOOL IsValidServerAddr(DWORD dwAddr, BOOL *pbMasterServer, BOOL *pbContro
 
 static BOOL RegisterSession(CommSession *pSession)
 {
-   DWORD i;
+   UINT32 i;
 
    MutexLock(g_hSessionListAccess);
    for(i = 0; i < g_dwMaxSessions; i++)
@@ -104,7 +104,7 @@ static BOOL RegisterSession(CommSession *pSession)
 // Unregister session
 //
 
-void UnregisterSession(DWORD dwIndex)
+void UnregisterSession(UINT32 dwIndex)
 {
    MutexLock(g_hSessionListAccess);
    g_pSessionList[dwIndex] = NULL;
@@ -266,7 +266,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 {
-   DWORD i;
+   UINT32 i;
    time_t now;
 
    m_mutexWatchdogActive = MutexCreate();
@@ -313,7 +313,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    int nCounter;
-   DWORD i;
+   UINT32 i;
 
    MutexLock(g_hSessionListAccess);
    for(i = 0, nCounter = 0; i < g_dwMaxSessions; i++)

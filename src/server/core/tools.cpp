@@ -73,7 +73,7 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
 {
 #ifdef _WIN32
-   DWORD dwSize = (DWORD)bufSize;
+   DWORD dwSize = (UINT32)bufSize;
    GetComputerName(buffer, &dwSize);
 #else
 #ifdef HAVE_SYS_UTSNAME_H
@@ -103,10 +103,10 @@ TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
 // Get IP address for local machine
 //
 
-DWORD GetLocalIpAddr()
+UINT32 GetLocalIpAddr()
 {
    InterfaceList *pIfList;
-   DWORD dwAddr = 0;
+   UINT32 dwAddr = 0;
    int i;
 
    pIfList = GetLocalInterfaceList();
@@ -250,7 +250,7 @@ BOOL ExecCommand(TCHAR *pszCommand)
 // with given MAC address inside
 //
 
-BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
+BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 {
    BYTE *pCurr, bPacketData[96];
    SOCKET hSocket;
@@ -285,7 +285,7 @@ BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 /**
  * Decode SQL string and set as NXCP variable's value
  */
-void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr)
+void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr)
 {
    DecodeSQLString(pszStr);
    pMsg->SetVariable(dwVarId, pszStr);
@@ -307,7 +307,7 @@ void EscapeString(String &str)
 /**
  * Check if given record exists in database
  */
-bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, DWORD id)
+bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id)
 {
 	bool exist = false;
 

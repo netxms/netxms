@@ -93,9 +93,8 @@ struct NXSL_Program;
 extern "C" {
 #endif
 
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource,
-                                             TCHAR *pszError, int nBufSize);
-TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize);
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize);
+TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize);
 
 #ifdef __cplusplus
 }

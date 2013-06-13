@@ -43,8 +43,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AbstractChart extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractChartConfig config;
 	private LabeledText title;
 	private Spinner timeRange;

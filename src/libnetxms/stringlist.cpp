@@ -105,7 +105,7 @@ void StringList::add(const TCHAR *value)
 /**
  * Add signed 32-bit integer as string
  */
-void StringList::add(LONG value)
+void StringList::add(INT32 value)
 {
 	TCHAR buffer[32];
 
@@ -116,7 +116,7 @@ void StringList::add(LONG value)
 /**
  * Add unsigned 32-bit integer as string
  */
-void StringList::add(DWORD value)
+void StringList::add(UINT32 value)
 {
 	TCHAR buffer[32];
 
@@ -138,7 +138,7 @@ void StringList::add(INT64 value)
 /**
  * Add unsigned 64-bit integer as string
  */
-void StringList::add(QWORD value)
+void StringList::add(UINT64 value)
 {
 	TCHAR buffer[32];
 

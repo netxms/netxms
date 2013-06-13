@@ -52,13 +52,13 @@ bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
 	_sntprintf(param, 256, _T("PDH.ObjectCounters(\"%s\")"), m_name);
 	if (conn->getList(param) != ERR_SUCCESS)
 		return false;
-	for(DWORD i = 0; i < conn->getNumDataLines(); i++)
+	for(UINT32 i = 0; i < conn->getNumDataLines(); i++)
 		m_counters->add(conn->getDataLine(i));
 
 	_sntprintf(param, 256, _T("PDH.ObjectInstances(\"%s\")"), m_name);
 	if (conn->getList(param) != ERR_SUCCESS)
 		return false;
-	for(DWORD i = 0; i < conn->getNumDataLines(); i++)
+	for(UINT32 i = 0; i < conn->getNumDataLines(); i++)
 		m_instances->add(conn->getDataLine(i));
 
 	return true;
@@ -69,13 +69,13 @@ bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
  *
  * @return next available variable ID
  */
-DWORD WinPerfObject::fillMessage(CSCPMessage *msg, DWORD baseId)
+UINT32 WinPerfObject::fillMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	msg->SetVariable(baseId, m_name);
-	msg->SetVariable(baseId + 1, (DWORD)m_counters->getSize());
-	msg->SetVariable(baseId + 2, (DWORD)m_instances->getSize());
+	msg->SetVariable(baseId + 1, (UINT32)m_counters->getSize());
+	msg->SetVariable(baseId + 2, (UINT32)m_instances->getSize());
 
-	DWORD varId = baseId + 3;
+	UINT32 varId = baseId + 3;
 	for(int i = 0; i < m_counters->getSize(); i++)
 		msg->SetVariable(varId++, m_counters->getValue(i));
 	for(int i = 0; i < m_instances->getSize(); i++)
@@ -92,7 +92,7 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 	if (conn->getList(_T("PDH.Objects")) == ERR_SUCCESS)
 	{
 		objects = new ObjectArray<WinPerfObject>((int)conn->getNumDataLines(), 16, true);
-		for(DWORD i = 0; i < conn->getNumDataLines(); i++)
+		for(UINT32 i = 0; i < conn->getNumDataLines(); i++)
 			objects->add(new WinPerfObject(conn->getDataLine(i)));
 
 		for(int i = 0; i < objects->size(); i++)

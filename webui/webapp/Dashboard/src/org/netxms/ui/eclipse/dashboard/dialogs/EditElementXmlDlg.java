@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class EditElementXmlDlg extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private String value;
 	private Text text;
 	

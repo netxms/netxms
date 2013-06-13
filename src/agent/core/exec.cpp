@@ -138,17 +138,17 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 }
 #endif
 
-DWORD ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
+UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
 {
    TCHAR *pszCmdLine, *sptr;
-   DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
+   UINT32 i, dwSize, dwRetCode = ERR_SUCCESS;
 
    DebugPrintf(INVALID_INDEX, 4, _T("EXEC: Expanding command \"%s\""), pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (args != NULL)
    {
-      dwSize = ((DWORD)_tcslen(pszCommand) + 1) * sizeof(TCHAR);
+      dwSize = ((UINT32)_tcslen(pszCommand) + 1) * sizeof(TCHAR);
       pszCmdLine = (TCHAR *)malloc(dwSize);
 		for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
 			if (*sptr == _T('$'))
@@ -544,17 +544,17 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
 // Execute external command via shell
 //
 
-DWORD ExecuteShellCommand(TCHAR *pszCommand, StringList *args)
+UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *args)
 {
    TCHAR *pszCmdLine, *sptr;
-   DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
+   UINT32 i, dwSize, dwRetCode = ERR_SUCCESS;
 
    DebugPrintf(INVALID_INDEX, 4, _T("SH_EXEC: Expanding command \"%s\""), pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (args != NULL)
    {
-      dwSize = ((DWORD)_tcslen(pszCommand) + 1) * sizeof(TCHAR);
+      dwSize = ((UINT32)_tcslen(pszCommand) + 1) * sizeof(TCHAR);
       pszCmdLine = (TCHAR *)malloc(dwSize);
       for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
          if (*sptr == _T('$'))

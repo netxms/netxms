@@ -25,7 +25,7 @@
 
 #include "net.h"
 
-SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort, DWORD dwTimeout)
+SOCKET NetConnectTCP(const char *szHost, UINT32 dwAddr, unsigned short nPort, UINT32 dwTimeout)
 {
 	SOCKET nSocket;
 

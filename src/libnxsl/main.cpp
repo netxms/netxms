@@ -54,7 +54,7 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszE
 /**
  * Load file into memory
  */
-TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize)
+TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize)
 {
    int fd, iBufPos, iNumBytes, iBytesRead;
    char *pBuffer = NULL;

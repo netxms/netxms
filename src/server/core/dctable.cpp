@@ -49,7 +49,7 @@ static int CompareCacheElements2(const void *e1, const void *e2)
 /**
  * Get column ID from column name
  */
-LONG DCTable::columnIdFromName(const TCHAR *name)
+INT32 DCTable::columnIdFromName(const TCHAR *name)
 {
 	TC_ID_MAP_ENTRY buffer;
 
@@ -143,7 +143,7 @@ DCTable::DCTable(const DCTable *src) : DCObject(src)
 /**
  * Constructor for creating new DCTable from scratch
  */
-DCTable::DCTable(DWORD id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
+DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
 	              Template *node, const TCHAR *instanceColumn, const TCHAR *description, const TCHAR *systemTag)
         : DCObject(id, name, source, pollingInterval, retentionTime, node, description, systemTag)
 {
@@ -268,8 +268,8 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
    m_lastValue->setSource(m_source);
 
 	// Copy required fields into local variables
-	DWORD tableId = m_dwId;
-	DWORD nodeId = m_pNode->Id();
+	UINT32 tableId = m_dwId;
+	UINT32 nodeId = m_pNode->Id();
 
    unlock();
 
@@ -283,18 +283,18 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)nTimeStamp);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)nTimeStamp);
 
 		Table *data = (Table *)value;
 		for(int col = 0; col < data->getNumColumns(); col++)
 		{
-			LONG colId = columnIdFromName(data->getColumnName(col));
+			INT32 colId = columnIdFromName(data->getColumnName(col));
 			if (colId == 0)
 				continue;	// cannot get column ID
 
 			for(int row = 0; row < data->getNumRows(); row++)
 			{
-				DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)row);
+				DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)row);
 				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, colId);
 				DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, data->getAsString(row, col), DB_BIND_STATIC);
 				DBExecute(hStmt);
@@ -366,18 +366,18 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 
    lock();
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id());
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_pNode == NULL) ? (UINT32)0 : m_pNode->Id());
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
 	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_szName, DB_BIND_STATIC);
 	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_instanceColumn, DB_BIND_STATIC);
 	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_szDescription, DB_BIND_STATIC);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (DWORD)m_flags);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_source);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (DWORD)m_snmpPort);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_iPollingInterval);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_iRetentionTime);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (LONG)m_status);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_source);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (UINT32)m_snmpPort);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_iPollingInterval);
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_iRetentionTime);
+	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_status);
 	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwResourceId);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwProxyNode);
@@ -415,7 +415,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, column->getName(), DB_BIND_STATIC);
 					SNMP_ObjectId *oid = column->getSnmpOid();
 					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (oid != NULL) ? oid->getValueAsText() : NULL, DB_BIND_STATIC);
-					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)column->getDataType());
+					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)column->getDataType());
 
 					result = DBExecute(hStmt);
 					if (!result)
@@ -460,8 +460,8 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 
    lock();
    pMsg->SetVariable(VID_INSTANCE_COLUMN, m_instanceColumn);
-	pMsg->SetVariable(VID_NUM_COLUMNS, (DWORD)m_columns->size());
-	DWORD varId = VID_DCI_COLUMN_BASE;
+	pMsg->SetVariable(VID_NUM_COLUMNS, (UINT32)m_columns->size());
+	UINT32 varId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < m_columns->size(); i++)
 	{
 		DCTableColumn *column = m_columns->get(i);
@@ -490,7 +490,7 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 
 	m_columns->clear();
 	int count = (int)pMsg->GetVariableLong(VID_NUM_COLUMNS);
-	DWORD varId = VID_DCI_COLUMN_BASE;
+	UINT32 varId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < count; i++)
 	{
 		m_columns->add(new DCTableColumn(pMsg, varId));
@@ -518,7 +518,7 @@ void DCTable::fillLastValueMessage(CSCPMessage *msg)
 /**
  * Get summary of last collected value (to show along simple DCI values)
  */
-void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, DWORD dwId)
+void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId)
 {
 	lock();
    pMsg->SetVariable(dwId++, m_dwId);
@@ -527,7 +527,7 @@ void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, DWORD dwId)
    pMsg->SetVariable(dwId++, (WORD)m_source);
    pMsg->SetVariable(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
    pMsg->SetVariable(dwId++, _T(""));             // compatibility: value
-   pMsg->SetVariable(dwId++, (DWORD)m_tLastPoll);
+   pMsg->SetVariable(dwId++, (UINT32)m_tLastPoll);
    pMsg->SetVariable(dwId++, (WORD)m_status);
 	pMsg->SetVariable(dwId++, (WORD)getType());
 	pMsg->SetVariable(dwId++, m_dwErrorCount);
@@ -540,7 +540,7 @@ void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, DWORD dwId)
 /**
  * Get ID of instance column
  */
-LONG DCTable::getInstanceColumnId()
+INT32 DCTable::getInstanceColumnId()
 {
 	if (m_instanceColumn[0] != 0)
 		return columnIdFromName(m_instanceColumn);
@@ -573,7 +573,7 @@ int DCTable::getColumnDataType(const TCHAR *name)
    {
       int index = m_lastValue->getColumnIndex(name);
       if (index != -1)
-         dt = m_lastValue->getColumnFormat(index);
+         dt = m_lastValue->getColumnDataType(index);
    }
 
    unlock();

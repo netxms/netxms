@@ -59,7 +59,7 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
  * Fill NXCP message with event data from SQL query
  * Expected field order: event_id,event_code,event_name,severity,source_object_id,event_timestamp,message
  */
-static void FillEventData(CSCPMessage *msg, DWORD baseId, DB_RESULT hResult, int row, QWORD rootId)
+static void FillEventData(CSCPMessage *msg, UINT32 baseId, DB_RESULT hResult, int row, QWORD rootId)
 {
 	TCHAR buffer[MAX_EVENT_MSG_LENGTH];
 
@@ -78,9 +78,9 @@ static void FillEventData(CSCPMessage *msg, DWORD baseId, DB_RESULT hResult, int
  *
  * @return number of consumed variable identifiers
  */
-static DWORD GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, DWORD baseId, DB_HANDLE hdb)
+static UINT32 GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, UINT32 baseId, DB_HANDLE hdb)
 {
-	DWORD varId = baseId;
+	UINT32 varId = baseId;
 	DB_STATEMENT hStmt = DBPrepare(hdb,
 		(g_nDBSyntax == DB_SYNTAX_ORACLE) ?
 			_T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
@@ -112,7 +112,7 @@ static DWORD GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, DWORD baseId, 
 /**
  * Fill NXCP message with alarm's related events
  */
-static void FillAlarmEventsMessage(CSCPMessage *msg, DWORD alarmId)
+static void FillAlarmEventsMessage(CSCPMessage *msg, UINT32 alarmId)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	const TCHAR *query;
@@ -136,7 +136,7 @@ static void FillAlarmEventsMessage(CSCPMessage *msg, DWORD alarmId)
 		if (hResult != NULL)
 		{
 			int count = DBGetNumRows(hResult);
-			DWORD varId = VID_ELEMENT_LIST_BASE;
+			UINT32 varId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < count; i++)
 			{
 				FillEventData(msg, varId, hResult, i, 0);
@@ -187,9 +187,9 @@ static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg)
 /**
  * Get number of notes for alarm
  */
-static DWORD GetNoteCount(DB_HANDLE hdb, DWORD alarmId)
+static UINT32 GetNoteCount(DB_HANDLE hdb, UINT32 alarmId)
 {
-	DWORD value = 0;
+	UINT32 value = 0;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT count(*) FROM alarm_notes WHERE alarm_id=?"));
 	if (hStmt != NULL)
 	{
@@ -212,7 +212,7 @@ static DWORD GetNoteCount(DB_HANDLE hdb, DWORD alarmId)
 BOOL AlarmManager::init()
 {
    DB_RESULT hResult;
-   DWORD i;
+   UINT32 i;
 
    // Load active alarms into memory
    hResult = DBSelect(g_hCoreDB, _T("SELECT alarm_id,source_object_id,")
@@ -264,8 +264,8 @@ BOOL AlarmManager::init()
  * Create new alarm
  */
 void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
-                            int iSeverity, DWORD dwTimeout,
-									 DWORD dwTimeoutEvent, Event *pEvent)
+                            int iSeverity, UINT32 dwTimeout,
+									 UINT32 dwTimeoutEvent, Event *pEvent)
 {
    NXC_ALARM alarm;
    TCHAR *pszExpMsg, *pszExpKey, szQuery[2048];
@@ -280,11 +280,11 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    {
       lock();
 
-      for(DWORD i = 0; i < m_dwNumAlarms; i++)
+      for(UINT32 i = 0; i < m_dwNumAlarms; i++)
 			if (!_tcscmp(pszExpKey, m_pAlarmList[i].szKey))
          {
             m_pAlarmList[i].dwRepeatCount++;
-            m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
+            m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
             m_pAlarmList[i].dwSourceObject = pEvent->getSourceId();
 				if ((m_pAlarmList[i].nState & ALARM_STATE_STICKY) == 0)
 					m_pAlarmList[i].nState = nState;
@@ -313,7 +313,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       alarm.qwSourceEventId = pEvent->getId();
       alarm.dwSourceEventCode = pEvent->getCode();
       alarm.dwSourceObject = pEvent->getSourceId();
-      alarm.dwCreationTime = (DWORD)time(NULL);
+      alarm.dwCreationTime = (UINT32)time(NULL);
       alarm.dwLastChangeTime = alarm.dwCreationTime;
       alarm.nState = nState;
       alarm.nOriginalSeverity = iSeverity;
@@ -373,7 +373,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 	_sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
 	_sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
 	_sntprintf(valSource, 16, _T("%d"), pEvent->getSourceId());
-	_sntprintf(valTimestamp, 16, _T("%u"), (DWORD)pEvent->getTimeStamp());
+	_sntprintf(valTimestamp, 16, _T("%u"), (UINT32)pEvent->getTimeStamp());
 	static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
 	QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
 	                8, sqlTypes, values);
@@ -385,9 +385,9 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 /**
  * Acknowledge alarm with given ID
  */
-DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky)
+UINT32 AlarmManager::ackById(UINT32 dwAlarmId, UINT32 dwUserId, bool sticky)
 {
-   DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
+   UINT32 i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
    lock();
    for(i = 0; i < m_dwNumAlarms; i++)
@@ -399,7 +399,7 @@ DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky)
 				if (sticky)
 	            m_pAlarmList[i].nState |= ALARM_STATE_STICKY;
             m_pAlarmList[i].dwAckByUser = dwUserId;
-            m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
+            m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
             dwObject = m_pAlarmList[i].dwSourceObject;
             notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
             updateAlarmInDB(&m_pAlarmList[i]);
@@ -422,9 +422,9 @@ DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky)
  * Resolve and possibly terminate alarm with given ID
  * Should return RCC which can be sent to client
  */
-DWORD AlarmManager::resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate)
+UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, UINT32 dwUserId, bool terminate)
 {
-   DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
+   UINT32 i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
    lock();
    for(i = 0; i < m_dwNumAlarms; i++)
@@ -438,7 +438,7 @@ DWORD AlarmManager::resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate)
 					m_pAlarmList[i].dwTermByUser = dwUserId;
 				else
 					m_pAlarmList[i].dwResolvedByUser = dwUserId;
-            m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
+            m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
 				m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
 				notifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
             updateAlarmInDB(&m_pAlarmList[i]);
@@ -467,12 +467,12 @@ DWORD AlarmManager::resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate)
  */
 void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool terminate)
 {
-   DWORD i, j, dwNumObjects, *pdwObjectList, dwCurrTime;
+   UINT32 i, j, dwNumObjects, *pdwObjectList, dwCurrTime;
 
-   pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumAlarms);
+   pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumAlarms);
 
    lock();
-   dwCurrTime = (DWORD)time(NULL);
+   dwCurrTime = (UINT32)time(NULL);
    for(i = 0, dwNumObjects = 0; i < m_dwNumAlarms; i++)
 		if ((useRegexp ? RegexpMatch(m_pAlarmList[i].szKey, pszKey, TRUE) : !_tcscmp(pszKey, m_pAlarmList[i].szKey)) &&
          (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_OPEN))
@@ -515,9 +515,9 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
 /**
  * Delete alarm with given ID
  */
-void AlarmManager::deleteAlarm(DWORD dwAlarmId, bool objectCleanup)
+void AlarmManager::deleteAlarm(UINT32 dwAlarmId, bool objectCleanup)
 {
-   DWORD i, dwObject;
+   UINT32 i, dwObject;
    TCHAR szQuery[256];
 
    // Delete alarm from in-memory list
@@ -555,7 +555,7 @@ void AlarmManager::deleteAlarm(DWORD dwAlarmId, bool objectCleanup)
  * Delete all alarms of given object. Intended to be called only
  * on final stage of object deletion.
  */
-bool AlarmManager::deleteObjectAlarms(DWORD objectId, DB_HANDLE hdb)
+bool AlarmManager::deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
 {
 	lock();
 
@@ -583,7 +583,7 @@ bool AlarmManager::deleteObjectAlarms(DWORD objectId, DB_HANDLE hdb)
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
          {
-            DWORD alarmId = DBGetFieldULong(hResult, i, 0);
+            UINT32 alarmId = DBGetFieldULong(hResult, i, 0);
 				DeleteAlarmNotes(hdb, alarmId);
             DeleteAlarmEvents(hdb, alarmId);
          }
@@ -644,10 +644,10 @@ void AlarmManager::sendAlarmNotification(ClientSession *pSession, void *pArg)
 /**
  * Notify connected clients about changes
  */
-void AlarmManager::notifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
+void AlarmManager::notifyClients(UINT32 dwCode, NXC_ALARM *pAlarm)
 {
 	// Notify modules
-   for(DWORD i = 0; i < g_dwNumModules; i++)
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
 		if (g_pModuleList[i].pfAlarmChangeHook != NULL)
 			g_pModuleList[i].pfAlarmChangeHook(dwCode, pAlarm);
@@ -661,9 +661,9 @@ void AlarmManager::notifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
 /**
  * Send all alarms to client
  */
-void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
+void AlarmManager::sendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
 {
-   DWORD i, dwUserId;
+   UINT32 i, dwUserId;
    NetObj *pObject;
    CSCPMessage msg;
 
@@ -690,7 +690,7 @@ void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
    unlock();
 
    // Send end-of-list indicator
-   msg.SetVariable(VID_ALARM_ID, (DWORD)0);
+   msg.SetVariable(VID_ALARM_ID, (UINT32)0);
    pSession->sendMessage(&msg);
 }
 
@@ -698,9 +698,9 @@ void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
  * Get alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-DWORD AlarmManager::getAlarm(DWORD dwAlarmId, CSCPMessage *msg)
+UINT32 AlarmManager::getAlarm(UINT32 dwAlarmId, CSCPMessage *msg)
 {
-   DWORD i, dwRet = RCC_INVALID_ALARM_ID;
+   UINT32 i, dwRet = RCC_INVALID_ALARM_ID;
 
    lock();
    for(i = 0; i < m_dwNumAlarms; i++)
@@ -719,9 +719,9 @@ DWORD AlarmManager::getAlarm(DWORD dwAlarmId, CSCPMessage *msg)
  * Get all related events for alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-DWORD AlarmManager::getAlarmEvents(DWORD dwAlarmId, CSCPMessage *msg)
+UINT32 AlarmManager::getAlarmEvents(UINT32 dwAlarmId, CSCPMessage *msg)
 {
-   DWORD i, dwRet = RCC_INVALID_ALARM_ID;
+   UINT32 i, dwRet = RCC_INVALID_ALARM_ID;
 
    lock();
    for(i = 0; i < m_dwNumAlarms; i++)
@@ -743,9 +743,9 @@ DWORD AlarmManager::getAlarmEvents(DWORD dwAlarmId, CSCPMessage *msg)
 /**
  * Get source object for given alarm id
  */
-NetObj *AlarmManager::getAlarmSourceObject(DWORD dwAlarmId)
+NetObj *AlarmManager::getAlarmSourceObject(UINT32 dwAlarmId)
 {
-   DWORD i, dwObjectId = 0;
+   UINT32 i, dwObjectId = 0;
    TCHAR szQuery[256];
    DB_RESULT hResult;
 
@@ -781,12 +781,12 @@ NetObj *AlarmManager::getAlarmSourceObject(DWORD dwAlarmId)
  * Get most critical status among active alarms for given object
  * Will return STATUS_UNKNOWN if there are no active alarms
  */
-int AlarmManager::getMostCriticalStatusForObject(DWORD dwObjectId)
+int AlarmManager::getMostCriticalStatusForObject(UINT32 dwObjectId)
 {
    int iStatus = STATUS_UNKNOWN;
 
    lock();
-   for(DWORD i = 0; i < m_dwNumAlarms; i++)
+   for(UINT32 i = 0; i < m_dwNumAlarms; i++)
    {
       if ((m_pAlarmList[i].dwSourceObject == dwObjectId) &&
 			 ((m_pAlarmList[i].nState & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
@@ -802,7 +802,7 @@ int AlarmManager::getMostCriticalStatusForObject(DWORD dwObjectId)
 /**
  * Update object status after alarm acknowledgement or deletion
  */
-void AlarmManager::updateObjectStatus(DWORD dwObjectId)
+void AlarmManager::updateObjectStatus(UINT32 dwObjectId)
 {
    NetObj *pObject;
 
@@ -816,11 +816,11 @@ void AlarmManager::updateObjectStatus(DWORD dwObjectId)
  */
 void AlarmManager::getAlarmStats(CSCPMessage *pMsg)
 {
-   DWORD i, dwCount[5];
+   UINT32 i, dwCount[5];
 
    lock();
    pMsg->SetVariable(VID_NUM_ALARMS, m_dwNumAlarms);
-   memset(dwCount, 0, sizeof(DWORD) * 5);
+   memset(dwCount, 0, sizeof(UINT32) * 5);
    for(i = 0; i < m_dwNumAlarms; i++)
       dwCount[m_pAlarmList[i].nCurrentSeverity]++;
    unlock();
@@ -832,7 +832,7 @@ void AlarmManager::getAlarmStats(CSCPMessage *pMsg)
  */
 void AlarmManager::watchdogThread()
 {
-	DWORD i;
+	UINT32 i;
 	time_t now;
 
 	while(1)
@@ -866,7 +866,7 @@ void AlarmManager::watchdogThread()
 /**
  * Check if givel alram/note id pair is valid
  */
-static bool IsValidNoteId(DWORD alarmId, DWORD noteId)
+static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 {
 	bool isValid = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -890,12 +890,12 @@ static bool IsValidNoteId(DWORD alarmId, DWORD noteId)
 /**
  * Update alarm's note
  */
-DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId)
+UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
 {
-   DWORD rcc = RCC_INVALID_ALARM_ID;
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
 
    lock();
-   for(DWORD i = 0; i < m_dwNumAlarms; i++)
+   for(UINT32 i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == alarmId)
       {
 			if (noteId != 0)
@@ -906,7 +906,7 @@ DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *te
 					DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
 					if (hStmt != NULL)
 					{
-						DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+						DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 						DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
 						DBBind(hStmt, 3, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
 						DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, noteId);
@@ -934,7 +934,7 @@ DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *te
 				{
 					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, noteId);
 					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, alarmId);
-					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
 					DBBind(hStmt, 5, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
 					rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
@@ -961,10 +961,10 @@ DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *te
 /**
  * Get alarm's notes
  */
-DWORD AlarmManager::getAlarmNotes(DWORD alarmId, CSCPMessage *msg)
+UINT32 AlarmManager::getAlarmNotes(UINT32 alarmId, CSCPMessage *msg)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DWORD rcc = RCC_DB_FAILURE;
+	UINT32 rcc = RCC_DB_FAILURE;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT note_id,change_time,user_id,note_text FROM alarm_notes WHERE alarm_id=?"));
 	if (hStmt != NULL)
@@ -974,9 +974,9 @@ DWORD AlarmManager::getAlarmNotes(DWORD alarmId, CSCPMessage *msg)
 		if (hResult != NULL)
 		{
 			int count = DBGetNumRows(hResult);
-			msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)count);
+			msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)count);
 
-			DWORD varId = VID_ELEMENT_LIST_BASE;
+			UINT32 varId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < count; i++)
 			{
 				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 0));
@@ -1006,12 +1006,12 @@ DWORD AlarmManager::getAlarmNotes(DWORD alarmId, CSCPMessage *msg)
  * @param objectId object ID or 0 to get all alarms
  * @return array of active alarms for given object
  */
-ObjectArray<NXC_ALARM> *AlarmManager::getAlarms(DWORD objectId)
+ObjectArray<NXC_ALARM> *AlarmManager::getAlarms(UINT32 objectId)
 {
    ObjectArray<NXC_ALARM> *result = new ObjectArray<NXC_ALARM>(16, 16, true);
 
    lock();
-   for(DWORD i = 0; i < m_dwNumAlarms; i++)
+   for(UINT32 i = 0; i < m_dwNumAlarms; i++)
    {
       if ((objectId == 0) || (m_pAlarmList[i].dwSourceObject == objectId))
       {

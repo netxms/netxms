@@ -83,20 +83,20 @@ void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Stri
 /**
  * Handler for interface enumeration
  */
-static DWORD HandlerIfList(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Transport *transport, void *arg)
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
-   DWORD nameLen = varbind->GetName()->getLength();
-	DWORD oidName[MAX_OID_LEN];
-	memcpy(oidName, varbind->GetName()->getValue(), nameLen * sizeof(DWORD));
+   UINT32 nameLen = varbind->GetName()->getLength();
+	UINT32 oidName[MAX_OID_LEN];
+	memcpy(oidName, varbind->GetName()->getValue(), nameLen * sizeof(UINT32));
 
 	NX_INTERFACE_INFO iface;
 	memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
 	iface.dwIndex = varbind->GetValueAsUInt();
 
 	oidName[10] = 2;	// nsIfName
-	DWORD rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.szName, MAX_DB_STRING, SG_STRING_RESULT);
+	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.szName, MAX_DB_STRING, SG_STRING_RESULT);
 	if (rc != SNMP_ERR_SUCCESS)
 		return rc;
 	nx_strncpy(iface.szDescription, iface.szName, MAX_DB_STRING);
@@ -107,12 +107,12 @@ static DWORD HandlerIfList(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Trans
 		return rc;
 
 	oidName[10] = 6;	// nsIfIp
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.dwIpAddr, sizeof(DWORD), 0);
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.dwIpAddr, sizeof(UINT32), 0);
 	if (rc != SNMP_ERR_SUCCESS)
 		return rc;
 
 	oidName[10] = 7;	// nsIfNetmask
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.dwIpNetMask, sizeof(DWORD), 0);
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.dwIpNetMask, sizeof(UINT32), 0);
 	if (rc != SNMP_ERR_SUCCESS)
 		return rc;
 

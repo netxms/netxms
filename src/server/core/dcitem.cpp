@@ -159,7 +159,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 /**
  * Constructor for creating new DCItem from scratch
  */
-DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
+DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType, 
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 	: DCObject(dwId, szName, iSource, iPollingInterval, iRetentionTime, pNode, pszDescription, systemTag)
@@ -260,7 +260,7 @@ void DCItem::deleteAllThresholds()
  */
 void DCItem::clearCache()
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwCacheSize; i++)
       delete m_ppValueCache[i];
@@ -341,30 +341,30 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_pNode == NULL) ? 0 : m_pNode->Id());
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_szName, DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_source);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_dataType);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_iPollingInterval);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iRetentionTime);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_status);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_deltaCalculation);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_source);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_dataType);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_iPollingInterval);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_iRetentionTime);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_status);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_deltaCalculation);
 	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_transformationScriptSource, DB_BIND_STATIC);
 	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_szDescription, DB_BIND_STATIC);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (DWORD)m_flags);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwResourceId);
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_dwProxyNode);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (LONG)m_nBaseUnits);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_nMultiplier);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_nBaseUnits);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (INT32)m_nMultiplier);
 	DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_customUnitName, DB_BIND_STATIC);
 	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_pszPerfTabSettings, DB_BIND_STATIC);
 	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
-	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
-	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (LONG)m_snmpRawValueType);
-	DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (LONG)m_instanceDiscoveryMethod);
+	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (INT32)m_snmpPort);
+	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (INT32)m_snmpRawValueType);
+	DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (INT32)m_instanceDiscoveryMethod);
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_instanceFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_sampleCount);
+	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
 	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_dwId);
 
    BOOL bResult = DBExecute(hStmt);
@@ -386,7 +386,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
       int iNumRows = DBGetNumRows(hResult);
       for(int i = 0; i < iNumRows; i++)
       {
-         DWORD dwId = DBGetFieldULong(hResult, i, 0);
+         UINT32 dwId = DBGetFieldULong(hResult, i, 0);
 			int j;
 			for(j = 0; j < getThresholdCount(); j++)
 				if (m_thresholds->get(j)->getId() == dwId)
@@ -429,7 +429,7 @@ void DCItem::checkThresholds(ItemValue &value)
 	if (m_thresholds == NULL)
 		return;
 
-   DWORD dwInterval;
+   UINT32 dwInterval;
    ItemValue checkValue;
 	EVENT_TEMPLATE *evt;
 	time_t now = time(NULL);
@@ -462,7 +462,7 @@ void DCItem::checkThresholds(ItemValue &value)
 					if (thr->getRepeatInterval() == -1)
 						dwInterval = g_dwThresholdRepeatInterval;
 					else
-						dwInterval = (DWORD)thr->getRepeatInterval();
+						dwInterval = (UINT32)thr->getRepeatInterval();
 					if ((dwInterval != 0) && (thr->getLastEventTimestamp() + (time_t)dwInterval < now))
 					{
 						PostEventWithNames(thr->getEventCode(), m_pNode->Id(), "ssssisd", 
@@ -496,7 +496,7 @@ void DCItem::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
    pMsg->SetVariable(VID_SAMPLE_COUNT, (WORD)m_sampleCount);
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
-	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
+	pMsg->SetVariable(VID_MULTIPLIER, (UINT32)m_nMultiplier);
 	pMsg->SetVariable(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
 	pMsg->SetVariable(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
 	if (m_instanceDiscoveryData != NULL)
@@ -507,14 +507,14 @@ void DCItem::createMessage(CSCPMessage *pMsg)
 		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_customUnitName);
 	if (m_thresholds != NULL)
 	{
-		pMsg->SetVariable(VID_NUM_THRESHOLDS, (DWORD)m_thresholds->size());
-		DWORD dwId = VID_DCI_THRESHOLD_BASE;
+		pMsg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
+		UINT32 dwId = VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < m_thresholds->size(); i++, dwId += 20)
 			m_thresholds->get(i)->createMessage(pMsg, dwId);
 	}
 	else
 	{
-		pMsg->SetVariable(VID_NUM_THRESHOLDS, (DWORD)0);
+		pMsg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)0);
 	}
    unlock();
 }
@@ -539,7 +539,7 @@ void DCItem::deleteFromDB()
 /**
  * Update item from NXCP message
  */
-void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId)
+void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId)
 {
 	DCObject::updateFromMessage(pMsg);
 
@@ -564,14 +564,14 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppd
    safe_free(pszStr);
 
    // Update thresholds
-   DWORD dwNum = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
-   DWORD *newThresholds = (DWORD *)malloc(sizeof(DWORD) * dwNum);
-   *ppdwMapIndex = (DWORD *)malloc(dwNum * sizeof(DWORD));
-   *ppdwMapId = (DWORD *)malloc(dwNum * sizeof(DWORD));
+   UINT32 dwNum = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+   UINT32 *newThresholds = (UINT32 *)malloc(sizeof(UINT32) * dwNum);
+   *ppdwMapIndex = (UINT32 *)malloc(dwNum * sizeof(UINT32));
+   *ppdwMapId = (UINT32 *)malloc(dwNum * sizeof(UINT32));
    *pdwNumMaps = 0;
 
    // Read all new threshold ids from message
-   for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
+   for(UINT32 i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
    {
       newThresholds[i] = pMsg->GetVariableLong(dwId);
    }
@@ -580,7 +580,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppd
    Threshold **ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
    for(int i = 0; i < getThresholdCount(); i++)
    {
-		DWORD j;
+		UINT32 j;
       for(j = 0; j < dwNum; j++)
          if (m_thresholds->get(i)->getId() == newThresholds[j])
             break;
@@ -598,7 +598,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppd
    }
 
    // Add or update thresholds
-   for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
+   for(UINT32 i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
    {
       if (newThresholds[i] == 0)    // New threshold?
       {
@@ -625,7 +625,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppd
 		{
 			m_thresholds = new ObjectArray<Threshold>((int)dwNum, 8, true);
 		}
-		for(DWORD i = 0; i < dwNum; i++)
+		for(UINT32 i = 0; i < dwNum; i++)
 			m_thresholds->add(ppNewList[i]);
 	}
 	else
@@ -661,7 +661,7 @@ void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    m_dwErrorCount = 0;
 
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue((const TCHAR *)originalValue, (DWORD)tmTimeStamp);
+   pValue = new ItemValue((const TCHAR *)originalValue, (UINT32)tmTimeStamp);
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
@@ -768,22 +768,22 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
          switch(m_dataType)
          {
             case DCI_DT_INT:
-               value = (LONG)value - (LONG)m_prevRawValue;
+               value = (INT32)value - (INT32)m_prevRawValue;
                break;
             case DCI_DT_UINT:
-               value = (DWORD)value - (DWORD)m_prevRawValue;
+               value = (UINT32)value - (UINT32)m_prevRawValue;
                break;
             case DCI_DT_INT64:
                value = (INT64)value - (INT64)m_prevRawValue;
                break;
             case DCI_DT_UINT64:
-               value = (QWORD)value - (QWORD)m_prevRawValue;
+               value = (UINT64)value - (UINT64)m_prevRawValue;
                break;
             case DCI_DT_FLOAT:
                value = (double)value - (double)m_prevRawValue;
                break;
             case DCI_DT_STRING:
-               value = (LONG)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               value = (INT32)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
@@ -800,16 +800,16 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
          switch(m_dataType)
          {
             case DCI_DT_INT:
-               value = ((LONG)value - (LONG)m_prevRawValue) / (LONG)nElapsedTime;
+               value = ((INT32)value - (INT32)m_prevRawValue) / (INT32)nElapsedTime;
                break;
             case DCI_DT_UINT:
-               value = ((DWORD)value - (DWORD)m_prevRawValue) / (DWORD)nElapsedTime;
+               value = ((UINT32)value - (UINT32)m_prevRawValue) / (UINT32)nElapsedTime;
                break;
             case DCI_DT_INT64:
                value = ((INT64)value - (INT64)m_prevRawValue) / (INT64)nElapsedTime;
                break;
             case DCI_DT_UINT64:
-               value = ((QWORD)value - (QWORD)m_prevRawValue) / (QWORD)nElapsedTime;
+               value = ((UINT64)value - (UINT64)m_prevRawValue) / (UINT64)nElapsedTime;
                break;
             case DCI_DT_FLOAT:
                value = ((double)value - (double)m_prevRawValue) / (double)nElapsedTime;
@@ -818,7 +818,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
                // I don't see any meaning in _T("average delta per second (minute)") for string
                // values, so result will be 0 if there are no difference between
                // current and previous values, and 1 otherwise
-               value = (LONG)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               value = (INT32)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
@@ -884,7 +884,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 /**
  * Set new ID and node/template association
  */
-void DCItem::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpansion)
+void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpansion)
 {
 	DCObject::changeBinding(dwNewId, pNewNode, doMacroExpansion);
 
@@ -909,9 +909,9 @@ void DCItem::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpans
  * GetCacheSizeForDCI should be called with bNoLock == TRUE for appropriate
  * condition object
  */
-void DCItem::updateCacheSize(DWORD dwCondId)
+void DCItem::updateCacheSize(UINT32 dwCondId)
 {
-   DWORD dwSize, dwRequiredSize;
+   UINT32 dwSize, dwRequiredSize;
 
    // Sanity check
    if (m_pNode == NULL)
@@ -954,7 +954,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
       // Destroy unneeded values
       if (m_dwCacheSize > 0)
 		{
-         for(DWORD i = dwRequiredSize; i < m_dwCacheSize; i++)
+         for(UINT32 i = dwRequiredSize; i < m_dwCacheSize; i++)
             delete m_ppValueCache[i];
 		}
 
@@ -973,7 +973,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
    {
       // Expand cache
       m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
-      for(DWORD i = m_dwCacheSize; i < dwRequiredSize; i++)
+      for(UINT32 i = m_dwCacheSize; i < dwRequiredSize; i++)
          m_ppValueCache[i] = NULL;
 
       // Load missing values from database
@@ -1012,7 +1012,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
          if (hResult != NULL)
          {
             // Skip already cached values
-				DWORD i;
+				UINT32 i;
             for(i = 0, bHasData = TRUE; i < m_dwCacheSize; i++)
                bHasData = DBFetch(hResult);
 
@@ -1040,7 +1040,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
          else
          {
             // Error reading data from database, fill cache with empty values
-            for(DWORD i = m_dwCacheSize; i < dwRequiredSize; i++)
+            for(UINT32 i = m_dwCacheSize; i < dwRequiredSize; i++)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
          }
 			DBConnectionPoolReleaseConnection(hdb);
@@ -1053,7 +1053,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
 /**
  * Put last value into CSCP message
  */
-void DCItem::fillLastValueMessage(CSCPMessage *pMsg, DWORD dwId)
+void DCItem::fillLastValueMessage(CSCPMessage *pMsg, UINT32 dwId)
 {
 	lock();
    pMsg->SetVariable(dwId++, m_dwId);
@@ -1070,7 +1070,7 @@ void DCItem::fillLastValueMessage(CSCPMessage *pMsg, DWORD dwId)
    {
       pMsg->SetVariable(dwId++, (WORD)DCI_DT_NULL);
       pMsg->SetVariable(dwId++, _T(""));
-      pMsg->SetVariable(dwId++, (DWORD)0);
+      pMsg->SetVariable(dwId++, (UINT32)0);
    }
    pMsg->SetVariable(dwId++, (WORD)m_status);
 	pMsg->SetVariable(dwId++, (WORD)getType());
@@ -1128,7 +1128,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
             ItemValue result;
 
             CalculateItemValueAverage(result, m_dataType,
-                                      min(m_dwCacheSize, (DWORD)nPolls), m_ppValueCache);
+                                      min(m_dwCacheSize, (UINT32)nPolls), m_ppValueCache);
             pValue = new NXSL_Value(result.getString());
          }
          else
@@ -1142,7 +1142,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
             ItemValue result;
 
             CalculateItemValueMD(result, m_dataType,
-                                 min(m_dwCacheSize, (DWORD)nPolls), m_ppValueCache);
+                                 min(m_dwCacheSize, (UINT32)nPolls), m_ppValueCache);
             pValue = new NXSL_Value(result.getString());
          }
          else
@@ -1151,7 +1151,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          }
          break;
       case F_ERROR:
-         pValue = new NXSL_Value((LONG)((m_dwErrorCount >= (DWORD)nPolls) ? 1 : 0));
+         pValue = new NXSL_Value((INT32)((m_dwErrorCount >= (UINT32)nPolls) ? 1 : 0));
          break;
       default:
          pValue = new NXSL_Value;
@@ -1303,14 +1303,14 @@ void DCItem::setInstanceFilter(const TCHAR *pszScript)
 /**
  * Get list of used events
  */
-void DCItem::getEventList(DWORD **ppdwList, DWORD *pdwSize)
+void DCItem::getEventList(UINT32 **ppdwList, UINT32 *pdwSize)
 {
    lock();
 
    if (getThresholdCount() > 0)
    {
-      *ppdwList = (DWORD *)realloc(*ppdwList, sizeof(DWORD) * (*pdwSize + m_thresholds->size() * 2));
-      DWORD j = *pdwSize;
+      *ppdwList = (UINT32 *)realloc(*ppdwList, sizeof(UINT32) * (*pdwSize + m_thresholds->size() * 2));
+      UINT32 j = *pdwSize;
       *pdwSize += m_thresholds->size() * 2;
       for(int i = 0; i < m_thresholds->size(); i++)
       {
@@ -1327,7 +1327,7 @@ void DCItem::getEventList(DWORD **ppdwList, DWORD *pdwSize)
  */
 void DCItem::createNXMPRecord(String &str)
 {
-	DWORD i;
+	UINT32 i;
 
    lock();
    
@@ -1376,7 +1376,7 @@ void DCItem::createNXMPRecord(String &str)
 	if (m_thresholds != NULL)
 	{
 	   str += _T("\t\t\t\t\t<thresholds>\n");
-		for(i = 0; i < (DWORD)m_thresholds->size(); i++)
+		for(i = 0; i < (UINT32)m_thresholds->size(); i++)
 		{
 			m_thresholds->get(i)->createNXMPRecord(str, i + 1);
 		}
@@ -1421,7 +1421,7 @@ void DCItem::addThreshold(Threshold *pThreshold)
 /**
  * Enumerate all thresholds
  */
-BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg)
+BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg)
 {
 	BOOL bRet = TRUE;
 
@@ -1507,8 +1507,8 @@ void DCItem::fillMessageWithThresholds(CSCPMessage *msg)
 {
 	lock();
 
-	msg->SetVariable(VID_NUM_THRESHOLDS, (DWORD)getThresholdCount());
-	DWORD id = VID_DCI_THRESHOLD_BASE;
+	msg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)getThresholdCount());
+	UINT32 id = VID_DCI_THRESHOLD_BASE;
 	for(int i = 0; i < getThresholdCount(); i++, id += 20)
 	{
 		m_thresholds->get(i)->createMessage(msg, id);

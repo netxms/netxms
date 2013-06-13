@@ -42,7 +42,7 @@ SNMP_MIBObject::SNMP_MIBObject()
 /**
  * Construct object with all data
  */
-SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName, int iType, 
+SNMP_MIBObject::SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName, int iType, 
                                int iStatus, int iAccess, const TCHAR *pszDescription,
 										 const TCHAR *pszTextualConvention)
 {
@@ -60,7 +60,7 @@ SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName, int iType,
 /**
  * Construct object with only ID and name
  */
-SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName)
+SNMP_MIBObject::SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName)
 {
    Initialize();
 
@@ -124,7 +124,7 @@ void SNMP_MIBObject::addChild(SNMP_MIBObject *pObject)
 /**
  * Find child object by OID
  */
-SNMP_MIBObject *SNMP_MIBObject::findChildByID(DWORD dwOID)
+SNMP_MIBObject *SNMP_MIBObject::findChildByID(UINT32 dwOID)
 {
    SNMP_MIBObject *pCurr;
 
@@ -191,7 +191,7 @@ static void WriteStringToFile(ZFile *pFile, const TCHAR *pszStr)
 /**
  * Write object to file
  */
-void SNMP_MIBObject::writeToFile(ZFile *pFile, DWORD dwFlags)
+void SNMP_MIBObject::writeToFile(ZFile *pFile, UINT32 dwFlags)
 {
    SNMP_MIBObject *pCurr;
 
@@ -220,12 +220,12 @@ void SNMP_MIBObject::writeToFile(ZFile *pFile, DWORD dwFlags)
    }
    else
    {
-      DWORD dwTemp;
+      UINT32 dwTemp;
 
-      pFile->fputc(MIB_TAG_DWORD_OID);
+      pFile->fputc(MIB_TAG_UINT32_OID);
       dwTemp = htonl(m_dwOID);
       pFile->write(&dwTemp, 4);
-      pFile->fputc(MIB_TAG_DWORD_OID | MIB_END_OF_TAG);
+      pFile->fputc(MIB_TAG_UINT32_OID | MIB_END_OF_TAG);
    }
 
    // Object status
@@ -268,12 +268,12 @@ void SNMP_MIBObject::writeToFile(ZFile *pFile, DWORD dwFlags)
 /**
  * Save MIB tree to file
  */
-DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, DWORD dwFlags)
+UINT32 LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, UINT32 dwFlags)
 {
    FILE *pFile;
    ZFile *pZFile;
    SNMP_MIB_HEADER header;
-   DWORD dwRet = SNMP_ERR_SUCCESS;
+   UINT32 dwRet = SNMP_ERR_SUCCESS;
 
    pFile = _tfopen(pszFile, _T("wb"));
    if (pFile != NULL)
@@ -282,7 +282,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject 
       header.bVersion = MIB_FILE_VERSION;
       header.bHeaderSize = sizeof(SNMP_MIB_HEADER);
       header.wFlags = htons((WORD)dwFlags);
-      header.dwTimeStamp = htonl((DWORD)time(NULL));
+      header.dwTimeStamp = htonl((UINT32)time(NULL));
       memset(header.bReserved, 0, sizeof(header.bReserved));
       fwrite(&header, sizeof(SNMP_MIB_HEADER), 1, pFile);
       pZFile = new ZFile(pFile, dwFlags & SMT_COMPRESS_DATA, TRUE);
@@ -339,7 +339,7 @@ BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
 {
    int ch, nState = 0;
    WORD wTmp;
-   DWORD dwTmp;
+   UINT32 dwTmp;
    SNMP_MIBObject *pObject;
 
    while(nState == 0)
@@ -351,18 +351,18 @@ BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
             nState++;
             break;
          case MIB_TAG_BYTE_OID:
-            m_dwOID = (DWORD)pFile->fgetc();
+            m_dwOID = (UINT32)pFile->fgetc();
             CHECK_NEXT_TAG(MIB_TAG_BYTE_OID | MIB_END_OF_TAG);
             break;
          case MIB_TAG_WORD_OID:
             pFile->read(&wTmp, 2);
-            m_dwOID = (DWORD)ntohs(wTmp);
+            m_dwOID = (UINT32)ntohs(wTmp);
             CHECK_NEXT_TAG(MIB_TAG_WORD_OID | MIB_END_OF_TAG);
             break;
-         case MIB_TAG_DWORD_OID:
+         case MIB_TAG_UINT32_OID:
             pFile->read(&dwTmp, 4);
             m_dwOID = ntohl(dwTmp);
-            CHECK_NEXT_TAG(MIB_TAG_DWORD_OID | MIB_END_OF_TAG);
+            CHECK_NEXT_TAG(MIB_TAG_UINT32_OID | MIB_END_OF_TAG);
             break;
          case MIB_TAG_NAME:
             safe_free(m_pszName);
@@ -414,12 +414,12 @@ BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
 /**
  * Load MIB tree from file
  */
-DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot)
+UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot)
 {
    FILE *pFile;
    ZFile *pZFile;
    SNMP_MIB_HEADER header;
-   DWORD dwRet = SNMP_ERR_SUCCESS;
+   UINT32 dwRet = SNMP_ERR_SUCCESS;
 
    pFile = _tfopen(pszFile, _T("rb"));
    if (pFile != NULL)
@@ -469,11 +469,11 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject 
 /**
  * Get timestamp from saved MIB tree
  */
-DWORD LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, DWORD *pdwTimestamp)
+UINT32 LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, UINT32 *pdwTimestamp)
 {
    FILE *pFile;
    SNMP_MIB_HEADER header;
-   DWORD dwRet = SNMP_ERR_SUCCESS;
+   UINT32 dwRet = SNMP_ERR_SUCCESS;
 
    pFile = _tfopen(pszFile, _T("rb"));
    if (pFile != NULL)

@@ -34,7 +34,7 @@
  */
 struct QUEUED_SYSLOG_MESSAGE
 {
-   DWORD dwSourceIP;
+   UINT32 dwSourceIP;
    int nBytes;
    char *psMsg;
 };
@@ -42,7 +42,7 @@ struct QUEUED_SYSLOG_MESSAGE
 /**
  * Static data
  */
-static QWORD m_qwMsgId = 1;
+static UINT64 m_qwMsgId = 1;
 static Queue *m_pSyslogQueue = NULL;
 static LogParser *m_parser = NULL;
 static MUTEX m_mutexParserAccess = INVALID_MUTEX_HANDLE;
@@ -221,10 +221,10 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
  * Bind syslog message to NetXMS node object
  * dwSourceIP is an IP address from which we receive message
  */
-static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, DWORD dwSourceIP)
+static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
 {
    Node *pNode = NULL;
-   DWORD dwIpAddr;
+   UINT32 dwIpAddr;
 
    // Determine IP address of a source
    if (pRec->szHostName[0] == 0)
@@ -286,7 +286,7 @@ static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
 /**
  * Process syslog message
  */
-static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
+static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
 {
    NX_SYSLOG_RECORD record;
    TCHAR szQuery[4096];
@@ -360,7 +360,7 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
 /**
  * Queue syslog message for processing
  */
-static void QueueSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
+static void QueueSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
 {
    QUEUED_SYSLOG_MESSAGE *pMsg;
 
@@ -568,11 +568,11 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
  */
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
 {
-   DWORD dwId = VID_SYSLOG_MSG_BASE;
+   UINT32 dwId = VID_SYSLOG_MSG_BASE;
 
-   pMsg->SetVariable(VID_NUM_RECORDS, (DWORD)1);
+   pMsg->SetVariable(VID_NUM_RECORDS, (UINT32)1);
    pMsg->SetVariable(dwId++, pRec->qwMsgId);
-   pMsg->SetVariable(dwId++, (DWORD)pRec->tmTimeStamp);
+   pMsg->SetVariable(dwId++, (UINT32)pRec->tmTimeStamp);
    pMsg->SetVariable(dwId++, (WORD)pRec->nFacility);
    pMsg->SetVariable(dwId++, (WORD)pRec->nSeverity);
    pMsg->SetVariable(dwId++, pRec->dwSourceObject);

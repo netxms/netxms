@@ -46,7 +46,7 @@ public:
 	int getPollInterval() { return m_pollInterval; }
 	void poll();
 	LONG getValue(const TCHAR *name, TCHAR *buffer);
-	void listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+	void listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
 };
 
@@ -81,7 +81,7 @@ LONG ParamProvider::getValue(const TCHAR *name, TCHAR *buffer)
 
 	lock();
 
-	for(DWORD i = 0; i < m_parameters->getSize(); i++)
+	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
 	{
 		if (!_tcsicmp(m_parameters->getKeyByIndex(i), name))
 		{
@@ -150,12 +150,12 @@ void ParamProvider::poll()
 /**
  * List available parameters
  */
-void ParamProvider::listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+void ParamProvider::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
-	DWORD id = *baseId;
+	UINT32 id = *baseId;
 
 	lock();
-	for(DWORD i = 0; i < m_parameters->getSize(); i++)
+	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
 	{
 		msg->SetVariable(id++, m_parameters->getKeyByIndex(i));
 		msg->SetVariable(id++, _T(""));
@@ -173,7 +173,7 @@ void ParamProvider::listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count
 void ParamProvider::listParameters(StringList *list)
 {
 	lock();
-	for(DWORD i = 0; i < m_parameters->getSize(); i++)
+	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
 	{
 		list->add(m_parameters->getKeyByIndex(i));
 	}
@@ -267,7 +267,7 @@ LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
 /**
  * Add parameters from external providers to NXCP message
  */
-void ListParametersFromExtProviders(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+void ListParametersFromExtProviders(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_providers.size(); i++)
 	{

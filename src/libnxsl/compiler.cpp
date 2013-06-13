@@ -110,29 +110,29 @@ void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
 /**
  * Pop address
  */
-DWORD NXSL_Compiler::popAddr()
+UINT32 NXSL_Compiler::popAddr()
 {
    void *pAddr;
 
    pAddr = m_pAddrStack->pop();
-   return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
+   return pAddr ? CAST_FROM_POINTER(pAddr, UINT32) : INVALID_ADDRESS;
 }
 
 /**
  * Peek address
  */
-DWORD NXSL_Compiler::peekAddr()
+UINT32 NXSL_Compiler::peekAddr()
 {
    void *pAddr;
 
    pAddr = m_pAddrStack->peek();
-   return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
+   return pAddr ? CAST_FROM_POINTER(pAddr, UINT32) : INVALID_ADDRESS;
 }
 
 /**
  * Add "break" statement address
  */
-void NXSL_Compiler::addBreakAddr(DWORD dwAddr)
+void NXSL_Compiler::addBreakAddr(UINT32 dwAddr)
 {
 	Queue *pQueue;
 
@@ -150,14 +150,14 @@ void NXSL_Compiler::closeBreakLevel(NXSL_Program *pScript)
 {
 	Queue *pQueue;
 	void *pAddr;
-	DWORD dwAddr;
+	UINT32 dwAddr;
 
 	pQueue = (Queue *)m_pBreakStack->pop();
 	if (pQueue != NULL)
 	{
 		while((pAddr = pQueue->Get()) != NULL)
 		{
-			dwAddr = CAST_FROM_POINTER(pAddr, DWORD);
+			dwAddr = CAST_FROM_POINTER(pAddr, UINT32);
 			pScript->createJumpAt(dwAddr, pScript->getCodeSize());
 		}
 		delete pQueue;

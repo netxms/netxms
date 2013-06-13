@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
  */
 public class CustomWidgetElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	/**
 	 * @param parent
 	 * @param element

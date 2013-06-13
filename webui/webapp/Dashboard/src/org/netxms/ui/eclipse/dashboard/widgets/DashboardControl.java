@@ -22,10 +22,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -47,6 +45,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dashboard rendering control
@@ -65,8 +64,6 @@ public class DashboardControl extends Composite
 	public static final String DEFAULT_GEO_MAP_CONFIG = "<element>\n\t<latitude>0</latitude>\n\t<longitude>0</longitude>\n\t<zoom>8</zoom>\t<title></title>\n</element>";  //$NON-NLS-1$
 	public static final String DEFAULT_WEB_PAGE_CONFIG = "<element>\n\t<url>http://</url>\n\t<title></title>\n</element>";  //$NON-NLS-1$
 			
-	private static final long serialVersionUID = 1L;
-
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
 	private Map<DashboardElement, ElementWidget> elementWidgets = new HashMap<DashboardElement, ElementWidget>();
@@ -359,12 +356,12 @@ public class DashboardControl extends Composite
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorPrefix + e.getMessage());
+				MessageDialogHelper.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorPrefix + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialog.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorText1);
+			MessageDialogHelper.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorText1);
 		}
 	}
 
@@ -424,12 +421,12 @@ public class DashboardControl extends Composite
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorPrefix + e.getMessage());
+				MessageDialogHelper.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorPrefix + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialog.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorText2);
+			MessageDialogHelper.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorText2);
 		}
 	}
 	

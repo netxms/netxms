@@ -35,15 +35,15 @@ DCTableColumn::DCTableColumn(const DCTableColumn *src)
 /**
  * Create column object from NXCP message
  */
-DCTableColumn::DCTableColumn(CSCPMessage *msg, DWORD baseId)
+DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
 {
 	msg->GetVariableStr(baseId, m_name, MAX_COLUMN_NAME);
 	m_dataType = (int)msg->GetVariableShort(baseId + 1);
 
    if (msg->IsVariableExist(baseId + 2))
 	{
-		DWORD oid[256];
-		DWORD len = msg->GetVariableInt32Array(baseId + 3, 256, oid);
+		UINT32 oid[256];
+		UINT32 len = msg->GetVariableInt32Array(baseId + 3, 256, oid);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(len, oid);
@@ -75,8 +75,8 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 	StrStrip(oid);
 	if (oid[0] != 0)
 	{
-		DWORD oidBin[256];
-		DWORD len = SNMPParseOID(oid, oidBin, 256);
+		UINT32 oidBin[256];
+		UINT32 len = SNMPParseOID(oid, oidBin, 256);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(len, oidBin);

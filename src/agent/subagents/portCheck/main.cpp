@@ -26,14 +26,14 @@ char g_szDomainName[128] = "netxms.org";
 //
 // Command handler
 //
-BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
 {
 	BOOL bHandled = TRUE;
 	WORD wType, wPort;
-	DWORD dwAddress;
+	UINT32 dwAddress;
 	char szRequest[1024 * 10];
 	char szResponse[1024 * 10];
-	DWORD nRet;
+	UINT32 nRet;
 
 	if (dwCommand != CMD_CHECK_NETWORK_SERVICE)
 	{
@@ -52,19 +52,19 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 			// unsupported for now
 			nRet = CheckCustom(NULL, dwAddress, wPort, 0);
 			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_SSH:
 			nRet = CheckSSH(NULL, dwAddress, wPort, NULL, NULL, 0);
 
 			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_TELNET:
 			nRet = CheckTelnet(NULL, dwAddress, wPort, NULL, NULL, 0);
 
 			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_POP3:
 			{
@@ -83,7 +83,7 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 				}
 
 				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 			break;
 		case NETSRV_SMTP:
@@ -93,11 +93,11 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 			{
 				nRet = CheckSMTP(NULL, dwAddress, wPort, szRequest, 0);
 				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 
 			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_FTP:
 			bHandled = FALSE;
@@ -121,7 +121,7 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 				}
 
 				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 			break;
 		default:
@@ -136,7 +136,7 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 // Init callback
 //
 
-DWORD m_dwDefaultTimeout = 3000;
+UINT32 m_dwDefaultTimeout = 3000;
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {

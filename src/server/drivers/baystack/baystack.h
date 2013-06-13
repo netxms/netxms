@@ -34,7 +34,7 @@
 class BayStackDriver : public AvayaERSDriver
 {
 protected:
-	virtual DWORD getSlotSize(StringMap *attributes);
+	virtual UINT32 getSlotSize(StringMap *attributes);
 
 public:
 	virtual const TCHAR *getName();

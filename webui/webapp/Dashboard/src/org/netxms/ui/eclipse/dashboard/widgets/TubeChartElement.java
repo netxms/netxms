@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
  */
 public class TubeChartElement extends ComparisonChartElement
 {
-	private static final long serialVersionUID = 1L;
-
 	private TubeChartConfig config;
 	
 	/**

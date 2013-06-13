@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class NetworkMapElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	private NetworkMap mapObject;
 	private NetworkMapWidget mapWidget;
 	private NetworkMapConfig config;

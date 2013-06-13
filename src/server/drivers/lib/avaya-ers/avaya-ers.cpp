@@ -30,7 +30,7 @@
  * @param attributes object's custom attributes
  * @return slot size
  */
-DWORD AvayaERSDriver::getSlotSize(StringMap *attributes)
+UINT32 AvayaERSDriver::getSlotSize(StringMap *attributes)
 {
 	return 64;
 }
@@ -38,16 +38,16 @@ DWORD AvayaERSDriver::getSlotSize(StringMap *attributes)
 /**
  * Handler for VLAN enumeration on Avaya ERS
  */
-static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   DWORD oidName[MAX_OID_LEN], dwResult;
+   UINT32 oidName[MAX_OID_LEN], dwResult;
    VlanList *vlanList = (VlanList *)pArg;
 
-   DWORD dwNameLen = pVar->GetName()->getLength();
+   UINT32 dwNameLen = pVar->GetName()->getLength();
 	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt(), VLAN_PRM_IFINDEX);
 
    // Get VLAN name
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
+   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
    oidName[dwNameLen - 2] = 2;
    TCHAR buffer[256];
 	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, buffer, 256, SG_STRING_RESULT);
@@ -78,7 +78,7 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpor
       return dwResult;
 	}
 
-	DWORD ifIndex = 0;
+	UINT32 ifIndex = 0;
 	for(int i = 0; i < 256; i++)
 	{
 		BYTE mask = 0x80;
@@ -103,7 +103,7 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
 	VlanList *list = new VlanList();
-	DWORD slotSize = getSlotSize(attributes);
+	UINT32 slotSize = getSlotSize(attributes);
 	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 	{
 		delete_and_null(list);

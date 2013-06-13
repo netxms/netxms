@@ -47,7 +47,7 @@ void FileUploadJob::init()
 // Constructor
 //
 
-FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, DWORD userId, bool createOnHold)
+FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold)
               : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->Id(), userId, createOnHold)
 {
 	m_node = node;
@@ -103,7 +103,7 @@ bool FileUploadJob::run()
 	if (conn != NULL)
 	{
 		m_fileSize = (INT64)FileSize(m_localFile);
-		DWORD rcc = conn->uploadFile(m_localFile, m_remoteFile, uploadCallback, this);
+		UINT32 rcc = conn->uploadFile(m_localFile, m_remoteFile, uploadCallback, this);
 		if (rcc == ERR_SUCCESS)
 		{
 			success = true;

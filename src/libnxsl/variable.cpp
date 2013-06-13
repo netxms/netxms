@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -85,7 +85,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(bool constant)
 
 NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *pSrc)
 {
-   DWORD i;
+   UINT32 i;
 
    m_dwNumVariables = pSrc->m_dwNumVariables;
    m_ppVariableList = (NXSL_Variable **)malloc(sizeof(NXSL_Variable *) * m_dwNumVariables);
@@ -101,7 +101,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *pSrc)
 
 NXSL_VariableSystem::~NXSL_VariableSystem()
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumVariables; i++)
       delete m_ppVariableList[i];
@@ -115,7 +115,7 @@ NXSL_VariableSystem::~NXSL_VariableSystem()
 
 void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 {
-	DWORD i;
+	UINT32 i;
 
 	for(i = 0; i < src->m_dwNumVariables; i++)
 	{
@@ -134,7 +134,7 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 
 NXSL_Variable *NXSL_VariableSystem::find(const TCHAR *pszName)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumVariables; i++)
       if (!_tcscmp(pszName, m_ppVariableList[i]->getName()))

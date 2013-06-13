@@ -85,7 +85,7 @@ bool ExternalSubagent::sendMessage(CSCPMessage *msg)
 /**
  * Wait for specific message to arrive
  */
-CSCPMessage *ExternalSubagent::waitForMessage(WORD code, DWORD id)
+CSCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
 {
 	return m_msgQueue->waitForMessage(code, id, 5000);	// 5 sec timeout
 }
@@ -167,7 +167,7 @@ void ExternalSubagent::connect(HPIPE hPipe)
 /**
  * Get list of supported parameters
  */
-NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(DWORD *count)
+NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(UINT32 *count)
 {
 	CSCPMessage msg;
 	NETXMS_SUBAGENT_PARAM *result = NULL;
@@ -183,8 +183,8 @@ NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(DWORD *count)
 			{
 				*count = response->GetVariableLong(VID_NUM_PARAMETERS);
 				result = (NETXMS_SUBAGENT_PARAM *)malloc(*count * sizeof(NETXMS_SUBAGENT_PARAM));
-				DWORD varId = VID_PARAM_LIST_BASE;
-				for(DWORD i = 0; i < *count; i++)
+				UINT32 varId = VID_PARAM_LIST_BASE;
+				for(UINT32 i = 0; i < *count; i++)
 				{
 					response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
 					response->GetVariableStr(varId++, result[i].description, MAX_DB_STRING);
@@ -200,7 +200,7 @@ NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(DWORD *count)
 /**
  * Get list of supported lists
  */
-NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(DWORD *count)
+NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(UINT32 *count)
 {
 	CSCPMessage msg;
 	NETXMS_SUBAGENT_LIST *result = NULL;
@@ -216,8 +216,8 @@ NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(DWORD *count)
 			{
 				*count = response->GetVariableLong(VID_NUM_ENUMS);
 				result = (NETXMS_SUBAGENT_LIST *)malloc(*count * sizeof(NETXMS_SUBAGENT_LIST));
-				DWORD varId = VID_ENUM_LIST_BASE;
-				for(DWORD i = 0; i < *count; i++)
+				UINT32 varId = VID_ENUM_LIST_BASE;
+				for(UINT32 i = 0; i < *count; i++)
 				{
 					response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
 				}
@@ -231,7 +231,7 @@ NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(DWORD *count)
 /**
  * Get list of supported tables
  */
-NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(DWORD *count)
+NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(UINT32 *count)
 {
 	CSCPMessage msg;
 	NETXMS_SUBAGENT_TABLE *result = NULL;
@@ -247,8 +247,8 @@ NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(DWORD *count)
 			{
 				*count = response->GetVariableLong(VID_NUM_TABLES);
 				result = (NETXMS_SUBAGENT_TABLE *)malloc(*count * sizeof(NETXMS_SUBAGENT_TABLE));
-				DWORD varId = VID_TABLE_LIST_BASE;
-				for(DWORD i = 0; i < *count; i++)
+				UINT32 varId = VID_TABLE_LIST_BASE;
+				for(UINT32 i = 0; i < *count; i++)
 				{
 					response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
 					response->GetVariableStr(varId++, result[i].instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
@@ -264,15 +264,15 @@ NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(DWORD *count)
 /**
  * List supported parameters
  */
-void ExternalSubagent::listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+void ExternalSubagent::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
-	DWORD paramCount = 0;
+	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_PARAM *list = getSupportedParameters(&paramCount);
 	if (list != NULL)
 	{
-		DWORD id = *baseId;
+		UINT32 id = *baseId;
 
-		for(DWORD i = 0; i < paramCount; i++)
+		for(UINT32 i = 0; i < paramCount; i++)
 		{
 			msg->SetVariable(id++, list[i].name);
 			msg->SetVariable(id++, list[i].description);
@@ -289,11 +289,11 @@ void ExternalSubagent::listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *co
  */
 void ExternalSubagent::listParameters(StringList *list)
 {
-	DWORD paramCount = 0;
+	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_PARAM *plist = getSupportedParameters(&paramCount);
 	if (plist != NULL)
 	{
-		for(DWORD i = 0; i < paramCount; i++)
+		for(UINT32 i = 0; i < paramCount; i++)
 			list->add(plist[i].name);
 		free(plist);
 	}
@@ -302,15 +302,15 @@ void ExternalSubagent::listParameters(StringList *list)
 /**
  * List supported lists
  */
-void ExternalSubagent::listLists(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+void ExternalSubagent::listLists(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
-	DWORD paramCount = 0;
+	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_LIST *list = getSupportedLists(&paramCount);
 	if (list != NULL)
 	{
-		DWORD id = *baseId;
+		UINT32 id = *baseId;
 
-		for(DWORD i = 0; i < paramCount; i++)
+		for(UINT32 i = 0; i < paramCount; i++)
 		{
 			msg->SetVariable(id++, list[i].name);
 		}
@@ -325,11 +325,11 @@ void ExternalSubagent::listLists(CSCPMessage *msg, DWORD *baseId, DWORD *count)
  */
 void ExternalSubagent::listLists(StringList *list)
 {
-	DWORD paramCount = 0;
+	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_LIST *plist = getSupportedLists(&paramCount);
 	if (plist != NULL)
 	{
-		for(DWORD i = 0; i < paramCount; i++)
+		for(UINT32 i = 0; i < paramCount; i++)
 			list->add(plist[i].name);
 		free(plist);
 	}
@@ -338,15 +338,15 @@ void ExternalSubagent::listLists(StringList *list)
 /**
  * List supported tables
  */
-void ExternalSubagent::listTables(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+void ExternalSubagent::listTables(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
-	DWORD paramCount = 0;
+	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_TABLE *list = getSupportedTables(&paramCount);
 	if (list != NULL)
 	{
-		DWORD id = *baseId;
+		UINT32 id = *baseId;
 
-		for(DWORD i = 0; i < paramCount; i++)
+		for(UINT32 i = 0; i < paramCount; i++)
 		{
 			msg->SetVariable(id++, list[i].name);
 			msg->SetVariable(id++, list[i].instanceColumns);
@@ -363,11 +363,11 @@ void ExternalSubagent::listTables(CSCPMessage *msg, DWORD *baseId, DWORD *count)
  */
 void ExternalSubagent::listTables(StringList *list)
 {
-	DWORD paramCount = 0;
+	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_TABLE *plist = getSupportedTables(&paramCount);
 	if (plist != NULL)
 	{
-		for(DWORD i = 0; i < paramCount; i++)
+		for(UINT32 i = 0; i < paramCount; i++)
 			list->add(plist[i].name);
 		free(plist);
 	}
@@ -376,10 +376,10 @@ void ExternalSubagent::listTables(StringList *list)
 /**
  * Get parameter value from external subagent
  */
-DWORD ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
+UINT32 ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
 {
 	CSCPMessage msg;
-	DWORD rcc;
+	UINT32 rcc;
 
 	msg.SetCode(CMD_GET_PARAMETER);
 	msg.SetId(m_requestId++);
@@ -409,10 +409,10 @@ DWORD ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
 /**
  * Get table value from external subagent
  */
-DWORD ExternalSubagent::getTable(const TCHAR *name, Table *value)
+UINT32 ExternalSubagent::getTable(const TCHAR *name, Table *value)
 {
 	CSCPMessage msg;
-	DWORD rcc;
+	UINT32 rcc;
 
 	msg.SetCode(CMD_GET_TABLE);
 	msg.SetId(m_requestId++);
@@ -442,10 +442,10 @@ DWORD ExternalSubagent::getTable(const TCHAR *name, Table *value)
 /**
  * Get list value from external subagent
  */
-DWORD ExternalSubagent::getList(const TCHAR *name, StringList *value)
+UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
 {
 	CSCPMessage msg;
-	DWORD rcc;
+	UINT32 rcc;
 
 	msg.SetCode(CMD_GET_LIST);
 	msg.SetId(m_requestId++);
@@ -458,8 +458,8 @@ DWORD ExternalSubagent::getList(const TCHAR *name, StringList *value)
 			rcc = response->GetVariableLong(VID_RCC);
 			if (rcc == ERR_SUCCESS)
 			{
-            DWORD count = response->GetVariableLong(VID_NUM_STRINGS);
-            for(DWORD i = 0; i < count; i++)
+            UINT32 count = response->GetVariableLong(VID_NUM_STRINGS);
+            for(UINT32 i = 0; i < count; i++)
 					value->addPreallocated(response->GetVariableStr(VID_ENUM_VALUE_BASE + i));
 			}
 			delete response;
@@ -631,7 +631,7 @@ bool AddExternalSubagent(const TCHAR *config)
 /**
  * Add parameters from external providers to NXCP message
  */
-void ListParametersFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+void ListParametersFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
@@ -659,7 +659,7 @@ void ListParametersFromExtSubagents(StringList *list)
 /**
  * Add lists from external providers to NXCP message
  */
-void ListListsFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+void ListListsFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
@@ -687,7 +687,7 @@ void ListListsFromExtSubagents(StringList *list)
 /**
  * Add tables from external providers to NXCP message
  */
-void ListTablesFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+void ListTablesFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
@@ -717,9 +717,9 @@ void ListTablesFromExtSubagents(StringList *list)
  *
  * @return agent error code
  */
-DWORD GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
+UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
 {
-	DWORD rc = ERR_UNKNOWN_PARAMETER;
+	UINT32 rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
@@ -737,9 +737,9 @@ DWORD GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
  *
  * @return agent error code
  */
-DWORD GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
+UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
 {
-	DWORD rc = ERR_UNKNOWN_PARAMETER;
+	UINT32 rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
@@ -757,9 +757,9 @@ DWORD GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
  *
  * @return agent error code
  */
-DWORD GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
+UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
 {
-	DWORD rc = ERR_UNKNOWN_PARAMETER;
+	UINT32 rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())

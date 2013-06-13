@@ -25,7 +25,7 @@
 /**
  * Constructor for download job
  */
-FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, ClientSession *session, DWORD requestId)
+FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, ClientSession *session, UINT32 requestId)
                 : ServerJob(_T("DOWNLOAD_FILE"), _T("Download file"), node->Id(), session->getUserId(), false)
 {
 	m_session = session;
@@ -82,7 +82,7 @@ void FileDownloadJob::progressCallback(size_t size, void *arg)
 bool FileDownloadJob::run()
 {
 	AgentConnection *conn;
-	DWORD rcc = 0xFFFFFFFF;
+	UINT32 rcc = 0xFFFFFFFF;
 	bool success = false;
 
 	conn = m_node->createAgentConnection();
@@ -124,9 +124,9 @@ bool FileDownloadJob::run()
 				{
 					if ((m_fileSize > (INT64)fs.st_size) && (modTime <= fs.st_mtime))
 					{
-						msg.SetVariable(VID_FILE_OFFSET, (DWORD)fs.st_size);
+						msg.SetVariable(VID_FILE_OFFSET, (UINT32)fs.st_size);
 						appendFile = true;
-						DbgPrintf(5, _T("FileDownloadJob: File %s already exist, requesting download from offset %u"), m_localFile, (DWORD)fs.st_size);
+						DbgPrintf(5, _T("FileDownloadJob: File %s already exist, requesting download from offset %u"), m_localFile, (UINT32)fs.st_size);
 					}
 				}
 
@@ -233,7 +233,7 @@ const TCHAR *FileDownloadJob::getAdditionalInfo()
 // Build name of staging file on server
 //
 
-TCHAR *FileDownloadJob::buildServerFileName(DWORD nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize)
+TCHAR *FileDownloadJob::buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize)
 {
 	BYTE hash[MD5_DIGEST_SIZE];
 	TCHAR hashStr[128];

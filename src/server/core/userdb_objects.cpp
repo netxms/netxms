@@ -58,7 +58,7 @@ UserDatabaseObject::UserDatabaseObject()
 // Condtructor for generic object - create new object with given id and name
 //
 
-UserDatabaseObject::UserDatabaseObject(DWORD id, const TCHAR *name)
+UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 {
 	m_id = id;
 	uuid_generate(m_guid);
@@ -104,7 +104,7 @@ bool UserDatabaseObject::deleteFromDatabase(DB_HANDLE hdb)
 
 void UserDatabaseObject::fillMessage(CSCPMessage *msg)
 {
-	DWORD i, varId;
+	UINT32 i, varId;
 
    msg->SetVariable(VID_USER_ID, m_id);
    msg->SetVariable(VID_USER_NAME, m_name);
@@ -127,7 +127,7 @@ void UserDatabaseObject::fillMessage(CSCPMessage *msg)
 
 void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 {
-	DWORD flags, fields;
+	UINT32 flags, fields;
 
 	fields = msg->GetVariableLong(VID_FIELDS);
 	DbgPrintf(5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
@@ -141,7 +141,7 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 	// older client versions may not be aware of custom attributes
 	if ((fields & USER_MODIFY_CUSTOM_ATTRIBUTES) || msg->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
 	{
-		DWORD i, varId, count;
+		UINT32 i, varId, count;
 		TCHAR *name, *value;
 
 		count = msg->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
@@ -218,7 +218,7 @@ bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 {
 	TCHAR query[8192], *escName, *escValue;
-	DWORD i;
+	UINT32 i;
 	bool success = false;
 
 	_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
@@ -242,10 +242,10 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 
 
 //
-// Get custom attribute as DWORD
+// Get custom attribute as UINT32
 //
 
-DWORD UserDatabaseObject::getAttributeAsULong(const TCHAR *name)
+UINT32 UserDatabaseObject::getAttributeAsULong(const TCHAR *name)
 {
 	const TCHAR *value = getAttribute(name);
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : 0;
@@ -332,7 +332,7 @@ User::User()
 // Constructor for user object - new user
 //
 
-User::User(DWORD id, const TCHAR *name)
+User::User(UINT32 id, const TCHAR *name)
      : UserDatabaseObject(id, name)
 {
 	m_fullName[0] = 0;
@@ -518,11 +518,11 @@ void User::fillMessage(CSCPMessage *msg)
    msg->SetVariable(VID_AUTH_METHOD, (WORD)m_authMethod);
 	msg->SetVariable(VID_CERT_MAPPING_METHOD, (WORD)m_certMappingMethod);
 	msg->SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(m_certMappingData));
-	msg->SetVariable(VID_LAST_LOGIN, (DWORD)m_lastLogin);
-	msg->SetVariable(VID_LAST_PASSWORD_CHANGE, (DWORD)m_lastPasswordChange);
+	msg->SetVariable(VID_LAST_LOGIN, (UINT32)m_lastLogin);
+	msg->SetVariable(VID_LAST_PASSWORD_CHANGE, (UINT32)m_lastPasswordChange);
 	msg->SetVariable(VID_MIN_PASSWORD_LENGTH, (WORD)m_minPasswordLength);
-	msg->SetVariable(VID_DISABLED_UNTIL, (DWORD)m_disabledUntil);
-	msg->SetVariable(VID_AUTH_FAILURES, (DWORD)m_authFailures);
+	msg->SetVariable(VID_DISABLED_UNTIL, (UINT32)m_disabledUntil);
+	msg->SetVariable(VID_AUTH_FAILURES, (UINT32)m_authFailures);
 }
 
 /**
@@ -532,7 +532,7 @@ void User::modifyFromMessage(CSCPMessage *msg)
 {
 	UserDatabaseObject::modifyFromMessage(msg);
 
-	DWORD fields = msg->GetVariableLong(VID_FIELDS);
+	UINT32 fields = msg->GetVariableLong(VID_FIELDS);
 
 	if (fields & USER_MODIFY_FULL_NAME)
 		msg->GetVariableStr(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
@@ -604,7 +604,7 @@ Group::Group(DB_RESULT hr, int row)
 		m_memberCount = DBGetNumRows(hResult);
 		if (m_memberCount > 0)
 		{
-			m_members = (DWORD *)malloc(sizeof(DWORD) * m_memberCount);
+			m_members = (UINT32 *)malloc(sizeof(UINT32) * m_memberCount);
 			for(int i = 0; i < m_memberCount; i++)
 				m_members[i] = DBGetFieldULong(hResult, i, 0);
 		}
@@ -640,7 +640,7 @@ Group::Group()
 // Constructor for group object - create new group
 //
 
-Group::Group(DWORD id, const TCHAR *name)
+Group::Group(UINT32 id, const TCHAR *name)
       :UserDatabaseObject(id, name)
 {
 	m_memberCount = 0;
@@ -769,7 +769,7 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 // Check if given user is a member
 //
 
-bool Group::isMember(DWORD userId)
+bool Group::isMember(UINT32 userId)
 {
 	int i;
 
@@ -787,7 +787,7 @@ bool Group::isMember(DWORD userId)
 // Add user to group
 //
 
-void Group::addUser(DWORD userId)
+void Group::addUser(UINT32 userId)
 {
 	int i;
 
@@ -798,7 +798,7 @@ void Group::addUser(DWORD userId)
 
    // Not in group, add it
 	m_memberCount++;
-   m_members = (DWORD *)realloc(m_members, sizeof(DWORD) * m_memberCount);
+   m_members = (UINT32 *)realloc(m_members, sizeof(UINT32) * m_memberCount);
    m_members[i] = userId;
 
 	m_flags |= UF_MODIFIED;
@@ -809,7 +809,7 @@ void Group::addUser(DWORD userId)
 // Delete user from group
 //
 
-void Group::deleteUser(DWORD userId)
+void Group::deleteUser(UINT32 userId)
 {
    int i;
 
@@ -817,7 +817,7 @@ void Group::deleteUser(DWORD userId)
       if (m_members[i] == userId)
       {
          m_memberCount--;
-         memmove(&m_members[i], &m_members[i + 1], sizeof(DWORD) * (m_memberCount - i));
+         memmove(&m_members[i], &m_members[i + 1], sizeof(UINT32) * (m_memberCount - i));
       }
 	m_flags |= UF_MODIFIED;
 }
@@ -829,12 +829,12 @@ void Group::deleteUser(DWORD userId)
 
 void Group::fillMessage(CSCPMessage *msg)
 {
-   DWORD varId;
+   UINT32 varId;
 	int i;
 
 	UserDatabaseObject::fillMessage(msg);
 
-   msg->SetVariable(VID_NUM_MEMBERS, (DWORD)m_memberCount);
+   msg->SetVariable(VID_NUM_MEMBERS, (UINT32)m_memberCount);
    for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
       msg->SetVariable(varId, m_members[i]);
 }
@@ -847,7 +847,7 @@ void Group::fillMessage(CSCPMessage *msg)
 void Group::modifyFromMessage(CSCPMessage *msg)
 {
 	int i;
-	DWORD varId, fields;
+	UINT32 varId, fields;
 
 	UserDatabaseObject::modifyFromMessage(msg);
 
@@ -857,7 +857,7 @@ void Group::modifyFromMessage(CSCPMessage *msg)
 		m_memberCount = msg->GetVariableLong(VID_NUM_MEMBERS);
 		if (m_memberCount > 0)
 		{
-			m_members = (DWORD *)realloc(m_members, sizeof(DWORD) * m_memberCount);
+			m_members = (UINT32 *)realloc(m_members, sizeof(UINT32) * m_memberCount);
 			for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
 				m_members[i] = msg->GetVariableLong(varId);
 		}

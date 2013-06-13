@@ -44,9 +44,9 @@ AccessList::~AccessList()
 /**
  * Add element to list
  */
-void AccessList::addElement(DWORD dwUserId, DWORD dwAccessRights)
+void AccessList::addElement(UINT32 dwUserId, UINT32 dwAccessRights)
 {
-   DWORD i;
+   UINT32 i;
 
    lock();
    for(i = 0; i < m_dwNumElements; i++)
@@ -69,9 +69,9 @@ void AccessList::addElement(DWORD dwUserId, DWORD dwAccessRights)
 /**
  * Delete element from list
  */
-bool AccessList::deleteElement(DWORD dwUserId)
+bool AccessList::deleteElement(UINT32 dwUserId)
 {
-   DWORD i;
+   UINT32 i;
    bool bDeleted = false;
 
    lock();
@@ -92,9 +92,9 @@ bool AccessList::deleteElement(DWORD dwUserId)
  * Returns true on success and stores access rights to specific location
  * If user doesn't have explicit rights or via group, returns false
  */
-bool AccessList::getUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
+bool AccessList::getUserRights(UINT32 dwUserId, UINT32 *pdwAccessRights)
 {
-   DWORD i;
+   UINT32 i;
    bool bFound = false;
 
    lock();
@@ -129,9 +129,9 @@ bool AccessList::getUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
 /**
  * Enumerate all elements
  */
-void AccessList::enumerateElements(void (* pHandler)(DWORD, DWORD, void *), void *pArg)
+void AccessList::enumerateElements(void (* pHandler)(UINT32, UINT32, void *), void *pArg)
 {
-   DWORD i;
+   UINT32 i;
 
    lock();
    for(i = 0; i < m_dwNumElements; i++)
@@ -144,7 +144,7 @@ void AccessList::enumerateElements(void (* pHandler)(DWORD, DWORD, void *), void
  */
 void AccessList::fillMessage(CSCPMessage *pMsg)
 {
-   DWORD i, dwId1, dwId2;
+   UINT32 i, dwId1, dwId2;
 
    lock();
    pMsg->SetVariable(VID_ACL_SIZE, m_dwNumElements);

@@ -30,7 +30,7 @@ static QWORD m_networkLostEventId = 0;
 /**
  * Correlate current event to another node down event
  */
-static bool CheckNodeDown(Node *currNode, Event *pEvent, DWORD nodeId, const TCHAR *nodeType)
+static bool CheckNodeDown(Node *currNode, Event *pEvent, UINT32 nodeId, const TCHAR *nodeType)
 {
 	Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
 	if ((node != NULL) && node->isDown())
@@ -46,7 +46,7 @@ static bool CheckNodeDown(Node *currNode, Event *pEvent, DWORD nodeId, const TCH
 /**
  * Correlate current event to agent unreachable event
  */
-static bool CheckAgentDown(Node *currNode, Event *pEvent, DWORD nodeId, const TCHAR *nodeType)
+static bool CheckAgentDown(Node *currNode, Event *pEvent, UINT32 nodeId, const TCHAR *nodeType)
 {
 	Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
 	if ((node != NULL) && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))

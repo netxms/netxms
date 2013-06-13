@@ -112,7 +112,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 			_sntprintf(szQuery, 4096, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,")
 											  _T("event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT 
 											  _T(",%d,%d,%d,%d,%s,") UINT64_FMT _T(",%s)"), pEvent->getId(), pEvent->getCode(), 
-											  (DWORD)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getSeverity(), 
+											  (UINT32)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getSeverity(), 
 											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH - 1),
 											  pEvent->getRootId(), (const TCHAR *)DBPrepareString(hdb, pEvent->getUserTag(), 63));
 			DBQuery(hdb, szQuery);
@@ -130,7 +130,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 				{
 					DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, pEvent->getId());
 					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pEvent->getCode());
-					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (DWORD)pEvent->getTimeStamp());
+					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)pEvent->getTimeStamp());
 					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
 					DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
 					if (_tcslen(pEvent->getMessage()) < MAX_EVENT_MSG_LENGTH)
@@ -205,7 +205,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       CorrelateEvent(pEvent);
 
 		// Pass event to modules
-      for(DWORD i = 0; i < g_dwNumModules; i++)
+      for(UINT32 i = 0; i < g_dwNumModules; i++)
 		{
 			if (g_pModuleList[i].pfEventHandler != NULL)
 				g_pModuleList[i].pfEventHandler(pEvent);

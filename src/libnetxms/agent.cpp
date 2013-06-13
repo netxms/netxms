@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -29,20 +29,18 @@
 //
 
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
-static void (* s_fpSendTrap1)(DWORD, const TCHAR *, const char *, va_list) = NULL;
-static void (* s_fpSendTrap2)(DWORD, const TCHAR *, int, TCHAR **) = NULL;
-static BOOL (* s_fpSendFile)(void *, DWORD, const TCHAR *, long) = NULL;
+static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
+static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
+static BOOL (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
 static BOOL (* s_fpPushData)(const TCHAR *, const TCHAR *) = NULL;
 
-
-//
-// Initialize subagent API
-//
-
+/**
+ * Initialize subagent API
+ */
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-														void (* sendTrap1)(DWORD, const TCHAR *, const char *, va_list),
-														void (* sendTrap2)(DWORD, const TCHAR *, int, TCHAR **),
-														BOOL (* sendFile)(void *, DWORD, const TCHAR *, long),
+														void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
+														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
+														BOOL (* sendFile)(void *, UINT32, const TCHAR *, long),
 														BOOL (* pushData)(const TCHAR *, const TCHAR *))
 {
    s_fpWriteLog = writeLog;
@@ -112,7 +110,7 @@ void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va
 // Send trap from agent to server
 //
 
-void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const TCHAR *eventName, const char *pszFormat, ...)
+void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...)
 {
    va_list args;
 
@@ -124,7 +122,7 @@ void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const TCHAR *eventName, c
    }
 }
 
-void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList)
+void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList)
 {
    if (s_fpSendTrap2 != NULL)
       s_fpSendTrap2(dwEvent, eventName, nCount, ppszArgList);
@@ -260,7 +258,7 @@ BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, W
 // Send file to server
 //
 
-BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset)
+BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
 {
 	if ((s_fpSendFile == NULL) || (session == NULL) || (file == NULL))
 		return FALSE;
@@ -287,7 +285,7 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LO
 	return AgentPushParameterData(parameter, buffer);
 }
 
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, DWORD value)
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, UINT32 value)
 {
 	TCHAR buffer[64];
 

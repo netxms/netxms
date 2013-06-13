@@ -50,7 +50,7 @@ inline void RWLockDestroy(RWLOCK hLock)
    }
 }
 
-inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
+inline BOOL RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
 {
 	BOOL ret = FALSE;
 
@@ -94,7 +94,7 @@ inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
    return ret;
 }
 
-inline BOOL RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
+inline BOOL RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
 {
 	BOOL ret = FALSE;
 
@@ -169,7 +169,7 @@ inline void RWLockDestroy(RWLOCK hLock)
    }
 }
 
-inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
+inline BOOL RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
 {
 	BOOL ret = FALSE;
 
@@ -197,7 +197,7 @@ inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
    return ret;
 }
 
-inline BOOL RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
+inline BOOL RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
 {
 	BOOL ret = FALSE;
 
@@ -244,8 +244,8 @@ struct __rwlock_data
    pthread_cond_t m_condRead;
    pthread_cond_t m_condWrite;
 #endif
-   DWORD m_dwWaitReaders;
-   DWORD m_dwWaitWriters;
+   UINT32 m_dwWaitReaders;
+   UINT32 m_dwWaitWriters;
    int m_iRefCount;  // -1 for write lock, otherwise number of read locks
 };
 
@@ -253,13 +253,13 @@ typedef struct __rwlock_data * RWLOCK;
 
 RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate();
 void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock);
-BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut);
-BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut);
+BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut);
+BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut);
 void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock);
 
 #endif
 
-inline void RWLockPreemptiveWriteLock(RWLOCK hLock, DWORD dwTimeout, DWORD dwSleep)
+inline void RWLockPreemptiveWriteLock(RWLOCK hLock, UINT32 dwTimeout, UINT32 dwSleep)
 {
 	while(!RWLockWriteLock(hLock, dwTimeout))
 		ThreadSleepMs(dwSleep);

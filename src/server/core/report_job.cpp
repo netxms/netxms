@@ -36,7 +36,7 @@
 // Constructor
 //
 
-ReportJob::ReportJob(Report *report, StringMap *parameters, DWORD userId)
+ReportJob::ReportJob(Report *report, StringMap *parameters, UINT32 userId)
 	: ServerJob(_T("EXECUTE_REPORT"), _T("Execute report"), g_dwMgmtNode, userId, false)
 {
 	m_report = report;
@@ -209,7 +209,7 @@ bool ReportJob::run()
 // Build name of data file
 //
 
-TCHAR *ReportJob::buildDataFileName(DWORD jobId, const TCHAR *suffix, TCHAR *buffer, size_t bufferSize)
+TCHAR *ReportJob::buildDataFileName(UINT32 jobId, const TCHAR *suffix, TCHAR *buffer, size_t bufferSize)
 {
 	_sntprintf(buffer, bufferSize, _T("%s") DDIR_REPORTS FS_PATH_SEPARATOR _T("job_%u%s"), g_szDataDir, jobId, (suffix != NULL) ? suffix : _T(""));
 	return buffer;

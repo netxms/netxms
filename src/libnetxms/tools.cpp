@@ -57,10 +57,10 @@
 // Calculate number of bits in netmask (in host byte order)
 //
 
-int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask)
+int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask)
 {
    int bits;
-   DWORD dwTemp;
+   UINT32 dwTemp;
 
    for(bits = 0, dwTemp = dwMask; dwTemp != 0; bits++, dwTemp <<= 1);
    return bits;
@@ -71,7 +71,7 @@ int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask)
 // Convert IP address from binary form (host bytes order) to string
 //
 
-TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer)
+TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer)
 {
    static TCHAR szInternalBuffer[32];
    TCHAR *szBufPtr;
@@ -84,7 +84,7 @@ TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer)
 
 #ifdef UNICODE
 
-char LIBNETXMS_EXPORTABLE *IpToStrA(DWORD dwAddr, char *szBuffer)
+char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer)
 {
    static char szInternalBuffer[32];
    char *szBufPtr;
@@ -164,7 +164,7 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer)
 /**
  * Duplicate memory block
  */
-void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize)
+void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, UINT32 dwSize)
 {
    void *pNewData;
 
@@ -178,7 +178,7 @@ void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize)
 // Swap two memory blocks
 //
 
-void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize)
+void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, UINT32 dwSize)
 {
    void *pTemp;
 
@@ -575,7 +575,7 @@ const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer)
  * Get system error string by call to FormatMessage
  * (Windows only)
  */
-TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, size_t iBufSize)
+TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer, size_t iBufSize)
 {
    TCHAR *msgBuf;
 
@@ -662,7 +662,7 @@ BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName)
  */
 TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 {
-   DWORD i;
+   UINT32 i;
    TCHAR *pCurr;
 
    for(i = 0, pCurr = pStr; i < 6; i++)
@@ -678,9 +678,9 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 /**
  * Convert byte array to text representation (wide character version)
  */
-WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, DWORD dwSize, WCHAR *pStr)
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, UINT32 dwSize, WCHAR *pStr)
 {
-   DWORD i;
+   UINT32 i;
    WCHAR *pCurr;
 
    for(i = 0, pCurr = pStr; i < dwSize; i++)
@@ -695,9 +695,9 @@ WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, DWORD dwSize, WCHAR *pS
 /**
  * Convert byte array to text representation (multibyte character version)
  */
-char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, DWORD dwSize, char *pStr)
+char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pStr)
 {
-   DWORD i;
+   UINT32 i;
    char *pCurr;
 
    for(i = 0, pCurr = pStr; i < dwSize; i++)
@@ -713,9 +713,9 @@ char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, DWORD dwSize, char *pStr
  * Convert string of hexadecimal digits to byte array
  * Returns number of bytes written to destination
  */
-DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize)
+UINT32 LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, UINT32 dwSize)
 {
-   DWORD i;
+   UINT32 i;
    const TCHAR *pCurr;
 
    memset(pData, 0, dwSize);
@@ -898,7 +898,7 @@ retry:
  * Extended recv() - receive data with timeout
  */
 int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
-                                size_t nSize, int nFlags, DWORD dwTimeout)
+                                size_t nSize, int nFlags, UINT32 dwTimeout)
 {
    int iErr;
 #if HAVE_POLL
@@ -909,7 +909,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 #endif
 #ifndef _WIN32
    QWORD qwStartTime;
-   DWORD dwElapsed;
+   UINT32 dwElapsed;
 #endif
 
 	// I've seen on Linux that poll() may hang if fds.fd == -1,
@@ -990,7 +990,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 // Sets socket to non-blocking mode
 //
 
-int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWORD timeout)
+int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout)
 {
 	SetSocketNonBlocking(s);
 
@@ -1001,7 +1001,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 		{
 #ifndef _WIN32
 			QWORD qwStartTime;
-			DWORD dwElapsed;
+			UINT32 dwElapsed;
 #endif
 
 #if HAVE_POLL
@@ -1097,9 +1097,9 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
  * @param pszName host name or IP address
  * @return IP address in network byte order
  */
-DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
+UINT32 LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 {
-   DWORD dwAddr;
+   UINT32 dwAddr;
    struct hostent *hs;
 #ifdef UNICODE
    char szBuffer[256];
@@ -1118,7 +1118,7 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 #endif
       if (hs != NULL)
       {
-         memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
+         memcpy(&dwAddr, hs->h_addr, sizeof(UINT32));
       }
       else
       {
@@ -1131,9 +1131,9 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 
 #ifdef UNICODE
 
-DWORD LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName)
+UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName)
 {
-   DWORD dwAddr;
+   UINT32 dwAddr;
    struct hostent *hs;
    dwAddr = inet_addr(pszName);
    if ((dwAddr == INADDR_NONE) || (dwAddr == INADDR_ANY))
@@ -1141,7 +1141,7 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName)
       hs = gethostbyname(pszName);
       if (hs != NULL)
       {
-         memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
+         memcpy(&dwAddr, hs->h_addr, sizeof(UINT32));
       }
       else
       {
@@ -1516,7 +1516,7 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 /**
  * Load file content into memory
  */
-static BYTE *LoadFileContent(int fd, DWORD *pdwFileSize)
+static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
 {
    int iBufPos, iNumBytes, iBytesRead;
    BYTE *pBuffer = NULL;
@@ -1545,7 +1545,7 @@ static BYTE *LoadFileContent(int fd, DWORD *pdwFileSize)
    return pBuffer;
 }
 
-BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize)
+BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize)
 {
    int fd;
    BYTE *pBuffer = NULL;
@@ -1560,7 +1560,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize
 
 #ifdef UNICODE
 
-BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, DWORD *pdwFileSize)
+BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSize)
 {
    int fd;
    BYTE *pBuffer = NULL;
@@ -1591,7 +1591,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, DWORD *pdwFileSize
 int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...)
 {
    HANDLE hFile;
-   DWORD dwAccess, dwDisp;
+   UINT32 dwAccess, dwDisp;
 
    dwAccess = (nFlags & O_RDONLY) ? GENERIC_READ : 
                  (nFlags & O_WRONLY) ? GENERIC_WRITE : 
@@ -1613,7 +1613,7 @@ int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...)
 
 int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes)
 {
-   DWORD dwBytes;
+   UINT32 dwBytes;
 
    if (ReadFile((HANDLE)hFile, pBuffer, nBytes, &dwBytes, NULL))
       return dwBytes;
@@ -1623,7 +1623,7 @@ int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes)
 
 int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes)
 {
-   DWORD dwBytes;
+   UINT32 dwBytes;
 
    if (WriteFile((HANDLE)hFile, pBuffer, nBytes, &dwBytes, NULL))
       return dwBytes;
@@ -1654,7 +1654,7 @@ typedef struct
 } MEMORY_BLOCK;
 
 static MEMORY_BLOCK *m_pBlockList = NULL;
-static DWORD m_dwNumBlocks = 0;
+static UINT32 m_dwNumBlocks = 0;
 static MUTEX m_mutex;
 static time_t m_nStartTime;
 
@@ -1677,7 +1677,7 @@ static void AddBlock(void *p, char *file, int line, size_t size)
 
 static void DeleteBlock(void *ptr)
 {
-	DWORD i;
+	UINT32 i;
 
 	for(i = 0; i < m_dwNumBlocks; i++)
 		if (m_pBlockList[i].pAddr == ptr)
@@ -1724,7 +1724,7 @@ void nx_free(void *ptr, char *file, int line)
 
 void PrintMemoryBlocks(void)
 {
-	DWORD i;
+	UINT32 i;
 	LONG nBytes;
 
 	MutexLock(m_mutex, INFINITE);
@@ -1869,10 +1869,10 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
       // Assume output is redirected
 #ifdef UNICODE
       char *mbText = MBStringFromWideString(text);
-      WriteFile(out, mbText, (DWORD)strlen(mbText), &mode, NULL);
+      WriteFile(out, mbText, (UINT32)strlen(mbText), &mode, NULL);
       free(mbText);
 #else
-      WriteFile(out, text, (DWORD)strlen(text), &mode, NULL);
+      WriteFile(out, text, (UINT32)strlen(text), &mode, NULL);
 #endif
       return;
    }
@@ -1891,7 +1891,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 			{
 				// write everything up to ESC char
 				DWORD chars;
-				WriteConsole(out, curr, (DWORD)(esc - curr - 1), &chars, NULL);
+				WriteConsole(out, curr, (UINT32)(esc - curr - 1), &chars, NULL);
 
 				esc++;
 
@@ -1922,14 +1922,14 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 			else
 			{
 				DWORD chars;
-				WriteConsole(out, curr, (DWORD)(esc - curr), &chars, NULL);
+				WriteConsole(out, curr, (UINT32)(esc - curr), &chars, NULL);
 			}
 			curr = esc;
 		}
 		else
 		{
 			DWORD chars;
-			WriteConsole(out, curr, (DWORD)_tcslen(curr), &chars, NULL);
+			WriteConsole(out, curr, (UINT32)_tcslen(curr), &chars, NULL);
 			break;
 		}
 	}

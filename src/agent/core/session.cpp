@@ -30,11 +30,11 @@
 /**
  * Externals
  */
-void UnregisterSession(DWORD dwIndex);
+void UnregisterSession(UINT32 dwIndex);
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse);
-DWORD DeployPolicy(CommSession *session, CSCPMessage *request);
-DWORD UninstallPolicy(CommSession *session, CSCPMessage *request);
-DWORD GetPolicyInventory(CommSession *session, CSCPMessage *msg);
+UINT32 DeployPolicy(CommSession *session, CSCPMessage *request);
+UINT32 UninstallPolicy(CommSession *session, CSCPMessage *request);
+UINT32 GetPolicyInventory(CommSession *session, CSCPMessage *msg);
 
 /**
  * Constants
@@ -94,7 +94,7 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
 // Client session class constructor
 //
 
-CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr,
+CommSession::CommSession(SOCKET hSocket, UINT32 dwHostAddr,
                          BOOL bMasterServer, BOOL bControlServer)
 {
    m_pSendQueue = new Queue;
@@ -397,7 +397,7 @@ void CommSession::processingThread()
    CSCPMessage *pMsg;
    TCHAR szBuffer[128];
    CSCPMessage msg;
-   DWORD dwCommand, dwRet;
+   UINT32 dwCommand, dwRet;
 
    while(1)
    {
@@ -647,7 +647,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 void CommSession::getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
-   DWORD dwErrorCode;
+   UINT32 dwErrorCode;
 
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
    dwErrorCode = GetParameterValue(m_dwIndex, szParameter, szValue);
@@ -666,11 +666,11 @@ void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    StringList value;
-   DWORD dwErrorCode = GetListValue(m_dwIndex, szParameter, &value);
+   UINT32 dwErrorCode = GetListValue(m_dwIndex, szParameter, &value);
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
-		pMsg->SetVariable(VID_NUM_STRINGS, (DWORD)value.getSize());
+		pMsg->SetVariable(VID_NUM_STRINGS, (UINT32)value.getSize());
 		for(int i = 0; i < value.getSize(); i++)
 			pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.getValue(i));
    }
@@ -686,7 +686,7 @@ void CommSession::getTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    Table value;
-   DWORD dwErrorCode = GetTableValue(m_dwIndex, szParameter, &value);
+   UINT32 dwErrorCode = GetTableValue(m_dwIndex, szParameter, &value);
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
@@ -701,13 +701,13 @@ void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR szAction[MAX_PARAM_NAME];         //
    StringList args;
-   DWORD i, dwRetCode;
+   UINT32 i, dwRetCode;
 
    if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_bControlServer)
    {
       // Get action name and arguments
       pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
-      DWORD numArgs = pRequest->GetVariableLong(VID_NUM_ARGS);
+      UINT32 numArgs = pRequest->GetVariableLong(VID_NUM_ARGS);
       for(i = 0; i < numArgs; i++)
 			args.addPreallocated(pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i));
 
@@ -835,7 +835,7 @@ static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 	((CommSession *)cbArg)->updateTimeStamp();
 }
 
-bool CommSession::sendFile(DWORD requestId, const TCHAR *file, long offset)
+bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset)
 {
 	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
 }
@@ -845,7 +845,7 @@ bool CommSession::sendFile(DWORD requestId, const TCHAR *file, long offset)
 // Upgrade agent from package in the file store
 //
 
-DWORD CommSession::upgrade(CSCPMessage *pRequest)
+UINT32 CommSession::upgrade(CSCPMessage *pRequest)
 {
    if (m_bMasterServer)
    {
@@ -891,7 +891,7 @@ void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
    {
       BYTE *pConfig;
       int hFile;
-      DWORD dwSize;
+      UINT32 dwSize;
 
       if (pRequest->IsVariableExist(VID_CONFIG_FILE))
       {
@@ -903,7 +903,7 @@ void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
          {
             if (dwSize > 0)
             {
-               for(DWORD i = 0; i < dwSize - 1; i++)
+               for(UINT32 i = 0; i < dwSize - 1; i++)
                   if (pConfig[i] == 0x0D)
                   {
                      dwSize--;
@@ -939,9 +939,9 @@ void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 // Setup proxy connection
 //
 
-DWORD CommSession::setupProxyConnection(CSCPMessage *pRequest)
+UINT32 CommSession::setupProxyConnection(CSCPMessage *pRequest)
 {
-   DWORD dwResult, dwAddr;
+   UINT32 dwResult, dwAddr;
    WORD wPort;
    struct sockaddr_in sa;
    NXCPEncryptionContext *pSavedCtx;

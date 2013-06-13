@@ -96,7 +96,7 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 BOOL ExecSQLBatch(const char *pszFile)
 {
    BYTE *pBatch, *pQuery, *pNext;
-   DWORD dwSize;
+   UINT32 dwSize;
    BOOL bResult = FALSE;
 
 	if (strstr(pszFile, "@dbengine@") != NULL)

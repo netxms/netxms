@@ -104,7 +104,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 // Queue INSERT request for idata_xxx table
 //
 
-void QueueIDataInsert(time_t timestamp, DWORD nodeId, DWORD dciId, const TCHAR *value)
+void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *value)
 {
 	DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)malloc(sizeof(DELAYED_IDATA_INSERT));
 	rq->timestamp = timestamp;

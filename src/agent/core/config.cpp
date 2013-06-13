@@ -62,7 +62,7 @@ static BOOL SaveConfig(TCHAR *pszConfig)
 
 BOOL DownloadConfig(TCHAR *pszServer)
 {
-   DWORD dwAddr;
+   UINT32 dwAddr;
    SOCKET hSocket;
    struct sockaddr_in sa;
    BOOL bRet = FALSE;

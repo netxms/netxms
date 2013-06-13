@@ -42,7 +42,7 @@ static struct
    time_t tLastCheck;
    BOOL bNotResponding;
 } m_threadInfo[MAX_THREADS];
-static DWORD m_dwNumThreads = 0;
+static UINT32 m_dwNumThreads = 0;
 static MUTEX m_mutexWatchdogAccess = INVALID_MUTEX_HANDLE;
 
 
@@ -50,9 +50,9 @@ static MUTEX m_mutexWatchdogAccess = INVALID_MUTEX_HANDLE;
 // Add thread to watch list
 //
 
-DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval)
+UINT32 WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval)
 {
-   DWORD dwId;
+   UINT32 dwId;
 
    MutexLock(m_mutexWatchdogAccess);
    _tcscpy(m_threadInfo[m_dwNumThreads].szName, szName);
@@ -80,7 +80,7 @@ void WatchdogInit()
 // Set thread timestamp
 //
 
-void WatchdogNotify(DWORD dwId)
+void WatchdogNotify(UINT32 dwId)
 {
    if (IsShutdownInProgress())
       return;
@@ -103,7 +103,7 @@ void WatchdogNotify(DWORD dwId)
 
 void WatchdogPrintStatus(CONSOLE_CTX pCtx)
 {
-   DWORD i;
+   UINT32 i;
 
    ConsolePrintf(pCtx, _T("\x1b[1m%-48s Interval Status\x1b[0m\n----------------------------------------------------------------------------\n"), _T("Thread"));
    MutexLock(m_mutexWatchdogAccess);
@@ -121,7 +121,7 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx)
 
 THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 {
-   DWORD i;
+   UINT32 i;
    time_t currTime;
 
    while(!IsShutdownInProgress())

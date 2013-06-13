@@ -109,7 +109,7 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 /**
  * Validate configuration before import
  */
-bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorTextLen)
+bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen)
 {
    int i;
 	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL;
@@ -128,7 +128,7 @@ bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorText
 			ConfigEntry *event = events->getEntry(i);
 			DbgPrintf(6, _T("ValidateConfig(): validating event %s"), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
 		
-			DWORD code = event->getSubEntryValueUInt(_T("code"));
+			UINT32 code = event->getSubEntryValueUInt(_T("code"));
 			if ((code >= FIRST_USER_EVENT_ID) || (code == 0))
 			{
 				ConfigEntry *e = event->findEntry(_T("name"));
@@ -211,7 +211,7 @@ stop_processing:
 /**
  * Import event
  */
-static DWORD ImportEvent(ConfigEntry *event)
+static UINT32 ImportEvent(ConfigEntry *event)
 {
 	const TCHAR *name = event->getSubEntryValue(_T("name"));
 	if (name == NULL)
@@ -221,7 +221,7 @@ static DWORD ImportEvent(ConfigEntry *event)
 	if (hdb == NULL)
 		return RCC_DB_FAILURE;
 
-	DWORD code = event->getSubEntryValueUInt(_T("code"), 0, 0);
+	UINT32 code = event->getSubEntryValueUInt(_T("code"), 0, 0);
 	if ((code == 0) || (code >= FIRST_USER_EVENT_ID))
 		code = CreateUniqueId(IDG_EVENT);
 
@@ -244,7 +244,7 @@ static DWORD ImportEvent(ConfigEntry *event)
 					  event->getSubEntryValueInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
 					  (const TCHAR *)DBPrepareString(hdb, descr));
    }
-	DWORD rcc = DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE;
+	UINT32 rcc = DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE;
 
 	DBConnectionPoolReleaseConnection(hdb);
 	return rcc;
@@ -253,7 +253,7 @@ static DWORD ImportEvent(ConfigEntry *event)
 /**
  * Import SNMP trap configuration
  */
-static DWORD ImportTrap(ConfigEntry *trap)
+static UINT32 ImportTrap(ConfigEntry *trap)
 {
 	NXC_TRAP_CFG_ENTRY tc;
 	EVENT_TEMPLATE *event;
@@ -267,7 +267,7 @@ static DWORD ImportTrap(ConfigEntry *trap)
 	nx_strncpy(tc.szDescription, trap->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
 	nx_strncpy(tc.szUserTag, trap->getSubEntryValue(_T("userTag"), 0, _T("")), MAX_USERTAG_LENGTH);
 
-	DWORD oid[256];
+	UINT32 oid[256];
 	tc.dwOidLen = SNMPParseOID(trap->getSubEntryValue(_T("oid"), 0, _T("")), oid, 256);
 	tc.pdwObjectId = oid;
 	if (tc.dwOidLen == 0)
@@ -290,14 +290,14 @@ static DWORD ImportTrap(ConfigEntry *trap)
 				{
 					// Positional parameter
 					tc.pMaps[i].pdwObjectId = NULL;
-					tc.pMaps[i].dwOidLen = (DWORD)position | 0x80000000;
+					tc.pMaps[i].dwOidLen = (UINT32)position | 0x80000000;
 				}
 				else
 				{
 					// OID parameter
-					DWORD temp[256];
+					UINT32 temp[256];
 					tc.pMaps[i].dwOidLen = SNMPParseOID(parameter->getSubEntryValue(_T("oid"), 0, _T("")), temp, 256);
-					tc.pMaps[i].pdwObjectId = (DWORD *)nx_memdup(temp, sizeof(DWORD) * tc.pMaps[i].dwOidLen);
+					tc.pMaps[i].pdwObjectId = (UINT32 *)nx_memdup(temp, sizeof(UINT32) * tc.pMaps[i].dwOidLen);
 				}
 				nx_strncpy(tc.pMaps[i].szDescription, parameter->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
 				tc.pMaps[i].dwFlags = parameter->getSubEntryValueUInt(_T("flags"), 0, 0);
@@ -306,10 +306,10 @@ static DWORD ImportTrap(ConfigEntry *trap)
 		delete parameters;
 	}
 
-	DWORD rcc = CreateNewTrap(&tc);
+	UINT32 rcc = CreateNewTrap(&tc);
 
 	// Cleanup
-	for(DWORD i = 0; i < tc.dwNumMaps; i++)
+	for(UINT32 i = 0; i < tc.dwNumMaps; i++)
 		safe_free(tc.pMaps[i].pdwObjectId);
 
 	return rcc;
@@ -318,11 +318,11 @@ static DWORD ImportTrap(ConfigEntry *trap)
 /**
  * Import configuration
  */
-DWORD ImportConfig(Config *config, DWORD flags)
+UINT32 ImportConfig(Config *config, UINT32 flags)
 {
 	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
-	DWORD rcc = RCC_SUCCESS;
+	UINT32 rcc = RCC_SUCCESS;
 	int i;
 
    DbgPrintf(4, _T("ImportConfig() called, flags=0x%04X"), flags);

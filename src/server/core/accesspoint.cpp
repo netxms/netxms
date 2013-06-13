@@ -62,7 +62,7 @@ AccessPoint::~AccessPoint()
 /**
  * Create object from database data
  */
-BOOL AccessPoint::CreateFromDB(DWORD dwId)
+BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 {
    m_dwId = dwId;
 
@@ -82,7 +82,7 @@ BOOL AccessPoint::CreateFromDB(DWORD dwId)
 	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
 	m_model = DBGetField(hResult, 0, 2, NULL, 0);
 	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
-	DWORD nodeId = DBGetFieldULong(hResult, 0, 4);
+	UINT32 nodeId = DBGetFieldULong(hResult, 0, 4);
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -201,16 +201,16 @@ void AccessPoint::CreateMessage(CSCPMessage *msg)
    if (m_radioInterfaces != NULL)
    {
       msg->SetVariable(VID_RADIO_COUNT, (WORD)m_radioInterfaces->size());
-      DWORD varId = VID_RADIO_LIST_BASE;
+      UINT32 varId = VID_RADIO_LIST_BASE;
       for(int i = 0; i < m_radioInterfaces->size(); i++)
       {
          RadioInterfaceInfo *rif = m_radioInterfaces->get(i);
-         msg->SetVariable(varId++, (DWORD)rif->index);
+         msg->SetVariable(varId++, (UINT32)rif->index);
          msg->SetVariable(varId++, rif->name);
          msg->SetVariable(varId++, rif->macAddr, MAC_ADDR_LENGTH);
          msg->SetVariable(varId++, rif->channel);
-         msg->SetVariable(varId++, (DWORD)rif->powerDBm);
-         msg->SetVariable(varId++, (DWORD)rif->powerMW);
+         msg->SetVariable(varId++, (UINT32)rif->powerDBm);
+         msg->SetVariable(varId++, (UINT32)rif->powerMW);
          varId += 4;
       }
    }
@@ -223,7 +223,7 @@ void AccessPoint::CreateMessage(CSCPMessage *msg)
 /**
  * Modify object from message
  */
-DWORD AccessPoint::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AccessPoint::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -234,7 +234,7 @@ DWORD AccessPoint::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 /**
  * Attach access point to node
  */
-void AccessPoint::attachToNode(DWORD nodeId)
+void AccessPoint::attachToNode(UINT32 nodeId)
 {
 	if (m_nodeId == nodeId)
 		return;

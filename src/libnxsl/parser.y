@@ -26,10 +26,10 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 %union
 {
-	LONG valInt32;
-	DWORD valUInt32;
+	INT32 valInt32;
+	UINT32 valUInt32;
 	INT64 valInt64;
-	QWORD valUInt64;
+	UINT64 valUInt64;
 	char *valStr;
 	double valReal;
 	NXSL_Value *pConstant;
@@ -552,7 +552,7 @@ BuiltinStatement:
 }
 |	T_CONTINUE ';'
 {
-	DWORD dwAddr = pCompiler->peekAddr();
+	UINT32 dwAddr = pCompiler->peekAddr();
 	if (dwAddr != INVALID_ADDRESS)
 	{
 		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, dwAddr));
@@ -649,7 +649,7 @@ ForStatement:
 	Expression ')'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (int)1));
-	DWORD addrPart3 = pCompiler->popAddr();
+	UINT32 addrPart3 = pCompiler->popAddr();
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr()));
 	pCompiler->pushAddr(addrPart3);
 	pCompiler->newBreakLevel();

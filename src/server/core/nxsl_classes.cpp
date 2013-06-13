@@ -460,7 +460,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("parameters")))
    {
 		NXSL_Array *array = new NXSL_Array;
-		DWORD i;
+		UINT32 i;
 
 		for(i = 0; i < event->getParametersCount(); i++)
 			array->set((int)(i + 1), new NXSL_Value(event->getParameter(i)));
@@ -580,7 +580,7 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	t = (SNMP_Variable *)object->getData();
 	if (!_tcscmp(attr, _T("type")))
 	{
-		value = new NXSL_Value((DWORD)t->GetType());
+		value = new NXSL_Value((UINT32)t->GetType());
 	}
 	else if (!_tcscmp(attr, _T("name")))
 	{

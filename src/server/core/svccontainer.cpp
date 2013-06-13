@@ -63,7 +63,7 @@ void ServiceContainer::initServiceContainer()
 /**
  * Create object from database data
  */
-BOOL ServiceContainer::CreateFromDB(DWORD id)
+BOOL ServiceContainer::CreateFromDB(UINT32 id)
 {
 	if (!Container::CreateFromDB(id))
 		return FALSE;
@@ -102,7 +102,7 @@ void ServiceContainer::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-DWORD ServiceContainer::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 ServiceContainer::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -185,8 +185,8 @@ BOOL ServiceContainer::addHistoryRecord()
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ServiceContainer::logRecordId);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DWORD(time(NULL)));
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, DWORD(m_iStatus));
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, UINT32(time(NULL)));
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, UINT32(m_iStatus));
 		if (!DBExecute(hStmt))
 		{
 			DBFreeStatement(hStmt);
@@ -235,7 +235,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (DWORD)beginTime);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (UINT32)beginTime);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult == NULL)
 		{

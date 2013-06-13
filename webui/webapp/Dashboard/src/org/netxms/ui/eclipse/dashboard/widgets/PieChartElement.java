@@ -33,8 +33,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
  */
 public class PieChartElement extends ComparisonChartElement
 {
-	private static final long serialVersionUID = 1L;
-
 	private PieChartConfig config;
 
 	/**

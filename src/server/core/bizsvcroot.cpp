@@ -52,7 +52,7 @@ BusinessServiceRoot::~BusinessServiceRoot()
 BOOL BusinessServiceRoot::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
-   DWORD i;
+   UINT32 i;
 
    LockData();
 
@@ -98,7 +98,7 @@ void BusinessServiceRoot::LoadFromDB()
 
 void BusinessServiceRoot::LinkChildObjects()
 {
-   DWORD i, dwNumChilds, dwObjectId;
+   UINT32 i, dwNumChilds, dwObjectId;
    NetObj *pObject;
    TCHAR szQuery[256];
    DB_RESULT hResult;

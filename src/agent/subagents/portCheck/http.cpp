@@ -35,13 +35,13 @@ LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		nPort = 80;
 	}
 
-	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
+	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout));
 	return nRet;
 }
 
-int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
-		char *szHost, char *szMatch, DWORD dwTimeout)
+int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
+		char *szHost, char *szMatch, UINT32 dwTimeout)
 {
 	int nBytes, nRet = 0;
 	SOCKET nSd;

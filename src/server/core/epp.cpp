@@ -25,7 +25,7 @@
 /**
  * Default event policy rule constructor
  */
-EPRule::EPRule(DWORD dwId)
+EPRule::EPRule(UINT32 dwId)
 {
    m_dwId = dwId;
    m_dwFlags = 0;
@@ -90,7 +90,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
  */
 EPRule::EPRule(CSCPMessage *pMsg)
 {
-	DWORD i, id, count;
+	UINT32 i, id, count;
 	TCHAR *name, *value;
 	
    m_dwFlags = pMsg->GetVariableLong(VID_FLAGS);
@@ -98,15 +98,15 @@ EPRule::EPRule(CSCPMessage *pMsg)
    m_pszComment = pMsg->GetVariableStr(VID_COMMENTS);
 
    m_dwNumActions = pMsg->GetVariableLong(VID_NUM_ACTIONS);
-   m_pdwActionList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumActions);
+   m_pdwActionList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumActions);
    pMsg->GetVariableInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
 
    m_dwNumEvents = pMsg->GetVariableLong(VID_NUM_EVENTS);
-   m_pdwEventList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumEvents);
+   m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumEvents);
    pMsg->GetVariableInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
 
    m_dwNumSources = pMsg->GetVariableLong(VID_NUM_SOURCES);
-   m_pdwSourceList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumSources);
+   m_pdwSourceList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumSources);
    pMsg->GetVariableInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
 
    pMsg->GetVariableStr(VID_ALARM_KEY, m_szAlarmKey, MAX_DB_STRING);
@@ -163,9 +163,9 @@ EPRule::~EPRule()
 /**
  * Check if source object's id match to the rule
  */
-bool EPRule::matchSource(DWORD dwObjectId)
+bool EPRule::matchSource(UINT32 dwObjectId)
 {
-   DWORD i;
+   UINT32 i;
    NetObj *pObject;
    bool bMatch = FALSE;
 
@@ -204,9 +204,9 @@ bool EPRule::matchSource(DWORD dwObjectId)
 /**
  * Check if event's id match to the rule
  */
-bool EPRule::matchEvent(DWORD dwEventCode)
+bool EPRule::matchEvent(UINT32 dwEventCode)
 {
-   DWORD i;
+   UINT32 i;
    bool bMatch = false;
 
    if (m_dwNumEvents == 0)   // No sources in list means "any"
@@ -235,9 +235,9 @@ bool EPRule::matchEvent(DWORD dwEventCode)
 /**
  * Check if event's severity match to the rule
  */
-bool EPRule::matchSeverity(DWORD dwSeverity)
+bool EPRule::matchSeverity(UINT32 dwSeverity)
 {
-   static DWORD dwSeverityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_WARNING,
+   static UINT32 dwSeverityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_WARNING,
                                      RF_SEVERITY_MINOR, RF_SEVERITY_MAJOR,
                                      RF_SEVERITY_CRITICAL };
 	return (dwSeverityFlag[dwSeverity] & m_dwFlags) ? true : false;
@@ -252,7 +252,7 @@ bool EPRule::matchScript(Event *pEvent)
    NXSL_Value **ppValueList, *pValue;
    NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    bool bRet = true;
-   DWORD i;
+   UINT32 i;
 	NetObj *pObject;
 
    if (m_pScript == NULL)
@@ -320,7 +320,7 @@ bool EPRule::matchScript(Event *pEvent)
 bool EPRule::processEvent(Event *pEvent)
 {
    bool bStopProcessing = false;
-   DWORD i;
+   UINT32 i;
    TCHAR *pszText;
 
    // Check disable flag
@@ -407,7 +407,7 @@ bool EPRule::loadFromDB()
    DB_RESULT hResult;
    TCHAR szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
    bool bSuccess = true;
-   DWORD i, count;
+   UINT32 i, count;
    
    // Load rule's sources
    _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d"), m_dwId);
@@ -415,7 +415,7 @@ bool EPRule::loadFromDB()
    if (hResult != NULL)
    {
       m_dwNumSources = DBGetNumRows(hResult);
-      m_pdwSourceList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumSources);
+      m_pdwSourceList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumSources);
       for(i = 0; i < m_dwNumSources; i++)
          m_pdwSourceList[i] = DBGetFieldULong(hResult, i, 0);
       DBFreeResult(hResult);
@@ -431,7 +431,7 @@ bool EPRule::loadFromDB()
    if (hResult != NULL)
    {
       m_dwNumEvents = DBGetNumRows(hResult);
-      m_pdwEventList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumEvents);
+      m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumEvents);
       for(i = 0; i < m_dwNumEvents; i++)
          m_pdwEventList[i] = DBGetFieldULong(hResult, i, 0);
       DBFreeResult(hResult);
@@ -447,7 +447,7 @@ bool EPRule::loadFromDB()
    if (hResult != NULL)
    {
       m_dwNumActions = DBGetNumRows(hResult);
-      m_pdwActionList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumActions);
+      m_pdwActionList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumActions);
       for(i = 0; i < m_dwNumActions; i++)
          m_pdwActionList[i] = DBGetFieldULong(hResult, i, 0);
       DBFreeResult(hResult);
@@ -484,7 +484,7 @@ bool EPRule::loadFromDB()
  */
 void EPRule::saveToDB(DB_HANDLE hdb)
 {
-	DWORD len = (DWORD)(_tcslen(CHECK_NULL(m_pszComment)) + _tcslen(CHECK_NULL(m_pszScript)) + 4096);
+	UINT32 len = (UINT32)(_tcslen(CHECK_NULL(m_pszComment)) + _tcslen(CHECK_NULL(m_pszScript)) + 4096);
    TCHAR *pszQuery = (TCHAR *)malloc(len * sizeof(TCHAR));
 
    // General attributes
@@ -500,7 +500,7 @@ void EPRule::saveToDB(DB_HANDLE hdb)
    DBQuery(hdb, pszQuery);
 
    // Actions
-	DWORD i;
+	UINT32 i;
    for(i = 0; i < m_dwNumActions; i++)
    {
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"),
@@ -542,7 +542,7 @@ void EPRule::saveToDB(DB_HANDLE hdb)
  */
 void EPRule::createMessage(CSCPMessage *pMsg)
 {
-	DWORD i, id;
+	UINT32 i, id;
 
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_RULE_ID, m_dwId);
@@ -572,9 +572,9 @@ void EPRule::createMessage(CSCPMessage *pMsg)
 /**
  * Check if given action is used within rule
  */
-bool EPRule::isActionInUse(DWORD dwActionId)
+bool EPRule::isActionInUse(UINT32 dwActionId)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumActions; i++)
       if (m_pdwActionList[i] == dwActionId)
@@ -606,7 +606,7 @@ EventPolicy::~EventPolicy()
  */
 void EventPolicy::clear()
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumRules; i++)
       delete m_ppRuleList[i];
@@ -628,7 +628,7 @@ bool EventPolicy::loadFromDB()
                                  _T("FROM event_policy ORDER BY rule_id"));
    if (hResult != NULL)
    {
-      DWORD i;
+      UINT32 i;
 
       bSuccess = true;
       m_dwNumRules = DBGetNumRows(hResult);
@@ -649,7 +649,7 @@ bool EventPolicy::loadFromDB()
  */
 void EventPolicy::saveToDB()
 {
-   DWORD i;
+   UINT32 i;
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -672,7 +672,7 @@ void EventPolicy::saveToDB()
  */
 void EventPolicy::processEvent(Event *pEvent)
 {
-   DWORD i;
+   UINT32 i;
 
 	DbgPrintf(7, _T("EPP: processing event ") UINT64_FMT, pEvent->getId());
    readLock();
@@ -688,9 +688,9 @@ void EventPolicy::processEvent(Event *pEvent)
 /**
  * Send event policy to client
  */
-void EventPolicy::sendToClient(ClientSession *pSession, DWORD dwRqId)
+void EventPolicy::sendToClient(ClientSession *pSession, UINT32 dwRqId)
 {
-   DWORD i;
+   UINT32 i;
    CSCPMessage msg;
 
    readLock();
@@ -708,9 +708,9 @@ void EventPolicy::sendToClient(ClientSession *pSession, DWORD dwRqId)
 /**
  * Replace policy with new one
  */
-void EventPolicy::replacePolicy(DWORD dwNumRules, EPRule **ppRuleList)
+void EventPolicy::replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList)
 {
-   DWORD i;
+   UINT32 i;
 
    writeLock();
 
@@ -729,10 +729,10 @@ void EventPolicy::replacePolicy(DWORD dwNumRules, EPRule **ppRuleList)
 /**
  * Check if given action is used in policy
  */
-bool EventPolicy::isActionInUse(DWORD dwActionId)
+bool EventPolicy::isActionInUse(UINT32 dwActionId)
 {
    bool bResult = false;
-   DWORD i;
+   UINT32 i;
 
    readLock();
 

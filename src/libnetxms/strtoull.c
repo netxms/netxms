@@ -47,10 +47,10 @@
  * alphabets and digits are each contiguous.
  */
 
-QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base)
+UINT64 LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base)
 {
 	const unsigned char *s;
-	QWORD acc, cutoff;
+	UINT64 acc, cutoff;
    int c;
 	int neg, any, cutlim;
 
@@ -78,8 +78,8 @@ QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base)
 	if (base == 0)
 		base = c == '0' ? 8 : 10;
 
-	cutoff = ULLONG_MAX / (QWORD)base;
-	cutlim = (int)(ULLONG_MAX % (QWORD)base);
+	cutoff = ULLONG_MAX / (UINT64)base;
+	cutlim = (int)(ULLONG_MAX % (UINT64)base);
 	for (acc = 0, any = 0;; c = *s++) {
 		if (isdigit(c))
 			c -= '0';
@@ -99,7 +99,7 @@ QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base)
 #endif
 		} else {
 			any = 1;
-			acc *= (QWORD)base;
+			acc *= (UINT64)base;
 			acc += c;
 		}
 	}

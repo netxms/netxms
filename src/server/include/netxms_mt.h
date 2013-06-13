@@ -53,11 +53,11 @@ class NXCORE_EXPORTABLE MappingTable
 private:
 	LONG m_id;
 	TCHAR *m_name;
-	DWORD m_flags;
+	UINT32 m_flags;
 	TCHAR *m_description;
 	StringObjectMap<MappingTableElement> *m_data;
 
-	MappingTable(LONG id, TCHAR *name, DWORD flags, TCHAR *description);
+	MappingTable(LONG id, TCHAR *name, UINT32 flags, TCHAR *description);
 
 public:
 	~MappingTable();
@@ -75,16 +75,16 @@ public:
 	LONG getId() { return m_id; }
 	const TCHAR *getName() { return CHECK_NULL(m_name); }
 	const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
-	DWORD getFlags() { return m_flags; }
+	UINT32 getFlags() { return m_flags; }
 };
 
 /**
  * Mapping tables API
  */
 void InitMappingTables();
-DWORD UpdateMappingTable(CSCPMessage *msg, LONG *newId);
-DWORD DeleteMappingTable(LONG id);
-DWORD GetMappingTable(LONG id, CSCPMessage *msg);
-DWORD ListMappingTables(CSCPMessage *msg);
+UINT32 UpdateMappingTable(CSCPMessage *msg, LONG *newId);
+UINT32 DeleteMappingTable(LONG id);
+UINT32 GetMappingTable(LONG id, CSCPMessage *msg);
+UINT32 ListMappingTables(CSCPMessage *msg);
 
 #endif

@@ -41,7 +41,7 @@ ComponentTree::~ComponentTree()
 /**
  * Fill NXCP message with tree data
  */
-void ComponentTree::fillMessage(CSCPMessage *msg, DWORD baseId)
+void ComponentTree::fillMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	if (m_root != NULL)
 		m_root->fillMessage(msg, baseId);
@@ -50,7 +50,7 @@ void ComponentTree::fillMessage(CSCPMessage *msg, DWORD baseId)
 /**
  * Constructor
  */
-Component::Component(DWORD index, const TCHAR *name) : m_childs(0, 16, true)
+Component::Component(UINT32 index, const TCHAR *name) : m_childs(0, 16, true)
 {
 	m_index = index;
 	m_class = 2; // unknown
@@ -80,20 +80,20 @@ Component::~Component()
 /**
  * Update component from SNMP
  */
-DWORD Component::updateFromSnmp(SNMP_Transport *snmp)
+UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 {
-	DWORD oid[16] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 0, 0 };
-	DWORD rc;
+	UINT32 oid[16] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 0, 0 };
+	UINT32 rc;
 	TCHAR buffer[256];
 
 	oid[12] = m_index;
 
 	oid[11] = 5;	// entPhysicalClass
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_class, sizeof(DWORD), 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_class, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
 	oid[11] = 4;	// entPhysicalContainedIn
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_parentIndex, sizeof(DWORD), 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_parentIndex, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
 	oid[11] = 7;	// entPhysicalDescr
@@ -153,7 +153,7 @@ void Component::print(CONSOLE_CTX console, int level)
 /**
  * Fill NXCP message
  */
-DWORD Component::fillMessage(CSCPMessage *msg, DWORD baseId)
+UINT32 Component::fillMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	msg->SetVariable(baseId, m_index);
 	msg->SetVariable(baseId + 1, m_parentIndex);
@@ -165,9 +165,9 @@ DWORD Component::fillMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(baseId + 7, m_serial);
 	msg->SetVariable(baseId + 8, m_vendor);
 	msg->SetVariable(baseId + 9, m_firmware);
-	msg->SetVariable(baseId + 10, (DWORD)m_childs.size());
+	msg->SetVariable(baseId + 10, (UINT32)m_childs.size());
 
-	DWORD varId = baseId + 11;
+	UINT32 varId = baseId + 11;
 	for(int i = 0; i < m_childs.size(); i++)
 		varId = m_childs.get(i)->fillMessage(msg, varId);
 
@@ -177,11 +177,11 @@ DWORD Component::fillMessage(CSCPMessage *msg, DWORD baseId)
 /**
  * Physical entity tree walk callback
  */
-static DWORD EntityWalker(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 EntityWalker(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	TCHAR buffer[256];
 	Component *element = new Component(var->GetName()->getValue()[12], var->GetValueAsString(buffer, 256));
-	DWORD rc = element->updateFromSnmp(transport);
+	UINT32 rc = element->updateFromSnmp(transport);
 	if (rc != SNMP_ERR_SUCCESS)
 	{
 		delete element;

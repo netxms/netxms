@@ -385,7 +385,7 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 	char digest[16];
 	int vendorpec;
 	int len;
-	DWORD lvalue;
+	UINT32 lvalue;
 
 	total_length = AUTH_HDR_LEN;
 
@@ -501,7 +501,7 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 			case PW_TYPE_INTEGER:
 			case PW_TYPE_DATE:
 			case PW_TYPE_IPADDR:
-				len = sizeof(DWORD) + (vp->flags.has_tag && vp->type != PW_TYPE_INTEGER);
+				len = sizeof(UINT32) + (vp->flags.has_tag && vp->type != PW_TYPE_INTEGER);
 #ifdef ATTRIB_NMC
 				if (vendorpec != VENDORPEC_USR)
 #endif
@@ -524,8 +524,8 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 					}
 				}
 				lvalue = htonl(lvalue);
-				memcpy(ptr, &lvalue, sizeof(DWORD));
-				ptr += sizeof(DWORD);
+				memcpy(ptr, &lvalue, sizeof(UINT32));
+				ptr += sizeof(UINT32);
 				total_length += len + 2;
 				break;
 
@@ -577,7 +577,7 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 // Receive result from server
 //
 
-static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE *vector, char *secretkey)
+static int result_recv(UINT32 host, WORD udp_port, char *buffer, int length, BYTE *vector, char *secretkey)
 {
 	AUTH_HDR *auth;
 	int totallen, secretlen;
@@ -621,7 +621,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
-	DWORD server_ip, local_ip = 0;
+	UINT32 server_ip, local_ip = 0;
 	struct sockaddr saremote;
 	struct sockaddr_in *sin;
 	struct timeval		tv;

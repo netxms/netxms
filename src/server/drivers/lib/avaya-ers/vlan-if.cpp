@@ -31,14 +31,14 @@
 struct VLAN_INFO
 {
    TCHAR szName[MAX_OBJECT_NAME];
-   DWORD dwVlanId;
-   DWORD dwIfIndex;
+   UINT32 dwVlanId;
+   UINT32 dwIfIndex;
    BYTE bMacAddr[MAC_ADDR_LENGTH];
 };
 
 struct VLAN_LIST
 {
-   DWORD dwNumVlans;
+   UINT32 dwNumVlans;
    VLAN_INFO *pList;
 };
 
@@ -46,9 +46,9 @@ struct VLAN_LIST
 /**
  * Handler for VLAN enumeration on Avaya ERS
  */
-static DWORD HandlerVlanIfList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerVlanIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   DWORD dwIndex, oidName[MAX_OID_LEN], dwNameLen, dwResult;
+   UINT32 dwIndex, oidName[MAX_OID_LEN], dwNameLen, dwResult;
    VLAN_LIST *pVlanList = (VLAN_LIST *)pArg;
    BYTE szBuffer[256];
 
@@ -61,7 +61,7 @@ static DWORD HandlerVlanIfList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transp
    pVlanList->pList[dwIndex].dwVlanId = pVar->GetValueAsUInt();
 
    // Get VLAN name
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
+   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
    oidName[dwNameLen - 2] = 2;
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, 
                       pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME, 0);
@@ -71,7 +71,7 @@ static DWORD HandlerVlanIfList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transp
    // Get VLAN interface index
    oidName[dwNameLen - 2] = 6;
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, 
-                      &pVlanList->pList[dwIndex].dwIfIndex, sizeof(DWORD), 0);
+                      &pVlanList->pList[dwIndex].dwIfIndex, sizeof(UINT32), 0);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
@@ -88,11 +88,11 @@ static DWORD HandlerVlanIfList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transp
 /**
  * Handler for VLAN enumeration
  */
-static DWORD HandlerRapidCityIfList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerRapidCityIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    InterfaceList *pIfList = (InterfaceList *)pArg;
    VLAN_LIST *pVlanList = (VLAN_LIST *)pIfList->getData();
-   DWORD oidName[MAX_OID_LEN], dwVlanIndex, dwIfIndex, dwNameLen, dwResult;
+   UINT32 oidName[MAX_OID_LEN], dwVlanIndex, dwIfIndex, dwNameLen, dwResult;
 
    dwIfIndex = pVar->GetValueAsUInt();
    for(dwVlanIndex = 0; dwVlanIndex < pVlanList->dwNumVlans; dwVlanIndex++)
@@ -113,16 +113,16 @@ static DWORD HandlerRapidCityIfList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_T
       dwNameLen = pVar->GetName()->getLength();
 
       // Get IP address
-      memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
+      memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
       oidName[dwNameLen - 6] = 2;
-      dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &iface.dwIpAddr, sizeof(DWORD), 0);
+      dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &iface.dwIpAddr, sizeof(UINT32), 0);
 
       if (dwResult == SNMP_ERR_SUCCESS)
       {
          // Get netmask
          oidName[dwNameLen - 6] = 3;
          dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
-                            &iface.dwIpNetMask, sizeof(DWORD), 0);
+                            &iface.dwIpNetMask, sizeof(UINT32), 0);
       }
 
 		pIfList->add(&iface);

@@ -62,7 +62,7 @@ BusinessService::~BusinessService()
 // Create object from database data
 //
 
-BOOL BusinessService::CreateFromDB(DWORD id)
+BOOL BusinessService::CreateFromDB(UINT32 id)
 {
 	if (!ServiceContainer::CreateFromDB(id))
 		return FALSE;
@@ -173,7 +173,7 @@ void BusinessService::CreateMessage(CSCPMessage *pMsg)
 // Modify object from message
 //
 
-DWORD BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -206,14 +206,14 @@ void BusinessService::lockForPolling()
 // A callback for poller threads
 //
 
-void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
+void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 {
 	DbgPrintf(5, _T("Started polling of business service %s [%d]"), m_szName, (int)m_dwId);
 	m_lastPollTime = time(NULL);
 
 	// Loop through the kids and execute their either scripts or thresholds
    LockChildList(FALSE);
-	for (DWORD i = 0; i < m_dwChildCount; i++)
+	for (UINT32 i = 0; i < m_dwChildCount; i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
 			((SlmCheck *)m_pChildList[i])->execute();
@@ -236,7 +236,7 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates)
 {
 	LockChildList(FALSE);
-	for(DWORD i = 0; i < m_dwChildCount; i++)
+	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
 		if ((m_pChildList[i]->Type() == OBJECT_SLMCHECK) &&
           ((SlmCheck *)m_pChildList[i])->isTemplate())
@@ -248,7 +248,7 @@ void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArr
 	UnlockChildList();
 
 	LockParentList(FALSE);
-	for(DWORD i = 0; i < m_dwParentCount; i++)
+	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
 		if (m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICE)
 		{

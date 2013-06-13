@@ -25,8 +25,8 @@
 /**
  * Static data
  */
-static DWORD m_dwRecordId = 1;
-static DWORD m_auditServerAddr = 0;
+static UINT32 m_dwRecordId = 1;
+static UINT32 m_auditServerAddr = 0;
 static WORD m_auditServerPort;
 static int m_auditFacility;
 static int m_auditSeverity;
@@ -137,8 +137,8 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 /**
  * Write audit record
  */
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD userId,
-                                     const TCHAR *workstation, DWORD objectId,
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
+                                     const TCHAR *workstation, UINT32 objectId,
                                      const TCHAR *format, ...)
 {
 	String text, query;

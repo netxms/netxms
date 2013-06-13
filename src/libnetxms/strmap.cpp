@@ -28,7 +28,7 @@
  */
 StringMap::StringMap(const StringMap &src) : StringMapBase(true)
 {
-	DWORD i;
+	UINT32 i;
 
 	m_size = src.m_size;
 	m_objectOwner = src.m_objectOwner;
@@ -54,7 +54,7 @@ StringMap::~StringMap()
  */
 StringMap& StringMap::operator =(const StringMap &src)
 {
-	DWORD i;
+	UINT32 i;
 
 	clear();
 	m_size = src.m_size;
@@ -69,9 +69,9 @@ StringMap& StringMap::operator =(const StringMap &src)
 }
 
 /**
- * Set value from DWORD
+ * Set value from UINT32
  */
-void StringMap::set(const TCHAR *key, DWORD value)
+void StringMap::set(const TCHAR *key, UINT32 value)
 {
 	TCHAR buffer[32];
 
@@ -80,9 +80,9 @@ void StringMap::set(const TCHAR *key, DWORD value)
 }
 
 /**
- * Get value by key as DWORD
+ * Get value by key as UINT32
  */
-DWORD StringMap::getULong(const TCHAR *key, DWORD defaultValue)
+UINT32 StringMap::getULong(const TCHAR *key, UINT32 defaultValue)
 {
 	const TCHAR *value = get(key);
 	if (value == NULL)

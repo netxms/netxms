@@ -38,7 +38,7 @@ static RWLOCK m_rwlockSessionListAccess;
  */
 static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
 {
-   DWORD i;
+   UINT32 i;
 
    RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_DEVICE_SESSIONS; i++)
@@ -58,7 +58,7 @@ static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
 /**
  * Unregister session
  */
-void UnregisterMobileDeviceSession(DWORD dwIndex)
+void UnregisterMobileDeviceSession(UINT32 dwIndex)
 {
    RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
    m_pSessionList[dwIndex] = NULL;

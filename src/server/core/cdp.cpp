@@ -25,13 +25,13 @@
 /**
  * Topology table walker's callback for CDP topology table
  */
-static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 CDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
 	SNMP_ObjectId *oid = var->GetName();
 
-	DWORD remoteIp;
-	var->getRawValue((BYTE *)&remoteIp, sizeof(DWORD));
+	UINT32 remoteIp;
+	var->getRawValue((BYTE *)&remoteIp, sizeof(UINT32));
 	remoteIp = ntohl(remoteIp);
 	
    TCHAR ipAddrText[16];
@@ -45,15 +45,15 @@ static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 	DbgPrintf(6, _T("CDP(%s [%d]): remote node is %s [%d]"), node->Name(), node->Id(), remoteNode->Name(), remoteNode->Id());
 
 	// Get additional info for current record
-	DWORD newOid[128];
-	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(DWORD));
+	UINT32 newOid[128];
+	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
 
 	newOid[13] = 7;	// cdpCacheDevicePort
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
    SNMP_PDU *pRespPDU = NULL;
-   DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)

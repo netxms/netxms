@@ -44,9 +44,9 @@
 //             dwTimeout - Timeout waiting for response in milliseconds
 //
 
-DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
-                                    DWORD dwTimeout, DWORD *pdwRTT,
-                                    DWORD dwPacketSize)
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries,
+                                    UINT32 dwTimeout, UINT32 *pdwRTT,
+                                    UINT32 dwPacketSize)
 {
    static char payload[MAX_PING_SIZE] = "NetXMS ICMP probe [01234567890]";
 
@@ -56,7 +56,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
 
 	char *reply = (char *)alloca(dwPacketSize + sizeof(ICMP_ECHO_REPLY));
 	int retries = iNumRetries;
-	DWORD rc = ICMP_API_ERROR;
+	UINT32 rc = ICMP_API_ERROR;
 	do
 	{
 		rc = IcmpSendEcho(hIcmpFile, dwAddr, payload, (WORD)dwPacketSize, NULL, reply, (WORD)(dwPacketSize + sizeof(ICMP_ECHO_REPLY)), dwTimeout);
@@ -142,7 +142,7 @@ struct ECHOREPLY
 static WORD IPChecksum(BYTE *addr, int len)
 {
 	int nleft = len;
-	DWORD sum = 0;
+	UINT32 sum = 0;
 	BYTE *curr = addr;
 
 	/*
@@ -179,16 +179,16 @@ static WORD IPChecksum(BYTE *addr, int len)
 //             dwTimeout - Timeout waiting for response in milliseconds
 //
 
-DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
-                                    DWORD dwTimeout, DWORD *pdwRTT,
-                                    DWORD dwPacketSize)
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries,
+                                    UINT32 dwTimeout, UINT32 *pdwRTT,
+                                    UINT32 dwPacketSize)
 {
    SOCKET sock;
    struct sockaddr_in saDest;
-   DWORD dwResult = ICMP_TIMEOUT;
+   UINT32 dwResult = ICMP_TIMEOUT;
    ECHOREQUEST request;
    ECHOREPLY reply;
-   DWORD dwTimeLeft, dwElapsedTime, dwRTT;
+   UINT32 dwTimeLeft, dwElapsedTime, dwRTT;
    int nBytes;
    INT64 qwStartTime;
    static char szPayload[64] = "NetXMS ICMP probe [01234567890]";
@@ -308,14 +308,14 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
 					{
 						LARGE_INTEGER pcCurr;
 						QueryPerformanceCounter(&pcCurr);
-						dwElapsedTime = (DWORD)((pcCurr.QuadPart - pc.QuadPart) / pcTicksPerMs);
+						dwElapsedTime = (UINT32)((pcCurr.QuadPart - pc.QuadPart) / pcTicksPerMs);
 					}
 					else
 					{
-	               dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
+	               dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
 					}
 #else
-               dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
+               dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
 #endif
                dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
                dwRTT += dwElapsedTime;

@@ -212,13 +212,13 @@ void SaveUsers(DB_HANDLE hdb)
 // For non-UNICODE build, password must be UTF-8 encoded
 //
 
-DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
-							  DWORD dwSigLen, void *pCert, BYTE *pChallenge,
-							  DWORD *pdwId, DWORD *pdwSystemRights,
+UINT32 AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
+							  UINT32 dwSigLen, void *pCert, BYTE *pChallenge,
+							  UINT32 *pdwId, UINT32 *pdwSystemRights,
 							  bool *pbChangePasswd, bool *pbIntruderLockout)
 {
    int i, j;
-   DWORD dwResult = RCC_ACCESS_DENIED;
+   UINT32 dwResult = RCC_ACCESS_DENIED;
    BOOL bPasswordValid;
 
    MutexLock(m_mutexUserDatabaseAccess);
@@ -373,7 +373,7 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 /**
  * Check if user is a member of specific group
  */
-bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
+bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId)
 {
    bool result = false;
 
@@ -397,7 +397,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 /**
  * Resolve user's ID to login name
  */
-bool NXCORE_EXPORTABLE ResolveUserId(DWORD id, TCHAR *buffer, int bufSize)
+bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize)
 {
 	bool found = false;
 
@@ -441,7 +441,7 @@ void DumpUsers(CONSOLE_CTX pCtx)
  * @param id user database object ID
  * @return RCC ready to be sent to client
  */
-DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id)
+UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id)
 {
    int i, j;
 
@@ -478,9 +478,9 @@ DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id)
 /**
  * Create new user or group
  */
-DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId)
+UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pdwId)
 {
-   DWORD dwResult = RCC_SUCCESS;
+   UINT32 dwResult = RCC_SUCCESS;
 	UserDatabaseObject *object;
 	int i;
 
@@ -523,9 +523,9 @@ DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwI
 /**
  * Modify user database object
  */
-DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
 {
-   DWORD id, fields, dwResult = RCC_INVALID_USER_ID;
+   UINT32 id, fields, dwResult = RCC_INVALID_USER_ID;
 	int i;
 
 	id = msg->GetVariableLong(VID_USER_ID);
@@ -633,10 +633,10 @@ static bool CheckPasswordComplexity(const TCHAR *password)
  * Set user's password
  * For non-UNICODE build, passwords must be UTF-8 encoded
  */
-DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)
+UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)
 {
 	int i;
-   DWORD dwResult = RCC_INVALID_USER_ID;
+   UINT32 dwResult = RCC_INVALID_USER_ID;
 
 	if (id & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
@@ -780,7 +780,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase()
 // Get custom attribute's value
 //
 
-const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(DWORD id, const TCHAR *name)
+const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 {
 	const TCHAR *value = NULL;
 
@@ -797,7 +797,7 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(DWORD id, const TCHAR *name)
 	return value;
 }
 
-DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name)
+UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name)
 {
 	const TCHAR *value = GetUserDbObjectAttr(id, name);
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : 0;
@@ -806,7 +806,7 @@ DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name)
 /**
  * Set custom attribute's value
  */
-void NXCORE_EXPORTABLE SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value)
+void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value)
 {
    MutexLock(m_mutexUserDatabaseAccess);
 

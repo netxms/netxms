@@ -35,7 +35,7 @@ Subnet::Subnet()
 /**
  * Subnet class constructor
  */
-Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, bool bSyntheticMask)
+Subnet::Subnet(UINT32 dwAddr, UINT32 dwNetMask, UINT32 dwZone, bool bSyntheticMask)
 {
    TCHAR szBuffer[32];
 
@@ -56,7 +56,7 @@ Subnet::~Subnet()
 /**
  * Create object from database data
  */
-BOOL Subnet::CreateFromDB(DWORD dwId)
+BOOL Subnet::CreateFromDB(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -97,7 +97,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
    DB_RESULT hResult;
-   DWORD i;
+   UINT32 i;
    BOOL bNewObject = TRUE;
 
    // Lock object's access
@@ -176,7 +176,7 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
 /**
  * Set correct netmask for subnet
  */
-void Subnet::setCorrectMask(DWORD dwAddr, DWORD dwMask)
+void Subnet::setCorrectMask(UINT32 dwAddr, UINT32 dwMask)
 {
 	TCHAR szName[MAX_OBJECT_NAME], szBuffer[32];
 
@@ -206,13 +206,13 @@ void Subnet::setCorrectMask(DWORD dwAddr, DWORD dwMask)
  * @param macAddr buffer for found MAC address
  * @return true if MAC address found
  */
-bool Subnet::findMacAddress(DWORD ipAddr, BYTE *macAddr)
+bool Subnet::findMacAddress(UINT32 ipAddr, BYTE *macAddr)
 {
 	bool success = false;
 
 	LockChildList(FALSE);
 
-   for(DWORD i = 0; (i < m_dwChildCount) && !success; i++)
+   for(UINT32 i = 0; (i < m_dwChildCount) && !success; i++)
    {
       if (m_pChildList[i]->Type() != OBJECT_NODE)
 			continue;
@@ -223,7 +223,7 @@ bool Subnet::findMacAddress(DWORD ipAddr, BYTE *macAddr)
 		if (arpCache == NULL)
 			continue;
 
-		for(DWORD j = 0; j < arpCache->dwNumEntries; j++)
+		for(UINT32 j = 0; j < arpCache->dwNumEntries; j++)
 		{
 			if (arpCache->pEntries[j].dwIpAddr == ipAddr)
 			{
@@ -244,11 +244,11 @@ bool Subnet::findMacAddress(DWORD ipAddr, BYTE *macAddr)
 /**
  * Build IP topology
  */
-void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD seedNode, bool includeEndNodes)
+void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes)
 {
 	ObjectArray<Node> nodes;
 	LockChildList(FALSE);
-	for(DWORD i = 0; i < m_dwChildCount; i++)
+	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
 		if ((m_pChildList[i]->Id() == seedNode) || (m_pChildList[i]->Type() != OBJECT_NODE))
 			continue;

@@ -36,8 +36,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AvailabilityChart extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AvailabilityChartConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;

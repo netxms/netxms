@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AlarmViewer extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AlarmViewerConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;

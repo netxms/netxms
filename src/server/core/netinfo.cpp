@@ -43,7 +43,7 @@
 //
 
 #ifdef _WIN32
-static DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = NULL;
+static UINT32 (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = NULL;
 #else
 static HMODULE m_hSubAgent = NULL;
 static BOOL (* imp_NxSubAgentGetIfList)(StringList *) = NULL;
@@ -64,7 +64,7 @@ void InitLocalNetInfo()
    if (hModule != NULL)
    {
       imp_HrLanConnectionNameFromGuidOrPath = 
-         (DWORD (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddress(hModule, "HrLanConnectionNameFromGuidOrPath");
+         (UINT32 (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddress(hModule, "HrLanConnectionNameFromGuidOrPath");
    }
 #elif HAVE_SYS_UTSNAME_H
    struct utsname un;
@@ -112,7 +112,7 @@ void InitLocalNetInfo()
  */
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer)
 {
-   DWORD byte1, byte2, byte3, byte4, byte5, byte6;
+   UINT32 byte1, byte2, byte3, byte4, byte5, byte6;
 
    memset(pBuffer, 0, 6);
    if (_stscanf(pszStr, _T("%x:%x:%x:%x:%x:%x"), &byte1, &byte2, &byte3, 
@@ -168,7 +168,7 @@ static ARP_CACHE *SysGetLocalArpCache()
    free(sysArpCache);
 #else
 	TCHAR szByte[4], *pChar;
-	DWORD i, j;
+	UINT32 i, j;
 
 	if (imp_NxSubAgentGetArpCache != NULL)
 	{
@@ -225,11 +225,9 @@ static ARP_CACHE *SysGetLocalArpCache()
    return pArpCache;
 }
 
-
-//
-// Get local interface list (built-in system dependent code)
-//
-
+/**
+ * Get local interface list (built-in system dependent code)
+ */
 static InterfaceList *SysGetLocalIfList()
 {
    InterfaceList *pIfList = NULL;
@@ -314,7 +312,7 @@ static InterfaceList *SysGetLocalIfList()
    free(pBuffer);
 
 #else
-   DWORD i, dwBits;
+   UINT32 i, dwBits;
    TCHAR *pChar;
 
    if (imp_NxSubAgentGetIfList != NULL)

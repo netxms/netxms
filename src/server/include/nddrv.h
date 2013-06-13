@@ -119,7 +119,7 @@ struct RadioInterfaceInfo
 	int index;
 	TCHAR name[64];
 	BYTE macAddr[MAC_ADDR_LENGTH];
-   DWORD channel;
+   UINT32 channel;
    LONG powerDBm;
    LONG powerMW;
 };
@@ -156,14 +156,14 @@ struct WirelessStationInfo
 {
 	// This part filled by driver
    BYTE macAddr[MAC_ADDR_LENGTH];
-	DWORD ipAddr;	// IP address, must be in host byte order
+	UINT32 ipAddr;	// IP address, must be in host byte order
 	int rfIndex;	// radio interface index
 	TCHAR ssid[MAX_OBJECT_NAME];
    int vlan;
 
 	// This part filled by core
-	DWORD apObjectId;
-	DWORD nodeId;
+	UINT32 apObjectId;
+	UINT32 nodeId;
    TCHAR rfName[MAX_OBJECT_NAME];
 };
 

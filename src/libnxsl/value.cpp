@@ -191,7 +191,7 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *pIterator)
 /**
  * Create "int32" value
  */
-NXSL_Value::NXSL_Value(LONG nValue)
+NXSL_Value::NXSL_Value(INT32 nValue)
 {
    m_nDataType = NXSL_DT_INT32;
    m_pszValStr = NULL;
@@ -206,7 +206,7 @@ NXSL_Value::NXSL_Value(LONG nValue)
 /**
  * Create "uint32" value
  */
-NXSL_Value::NXSL_Value(DWORD uValue)
+NXSL_Value::NXSL_Value(UINT32 uValue)
 {
    m_nDataType = NXSL_DT_UINT32;
    m_pszValStr = NULL;
@@ -236,7 +236,7 @@ NXSL_Value::NXSL_Value(INT64 nValue)
 /**
  * Create "uint64" value
  */
-NXSL_Value::NXSL_Value(QWORD uValue)
+NXSL_Value::NXSL_Value(UINT64 uValue)
 {
    m_nDataType = NXSL_DT_UINT64;
    m_pszValStr = NULL;
@@ -271,7 +271,7 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue)
    m_nDataType = NXSL_DT_STRING;
 	if (pszValue != NULL)
 	{
-		m_dwStrLen = (DWORD)_tcslen(pszValue);
+		m_dwStrLen = (UINT32)_tcslen(pszValue);
 		m_pszValStr = _tcsdup(pszValue);
 	}
 	else
@@ -298,7 +298,7 @@ NXSL_Value::NXSL_Value(const char *pszValue)
 	if (pszValue != NULL)
 	{
 		m_pszValStr = WideStringFromUTF8String(pszValue);
-		m_dwStrLen = (DWORD)_tcslen(m_pszValStr);
+		m_dwStrLen = (UINT32)_tcslen(m_pszValStr);
 	}
 	else
 	{
@@ -316,7 +316,7 @@ NXSL_Value::NXSL_Value(const char *pszValue)
 /**
  * Create "string" value from non null-terminated string
  */
-NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
+NXSL_Value::NXSL_Value(const TCHAR *pszValue, UINT32 dwLen)
 {
    m_nDataType = NXSL_DT_STRING;
    m_dwStrLen = dwLen;
@@ -369,7 +369,7 @@ NXSL_Value::~NXSL_Value()
 /**
  * Set value to "int32"
  */
-void NXSL_Value::set(LONG nValue)
+void NXSL_Value::set(INT32 nValue)
 {
    m_nDataType = NXSL_DT_INT32;
 	safe_free_and_null(m_pszValStr);
@@ -390,7 +390,7 @@ void NXSL_Value::updateNumber()
    double dVal;
 
    nVal = _tcstoll(m_pszValStr, &eptr, 0);
-   if ((*eptr == 0) && ((DWORD)(eptr - m_pszValStr) == m_dwStrLen))
+   if ((*eptr == 0) && ((UINT32)(eptr - m_pszValStr) == m_dwStrLen))
    {
       if (nVal > 0x7FFFFFFF)
       {
@@ -400,13 +400,13 @@ void NXSL_Value::updateNumber()
       else
       {
          m_nDataType = NXSL_DT_INT32;
-         m_value.nInt32 = (LONG)nVal;
+         m_value.nInt32 = (INT32)nVal;
       }
    }
    else
    {
       dVal = _tcstod(m_pszValStr, &eptr);
-      if ((*eptr == 0) && ((DWORD)(eptr - m_pszValStr) == m_dwStrLen))
+      if ((*eptr == 0) && ((UINT32)(eptr - m_pszValStr) == m_dwStrLen))
       {
          m_nDataType = NXSL_DT_REAL;
          m_value.dReal = dVal;
@@ -446,7 +446,7 @@ void NXSL_Value::updateString()
          szBuffer[0] = 0;
          break;
    }
-   m_dwStrLen = (DWORD)_tcslen(szBuffer);
+   m_dwStrLen = (UINT32)_tcslen(szBuffer);
    m_pszValStr = _tcsdup(szBuffer);
    m_bStringIsValid = TRUE;
 }
@@ -456,10 +456,10 @@ void NXSL_Value::updateString()
  */
 bool NXSL_Value::convert(int nDataType)
 {
-   LONG nInt32;
-   DWORD uInt32;
+   INT32 nInt32;
+   UINT32 uInt32;
    INT64 nInt64;
-   QWORD uInt64;
+   UINT64 uInt64;
    double dReal;
    bool bRet = true;
 
@@ -472,12 +472,12 @@ bool NXSL_Value::convert(int nDataType)
    switch(nDataType)
    {
       case NXSL_DT_INT32:
-         RETRIEVE_NUMERIC_VALUE(nInt32, LONG);
+         RETRIEVE_NUMERIC_VALUE(nInt32, INT32);
          m_nDataType = nDataType;
          m_value.nInt32 = nInt32;
          break;
       case NXSL_DT_UINT32:
-         RETRIEVE_NUMERIC_VALUE(uInt32, DWORD);
+         RETRIEVE_NUMERIC_VALUE(uInt32, UINT32);
          m_nDataType = nDataType;
          m_value.uInt32 = uInt32;
          break;
@@ -487,7 +487,7 @@ bool NXSL_Value::convert(int nDataType)
          m_value.nInt64 = nInt64;
          break;
       case NXSL_DT_UINT64:
-         RETRIEVE_NUMERIC_VALUE(uInt64, QWORD);
+         RETRIEVE_NUMERIC_VALUE(uInt64, UINT64);
          m_nDataType = nDataType;
          m_value.uInt64 = uInt64;
          break;
@@ -559,7 +559,7 @@ const char *NXSL_Value::getValueAsMBString()
 /**
  * Get value as string
  */
-const TCHAR *NXSL_Value::getValueAsString(DWORD *pdwLen)
+const TCHAR *NXSL_Value::getValueAsString(UINT32 *pdwLen)
 {
    if (isNull() || isObject() || isArray())
 	{
@@ -576,22 +576,22 @@ const TCHAR *NXSL_Value::getValueAsString(DWORD *pdwLen)
 /**
  * Get value as 32 bit integer
  */
-LONG NXSL_Value::getValueAsInt32()
+INT32 NXSL_Value::getValueAsInt32()
 {
-   LONG nVal;
+   INT32 nVal;
 
-   RETRIEVE_NUMERIC_VALUE(nVal, LONG);
+   RETRIEVE_NUMERIC_VALUE(nVal, INT32);
    return nVal;
 }
 
 /**
  * Get value as unsigned 32 bit integer
  */
-DWORD NXSL_Value::getValueAsUInt32()
+UINT32 NXSL_Value::getValueAsUInt32()
 {
-   DWORD uVal;
+   UINT32 uVal;
 
-   RETRIEVE_NUMERIC_VALUE(uVal, DWORD);
+   RETRIEVE_NUMERIC_VALUE(uVal, UINT32);
    return uVal;
 }
 
@@ -609,11 +609,11 @@ INT64 NXSL_Value::getValueAsInt64()
 /**
  * Get value as unsigned 64 bit integer
  */
-QWORD NXSL_Value::getValueAsUInt64()
+UINT64 NXSL_Value::getValueAsUInt64()
 {
-   QWORD uVal;
+   UINT64 uVal;
 
-   RETRIEVE_NUMERIC_VALUE(uVal, QWORD);
+   RETRIEVE_NUMERIC_VALUE(uVal, UINT64);
    return uVal;
 }
 
@@ -651,7 +651,7 @@ double NXSL_Value::getValueAsReal()
 /**
  * Concatenate string value
  */
-void NXSL_Value::concatenate(const TCHAR *pszString, DWORD dwLen)
+void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
 {
    if (!m_bStringIsValid)
 	{
@@ -745,7 +745,7 @@ void NXSL_Value::negate()
             m_value.nInt32 = -m_value.nInt32;
             break;
          case NXSL_DT_UINT32:
-            m_value.nInt32 = -((LONG)m_value.uInt32);
+            m_value.nInt32 = -((INT32)m_value.uInt32);
             m_nDataType = NXSL_DT_INT32;
             break;
          case NXSL_DT_INT64:

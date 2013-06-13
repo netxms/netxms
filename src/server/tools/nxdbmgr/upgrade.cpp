@@ -1179,7 +1179,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 				int count = DBGetNumRows(hResult);
 				for(int i = 0; i < count; i++)
 				{
-					DWORD id = DBGetFieldULong(hResult, i, 0);
+					UINT32 id = DBGetFieldULong(hResult, i, 0);
 					DBGetField(hResult, i, 1, name, 128);
 					DecodeSQLString(name);
 					value = DBGetField(hResult, i, 2, NULL, 0);

@@ -79,12 +79,10 @@ void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock)
    }
 }
 
-
-//
-// Lock read/write lock for reading
-//
-
-BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
+/**
+ * Lock read/write lock for reading
+ */
+BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
 {
    BOOL bResult = FALSE;
    int retcode;
@@ -94,7 +92,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
       return FALSE;
 
 #ifdef _WIN32
-   DWORD dwStart, dwElapsed;
+   UINT32 dwStart, dwElapsed;
    BOOL bTimeOut = FALSE;
 
    // Acquire access to handle
@@ -190,7 +188,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
 // Lock read/write lock for writing
 //
 
-BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
+BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
 {
    BOOL bResult = FALSE;
    int retcode;
@@ -200,7 +198,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
       return FALSE;
 
 #ifdef _WIN32
-   DWORD dwStart, dwElapsed;
+   UINT32 dwStart, dwElapsed;
    BOOL bTimeOut = FALSE;
 
    WaitForSingleObject(hLock->m_mutex, INFINITE);

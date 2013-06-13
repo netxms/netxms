@@ -59,7 +59,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class EmbeddedDashboard extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
 	private static final Set<Integer> objectSelectionFilter;
 	
 	static
@@ -135,8 +134,6 @@ public class EmbeddedDashboard extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
       upButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-      	
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -157,8 +154,6 @@ public class EmbeddedDashboard extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
       downButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-      	
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -191,8 +186,6 @@ public class EmbeddedDashboard extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-      	
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -212,8 +205,6 @@ public class EmbeddedDashboard extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-      	
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -258,8 +249,6 @@ public class EmbeddedDashboard extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       refreshIntervalScale.setLayoutData(gd);
       refreshIntervalScale.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-      	
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -278,8 +267,6 @@ public class EmbeddedDashboard extends PropertyPage
       refreshIntervalSpinner.setMaximum(600);
       refreshIntervalSpinner.setSelection(config.getDisplayInterval());
       refreshIntervalSpinner.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-      	
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

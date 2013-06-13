@@ -100,9 +100,9 @@ const TCHAR *SituationInstance::GetAttribute(const TCHAR *attribute)
 // Create NXCP message
 //
 
-DWORD SituationInstance::CreateMessage(CSCPMessage *msg, DWORD baseId)
+UINT32 SituationInstance::CreateMessage(CSCPMessage *msg, UINT32 baseId)
 {
-	DWORD i, id = baseId;
+	UINT32 i, id = baseId;
 	
 	msg->SetVariable(id++, m_name);
 	msg->SetVariable(id++, m_attributes.getSize());
@@ -314,14 +314,14 @@ SituationInstance *Situation::FindInstance(const TCHAR *name)
 void Situation::CreateMessage(CSCPMessage *msg)
 {
 	int i;
-	DWORD id;
+	UINT32 id;
 	
 	Lock();
 	
 	msg->SetVariable(VID_SITUATION_ID, m_id);
 	msg->SetVariable(VID_NAME, CHECK_NULL_EX(m_name));
 	msg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_comments));
-	msg->SetVariable(VID_INSTANCE_COUNT, (DWORD)m_numInstances);
+	msg->SetVariable(VID_INSTANCE_COUNT, (UINT32)m_numInstances);
 	
 	for(i = 0, id = VID_INSTANCE_LIST_BASE; i < m_numInstances; i++)
 	{
@@ -388,7 +388,7 @@ BOOL SituationsInit()
 // Find situation by ID
 //
 
-Situation *FindSituationById(DWORD id)
+Situation *FindSituationById(UINT32 id)
 {
 	return (Situation *)s_idxSituations.get(id);
 }
@@ -429,9 +429,9 @@ Situation *CreateSituation(const TCHAR *name)
 // Delete situation
 //
 
-DWORD DeleteSituation(DWORD id)
+UINT32 DeleteSituation(UINT32 id)
 {
-   DWORD rcc;
+   UINT32 rcc;
 
 	Situation *s = (Situation *)s_idxSituations.get(id);
    if (s != NULL)
@@ -458,7 +458,7 @@ void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
 {
 	ObjectArray<NetObj> *list = s_idxSituations.getObjects();
 
-	msg->SetVariable(VID_SITUATION_COUNT, (DWORD)list->size());
+	msg->SetVariable(VID_SITUATION_COUNT, (UINT32)list->size());
 	session->sendMessage(msg);
 	
 	msg->SetCode(CMD_SITUATION_DATA);
@@ -611,4 +611,4 @@ NXSL_ExtFunction g_nxslSituationFunctions[] =
    { _T("FindSituation"), F_FindSituation, 2 },
    { _T("GetSituationAttribute"), F_GetSituationAttribute, 2 }
 };
-DWORD g_nxslNumSituationFunctions = sizeof(g_nxslSituationFunctions) / sizeof(NXSL_ExtFunction);
+UINT32 g_nxslNumSituationFunctions = sizeof(g_nxslSituationFunctions) / sizeof(NXSL_ExtFunction);

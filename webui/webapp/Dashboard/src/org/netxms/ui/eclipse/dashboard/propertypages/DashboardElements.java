@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -58,6 +57,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -68,8 +68,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 @SuppressWarnings("restriction")
 public class DashboardElements extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_TYPE = 0;
 	public static final int COLUMN_SPAN = 1;
 	public static final int COLUMN_ALIGNMENT = 2;
@@ -156,9 +154,7 @@ public class DashboardElements extends PropertyPage
       upButton.setText(Messages.DashboardElements_Up);
       upButton.setEnabled(false);
       upButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
-      	@Override
+		@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
@@ -175,20 +171,18 @@ public class DashboardElements extends PropertyPage
       downButton.setText(Messages.DashboardElements_Down);
       downButton.setEnabled(false);
       downButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
    		@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				moveDown();
-			}
-		});
+   			public void widgetDefaultSelected(SelectionEvent e)
+   			{
+   				widgetSelected(e);
+   			}
+
+   			@Override
+   			public void widgetSelected(SelectionEvent e)
+   			{
+   				moveDown();
+   			}
+         });
 
       Composite rightButtons = new Composite(dialogArea, SWT.NONE);
       buttonLayout = new RowLayout();
@@ -204,8 +198,6 @@ public class DashboardElements extends PropertyPage
       addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText(Messages.DashboardElements_Add);
       addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -222,8 +214,6 @@ public class DashboardElements extends PropertyPage
       editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText(Messages.DashboardElements_Edit);
       editButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -240,8 +230,6 @@ public class DashboardElements extends PropertyPage
       editXmlButton = new Button(rightButtons, SWT.PUSH);
       editXmlButton.setText(Messages.DashboardElements_EditXML);
       editXmlButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -258,8 +246,6 @@ public class DashboardElements extends PropertyPage
       deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText(Messages.DashboardElements_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -325,7 +311,7 @@ public class DashboardElements extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openError(getShell(), Messages.DashboardElements_Error, Messages.DashboardElements_ErrorText);
+			MessageDialogHelper.openError(getShell(), Messages.DashboardElements_Error, Messages.DashboardElements_ErrorText);
 			return false;
 		}
 		
@@ -480,12 +466,12 @@ public class DashboardElements extends PropertyPage
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText + e.getMessage());
+				MessageDialogHelper.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialog.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText2);
+			MessageDialogHelper.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText2);
 		}
 	}
 	

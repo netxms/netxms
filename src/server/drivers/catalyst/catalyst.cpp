@@ -65,8 +65,8 @@ int CatalystDriver::isPotentialDevice(const TCHAR *oid)
  */
 bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
-	DWORD value = 0;
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.2.14.0"), NULL, 0, &value, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
+	UINT32 value = 0;
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.2.14.0"), NULL, 0, &value, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 		return false;
 	return value >= 0;	// Catalyst 3550 can return 0 as number of slots
 }
@@ -74,20 +74,20 @@ bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for switch port enumeration
  */
-static DWORD HandlerPortList(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
 	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->GetValueAsUInt());
 	if (iface != NULL)
 	{
-		DWORD nameLen = var->GetName()->getLength();
+		UINT32 nameLen = var->GetName()->getLength();
 		
-		DWORD moduleIndex = var->GetName()->getValue()[nameLen - 2];
-		DWORD oid[] = { 1, 3, 6, 1, 4, 1, 9, 5, 1, 3, 1, 1, 25, 0 };
+		UINT32 moduleIndex = var->GetName()->getValue()[nameLen - 2];
+		UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 9, 5, 1, 3, 1, 1, 25, 0 };
 		oid[13] = moduleIndex;
-		DWORD slot;
-		if (SnmpGet(version, transport, NULL, oid, 14, &slot, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
+		UINT32 slot;
+		if (SnmpGet(version, transport, NULL, oid, 14, &slot, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			slot = moduleIndex;	// Assume slot # equal to module index if it cannot be read
 
 		iface->dwSlotNumber = slot;

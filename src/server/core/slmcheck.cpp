@@ -160,9 +160,9 @@ void SlmCheck::compileScript()
 // Create object from database data
 //
 
-BOOL SlmCheck::CreateFromDB(DWORD id)
+BOOL SlmCheck::CreateFromDB(UINT32 id)
 {
-	DWORD thresholdId;
+	UINT32 thresholdId;
 
 	m_dwId = id;
 
@@ -249,7 +249,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	if (hStmt == NULL)	
 		goto finish;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DWORD(m_type));
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, UINT32(m_type));
 	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, CHECK_NULL_EX(m_script), DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
 	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
@@ -294,7 +294,7 @@ bool SlmCheck::deleteFromDB(DB_HANDLE hdb)
 void SlmCheck::CreateMessage(CSCPMessage *pMsg)
 {
 	NetObj::CreateMessage(pMsg);
-	pMsg->SetVariable(VID_SLMCHECK_TYPE, DWORD(m_type));
+	pMsg->SetVariable(VID_SLMCHECK_TYPE, UINT32(m_type));
 	pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->SetVariable(VID_REASON, m_reason);
 	pMsg->SetVariable(VID_TEMPLATE_ID, m_templateId);
@@ -308,7 +308,7 @@ void SlmCheck::CreateMessage(CSCPMessage *pMsg)
 // Modify object from message
 //
 
-DWORD SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
 		LockData();
@@ -396,7 +396,7 @@ void SlmCheck::execute()
 	if (m_isTemplate)
 		return;
 
-	DWORD oldStatus;
+	UINT32 oldStatus;
 
 	switch (m_type)
 	{
@@ -477,7 +477,7 @@ bool SlmCheck::insertTicket()
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_currentTicketId);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, getOwnerId());
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_TRANSIENT);
 		success = DBExecute(hStmt) ? true : false;
 		DBFreeStatement(hStmt);
@@ -498,7 +498,7 @@ void SlmCheck::closeTicket()
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE slm_tickets SET close_timestamp=? WHERE ticket_id=?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_currentTicketId);
 		DBExecute(hStmt);
 		DBFreeStatement(hStmt);
@@ -512,12 +512,12 @@ void SlmCheck::closeTicket()
 // Get ID of owning SLM object (business service or node link)
 //
 
-DWORD SlmCheck::getOwnerId()
+UINT32 SlmCheck::getOwnerId()
 {
-	DWORD ownerId = 0;
+	UINT32 ownerId = 0;
 
 	LockParentList(FALSE);
-	for(DWORD i = 0; i < m_dwParentCount; i++)
+	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
 		if ((m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICE) ||
 		    (m_pParentList[i]->Type() == OBJECT_NODELINK))
@@ -539,10 +539,10 @@ DWORD SlmCheck::getOwnerId()
 NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 {
 	NXSL_Value *value = NULL;
-	DWORD nodeId = 0;
+	UINT32 nodeId = 0;
 
 	LockParentList(FALSE);
-	for(DWORD i = 0; i < m_dwParentCount; i++)
+	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
 		if (m_pParentList[i]->Type() == OBJECT_NODELINK)
 		{
@@ -567,7 +567,7 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 /**
  * Object deletion handler
  */
-void SlmCheck::onObjectDelete(DWORD objectId)
+void SlmCheck::onObjectDelete(UINT32 objectId)
 {
 	// Delete itself if object curemtly being deleted is
 	// a template used to create this check

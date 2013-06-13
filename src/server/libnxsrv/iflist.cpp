@@ -65,7 +65,7 @@ void InterfaceList::add(NX_INTERFACE_INFO *iface)
 // Find interface entry by ifIndex
 //
 
-NX_INTERFACE_INFO *InterfaceList::findByIfIndex(DWORD ifIndex)
+NX_INTERFACE_INFO *InterfaceList::findByIfIndex(UINT32 ifIndex)
 {
    // Delete loopback interface(s) from list
    for(int i = 0; i < m_size; i++)

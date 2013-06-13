@@ -1,5 +1,3 @@
-/* $Id$ */
-
 #include <nms_common.h>
 #include <nms_agent.h>
 
@@ -30,12 +28,12 @@ LONG H_CheckTelnet(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		nPort = 23;
 	}
 
-	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
+	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckTelnet(szHost, 0, nPort, NULL, NULL, dwTimeout));
 	return nRet;
 }
 
-int CheckTelnet(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass, DWORD dwTimeout)
+int CheckTelnet(char *szAddr, UINT32 dwAddr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;

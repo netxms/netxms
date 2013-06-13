@@ -10,17 +10,17 @@ enum
 };
 
 LONG H_CheckPOP3(const TCHAR *, const TCHAR *, TCHAR *);
-int CheckPOP3(char *, DWORD, short, char *, char *, DWORD);
+int CheckPOP3(char *, UINT32, short, char *, char *, UINT32);
 LONG H_CheckSSH(const TCHAR *, const TCHAR *, TCHAR *);
-int CheckSSH(char *, DWORD, short, char *, char *, DWORD);
+int CheckSSH(char *, UINT32, short, char *, char *, UINT32);
 LONG H_CheckSMTP(const TCHAR *, const TCHAR *, TCHAR *);
-int CheckSMTP(char *, DWORD, short, char *, DWORD);
+int CheckSMTP(char *, UINT32, short, char *, UINT32);
 LONG H_CheckHTTP(const TCHAR *, const TCHAR *, TCHAR *);
-int CheckHTTP(char *, DWORD, short, char *, char *, char *, DWORD);
+int CheckHTTP(char *, UINT32, short, char *, char *, char *, UINT32);
 LONG H_CheckCustom(const TCHAR *, const TCHAR *, TCHAR *);
-int CheckCustom(char *, DWORD, short, DWORD);
+int CheckCustom(char *, UINT32, short, UINT32);
 LONG H_CheckTelnet(const TCHAR *, const TCHAR *, TCHAR *);
-int CheckTelnet(char *, DWORD, short, char *, char *, DWORD);
+int CheckTelnet(char *, UINT32, short, char *, char *, UINT32);
 
 extern char g_szDomainName[];
 

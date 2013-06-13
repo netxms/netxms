@@ -45,20 +45,20 @@ struct NXCORE_LOG;
  */
 typedef struct
 {
-   DWORD dwSize;           // Size of structure in bytes
+   UINT32 dwSize;           // Size of structure in bytes
    TCHAR szName[MAX_OBJECT_NAME];
    void (* pfServerStarted)();
 	void (* pfShutdown)();
 	void (* pfLoadObjects)();
 	void (* pfLinkObjects)();
-   int (* pfClientCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
-   int (* pfMobileDeviceCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, MobileDeviceSession *pSession);
+   int (* pfClientCommandHandler)(UINT32 dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
+   int (* pfMobileDeviceCommandHandler)(UINT32 dwCommand, CSCPMessage *pMsg, MobileDeviceSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
-   void (* pfAlarmChangeHook)(DWORD changeCode, NXC_ALARM *alarm);
-	void (* pfStatusPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
-	void (* pfConfPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
-	void (* pfTopologyPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
+   void (* pfAlarmChangeHook)(UINT32 changeCode, NXC_ALARM *alarm);
+	void (* pfStatusPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
+	void (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
+	void (* pfTopologyPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
 	int (* pfCalculateObjectStatus)(NetObj *object);
 	BOOL (* pfNetObjInsert)(NetObj *object);
 	BOOL (* pfNetObjDelete)(NetObj *object);
@@ -66,7 +66,7 @@ typedef struct
 	void (* pfPreObjectDelete)(NetObj *object);
 	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, CSCPMessage *msg);
 	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
-	BOOL (* pfAcceptNewNode)(DWORD ipAddr, DWORD ipNetMask, DWORD zoneId, BYTE *macAddr);
+	BOOL (* pfAcceptNewNode)(UINT32 ipAddr, UINT32 ipNetMask, UINT32 zoneId, BYTE *macAddr);
    NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;
@@ -79,7 +79,7 @@ bool LoadNetXMSModules();
 /**
  * Global variables
  */
-extern DWORD g_dwNumModules;
+extern UINT32 g_dwNumModules;
 extern NXMODULE *g_pModuleList;
 
 #endif   /* _nxmodule_h_ */

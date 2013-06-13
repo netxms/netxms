@@ -62,7 +62,7 @@ void VlanList::add(VlanInfo *vlan)
  * @param vlanId VLAN ID
  * @param portId port's 32bit identifier (usually ifIndex or slot/port pair)
  */
-void VlanList::addMemberPort(int vlanId, DWORD portId)
+void VlanList::addMemberPort(int vlanId, UINT32 portId)
 {
 	VlanInfo *vlan = findById(vlanId);
 	if (vlan != NULL)
@@ -89,16 +89,16 @@ VlanInfo *VlanList::findById(int id)
  */
 void VlanList::fillMessage(CSCPMessage *msg)
 {
-	msg->SetVariable(VID_NUM_VLANS, (DWORD)m_size);
-	DWORD varId = VID_VLAN_LIST_BASE;
+	msg->SetVariable(VID_NUM_VLANS, (UINT32)m_size);
+	UINT32 varId = VID_VLAN_LIST_BASE;
 	for(int i = 0; i < m_size; i++)
 	{
-		msg->SetVariable(varId++, (WORD)m_vlans[i]->getVlanId());
+		msg->SetVariable(varId++, (UINT16)m_vlans[i]->getVlanId());
 		msg->SetVariable(varId++, m_vlans[i]->getName());
-		msg->SetVariable(varId++, (DWORD)m_vlans[i]->getNumPorts());
-		msg->SetVariableToInt32Array(varId++, (DWORD)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
-		msg->SetVariableToInt32Array(varId++, (DWORD)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIndexes());
-		msg->SetVariableToInt32Array(varId++, (DWORD)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIds());
+		msg->SetVariable(varId++, (UINT32)m_vlans[i]->getNumPorts());
+		msg->SetVariableToInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
+		msg->SetVariableToInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIndexes());
+		msg->SetVariableToInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIds());
 		varId += 4;
 	}
 }
@@ -113,7 +113,7 @@ VlanInfo::VlanInfo(int vlanId, int prm)
 	m_name = NULL;
 	m_allocated = 64;
 	m_numPorts = 0;
-	m_ports = (DWORD *)malloc(m_allocated * sizeof(DWORD));
+	m_ports = (UINT32 *)malloc(m_allocated * sizeof(UINT32));
 	m_indexes = NULL;
 	m_ids = NULL;
 }
@@ -132,12 +132,12 @@ VlanInfo::~VlanInfo()
 /**
  * Add port identified by single 32bit ID (usually ifIndex)
  */
-void VlanInfo::add(DWORD ifIndex)
+void VlanInfo::add(UINT32 ifIndex)
 {
 	if (m_numPorts == m_allocated)
 	{
 		m_allocated += 64;
-		m_ports = (DWORD *)realloc(m_ports, sizeof(DWORD) * m_allocated);
+		m_ports = (UINT32 *)realloc(m_ports, sizeof(UINT32) * m_allocated);
 	}
 	m_ports[m_numPorts++] = ifIndex;
 }
@@ -145,7 +145,7 @@ void VlanInfo::add(DWORD ifIndex)
 /**
  * Add port identified by slot/port pair
  */
-void VlanInfo::add(DWORD slot, DWORD port)
+void VlanInfo::add(UINT32 slot, UINT32 port)
 {
 	add((slot << 16) | port);
 }
@@ -168,13 +168,13 @@ void VlanInfo::prepareForResolve()
 {
 	if (m_indexes == NULL)
 	{
-		m_indexes = (DWORD *)malloc(sizeof(DWORD) * m_numPorts);
-		memset(m_indexes, 0, sizeof(DWORD) * m_numPorts);
+		m_indexes = (UINT32 *)malloc(sizeof(UINT32) * m_numPorts);
+		memset(m_indexes, 0, sizeof(UINT32) * m_numPorts);
 	}
 	if (m_ids == NULL)
 	{
-		m_ids = (DWORD *)malloc(sizeof(DWORD) * m_numPorts);
-		memset(m_ids, 0, sizeof(DWORD) * m_numPorts);
+		m_ids = (UINT32 *)malloc(sizeof(UINT32) * m_numPorts);
+		memset(m_ids, 0, sizeof(UINT32) * m_numPorts);
 	}
 }
 
@@ -187,7 +187,7 @@ void VlanInfo::prepareForResolve()
  * @param ifIndex interface index
  * @param id interface object ID
  */
-void VlanInfo::resolvePort(int index, DWORD sp, DWORD ifIndex, DWORD id)
+void VlanInfo::resolvePort(int index, UINT32 sp, UINT32 ifIndex, UINT32 id)
 {
 	if ((index >= 0) && (index < m_numPorts))
 	{

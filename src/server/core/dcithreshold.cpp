@@ -167,7 +167,7 @@ void Threshold::createId()
 // Save threshold to database
 //
 
-BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
+BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 {
    // Prepare and execute query
 	DB_STATEMENT hStmt;
@@ -194,18 +194,18 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_itemId);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_value.getString(), DB_BIND_STATIC);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_function);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_operation);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_param1);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_param2);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_function);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_operation);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_param1);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_param2);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_eventCode);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, dwIndex);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)(m_isReached ? 1 : 0));
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)(m_isReached ? 1 : 0));
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_rearmEventCode);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (LONG)m_repeatInterval);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (LONG)m_currentSeverity);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)m_lastEventTimestamp);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_id);
+	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_repeatInterval);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_lastEventTimestamp);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -245,7 +245,7 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             iDataType = DCI_DT_INT;  // diff() for strings is an integer
          break;
       case F_ERROR:        // Check for collection error
-         fvalue = (DWORD)0;
+         fvalue = (UINT32)0;
          break;
       default:
          break;
@@ -266,16 +266,16 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             switch(iDataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((LONG)fvalue < (LONG)m_value);
+                  bMatch = ((INT32)fvalue < (INT32)m_value);
                   break;
                case DCI_DT_UINT:
-                  bMatch = ((DWORD)fvalue < (DWORD)m_value);
+                  bMatch = ((UINT32)fvalue < (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue < (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
-                  bMatch = ((QWORD)fvalue < (QWORD)m_value);
+                  bMatch = ((UINT64)fvalue < (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
                   bMatch = ((double)fvalue < (double)m_value);
@@ -286,16 +286,16 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             switch(iDataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((LONG)fvalue <= (LONG)m_value);
+                  bMatch = ((INT32)fvalue <= (INT32)m_value);
                   break;
                case DCI_DT_UINT:
-                  bMatch = ((DWORD)fvalue <= (DWORD)m_value);
+                  bMatch = ((UINT32)fvalue <= (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue <= (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
-                  bMatch = ((QWORD)fvalue <= (QWORD)m_value);
+                  bMatch = ((UINT64)fvalue <= (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
                   bMatch = ((double)fvalue <= (double)m_value);
@@ -306,16 +306,16 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             switch(iDataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((LONG)fvalue == (LONG)m_value);
+                  bMatch = ((INT32)fvalue == (INT32)m_value);
                   break;
                case DCI_DT_UINT:
-                  bMatch = ((DWORD)fvalue == (DWORD)m_value);
+                  bMatch = ((UINT32)fvalue == (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue == (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
-                  bMatch = ((QWORD)fvalue == (QWORD)m_value);
+                  bMatch = ((UINT64)fvalue == (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
                   bMatch = ((double)fvalue == (double)m_value);
@@ -329,16 +329,16 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             switch(iDataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((LONG)fvalue >= (LONG)m_value);
+                  bMatch = ((INT32)fvalue >= (INT32)m_value);
                   break;
                case DCI_DT_UINT:
-                  bMatch = ((DWORD)fvalue >= (DWORD)m_value);
+                  bMatch = ((UINT32)fvalue >= (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue >= (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
-                  bMatch = ((QWORD)fvalue >= (QWORD)m_value);
+                  bMatch = ((UINT64)fvalue >= (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
                   bMatch = ((double)fvalue >= (double)m_value);
@@ -349,16 +349,16 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             switch(iDataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((LONG)fvalue > (LONG)m_value);
+                  bMatch = ((INT32)fvalue > (INT32)m_value);
                   break;
                case DCI_DT_UINT:
-                  bMatch = ((DWORD)fvalue > (DWORD)m_value);
+                  bMatch = ((UINT32)fvalue > (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue > (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
-                  bMatch = ((QWORD)fvalue > (QWORD)m_value);
+                  bMatch = ((UINT64)fvalue > (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
                   bMatch = ((double)fvalue > (double)m_value);
@@ -369,16 +369,16 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             switch(iDataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((LONG)fvalue != (LONG)m_value);
+                  bMatch = ((INT32)fvalue != (INT32)m_value);
                   break;
                case DCI_DT_UINT:
-                  bMatch = ((DWORD)fvalue != (DWORD)m_value);
+                  bMatch = ((UINT32)fvalue != (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue != (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
-                  bMatch = ((QWORD)fvalue != (QWORD)m_value);
+                  bMatch = ((UINT64)fvalue != (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
                   bMatch = ((double)fvalue != (double)m_value);
@@ -454,7 +454,7 @@ void Threshold::markLastEvent(int severity)
  * Check for collection error thresholds
  * Return same values as Check()
  */
-int Threshold::checkError(DWORD dwErrorCount)
+int Threshold::checkError(UINT32 dwErrorCount)
 {
    int nResult;
    BOOL bMatch;
@@ -462,7 +462,7 @@ int Threshold::checkError(DWORD dwErrorCount)
    if (m_function != F_ERROR)
       return NO_ACTION;
 
-   bMatch = ((DWORD)m_param1 <= dwErrorCount);
+   bMatch = ((UINT32)m_param1 <= dwErrorCount);
    nResult = (bMatch & !m_isReached) ? THRESHOLD_REACHED :
                 ((!bMatch & m_isReached) ? THRESHOLD_REARMED : NO_ACTION);
    m_isReached = bMatch;
@@ -484,31 +484,31 @@ int Threshold::checkError(DWORD dwErrorCount)
 // Fill DCI_THRESHOLD with object's data ready to send over the network
 //
 
-void Threshold::createMessage(CSCPMessage *msg, DWORD baseId)
+void Threshold::createMessage(CSCPMessage *msg, UINT32 baseId)
 {
-	DWORD varId = baseId;
+	UINT32 varId = baseId;
 
 	msg->SetVariable(varId++, m_id);
 	msg->SetVariable(varId++, m_eventCode);
 	msg->SetVariable(varId++, m_rearmEventCode);
 	msg->SetVariable(varId++, (WORD)m_function);
 	msg->SetVariable(varId++, (WORD)m_operation);
-	msg->SetVariable(varId++, (DWORD)m_param1);
-	msg->SetVariable(varId++, (DWORD)m_param2);
-	msg->SetVariable(varId++, (DWORD)m_repeatInterval);
+	msg->SetVariable(varId++, (UINT32)m_param1);
+	msg->SetVariable(varId++, (UINT32)m_param2);
+	msg->SetVariable(varId++, (UINT32)m_repeatInterval);
 	msg->SetVariable(varId++, m_value.getString());
 	msg->SetVariable(varId++, (WORD)m_isReached);
 	msg->SetVariable(varId++, (WORD)m_currentSeverity);
-	msg->SetVariable(varId++, (DWORD)m_lastEventTimestamp);
+	msg->SetVariable(varId++, (UINT32)m_lastEventTimestamp);
 }
 
 /**
  * Update threshold object from NXCP message
  */
-void Threshold::updateFromMessage(CSCPMessage *msg, DWORD baseId)
+void Threshold::updateFromMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	TCHAR buffer[MAX_DCI_STRING_VALUE];
-	DWORD varId = baseId + 1;	// Skip ID field
+	UINT32 varId = baseId + 1;	// Skip ID field
 
 	m_eventCode = msg->GetVariableLong(varId++);
 	m_rearmEventCode = msg->GetVariableLong(varId++);
@@ -547,16 +547,16 @@ void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
    switch(m_dataType)
    {
       case DCI_DT_INT:
-         CALC_AVG_VALUE(LONG);
+         CALC_AVG_VALUE(INT32);
          break;
       case DCI_DT_UINT:
-         CALC_AVG_VALUE(DWORD);
+         CALC_AVG_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_AVG_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
-         CALC_AVG_VALUE(QWORD);
+         CALC_AVG_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
          CALC_AVG_VALUE(double);
@@ -591,16 +591,16 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
    switch(m_dataType)
    {
       case DCI_DT_INT:
-         CALC_SUM_VALUE(LONG);
+         CALC_SUM_VALUE(INT32);
          break;
       case DCI_DT_UINT:
-         CALC_SUM_VALUE(DWORD);
+         CALC_SUM_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_SUM_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
-         CALC_SUM_VALUE(QWORD);
+         CALC_SUM_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
          CALC_SUM_VALUE(double);
@@ -651,7 +651,7 @@ void Threshold::calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemV
    {
       case DCI_DT_INT:
 #define ABS(x) ((x) < 0 ? -(x) : (x))
-         CALC_MD_VALUE(LONG);
+         CALC_MD_VALUE(INT32);
          break;
       case DCI_DT_INT64:
          CALC_MD_VALUE(INT64);
@@ -662,10 +662,10 @@ void Threshold::calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemV
       case DCI_DT_UINT:
 #undef ABS
 #define ABS(x) (x)
-         CALC_MD_VALUE(DWORD);
+         CALC_MD_VALUE(UINT32);
          break;
       case DCI_DT_UINT64:
-         CALC_MD_VALUE(QWORD);
+         CALC_MD_VALUE(UINT64);
          break;
       case DCI_DT_STRING:
          *pResult = _T("");   // Mean deviation for string is meaningless
@@ -695,16 +695,16 @@ BOOL Threshold::compare(Threshold *pThr)
    switch(m_dataType)
    {
       case DCI_DT_INT:
-         bMatch = ((LONG)pThr->m_value == (LONG)m_value);
+         bMatch = ((INT32)pThr->m_value == (INT32)m_value);
          break;
       case DCI_DT_UINT:
-         bMatch = ((DWORD)pThr->m_value == (DWORD)m_value);
+         bMatch = ((UINT32)pThr->m_value == (UINT32)m_value);
          break;
       case DCI_DT_INT64:
          bMatch = ((INT64)pThr->m_value == (INT64)m_value);
          break;
       case DCI_DT_UINT64:
-         bMatch = ((QWORD)pThr->m_value == (QWORD)m_value);
+         bMatch = ((UINT64)pThr->m_value == (UINT64)m_value);
          break;
       case DCI_DT_FLOAT:
          bMatch = ((double)pThr->m_value == (double)m_value);

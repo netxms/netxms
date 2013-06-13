@@ -71,7 +71,7 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
 
 	Node *bestMatchNode = NULL;
-	DWORD bestMatchIfIndex = 0;
+	UINT32 bestMatchIfIndex = 0;
 	int bestMatchCount = 0x7FFFFFFF;
 
 	for(int i = 0; (i < nodes->size()) && (iface == NULL); i++)
@@ -82,7 +82,7 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 		{
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
 			          macAddrText, node->Name(), (int)node->Id());
-			DWORD ifIndex = fdb->findMacAddress(macAddr);
+			UINT32 ifIndex = fdb->findMacAddress(macAddr);
 			if (ifIndex != 0)
 			{
 				int count = fdb->getMacCountOnPort(ifIndex);

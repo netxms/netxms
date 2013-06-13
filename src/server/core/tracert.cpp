@@ -46,7 +46,7 @@ NetworkPath::~NetworkPath()
 /**
  * Add hop to path
  */
-void NetworkPath::addHop(DWORD nextHop, NetObj *currentObject, DWORD ifIndex, bool isVpn)
+void NetworkPath::addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn)
 {
 	if (m_hopCount == m_allocated)
 	{
@@ -69,7 +69,7 @@ void NetworkPath::fillMessage(CSCPMessage *msg)
 {
 	msg->SetVariable(VID_HOP_COUNT, (WORD)m_hopCount);
 	msg->SetVariable(VID_IS_COMPLETE, (WORD)(m_complete ? 1 : 0));
-	DWORD varId = VID_NETWORK_PATH_BASE;
+	UINT32 varId = VID_NETWORK_PATH_BASE;
 	for(int i = 0; i < m_hopCount; i++, varId += 6)
 	{
 		msg->SetVariable(varId++, m_path[i].object->Id());
@@ -84,7 +84,7 @@ void NetworkPath::fillMessage(CSCPMessage *msg)
  */
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
 {
-   DWORD dwNextHop, dwIfIndex, dwHopCount;
+   UINT32 dwNextHop, dwIfIndex, dwHopCount;
    Node *pCurr, *pNext;
    NetworkPath *pTrace;
    BOOL bIsVPN;

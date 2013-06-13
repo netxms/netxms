@@ -25,12 +25,12 @@
 /**
  * Unique request ID
  */
-static DWORD m_dwRequestId = 1;
+static UINT32 m_dwRequestId = 1;
 
 /**
  * Generate new request ID
  */
-DWORD LIBNXSRV_EXPORTABLE SnmpNewRequestId()
+UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId()
 {
    return m_dwRequestId++;
 }
@@ -40,12 +40,12 @@ DWORD LIBNXSRV_EXPORTABLE SnmpNewRequestId()
  * If szOidStr is not NULL, string representation of OID is used, otherwise -
  * binary representation from oidBinary and dwOidLen
  */
-DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
-                                  const TCHAR *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
-                                  DWORD dwBufferSize, DWORD dwFlags)
+UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
+                                  const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
+                                  UINT32 dwBufferSize, UINT32 dwFlags)
 {
    SNMP_PDU *pRqPDU, *pRespPDU;
-   DWORD dwNameLen, pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
+   UINT32 dwNameLen, pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
 
 	if (pTransport == NULL)
 		return SNMP_ERR_COMM;
@@ -63,7 +63,7 @@ DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
    }
    else
    {
-      memcpy(pdwVarName, oidBinary, dwOidLen * sizeof(DWORD));
+      memcpy(pdwVarName, oidBinary, dwOidLen * sizeof(UINT32));
       dwNameLen = dwOidLen;
    }
 
@@ -116,7 +116,7 @@ DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
                         *((LONG *)pValue) = pVar->GetValueAsInt();
                         break;
                      case ASN_IP_ADDR:
-                        *((DWORD *)pValue) = ntohl(pVar->GetValueAsUInt());
+                        *((UINT32 *)pValue) = ntohl(pVar->GetValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:
                         pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
@@ -159,16 +159,16 @@ DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
 /**
  * Enumerate multiple values by walking through MIB, starting at given root
  */
-DWORD LIBNXSRV_EXPORTABLE SnmpWalk(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
-                                   DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
+UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
+                                   UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
                                    void *pUserArg, BOOL bVerbose)
 {
 	if (pTransport == NULL)
 		return SNMP_ERR_COMM;
 
    // Get root
-	DWORD pdwRootName[MAX_OID_LEN];
-   DWORD dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
+	UINT32 pdwRootName[MAX_OID_LEN];
+   UINT32 dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
    if (dwRootLen == 0)
    {
       nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
@@ -176,15 +176,15 @@ DWORD LIBNXSRV_EXPORTABLE SnmpWalk(DWORD dwVersion, SNMP_Transport *pTransport, 
    }
 
 	// First OID to request
-   DWORD pdwName[MAX_OID_LEN];
-   memcpy(pdwName, pdwRootName, dwRootLen * sizeof(DWORD));
-   DWORD dwNameLen = dwRootLen;
+   UINT32 pdwName[MAX_OID_LEN];
+   memcpy(pdwName, pdwRootName, dwRootLen * sizeof(UINT32));
+   UINT32 dwNameLen = dwRootLen;
 
    // Walk the MIB
-   DWORD dwResult;
+   UINT32 dwResult;
    BOOL bRunning = TRUE;
-   DWORD firstObjectName[MAX_OID_LEN];
-   DWORD firstObjectNameLen = 0;
+   UINT32 firstObjectName[MAX_OID_LEN];
+   UINT32 firstObjectNameLen = 0;
    while(bRunning)
    {
       SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, m_dwRequestId++, dwVersion);
@@ -207,7 +207,7 @@ DWORD LIBNXSRV_EXPORTABLE SnmpWalk(DWORD dwVersion, SNMP_Transport *pTransport, 
 					// Some buggy SNMP agents may return first value after last one
 					// (Toshiba Strata CTX do that for example), so last check is here
                if ((pVar->GetName()->getLength() < dwRootLen) ||
-                   (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(DWORD))) ||
+                   (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(UINT32))) ||
 						 (pVar->GetName()->compare(pdwName, dwNameLen) == OID_EQUAL) ||
 						 (pVar->GetName()->compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
                {
@@ -217,11 +217,11 @@ DWORD LIBNXSRV_EXPORTABLE SnmpWalk(DWORD dwVersion, SNMP_Transport *pTransport, 
                   break;
                }
                dwNameLen = pVar->GetName()->getLength();
-               memcpy(pdwName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
+               memcpy(pdwName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
 					if (firstObjectNameLen == 0)
 					{
 						firstObjectNameLen = dwNameLen;
-						memcpy(firstObjectName, pdwName, dwNameLen * sizeof(DWORD));
+						memcpy(firstObjectName, pdwName, dwNameLen * sizeof(UINT32));
 					}
 
                // Call user's callback function for processing

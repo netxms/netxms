@@ -44,7 +44,7 @@ public:
 	const TCHAR *GetName() { return m_name; }
 	Situation *GetParent() { return m_parent; }
 	
-	DWORD CreateMessage(CSCPMessage *msg, DWORD baseId);
+	UINT32 CreateMessage(CSCPMessage *msg, UINT32 baseId);
 
 	const TCHAR *GetAttribute(const TCHAR *attribute);
 	void UpdateAttribute(const TCHAR *attribute, const TCHAR *value);
@@ -58,7 +58,7 @@ public:
 class Situation
 {
 private:
-	DWORD m_id;
+	UINT32 m_id;
 	TCHAR *m_name;
 	TCHAR *m_comments;
 	int m_numInstances;
@@ -76,7 +76,7 @@ public:
 	void SaveToDatabase();
 	void DeleteFromDatabase();
 	
-	DWORD GetId() { return m_id; }
+	UINT32 GetId() { return m_id; }
 	const TCHAR *GetName() { return m_name; }
 	
 	void CreateMessage(CSCPMessage *msg);
@@ -93,10 +93,10 @@ public:
 //
 
 BOOL SituationsInit(void);
-Situation *FindSituationById(DWORD id);
+Situation *FindSituationById(UINT32 id);
 Situation *FindSituationByName(const TCHAR *name);
 Situation *CreateSituation(const TCHAR *name);
-DWORD DeleteSituation(DWORD id);
+UINT32 DeleteSituation(UINT32 id);
 void SendSituationListToClient(ClientSession *session, CSCPMessage *msg);
 
 

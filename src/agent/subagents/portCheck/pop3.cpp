@@ -25,12 +25,12 @@ LONG H_CheckPOP3(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
+	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckPOP3(szHost, 0, 110, szUser, szPassword, dwTimeout));
 	return nRet;
 }
 
-int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass, DWORD dwTimeout)
+int CheckPOP3(char *szAddr, UINT32 dwAddr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;

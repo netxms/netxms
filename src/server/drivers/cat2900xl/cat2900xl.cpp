@@ -84,14 +84,14 @@ bool Cat2900Driver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for switch port enumeration
  */
-static DWORD HandlerPortList(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
 	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->GetValueAsUInt());
 	if (iface != NULL)
 	{
-		DWORD nameLen = var->GetName()->getLength();
+		UINT32 nameLen = var->GetName()->getLength();
 		iface->dwSlotNumber = var->GetName()->getValue()[nameLen - 2];
 		iface->dwPortNumber = var->GetName()->getValue()[nameLen - 1];
 		iface->isPhysicalPort = true;

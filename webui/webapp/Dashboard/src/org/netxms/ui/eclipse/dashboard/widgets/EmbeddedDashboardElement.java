@@ -33,8 +33,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class EmbeddedDashboardElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-	
 	private Dashboard[] objects;
 	private EmbeddedDashboardConfig config;
 	private DashboardControl control = null;

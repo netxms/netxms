@@ -30,8 +30,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
  */
 public class AlarmViewerElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	private AlarmList viewer;
 	private AlarmViewerConfig config;
 	

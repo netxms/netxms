@@ -190,8 +190,7 @@ void ExportDatabase(const char *file)
 	sqlite3 *db;
 	char *errmsg, buffer[MAX_PATH], queryTemplate[MAX_DB_STRING], *data;
 	TCHAR idataTable[128];
-	DWORD size;
-	int i, rowCount, version = 0;
+   int i, rowCount, version = 0;
 	DB_RESULT hResult;
 	BOOL success = FALSE;
 
@@ -221,7 +220,7 @@ void ExportDatabase(const char *file)
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
                     KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
-      size = MAX_PATH - 16;
+      DWORD size = MAX_PATH - 16;
       if (RegQueryValueExA(hKey, "InstallPath", NULL, NULL, 
                            (BYTE *)buffer, &size) == ERROR_SUCCESS)
       {
@@ -265,6 +264,7 @@ void ExportDatabase(const char *file)
 #endif
 #endif
 
+   UINT32 size;
 	data = (char *)LoadFileA(buffer, &size);
 	if (data == NULL)
 	{

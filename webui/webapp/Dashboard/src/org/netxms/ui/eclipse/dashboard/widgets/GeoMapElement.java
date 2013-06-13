@@ -31,8 +31,6 @@ import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
  */
 public class GeoMapElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	private GeoMapViewer mapWidget;
 	private GeoMapConfig config;
 	

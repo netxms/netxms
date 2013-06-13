@@ -35,7 +35,7 @@ NodeLink::NodeLink() : ServiceContainer()
 /**
  * Constructor for new nodelink object
  */
-NodeLink::NodeLink(const TCHAR *name, DWORD nodeId) : ServiceContainer(name)
+NodeLink::NodeLink(const TCHAR *name, UINT32 nodeId) : ServiceContainer(name)
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_nodeId = nodeId;
@@ -51,7 +51,7 @@ NodeLink::~NodeLink()
 /**
  * Create object from database data
  */
-BOOL NodeLink::CreateFromDB(DWORD id)
+BOOL NodeLink::CreateFromDB(UINT32 id)
 {
 	const int script_length = 1024;
 	m_dwId = id;
@@ -170,7 +170,7 @@ void NodeLink::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-DWORD NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
 		LockData();
@@ -211,7 +211,7 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 	// Check if we already have check created from this template
 	SlmCheck *check = NULL;
 	LockChildList(FALSE);
-	for(DWORD i = 0; i < m_dwChildCount; i++)
+	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
 		if ((m_pChildList[i]->Type() == OBJECT_SLMCHECK) &&
 		    (((SlmCheck *)m_pChildList[i])->getTemplateId() == tmpl->Id()))
@@ -244,7 +244,7 @@ void NodeLink::applyTemplates()
 	ObjectArray<SlmCheck> templates;
 
 	LockParentList(FALSE);
-	for(DWORD i = 0; i < m_dwParentCount; i++)
+	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
 		if (m_pParentList[i]->Type() != OBJECT_BUSINESSSERVICE)
 			continue;
@@ -274,7 +274,7 @@ static THREAD_RESULT THREAD_CALL DeleteThread(void *arg)
 /**
  * Object deletion handler
  */
-void NodeLink::onObjectDelete(DWORD dwObjectId)
+void NodeLink::onObjectDelete(UINT32 dwObjectId)
 {
 	if (dwObjectId == m_nodeId)
 	{

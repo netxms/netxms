@@ -26,7 +26,7 @@
 /**
  * Constructor
  */
-SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *pConn, DWORD dwIpAddr, WORD wPort)
+SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr, WORD wPort)
 {
 	m_pAgentConnection = pConn;
 	m_dwIpAddr = dwIpAddr;
@@ -49,7 +49,7 @@ SNMP_ProxyTransport::~SNMP_ProxyTransport()
 int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 {
    BYTE *pBuffer;
-   DWORD dwSize;
+   UINT32 dwSize;
    int nRet = -1;
 	CSCPMessage msg(m_pAgentConnection->getProtocolVersion());
 
@@ -76,13 +76,13 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 /**
  * Receive PDU
  */
-int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout, 
+int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout, 
                                      struct sockaddr *pSender, socklen_t *piAddrSize,
                                      SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
 	int nRet;
 	BYTE *pBuffer;
-	DWORD dwSize;
+	UINT32 dwSize;
 
 	if (m_pResponse == NULL)
 		return -1;
@@ -117,7 +117,7 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
 /**
  * Get peer IPv4 address (in host byte order)
  */
-DWORD SNMP_ProxyTransport::getPeerIpAddress()
+UINT32 SNMP_ProxyTransport::getPeerIpAddress()
 {
    return m_dwIpAddr;
 }

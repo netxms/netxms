@@ -27,11 +27,11 @@
 // Map port numbers from dot1dBasePortTable to interface indexes
 //
 
-static DWORD PortMapCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 PortMapCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    TCHAR oid[MAX_OID_LEN * 4], suffix[MAX_OID_LEN * 4];
    SNMP_ObjectId *pOid = var->GetName();
-   SNMPConvertOIDToText(pOid->getLength() - 11, (DWORD *)&(pOid->getValue())[11], suffix, MAX_OID_LEN * 4);
+   SNMPConvertOIDToText(pOid->getLength() - 11, (UINT32 *)&(pOid->getValue())[11], suffix, MAX_OID_LEN * 4);
 
 	// Get interface index
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
@@ -40,12 +40,12 @@ static DWORD PortMapCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 	pRqPDU->bindVariable(new SNMP_Variable(oid));
 
 	SNMP_PDU *pRespPDU;
-   DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		DWORD ifIndex = pRespPDU->getVariable(0)->GetValueAsUInt();
+		UINT32 ifIndex = pRespPDU->getVariable(0)->GetValueAsUInt();
 		InterfaceList *ifList = (InterfaceList *)arg;
 		for(int i = 0; i < ifList->getSize(); i++)
 			if (ifList->get(i)->dwIndex == ifIndex)

@@ -62,7 +62,7 @@ void ForwardingDatabase::addPortMapping(PORT_MAPPING_ENTRY *entry)
 /**
  * Get interface index for given port number
  */
-DWORD ForwardingDatabase::ifIndexFromPort(DWORD port)
+UINT32 ForwardingDatabase::ifIndexFromPort(UINT32 port)
 {
 	for(int i = 0; i < m_pmSize; i++)
 		if (m_portMap[i].port == port)
@@ -106,7 +106,7 @@ static int EntryComparator(const void *p1, const void *p2)
  * Find MAC address
  * Returns interface index or 0 if MAC address not found
  */
-DWORD ForwardingDatabase::findMacAddress(const BYTE *macAddr)
+UINT32 ForwardingDatabase::findMacAddress(const BYTE *macAddr)
 {
 	FDB_ENTRY key;
 	memcpy(key.macAddr, macAddr, MAC_ADDR_LENGTH);
@@ -119,7 +119,7 @@ DWORD ForwardingDatabase::findMacAddress(const BYTE *macAddr)
  * If macAddr parameter is not NULL, MAC address found on port
  * copied into provided buffer
  */
-bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr)
+bool ForwardingDatabase::isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr)
 {
 	int count = 0;
 	for(int i = 0; i < m_fdbSize; i++)
@@ -138,7 +138,7 @@ bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr)
 /**
  * Get number of MAC addresses on given port
  */
-int ForwardingDatabase::getMacCountOnPort(DWORD ifIndex)
+int ForwardingDatabase::getMacCountOnPort(UINT32 ifIndex)
 {
 	int count = 0;
 	for(int i = 0; i < m_fdbSize; i++)
@@ -161,12 +161,12 @@ void ForwardingDatabase::sort()
 /**
  * FDB walker's callback
  */
-static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
    SNMP_ObjectId *pOid = pVar->GetName();
-	DWORD oidLen = pOid->getLength();
-	DWORD oid[MAX_OID_LEN];
-	memcpy(oid, pOid->getValue(), oidLen * sizeof(DWORD));
+	UINT32 oidLen = pOid->getLength();
+	UINT32 oid[MAX_OID_LEN];
+	memcpy(oid, pOid->getValue(), oidLen * sizeof(UINT32));
 
 	// Get port number and status
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
@@ -178,7 +178,7 @@ static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
 	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
 
    SNMP_PDU *pRespPDU;
-   DWORD rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)
@@ -190,7 +190,7 @@ static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
 			FDB_ENTRY entry;
 
 			memset(&entry, 0, sizeof(FDB_ENTRY));
-			entry.port = (DWORD)port;
+			entry.port = (UINT32)port;
 			pVar->getRawValue(entry.macAddr, MAC_ADDR_LENGTH);
 			Node *node = FindNodeByMAC(entry.macAddr);
 			entry.nodeObject = (node != NULL) ? node->Id() : 0;
@@ -205,16 +205,16 @@ static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
 /**
  * dot1qTpFdbEntry walker's callback
  */
-static DWORD Dot1qTpFdbHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
 	int port = pVar->GetValueAsInt();
 	if (port == 0)
 		return SNMP_ERR_SUCCESS;
 
    SNMP_ObjectId *pOid = pVar->GetName();
-	DWORD oidLen = pOid->getLength();
-	DWORD oid[MAX_OID_LEN];
-	memcpy(oid, pOid->getValue(), oidLen * sizeof(DWORD));
+	UINT32 oidLen = pOid->getLength();
+	UINT32 oid[MAX_OID_LEN];
+	memcpy(oid, pOid->getValue(), oidLen * sizeof(UINT32));
 
 	// Get port number and status
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
@@ -223,7 +223,7 @@ static DWORD Dot1qTpFdbHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transp
 	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
 
    SNMP_PDU *pRespPDU;
-   DWORD rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)
@@ -234,8 +234,8 @@ static DWORD Dot1qTpFdbHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transp
 			FDB_ENTRY entry;
 
 			memset(&entry, 0, sizeof(FDB_ENTRY));
-			entry.port = (DWORD)port;
-			for(DWORD i = oidLen - MAC_ADDR_LENGTH, j = 0; i < oidLen; i++)
+			entry.port = (UINT32)port;
+			for(UINT32 i = oidLen - MAC_ADDR_LENGTH, j = 0; i < oidLen; i++)
 				entry.macAddr[j++] = (BYTE)oid[i];
 			Node *node = FindNodeByMAC(entry.macAddr);
 			entry.nodeObject = (node != NULL) ? node->Id() : 0;
@@ -250,7 +250,7 @@ static DWORD Dot1qTpFdbHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transp
 /**
  * dot1dBasePortTable walker's callback
  */
-static DWORD Dot1dPortTableHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static UINT32 Dot1dPortTableHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
    SNMP_ObjectId *pOid = pVar->GetName();
 	PORT_MAPPING_ENTRY pm;

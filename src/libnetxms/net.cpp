@@ -37,7 +37,7 @@
  * @param timeout connection timeout in milliseconds
  * @return connected SocketConnection object or NULL on connection failure
  */
-SocketConnection *SocketConnection::createTCPConnection(const TCHAR *hostName, WORD port, DWORD timeout)
+SocketConnection *SocketConnection::createTCPConnection(const TCHAR *hostName, WORD port, UINT32 timeout)
 {
 	SocketConnection *s = new SocketConnection;
 	if (!s->connectTCP(hostName, port, timeout))
@@ -74,7 +74,7 @@ SocketConnection::~SocketConnection()
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, DWORD timeout)
+bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout)
 {
    return connectTCP(ntohl(ResolveHostName(hostName)), port, timeout);
 }
@@ -87,7 +87,7 @@ bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, DWORD timeou
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool SocketConnection::connectTCP(DWORD ip, WORD port, DWORD timeout)
+bool SocketConnection::connectTCP(UINT32 ip, WORD port, UINT32 timeout)
 {
 	m_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_socket != INVALID_SOCKET)
@@ -111,7 +111,7 @@ bool SocketConnection::connectTCP(DWORD ip, WORD port, DWORD timeout)
 /**
  * Check if given socket can be read
  */
-bool SocketConnection::canRead(DWORD timeout)
+bool SocketConnection::canRead(UINT32 timeout)
 {
 	bool ret = false;
 	struct timeval tv;
@@ -133,7 +133,7 @@ bool SocketConnection::canRead(DWORD timeout)
 /**
  * Read data from socket
  */
-int SocketConnection::read(char *pBuff, int nSize, DWORD timeout)
+int SocketConnection::read(char *pBuff, int nSize, UINT32 timeout)
 {
 	return RecvEx(m_socket, pBuff, nSize, 0, timeout);
 }
@@ -224,7 +224,7 @@ bool SocketConnection::waitForText(const char *text, int timeout)
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool TelnetConnection::connect(const TCHAR *hostName, WORD port, DWORD timeout)
+bool TelnetConnection::connect(const TCHAR *hostName, WORD port, UINT32 timeout)
 {
    return connect(ntohl(ResolveHostName(hostName)), port, timeout);
 }
@@ -237,7 +237,7 @@ bool TelnetConnection::connect(const TCHAR *hostName, WORD port, DWORD timeout)
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool TelnetConnection::connect(DWORD ip, WORD port, DWORD timeout)
+bool TelnetConnection::connect(UINT32 ip, WORD port, UINT32 timeout)
 {
    bool ret = SocketConnection::connectTCP(ip, port, timeout);
 
@@ -257,7 +257,7 @@ bool TelnetConnection::connect(DWORD ip, WORD port, DWORD timeout)
 /**
  * Read data from socket
  */
-int TelnetConnection::read(char *pBuff, int nSize, DWORD timeout)
+int TelnetConnection::read(char *pBuff, int nSize, UINT32 timeout)
 {
 retry:
 	int bytesRead = RecvEx(m_socket, pBuff, nSize, 0, timeout);
@@ -327,7 +327,7 @@ retry:
 /**
  * Read line from socket
  */
-int TelnetConnection::readLine(char *buffer, int size, DWORD timeout)
+int TelnetConnection::readLine(char *buffer, int size, UINT32 timeout)
 {
    int numOfChars = 0;
 	int bytesRead = 0;
@@ -366,7 +366,7 @@ int TelnetConnection::readLine(char *buffer, int size, DWORD timeout)
  * @param timeout connection timeout in milliseconds
  * @return connected TelnetConnection object or NULL on connection failure
  */
-TelnetConnection *TelnetConnection::createConnection(const TCHAR *hostName, WORD port, DWORD timeout)
+TelnetConnection *TelnetConnection::createConnection(const TCHAR *hostName, WORD port, UINT32 timeout)
 {
 	TelnetConnection *tc = new TelnetConnection();
 	if (!tc->connect(hostName, port, timeout))

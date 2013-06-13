@@ -30,9 +30,9 @@
 
 struct TOOL_STARTUP_INFO
 {
-   DWORD dwToolId;
-   DWORD dwRqId;
-   DWORD dwFlags;
+   UINT32 dwToolId;
+   UINT32 dwRqId;
+   UINT32 dwFlags;
    Node *pNode;
    ClientSession *pSession;
    TCHAR *pszToolData;
@@ -45,10 +45,10 @@ struct TOOL_STARTUP_INFO
 
 struct SNMP_ENUM_ARGS
 {
-   DWORD dwNumCols;
+   UINT32 dwNumCols;
    TCHAR **ppszOidList;
    LONG *pnFormatList;
-   DWORD dwFlags;
+   UINT32 dwFlags;
    Node *pNode;
 	Table *table;
 };
@@ -58,7 +58,7 @@ struct SNMP_ENUM_ARGS
 // Check if tool with given id exist and is a table tool
 //
 
-BOOL IsTableTool(DWORD dwToolId)
+BOOL IsTableTool(UINT32 dwToolId)
 {
    DB_RESULT hResult;
    TCHAR szBuffer[256];
@@ -84,12 +84,12 @@ BOOL IsTableTool(DWORD dwToolId)
 // Check if user has access to the tool
 //
 
-BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId)
+BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId)
 {
    DB_RESULT hResult;
    TCHAR szBuffer[256];
 	int i, nRows;
-	DWORD dwId;
+	UINT32 dwId;
    BOOL bResult = FALSE;
 
    if (dwUserId == 0)
@@ -132,7 +132,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
    CSCPMessage msg;
    TCHAR *pszEnum, *pszRegEx, *pszLine, szBuffer[4096];
    AgentConnection *pConn;
-   DWORD i, j, dwNumRows, dwNumCols, dwResult, dwLen;
+   UINT32 i, j, dwNumRows, dwNumCols, dwResult, dwLen;
    int *pnSubstrPos, nPos;
    regex_t preg;
    regmatch_t *pMatchList;
@@ -264,7 +264,7 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
 {
    TCHAR szBuffer[4096];
    Interface *pInterface;
-   DWORD dwIndex;
+   UINT32 dwIndex;
 	bool convert;
 
    if (pVar != NULL)
@@ -310,12 +310,12 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
 // Handler for SNMP table enumeration
 //
 
-static DWORD TableHandler(DWORD dwVersion, SNMP_Variable *pVar,
+static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
                           SNMP_Transport *pTransport, void *pArg)
 {
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
    SNMP_PDU *pRqPDU, *pRespPDU;
-   DWORD i, dwResult, dwNameLen, pdwVarName[MAX_OID_LEN];
+   UINT32 i, dwResult, dwNameLen, pdwVarName[MAX_OID_LEN];
 
    // Create index (OID suffix) for columns
    if (((SNMP_ENUM_ARGS *)pArg)->dwFlags & TF_SNMP_INDEXED_BY_VALUE)
@@ -329,7 +329,7 @@ static DWORD TableHandler(DWORD dwVersion, SNMP_Variable *pVar,
       dwNameLen = SNMPParseOID(((SNMP_ENUM_ARGS *)pArg)->ppszOidList[0], pdwVarName, MAX_OID_LEN);
       pOid = pVar->GetName();
       SNMPConvertOIDToText(pOid->getLength() - dwNameLen, 
-         (DWORD *)&(pOid->getValue())[dwNameLen], szSuffix, MAX_OID_LEN * 4);
+         (UINT32 *)&(pOid->getValue())[dwNameLen], szSuffix, MAX_OID_LEN * 4);
    }
 
    // Get values for other columns
@@ -380,7 +380,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    TCHAR szBuffer[256];
    DB_RESULT hResult;
    CSCPMessage msg;
-   DWORD i, dwNumCols;
+   UINT32 i, dwNumCols;
    SNMP_ENUM_ARGS args;
 	Table table;
 
@@ -454,10 +454,10 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
 // Execute table tool
 //
 
-DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession)
+UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSession *pSession)
 {
    LONG nType;
-   DWORD dwRet = RCC_SUCCESS;
+   UINT32 dwRet = RCC_SUCCESS;
    TOOL_STARTUP_INFO *pStartup;
    TCHAR szBuffer[256];
    DB_RESULT hResult;
@@ -506,7 +506,7 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
 // Delete object tool from database
 //
 
-DWORD DeleteObjectToolFromDB(DWORD dwToolId)
+UINT32 DeleteObjectToolFromDB(UINT32 dwToolId)
 {
    TCHAR szQuery[256];
 
@@ -526,13 +526,13 @@ DWORD DeleteObjectToolFromDB(DWORD dwToolId)
 /**
  * Update object tool from NXCP message
  */
-DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
+UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 {
    DB_RESULT hResult;
    BOOL bUpdate = FALSE;
    TCHAR *pszName, *pszData, *pszDescription, *pszOID, *pszTmp, *pszConfirm;
    TCHAR szBuffer[MAX_DB_STRING], szQuery[4096];
-   DWORD i, dwToolId, dwAclSize, *pdwAcl;
+   UINT32 i, dwToolId, dwAclSize, *pdwAcl;
    int nType;
 
    // Check if tool already exist
@@ -587,7 +587,7 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    dwAclSize = pMsg->GetVariableLong(VID_ACL_SIZE);
    if (dwAclSize > 0)
    {
-      pdwAcl = (DWORD *)malloc(sizeof(DWORD) * dwAclSize);
+      pdwAcl = (UINT32 *)malloc(sizeof(UINT32) * dwAclSize);
       pMsg->GetVariableInt32Array(VID_ACL, dwAclSize, pdwAcl);
       for(i = 0; i < dwAclSize; i++)
       {
@@ -603,7 +603,7 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    if ((nType == TOOL_TYPE_TABLE_SNMP) ||
        (nType == TOOL_TYPE_TABLE_AGENT))
    {
-      DWORD dwId, dwNumColumns;
+      UINT32 dwId, dwNumColumns;
 
       dwNumColumns = pMsg->GetVariableShort(VID_NUM_COLUMNS);
       for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < dwNumColumns; i++, dwId += 2)

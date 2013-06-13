@@ -121,7 +121,7 @@ void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
 /**
  * Handler for enumerating indexes
  */
-static DWORD HandlerIndex(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
 	NX_INTERFACE_INFO info;
 	memset(&info, 0, sizeof(NX_INTERFACE_INFO));
@@ -133,15 +133,15 @@ static DWORD HandlerIndex(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *
 /**
  * Handler for enumerating IP addresses
  */
-static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   DWORD dwIndex, dwNetMask, dwNameLen, dwResult;
-   DWORD oidName[MAX_OID_LEN];
+   UINT32 dwIndex, dwNetMask, dwNameLen, dwResult;
+   UINT32 oidName[MAX_OID_LEN];
 
    dwNameLen = pVar->GetName()->getLength();
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
+   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
    oidName[dwNameLen - 5] = 3;  // Retrieve network mask for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwNetMask, sizeof(DWORD), 0);
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwNetMask, sizeof(UINT32), 0);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		TCHAR buffer[1024];
@@ -154,7 +154,7 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport 
 	}
 
    oidName[dwNameLen - 5] = 2;  // Retrieve interface index for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(DWORD), 0);
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(UINT32), 0);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		InterfaceList *ifList = (InterfaceList *)pArg;
@@ -210,7 +210,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p,%d,%s)"), snmp, useAliases, useIfXTable ? _T("true") : _T("false"));
 
    // Get number of interfaces
-	DWORD error = SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0, &iNumIf, sizeof(LONG), 0);
+	UINT32 error = SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0, &iNumIf, sizeof(LONG), 0);
 	if (error != SNMP_ERR_SUCCESS)
 	{
 		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET .1.3.6.1.2.1.2.1.0 failed (%s)"), snmp, SNMPGetErrorText(error));
@@ -307,7 +307,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          // Interface type
          _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->dwIndex);
          if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0,
-                      &iface->dwType, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
+                      &iface->dwType, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			{
 				iface->dwType = IFTYPE_OTHER;
 			}
@@ -354,7 +354,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 /**
  * Handler for VLAN enumeration
  */
-static DWORD HandlerVlanList(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
 
@@ -396,7 +396,7 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 	{
 		if (map & mask)
 		{
-			vlan->add((DWORD)port);
+			vlan->add((UINT32)port);
 		}
 		mask >>= 1;
 		port++;
@@ -406,10 +406,10 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 /**
  * Handler for VLAN egress port enumeration
  */
-static DWORD HandlerVlanEgressPorts(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerVlanEgressPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-	DWORD vlanId = var->GetName()->getValue()[var->GetName()->getLength() - 1];
+	UINT32 vlanId = var->GetName()->getValue()[var->GetName()->getLength() - 1];
 	VlanInfo *vlan = vlanList->findById(vlanId);
 	if (vlan != NULL)
 	{

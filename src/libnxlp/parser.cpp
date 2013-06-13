@@ -462,7 +462,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "event"))
 	{
-		ps->numEventParams = XMLGetAttrDWORD(attrs, "params", 0);
+		ps->numEventParams = XMLGetAttrUINT32(attrs, "params", 0);
 		ps->state = XML_STATE_EVENT;
 	}
 	else if (!strcmp(name, "context"))

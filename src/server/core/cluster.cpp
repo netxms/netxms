@@ -40,7 +40,7 @@ Cluster::Cluster() : DataCollectionTarget()
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, DWORD zoneId) : DataCollectionTarget(pszName)
+Cluster::Cluster(const TCHAR *pszName, UINT32 zoneId) : DataCollectionTarget(pszName)
 {
 	m_dwClusterType = 0;
 	m_dwNumSyncNets = 0;
@@ -64,12 +64,12 @@ Cluster::~Cluster()
 /**
  * Create object from database data
  */
-BOOL Cluster::CreateFromDB(DWORD dwId)
+BOOL Cluster::CreateFromDB(UINT32 dwId)
 {
 	TCHAR szQuery[256];
    BOOL bResult = FALSE;
 	DB_RESULT hResult;
-	DWORD dwNodeId;
+	UINT32 dwNodeId;
 	NetObj *pObject;
 	int i, nRows;
 
@@ -200,7 +200,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 {
 	TCHAR szQuery[4096], szIpAddr[16], szNetMask[16];
    BOOL bResult;
-   DWORD i;
+   UINT32 i;
 
    // Lock object's access
    LockData();
@@ -221,7 +221,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    if (bResult)
    {
 		lockDciAccess();
-      for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
+      for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDB(hdb);
 		unlockDciAccess();
 
@@ -342,14 +342,14 @@ bool Cluster::deleteFromDB(DB_HANDLE hdb)
  */
 void Cluster::CreateMessage(CSCPMessage *pMsg)
 {
-	DWORD i, dwId;
+	UINT32 i, dwId;
 
    DataCollectionTarget::CreateMessage(pMsg);
    pMsg->SetVariable(VID_CLUSTER_TYPE, m_dwClusterType);
 	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
 	pMsg->SetVariable(VID_NUM_SYNC_SUBNETS, m_dwNumSyncNets);
 	if (m_dwNumSyncNets > 0)
-		pMsg->SetVariableToInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (DWORD *)m_pSyncNetList);
+		pMsg->SetVariableToInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
 	pMsg->SetVariable(VID_NUM_RESOURCES, m_dwNumResources);
 	for(i = 0, dwId = VID_RESOURCE_LIST_BASE; i < m_dwNumResources; i++, dwId += 6)
 	{
@@ -363,7 +363,7 @@ void Cluster::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -379,7 +379,7 @@ DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		if (m_dwNumSyncNets > 0)
 		{
 			m_pSyncNetList = (IP_NETWORK *)realloc(m_pSyncNetList, sizeof(IP_NETWORK) * m_dwNumSyncNets);
-			pRequest->GetVariableInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (DWORD *)m_pSyncNetList);
+			pRequest->GetVariableInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
 		}
 		else
 		{
@@ -390,7 +390,7 @@ DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change resource list
    if (pRequest->IsVariableExist(VID_NUM_RESOURCES))
 	{
-		DWORD i, j, dwId, dwCount;
+		UINT32 i, j, dwId, dwCount;
 		CLUSTER_RESOURCE *pList;
 
       dwCount = pRequest->GetVariableLong(VID_NUM_RESOURCES);
@@ -443,9 +443,9 @@ void Cluster::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Check if given address is within sync network
  */
-bool Cluster::isSyncAddr(DWORD dwAddr)
+bool Cluster::isSyncAddr(UINT32 dwAddr)
 {
-	DWORD i;
+	UINT32 i;
 	bool bRet = false;
 
 	LockData();
@@ -464,9 +464,9 @@ bool Cluster::isSyncAddr(DWORD dwAddr)
 /**
  * Check if given address is a resource address
  */
-bool Cluster::isVirtualAddr(DWORD dwAddr)
+bool Cluster::isVirtualAddr(UINT32 dwAddr)
 {
-	DWORD i;
+	UINT32 i;
 	bool bRet = false;
 
 	LockData();
@@ -485,9 +485,9 @@ bool Cluster::isVirtualAddr(DWORD dwAddr)
 /**
  * Status poll
  */
-void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
+void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 {
-	DWORD i, j, k, dwPollListSize;
+	UINT32 i, j, k, dwPollListSize;
 	InterfaceList *pIfList;
 	BOOL bModified = FALSE, bAllDown;
 	BYTE *pbResourceFound;
@@ -545,7 +545,7 @@ void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 			if (pIfList != NULL)
 			{
 				LockData();
-				for(j = 0; j < (DWORD)pIfList->getSize(); j++)
+				for(j = 0; j < (UINT32)pIfList->getSize(); j++)
 				{
 					for(k = 0; k < m_dwNumResources; k++)
 					{
@@ -634,10 +634,10 @@ void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 /**
  * Check if node is current owner of resource
  */
-bool Cluster::isResourceOnNode(DWORD dwResource, DWORD dwNode)
+bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
 {
 	bool bRet = FALSE;
-	DWORD i;
+	UINT32 i;
 
 	LockData();
 	for(i = 0; i < m_dwNumResources; i++)
@@ -656,12 +656,12 @@ bool Cluster::isResourceOnNode(DWORD dwResource, DWORD dwNode)
 /**
  * Collect aggregated data for cluster nodes
  */
-DWORD Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
+UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
    LockChildList(TRUE);
    ItemValue **values = (ItemValue **)malloc(sizeof(ItemValue *) * m_dwChildCount);
    int valueCount = 0;
-   for(DWORD i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
    {
       if (m_pChildList[i]->Type() != OBJECT_NODE)
          continue;
@@ -677,7 +677,7 @@ DWORD Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
    }
    UnlockChildList();
 
-   DWORD rcc = DCE_SUCCESS;
+   UINT32 rcc = DCE_SUCCESS;
    if (valueCount > 0)
    {
       ItemValue result;

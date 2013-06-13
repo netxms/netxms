@@ -245,7 +245,7 @@ int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault)
 /**
  * Read unsigned long value from configuration table 
  */
-DWORD NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, DWORD dwDefault)
+UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault)
 {
    TCHAR szBuffer[64];
 
@@ -351,7 +351,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCrea
 /**
  * Write unsigned long value to configuration table
  */
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate, BOOL isVisible, BOOL needRestart)
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, UINT32 dwValue, BOOL bCreate, BOOL isVisible, BOOL needRestart)
 {
    TCHAR szBuffer[64];
 

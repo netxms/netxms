@@ -70,7 +70,7 @@ MobileDevice::~MobileDevice()
 /**
  * Create object from database data
  */
-BOOL MobileDevice::CreateFromDB(DWORD dwId)
+BOOL MobileDevice::CreateFromDB(UINT32 dwId)
 {
    m_dwId = dwId;
 
@@ -187,14 +187,14 @@ void MobileDevice::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_OS_NAME, CHECK_NULL_EX(m_osName));
 	msg->SetVariable(VID_OS_VERSION, CHECK_NULL_EX(m_osVersion));
 	msg->SetVariable(VID_USER_ID, CHECK_NULL_EX(m_userId));
-	msg->SetVariable(VID_BATTERY_LEVEL, (DWORD)m_batteryLevel);
+	msg->SetVariable(VID_BATTERY_LEVEL, (UINT32)m_batteryLevel);
 	msg->SetVariable(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
 }
 
 /**
  * Modify object from message
  */
-DWORD MobileDevice::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 MobileDevice::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -265,9 +265,9 @@ void MobileDevice::updateStatus(CSCPMessage *msg)
 /**
  * Get value for server's internal parameter
  */
-DWORD MobileDevice::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
+UINT32 MobileDevice::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
 {
-	DWORD rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
+	UINT32 rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
 	if (rc == DCE_SUCCESS)
 		return DCE_SUCCESS;
 	rc = DCE_SUCCESS;

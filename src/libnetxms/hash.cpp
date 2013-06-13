@@ -97,13 +97,10 @@ static DWORD crctab[256]=
 	0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-
-//
-// Calculate CRC32 for buffer of specified length
-//
-
-DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData,
-		DWORD nBytes, DWORD dwCRC = 0)
+/**
+ * Calculate CRC32 for buffer of specified length
+ */
+UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, UINT32 nBytes, UINT32 dwCRC)
 {
 	dwCRC = ~dwCRC;
 
@@ -115,11 +112,9 @@ DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData,
 	return ~dwCRC;
 }
 
-
-//
-// Calculate MD5 hash for array of bytes
-//
-
+/**
+ * Calculate MD5 hash for array of bytes
+ */
 void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, BYTE *hash)
 {
 	md5_state_t state;
@@ -129,11 +124,9 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nby
 	I_md5_finish(&state, (md5_byte_t *)hash);
 }
 
-
-//
-// Calculate MD5 hash for repeated pattern in virtual buffer
-//
-
+/**
+ * Calculate MD5 hash for repeated pattern in virtual buffer
+ */
 void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
 	md5_state_t state;
@@ -276,7 +269,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *
 // Calculate CRC32 for given file
 //
 
-BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, DWORD *pResult)
+BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult)
 {
 	size_t iSize;
 	unsigned char szBuffer[FILE_BLOCK_SIZE];

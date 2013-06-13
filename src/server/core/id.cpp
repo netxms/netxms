@@ -31,12 +31,12 @@
  * Static data
  */
 static MUTEX m_mutexTableAccess;
-static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 100, 1, FIRST_USER_EVENT_ID, 1, 1, 
+static UINT32 m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 100, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
                                                    10000, 10000, 1, 1, 1, 1, 1, 1, 1
                                                  };
-static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
+static UINT32 m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
@@ -82,7 +82,7 @@ BOOL InitIdTable()
    m_mutexTableAccess = MutexCreate();
 
    // Get first available network object ID
-	DWORD id = ConfigReadULong(_T("FirstFreeObjectId"), m_dwFreeIdTable[IDG_NETWORK_OBJECT]);
+	UINT32 id = ConfigReadULong(_T("FirstFreeObjectId"), m_dwFreeIdTable[IDG_NETWORK_OBJECT]);
 	if (id > m_dwFreeIdTable[IDG_NETWORK_OBJECT])
 		m_dwFreeIdTable[IDG_NETWORK_OBJECT] = id;
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM nodes"));
@@ -451,9 +451,9 @@ BOOL InitIdTable()
 /**
  * Create unique ID
  */
-DWORD CreateUniqueId(int iGroup)
+UINT32 CreateUniqueId(int iGroup)
 {
-   DWORD dwId;
+   UINT32 dwId;
 
    MutexLock(m_mutexTableAccess);
    if (m_dwFreeIdTable[iGroup] == m_dwIdLimits[iGroup])

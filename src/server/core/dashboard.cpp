@@ -66,7 +66,7 @@ void Dashboard::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create object from database
  */
-BOOL Dashboard::CreateFromDB(DWORD dwId)
+BOOL Dashboard::CreateFromDB(UINT32 dwId)
 {
 	if (!Container::CreateFromDB(dwId))
 		return FALSE;
@@ -186,9 +186,9 @@ void Dashboard::CreateMessage(CSCPMessage *msg)
 	Container::CreateMessage(msg);
 	msg->SetVariable(VID_NUM_COLUMNS, (WORD)m_numColumns);
 	msg->SetVariable(VID_FLAGS, m_options);
-	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_elements->size());
+	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
 
-	DWORD varId = VID_ELEMENT_LIST_BASE;
+	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_elements->size(); i++)
 	{
 		DashboardElement *element = m_elements->get(i);
@@ -202,7 +202,7 @@ void Dashboard::CreateMessage(CSCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-DWORD Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
+UINT32 Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
 {
 	if (!alreadyLocked)
 		LockData();
@@ -218,7 +218,7 @@ DWORD Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
 		m_elements->clear();
 
 		int count = (int)request->GetVariableLong(VID_NUM_ELEMENTS);
-		DWORD varId = VID_ELEMENT_LIST_BASE;
+		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
 			DashboardElement *e = new DashboardElement;

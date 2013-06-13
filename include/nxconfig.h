@@ -63,18 +63,18 @@ public:
 	int getConcatenatedValuesLength();
 	
 	const TCHAR *getValue(int index = 0);
-	LONG getValueInt(int index = 0, LONG defaultValue = 0);
-	DWORD getValueUInt(int index = 0, DWORD defaultValue = 0);
+	INT32 getValueInt(int index = 0, INT32 defaultValue = 0);
+	UINT32 getValueUInt(int index = 0, UINT32 defaultValue = 0);
 	INT64 getValueInt64(int index = 0, INT64 defaultValue = 0);
-	QWORD getValueUInt64(int index = 0, QWORD defaultValue = 0);
+	UINT64 getValueUInt64(int index = 0, UINT64 defaultValue = 0);
 	bool getValueBoolean(int index = 0, bool defaultValue = false);
 	bool getValueUUID(int index, uuid_t uuid);
 
 	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = NULL);
-	LONG getSubEntryValueInt(const TCHAR *name, int index = 0, LONG defaultValue = 0);
-	DWORD getSubEntryValueUInt(const TCHAR *name, int index = 0, DWORD defaultValue = 0);
+	INT32 getSubEntryValueInt(const TCHAR *name, int index = 0, INT32 defaultValue = 0);
+	UINT32 getSubEntryValueUInt(const TCHAR *name, int index = 0, UINT32 defaultValue = 0);
 	INT64 getSubEntryValueInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0);
-	QWORD getSubEntryValueUInt64(const TCHAR *name, int index = 0, QWORD defaultValue = 0);
+	UINT64 getSubEntryValueUInt64(const TCHAR *name, int index = 0, UINT64 defaultValue = 0);
 	bool getSubEntryValueBoolean(const TCHAR *name, int index = 0, bool defaultValue = false);
 	bool getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index = 0);
 
@@ -155,20 +155,20 @@ public:
 
 	ConfigEntry *getEntry(const TCHAR *path);
 	const TCHAR *getValue(const TCHAR *path, const TCHAR *defaultValue = NULL);
-	LONG getValueInt(const TCHAR *path, LONG defaultValue);
-	DWORD getValueUInt(const TCHAR *path, DWORD defaultValue);
+	INT32 getValueInt(const TCHAR *path, INT32 defaultValue);
+	UINT32 getValueUInt(const TCHAR *path, UINT32 defaultValue);
 	INT64 getValueInt64(const TCHAR *path, INT64 defaultValue);
-	QWORD getValueUInt64(const TCHAR *path, QWORD defaultValue);
+	UINT64 getValueUInt64(const TCHAR *path, UINT64 defaultValue);
 	bool getValueBoolean(const TCHAR *path, bool defaultValue);
 	bool getValueUUID(const TCHAR *path, uuid_t uuid);
 	ConfigEntryList *getSubEntries(const TCHAR *path, const TCHAR *mask);
 	ConfigEntryList *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
 
 	bool setValue(const TCHAR *path, const TCHAR *value);
-	bool setValue(const TCHAR *path, LONG value);
-	bool setValue(const TCHAR *path, DWORD value);
+	bool setValue(const TCHAR *path, INT32 value);
+	bool setValue(const TCHAR *path, UINT32 value);
 	bool setValue(const TCHAR *path, INT64 value);
-	bool setValue(const TCHAR *path, QWORD value);
+	bool setValue(const TCHAR *path, UINT64 value);
 	bool setValue(const TCHAR *path, double value);
 	bool setValue(const TCHAR *path, uuid_t value);
 

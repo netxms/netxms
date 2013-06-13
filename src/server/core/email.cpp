@@ -147,13 +147,13 @@ static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
 /**
  * Send e-mail
  */
-static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
+static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 {
    SOCKET hSocket;
    struct sockaddr_in sa;
    char szBuffer[SMTP_BUFFER_SIZE];
    int iResp, iState = STATE_INITIAL, nBufPos = 0;
-   DWORD dwRetCode;
+   UINT32 dwRetCode;
 	char szEncoding[128];
 
 	// get mail encoding from DB
@@ -286,7 +286,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S ", pCurrentTM);
 
 							TIME_ZONE_INFORMATION tzi;
-							DWORD tzType = GetTimeZoneInformation(&tzi);
+							UINT32 tzType = GetTimeZoneInformation(&tzi);
 							LONG effectiveBias;
 							switch(tzType)
 							{
@@ -402,7 +402,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
       ConfigReadStrA(_T("SMTPFromName"), m_szFromName, MAX_PATH, "NetXMS Server");
       m_wSmtpPort = (WORD)ConfigReadInt(_T("SMTPPort"), 25);
 
-      DWORD dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
+      UINT32 dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
       if (dwResult != SMTP_ERR_SUCCESS)
 		{
 			pEnvelope->nRetryCount--;

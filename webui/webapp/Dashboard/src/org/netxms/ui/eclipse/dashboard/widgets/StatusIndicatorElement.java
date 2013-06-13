@@ -43,8 +43,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class StatusIndicatorElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	private StatusIndicatorConfig config;
 	private Canvas canvas;
 	private Runnable refreshTimer;
@@ -85,8 +83,6 @@ public class StatusIndicatorElement extends ElementWidget
 		calcSize(parent);
 
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -95,8 +91,6 @@ public class StatusIndicatorElement extends ElementWidget
 		});
 
 		canvas.addPaintListener(new PaintListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void paintControl(PaintEvent e)
 			{

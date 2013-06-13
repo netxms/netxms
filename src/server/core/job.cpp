@@ -27,14 +27,14 @@
 // Externals
 //
 
-void UnregisterJob(DWORD jobId);
+void UnregisterJob(UINT32 jobId);
 
 
 //
 // Constructor
 //
 
-ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId, bool createOnHold)
+ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold)
 {
 	m_id = CreateUniqueId(IDG_JOB);
 	m_userId = userId;
@@ -316,7 +316,7 @@ void ServerJob::createHistoryRecord()
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_description), DB_BIND_STATIC);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_remoteNode);
@@ -344,7 +344,7 @@ void ServerJob::updateHistoryRecord(bool onStart)
 	
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_description), DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, getAdditionalInfo(), DB_BIND_TRANSIENT);

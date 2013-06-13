@@ -46,12 +46,12 @@ enum UserAuthMethod
 class NXCORE_EXPORTABLE UserDatabaseObject
 {
 protected:
-	DWORD m_id;
+	UINT32 m_id;
    uuid_t m_guid;
 	TCHAR m_name[MAX_USER_NAME];
 	TCHAR m_description[MAX_USER_DESCR];
-	DWORD m_systemRights;
-	DWORD m_flags;
+	UINT32 m_systemRights;
+	UINT32 m_flags;
 	StringMap m_attributes;		// Custom attributes
 
 	bool loadCustomAttributes(DB_HANDLE hdb);
@@ -60,7 +60,7 @@ protected:
 public:
 	UserDatabaseObject();
 	UserDatabaseObject(DB_RESULT hResult, int row);
-	UserDatabaseObject(DWORD id, const TCHAR *name);
+	UserDatabaseObject(UINT32 id, const TCHAR *name);
 	virtual ~UserDatabaseObject();
 
 	virtual bool saveToDatabase(DB_HANDLE hdb);
@@ -69,11 +69,11 @@ public:
 	virtual void fillMessage(CSCPMessage *msg);
 	virtual void modifyFromMessage(CSCPMessage *msg);
 
-	DWORD getId() { return m_id; }
+	UINT32 getId() { return m_id; }
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getDescription() { return m_description; }
-	DWORD getSystemRights() { return m_systemRights; }
-	DWORD getFlags() { return m_flags; }
+	UINT32 getSystemRights() { return m_systemRights; }
+	UINT32 getFlags() { return m_flags; }
 	TCHAR *getGuidAsText(TCHAR *buffer) { return uuid_to_string(m_guid, buffer); }
 
 	bool isDeleted() { return (m_flags & UF_DELETED) ? true : false; }
@@ -83,7 +83,7 @@ public:
 	void setDeleted() { m_flags |= UF_DELETED; }
 
 	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
-	DWORD getAttributeAsULong(const TCHAR *name);
+	UINT32 getAttributeAsULong(const TCHAR *name);
 	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); m_flags |= UF_MODIFIED; }
 };
 
@@ -108,7 +108,7 @@ protected:
 public:
 	User();
 	User(DB_RESULT hResult, int row);
-	User(DWORD id, const TCHAR *name);
+	User(UINT32 id, const TCHAR *name);
 	virtual ~User();
 
 	virtual bool saveToDatabase(DB_HANDLE hdb);
@@ -148,12 +148,12 @@ class NXCORE_EXPORTABLE Group : public UserDatabaseObject
 {
 protected:
 	int m_memberCount;
-	DWORD *m_members;
+	UINT32 *m_members;
 
 public:
 	Group();
 	Group(DB_RESULT hResult, int row);
-	Group(DWORD id, const TCHAR *name);
+	Group(UINT32 id, const TCHAR *name);
 	virtual ~Group();
 
 	virtual void fillMessage(CSCPMessage *msg);
@@ -162,9 +162,9 @@ public:
 	virtual bool saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	void addUser(DWORD userId);
-	void deleteUser(DWORD userId);
-	bool isMember(DWORD userId);
+	void addUser(UINT32 userId);
+	void deleteUser(UINT32 userId);
+	bool isMember(UINT32 userId);
 };
 
 /**
@@ -172,8 +172,8 @@ public:
  */
 typedef struct
 {
-   DWORD dwUserId;
-   DWORD dwAccessRights;
+   UINT32 dwUserId;
+   UINT32 dwAccessRights;
 } ACL_ELEMENT;
 
 /**
@@ -182,7 +182,7 @@ typedef struct
 class AccessList
 {
 private:
-   DWORD m_dwNumElements;
+   UINT32 m_dwNumElements;
    ACL_ELEMENT *m_pElements;
    MUTEX m_hMutex;
 
@@ -193,12 +193,12 @@ public:
    AccessList();
    ~AccessList();
 
-   bool getUserRights(DWORD dwUserId, DWORD *pdwAccessRights);
-   void addElement(DWORD dwUserId, DWORD dwAccessRights);
-   bool deleteElement(DWORD dwUserId);
+   bool getUserRights(UINT32 dwUserId, UINT32 *pdwAccessRights);
+   void addElement(UINT32 dwUserId, UINT32 dwAccessRights);
+   bool deleteElement(UINT32 dwUserId);
    void deleteAll();
 
-   void enumerateElements(void (* pHandler)(DWORD, DWORD, void *), void *pArg);
+   void enumerateElements(void (* pHandler)(UINT32, UINT32, void *), void *pArg);
 
    void fillMessage(CSCPMessage *pMsg);
 };
@@ -208,23 +208,23 @@ public:
  */
 BOOL LoadUsers();
 void SaveUsers(DB_HANDLE hdb);
-void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object);
-DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
-							  DWORD dwSigLen, void *pCert, BYTE *pChallenge,
-							  DWORD *pdwId, DWORD *pdwSystemRights,
+void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
+UINT32 AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
+							  UINT32 dwSigLen, void *pCert, BYTE *pChallenge,
+							  UINT32 *pdwId, UINT32 *pdwSystemRights,
 							  bool *pbChangePasswd, bool *pbIntruderLockout);
 
-DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
-bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
-DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id);
-DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId);
-DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
+bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId);
+UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
+UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pdwId);
+UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg);
 UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count);
 void NXCORE_EXPORTABLE CloseUserDatabase();
-const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(DWORD id, const TCHAR *name);
-DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name);
-void NXCORE_EXPORTABLE SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value);
-bool NXCORE_EXPORTABLE ResolveUserId(DWORD id, TCHAR *buffer, int bufSize);
+const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
+UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
+void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
+bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize);
 void DumpUsers(CONSOLE_CTX pCtx);
 
 #endif

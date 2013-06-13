@@ -48,7 +48,7 @@ Rack::~Rack()
 /**
  * Create object from database data
  */
-BOOL Rack::CreateFromDB(DWORD id)
+BOOL Rack::CreateFromDB(UINT32 id)
 {
 	if (!Container::CreateFromDB(id))
 		return FALSE;
@@ -124,7 +124,7 @@ void Rack::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-DWORD Rack::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Rack::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();

@@ -30,12 +30,12 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class TableItemComparator extends ViewerComparator
 {
-	private Integer[] formats;
+	private int[] formats;
 	
 	/**
 	 * 
 	 */
-	public TableItemComparator(Integer[] formats)
+	public TableItemComparator(int[] formats)
 	{
 		this.formats = formats;
 	}

@@ -33,7 +33,7 @@
  * Supported ciphers. By default, we support all ciphers compiled
  * into OpenSSL library.
  */
-static DWORD m_dwSupportedCiphers = 
+static UINT32 m_dwSupportedCiphers = 
 #ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_AES
    CSCP_SUPPORT_AES_256 |
@@ -116,7 +116,7 @@ static unsigned long CryptoIdCallback()
 /**
  * Initialize OpenSSL library
  */
-BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers)
+BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
 {
 #ifdef _WITH_ENCRYPTION
    BYTE random[8192];
@@ -142,7 +142,7 @@ BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers)
 /**
  * Get supported ciphers
  */
-DWORD LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers()
+UINT32 LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers()
 {
    return m_dwSupportedCiphers;
 }
@@ -157,7 +157,7 @@ CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionCo
    CSCP_ENCRYPTED_PAYLOAD_HEADER header;
    int nSize;
    EVP_CIPHER_CTX cipher;
-   DWORD dwMsgSize;
+   UINT32 dwMsgSize;
 
    if (pMsg->wFlags & m_wNoEncryptionFlag)
       return (CSCP_ENCRYPTED_MESSAGE *)nx_memdup(pMsg, ntohl(pMsg->dwSize));
@@ -211,7 +211,7 @@ BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
 #ifdef _WITH_ENCRYPTION
    int nSize;
    EVP_CIPHER_CTX cipher;
-   DWORD dwChecksum, dwMsgSize;
+   UINT32 dwChecksum, dwMsgSize;
    CSCP_MESSAGE *pClearMsg;
 
    if (m_pfCipherList[pCtx->getCipher()] == NULL)
@@ -246,18 +246,18 @@ BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
  * by message code. Initiator should provide it's private key,
  * and responder should provide pointer to response message.
  */
-DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
+UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
                                                   NXCPEncryptionContext **ppCtx,
                                                   CSCPMessage **ppResponse,
                                                   RSA *pPrivateKey, int nNXCPVersion)
 {
-   DWORD dwResult = RCC_NOT_IMPLEMENTED;
+   UINT32 dwResult = RCC_NOT_IMPLEMENTED;
 
 	*ppCtx = NULL;
 #ifdef _WITH_ENCRYPTION
    if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
    {
-      DWORD dwCiphers;
+      UINT32 dwCiphers;
 
       *ppResponse = new CSCPMessage(nNXCPVersion);
       (*ppResponse)->SetCode(CMD_SESSION_KEY);
@@ -274,7 +274,7 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
       {
 			BYTE *pBufPos, ucKeyBuffer[KEY_BUFFER_SIZE];
 			RSA *pServerKey;
-			DWORD dwKeySize;
+			UINT32 dwKeySize;
 
 			*ppCtx = NXCPEncryptionContext::create(dwCiphers);
 
@@ -375,13 +375,13 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
 #ifdef _WITH_ENCRYPTION
    FILE *fp;
    BYTE *pKeyBuffer, *pBufPos, hash[SHA1_DIGEST_SIZE];
-   DWORD dwLen;
+   UINT32 dwLen;
    RSA *pKey = NULL;
 
    fp = _tfopen(pszKeyFile, _T("rb"));
    if (fp != NULL)
    {
-      if (fread(&dwLen, 1, sizeof(DWORD), fp) == sizeof(DWORD) && dwLen < 10 * 1024)
+      if (fread(&dwLen, 1, sizeof(UINT32), fp) == sizeof(UINT32) && dwLen < 10 * 1024)
       {
          pKeyBuffer = (BYTE *)malloc(dwLen);
          pBufPos = pKeyBuffer;
@@ -398,7 +398,7 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
                   if (pKey != NULL)
                   {
                      if (d2i_RSAPrivateKey(&pKey, (OPENSSL_CONST BYTE **)&pBufPos,
-                                           dwLen - CAST_FROM_POINTER((pBufPos - pKeyBuffer), DWORD)) == NULL)
+                                           dwLen - CAST_FROM_POINTER((pBufPos - pKeyBuffer), UINT32)) == NULL)
                      {
                         RSA_free(pKey);
                         pKey = NULL;
@@ -429,8 +429,8 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
  */
 #ifdef _WIN32
 
-BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const CERT_CONTEXT *pCert,
-												          BYTE *pBuffer, DWORD dwBufSize, DWORD *pdwSigLen)
+BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, UINT32 dwMsgLen, const CERT_CONTEXT *pCert,
+												          BYTE *pBuffer, UINT32 dwBufSize, UINT32 *pdwSigLen)
 {
 	BOOL bFreeProv, bRet = FALSE;
 	DWORD i, j, dwLen, dwKeySpec;
@@ -537,7 +537,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *priv
 {
 #ifdef _WITH_ENCRYPTION
    BYTE ucKeyBuffer[KEY_BUFFER_SIZE], ucSessionKey[KEY_BUFFER_SIZE];
-   DWORD dwKeySize;
+   UINT32 dwKeySize;
    int nSize, nIVLen;
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
@@ -581,7 +581,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *priv
 /**
  * Create encryption context from CMD_REQUEST_SESSION_KEY NXCP message
  */
-NXCPEncryptionContext *NXCPEncryptionContext::create(DWORD ciphers)
+NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
 {
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 

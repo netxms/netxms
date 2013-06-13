@@ -28,6 +28,7 @@
  */
 NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
+NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 
 /**
  * addRow() method
@@ -146,9 +147,15 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value((LONG)table->getNumColumns());
    }
-   else if (!_tcscmp(attr, _T("instanceColumn")))
+   else if (!_tcscmp(attr, _T("columns")))
    {
-      value = new NXSL_Value(table->getInstanceColumn());
+      NXSL_Array *columns = new NXSL_Array();
+      ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
+      for(int i = 0; i < cd->size(); i++)
+      {
+         columns->set(i, new NXSL_Value(new NXSL_Object(&g_nxslTableColumnClass, new TableColumnDefinition(cd->get(i)))));
+      }
+      value = new NXSL_Value(columns);
    }
    else if (!_tcscmp(attr, _T("rowCount")))
    {
@@ -160,6 +167,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    return value;
 }
+
 /**
  * Implementation of "StaticTable" class: constructor
  */
@@ -179,4 +187,53 @@ NXSL_StaticTableClass::~NXSL_StaticTableClass()
  */
 void NXSL_StaticTableClass::onObjectDelete(NXSL_Object *object)
 {
+}
+
+/**
+ * Implementation of "TableColumn" class: constructor
+ */
+NXSL_TableColumnClass::NXSL_TableColumnClass() : NXSL_Class()
+{
+   _tcscpy(m_szName, _T("TableColumn"));
+}
+
+/**
+ * Implementation of "Table" class: destructor
+ */
+NXSL_TableColumnClass::~NXSL_TableColumnClass()
+{
+}
+
+/**
+ * Object delete
+ */
+void NXSL_TableColumnClass::onObjectDelete(NXSL_Object *object)
+{
+   delete (TableColumnDefinition *)object->getData();
+}
+
+/**
+ * Implementation of "TableColumn" class: get attribute
+ */
+NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NULL;
+   TableColumnDefinition *tc = (TableColumnDefinition *)object->getData();
+   if (!_tcscmp(attr, _T("dataType")))
+   {
+      value = new NXSL_Value(tc->getDataType());
+   }
+   else if (!_tcscmp(attr, _T("displayName")))
+   {
+      value = new NXSL_Value(tc->getDisplayName());
+   }
+   else if (!_tcscmp(attr, _T("isInstanceColumn")))
+   {
+      value = new NXSL_Value(tc->isInstanceColumn());
+   }
+   else if (!_tcscmp(attr, _T("name")))
+   {
+      value = new NXSL_Value(tc->getName());
+   }
+   return value;
 }

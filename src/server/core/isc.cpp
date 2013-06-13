@@ -66,7 +66,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
    CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
    CSCP_BUFFER *pRecvBuffer;
    CSCPMessage *pRequest, response;
-   DWORD serviceId;
+   UINT32 serviceId;
 	void *serviceData = NULL;
 	TCHAR buffer[256], dbgPrefix[128];
 	WORD wFlags;

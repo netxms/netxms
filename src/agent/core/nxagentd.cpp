@@ -110,7 +110,7 @@ extern const TCHAR *g_szMessages[];
 // Global variables
 //
 
-DWORD g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
+UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
 TCHAR g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
@@ -124,18 +124,18 @@ TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
-DWORD g_dwServerCount = 0;
-DWORD g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
-DWORD g_dwSNMPTimeout = 3000;
+UINT32 g_dwServerCount = 0;
+UINT32 g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
+UINT32 g_dwSNMPTimeout = 3000;
 time_t g_tmAgentStartTime;
-DWORD g_dwStartupDelay = 0;
-DWORD g_dwMaxSessions = 32;
-DWORD g_debugLevel = 0;
+UINT32 g_dwStartupDelay = 0;
+UINT32 g_dwMaxSessions = 32;
+UINT32 g_debugLevel = 0;
 Config *g_config;
 #ifdef _WIN32
-DWORD g_dwIdleTimeout = 60;   // Session idle timeout
+UINT32 g_dwIdleTimeout = 60;   // Session idle timeout
 #else
-DWORD g_dwIdleTimeout = 120;   // Session idle timeout
+UINT32 g_dwIdleTimeout = 120;   // Session idle timeout
 #endif
 
 #if !defined(_WIN32)
@@ -155,16 +155,16 @@ static TCHAR *m_pszExtParamList = NULL;
 static TCHAR *m_pszShExtParamList = NULL;
 static TCHAR *m_pszParamProviderList = NULL;
 static TCHAR *m_pszExtSubagentList = NULL;
-static DWORD m_dwEnabledCiphers = 0xFFFF;
+static UINT32 m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
 static THREAD m_thMasterAgentListener = INVALID_THREAD_HANDLE;
 static TCHAR m_szProcessToWait[MAX_PATH] = _T("");
 static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
-static DWORD m_dwMaxLogSize = 16384 * 1024;
-static DWORD m_dwLogHistorySize = 4;
-static DWORD m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
+static UINT32 m_dwMaxLogSize = 16384 * 1024;
+static UINT32 m_dwLogHistorySize = 4;
+static UINT32 m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR m_szDailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
 
@@ -558,7 +558,7 @@ static void LoadPlatformSubagent()
 /**
  * Send file to server (subagent API)
  */
-static BOOL SendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset)
+static BOOL SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
 {
 	if (session == NULL)
 		return FALSE;
@@ -598,7 +598,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 			*pEnd = 0;
 		StrStrip(pItem);
 
-		DWORD ipAddr, netMask;
+		UINT32 ipAddr, netMask;
 
 		TCHAR *mask = _tcschr(pItem, _T('/'));
 		if (mask != NULL)
@@ -634,7 +634,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 		}
 		else
 		{
-			DWORD i;
+			UINT32 i;
 
 			for(i = 0; i < g_dwServerCount; i++)
 				if ((g_pServerList[i].dwIpAddr == ipAddr) && (g_pServerList[i].dwNetMask == netMask))
@@ -875,7 +875,7 @@ BOOL Initialize()
       }
       else
       {
-         DWORD i;
+         UINT32 i;
 
          _tprintf(_T("XXXXXX%*s]\rWAIT ["), g_dwStartupDelay, _T(" "));
          fflush(stdout);
@@ -1014,7 +1014,7 @@ void Main()
 /**
  * Do necessary actions on agent restart
  */
-static void DoRestartActions(DWORD dwOldPID)
+static void DoRestartActions(UINT32 dwOldPID)
 {
 #if defined(_WIN32)
    if (dwOldPID == 0)
@@ -1100,7 +1100,7 @@ int main(int argc, char *argv[])
 {
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
    BOOL bRestart = FALSE;
-   DWORD dwOldPID, dwMainPID;
+   UINT32 dwOldPID, dwMainPID;
 	char *eptr;
 #ifdef _WIN32
    TCHAR szModuleName[MAX_PATH];

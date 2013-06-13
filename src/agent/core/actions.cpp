@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 //
 
 static ACTION *m_pActionList = NULL;
-static DWORD m_dwNumActions = 0;
+static UINT32 m_dwNumActions = 0;
 
 
 //
@@ -39,7 +39,7 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription)
 {
-   DWORD i;
+   UINT32 i;
 
    // Check if action with given name already registered
    for(i = 0; i < m_dwNumActions; i++)
@@ -89,14 +89,12 @@ BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec) //to be TCHAR
    return AddAction(pszLine, bShellExec ? AGENT_ACTION_SHELLEXEC : AGENT_ACTION_EXEC, pCmdLine, NULL, NULL, _T(""));
 }
 
-
-//
-// Execute action
-// 
-
-DWORD ExecAction(const TCHAR *pszAction, StringList *pArgs)
+/**
+ * Execute action
+ */ 
+UINT32 ExecAction(const TCHAR *pszAction, StringList *pArgs)
 {
-   DWORD i, dwErrorCode = ERR_UNKNOWN_PARAMETER;
+   UINT32 i, dwErrorCode = ERR_UNKNOWN_PARAMETER;
 
    for(i = 0; i < m_dwNumActions; i++)
       if (!_tcsicmp(m_pActionList[i].szName, pszAction))
@@ -129,7 +127,7 @@ DWORD ExecAction(const TCHAR *pszAction, StringList *pArgs)
 
 LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
-   DWORD i;
+   UINT32 i;
    TCHAR szBuffer[1024];
 
    for(i = 0; i < m_dwNumActions; i++)

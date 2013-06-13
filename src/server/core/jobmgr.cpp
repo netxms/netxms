@@ -63,7 +63,7 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 // Unregister job from job manager
 //
 
-void UnregisterJob(DWORD jobId)
+void UnregisterJob(UINT32 jobId)
 {
 	s_jobNodes.remove(jobId);
 }
@@ -76,8 +76,8 @@ void UnregisterJob(DWORD jobId)
 struct __job_callback_data
 {
 	CSCPMessage *msg;
-	DWORD jobCount;
-	DWORD baseId;
+	UINT32 jobCount;
+	UINT32 baseId;
 };
 
 static void JobListCallback(NetObj *object, void *data)
@@ -103,10 +103,10 @@ void GetJobList(CSCPMessage *msg)
 // Implementatoin for job status changing operations: cancel, hold, unhold
 //
 
-static DWORD ChangeJobStatus(DWORD userId, CSCPMessage *msg, int operation)
+static UINT32 ChangeJobStatus(UINT32 userId, CSCPMessage *msg, int operation)
 {
-	DWORD rcc = RCC_INVALID_JOB_ID;
-	DWORD jobId = msg->GetVariableLong(VID_JOB_ID);
+	UINT32 rcc = RCC_INVALID_JOB_ID;
+	UINT32 jobId = msg->GetVariableLong(VID_JOB_ID);
 	Node *node = (Node *)s_jobNodes.get(jobId);
 	if (node != NULL)
 	{
@@ -150,7 +150,7 @@ static DWORD ChangeJobStatus(DWORD userId, CSCPMessage *msg, int operation)
 // Cancel job
 //
 
-DWORD NXCORE_EXPORTABLE CancelJob(DWORD userId, CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, CSCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, CANCEL_JOB);
 }
@@ -160,7 +160,7 @@ DWORD NXCORE_EXPORTABLE CancelJob(DWORD userId, CSCPMessage *msg)
 // Hold job
 //
 
-DWORD NXCORE_EXPORTABLE HoldJob(DWORD userId, CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, CSCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, HOLD_JOB);
 }
@@ -170,7 +170,7 @@ DWORD NXCORE_EXPORTABLE HoldJob(DWORD userId, CSCPMessage *msg)
 // Unhold job
 //
 
-DWORD NXCORE_EXPORTABLE UnholdJob(DWORD userId, CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, CSCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, UNHOLD_JOB);
 }

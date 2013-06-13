@@ -37,7 +37,7 @@
 
 struct LOCK_INFO
 {
-   DWORD dwLockStatus;
+   UINT32 dwLockStatus;
    const TCHAR *pszName;
    TCHAR szOwnerInfo[MAX_OWNER_INFO];
 };
@@ -65,7 +65,7 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
 // Will return FALSE if someone already locked database
 //
 
-BOOL InitLocks(DWORD *pdwIpAddr, TCHAR *pszInfo)
+BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo)
 {
    BOOL bSuccess = FALSE;
    TCHAR szBuffer[256];
@@ -118,12 +118,12 @@ void NXCORE_EXPORTABLE UnlockDB()
 // field, and pszCurrentOwnerInfo will be filled with the value of  owner_info field.
 //
 
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const TCHAR *pszOwnerInfo, 
-                   DWORD *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo)
+BOOL LockComponent(UINT32 dwId, UINT32 dwLockBy, const TCHAR *pszOwnerInfo, 
+                   UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo)
 {
    TCHAR szBuffer[256];
    BOOL bSuccess = FALSE;
-   DWORD dwTemp;
+   UINT32 dwTemp;
 
    if (pdwCurrentOwner == NULL)
       pdwCurrentOwner = &dwTemp;
@@ -165,7 +165,7 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const TCHAR *pszOwnerInfo,
 // Unlock component
 //
 
-void UnlockComponent(DWORD dwId)
+void UnlockComponent(UINT32 dwId)
 {
    MutexLock(m_hMutexLockerAccess);
    m_locks[dwId].dwLockStatus = UNLOCKED;
@@ -179,9 +179,9 @@ void UnlockComponent(DWORD dwId)
 // Unlock all locks for specific session
 //
 
-void RemoveAllSessionLocks(DWORD dwSessionId)
+void RemoveAllSessionLocks(UINT32 dwSessionId)
 {
-   DWORD i;
+   UINT32 i;
 
    MutexLock(m_hMutexLockerAccess);
    for(i = 0; i < NUMBER_OF_LOCKS; i++)

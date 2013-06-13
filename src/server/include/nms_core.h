@@ -108,7 +108,7 @@ typedef __console_ctx * CONSOLE_CTX;
  * Common constants and macros
  */
 #define MAX_LINE_SIZE            4096
-#define GROUP_FLAG_BIT           ((DWORD)0x80000000)
+#define GROUP_FLAG_BIT           ((UINT32)0x80000000)
 #define CHECKPOINT_SNMP_PORT     260
 #define DEFAULT_AFFINITY_MASK    0xFFFFFFFF
 
@@ -166,14 +166,14 @@ typedef void * HSNMPSESSION;
 /**
  * Client session flags
  */
-#define CSF_EPP_LOCKED           ((DWORD)0x0002)
-#define CSF_PACKAGE_DB_LOCKED    ((DWORD)0x0004)
-#define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
-#define CSF_EPP_UPLOAD           ((DWORD)0x0010)
-#define CSF_CONSOLE_OPEN         ((DWORD)0x0020)
-#define CSF_AUTHENTICATED        ((DWORD)0x0080)
-#define CSF_RECEIVING_MAP_DATA   ((DWORD)0x0200)
-#define CSF_SYNC_OBJECT_COMMENTS ((DWORD)0x0400)
+#define CSF_EPP_LOCKED           ((UINT32)0x0002)
+#define CSF_PACKAGE_DB_LOCKED    ((UINT32)0x0004)
+#define CSF_USER_DB_LOCKED       ((UINT32)0x0008)
+#define CSF_EPP_UPLOAD           ((UINT32)0x0010)
+#define CSF_CONSOLE_OPEN         ((UINT32)0x0020)
+#define CSF_AUTHENTICATED        ((UINT32)0x0080)
+#define CSF_RECEIVING_MAP_DATA   ((UINT32)0x0200)
+#define CSF_SYNC_OBJECT_COMMENTS ((UINT32)0x0400)
 
 /**
  * Client session states
@@ -221,9 +221,9 @@ typedef void * HSNMPSESSION;
  */
 typedef struct
 {
-   DWORD dwIpAddr;
-   DWORD dwNetMask;
-	DWORD zoneId;
+   UINT32 dwIpAddr;
+   UINT32 dwNetMask;
+	UINT32 zoneId;
 	BOOL ignoreFilter;
 	BYTE bMacAddr[MAC_ADDR_LENGTH];
 } NEW_NODE;
@@ -245,10 +245,10 @@ typedef struct
  */
 typedef struct
 {
-   DWORD dwIpAddr;
-   DWORD dwNetMask;
-   DWORD dwSubnetAddr;
-   DWORD dwFlags;
+   UINT32 dwIpAddr;
+   UINT32 dwNetMask;
+   UINT32 dwSubnetAddr;
+   UINT32 dwFlags;
    int nSNMPVersion;
    TCHAR szObjectId[MAX_OID_LEN * 4];    // SNMP OID
    TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
@@ -260,8 +260,8 @@ typedef struct
  */
 typedef struct
 {
-   DWORD dwCategory;    // Data category - event, network object, etc.
-   DWORD dwCode;        // Data-specific update code
+   UINT32 dwCategory;    // Data category - event, network object, etc.
+   UINT32 dwCode;        // Data-specific update code
    void *pData;         // Pointer to data block
 } UPDATE_INFO;
 
@@ -272,19 +272,19 @@ typedef struct
 class AgentConnectionEx : public AgentConnection
 {
 protected:
-	DWORD m_nodeId;
+	UINT32 m_nodeId;
 
    virtual void onTrap(CSCPMessage *msg);
    virtual void onDataPush(CSCPMessage *msg);
 
 public:
-   AgentConnectionEx(DWORD nodeId, DWORD ipAddr, WORD wPort = AGENT_LISTEN_PORT,
+   AgentConnectionEx(UINT32 nodeId, UINT32 ipAddr, WORD wPort = AGENT_LISTEN_PORT,
                      int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL) :
             AgentConnection(ipAddr, wPort, iAuthMethod, pszSecret) { m_nodeId = nodeId; }
    virtual ~AgentConnectionEx();
 
-	DWORD deployPolicy(AgentPolicy *policy);
-	DWORD uninstallPolicy(AgentPolicy *policy);
+	UINT32 deployPolicy(AgentPolicy *policy);
+	UINT32 uninstallPolicy(AgentPolicy *policy);
 };
 
 /**
@@ -296,11 +296,11 @@ private:
    SOCKET m_hSocket;
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
-   DWORD m_dwIndex;
+   UINT32 m_dwIndex;
    int m_iState;
    WORD m_wCurrentCmd;
-   DWORD m_dwUserId;
-	DWORD m_deviceObjectId;
+   UINT32 m_dwUserId;
+	UINT32 m_deviceObjectId;
    CSCP_BUFFER *m_pMsgBuffer;
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
@@ -311,10 +311,10 @@ private:
 	TCHAR m_szHostName[256]; // IP address of name of conneced host in textual form
    TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
-   DWORD m_dwEncryptionRqId;
-   DWORD m_dwEncryptionResult;
+   UINT32 m_dwEncryptionRqId;
+   UINT32 m_dwEncryptionResult;
    CONDITION m_condEncryptionSetup;
-   DWORD m_dwRefCount;
+   UINT32 m_dwRefCount;
 	bool m_isAuthenticated;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
@@ -326,9 +326,9 @@ private:
    void processingThread();
 
    void setupEncryption(CSCPMessage *request);
-   void respondToKeepalive(DWORD dwRqId);
+   void respondToKeepalive(UINT32 dwRqId);
    void debugPrintf(int level, const TCHAR *format, ...);
-   void sendServerInfo(DWORD dwRqId);
+   void sendServerInfo(UINT32 dwRqId);
    void login(CSCPMessage *pRequest);
    void updateDeviceInfo(CSCPMessage *pRequest);
    void updateDeviceStatus(CSCPMessage *pRequest);
@@ -345,13 +345,13 @@ public:
    void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
    void sendMessage(CSCPMessage *pMsg);
 
-	DWORD getIndex() { return m_dwIndex; }
-   void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+	UINT32 getIndex() { return m_dwIndex; }
+   void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
    int getState() { return m_iState; }
    const TCHAR *getUserName() { return m_szUserName; }
    const TCHAR *getClientInfo() { return m_szClientInfo; }
 	const TCHAR *getHostName() { return m_szHostName; }
-   DWORD getUserId() { return m_dwUserId; }
+   UINT32 getUserId() { return m_dwUserId; }
    bool isAuthenticated() { return m_isAuthenticated; }
    WORD getCurrentCmd() { return m_wCurrentCmd; }
    int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
@@ -369,12 +369,12 @@ private:
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
    Queue *m_pUpdateQueue;
-   DWORD m_dwIndex;
+   UINT32 m_dwIndex;
    int m_iState;
    WORD m_wCurrentCmd;
-   DWORD m_dwUserId;
-   DWORD m_dwSystemAccess;    // User's system access rights
-   DWORD m_dwFlags;           // Session flags
+   UINT32 m_dwUserId;
+   UINT32 m_dwSystemAccess;    // User's system access rights
+   UINT32 m_dwFlags;           // Session flags
 	int m_clientType;				// Client system type - desktop, web, mobile, etc.
    CSCP_BUFFER *m_pMsgBuffer;
    NXCPEncryptionContext *m_pCtx;
@@ -396,22 +396,22 @@ private:
 	TCHAR m_szWorkstation[256]; // IP address of name of conneced host in textual form
    TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
-   DWORD m_dwOpenDCIListSize; // Number of open DCI lists
-   DWORD *m_pOpenDCIList;     // List of nodes with DCI lists open
-   DWORD m_dwNumRecordsToUpload; // Number of records to be uploaded
-   DWORD m_dwRecordsUploaded;
+   UINT32 m_dwOpenDCIListSize; // Number of open DCI lists
+   UINT32 *m_pOpenDCIList;     // List of nodes with DCI lists open
+   UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
+   UINT32 m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
    int m_hCurrFile;
-   DWORD m_dwFileRqId;
-   DWORD m_dwUploadCommand;
-   DWORD m_dwUploadData;
+   UINT32 m_dwFileRqId;
+   UINT32 m_dwUploadCommand;
+   UINT32 m_dwUploadData;
    uuid_t m_uploadImageGuid;
    TCHAR m_szCurrFileName[MAX_PATH];
-   DWORD m_dwRefCount;
-   DWORD m_dwEncryptionRqId;
-   DWORD m_dwEncryptionResult;
+   UINT32 m_dwRefCount;
+   UINT32 m_dwEncryptionRqId;
+   UINT32 m_dwEncryptionResult;
    CONDITION m_condEncryptionSetup;
-   DWORD m_dwActiveChannels;     // Active data channels
+   UINT32 m_dwActiveChannels;     // Active data channels
 	CONSOLE_CTX m_console;			// Server console context
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
@@ -450,31 +450,31 @@ private:
    void writeThread();
    void processingThread();
    void updateThread();
-   void pollerThread(Node *pNode, int iPollType, DWORD dwRqId);
+   void pollerThread(Node *pNode, int iPollType, UINT32 dwRqId);
 
    void setupEncryption(CSCPMessage *request);
-   void respondToKeepalive(DWORD dwRqId);
+   void respondToKeepalive(UINT32 dwRqId);
    void onFileUpload(BOOL bSuccess);
    void debugPrintf(int level, const TCHAR *format, ...);
-   void sendServerInfo(DWORD dwRqId);
+   void sendServerInfo(UINT32 dwRqId);
    void login(CSCPMessage *pRequest);
    void sendAllObjects(CSCPMessage *pRequest);
    void sendSelectedObjects(CSCPMessage *pRequest);
    void sendEventLog(CSCPMessage *pRequest);
-   void sendAllConfigVars(DWORD dwRqId);
+   void sendAllConfigVars(UINT32 dwRqId);
    void setConfigVariable(CSCPMessage *pRequest);
    void deleteConfigVariable(CSCPMessage *pRequest);
-   void sendUserDB(DWORD dwRqId);
-   void sendAllAlarms(DWORD dwRqId);
+   void sendUserDB(UINT32 dwRqId);
+   void sendAllAlarms(UINT32 dwRqId);
    void createUser(CSCPMessage *pRequest);
    void updateUser(CSCPMessage *pRequest);
    void deleteUser(CSCPMessage *pRequest);
    void setPassword(CSCPMessage *pRequest);
-   void lockUserDB(DWORD dwRqId, BOOL bLock);
-   void sendEventDB(DWORD dwRqId);
+   void lockUserDB(UINT32 dwRqId, BOOL bLock);
+   void sendEventDB(UINT32 dwRqId);
    void modifyEventTemplate(CSCPMessage *pRequest);
    void deleteEventTemplate(CSCPMessage *pRequest);
-   void generateEventCode(DWORD dwRqId);
+   void generateEventCode(UINT32 dwRqId);
    void modifyObject(CSCPMessage *pRequest);
    void changeObjectMgmtStatus(CSCPMessage *pRequest);
    void openNodeDCIList(CSCPMessage *pRequest);
@@ -490,11 +490,11 @@ private:
    void getLastValues(CSCPMessage *pRequest);
    void getTableLastValues(CSCPMessage *pRequest);
 	void getThresholdSummary(CSCPMessage *request);
-   void openEPP(DWORD dwRqId);
-   void closeEPP(DWORD dwRqId);
+   void openEPP(UINT32 dwRqId);
+   void closeEPP(UINT32 dwRqId);
    void saveEPP(CSCPMessage *pRequest);
    void processEPPRecord(CSCPMessage *pRequest);
-   void sendMIBTimestamp(DWORD dwRqId);
+   void sendMIBTimestamp(UINT32 dwRqId);
    void sendMib(CSCPMessage *request);
    void createObject(CSCPMessage *request);
    void changeObjectBinding(CSCPMessage *request, BOOL bBind);
@@ -509,19 +509,19 @@ private:
    void createAction(CSCPMessage *pRequest);
    void updateAction(CSCPMessage *pRequest);
    void deleteAction(CSCPMessage *pRequest);
-   void sendAllActions(DWORD dwRqId);
-   void SendContainerCategories(DWORD dwRqId);
+   void sendAllActions(UINT32 dwRqId);
+   void SendContainerCategories(UINT32 dwRqId);
    void forcedNodePoll(CSCPMessage *pRequest);
    void onTrap(CSCPMessage *pRequest);
    void onWakeUpNode(CSCPMessage *pRequest);
    void queryParameter(CSCPMessage *pRequest);
    void queryAgentTable(CSCPMessage *pRequest);
    void editTrap(int iOperation, CSCPMessage *pRequest);
-   void LockTrapCfg(DWORD dwRqId, BOOL bLock);
-   void sendAllTraps(DWORD dwRqId);
-   void sendAllTraps2(DWORD dwRqId);
-   void LockPackageDB(DWORD dwRqId, BOOL bLock);
-   void SendAllPackages(DWORD dwRqId);
+   void LockTrapCfg(UINT32 dwRqId, BOOL bLock);
+   void sendAllTraps(UINT32 dwRqId);
+   void sendAllTraps2(UINT32 dwRqId);
+   void LockPackageDB(UINT32 dwRqId, BOOL bLock);
+   void SendAllPackages(UINT32 dwRqId);
    void InstallPackage(CSCPMessage *pRequest);
    void RemovePackage(CSCPMessage *pRequest);
    void DeployPackage(CSCPMessage *pRequest);
@@ -535,28 +535,28 @@ private:
    void getAgentConfig(CSCPMessage *pRequest);
    void updateAgentConfig(CSCPMessage *pRequest);
    void executeAction(CSCPMessage *pRequest);
-   void sendObjectTools(DWORD dwRqId);
+   void sendObjectTools(UINT32 dwRqId);
    void sendObjectToolDetails(CSCPMessage *pRequest);
    void updateObjectTool(CSCPMessage *pRequest);
    void deleteObjectTool(CSCPMessage *pRequest);
-   void generateObjectToolId(DWORD dwRqId);
+   void generateObjectToolId(UINT32 dwRqId);
    void execTableTool(CSCPMessage *pRequest);
    void changeSubscription(CSCPMessage *pRequest);
    void sendSyslog(CSCPMessage *pRequest);
-   void sendServerStats(DWORD dwRqId);
-   void sendScriptList(DWORD dwRqId);
+   void sendServerStats(UINT32 dwRqId);
+   void sendScriptList(UINT32 dwRqId);
    void sendScript(CSCPMessage *pRequest);
    void updateScript(CSCPMessage *pRequest);
    void renameScript(CSCPMessage *pRequest);
    void deleteScript(CSCPMessage *pRequest);
-   void SendSessionList(DWORD dwRqId);
+   void SendSessionList(UINT32 dwRqId);
    void KillSession(CSCPMessage *pRequest);
    void SendTrapLog(CSCPMessage *pRequest);
    void StartSnmpWalk(CSCPMessage *pRequest);
    void resolveDCINames(CSCPMessage *pRequest);
-   DWORD resolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName);
+   UINT32 resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszName);
    void SendConfigForAgent(CSCPMessage *pRequest);
-   void sendAgentCfgList(DWORD dwRqId);
+   void sendAgentCfgList(UINT32 dwRqId);
    void OpenAgentConfig(CSCPMessage *pRequest);
    void SaveAgentConfig(CSCPMessage *pRequest);
    void DeleteAgentConfig(CSCPMessage *pRequest);
@@ -572,18 +572,18 @@ private:
    void sendPerfTabDCIList(CSCPMessage *pRequest);
    void exportConfiguration(CSCPMessage *pRequest);
    void importConfiguration(CSCPMessage *pRequest);
-	void SendGraphList(DWORD dwRqId);
+	void SendGraphList(UINT32 dwRqId);
 	void DefineGraph(CSCPMessage *pRequest);
 	void DeleteGraph(CSCPMessage *pRequest);
 	void AddCACertificate(CSCPMessage *pRequest);
 	void DeleteCertificate(CSCPMessage *pRequest);
 	void UpdateCertificateComments(CSCPMessage *pRequest);
-	void getCertificateList(DWORD dwRqId);
+	void getCertificateList(UINT32 dwRqId);
 	void queryL2Topology(CSCPMessage *pRequest);
 	void sendSMS(CSCPMessage *pRequest);
-	void SendCommunityList(DWORD dwRqId);
+	void SendCommunityList(UINT32 dwRqId);
 	void UpdateCommunityList(CSCPMessage *pRequest);
-	void SendSituationList(DWORD dwRqId);
+	void SendSituationList(UINT32 dwRqId);
 	void CreateSituation(CSCPMessage *pRequest);
 	void UpdateSituation(CSCPMessage *pRequest);
 	void DeleteSituation(CSCPMessage *pRequest);
@@ -594,7 +594,7 @@ private:
 	void getServerFile(CSCPMessage *pRequest);
 	void getAgentFile(CSCPMessage *pRequest);
 	void testDCITransformation(CSCPMessage *pRequest);
-	void sendJobList(DWORD dwRqId);
+	void sendJobList(UINT32 dwRqId);
 	void cancelJob(CSCPMessage *pRequest);
 	void holdJob(CSCPMessage *pRequest);
 	void unholdJob(CSCPMessage *pRequest);
@@ -605,7 +605,7 @@ private:
 	void closeServerLog(CSCPMessage *request);
 	void queryServerLog(CSCPMessage *request);
 	void getServerLogQueryData(CSCPMessage *request);
-	void sendUsmCredentials(DWORD dwRqId);
+	void sendUsmCredentials(UINT32 dwRqId);
 	void updateUsmCredentials(CSCPMessage *pRequest);
 	void sendDCIThresholds(CSCPMessage *request);
 	void addClusterNode(CSCPMessage *request);
@@ -620,8 +620,8 @@ private:
 	void uploadFileToAgent(CSCPMessage *request);
 	void listServerFileStore(CSCPMessage *request);
 	void processConsoleCommand(CSCPMessage *msg);
-	void openConsole(DWORD rqId);
-	void closeConsole(DWORD rqId);
+	void openConsole(UINT32 rqId);
+	void closeConsole(UINT32 rqId);
 	void getVlans(CSCPMessage *msg);
 	void receiveFile(CSCPMessage *request);
 	void deleteFile(CSCPMessage *request);
@@ -638,7 +638,7 @@ private:
 	void updateMappingTable(CSCPMessage *request);
 	void deleteMappingTable(CSCPMessage *request);
 	void getWirelessStations(CSCPMessage *request);
-   void getSummaryTables(DWORD rqId);
+   void getSummaryTables(UINT32 rqId);
    void getSummaryTableDetails(CSCPMessage *request);
    void modifySummaryTable(CSCPMessage *request);
    void deleteSummaryTable(CSCPMessage *request);
@@ -657,41 +657,41 @@ public:
    void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
    void sendMessage(CSCPMessage *pMsg);
    void sendRawMessage(CSCP_MESSAGE *pMsg);
-   void sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg);
-	BOOL sendFile(const TCHAR *file, DWORD dwRqId);
+   void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
+	BOOL sendFile(const TCHAR *file, UINT32 dwRqId);
 
-   DWORD getIndex() { return m_dwIndex; }
-   void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+   UINT32 getIndex() { return m_dwIndex; }
+   void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
    int getState() { return m_iState; }
    const TCHAR *getUserName() { return m_szUserName; }
    const TCHAR *getClientInfo() { return m_szClientInfo; }
 	const TCHAR *getWorkstation() { return m_szWorkstation; }
-   DWORD getUserId() { return m_dwUserId; }
-	DWORD getSystemRights() { return m_dwSystemAccess; }
+   UINT32 getUserId() { return m_dwUserId; }
+	UINT32 getSystemRights() { return m_dwSystemAccess; }
    bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
    bool isConsoleOpen() { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
-   bool isSubscribed(DWORD dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
+   bool isSubscribed(UINT32 dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
    WORD getCurrentCmd() { return m_wCurrentCmd; }
    int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
 	int getClientType() { return m_clientType; }
 
-	bool checkSysAccessRights(DWORD requiredAccess) 
+	bool checkSysAccessRights(UINT32 requiredAccess) 
    { 
       return m_dwUserId == 0 ? true : 
          ((requiredAccess & m_dwSystemAccess) ? true : false);
    }
 
    void kill();
-   void notify(DWORD dwCode, DWORD dwData = 0);
+   void notify(UINT32 dwCode, UINT32 dwData = 0);
 
 	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->Put(pUpdate); }
    void onNewEvent(Event *pEvent);
    void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
    void onNewSNMPTrap(CSCPMessage *pMsg);
    void onObjectChange(NetObj *pObject);
-   void onUserDBUpdate(int code, DWORD id, UserDatabaseObject *user);
-   void onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
-   void onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
+   void onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *user);
+   void onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm);
+   void onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction);
    void onSituationChange(CSCPMessage *msg);
    void onLibraryImageChange(uuid_t *guid, bool removed = false);
 };
@@ -713,8 +713,8 @@ typedef struct
 typedef struct
 {
 	time_t timestamp;
-	DWORD nodeId;
-	DWORD dciId;
+	UINT32 nodeId;
+	UINT32 dciId;
 	TCHAR value[MAX_RESULT_LENGTH];
 } DELAYED_IDATA_INSERT;
 
@@ -728,14 +728,14 @@ BOOL NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iB
 #define ConfigReadStrA ConfigReadStr
 #endif
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
-DWORD NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, DWORD dwDefault);
+UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault);
 BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray,
                                            int nSize, int nDefault);
 BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate,
 												  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
 BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate,
 												  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate,
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, UINT32 dwValue, BOOL bCreate,
 													 BOOL isVisible = TRUE, BOOL needRestart = FALSE);
 BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray,
                                             int nSize, BOOL bCreate,
@@ -765,13 +765,13 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd();
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
-void QueueIDataInsert(time_t timestamp, DWORD nodeId, DWORD dciId, const TCHAR *value);
+void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *value);
 void StartDBWriter();
 void StopDBWriter();
 
-bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, DWORD id);
+bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id);
 
-void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr);
+void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
 SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext);
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
@@ -779,41 +779,41 @@ void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 void InitLocalNetInfo();
 
 ARP_CACHE *GetLocalArpCache();
-ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport);
+ARP_CACHE *SnmpGetArpCache(UINT32 dwVersion, SNMP_Transport *pTransport);
 
 InterfaceList *GetLocalInterfaceList();
-void SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dwIfIndex, int *adminState, int *operState);
+void SnmpGetInterfaceStatus(UINT32 dwVersion, SNMP_Transport *pTransport, UINT32 dwIfIndex, int *adminState, int *operState);
 
-ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport);
+ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport);
 
 void LoadNetworkDeviceDrivers();
 NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport);
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 
 void WatchdogInit();
-DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval);
-void WatchdogNotify(DWORD dwId);
+UINT32 WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval);
+void WatchdogNotify(UINT32 dwId);
 void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode();
-Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags, WORD agentPort,
-                  WORD snmpPort, const TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy, Cluster *pCluster, 
-						DWORD zoneId, bool doConfPoll, bool discoveredNode);
+Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags, WORD agentPort,
+                  WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy, Cluster *pCluster, 
+						UINT32 zoneId, bool doConfPoll, bool discoveredNode);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
-void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
+void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 int GetSessionCount();
-bool IsLoggedIn(DWORD dwUserId);
+bool IsLoggedIn(UINT32 dwUserId);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
-DWORD GetLocalIpAddr();
+UINT32 GetLocalIpAddr();
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize);
 
 BOOL ExecCommand(TCHAR *pszCommand);
-BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets);
+BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets);
 
 BOOL InitIdTable();
-DWORD CreateUniqueId(int iGroup);
+UINT32 CreateUniqueId(int iGroup);
 QWORD CreateUniqueEventId();
 void SaveCurrentFreeId();
 
@@ -826,23 +826,23 @@ void ShutdownSMSSender();
 void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText);
 
 void InitTraps();
-void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
+void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId);
 void CreateTrapCfgMessage(CSCPMessage &msg);
-DWORD CreateNewTrap(DWORD *pdwTrapId);
-DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap);
-DWORD UpdateTrapFromMsg(CSCPMessage *pMsg);
-DWORD DeleteTrap(DWORD dwId);
-void CreateNXMPTrapRecord(String &str, DWORD dwId);
+UINT32 CreateNewTrap(UINT32 *pdwTrapId);
+UINT32 CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap);
+UINT32 UpdateTrapFromMsg(CSCPMessage *pMsg);
+UINT32 DeleteTrap(UINT32 dwId);
+void CreateNXMPTrapRecord(String &str, UINT32 dwId);
 
-BOOL IsTableTool(DWORD dwToolId);
-BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);
-DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession);
-DWORD DeleteObjectToolFromDB(DWORD dwToolId);
-DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
+BOOL IsTableTool(UINT32 dwToolId);
+BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
+UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSession *pSession);
+UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
+UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
-DWORD ModifySummaryTable(CSCPMessage *msg, LONG *newId);
-DWORD DeleteSummaryTable(LONG tableId);
-Table *QuerySummaryTable(LONG tableId, DWORD baseObjectId, DWORD userId, DWORD *rcc);
+UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId);
+UINT32 DeleteSummaryTable(LONG tableId);
+Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
@@ -850,17 +850,17 @@ void ReinitializeSyslogParser();
 void EscapeString(String &str);
 
 void InitAuditLog();
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD userId,
-                                     const TCHAR *workstation, DWORD objectId,
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
+                                     const TCHAR *workstation, UINT32 objectId,
                                      const TCHAR *format, ...);
                                      
-bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorTextLen);
-DWORD ImportConfig(Config *config, DWORD flags);
+bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen);
+UINT32 ImportConfig(Config *config, UINT32 flags);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
 BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge,
-									  BYTE *pSignature, DWORD dwSigLen, int nMappingMethod,
+									  BYTE *pSignature, UINT32 dwSigLen, int nMappingMethod,
 									  const TCHAR *pszMappingData);
 void ReloadCertificates();
 #endif
@@ -883,9 +883,9 @@ void DumpProcess(CONSOLE_CTX pCtx);
  */
 extern TCHAR NXCORE_EXPORTABLE g_szConfigFile[];
 extern TCHAR NXCORE_EXPORTABLE g_szLogFile[];
-extern DWORD g_dwLogRotationMode;
-extern DWORD g_dwMaxLogSize;
-extern DWORD g_dwLogHistorySize;
+extern UINT32 g_dwLogRotationMode;
+extern UINT32 g_dwMaxLogSize;
+extern UINT32 g_dwLogHistorySize;
 extern TCHAR g_szDailyLogFileSuffix[64];
 extern TCHAR NXCORE_EXPORTABLE g_szDumpDir[];
 extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
@@ -895,17 +895,17 @@ extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
 extern TCHAR g_szDataDir[];
 extern TCHAR g_szLibDir[];
 extern TCHAR g_szJavaLibDir[];
-extern DWORD NXCORE_EXPORTABLE g_processAffinityMask;
+extern UINT32 NXCORE_EXPORTABLE g_processAffinityMask;
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
-extern DWORD g_dwPingSize;
-extern DWORD g_dwAuditFlags;
+extern UINT32 g_dwPingSize;
+extern UINT32 g_dwAuditFlags;
 extern time_t g_tServerStartTime;
-extern DWORD g_dwLockTimeout;
-extern DWORD g_dwAgentCommandTimeout;
-extern DWORD g_dwThresholdRepeatInterval;
+extern UINT32 g_dwLockTimeout;
+extern UINT32 g_dwAgentCommandTimeout;
+extern UINT32 g_dwThresholdRepeatInterval;
 extern int g_nRequiredPolls;
-extern DWORD g_dwSlmPollingInterval;
+extern UINT32 g_dwSlmPollingInterval;
 
 extern TCHAR g_szDbDriver[];
 extern TCHAR g_szDbDrvParams[];

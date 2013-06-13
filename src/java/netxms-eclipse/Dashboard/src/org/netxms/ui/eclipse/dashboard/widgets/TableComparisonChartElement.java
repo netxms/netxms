@@ -140,7 +140,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 	 */
 	private void updateChart(Table data)
 	{
-		String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : data.getInstanceColumn();
+		String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : ""; // FIXME
 		if (instanceColumn == null)
 			return;
 		

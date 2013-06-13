@@ -30,11 +30,11 @@
 
 BOOL InitActions();
 void CleanupActions();
-BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg);
-DWORD CreateNewAction(const TCHAR *pszName, DWORD *pdwId);
-DWORD DeleteActionFromDB(DWORD dwActionId);
-DWORD ModifyActionFromMessage(CSCPMessage *pMsg);
+BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg);
+UINT32 CreateNewAction(const TCHAR *pszName, UINT32 *pdwId);
+UINT32 DeleteActionFromDB(UINT32 dwActionId);
+UINT32 ModifyActionFromMessage(CSCPMessage *pMsg);
 void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction);
-void SendActionsToClient(ClientSession *pSession, DWORD dwRqId);
+void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId);
 
 #endif   /* _nms_actions_ */

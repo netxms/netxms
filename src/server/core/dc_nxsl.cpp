@@ -150,7 +150,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectByName(argv[1]->getValueAsCString());
-	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
+	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
 	return 0;
 }
 
@@ -171,7 +171,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectByDescription(argv[1]->getValueAsCString());
-	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
+	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
 	return 0;
 }
 
@@ -193,7 +193,7 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		return NXSL_ERR_BAD_CLASS;
 	
 	Node *node = (Node *)object->getData();
-	DWORD nodeId = node->Id();
+	UINT32 nodeId = node->Id();
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
 	if (dci == NULL || dci->getType() != DCO_TYPE_ITEM)
 	{

@@ -101,6 +101,9 @@ public class StatusIndicatorElement extends ElementWidget
 		startRefreshTimer();
 	}
 
+	/**
+	 * @param parent
+	 */
 	private void calcSize(final DashboardControl parent)
 	{
 		final GC gc = new GC(parent);
@@ -135,8 +138,7 @@ public class StatusIndicatorElement extends ElementWidget
 	protected void startRefreshTimer()
 	{
 		final Display display = getDisplay();
-		refreshTimer = new Runnable()
-		{
+		refreshTimer = new Runnable() {
 			@Override
 			public void run()
 			{

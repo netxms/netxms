@@ -28,7 +28,7 @@
 static void H_GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
-   DWORD dwErrorCode;
+   UINT32 dwErrorCode;
 
    pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
    dwErrorCode = GetParameterValue(0, name, value);
@@ -44,7 +44,7 @@ static void H_GetTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR name[MAX_PARAM_NAME];
 	Table value;
-   DWORD dwErrorCode;
+   UINT32 dwErrorCode;
 
    pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
    dwErrorCode = GetTableValue(0, name, &value);
@@ -60,14 +60,14 @@ static void H_GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR name[MAX_PARAM_NAME];
 	StringList value;
-   DWORD dwErrorCode;
+   UINT32 dwErrorCode;
 
    pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
    dwErrorCode = GetListValue(0, name, &value);
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
-		pMsg->SetVariable(VID_NUM_STRINGS, (DWORD)value.getSize());
+		pMsg->SetVariable(VID_NUM_STRINGS, (UINT32)value.getSize());
 		for(int i = 0; i < value.getSize(); i++)
 			pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.getValue(i));
    }

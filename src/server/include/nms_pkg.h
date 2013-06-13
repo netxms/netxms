@@ -32,8 +32,8 @@ typedef struct
    MUTEX mutex;    // Synchronization mutex
 	ObjectArray<Node> *nodeList;
    ClientSession *pSession;
-   DWORD dwRqId;
-   DWORD dwPackageId;
+   UINT32 dwRqId;
+   UINT32 dwPackageId;
    Queue *pQueue;  // Used internally by deployment manager
    TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
    TCHAR szPkgFile[MAX_PATH];
@@ -47,8 +47,8 @@ typedef struct
 
 BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform);
 BOOL IsPackageFileExist(const TCHAR *pszFileName);
-BOOL IsValidPackageId(DWORD dwPkgId);
-DWORD UninstallPackage(DWORD dwPkgId);
+BOOL IsValidPackageId(UINT32 dwPkgId);
+UINT32 UninstallPackage(UINT32 dwPkgId);
 THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg);
 
 

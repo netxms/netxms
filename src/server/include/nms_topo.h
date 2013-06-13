@@ -43,9 +43,9 @@ struct LLDP_LOCAL_PORT_INFO
  */
 struct HOP_INFO
 {
-   DWORD nextHop;     // Next hop address
+   UINT32 nextHop;     // Next hop address
    NetObj *object;    // Current hop object
-   DWORD ifIndex;     // Interface index or VPN connector object ID
+   UINT32 ifIndex;     // Interface index or VPN connector object ID
    bool isVpn;        // TRUE if next hop is behind VPN tunnel
 };
 
@@ -64,7 +64,7 @@ public:
 	NetworkPath();
 	~NetworkPath();
 
-	void addHop(DWORD nextHop, NetObj *currentObject, DWORD ifIndex, bool isVpn);
+	void addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn);
 	void setComplete() { m_complete = true; }
 
 	bool isComplete() { return m_complete; }
@@ -79,10 +79,10 @@ public:
  */
 struct FDB_ENTRY
 {
-	DWORD port;                    // Port number
-	DWORD ifIndex;                 // Interface index
+	UINT32 port;                    // Port number
+	UINT32 ifIndex;                 // Interface index
 	BYTE macAddr[MAC_ADDR_LENGTH]; // MAC address
-	DWORD nodeObject;              // ID of node object or 0 if not found
+	UINT32 nodeObject;              // ID of node object or 0 if not found
 };
 
 /**
@@ -90,8 +90,8 @@ struct FDB_ENTRY
  */
 struct PORT_MAPPING_ENTRY
 {
-	DWORD port;
-	DWORD ifIndex;
+	UINT32 port;
+	UINT32 ifIndex;
 };
 
 /**
@@ -108,7 +108,7 @@ private:
 	PORT_MAPPING_ENTRY *m_portMap;
 	time_t m_timestamp;
 
-	DWORD ifIndexFromPort(DWORD port);
+	UINT32 ifIndexFromPort(UINT32 port);
 
 public:
 	ForwardingDatabase();
@@ -123,9 +123,9 @@ public:
 	int getSize() { return m_fdbSize; }
 	FDB_ENTRY *getEntry(int index) { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : NULL; }
 
-	DWORD findMacAddress(const BYTE *macAddr);
-	bool isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr = NULL);
-	int getMacCountOnPort(DWORD ifIndex);
+	UINT32 findMacAddress(const BYTE *macAddr);
+	bool isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr = NULL);
+	int getMacCountOnPort(UINT32 ifIndex);
 };
 
 
@@ -141,9 +141,9 @@ public:
 
 struct LL_NEIGHBOR_INFO
 {
-	DWORD ifLocal;			// Local interface index
-	DWORD ifRemote;		// Remote interface index
-	DWORD objectId;		// ID of connected object
+	UINT32 ifLocal;			// Local interface index
+	UINT32 ifRemote;		// Remote interface index
+	UINT32 objectId;		// ID of connected object
 	bool isPtToPt;			// true if this is point-to-point link
 	int protocol;			// Protocol used to obtain information
 };
@@ -187,37 +187,37 @@ public:
 
 class VrrpRouter
 {
-	friend DWORD VRRPHandler(DWORD, SNMP_Variable *, SNMP_Transport *, void *);
+	friend UINT32 VRRPHandler(UINT32, SNMP_Variable *, SNMP_Transport *, void *);
 
 private:
-	DWORD m_id;
-	DWORD m_ifIndex;
+	UINT32 m_id;
+	UINT32 m_ifIndex;
 	int m_state;
 	BYTE m_virtualMacAddr[MAC_ADDR_LENGTH];
 	int m_ipAddrCount;
-	DWORD *m_ipAddrList;
+	UINT32 *m_ipAddrList;
 
 	void addVirtualIP(SNMP_Variable *var);
-	static DWORD walkerCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg);
+	static UINT32 walkerCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg);
 
 protected:
-	bool readVirtualIP(DWORD snmpVersion, SNMP_Transport *transport);
+	bool readVirtualIP(UINT32 snmpVersion, SNMP_Transport *transport);
 
 public:
-	VrrpRouter(DWORD id, DWORD ifIndex, int state, BYTE *macAddr);
+	VrrpRouter(UINT32 id, UINT32 ifIndex, int state, BYTE *macAddr);
 	~VrrpRouter();
 
-	DWORD getId() { return m_id; }
-	DWORD getIfIndex() { return m_ifIndex; }
+	UINT32 getId() { return m_id; }
+	UINT32 getIfIndex() { return m_ifIndex; }
 	int getState() { return m_state; }
 	BYTE *getVirtualMacAddr() { return m_virtualMacAddr; }
 	int getVipCount() { return m_ipAddrCount; }
-	DWORD getVip(int index) { return ((index >= 0) && (index < m_ipAddrCount)) ? m_ipAddrList[index] : 0; }
+	UINT32 getVip(int index) { return ((index >= 0) && (index < m_ipAddrCount)) ? m_ipAddrList[index] : 0; }
 };
 
 class VrrpInfo
 {
-	friend DWORD VRRPHandler(DWORD, SNMP_Variable *, SNMP_Transport *, void *);
+	friend UINT32 VRRPHandler(UINT32, SNMP_Variable *, SNMP_Transport *, void *);
 
 private:
 	int m_version;

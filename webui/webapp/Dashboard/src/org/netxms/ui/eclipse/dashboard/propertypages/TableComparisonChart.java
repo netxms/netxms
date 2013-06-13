@@ -41,8 +41,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class TableComparisonChart extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private TableComparisonChartConfig config;
 	private LabeledText title;
 	private Spinner refreshRate;

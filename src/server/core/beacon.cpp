@@ -36,7 +36,7 @@
 
 THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 {
-	DWORD i, interval, timeout, packetSize, hostCount, hostList[MAX_BEACON_HOSTS];
+	UINT32 i, interval, timeout, packetSize, hostCount, hostList[MAX_BEACON_HOSTS];
 	TCHAR *curr, *next, hosts[1024];
 
 	interval = ConfigReadULong(_T("BeaconPollingInterval"), 1000);

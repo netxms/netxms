@@ -33,13 +33,13 @@ ItemValue::ItemValue()
    m_dwInt32 = 0;
    m_qwInt64 = 0;
    m_dFloat = 0;
-   m_dwTimeStamp = (DWORD)time(NULL);
+   m_dwTimeStamp = (UINT32)time(NULL);
 }
 
 /**
  * Construct value object from string value
  */
-ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
+ItemValue::ItemValue(const TCHAR *pszValue, UINT32 dwTimeStamp)
 {
    nx_strncpy(m_szString, pszValue, MAX_DB_STRING);
    m_iInt32 = _tcstol(m_szString, NULL, 0);
@@ -49,7 +49,7 @@ ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
    m_dFloat = _tcstod(m_szString, NULL);
 
    if (dwTimeStamp == 0)
-      m_dwTimeStamp = (DWORD)time(NULL);
+      m_dwTimeStamp = (UINT32)time(NULL);
    else
       m_dwTimeStamp = dwTimeStamp;
 }
@@ -104,21 +104,21 @@ const ItemValue& ItemValue::operator=(double dFloat)
 {
    m_dFloat = dFloat;
    _sntprintf(m_szString, MAX_DB_STRING, _T("%f"), m_dFloat);
-   m_iInt32 = (LONG)m_dFloat;
+   m_iInt32 = (INT32)m_dFloat;
    m_iInt64 = (INT64)m_dFloat;
-   m_dwInt32 = (DWORD)m_dFloat;
-   m_qwInt64 = (QWORD)m_dFloat;
+   m_dwInt32 = (UINT32)m_dFloat;
+   m_qwInt64 = (UINT64)m_dFloat;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(LONG iInt32)
+const ItemValue& ItemValue::operator=(INT32 iInt32)
 {
    m_iInt32 = iInt32;
    _sntprintf(m_szString, MAX_DB_STRING, _T("%d"), m_iInt32);
    m_dFloat = (double)m_iInt32;
    m_iInt64 = (INT64)m_iInt32;
-   m_dwInt32 = (DWORD)m_iInt32;
-   m_qwInt64 = (QWORD)m_iInt32;
+   m_dwInt32 = (UINT32)m_iInt32;
+   m_qwInt64 = (UINT64)m_iInt32;
    return *this;
 }
 
@@ -127,29 +127,29 @@ const ItemValue& ItemValue::operator=(INT64 iInt64)
    m_iInt64 = iInt64;
    _sntprintf(m_szString, MAX_DB_STRING, INT64_FMT, m_iInt64);
    m_dFloat = (double)m_iInt64;
-   m_iInt32 = (LONG)m_iInt64;
-   m_dwInt32 = (DWORD)m_iInt64;
-   m_qwInt64 = (QWORD)m_iInt64;
+   m_iInt32 = (INT32)m_iInt64;
+   m_dwInt32 = (UINT32)m_iInt64;
+   m_qwInt64 = (UINT64)m_iInt64;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(DWORD dwInt32)
+const ItemValue& ItemValue::operator=(UINT32 dwInt32)
 {
    m_dwInt32 = dwInt32;
    _sntprintf(m_szString, MAX_DB_STRING, _T("%u"), m_dwInt32);
    m_dFloat = (double)m_dwInt32;
-   m_iInt32 = (LONG)m_dwInt32;
+   m_iInt32 = (INT32)m_dwInt32;
    m_iInt64 = (INT64)m_dwInt32;
-   m_qwInt64 = (QWORD)m_dwInt32;
+   m_qwInt64 = (UINT64)m_dwInt32;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(QWORD qwInt64)
+const ItemValue& ItemValue::operator=(UINT64 qwInt64)
 {
    m_qwInt64 = qwInt64;
    _sntprintf(m_szString, MAX_DB_STRING, UINT64_FMT, m_qwInt64);
    m_dFloat = (double)((INT64)m_qwInt64);
-   m_iInt32 = (LONG)m_qwInt64;
+   m_iInt32 = (INT32)m_qwInt64;
    m_iInt64 = (INT64)m_qwInt64;
    return *this;
 }
@@ -162,22 +162,22 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1,
    switch(nDataType)
    {
       case DCI_DT_INT:
-         result = (LONG)value1 - (LONG)value2;
+         result = (INT32)value1 - (INT32)value2;
          break;
       case DCI_DT_UINT:
-         result = (DWORD)value1 - (DWORD)value2;
+         result = (UINT32)value1 - (UINT32)value2;
          break;
       case DCI_DT_INT64:
          result = (INT64)value1 - (INT64)value2;
          break;
       case DCI_DT_UINT64:
-         result = (QWORD)value1 - (QWORD)value2;
+         result = (UINT64)value1 - (UINT64)value2;
          break;
       case DCI_DT_FLOAT:
          result = (double)value1 - (double)value2;
          break;
       case DCI_DT_STRING:
-         result = (LONG)((_tcscmp((const TCHAR *)value1, (const TCHAR *)value2) == 0) ? 0 : 1);
+         result = (INT32)((_tcscmp((const TCHAR *)value1, (const TCHAR *)value2) == 0) ? 0 : 1);
          break;
       default:
          // Delta calculation is not supported for other types
@@ -212,16 +212,16 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues,
    switch(nDataType)
    {
       case DCI_DT_INT:
-         CALC_AVG_VALUE(LONG);
+         CALC_AVG_VALUE(INT32);
          break;
       case DCI_DT_UINT:
-         CALC_AVG_VALUE(DWORD);
+         CALC_AVG_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_AVG_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
-         CALC_AVG_VALUE(QWORD);
+         CALC_AVG_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
          CALC_AVG_VALUE(double);
@@ -258,16 +258,16 @@ void CalculateItemValueTotal(ItemValue &result, int nDataType, int nNumValues, I
    switch(nDataType)
    {
       case DCI_DT_INT:
-         CALC_TOTAL_VALUE(LONG);
+         CALC_TOTAL_VALUE(INT32);
          break;
       case DCI_DT_UINT:
-         CALC_TOTAL_VALUE(DWORD);
+         CALC_TOTAL_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_TOTAL_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
-         CALC_TOTAL_VALUE(QWORD);
+         CALC_TOTAL_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
          CALC_TOTAL_VALUE(double);
@@ -316,7 +316,7 @@ void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, Item
    {
       case DCI_DT_INT:
 #define ABS(x) ((x) < 0 ? -(x) : (x))
-         CALC_MD_VALUE(LONG);
+         CALC_MD_VALUE(INT32);
          break;
       case DCI_DT_INT64:
          CALC_MD_VALUE(INT64);
@@ -327,10 +327,10 @@ void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, Item
       case DCI_DT_UINT:
 #undef ABS
 #define ABS(x) (x)
-         CALC_MD_VALUE(DWORD);
+         CALC_MD_VALUE(UINT32);
          break;
       case DCI_DT_UINT64:
-         CALC_MD_VALUE(QWORD);
+         CALC_MD_VALUE(UINT64);
          break;
       case DCI_DT_STRING:
          result = _T("");   // Mean deviation for string is meaningless
@@ -365,16 +365,16 @@ void CalculateItemValueMin(ItemValue &result, int nDataType, int nNumValues, Ite
    switch(nDataType)
    {
       case DCI_DT_INT:
-         CALC_MIN_VALUE(LONG);
+         CALC_MIN_VALUE(INT32);
          break;
       case DCI_DT_UINT:
-         CALC_MIN_VALUE(DWORD);
+         CALC_MIN_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_MIN_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
-         CALC_MIN_VALUE(QWORD);
+         CALC_MIN_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
          CALC_MIN_VALUE(double);
@@ -413,16 +413,16 @@ void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, Ite
    switch(nDataType)
    {
       case DCI_DT_INT:
-         CALC_MAX_VALUE(LONG);
+         CALC_MAX_VALUE(INT32);
          break;
       case DCI_DT_UINT:
-         CALC_MAX_VALUE(DWORD);
+         CALC_MAX_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_MAX_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
-         CALC_MAX_VALUE(QWORD);
+         CALC_MAX_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
          CALC_MAX_VALUE(double);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@
  */
 struct EVENT_TEMPLATE
 {
-   DWORD dwCode;
-   DWORD dwSeverity;
-   DWORD dwFlags;
+   UINT32 dwCode;
+   UINT32 dwSeverity;
+   UINT32 dwFlags;
    TCHAR *pszMessageTemplate;
    TCHAR *pszDescription;
    TCHAR szName[MAX_EVENT_NAME];
@@ -52,12 +52,12 @@ struct EVENT_TEMPLATE
 class Event
 {
 private:
-   QWORD m_qwId;
-   QWORD m_qwRootId;    // Root event id
-   DWORD m_dwCode;
-   DWORD m_dwSeverity;
-   DWORD m_dwFlags;
-   DWORD m_dwSource;
+   UINT64 m_qwId;
+   UINT64 m_qwRootId;    // Root event id
+   UINT32 m_dwCode;
+   UINT32 m_dwSeverity;
+   UINT32 m_dwFlags;
+   UINT32 m_dwSource;
 	TCHAR m_szName[MAX_EVENT_NAME];
    TCHAR *m_pszMessageText;
    TCHAR *m_pszMessageTemplate;
@@ -69,36 +69,36 @@ private:
 
 public:
    Event();
-   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args);
+   Event(EVENT_TEMPLATE *pTemplate, UINT32 dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args);
    ~Event();
 
-   QWORD getId() { return m_qwId; }
-   DWORD getCode() { return m_dwCode; }
-   DWORD getSeverity() { return m_dwSeverity; }
-   DWORD getFlags() { return m_dwFlags; }
-   DWORD getSourceId() { return m_dwSource; }
+   UINT64 getId() { return m_qwId; }
+   UINT32 getCode() { return m_dwCode; }
+   UINT32 getSeverity() { return m_dwSeverity; }
+   UINT32 getFlags() { return m_dwFlags; }
+   UINT32 getSourceId() { return m_dwSource; }
 	const TCHAR *getName() { return m_szName; }
    const TCHAR *getMessage() { return m_pszMessageText; }
    const TCHAR *getUserTag() { return m_pszUserTag; }
    time_t getTimeStamp() { return m_tTimeStamp; }
    
-   QWORD getRootId() { return m_qwRootId; }
-   void setRootId(QWORD qwId) { m_qwRootId = qwId; }
+   UINT64 getRootId() { return m_qwRootId; }
+   void setRootId(UINT64 qwId) { m_qwRootId = qwId; }
 
    void prepareMessage(CSCPMessage *pMsg);
 
    void expandMessageText();
    TCHAR *expandText(const TCHAR *szTemplate, const TCHAR *pszAlarmMsg = NULL);
-   static TCHAR *expandText(Event *event, DWORD sourceObject, const TCHAR *szTemplate, const TCHAR *pszAlarmMsg);
+   static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *szTemplate, const TCHAR *pszAlarmMsg);
 
-   DWORD getParametersCount() { return m_parameters.size(); }
+   UINT32 getParametersCount() { return m_parameters.size(); }
    const TCHAR *getParameter(int index) { return (TCHAR *)m_parameters.get(index); }
-   DWORD getParameterAsULong(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
-   QWORD getParameterAsUInt64(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
+   UINT32 getParameterAsULong(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
+   UINT64 getParameterAsUInt64(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
 
 	const TCHAR *getNamedParameter(const TCHAR *name) { return getParameter(m_parameterNames.getIndexIgnoreCase(name)); }
-   DWORD getNamedParameterAsULong(const TCHAR *name) { return getParameterAsULong(m_parameterNames.getIndexIgnoreCase(name)); }
-   QWORD getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.getIndexIgnoreCase(name)); }
+   UINT32 getNamedParameterAsULong(const TCHAR *name) { return getParameterAsULong(m_parameterNames.getIndexIgnoreCase(name)); }
+   UINT64 getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.getIndexIgnoreCase(name)); }
 
 	void addParameter(const TCHAR *name, const TCHAR *value);
 	void setNamedParameter(const TCHAR *name, const TCHAR *value);
@@ -113,14 +113,14 @@ public:
 class EPRule
 {
 private:
-   DWORD m_dwId;
-   DWORD m_dwFlags;
-   DWORD m_dwNumSources;
-   DWORD *m_pdwSourceList;
-   DWORD m_dwNumEvents;
-   DWORD *m_pdwEventList;
-   DWORD m_dwNumActions;
-   DWORD *m_pdwActionList;
+   UINT32 m_dwId;
+   UINT32 m_dwFlags;
+   UINT32 m_dwNumSources;
+   UINT32 *m_pdwSourceList;
+   UINT32 m_dwNumEvents;
+   UINT32 *m_pdwEventList;
+   UINT32 m_dwNumActions;
+   UINT32 *m_pdwActionList;
    TCHAR *m_pszComment;
    TCHAR *m_pszScript;
    NXSL_Program *m_pScript;
@@ -128,34 +128,34 @@ private:
    TCHAR m_szAlarmMessage[MAX_EVENT_MSG_LENGTH];
    int m_iAlarmSeverity;
    TCHAR m_szAlarmKey[MAX_DB_STRING];
-	DWORD m_dwAlarmTimeout;
-	DWORD m_dwAlarmTimeoutEvent;
+	UINT32 m_dwAlarmTimeout;
+	UINT32 m_dwAlarmTimeoutEvent;
 
-	DWORD m_dwSituationId;
+	UINT32 m_dwSituationId;
 	TCHAR m_szSituationInstance[MAX_DB_STRING];
 	StringMap m_situationAttrList;
 
-   bool matchSource(DWORD dwObjectId);
-   bool matchEvent(DWORD dwEventCode);
-   bool matchSeverity(DWORD dwSeverity);
+   bool matchSource(UINT32 dwObjectId);
+   bool matchEvent(UINT32 dwEventCode);
+   bool matchSeverity(UINT32 dwSeverity);
    bool matchScript(Event *pEvent);
 
    void generateAlarm(Event *pEvent);
 
 public:
-   EPRule(DWORD dwId);
+   EPRule(UINT32 dwId);
    EPRule(DB_RESULT hResult, int iRow);
    EPRule(CSCPMessage *pMsg);
    ~EPRule();
 
-   DWORD getId() { return m_dwId; }
-   void setId(DWORD dwNewId) { m_dwId = dwNewId; }
+   UINT32 getId() { return m_dwId; }
+   void setId(UINT32 dwNewId) { m_dwId = dwNewId; }
    bool loadFromDB();
 	void saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
    void createMessage(CSCPMessage *pMsg);
 
-   bool isActionInUse(DWORD dwActionId);
+   bool isActionInUse(UINT32 dwActionId);
 };
 
 /**
@@ -164,7 +164,7 @@ public:
 class EventPolicy
 {
 private:
-   DWORD m_dwNumRules;
+   UINT32 m_dwNumRules;
    EPRule **m_ppRuleList;
    RWLOCK m_rwlock;
 
@@ -177,14 +177,14 @@ public:
    EventPolicy();
    ~EventPolicy();
 
-   DWORD getNumRules() { return m_dwNumRules; }
+   UINT32 getNumRules() { return m_dwNumRules; }
    bool loadFromDB();
    void saveToDB();
    void processEvent(Event *pEvent);
-   void sendToClient(ClientSession *pSession, DWORD dwRqId);
-   void replacePolicy(DWORD dwNumRules, EPRule **ppRuleList);
+   void sendToClient(ClientSession *pSession, UINT32 dwRqId);
+   void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
 
-   bool isActionInUse(DWORD dwActionId);
+   bool isActionInUse(UINT32 dwActionId);
 };
 
 /**
@@ -192,18 +192,18 @@ public:
  */
 BOOL InitEventSubsystem();
 void ShutdownEventSubsystem();
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...);
-BOOL PostEventWithNames(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, const TCHAR **names, ...);
-BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...);
-BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...);
+BOOL PostEvent(UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, ...);
+BOOL PostEventWithNames(UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, const TCHAR **names, ...);
+BOOL PostEventWithTag(UINT32 dwEventCode, UINT32 dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...);
+BOOL PostEventEx(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, ...);
 void ResendEvents(Queue *pQueue);
 void ReloadEvents();
-void DeleteEventTemplateFromList(DWORD dwEventCode);
+void DeleteEventTemplateFromList(UINT32 dwEventCode);
 void CorrelateEvent(Event *pEvent);
-void CreateNXMPEventRecord(String &str, DWORD dwCode);
-BOOL EventNameFromCode(DWORD dwCode, TCHAR *pszBuffer);
-DWORD EventCodeFromName(const TCHAR *name, DWORD defaultValue = 0);
-EVENT_TEMPLATE *FindEventTemplateByCode(DWORD dwCode);
+void CreateNXMPEventRecord(String &str, UINT32 dwCode);
+BOOL EventNameFromCode(UINT32 dwCode, TCHAR *pszBuffer);
+UINT32 EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
+EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 dwCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 
 /**

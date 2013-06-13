@@ -65,7 +65,7 @@ MsgWaitQueue::~MsgWaitQueue()
  */
 void MsgWaitQueue::clear()
 {
-   DWORD i;
+   UINT32 i;
 
    lock();
 
@@ -129,16 +129,14 @@ void MsgWaitQueue::put(CSCP_MESSAGE *pMsg)
    ConditionPulse(m_condNewMsg);
 }
 
-
-//
-// Wait for message with specific code and ID
-// Function return pointer to the message on success or
-// NULL on timeout or error
-//
-
-void *MsgWaitQueue::waitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut)
+/**
+ * Wait for message with specific code and ID
+ * Function return pointer to the message on success or
+ * NULL on timeout or error
+ */
+void *MsgWaitQueue::waitForMessageInternal(UINT16 wIsBinary, UINT16 wCode, UINT32 dwId, UINT32 dwTimeOut)
 {
-   DWORD i, dwSleepTime;
+   UINT32 i, dwSleepTime;
    QWORD qwStartTime;
 
    do
@@ -164,7 +162,7 @@ void *MsgWaitQueue::waitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwI
 
       qwStartTime = GetCurrentTimeMs();
       ConditionWait(m_condNewMsg, min(dwTimeOut, 100));
-      dwSleepTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
+      dwSleepTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
       dwTimeOut -= min(dwSleepTime, dwTimeOut);
    } while(dwTimeOut > 0);
 
@@ -178,7 +176,7 @@ void *MsgWaitQueue::waitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwI
 
 void MsgWaitQueue::housekeeperThread()
 {
-   DWORD i;
+   UINT32 i;
 
    while(1)
    {

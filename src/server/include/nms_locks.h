@@ -24,7 +24,7 @@
 #define _nms_locks_h_
 
 
-#define UNLOCKED           ((DWORD)0xFFFFFFFF)
+#define UNLOCKED           ((UINT32)0xFFFFFFFF)
 
 
 //
@@ -46,12 +46,12 @@
 
 #ifndef _NETXMS_DB_SCHEMA_
 
-BOOL InitLocks(DWORD *pdwIpAddr, TCHAR *pszInfo);
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const TCHAR *pszOwnerInfo, DWORD *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
-void UnlockComponent(DWORD dwId);
-void RemoveAllSessionLocks(DWORD dwSessionId);
-BOOL LockLPP(DWORD dwPolicyId, DWORD dwSessionId);
-void UnlockLPP(DWORD dwPolicyId, DWORD dwSessionId);
+BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo);
+BOOL LockComponent(UINT32 dwId, UINT32 dwLockBy, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
+void UnlockComponent(UINT32 dwId);
+void RemoveAllSessionLocks(UINT32 dwSessionId);
+BOOL LockLPP(UINT32 dwPolicyId, UINT32 dwSessionId);
+void UnlockLPP(UINT32 dwPolicyId, UINT32 dwSessionId);
 void NXCORE_EXPORTABLE UnlockDB();
 
 #endif

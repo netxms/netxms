@@ -50,8 +50,8 @@ LogHandle::~LogHandle()
  */
 void LogHandle::getColumnInfo(CSCPMessage &msg)
 {
-	DWORD count = 0;
-	DWORD varId = VID_COLUMN_INFO_BASE;
+	UINT32 count = 0;
+	UINT32 varId = VID_COLUMN_INFO_BASE;
 	for(int i = 0; m_log->columns[i].name != NULL; i++, count++, varId += 7)
 	{
 		msg.SetVariable(varId++, m_log->columns[i].name);
@@ -240,7 +240,7 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh)
 		else
 		{
 			// possibly we have more rows or refresh was requested
-			DWORD newLimit = (DWORD)(startRow + numRows);
+			UINT32 newLimit = (UINT32)(startRow + numRows);
 			if (newLimit > m_rowCountLimit)
 				m_rowCountLimit = (newLimit - m_rowCountLimit < 1000) ? (m_rowCountLimit + 1000) : newLimit;
 			deleteQueryResults();

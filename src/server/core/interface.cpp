@@ -52,7 +52,7 @@ Interface::Interface() : NetObj()
 // Constructor for "fake" interface object
 //
 
-Interface::Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheticMask) : NetObj()
+Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSyntheticMask) : NetObj()
 {
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
 	if ((dwAddr & 0xFF000000) == 0x7F000000)
@@ -85,7 +85,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheti
 // Constructor for normal interface object
 //
 
-Interface::Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD ipAddr, DWORD ipNetMask, DWORD ifType, DWORD zoneId)
+Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32 ipAddr, UINT32 ipNetMask, UINT32 ifType, UINT32 zoneId)
           : NetObj()
 {
 	if (((ipAddr & 0xFF000000) == 0x7F000000) || (ifType == IFTYPE_SOFTWARE_LOOPBACK))
@@ -129,7 +129,7 @@ Interface::~Interface()
 // Create object from database data
 //
 
-BOOL Interface::CreateFromDB(DWORD dwId)
+BOOL Interface::CreateFromDB(UINT32 dwId)
 {
    BOOL bResult = FALSE;
 
@@ -160,7 +160,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 1);
       m_dwIfType = DBGetFieldULong(hResult, 0, 2);
       m_dwIfIndex = DBGetFieldULong(hResult, 0, 3);
-      DWORD nodeId = DBGetFieldULong(hResult, 0, 4);
+      UINT32 nodeId = DBGetFieldULong(hResult, 0, 4);
 		DBGetFieldByteArray2(hResult, 0, 5, m_bMacAddr, MAC_ADDR_LENGTH, 0);
 		m_flags = DBGetFieldULong(hResult, 0, 6);
       m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 7);
@@ -220,7 +220,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 BOOL Interface::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szMacStr[16], szIpAddr[16], szNetMask[16];
-   DWORD dwNodeId;
+   UINT32 dwNodeId;
 
    LockData();
 
@@ -276,10 +276,10 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_peerNodeId);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
 	DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (DWORD)m_adminState);
-	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (DWORD)m_operState);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (DWORD)m_dot1xPaeAuthState);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (DWORD)m_dot1xBackendAuthState);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_adminState);
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_operState);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xPaeAuthState);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xBackendAuthState);
 	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_dwId);
 
 	BOOL success = DBExecute(hStmt);
@@ -311,7 +311,7 @@ bool Interface::deleteFromDB(DB_HANDLE hdb)
 /**
  * Perform status poll on interface
  */
-void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQueue, 
+void Interface::StatusPoll(ClientSession *pSession, UINT32 dwRqId,	Queue *pEventQueue, 
 									BOOL bClusterSync, SNMP_Transport *pTransport)
 {
    m_pPollRequestor = pSession;
@@ -377,7 +377,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
       else
       {
          // Use ICMP ping as a last option
-			DWORD icmpProxy = 0;
+			UINT32 icmpProxy = 0;
 
 			if (IsZoningEnabled() && (m_zoneId != 0))
 			{
@@ -440,7 +440,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 			{
 				sendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
 				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,1500,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_dwPingSize);
-				DWORD dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
+				UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
 				if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
 					nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
 				if (dwPingStatus == ICMP_SUCCESS)
@@ -528,7 +528,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 
    if ((newStatus != oldStatus) && (m_iPollCount >= requiredPolls) && (expectedState != IF_EXPECTED_STATE_IGNORE))
    {
-		static DWORD statusToEvent[] =
+		static UINT32 statusToEvent[] =
 		{
 			EVENT_INTERFACE_UP,       // Normal
 			EVENT_INTERFACE_UP,       // Warning
@@ -540,7 +540,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 			EVENT_INTERFACE_DISABLED, // Disabled
 			EVENT_INTERFACE_TESTING   // Testing
 		};
-		static DWORD statusToEventInverted[] =
+		static UINT32 statusToEventInverted[] =
 		{
 			EVENT_INTERFACE_EXPECTED_DOWN, // Normal
 			EVENT_INTERFACE_EXPECTED_DOWN, // Warning
@@ -584,7 +584,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 /**
  * PAE (802.1x) status poll
  */
-void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transport *pTransport, Node *node)
+void Interface::paeStatusPoll(ClientSession *pSession, UINT32 dwRqId, SNMP_Transport *pTransport, Node *node)
 {
 	static const TCHAR *paeStateText[] = 
 	{
@@ -633,7 +633,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transp
 		modified = true;
 
 		PostEvent(EVENT_8021X_PAE_STATE_CHANGED, node->Id(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
-		          (DWORD)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_dwId, m_szName);
+		          (UINT32)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_dwId, m_szName);
 
 		if (paeState == PAE_STATE_FORCE_UNAUTH)
 		{
@@ -647,7 +647,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transp
 		modified = true;
 
 		PostEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->Id(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
-		          (DWORD)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_dwId, m_szName);
+		          (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_dwId, m_szName);
 
 		if (backendState == BACKEND_STATE_FAIL)
 		{
@@ -696,7 +696,7 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-DWORD Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -708,7 +708,7 @@ DWORD Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	// Expected interface state
 	if (pRequest->IsVariableExist(VID_EXPECTED_STATE))
 	{
-      DWORD expectedState = pRequest->GetVariableShort(VID_EXPECTED_STATE);
+      UINT32 expectedState = pRequest->GetVariableShort(VID_EXPECTED_STATE);
 		m_flags &= ~IF_EXPECTED_STATE_MASK;
 		m_flags |= expectedState << 28;
 	}
@@ -723,7 +723,7 @@ void Interface::setExpectedState(int state)
 {
 	LockData();
 	m_flags &= ~IF_EXPECTED_STATE_MASK;
-	m_flags |= (DWORD)state << 28;
+	m_flags |= (UINT32)state << 28;
 	Modify();
 	UnlockData();
 }
@@ -731,9 +731,9 @@ void Interface::setExpectedState(int state)
 /**
  * Wake up node bound to this interface by sending magic packet
  */
-DWORD Interface::wakeUp()
+UINT32 Interface::wakeUp()
 {
-   DWORD dwAddr, dwResult = RCC_NO_MAC_ADDRESS;
+   UINT32 dwAddr, dwResult = RCC_NO_MAC_ADDRESS;
 
    if (memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6))
    {
@@ -753,7 +753,7 @@ DWORD Interface::wakeUp()
 
 Node *Interface::getParentNode()
 {
-   DWORD i;
+   UINT32 i;
    Node *pNode = NULL;
 
    LockParentList(FALSE);
@@ -772,7 +772,7 @@ Node *Interface::getParentNode()
 // Change interface's IP address
 //
 
-void Interface::setIpAddr(DWORD dwNewAddr) 
+void Interface::setIpAddr(UINT32 dwNewAddr) 
 {
    UpdateInterfaceIndex(m_dwIpAddr, dwNewAddr, this);
    LockData();
@@ -786,7 +786,7 @@ void Interface::setIpAddr(DWORD dwNewAddr)
 // Change interface's IP subnet mask
 //
 
-void Interface::setIpNetMask(DWORD dwNetMask) 
+void Interface::setIpNetMask(UINT32 dwNetMask) 
 {
    LockData();
    m_dwIpNetMask = dwNetMask;
@@ -823,7 +823,7 @@ void Interface::updateZoneId()
 /**
  * Handler for object deletion notification
  */
-void Interface::onObjectDelete(DWORD dwObjectId)
+void Interface::onObjectDelete(UINT32 dwObjectId)
 {
 	if ((m_peerNodeId == dwObjectId) || (m_peerInterfaceId == dwObjectId))
 	{

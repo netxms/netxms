@@ -34,7 +34,7 @@ MappingTable *MappingTable::createFromMessage(CSCPMessage *msg)
 													msg->GetVariableStr(VID_DESCRIPTION));
 
 	int count = (int)msg->GetVariableLong(VID_NUM_ELEMENTS);
-	DWORD varId = VID_ELEMENT_LIST_BASE;
+	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < count; i++)
 	{
 		TCHAR key[64];
@@ -115,7 +115,7 @@ MappingTable *MappingTable::createFromDatabase(LONG id)
 /**
  * Internal constructor
  */
-MappingTable::MappingTable(LONG id, TCHAR *name, DWORD flags, TCHAR *description)
+MappingTable::MappingTable(LONG id, TCHAR *name, UINT32 flags, TCHAR *description)
 {
 	m_id = id;
 	m_name = name;
@@ -139,14 +139,14 @@ MappingTable::~MappingTable()
  */
 void MappingTable::fillMessage(CSCPMessage *msg)
 {
-	msg->SetVariable(VID_MAPPING_TABLE_ID, (DWORD)m_id);
+	msg->SetVariable(VID_MAPPING_TABLE_ID, (UINT32)m_id);
 	msg->SetVariable(VID_NAME, CHECK_NULL_EX(m_name));
 	msg->SetVariable(VID_FLAGS, m_flags);
 	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 	
 	msg->SetVariable(VID_NUM_ELEMENTS, m_data->getSize());
-	DWORD varId = VID_ELEMENT_LIST_BASE;
-	for(DWORD i = 0; i < m_data->getSize(); i++)
+	UINT32 varId = VID_ELEMENT_LIST_BASE;
+	for(UINT32 i = 0; i < m_data->getSize(); i++)
 	{
 		msg->SetVariable(varId++, m_data->getKeyByIndex(i));
 		MappingTableElement *e = m_data->getValueByIndex(i);
@@ -170,7 +170,7 @@ bool MappingTable::saveToDatabase()
 	}
 
 	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("mapping_tables"), _T("id"), (DWORD)m_id))
+	if (IsDatabaseRecordExist(hdb, _T("mapping_tables"), _T("id"), (UINT32)m_id))
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE mapping_tables SET name=?,flags=?,description=? WHERE id=?"));
 	}
@@ -203,7 +203,7 @@ bool MappingTable::saveToDatabase()
 	if (hStmt == NULL)
 		goto failure2;
 
-	for(DWORD i = 0; i < m_data->getSize(); i++)
+	for(UINT32 i = 0; i < m_data->getSize(); i++)
 	{
 		MappingTableElement *e = m_data->getValueByIndex(i);
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -314,7 +314,7 @@ void InitMappingTables()
  */
 struct NOTIFICATION_DATA
 {
-	DWORD code;
+	UINT32 code;
 	LONG id;
 };
 
@@ -333,9 +333,9 @@ static void NotifyClients(ClientSession *session, void *arg)
  * @param msg NXCP message with table's data
  * @return RCC
  */
-DWORD UpdateMappingTable(CSCPMessage *msg, LONG *newId)
+UINT32 UpdateMappingTable(CSCPMessage *msg, LONG *newId)
 {
-	DWORD rcc;
+	UINT32 rcc;
 	MappingTable *mt = MappingTable::createFromMessage(msg);
 	RWLockWriteLock(s_mappingTablesLock, INFINITE);
 	if (mt->getId() != 0)
@@ -400,9 +400,9 @@ DWORD UpdateMappingTable(CSCPMessage *msg, LONG *newId)
  * @param id mapping table ID
  * @return RCC
  */
-DWORD DeleteMappingTable(LONG id)
+UINT32 DeleteMappingTable(LONG id)
 {
-	DWORD rcc = RCC_INVALID_MAPPING_TABLE_ID;
+	UINT32 rcc = RCC_INVALID_MAPPING_TABLE_ID;
 	RWLockWriteLock(s_mappingTablesLock, INFINITE);
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
@@ -440,9 +440,9 @@ DWORD DeleteMappingTable(LONG id)
  * @param msg NXCP message to fill
  * @return RCC
  */
-DWORD GetMappingTable(LONG id, CSCPMessage *msg)
+UINT32 GetMappingTable(LONG id, CSCPMessage *msg)
 {
-	DWORD rcc = RCC_INVALID_MAPPING_TABLE_ID;
+	UINT32 rcc = RCC_INVALID_MAPPING_TABLE_ID;
 	RWLockReadLock(s_mappingTablesLock, INFINITE);
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
@@ -463,15 +463,15 @@ DWORD GetMappingTable(LONG id, CSCPMessage *msg)
  * @param msg NXCP mesage to fill
  * @return RCC
  */
-DWORD ListMappingTables(CSCPMessage *msg)
+UINT32 ListMappingTables(CSCPMessage *msg)
 {
-	DWORD varId = VID_ELEMENT_LIST_BASE;
+	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	RWLockReadLock(s_mappingTablesLock, INFINITE);
-	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)s_mappingTables.size());
+	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)s_mappingTables.size());
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		MappingTable *mt = s_mappingTables.get(i);
-		msg->SetVariable(varId++, (DWORD)mt->getId());
+		msg->SetVariable(varId++, (UINT32)mt->getId());
 		msg->SetVariable(varId++, mt->getName());
 		msg->SetVariable(varId++, mt->getDescription());
 		msg->SetVariable(varId++, mt->getFlags());

@@ -25,7 +25,7 @@
 /**
  * Externals
  */
-extern DWORD g_nxslNumSituationFunctions;
+extern UINT32 g_nxslNumSituationFunctions;
 extern NXSL_ExtFunction g_nxslSituationFunctions[];
 
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
@@ -457,7 +457,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	DWORD eventCode = 0;
+	UINT32 eventCode = 0;
 	if (argv[1]->isInteger())
 	{
 		eventCode = argv[1]->getValueAsUInt32();
@@ -874,9 +874,9 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	SNMP_PDU *rspPDU;
-	DWORD len;
-	static DWORD requestId = 1;
-	DWORD nameLen, varName[MAX_OID_LEN], result = SNMP_ERR_SUCCESS;
+	UINT32 len;
+	static UINT32 requestId = 1;
+	UINT32 nameLen, varName[MAX_OID_LEN], result = SNMP_ERR_SUCCESS;
 
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -926,7 +926,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	TCHAR buffer[4096];
-	DWORD len;
+	UINT32 len;
 
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -967,7 +967,7 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	SNMP_PDU *request, *response;
-	DWORD len;
+	UINT32 len;
 	LONG ret = FALSE;
 
 	if (argc < 3 || argc > 4)
@@ -995,7 +995,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 		}
 		else
 		{
-			DWORD dataType = SNMPResolveDataType(argv[3]->getValueAsString(&len));
+			UINT32 dataType = SNMPResolveDataType(argv[3]->getValueAsString(&len));
 			if (dataType == ASN_NULL)
 			{
 				DbgPrintf(6, _T("SNMPSet: failed to resolve data type '%s', assume string"), 
@@ -1013,7 +1013,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 	}
 
 	// Send request and process response
-	DWORD snmpResult;
+	UINT32 snmpResult;
 	if ((snmpResult = trans->doRequest(request, &response, g_dwSNMPTimeout, 3)) == SNMP_ERR_SUCCESS)
 	{
 		if (response->getErrorCode() != 0)
@@ -1050,8 +1050,8 @@ finish:
  */
 static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	static DWORD requestId = 1;
-	DWORD rootName[MAX_OID_LEN], rootNameLen, name[MAX_OID_LEN], nameLen, result;
+	static UINT32 requestId = 1;
+	UINT32 rootName[MAX_OID_LEN], rootNameLen, name[MAX_OID_LEN], nameLen, result;
 	SNMP_PDU *rqPDU, *rspPDU;
 	BOOL isRunning = TRUE;
 	NXSL_Array *varList;
@@ -1075,7 +1075,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
    if (rootNameLen == 0)
       return SNMP_ERR_BAD_OID;
 
-	memcpy(name, rootName, rootNameLen * sizeof(DWORD));
+	memcpy(name, rootName, rootNameLen * sizeof(UINT32));
    nameLen = rootNameLen;
 
    // Walk the MIB
@@ -1097,16 +1097,16 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
             {
                // Do we have to stop walking?
                if ((var->GetName()->getLength() < rootNameLen) ||
-                   (memcmp(rootName, var->GetName()->getValue(), rootNameLen * sizeof(DWORD))) ||
+                   (memcmp(rootName, var->GetName()->getValue(), rootNameLen * sizeof(UINT32))) ||
                    ((var->GetName()->getLength() == nameLen) &&
-                    (!memcmp(var->GetName()->getValue(), name, var->GetName()->getLength() * sizeof(DWORD)))))
+                    (!memcmp(var->GetName()->getValue(), name, var->GetName()->getLength() * sizeof(UINT32)))))
                {
                   isRunning = FALSE;
                   delete rspPDU;
                   delete rqPDU;
                   break;
                }
-               memcpy(name, var->GetName()->getValue(), var->GetName()->getLength() * sizeof(DWORD));
+               memcpy(name, var->GetName()->getValue(), var->GetName()->getLength() * sizeof(UINT32));
                nameLen = var->GetName()->getLength();
 					varList->set(i++, new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, var)));
 					rspPDU->unlinkVariables();
@@ -1170,7 +1170,7 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_BAD_CLASS;
 
 	TCHAR buffer[MAX_RESULT_LENGTH];
-	DWORD rcc = ((Node *)object->getData())->getItemFromAgent(argv[1]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+	UINT32 rcc = ((Node *)object->getData())->getItemFromAgent(argv[1]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
 	if (rcc == DCE_SUCCESS)
 		*ppResult = new NXSL_Value(buffer);
 	else

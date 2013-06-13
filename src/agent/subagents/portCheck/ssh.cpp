@@ -30,12 +30,12 @@ LONG H_CheckSSH(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		nPort = 22;
 	}
 
-	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
+	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckSSH(szHost, 0, nPort, NULL, NULL, dwTimeout));
 	return nRet;
 }
 
-int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass, DWORD dwTimeout)
+int CheckSSH(char *szAddr, UINT32 dwAddr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;

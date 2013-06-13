@@ -37,7 +37,7 @@
 
 static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose, RSA *pServerKey)
 {
-   DWORD dwError;
+   UINT32 dwError;
    int i;
    BOOL bConnected = FALSE;
 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
    int iEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
    WORD wPort = AGENT_LISTEN_PORT;
-   DWORD dwAddr, dwTimeout = 5000, dwConnTimeout = 30000, dwError;
+   UINT32 dwAddr, dwTimeout = 5000, dwConnTimeout = 30000, dwError;
    INT64 nElapsedTime;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T("");
    TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               dwTimeout = (DWORD)i * 1000;  // Convert to milliseconds
+               dwTimeout = (UINT32)i * 1000;  // Convert to milliseconds
             }
             break;
          case 'W':   // Connection timeout
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               dwConnTimeout = (DWORD)i * 1000;  // Convert to milliseconds
+               dwConnTimeout = (UINT32)i * 1000;  // Convert to milliseconds
             }
             break;
 #ifdef _WITH_ENCRYPTION
@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
          hs = gethostbyname(argv[optind]);
          if (hs != NULL)
          {
-            memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
+            memcpy(&dwAddr, hs->h_addr, sizeof(UINT32));
          }
          else
          {
@@ -363,7 +363,7 @@ int main(int argc, char *argv[])
             conn.setEncryptionPolicy(iEncryptionPolicy);
             if (conn.connect(pServerKey, bVerbose, &dwError))
             {
-               DWORD dwError;
+               UINT32 dwError;
 
 #ifdef UNICODE
 					WCHAR fname[MAX_PATH];

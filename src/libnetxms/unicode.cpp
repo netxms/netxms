@@ -357,12 +357,10 @@ fallback:
 
 #endif   /* not _WIN32 */
 
-
-//
-// UNICODE version of inet_addr()
-//
-
-DWORD LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
+/**
+ * UNICODE version of inet_addr()
+ */
+UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
 {
    char szBuffer[256];
 
@@ -371,12 +369,10 @@ DWORD LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
    return inet_addr(szBuffer);
 }
 
-
-//
-// Convert multibyte string to wide string using current codepage and
-// allocating wide string dynamically
-//
-
+/**
+ * Convert multibyte string to wide string using current codepage and
+ * allocating wide string dynamically
+ */
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
 {
    WCHAR *pwszOut;

@@ -46,10 +46,10 @@ class NetObj;
 class NXCORE_EXPORTABLE ServerJob
 {
 private:
-	DWORD m_id;
-	DWORD m_userId;
+	UINT32 m_id;
+	UINT32 m_userId;
 	TCHAR *m_type;
-	DWORD m_remoteNode;
+	UINT32 m_remoteNode;
 	TCHAR *m_description;
 	ServerJobStatus m_status;
 	int m_progress;
@@ -83,7 +83,7 @@ protected:
 	void setDescription(const TCHAR *description);
 
 public:
-	ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId, bool createOnHold);
+	ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold);
 	virtual ~ServerJob();
 
 	void start();
@@ -97,13 +97,13 @@ public:
 	void setBlockNextJobsOnFailure(bool flag) { m_blockNextJobsOnFailure = flag; }
 	bool isBlockNextJobsOnFailure() { return m_blockNextJobsOnFailure; }
 
-	DWORD getId() { return m_id; }
-	DWORD getUserId() { return m_userId; }
+	UINT32 getId() { return m_id; }
+	UINT32 getUserId() { return m_userId; }
 	const TCHAR *getType() { return m_type; }
 	const TCHAR *getDescription() { return m_description; }
 	ServerJobStatus getStatus() { return m_status; }
 	int getProgress() { return m_progress; }
-	DWORD getRemoteNode() { return m_remoteNode; }
+	UINT32 getRemoteNode() { return m_remoteNode; }
 	const TCHAR *getFailureMessage() { return CHECK_NULL_EX(m_failureMessage); }
 	time_t getLastStatusChange() { return m_lastStatusChange; }
 
@@ -127,18 +127,18 @@ public:
 	~ServerJobQueue();
 
 	void add(ServerJob *job);
-	bool cancel(DWORD jobId);
-	bool hold(DWORD jobId);
-	bool unhold(DWORD jobId);
+	bool cancel(UINT32 jobId);
+	bool hold(UINT32 jobId);
+	bool unhold(UINT32 jobId);
 	void runNext();
 	void cleanup();
 
-	ServerJob *findJob(DWORD jobId);
+	ServerJob *findJob(UINT32 jobId);
 	int getJobCount(const TCHAR *type = NULL);
 
 	void jobCompleted(ServerJob *job);
 
-	DWORD fillMessage(CSCPMessage *msg, DWORD *varIdBase);
+	UINT32 fillMessage(CSCPMessage *msg, UINT32 *varIdBase);
 };
 
 /**
@@ -146,9 +146,9 @@ public:
  */
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job);
 void GetJobList(CSCPMessage *msg);
-DWORD NXCORE_EXPORTABLE CancelJob(DWORD userId, CSCPMessage *msg);
-DWORD NXCORE_EXPORTABLE HoldJob(DWORD userId, CSCPMessage *msg);
-DWORD NXCORE_EXPORTABLE UnholdJob(DWORD userId, CSCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, CSCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, CSCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, CSCPMessage *msg);
 
 /**
  * File upload job
@@ -173,7 +173,7 @@ protected:
 public:
 	static void init();
 
-	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, DWORD userId, bool createOnHold);
+	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold);
 	virtual ~FileUploadJob();
 };
 
@@ -185,7 +185,7 @@ class FileDownloadJob : public ServerJob
 private:
 	Node *m_node;
 	ClientSession *m_session;
-	DWORD m_requestId;
+	UINT32 m_requestId;
 	TCHAR *m_localFile;
 	TCHAR *m_remoteFile;
 	TCHAR *m_info;
@@ -200,10 +200,10 @@ protected:
 	static void progressCallback(size_t size, void *arg);
 
 public:
-	FileDownloadJob(Node *node, const TCHAR *remoteName, ClientSession *session, DWORD requestId);
+	FileDownloadJob(Node *node, const TCHAR *remoteName, ClientSession *session, UINT32 requestId);
 	virtual ~FileDownloadJob();
 
-	static TCHAR *buildServerFileName(DWORD nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
+	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
 };
 
 /**
@@ -220,7 +220,7 @@ protected:
 	virtual bool run();
 
 public:
-	PolicyDeploymentJob(Node *node, AgentPolicy *policy, DWORD userId);
+	PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32 userId);
 	virtual ~PolicyDeploymentJob();
 };
 
@@ -238,7 +238,7 @@ protected:
 	virtual bool run();
 
 public:
-	PolicyUninstallJob(Node *node, AgentPolicy *policy, DWORD userId);
+	PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 userId);
 	virtual ~PolicyUninstallJob();
 };
 

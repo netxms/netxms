@@ -249,15 +249,15 @@ private:
 #endif
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
-	DWORD m_requestId;
+	UINT32 m_requestId;
 	MUTEX m_mutexPipeWrite;
 
 	bool sendMessage(CSCPMessage *msg);
-	CSCPMessage *waitForMessage(WORD code, DWORD id);
-	DWORD waitForRCC(DWORD id);
-	NETXMS_SUBAGENT_PARAM *getSupportedParameters(DWORD *count);
-	NETXMS_SUBAGENT_LIST *getSupportedLists(DWORD *count);
-	NETXMS_SUBAGENT_TABLE *getSupportedTables(DWORD *count);
+	CSCPMessage *waitForMessage(WORD code, UINT32 id);
+	UINT32 waitForRCC(UINT32 id);
+	NETXMS_SUBAGENT_PARAM *getSupportedParameters(UINT32 *count);
+	NETXMS_SUBAGENT_LIST *getSupportedLists(UINT32 *count);
+	NETXMS_SUBAGENT_TABLE *getSupportedTables(UINT32 *count);
 
 public:
 	ExternalSubagent(const TCHAR *name, const TCHAR *user);
@@ -269,14 +269,14 @@ public:
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getUserName() { return m_user; }
 
-	DWORD getParameter(const TCHAR *name, TCHAR *buffer);
-	DWORD getTable(const TCHAR *name, Table *value);
-	DWORD getList(const TCHAR *name, StringList *value);
-	void listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+	UINT32 getParameter(const TCHAR *name, TCHAR *buffer);
+	UINT32 getTable(const TCHAR *name, Table *value);
+	UINT32 getList(const TCHAR *name, StringList *value);
+	void listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
-	void listLists(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+	void listLists(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listLists(StringList *list);
-	void listTables(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+	void listTables(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listTables(StringList *list);
 };
 
@@ -285,8 +285,8 @@ public:
  */
 struct SERVER_INFO
 {
-   DWORD dwIpAddr;
-	DWORD dwNetMask;
+   UINT32 dwIpAddr;
+	UINT32 dwNetMask;
    BOOL bMasterServer;
    BOOL bControlServer;
 };
@@ -304,15 +304,15 @@ private:
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hProxyReadThread;
-   DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
-   DWORD m_dwIndex;
+   UINT32 m_dwHostAddr;        // IP address of connected host (network byte order)
+   UINT32 m_dwIndex;
    BOOL m_bIsAuthenticated;
    BOOL m_bMasterServer;
    BOOL m_bControlServer;
    BOOL m_bProxyConnection;
    BOOL m_bAcceptTraps;
    int m_hCurrFile;
-   DWORD m_dwFileRqId;
+   UINT32 m_dwFileRqId;
 	NXCPEncryptionContext *m_pCtx;
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
@@ -329,8 +329,8 @@ private:
    void recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   DWORD upgrade(CSCPMessage *pRequest);
-   DWORD setupProxyConnection(CSCPMessage *pRequest);
+   UINT32 upgrade(CSCPMessage *pRequest);
+   UINT32 setupProxyConnection(CSCPMessage *pRequest);
 
    void readThread();
    void writeThread();
@@ -343,7 +343,7 @@ private:
    static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
 
 public:
-   CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bMasterServer, BOOL bControlServer);
+   CommSession(SOCKET hSocket, UINT32 dwHostAddr, BOOL bMasterServer, BOOL bControlServer);
    ~CommSession();
 
    void run();
@@ -351,12 +351,12 @@ public:
 
    void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
    void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
-	bool sendFile(DWORD requestId, const TCHAR *file, long offset);
+	bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
 
-	DWORD getServerAddress() { return m_dwHostAddr; }
+	UINT32 getServerAddress() { return m_dwHostAddr; }
 
-   DWORD getIndex() { return m_dwIndex; }
-   void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+   UINT32 getIndex() { return m_dwIndex; }
+   void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
 
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(NULL); }
@@ -371,7 +371,7 @@ BOOL Initialize();
 void Shutdown();
 void Main();
 void ConsolePrintf(const TCHAR *pszFormat, ...);
-void DebugPrintf(DWORD dwSessionId, int level, const TCHAR *pszFormat, ...);
+void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
@@ -385,9 +385,9 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *arg);
 void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description);
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec);
-DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
-DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue);
-DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue);
+UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
+UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue);
+UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue);
 void GetParameterList(CSCPMessage *pMsg);
 void GetEnumList(CSCPMessage *pMsg);
 void GetTableList(CSCPMessage *pMsg);
@@ -396,40 +396,40 @@ void UnloadAllSubAgents();
 BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, Config *),
                   const TCHAR *pszEntryPoint);
-BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
+BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg, 
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
 BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
-DWORD ExecAction(const TCHAR *pszAction, StringList *pArgs);
-DWORD ExecuteCommand(TCHAR *pszCommand, StringList *pArgs, pid_t *pid);
-DWORD ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);
+UINT32 ExecAction(const TCHAR *pszAction, StringList *pArgs);
+UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *pArgs, pid_t *pid);
+UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);
 
 void StartParamProvidersPoller();
 bool AddParametersProvider(const TCHAR *line);
 LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
-void ListParametersFromExtProviders(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+void ListParametersFromExtProviders(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtProviders(StringList *list);
 
 bool AddExternalSubagent(const TCHAR *config);
-DWORD GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
-DWORD GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
-DWORD GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
-void ListParametersFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
+UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
+UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
+void ListParametersFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtSubagents(StringList *list);
-void ListListsFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+void ListListsFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListListsFromExtSubagents(StringList *list);
-void ListTablesFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+void ListTablesFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListTablesFromExtSubagents(StringList *list);
 CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent);
 
 BOOL WaitForProcess(const TCHAR *name);
 
-DWORD UpgradeAgent(TCHAR *pszPkgFile);
+UINT32 UpgradeAgent(TCHAR *pszPkgFile);
 
-void SendTrap(DWORD dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList);
-void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, ...);
-void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
+void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList);
+void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, ...);
+void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
 
 Config *OpenRegistry();
 void CloseRegistry(bool modified);
@@ -451,7 +451,7 @@ BOOL WaitForService(DWORD dwDesiredState);
 void InstallEventSource(const TCHAR *path);
 void RemoveEventSource();
 
-TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);
+TCHAR *GetPdhErrorText(UINT32 dwError, TCHAR *pszBuffer, int iBufSize);
 
 #endif
 
@@ -460,7 +460,7 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);
 // Global variables
 //
 
-extern DWORD g_dwFlags;
+extern UINT32 g_dwFlags;
 extern TCHAR g_szLogFile[];
 extern TCHAR g_szSharedSecret[]; 
 extern TCHAR g_szConfigFile[];  
@@ -472,21 +472,21 @@ extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_masterAgent[];
 extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];
-extern DWORD g_dwServerCount;
+extern UINT32 g_dwServerCount;
 extern time_t g_tmAgentStartTime;
 extern TCHAR g_szPlatformSuffix[]; 
-extern DWORD g_dwStartupDelay;
-extern DWORD g_dwIdleTimeout;
-extern DWORD g_dwMaxSessions;
-extern DWORD g_dwExecTimeout;
-extern DWORD g_dwSNMPTimeout;
-extern DWORD g_debugLevel;
+extern UINT32 g_dwStartupDelay;
+extern UINT32 g_dwIdleTimeout;
+extern UINT32 g_dwMaxSessions;
+extern UINT32 g_dwExecTimeout;
+extern UINT32 g_dwSNMPTimeout;
+extern UINT32 g_debugLevel;
 
 extern Config *g_config;
 
-extern DWORD g_dwAcceptErrors;
-extern DWORD g_dwAcceptedConnections;
-extern DWORD g_dwRejectedConnections;
+extern UINT32 g_dwAcceptErrors;
+extern UINT32 g_dwAcceptedConnections;
+extern UINT32 g_dwRejectedConnections;
 
 extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;

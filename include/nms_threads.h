@@ -42,8 +42,8 @@
 #define INVALID_THREAD_HANDLE       (NULL)
 
 #ifdef UNDER_CE
-typedef DWORD THREAD_RESULT;
-typedef DWORD THREAD_ID;
+typedef UINT32 THREAD_RESULT;
+typedef UINT32 THREAD_ID;
 #else
 typedef unsigned int THREAD_RESULT;
 typedef unsigned int THREAD_ID;
@@ -81,7 +81,7 @@ void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTE
 															 const TCHAR *pszBaseProcessName, DWORD dwLogMsgCode,
 															 BOOL writeFullDump, BOOL printToScreen);
 BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
-TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code);
+TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(UINT32 code);
 void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx);
 
 void LIBNETXMS_EXPORTABLE SEHServiceExceptionDataWriter(const TCHAR *pszText);
@@ -103,10 +103,10 @@ inline void InitThreadLibrary()
 
 inline void ThreadSleep(int iSeconds)
 {
-   Sleep((DWORD)iSeconds * 1000);   // Convert to milliseconds
+   Sleep((UINT32)iSeconds * 1000);   // Convert to milliseconds
 }
 
-inline void ThreadSleepMs(DWORD dwMilliseconds)
+inline void ThreadSleepMs(UINT32 dwMilliseconds)
 {
    Sleep(dwMilliseconds);
 }
@@ -117,7 +117,7 @@ inline BOOL ThreadCreate(ThreadFunction start_address, int stack_size, void *arg
    THREAD_ID dwThreadId;
 
 #ifdef UNDER_CE
-	hThread = CreateThread(NULL, (DWORD)stack_size, start_address, args, 0, &dwThreadId);
+	hThread = CreateThread(NULL, (UINT32)stack_size, start_address, args, 0, &dwThreadId);
 #else
 	THREAD_START_DATA *data = (THREAD_START_DATA *)malloc(sizeof(THREAD_START_DATA));
 	data->start_address = start_address;
@@ -135,7 +135,7 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
 
 	thread = (THREAD)malloc(sizeof(struct netxms_thread_t));
 #ifdef UNDER_CE
-	thread->handle = CreateThread(NULL, (DWORD)stack_size, start_address, args, 0, &thread->id);
+	thread->handle = CreateThread(NULL, (UINT32)stack_size, start_address, args, 0, &thread->id);
 	if (thread->handle == NULL)
 	{
 #else
@@ -233,7 +233,7 @@ inline void ConditionPulse(CONDITION hCond)
    PulseEvent(hCond);
 }
 
-inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
+inline BOOL ConditionWait(CONDITION hCond, UINT32 dwTimeOut)
 {
 	if (hCond == INVALID_CONDITION_HANDLE)
 		return FALSE;
@@ -295,7 +295,7 @@ inline void ThreadSleep(int nSeconds)
    pth_sleep(nSeconds);
 }
 
-inline void ThreadSleepMs(DWORD dwMilliseconds)
+inline void ThreadSleepMs(UINT32 dwMilliseconds)
 {
 	pth_usleep(dwMilliseconds * 1000);
 }
@@ -451,7 +451,7 @@ inline void ConditionPulse(CONDITION cond)
 	}
 }
 
-inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
+inline BOOL ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 {
 	BOOL ret = FALSE;
 
@@ -495,7 +495,7 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 	return ret;
 }
 
-inline DWORD GetCurrentProcessId()
+inline UINT32 GetCurrentProcessId()
 {
    return getpid();
 }
@@ -608,7 +608,7 @@ inline void ThreadSleep(int nSeconds)
 #endif
 }
 
-inline void ThreadSleepMs(DWORD dwMilliseconds)
+inline void ThreadSleepMs(UINT32 dwMilliseconds)
 {
 #if HAVE_NANOSLEEP && HAVE_DECL_NANOSLEEP
 	struct timespec interval, remainder;
@@ -810,7 +810,7 @@ inline void ConditionPulse(CONDITION cond)
 	}
 }
 
-inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
+inline BOOL ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 {
 	BOOL ret = FALSE;
 
@@ -878,7 +878,7 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 	return ret;
 }
 
-inline DWORD GetCurrentProcessId()
+inline UINT32 GetCurrentProcessId()
 {
    return getpid();
 }

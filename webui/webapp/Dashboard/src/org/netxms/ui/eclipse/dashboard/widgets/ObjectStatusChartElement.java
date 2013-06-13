@@ -37,8 +37,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
  */
 public class ObjectStatusChartElement extends ComparisonChartElement
 {
-	private static final long serialVersionUID = 1L;
-
 	private ObjectStatusChartConfig config;
 	
 	/**

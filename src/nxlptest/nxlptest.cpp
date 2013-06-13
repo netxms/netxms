@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 {
 	int rc = 0, ch, traceLevel = -1;
 	BYTE *xml;
-	DWORD size;
+	UINT32 size;
 	TCHAR *inputFile = NULL;
 	LogParser *parser;
 

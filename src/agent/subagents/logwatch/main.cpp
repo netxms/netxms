@@ -167,15 +167,13 @@ static void LogParserTrace(const TCHAR *format, va_list args)
 	AgentWriteDebugLog2(7, format, args);
 }
 
-
-//
-// Add parser from config parameter
-//
-
+/**
+ * Add parser from config parameter
+ */
 static void AddParserFromConfig(const TCHAR *file)
 {
 	BYTE *xml;
-	DWORD size;
+	UINT32 size;
 	TCHAR error[1024];
 
 	xml = LoadFile(file, &size);

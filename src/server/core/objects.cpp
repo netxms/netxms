@@ -36,8 +36,8 @@ DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
 ReportRoot NXCORE_EXPORTABLE *g_pReportRoot = NULL;
 BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot = NULL;
 
-DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
-DWORD g_dwNumCategories = 0;
+UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
+UINT32 g_dwNumCategories = 0;
 CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 
 Queue *g_pTemplateUpdateQueue = NULL;
@@ -280,7 +280,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
       if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) || (pObject->Type() == OBJECT_CLUSTER))
       {
          TCHAR szQuery[256], szQueryTemplate[256];
-         DWORD i;
+         UINT32 i;
 
          MetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
          _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id());
@@ -420,7 +420,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          default:
 				{
 					bool processed = false;
-					for(DWORD i = 0; i < g_dwNumModules; i++)
+					for(UINT32 i = 0; i < g_dwNumModules; i++)
 					{
 						if (g_pModuleList[i].pfNetObjInsert != NULL)
 						{
@@ -438,7 +438,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 	// Notify modules about object creation
 	if (bNewObject)
 	{
-		for(DWORD i = 0; i < g_dwNumModules; i++)
+		for(UINT32 i = 0; i < g_dwNumModules; i++)
 		{
 			if (g_pModuleList[i].pfPostObjectCreate != NULL)
 				g_pModuleList[i].pfPostObjectCreate(pObject);
@@ -558,7 +558,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       default:
 			{
 				bool processed = false;
-				for(DWORD i = 0; i < g_dwNumModules; i++)
+				for(UINT32 i = 0; i < g_dwNumModules; i++)
 				{
 					if (g_pModuleList[i].pfNetObjDelete != NULL)
 					{
@@ -576,7 +576,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 /**
  * Get IP netmask for object of any class
  */
-static DWORD GetObjectNetmask(NetObj *pObject)
+static UINT32 GetObjectNetmask(NetObj *pObject)
 {
    switch(pObject->Type())
    {
@@ -650,7 +650,7 @@ MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId
 /**
  * Find node by IP address
  */
-Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr)
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, UINT32 ipAddr)
 {
    if (ipAddr == 0)
       return NULL;
@@ -690,7 +690,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr)
 /**
  * Find interface by IP address
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByIP(DWORD zoneId, DWORD ipAddr)
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, UINT32 ipAddr)
 {
    if (ipAddr == 0)
       return NULL;
@@ -778,7 +778,7 @@ Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 /**
  * Find subnet by IP address
  */
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr)
 {
    if (ipAddr == 0)
       return NULL;
@@ -804,13 +804,13 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr)
  */
 static bool SubnetAddrComparator(NetObj *object, void *nodeAddr)
 {
-   return (CAST_FROM_POINTER(nodeAddr, DWORD) & ((Subnet *)object)->getIpNetMask()) == ((Subnet *)object)->IpAddr();
+   return (CAST_FROM_POINTER(nodeAddr, UINT32) & ((Subnet *)object)->getIpNetMask()) == ((Subnet *)object)->IpAddr();
 }
 
 /**
  * Find subnet for given IP address
  */
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, UINT32 dwNodeAddr)
 {
    if (dwNodeAddr == 0)
       return NULL;
@@ -834,7 +834,7 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr)
 /**
  * Find object by ID
  */
-NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId, int objClass)
+NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
 {
 	NetObj *object = g_idxObjectById.get(dwId);
 	if ((object == NULL) || (objClass == -1))
@@ -915,10 +915,10 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 
 static bool ClusterResourceIPComparator(NetObj *object, void *ipAddr)
 {
-	return (object->Type() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, DWORD));
+	return (object->Type() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, UINT32));
 }
 
-Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr)
+Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 ipAddr)
 {
 	return (Cluster *)g_idxObjectById.find(ClusterResourceIPComparator, CAST_TO_POINTER(ipAddr, void *));
 }
@@ -928,8 +928,8 @@ Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr)
  */
 struct __cluster_ip_data
 {
-	DWORD ipAddr;
-	DWORD zoneId;
+	UINT32 ipAddr;
+	UINT32 zoneId;
 };
 
 /**
@@ -948,7 +948,7 @@ static bool ClusterIPComparator(NetObj *object, void *data)
  * Check if given IP address is used by cluster (it's either
  * resource IP or located on one of sync subnets)
  */
-bool NXCORE_EXPORTABLE IsClusterIP(DWORD zoneId, DWORD ipAddr)
+bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneId, UINT32 ipAddr)
 {
 	struct __cluster_ip_data data;
 	data.zoneId = zoneId;
@@ -959,7 +959,7 @@ bool NXCORE_EXPORTABLE IsClusterIP(DWORD zoneId, DWORD ipAddr)
 /**
  * Find zone object by GUID
  */
-Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID)
+Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID)
 {
 	return (Zone *)g_idxZoneByGUID.get(dwZoneGUID);
 }
@@ -975,7 +975,7 @@ static bool LocalMgmtNodeComparator(NetObj *object, void *data)
 /**
  * Find local management node ID
  */
-DWORD FindLocalMgmtNode()
+UINT32 FindLocalMgmtNode()
 {
 	NetObj *object = g_idxNodeById.find(LocalMgmtNodeComparator, NULL);
 	return (object != NULL) ? object->Id() : 0;
@@ -1014,8 +1014,8 @@ static void LinkChildObjectsCallback(NetObj *object, void *data)
 BOOL LoadObjects()
 {
    DB_RESULT hResult;
-   DWORD i, dwNumRows;
-   DWORD dwId;
+   UINT32 i, dwNumRows;
+   UINT32 dwId;
    Template *pTemplate;
    TCHAR szQuery[256];
 
@@ -1743,13 +1743,13 @@ BOOL LoadObjects()
  */
 static void DropUserAccess(NetObj *object, void *userId)
 {
-	object->dropUserAccess(CAST_FROM_POINTER(userId, DWORD));
+	object->dropUserAccess(CAST_FROM_POINTER(userId, UINT32));
 }
 
 /**
  * Delete user or group from all objects' ACLs
  */
-void DeleteUserFromAllObjects(DWORD dwUserId)
+void DeleteUserFromAllObjects(UINT32 dwUserId)
 {
 	g_idxObjectById.forEach(DropUserAccess, CAST_TO_POINTER(dwUserId, void *));
 }
@@ -1910,7 +1910,7 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
    }
 
    // Additional check by loaded modules
-   for(DWORD i = 0; i < g_dwNumModules; i++)
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
 		if (g_pModuleList[i].pfIsValidParentClass != NULL)
 		{
@@ -1939,7 +1939,7 @@ void NetObjDelete(NetObj *pObject)
 /**
  * Update interface index when IP address changes
  */
-void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, Interface *iface)
+void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *iface)
 {
 	if (IsZoningEnabled())
 	{

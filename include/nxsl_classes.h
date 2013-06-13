@@ -214,7 +214,7 @@ public:
 class LIBNXSL_EXPORTABLE NXSL_Value
 {
 protected:
-   DWORD m_dwStrLen;
+   UINT32 m_dwStrLen;
    TCHAR *m_pszValStr;
 #ifdef UNICODE
 	char *m_valueMBStr;	// value as MB string; NULL until first request
@@ -224,10 +224,10 @@ protected:
    BYTE m_bStringIsValid;
    union
    {
-      LONG nInt32;
-      DWORD uInt32;
+      INT32 nInt32;
+      UINT32 uInt32;
       INT64 nInt64;
-      QWORD uInt64;
+      UINT64 uInt64;
       double dReal;
       NXSL_Object *pObject;
 		NXSL_Array *pArray;
@@ -252,19 +252,19 @@ public:
    NXSL_Value(NXSL_Object *pObject);
    NXSL_Value(NXSL_Array *pArray);
    NXSL_Value(NXSL_Iterator *pIterator);
-   NXSL_Value(LONG nValue);
+   NXSL_Value(INT32 nValue);
    NXSL_Value(INT64 nValue);
-   NXSL_Value(DWORD uValue);
-   NXSL_Value(QWORD uValue);
+   NXSL_Value(UINT32 uValue);
+   NXSL_Value(UINT64 uValue);
    NXSL_Value(double dValue);
    NXSL_Value(const TCHAR *pszValue);
-   NXSL_Value(const TCHAR *pszValue, DWORD dwLen);
+   NXSL_Value(const TCHAR *pszValue, UINT32 dwLen);
 #ifdef UNICODE
    NXSL_Value(const char *pszValue);
 #endif
    ~NXSL_Value();
 
-   void set(LONG nValue);
+   void set(INT32 nValue);
 
 	void setName(const TCHAR *name) { safe_free(m_name); m_name = _tcsdup(name); }
 	const TCHAR *getName() { return m_name; }
@@ -285,23 +285,23 @@ public:
    bool isZero();
    bool isNonZero();
 
-   const TCHAR *getValueAsString(DWORD *pdwLen);
+   const TCHAR *getValueAsString(UINT32 *pdwLen);
    const TCHAR *getValueAsCString();
 #ifdef UNICODE
    const char *getValueAsMBString();
 #else
 	const char *getValueAsMBString() { return getValueAsCString(); }
 #endif
-   LONG getValueAsInt32();
-   DWORD getValueAsUInt32();
+   INT32 getValueAsInt32();
+   UINT32 getValueAsUInt32();
    INT64 getValueAsInt64();
-   QWORD getValueAsUInt64();
+   UINT64 getValueAsUInt64();
    double getValueAsReal();
    NXSL_Object *getValueAsObject() { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.pObject : NULL; }
    NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.pArray : NULL; }
    NXSL_Iterator *getValueAsIterator() { return (m_nDataType == NXSL_DT_ITERATOR) ? m_value.pIterator : NULL; }
 
-   void concatenate(const TCHAR *pszString, DWORD dwLen);
+   void concatenate(const TCHAR *pszString, UINT32 dwLen);
    
    void increment();
    void decrement();
@@ -332,7 +332,7 @@ public:
 struct NXSL_Function
 {
    TCHAR m_szName[MAX_FUNCTION_NAME];
-   DWORD m_dwAddr;
+   UINT32 m_dwAddr;
 };
 
 /**
@@ -353,7 +353,7 @@ class NXSL_Library;
 class LIBNXSL_EXPORTABLE NXSL_Environment
 {
 private:
-   DWORD m_dwNumFunctions;
+   UINT32 m_dwNumFunctions;
    NXSL_ExtFunction *m_pFunctionList;
 
    NXSL_Library *m_pLibrary;
@@ -368,7 +368,7 @@ public:
    void setLibrary(NXSL_Library *pLib) { m_pLibrary = pLib; }
 
    NXSL_ExtFunction *findFunction(const TCHAR *pszName);
-   void registerFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList);
+   void registerFunctionSet(UINT32 dwNumFunctions, NXSL_ExtFunction *pList);
 
    BOOL useModule(NXSL_Program *main, const TCHAR *name);
 };
@@ -403,7 +403,7 @@ public:
 class LIBNXSL_EXPORTABLE NXSL_VariableSystem
 {
 protected:
-   DWORD m_dwNumVariables;
+   UINT32 m_dwNumVariables;
    NXSL_Variable **m_ppVariableList;
 	bool m_isConstant;
 
@@ -433,7 +433,7 @@ protected:
    {
       NXSL_Value *m_pConstant;
       TCHAR *m_pszString;
-      DWORD m_dwAddr;
+      UINT32 m_dwAddr;
    } m_operand;
    int m_nStackItems;
    int m_nSourceLine;
@@ -443,7 +443,7 @@ public:
    NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue);
    NXSL_Instruction(int nLine, int nOpCode, char *pszString);
    NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems);
-   NXSL_Instruction(int nLine, int nOpCode, DWORD dwAddr);
+   NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr);
    NXSL_Instruction(int nLine, int nOpCode, int nStackItems);
    NXSL_Instruction(NXSL_Instruction *pSrc);
    ~NXSL_Instruction();
@@ -455,10 +455,10 @@ public:
 struct NXSL_Module
 {
    TCHAR m_szName[MAX_PATH];
-   DWORD m_dwCodeStart;
-   DWORD m_dwCodeSize;
-   DWORD m_dwFunctionStart;
-   DWORD m_dwNumFunctions;
+   UINT32 m_dwCodeStart;
+   UINT32 m_dwCodeSize;
+   UINT32 m_dwFunctionStart;
+   UINT32 m_dwNumFunctions;
 };
 
 /**
@@ -472,13 +472,13 @@ protected:
 	void *m_userData;
 
    NXSL_Instruction **m_ppInstructionSet;
-   DWORD m_dwCodeSize;
-   DWORD m_dwCurrPos;
+   UINT32 m_dwCodeSize;
+   UINT32 m_dwCurrPos;
 
-   DWORD m_dwNumPreloads;
+   UINT32 m_dwNumPreloads;
    TCHAR **m_ppszPreloadList;
 
-   DWORD m_dwSubLevel;
+   UINT32 m_dwSubLevel;
    NXSL_Stack *m_pDataStack;
    NXSL_Stack *m_pCodeStack;
    int m_nBindPos;
@@ -487,10 +487,10 @@ protected:
    NXSL_VariableSystem *m_pGlobals;
    NXSL_VariableSystem *m_pLocals;
 
-   DWORD m_dwNumFunctions;
+   UINT32 m_dwNumFunctions;
    NXSL_Function *m_pFunctionList;
 
-   DWORD m_dwNumModules;
+   UINT32 m_dwNumModules;
    NXSL_Module *m_pModuleList;
 
    NXSL_Value *m_pRetValue;
@@ -508,35 +508,35 @@ protected:
    NXSL_Variable *findOrCreateVariable(const TCHAR *pszName);
 	NXSL_Variable *createVariable(const TCHAR *pszName);
 
-   DWORD getFunctionAddress(const TCHAR *pszName);
-   void relocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);
-	DWORD getFinalJumpDestination(DWORD dwAddr, int srcJump);
+   UINT32 getFunctionAddress(const TCHAR *pszName);
+   void relocateCode(UINT32 dwStartOffset, UINT32 dwLen, UINT32 dwShift);
+	UINT32 getFinalJumpDestination(UINT32 dwAddr, int srcJump);
 
 public:
    NXSL_Program();
    ~NXSL_Program();
 
-   BOOL addFunction(const char *pszName, DWORD dwAddr, char *pszError);
+   BOOL addFunction(const char *pszName, UINT32 dwAddr, char *pszError);
    void resolveFunctions();
    void addInstruction(NXSL_Instruction *pInstruction);
    void resolveLastJump(int nOpCode);
-	void createJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr);
+	void createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr);
    void addPreload(char *pszName);
    void useModule(NXSL_Program *pModule, const TCHAR *pszName);
 	void optimize();
-	void removeInstructions(DWORD start, int count);
+	void removeInstructions(UINT32 start, int count);
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_pGlobals->find(pszName); }
 
-   int run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
+   int run(NXSL_Environment *pEnv = NULL, UINT32 argc = 0,
            NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
 			  const TCHAR *entryPoint = NULL);
 	void lock() { MutexLock(m_mutex); }
 	void unlock() { MutexUnlock(m_mutex); }
 
-   DWORD getCodeSize() { return m_dwCodeSize; }
+   UINT32 getCodeSize() { return m_dwCodeSize; }
 
 	void trace(int level, const TCHAR *text);
    void dump(FILE *pFile);
@@ -553,10 +553,10 @@ public:
 class LIBNXSL_EXPORTABLE NXSL_Library
 {
 private:
-   DWORD m_dwNumScripts;
+   UINT32 m_dwNumScripts;
    NXSL_Program **m_ppScriptList;
    TCHAR **m_ppszNames;
-   DWORD *m_pdwIdList;
+   UINT32 *m_pdwIdList;
    MUTEX m_mutex;
 
    void deleteInternal(int nIndex);
@@ -568,12 +568,25 @@ public:
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
 
-   BOOL addScript(DWORD dwId, const TCHAR *pszName, NXSL_Program *pScript);
+   BOOL addScript(UINT32 dwId, const TCHAR *pszName, NXSL_Program *pScript);
    void deleteScript(const TCHAR *pszName);
-   void deleteScript(DWORD dwId);
+   void deleteScript(UINT32 dwId);
    NXSL_Program *findScript(const TCHAR *pszName);
 
    void fillMessage(CSCPMessage *pMsg);
+};
+
+/**
+ * NXSL "TableColumn" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_TableColumnClass : public NXSL_Class
+{
+public:
+   NXSL_TableColumnClass();
+   virtual ~NXSL_TableColumnClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+	virtual void onObjectDelete(NXSL_Object *object);
 };
 
 /**
@@ -619,6 +632,7 @@ public:
  */
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
+extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
 
 #endif

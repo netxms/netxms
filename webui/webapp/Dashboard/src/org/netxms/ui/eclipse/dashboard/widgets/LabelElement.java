@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class LabelElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabelConfig config; 
 	private Label label;
 	private Font font;
@@ -71,8 +69,6 @@ public class LabelElement extends ElementWidget
 		label.setFont(font);
 		
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

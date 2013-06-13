@@ -25,7 +25,7 @@
 /**
  * STP port table walker's callback
  */
-static DWORD STPPortListHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 STPPortListHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	int state = var->GetValueAsInt();
 	if ((state != 2) && (state != 5))

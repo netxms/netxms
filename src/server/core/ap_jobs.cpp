@@ -25,7 +25,7 @@
 /**
  * Constructor
  */
-PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy, DWORD userId)
+PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32 userId)
                     : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->Id(), userId, false)
 {
 	m_node = node;
@@ -57,7 +57,7 @@ bool PolicyDeploymentJob::run()
 	AgentConnectionEx *conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
-		DWORD rcc = conn->deployPolicy(m_policy);
+		UINT32 rcc = conn->deployPolicy(m_policy);
 		if (rcc == ERR_SUCCESS)
 		{
 			m_policy->linkNode(m_node);
@@ -78,7 +78,7 @@ bool PolicyDeploymentJob::run()
 /**
  * Constructor
  */
-PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, DWORD userId)
+PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 userId)
                    : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->Id(), userId, false)
 {
 	m_node = node;
@@ -110,7 +110,7 @@ bool PolicyUninstallJob::run()
 	AgentConnectionEx *conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
-		DWORD rcc = conn->uninstallPolicy(m_policy);
+		UINT32 rcc = conn->uninstallPolicy(m_policy);
 		if (rcc == ERR_SUCCESS)
 		{
 			m_policy->unlinkNode(m_node);

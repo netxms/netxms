@@ -34,7 +34,7 @@ AgentConnectionEx::~AgentConnectionEx()
  */
 void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 {
-   DWORD dwEventCode;
+   UINT32 dwEventCode;
    int i, iNumArgs;
    Node *pNode = NULL;
    TCHAR *pszArgList[32], szBuffer[32];
@@ -136,9 +136,9 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 /**
  * Deploy policy to agent
  */
-DWORD AgentConnectionEx::deployPolicy(AgentPolicy *policy)
+UINT32 AgentConnectionEx::deployPolicy(AgentPolicy *policy)
 {
-	DWORD rqId, rcc;
+	UINT32 rqId, rcc;
 	CSCPMessage msg(getProtocolVersion());
 
    rqId = generateRequestId();
@@ -165,9 +165,9 @@ DWORD AgentConnectionEx::deployPolicy(AgentPolicy *policy)
 /**
  * Uninstall policy from agent
  */
-DWORD AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
+UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
 {
-	DWORD rqId, rcc;
+	UINT32 rqId, rcc;
 	CSCPMessage msg(getProtocolVersion());
 
    rqId = generateRequestId();

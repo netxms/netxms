@@ -25,7 +25,7 @@
 class RSConnector : public ISC
 {
 public:
-   RSConnector(DWORD addr, WORD port) : ISC(addr, port)
+   RSConnector(UINT32 addr, WORD port) : ISC(addr, port)
    {
    }
 
@@ -80,7 +80,7 @@ CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request)
 {
    CSCPMessage *reply = NULL;
 
-   DWORD originalId = request->GetId();
+   UINT32 originalId = request->GetId();
 
    if (m_connector != NULL)
    {

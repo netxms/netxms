@@ -28,7 +28,7 @@
 // Constructor
 //
 
-NetworkMapLink::NetworkMapLink(DWORD e1, DWORD e2, int type)
+NetworkMapLink::NetworkMapLink(UINT32 e1, UINT32 e2, int type)
 {
 	m_element1 = e1;
 	m_element2 = e2;
@@ -46,7 +46,7 @@ NetworkMapLink::NetworkMapLink(DWORD e1, DWORD e2, int type)
 // Constuctor: create link object from NXCP message
 //
 
-NetworkMapLink::NetworkMapLink(CSCPMessage *msg, DWORD baseId)
+NetworkMapLink::NetworkMapLink(CSCPMessage *msg, UINT32 baseId)
 {
 	m_type = msg->GetVariableShort(baseId);
 	m_name = msg->GetVariableStr(baseId + 1);
@@ -108,7 +108,7 @@ void NetworkMapLink::setConnector2Name(const TCHAR *name)
 /**
  * Fill NXCP message
  */
-void NetworkMapLink::fillMessage(CSCPMessage *msg, DWORD baseId)
+void NetworkMapLink::fillMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	msg->SetVariable(baseId, (WORD)m_type);
 	msg->SetVariable(baseId + 1, getName());

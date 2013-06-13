@@ -21,12 +21,12 @@ LONG H_CheckSMTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
+	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckSMTP(szHost, 0, 25, szTo, dwTimeout));
 	return nRet;
 }
 
-int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo, DWORD dwTimeout)
+int CheckSMTP(char *szAddr, UINT32 dwAddr, short nPort, char *szTo, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;

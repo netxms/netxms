@@ -40,11 +40,11 @@ protected:
 	virtual bool run();
 
 public:
-	ReportJob(Report *report, StringMap *parameters, DWORD userId);
+	ReportJob(Report *report, StringMap *parameters, UINT32 userId);
 	virtual ~ReportJob();
 
 	TCHAR *buildDataFileName(TCHAR *buffer, size_t bufferSize) { return ReportJob::buildDataFileName(getId(), NULL, buffer, bufferSize); }
-	static TCHAR *buildDataFileName(DWORD jobId, const TCHAR *suffix, TCHAR *buffer, size_t bufferSize);
+	static TCHAR *buildDataFileName(UINT32 jobId, const TCHAR *suffix, TCHAR *buffer, size_t bufferSize);
 };
 
 #endif

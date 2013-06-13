@@ -23,12 +23,10 @@
 
 #include "nxagentd.h"
 
-
-//
-// Upgrade agent from given package file
-//
-
-DWORD UpgradeAgent(TCHAR *pszPkgFile)
+/**
+ * Upgrade agent from given package file
+ */
+UINT32 UpgradeAgent(TCHAR *pszPkgFile)
 {
    TCHAR szCmdLine[1024];
 

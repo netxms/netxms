@@ -135,7 +135,7 @@ NXSL_Environment::~NXSL_Environment()
  */
 NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *pszName)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumFunctions; i++)
       if (!_tcscmp(m_pFunctionList[i].m_szName, pszName))
@@ -146,7 +146,7 @@ NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *pszName)
 /**
  * Register function set
  */
-void NXSL_Environment::registerFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList)
+void NXSL_Environment::registerFunctionSet(UINT32 dwNumFunctions, NXSL_ExtFunction *pList)
 {
    m_pFunctionList = (NXSL_ExtFunction *)realloc(m_pFunctionList, sizeof(NXSL_ExtFunction) * (m_dwNumFunctions + dwNumFunctions));
    memcpy(&m_pFunctionList[m_dwNumFunctions], pList, sizeof(NXSL_ExtFunction) * dwNumFunctions);
@@ -159,7 +159,7 @@ void NXSL_Environment::registerFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunctio
 BOOL NXSL_Environment::useModule(NXSL_Program *pMain, const TCHAR *pszName)
 {
    TCHAR *pData, szBuffer[MAX_PATH];
-   DWORD dwSize;
+   UINT32 dwSize;
    NXSL_Program *pScript;
    BOOL bRet = FALSE;
 

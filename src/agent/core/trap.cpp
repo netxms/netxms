@@ -42,7 +42,7 @@ static time_t s_lastTrapTime = 0;
 THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 {
    CSCP_MESSAGE *pMsg;
-   DWORD i;
+   UINT32 i;
    BOOL bTrapSent;
 
    s_trapQueue = new Queue;
@@ -97,7 +97,7 @@ void ShutdownTrapSender()
 // Send trap to server
 //
 
-void SendTrap(DWORD dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList)
+void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList)
 {
    int i;
    CSCPMessage msg;
@@ -142,7 +142,7 @@ void SendTrap(DWORD dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **p
 //        X - 64-bit hex integer
 //
 
-void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args)
+void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args)
 {
    int i, iNumArgs;
    TCHAR *ppArgList[64];
@@ -169,7 +169,7 @@ void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, 
          case 'x':
          case 'i':
             ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));  //
-            _sntprintf(ppArgList[i], 16, _T("0x%08X"), va_arg(args, DWORD));  //
+            _sntprintf(ppArgList[i], 16, _T("0x%08X"), va_arg(args, UINT32));  //
             break;
          case 'X':
             ppArgList[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
@@ -177,7 +177,7 @@ void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, 
             break;
          case 'a':
             ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-            IpToStr(va_arg(args, DWORD), ppArgList[i]);
+            IpToStr(va_arg(args, UINT32), ppArgList[i]);
             break;
          default:
             ppArgList[i] = badFormat;
@@ -201,7 +201,7 @@ void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, 
 // Same as variant 2, but uses argument list instead of va_list
 //
 
-void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, ...)
+void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, ...)
 {
    va_list args;
 

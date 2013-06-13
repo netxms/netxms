@@ -52,7 +52,7 @@ static void PGSQLMaintenance(DB_HANDLE hdb)
 /**
  * Delete notes for alarm
  */
-void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId)
+void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId)
 {
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_notes WHERE alarm_id=?"));
 	if (hStmt == NULL)
@@ -66,7 +66,7 @@ void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId)
 /**
  * Delete realted events for alarm
  */
-void DeleteAlarmEvents(DB_HANDLE hdb, DWORD alarmId)
+void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId)
 {
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_events WHERE alarm_id=?"));
 	if (hStmt == NULL)
@@ -82,7 +82,7 @@ void DeleteAlarmEvents(DB_HANDLE hdb, DWORD alarmId)
  */
 static void CleanAlarmHistory(DB_HANDLE hdb)
 {
-	DWORD retentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
+	UINT32 retentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
 	if (retentionTime == 0)
 		return;
 
@@ -92,14 +92,14 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT alarm_id FROM alarms WHERE alarm_state=2 AND last_change_time<?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)ts);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)ts);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
          {
-            DWORD alarmId = DBGetFieldULong(hResult, i, 0);
+            UINT32 alarmId = DBGetFieldULong(hResult, i, 0);
 				DeleteAlarmNotes(hdb, alarmId);
             DeleteAlarmEvents(hdb, alarmId);
          }
@@ -111,7 +111,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 	hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE alarm_state=2 AND last_change_time<?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)ts);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)ts);
 		DBExecute(hStmt);
 		DBFreeStatement(hStmt);
 	}
@@ -132,7 +132,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
    time_t currTime;
    TCHAR szQuery[256];
-   DWORD dwRetentionTime, dwInterval;
+   UINT32 dwRetentionTime, dwInterval;
 
    // Load configuration
    dwInterval = ConfigReadULong(_T("HouseKeepingInterval"), 3600);
@@ -141,7 +141,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    while(!IsShutdownInProgress())
    {
       currTime = time(NULL);
-      if (SleepAndCheckForShutdown(dwInterval - (DWORD)(currTime % dwInterval)))
+      if (SleepAndCheckForShutdown(dwInterval - (UINT32)(currTime % dwInterval)))
          break;      // Shutdown has arrived
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

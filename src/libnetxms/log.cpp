@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -42,7 +42,7 @@ static const TCHAR **m_messages;
 static TCHAR m_logFileName[MAX_PATH] = _T("");
 static FILE *m_logFileHandle = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
-static DWORD m_flags = 0;
+static UINT32 m_flags = 0;
 static int m_rotationMode = NXLOG_ROTATION_BY_SIZE;
 static int m_maxLogSize = 4096 * 1024;	// 4 MB
 static int m_logHistorySize = 4;		// Keep up 4 previous log files
@@ -229,7 +229,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_rotate()
 /**
  * Initialize log
  */
-BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
+BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
                                      const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages)
 {
 	m_flags = flags & 0x7FFFFFFF;
@@ -347,7 +347,7 @@ static void WriteLogToFile(TCHAR *message)
  */
 #ifndef _WIN32
 
-static TCHAR *FormatMessageUX(DWORD dwMsgId, TCHAR **ppStrings)
+static TCHAR *FormatMessageUX(UINT32 dwMsgId, TCHAR **ppStrings)
 {
    const TCHAR *p;
    TCHAR *pMsg;
@@ -417,7 +417,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
    va_list args;
    TCHAR *strings[16], *pMsg, szBuffer[256];
    int numStrings = 0;
-   DWORD error;
+   UINT32 error;
 #if defined(UNICODE) && !defined(_WIN32)
 	char *mbMsg;
 #endif
@@ -458,18 +458,18 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                break;
             case 'x':
                strings[numStrings] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               _sntprintf(strings[numStrings], 16, _T("0x%08X"), (unsigned int)(va_arg(args, DWORD)));
+               _sntprintf(strings[numStrings], 16, _T("0x%08X"), (unsigned int)(va_arg(args, UINT32)));
                break;
             case 'a':
                strings[numStrings] = (TCHAR *)malloc(20 * sizeof(TCHAR));
-               IpToStr(va_arg(args, DWORD), strings[numStrings]);
+               IpToStr(va_arg(args, UINT32), strings[numStrings]);
                break;
             case 'A':
                strings[numStrings] = (TCHAR *)malloc(48 * sizeof(TCHAR));
                Ip6ToStr(va_arg(args, BYTE *), strings[numStrings]);
                break;
             case 'e':
-               error = va_arg(args, DWORD);
+               error = va_arg(args, UINT32);
 #ifdef _WIN32
                if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
                                  FORMAT_MESSAGE_FROM_SYSTEM | 
@@ -503,7 +503,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                break;
             default:
                strings[numStrings] = (TCHAR *)malloc(32 * sizeof(TCHAR));
-               _sntprintf(strings[numStrings], 32, _T("BAD FORMAT (0x%08X)"), (unsigned int)(va_arg(args, DWORD)));
+               _sntprintf(strings[numStrings], 32, _T("BAD FORMAT (0x%08X)"), (unsigned int)(va_arg(args, UINT32)));
                break;
          }
       }

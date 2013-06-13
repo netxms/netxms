@@ -41,7 +41,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class EditPaneWidget extends Canvas implements PaintListener
 {
-	private static final long serialVersionUID = 1L;
 	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 0, 0, 127);
 	
 	private DashboardControl dbc;
@@ -83,8 +82,6 @@ public class EditPaneWidget extends Canvas implements PaintListener
 	private void createActions()
 	{
 		actionEdit = new Action(Messages.EditPaneWidget_Edit) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -94,8 +91,6 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
 		actionEditXml = new Action(Messages.EditPaneWidget_EditXML) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -105,8 +100,6 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		actionEditXml.setImageDescriptor(SharedIcons.XML);
 		
 		actionDelete = new Action(Messages.EditPaneWidget_Delete) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -125,8 +118,6 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

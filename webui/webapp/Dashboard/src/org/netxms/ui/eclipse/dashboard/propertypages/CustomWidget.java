@@ -33,8 +33,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CustomWidget extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private CustomWidgetConfig config;
 	private LabeledText className; 
 

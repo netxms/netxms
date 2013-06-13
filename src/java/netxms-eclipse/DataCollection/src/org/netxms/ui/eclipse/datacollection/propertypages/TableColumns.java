@@ -440,7 +440,6 @@ public class TableColumns extends PropertyPage
 						@Override
 						public void run()
 						{
-							instanceColumn.setText(table.getInstanceColumn());
 							columns.clear();
 							for(int i = 0; i < table.getColumnCount(); i++)
 							{

@@ -30,7 +30,7 @@
 /**
  * Subagent list
  */
-static DWORD m_dwNumSubAgents = 0;
+static UINT32 m_dwNumSubAgents = 0;
 static SUBAGENT *m_pSubAgentList = NULL;
 
 /**
@@ -49,7 +49,7 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
       // Check if information structure is valid
       if (pInfo->magic == NETXMS_SUBAGENT_INFO_MAGIC)
       {
-         DWORD i;
+         UINT32 i;
 
          // Check if subagent with given name alreay loaded
          for(i = 0; i < m_dwNumSubAgents; i++)
@@ -232,7 +232,7 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
  */
 void UnloadAllSubAgents()
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumSubAgents; i++)
    {
@@ -253,7 +253,7 @@ void UnloadAllSubAgents()
  */
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
-   DWORD i;
+   UINT32 i;
    TCHAR szBuffer[MAX_PATH + 32];
 
    for(i = 0; i < m_dwNumSubAgents; i++)
@@ -265,7 +265,7 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 #else
       _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"), 
                  m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
-                 CAST_FROM_POINTER(m_pSubAgentList[i].hModule, DWORD), m_pSubAgentList[i].szName);
+                 CAST_FROM_POINTER(m_pSubAgentList[i].hModule, UINT32), m_pSubAgentList[i].szName);
 #endif
       value->add(szBuffer);
    }
@@ -281,7 +281,7 @@ LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
    value->addColumn(_T("VERSION"));
    value->addColumn(_T("FILE"));
 
-   for(DWORD i = 0; i < m_dwNumSubAgents; i++)
+   for(UINT32 i = 0; i < m_dwNumSubAgents; i++)
    {
       value->addRow();
       value->set(0, m_pSubAgentList[i].pInfo->name);
@@ -300,7 +300,7 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 
 	AgentGetParameterArg(pszCmd, 1, name, 256);
 	int rc = 0;
-   for(DWORD i = 0; i < m_dwNumSubAgents; i++)
+   for(UINT32 i = 0; i < m_dwNumSubAgents; i++)
    {
 		if (!_tcsicmp(name, m_pSubAgentList[i].pInfo->name))
 		{
@@ -315,10 +315,10 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Process unknown command by subagents
  */
-BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
 {
    BOOL bResult = FALSE;
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; (i < m_dwNumSubAgents) && (!bResult); i++)
    {

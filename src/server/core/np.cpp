@@ -142,13 +142,13 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
  * @param doConfPoll if set to true, Node::configurationPoll will be called before exit
  * @param discoveredNode must be set to true if node being added automatically by discovery thread
  */
-Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
-                  WORD agentPort, WORD snmpPort, const TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
-                  Cluster *pCluster, DWORD zoneId, bool doConfPoll, bool discoveredNode)
+Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags,
+                  WORD agentPort, WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy,
+                  Cluster *pCluster, UINT32 zoneId, bool doConfPoll, bool discoveredNode)
 {
    Node *pNode;
    TCHAR szIpAddr1[32], szIpAddr2[32];
-   DWORD dwFlags = 0;
+   UINT32 dwFlags = 0;
 
    DbgPrintf(4, _T("PollNode(%s,%s) zone %d"), IpToStr(dwIpAddr, szIpAddr1), IpToStr(dwNetMask, szIpAddr2), (int)zoneId);
    // Check for node existence
@@ -178,7 +178,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
 	// Use DNS name as primary name if required
 	if (discoveredNode && ConfigReadInt(_T("UseDNSNameForDiscoveredNodes"), 0))
 	{
-		DWORD ip = htonl(dwIpAddr);
+		UINT32 ip = htonl(dwIpAddr);
 		struct hostent *hs = gethostbyaddr((char *)&ip, 4, AF_INET);
 		if (hs != NULL)
 		{
@@ -233,7 +233,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
  *
  * @return pointer to existing interface object with given MAC address or NULL if no such interface found
  */
-static Interface *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZoneId, BYTE *bMacAddr)
+static Interface *GetOldNodeWithNewIP(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwZoneId, BYTE *bMacAddr)
 {
 	Subnet *subnet;
 	BYTE nodeMacAddr[MAC_ADDR_LENGTH];
@@ -277,7 +277,7 @@ static Interface *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZ
 /**
  * Check if host at given IP address is reachable by NetXMS server
  */
-static bool HostIsReachable(DWORD ipAddr, DWORD zoneId, bool fullCheck, SNMP_Transport **transport, AgentConnection **agentConn)
+static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_Transport **transport, AgentConnection **agentConn)
 {
 	bool reachable = false;
 
@@ -286,9 +286,9 @@ static bool HostIsReachable(DWORD ipAddr, DWORD zoneId, bool fullCheck, SNMP_Tra
 	if (agentConn != NULL)
 		*agentConn = NULL;
 
-	DWORD agentProxy = 0;
-	DWORD icmpProxy = 0;
-	DWORD snmpProxy = 0;
+	UINT32 agentProxy = 0;
+	UINT32 icmpProxy = 0;
+	UINT32 snmpProxy = 0;
 
 	if (IsZoningEnabled() && (zoneId != 0))
 	{
@@ -406,11 +406,11 @@ static bool HostIsReachable(DWORD ipAddr, DWORD zoneId, bool fullCheck, SNMP_Tra
 /**
  * Check if newly discovered node should be added
  */
-static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *macAddr)
+static BOOL AcceptNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 zoneId, BYTE *macAddr)
 {
    DISCOVERY_FILTER_DATA data;
    TCHAR szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[16];
-   DWORD dwTemp;
+   UINT32 dwTemp;
    AgentConnection *pAgentConn;
    NXSL_Program *pScript;
    NXSL_Value *pValue;
@@ -448,7 +448,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
 	}
 
    // Allow filtering by loaded modules
-   for(DWORD i = 0; i < g_dwNumModules; i++)
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
 		if (g_pModuleList[i].pfAcceptNewNode != NULL)
 		{
@@ -480,7 +480,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
    data.dwSubnetAddr = dwIpAddr & dwNetMask;
 
    // Check for address range if we use simple filter instead of script
-	DWORD autoFilterFlags;
+	UINT32 autoFilterFlags;
    if (!_tcsicmp(szFilter, _T("auto")))
    {
       autoFilterFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
@@ -538,7 +538,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
    if (data.dwFlags & NNF_IS_SNMP)
    {
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.3.6.1.2.1.4.1.0"), NULL, 0, &dwTemp, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.2.1.4.1.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.dwFlags |= NNF_IS_ROUTER;
@@ -570,7 +570,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
 
       // Check for CDP (Cisco Discovery Protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), NULL, 0, &dwTemp, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.dwFlags |= NNF_IS_CDP;
@@ -578,7 +578,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
 
       // Check for SONMP (Nortel topology discovery protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), NULL, 0, &dwTemp, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.dwFlags |= NNF_IS_SONMP;

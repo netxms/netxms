@@ -60,7 +60,7 @@ DCObject::DCObject()
  */
 DCObject::DCObject(const DCObject *pSrc)
 {
-   DWORD i;
+   UINT32 i;
 
    m_dwId = pSrc->m_dwId;
    m_dwTemplateId = pSrc->m_dwTemplateId;
@@ -108,7 +108,7 @@ DCObject::DCObject(const DCObject *pSrc)
 /**
  * Constructor for creating new DCObject from scratch
  */
-DCObject::DCObject(DWORD dwId, const TCHAR *szName, int iSource, 
+DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource, 
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 {
@@ -186,7 +186,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 		schedules = schedules->findEntry(_T("schedule"));
 	if (schedules != NULL)
 	{
-		m_dwNumSchedules = (DWORD)schedules->getValueCount();
+		m_dwNumSchedules = (UINT32)schedules->getValueCount();
       if (m_dwNumSchedules > 0)
       {
          m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
@@ -207,7 +207,7 @@ DCObject::~DCObject()
    delete m_transformationScript;
    if (m_dwNumSchedules > 0)
    {
-      for(DWORD i = 0; i < m_dwNumSchedules; i++)
+      for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       {
          free(m_ppScheduleList[i]);
       }
@@ -232,11 +232,11 @@ BOOL DCObject::loadCustomSchedules()
    DB_RESULT hResult = DBSelect(g_hCoreDB, query);
    if (hResult != NULL)
    {
-      m_dwNumSchedules = (DWORD)DBGetNumRows(hResult);
+      m_dwNumSchedules = (UINT32)DBGetNumRows(hResult);
       if (m_dwNumSchedules > 0)
       {
          m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-         for(DWORD i = 0; i < m_dwNumSchedules; i++)
+         for(UINT32 i = 0; i < m_dwNumSchedules; i++)
          {
             m_ppScheduleList[i] = DBGetField(hResult, i, 0, NULL, 0);
          }
@@ -399,7 +399,7 @@ void DCObject::addSchedule(const TCHAR *pszSchedule)
 /**
  * Set new ID and node/template association
  */
-void DCObject::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpansion)
+void DCObject::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpansion)
 {
    lock();
    m_pNode = pNewNode;
@@ -422,7 +422,7 @@ void DCObject::setStatus(int status, bool generateEvent)
 {
 	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status) && IsEventSource(m_pNode->Type()))
 	{
-		static DWORD eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
+		static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
 		static const TCHAR *originName[7] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("iLO") };
 
 		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription,
@@ -623,7 +623,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    {
       if (m_flags & DCF_ADVANCED_SCHEDULE)
       {
-         DWORD i;
+         UINT32 i;
          struct tm tmCurrLocal, tmLastLocal;
 			BOOL bWithSeconds = FALSE;
 
@@ -701,8 +701,8 @@ void DCObject::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
    pMsg->SetVariable(VID_FLAGS, m_flags);
    pMsg->SetVariable(VID_SYSTEM_TAG, m_systemTag);
-   pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
-   pMsg->SetVariable(VID_RETENTION_TIME, (DWORD)m_iRetentionTime);
+   pMsg->SetVariable(VID_POLLING_INTERVAL, (UINT32)m_iPollingInterval);
+   pMsg->SetVariable(VID_RETENTION_TIME, (UINT32)m_iRetentionTime);
    pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_source);
    pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_status);
 	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
@@ -711,7 +711,7 @@ void DCObject::createMessage(CSCPMessage *pMsg)
 	if (m_pszPerfTabSettings != NULL)
 		pMsg->SetVariable(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
    pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
-   for(DWORD i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
+   for(UINT32 i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
       pMsg->SetVariable(dwId, m_ppScheduleList[i]);
    unlock();
 }
@@ -741,7 +741,7 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
    safe_free(pszStr);
 
    // Update schedules
-   for(DWORD i = 0; i < m_dwNumSchedules; i++)
+   for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       free(m_ppScheduleList[i]);
    safe_free_and_null(m_ppScheduleList);
 
@@ -749,7 +749,7 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
    if (m_dwNumSchedules > 0)
    {
       m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-      for(DWORD i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
+      for(UINT32 i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
       {
          TCHAR *pszStr = pMsg->GetVariableStr(dwId);
          if (pszStr != NULL)
@@ -780,7 +780,7 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
    BOOL success = DBQuery(hdb, query);
 	if (success)
    {
-      for(DWORD i = 0; i < m_dwNumSchedules; i++)
+      for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       {
          _sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,%s)"),
                     m_dwId, i + 1, (const TCHAR *)DBPrepareString(hdb, m_ppScheduleList[i]));
@@ -808,7 +808,7 @@ void DCObject::deleteFromDB()
 /**
  * Get list of used events
  */
-void DCObject::getEventList(DWORD **ppdwList, DWORD *pdwSize)
+void DCObject::getEventList(UINT32 **ppdwList, UINT32 *pdwSize)
 {
 	*ppdwList = NULL;
 	*pdwSize = 0;
@@ -855,7 +855,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    setTransformationScript(src->m_transformationScriptSource);
 
    // Copy schedules
-	DWORD i;
+	UINT32 i;
    for(i = 0; i < m_dwNumSchedules; i++)
       safe_free(m_ppScheduleList[i]);
    safe_free_and_null(m_ppScheduleList);

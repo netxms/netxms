@@ -66,7 +66,7 @@ typedef struct
    time_t tmTimeStamp;
    int nFacility;
    int nSeverity;
-   DWORD dwSourceObject;
+   UINT32 dwSourceObject;
    char szHostName[MAX_SYSLOG_HOSTNAME_LEN];
    char szTag[MAX_SYSLOG_TAG_LEN];
    char szMessage[MAX_LOG_MSG_LENGTH];

@@ -87,7 +87,7 @@ NetObj::~NetObj()
 /**
  * Create object from database data
  */
-BOOL NetObj::CreateFromDB(DWORD dwId)
+BOOL NetObj::CreateFromDB(UINT32 dwId)
 {
    return FALSE;     // Abstract objects cannot be loaded from database
 }
@@ -315,7 +315,7 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
 	DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
-	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (DWORD)m_geoLocation.getTimestamp());
+	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
 	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guid), DB_BIND_STATIC);
 	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, uuid_to_string(m_image, image), DB_BIND_STATIC);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
@@ -335,7 +335,7 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
 			if (hStmt != NULL)
 			{
-				for(DWORD i = 0; i < m_customAttributes.getSize(); i++)
+				for(UINT32 i = 0; i < m_customAttributes.getSize(); i++)
 				{
 					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_customAttributes.getKeyByIndex(i), DB_BIND_STATIC);
@@ -364,7 +364,7 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
  */
 void NetObj::AddChild(NetObj *pObject)
 {
-   DWORD i;
+   UINT32 i;
 
    LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
@@ -385,7 +385,7 @@ void NetObj::AddChild(NetObj *pObject)
  */
 void NetObj::AddParent(NetObj *pObject)
 {
-   DWORD i;
+   UINT32 i;
 
    LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
@@ -406,7 +406,7 @@ void NetObj::AddParent(NetObj *pObject)
  */
 void NetObj::DeleteChild(NetObj *pObject)
 {
-   DWORD i;
+   UINT32 i;
 
    LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
@@ -439,7 +439,7 @@ void NetObj::DeleteChild(NetObj *pObject)
  */
 void NetObj::DeleteParent(NetObj *pObject)
 {
-   DWORD i;
+   UINT32 i;
 
    LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
@@ -471,7 +471,7 @@ void NetObj::DeleteParent(NetObj *pObject)
  */
 void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
 {
-	DWORD currId = ((NetObj *)data)->Id();
+	UINT32 currId = ((NetObj *)data)->Id();
 	if ((object->Id() != currId) && !object->isDeleted())
 		object->onObjectDelete(currId);
 }
@@ -481,7 +481,7 @@ void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
  */
 void NetObj::deleteObject()
 {
-   DWORD i;
+   UINT32 i;
 
    DbgPrintf(4, _T("Deleting object %d [%s]"), m_dwId, m_szName);
 
@@ -493,7 +493,7 @@ void NetObj::deleteObject()
 	UnlockData();
 
 	// Notify modules about object deletion
-	for(DWORD i = 0; i < g_dwNumModules; i++)
+	for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
 		if (g_pModuleList[i].pfPreObjectDelete != NULL)
 			g_pModuleList[i].pfPreObjectDelete(this);
@@ -549,7 +549,7 @@ void NetObj::deleteObject()
 /**
  * Default handler for object deletion notification
  */
-void NetObj::onObjectDelete(DWORD dwObjectId)
+void NetObj::onObjectDelete(UINT32 dwObjectId)
 {
 }
 
@@ -558,7 +558,7 @@ void NetObj::onObjectDelete(DWORD dwObjectId)
  */
 const TCHAR *NetObj::dbgGetChildList(TCHAR *szBuffer)
 {
-   DWORD i;
+   UINT32 i;
    TCHAR *pBuf = szBuffer;
 
    *pBuf = 0;
@@ -580,7 +580,7 @@ const TCHAR *NetObj::dbgGetChildList(TCHAR *szBuffer)
  */
 const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
 {
-   DWORD i;
+   UINT32 i;
    TCHAR *pBuf = szBuffer;
 
    *pBuf = 0;
@@ -602,7 +602,7 @@ const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
  */
 void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   DWORD i;
+   UINT32 i;
    int iMostCriticalAlarm, iMostCriticalStatus, iCount, iStatusAlg;
    int nSingleThreshold, *pnThresholds, iOldStatus = m_iStatus;
    int nRating[5], iChildStatus, nThresholds[4];
@@ -762,13 +762,13 @@ BOOL NetObj::loadACLFromDB()
 struct SAVE_PARAM
 {
    DB_HANDLE hdb;
-   DWORD dwObjectId;
+   UINT32 dwObjectId;
 };
 
 /**
  * Handler for ACL elements enumeration
  */
-static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
+static void EnumerationHandler(UINT32 dwUserId, UINT32 dwAccessRights, void *pArg)
 {
    TCHAR szQuery[256];
 
@@ -805,7 +805,7 @@ BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
  */
 void NetObj::CreateMessage(CSCPMessage *pMsg)
 {
-   DWORD i, dwId;
+   UINT32 i, dwId;
 
    pMsg->SetVariable(VID_OBJECT_CLASS, (WORD)Type());
    pMsg->SetVariable(VID_OBJECT_ID, m_dwId);
@@ -872,7 +872,7 @@ void NetObj::Modify()
       return;
 
    m_bIsModified = TRUE;
-   m_dwTimeStamp = (DWORD)time(NULL);
+   m_dwTimeStamp = (UINT32)time(NULL);
 
    // Send event to all connected clients
    if (!m_bIsHidden)
@@ -882,7 +882,7 @@ void NetObj::Modify()
 /**
  * Modify object from NXCP message
  */
-DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    BOOL bRecalcStatus = FALSE;
 
@@ -919,7 +919,7 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change object's ACL
    if (pRequest->IsVariableExist(VID_ACL_SIZE))
    {
-      DWORD i, dwNumElements;
+      UINT32 i, dwNumElements;
 
       LockACL();
       dwNumElements = pRequest->GetVariableLong(VID_ACL_SIZE);
@@ -935,14 +935,14 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->IsVariableExist(VID_NUM_TRUSTED_NODES))
    {
       m_dwNumTrustedNodes = pRequest->GetVariableLong(VID_NUM_TRUSTED_NODES);
-		m_pdwTrustedNodes = (DWORD *)realloc(m_pdwTrustedNodes, sizeof(DWORD) * m_dwNumTrustedNodes);
+		m_pdwTrustedNodes = (UINT32 *)realloc(m_pdwTrustedNodes, sizeof(UINT32) * m_dwNumTrustedNodes);
 		pRequest->GetVariableInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
    }
    
    // Change custom attributes
    if (pRequest->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
    {
-      DWORD i, dwId, dwNumElements;
+      UINT32 i, dwId, dwNumElements;
       TCHAR *name, *value;
 
       dwNumElements = pRequest->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
@@ -988,9 +988,9 @@ void NetObj::postModify()
  *
  * @param userId user object ID
  */
-DWORD NetObj::getUserRights(DWORD userId)
+UINT32 NetObj::getUserRights(UINT32 userId)
 {
-   DWORD dwRights;
+   UINT32 dwRights;
 
    // Admin always has all rights to any object
    if (userId == 0)
@@ -1010,7 +1010,7 @@ DWORD NetObj::getUserRights(DWORD userId)
       // We don't. If this object inherit rights from parents, get them
       if (m_bInheritAccessRights)
       {
-         DWORD i;
+         UINT32 i;
 
          LockParentList(FALSE);
          for(i = 0, dwRights = 0; i < m_dwParentCount; i++)
@@ -1029,16 +1029,16 @@ DWORD NetObj::getUserRights(DWORD userId)
  * @param requiredRights bit mask of requested right
  * @return true if user has all rights specified in requested rights bit mask
  */
-BOOL NetObj::checkAccessRights(DWORD userId, DWORD requiredRights)
+BOOL NetObj::checkAccessRights(UINT32 userId, UINT32 requiredRights)
 {
-   DWORD effectiveRights = getUserRights(userId);
+   UINT32 effectiveRights = getUserRights(userId);
    return (effectiveRights & requiredRights) == requiredRights;
 }
 
 /**
  * Drop all user privileges on current object
  */
-void NetObj::dropUserAccess(DWORD dwUserId)
+void NetObj::dropUserAccess(UINT32 dwUserId)
 {
    LockACL();
    bool modified = m_pAccessList->deleteElement(dwUserId);
@@ -1056,7 +1056,7 @@ void NetObj::dropUserAccess(DWORD dwUserId)
  */
 void NetObj::setMgmtStatus(BOOL bIsManaged)
 {
-   DWORD i;
+   UINT32 i;
    int iOldStatus;
 
    LockData();
@@ -1096,9 +1096,9 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
  *
  * @param id object ID to test
  */
-bool NetObj::isChild(DWORD id)
+bool NetObj::isChild(UINT32 id)
 {
-   DWORD i;
+   UINT32 i;
    bool bResult = false;
 
    // Check for our own ID (object ID should never change, so we may not lock object's data)
@@ -1138,7 +1138,7 @@ bool NetObj::isChild(DWORD id)
  * Send message to client, who requests poll, if any
  * This method is used by Node and Interface class objects
  */
-void NetObj::sendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...)
+void NetObj::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...)
 {
    if (m_pPollRequestor != NULL)
    {
@@ -1155,9 +1155,9 @@ void NetObj::sendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...)
 /**
  * Add child node objects (direct and indirect childs) to list
  */
-void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId)
+void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, UINT32 dwUserId)
 {
-   DWORD i;
+   UINT32 i;
 
    LockChildList(FALSE);
 
@@ -1190,9 +1190,9 @@ void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId)
 /**
  * Add child data collection targets (direct and indirect childs) to list
  */
-void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, DWORD dwUserId)
+void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, UINT32 dwUserId)
 {
-   DWORD i;
+   UINT32 i;
 
    LockChildList(FALSE);
 
@@ -1227,7 +1227,7 @@ void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList,
  */
 void NetObj::hide()
 {
-   DWORD i;
+   UINT32 i;
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
@@ -1244,7 +1244,7 @@ void NetObj::hide()
  */
 void NetObj::unhide()
 {
-   DWORD i;
+   UINT32 i;
 
    LockData();
    m_bIsHidden = FALSE;
@@ -1358,7 +1358,7 @@ BOOL NetObj::loadTrustedNodes()
 		if (count > 0)
 		{
 			m_dwNumTrustedNodes = count;
-			m_pdwTrustedNodes = (DWORD *)malloc(sizeof(DWORD) * count);
+			m_pdwTrustedNodes = (UINT32 *)malloc(sizeof(UINT32) * count);
 			for(i = 0; i < count; i++)
 			{
 				m_pdwTrustedNodes[i] = DBGetFieldULong(hResult, i, 0);
@@ -1375,7 +1375,7 @@ BOOL NetObj::loadTrustedNodes()
 BOOL NetObj::saveTrustedNodes(DB_HANDLE hdb)
 {
 	TCHAR query[256];
-	DWORD i;
+	UINT32 i;
 	BOOL rc = FALSE;
 
 	_sntprintf(query, 256, _T("DELETE FROM trusted_nodes WHERE source_object_id=%d"), m_dwId);
@@ -1398,13 +1398,13 @@ BOOL NetObj::saveTrustedNodes(DB_HANDLE hdb)
  * Check if given node is in trust list
  * Will always return TRUE if system parameter CheckTrustedNodes set to 0
  */
-bool NetObj::isTrustedNode(DWORD id)
+bool NetObj::isTrustedNode(UINT32 id)
 {
 	bool rc;
 
 	if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
 	{
-		DWORD i;
+		UINT32 i;
 
 		LockData();
 		for(i = 0, rc = false; i < m_dwNumTrustedNodes; i++)
@@ -1433,7 +1433,7 @@ NXSL_Array *NetObj::getParentsForNXSL()
 	int index = 0;
 
 	LockParentList(FALSE);
-	for(DWORD i = 0; i < m_dwParentCount; i++)
+	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
 		if ((m_pParentList[i]->Type() == OBJECT_CONTAINER) ||
 			 (m_pParentList[i]->Type() == OBJECT_SERVICEROOT) ||
@@ -1456,7 +1456,7 @@ NXSL_Array *NetObj::getChildrenForNXSL()
 	int index = 0;
 
 	LockChildList(FALSE);
-	for(DWORD i = 0; i < m_dwChildCount; i++)
+	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_NODE)
 		{
@@ -1482,7 +1482,7 @@ NXSL_Array *NetObj::getChildrenForNXSL()
 void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly)
 {
 	LockChildList(FALSE);
-	for(DWORD i = 0; i < m_dwChildCount; i++)
+	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
 		if (!eventSourceOnly || IsEventSource(m_pChildList[i]->Type()))
 			list->put(m_pChildList[i]->Id(), m_pChildList[i]);
@@ -1515,7 +1515,7 @@ ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
 {
 	LockChildList(FALSE);
 	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_dwChildCount, 16, false);
-	for(DWORD i = 0; i < m_dwChildCount; i++)
+	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
 		if ((typeFilter == -1) || (typeFilter == m_pChildList[i]->Type()))
 			list->add(m_pChildList[i]);

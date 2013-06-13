@@ -57,7 +57,7 @@ StringMapBase::~StringMapBase()
  */
 void StringMapBase::clear()
 {
-	DWORD i;
+	UINT32 i;
 
 	for(i = 0; i < m_size; i++)
 	{
@@ -73,12 +73,12 @@ void StringMapBase::clear()
 /**
  * Find entry index by key
  */
-DWORD StringMapBase::find(const TCHAR *key)
+UINT32 StringMapBase::find(const TCHAR *key)
 {
 	if (key == NULL)
 		return INVALID_INDEX;
 
-	for(DWORD i = 0; i < m_size; i++)
+	for(UINT32 i = 0; i < m_size; i++)
 	{
       if (m_ignoreCase ? !_tcsicmp(key, m_keys[i]) : !_tcscmp(key, m_keys[i]))
 			return i;
@@ -91,7 +91,7 @@ DWORD StringMapBase::find(const TCHAR *key)
  */
 void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
 {
-	DWORD index;
+	UINT32 index;
 
 	index = find(key);
 	if (index != INVALID_INDEX)
@@ -117,7 +117,7 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
  */
 void *StringMapBase::getObject(const TCHAR *key)
 {
-	DWORD index;
+	UINT32 index;
 
 	index = find(key);
 	return (index != INVALID_INDEX) ? m_values[index] : NULL;
@@ -128,7 +128,7 @@ void *StringMapBase::getObject(const TCHAR *key)
  */
 void StringMapBase::remove(const TCHAR *key)
 {
-	DWORD index;
+	UINT32 index;
 
 	index = find(key);
 	if (index != INVALID_INDEX)

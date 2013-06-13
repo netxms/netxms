@@ -135,8 +135,8 @@ public:
 //
 
 void LoadScripts();
-void ReloadScript(DWORD dwScriptId);
-BOOL IsValidScriptId(DWORD dwId);
+void ReloadScript(UINT32 dwScriptId);
+BOOL IsValidScriptId(UINT32 dwId);
 
 
 //

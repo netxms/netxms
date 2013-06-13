@@ -43,6 +43,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
+import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -282,7 +283,7 @@ public class TableLastValues extends ViewPart
 	{
 		if (!viewer.isInitialized())
 		{
-			final String[] names = table.getColumnNames();
+			final String[] names = table.getColumnDisplayNames();
 			final int[] widths = new int[names.length];
 			Arrays.fill(widths, 150);
 			viewer.createColumns(names, widths, 0, SWT.UP);
@@ -294,7 +295,7 @@ public class TableLastValues extends ViewPart
 					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableLastValues");
 				}
 			});
-			viewer.setComparator(new TableItemComparator(table.getColumnFormats()));
+			viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
 		}
 		viewer.setInput(table);
 		currentData = table;
@@ -312,19 +313,18 @@ public class TableLastValues extends ViewPart
 		if (cells.length == 0)
 			return;
 		
-		int instanceColumnIndex = currentData.getColumnIndex(currentData.getInstanceColumn());
+		int instanceColumnIndex = 0;//currentData.getColumnIndex(currentData.getInstanceColumn());
 		String id = Long.toString(uniqueId++);
 		for(int i = 0; i < cells.length; i++)
 		{
-			String columnName = currentData.getColumnName(cells[i].getColumnIndex());
+			TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
 			String instance = cells[i].getViewerRow().getText(instanceColumnIndex);
-			int dataType = currentData.getColumnFormat(cells[i].getColumnIndex());
 			int source = currentData.getSource();
 			
 			id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + 
-					Integer.toString(source) + "@" + Integer.toString(dataType) + "@" + 
-					safeEncode(currentData.getTitle()) + "@" + safeEncode(columnName + ": " + instance) + 
-					"@" + safeEncode(instance) + "@" + safeEncode(columnName);
+					Integer.toString(source) + "@" + Integer.toString(column.getDataType()) + "@" + 
+					safeEncode(currentData.getTitle()) + "@" + safeEncode(column.getDisplayName() + ": " + instance) + 
+					"@" + safeEncode(instance) + "@" + safeEncode(column.getName());
 		}
 		
 		try
@@ -349,19 +349,18 @@ public class TableLastValues extends ViewPart
 		if (cells.length == 0)
 			return;
 		
-		int instanceColumnIndex = currentData.getColumnIndex(currentData.getInstanceColumn());
+		int instanceColumnIndex = 0;//currentData.getColumnIndex(currentData.getInstanceColumn());
 		String id = Long.toString(uniqueId++) + "&" + Integer.toString(chartType);
 		for(int i = 0; i < cells.length; i++)
 		{
-			String columnName = currentData.getColumnName(cells[i].getColumnIndex());
+			TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
 			String instance = cells[i].getViewerRow().getText(instanceColumnIndex);
-			int dataType = currentData.getColumnFormat(cells[i].getColumnIndex());
 			int source = currentData.getSource();
 			
 			id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + 
-					Integer.toString(source) + "@" + Integer.toString(dataType) + "@" + 
-					safeEncode(currentData.getTitle()) + "@" + safeEncode(columnName + ": " + instance) + 
-					"@" + safeEncode(instance) + "@" + safeEncode(columnName);
+					Integer.toString(source) + "@" + Integer.toString(column.getDataType()) + "@" + 
+					safeEncode(currentData.getTitle()) + "@" + safeEncode(column.getDisplayName() + ": " + instance) + 
+					"@" + safeEncode(instance) + "@" + safeEncode(column.getName());
 		}
 		
 		try

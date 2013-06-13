@@ -43,7 +43,7 @@
 class AVAYA_ERS_EXPORTABLE AvayaERSDriver : public NetworkDeviceDriver
 {
 protected:
-	virtual DWORD getSlotSize(StringMap *attributes);
+	virtual UINT32 getSlotSize(StringMap *attributes);
 
 	void getVlanInterfaces(SNMP_Transport *pTransport, InterfaceList *pIfList);
 

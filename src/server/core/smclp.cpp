@@ -25,7 +25,7 @@
 /**
  * Constructor
  */
-SMCLP_Connection::SMCLP_Connection(DWORD ip, WORD port)
+SMCLP_Connection::SMCLP_Connection(UINT32 ip, WORD port)
 {
 	m_ip = ip;
 	m_port = port;

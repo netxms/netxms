@@ -69,7 +69,7 @@ extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
-void UnregisterClientSession(DWORD dwIndex);
+void UnregisterClientSession(UINT32 dwIndex);
 void ResetDiscoveryPoller();
 CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request);
 
@@ -81,7 +81,7 @@ typedef struct
    ClientSession *pSession;
    Node *pNode;
    int iPollType;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 } POLLER_START_DATA;
 
 /**
@@ -98,8 +98,8 @@ typedef struct
  */
 typedef struct
 {
-   DWORD dwToolId;
-   DWORD dwUserId;
+   UINT32 dwToolId;
+   UINT32 dwUserId;
 } OBJECT_TOOL_ACL;
 
 /**
@@ -107,9 +107,9 @@ typedef struct
  */
 struct GRAPH_ACL_ENTRY
 {
-	DWORD dwGraphId;
-	DWORD dwUserId;
-	DWORD dwAccess;
+	UINT32 dwGraphId;
+	UINT32 dwUserId;
+	UINT32 dwAccess;
 };
 
 /**
@@ -301,7 +301,7 @@ ClientSession::~ClientSession()
    safe_free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
-      DWORD i;
+      UINT32 i;
 
       if (m_dwFlags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
          for(i = 0; i < m_dwRecordsUploaded; i++)
@@ -353,13 +353,13 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void ClientSession::readThread()
 {
-	DWORD msgBufferSize = 1024;
+	UINT32 msgBufferSize = 1024;
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
    BYTE *pDecryptionBuffer = NULL;
    TCHAR szBuffer[256];
    int iErr;
-   DWORD i;
+   UINT32 i;
    NetObj *pObject;
    WORD wFlags;
 
@@ -703,11 +703,11 @@ void ClientSession::updateThread()
               msg.SetVariable(VID_GUID, (BYTE *)info->guid, UUID_LENGTH);
               if (info->removed)
               {
-                msg.SetVariable(VID_FLAGS, (DWORD)1);
+                msg.SetVariable(VID_FLAGS, (UINT32)1);
               }
               else
               {
-                msg.SetVariable(VID_FLAGS, (DWORD)0);
+                msg.SetVariable(VID_FLAGS, (UINT32)0);
               }
               sendMessage(&msg);
               msg.DeleteAllVariables();
@@ -730,7 +730,7 @@ void ClientSession::processingThread()
 {
    CSCPMessage *pMsg;
    TCHAR szBuffer[128];
-   DWORD i;
+   UINT32 i;
 	int status;
 
    while(1)
@@ -1379,7 +1379,7 @@ void ClientSession::processingThread()
 /**
  * Respond to client's keepalive message
  */
-void ClientSession::respondToKeepalive(DWORD dwRqId)
+void ClientSession::respondToKeepalive(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -1494,7 +1494,7 @@ void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
 /**
  * Send file to client
  */
-BOOL ClientSession::sendFile(const TCHAR *file, DWORD dwRqId)
+BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId)
 {
 	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite);
 }
@@ -1502,7 +1502,7 @@ BOOL ClientSession::sendFile(const TCHAR *file, DWORD dwRqId)
 /**
  * Send server information to client
  */
-void ClientSession::sendServerInfo(DWORD dwRqId)
+void ClientSession::sendServerInfo(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	TCHAR szBuffer[1024];
@@ -1523,8 +1523,8 @@ void ClientSession::sendServerInfo(DWORD dwRqId)
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
    msg.SetVariable(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
-   msg.SetVariable(VID_SUPPORTED_ENCRYPTION, (DWORD)0);
-   msg.SetVariable(VID_PROTOCOL_VERSION, (DWORD)CLIENT_PROTOCOL_VERSION);
+   msg.SetVariable(VID_SUPPORTED_ENCRYPTION, (UINT32)0);
+   msg.SetVariable(VID_PROTOCOL_VERSION, (UINT32)CLIENT_PROTOCOL_VERSION);
 	msg.SetVariable(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
 
 #if defined(_WIN32)
@@ -1623,7 +1623,7 @@ void ClientSession::login(CSCPMessage *pRequest)
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false;
-   DWORD dwResult;
+   UINT32 dwResult;
 #ifdef _WITH_ENCRYPTION
 	X509 *pCert;
 #endif
@@ -1669,7 +1669,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 				if (pCert != NULL)
 				{
 					BYTE signature[256];
-					DWORD dwSigLen;
+					UINT32 dwSigLen;
 
 					dwSigLen = pRequest->GetVariableBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
@@ -1732,7 +1732,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 /**
  * Send event configuration to client
  */
-void ClientSession::sendEventDB(DWORD dwRqId)
+void ClientSession::sendEventDB(UINT32 dwRqId)
 {
    DB_ASYNC_RESULT hResult;
    CSCPMessage msg;
@@ -1777,7 +1777,7 @@ void ClientSession::sendEventDB(DWORD dwRqId)
          }
 
          // End-of-list indicator
-         msg.SetVariable(VID_EVENT_CODE, (DWORD)0);
+         msg.SetVariable(VID_EVENT_CODE, (UINT32)0);
 			msg.SetEndOfSequence();
       }
       else
@@ -1818,7 +1818,7 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
       TCHAR szQuery[8192], szName[MAX_EVENT_NAME];
 
       // Check if event with specific code exists
-      DWORD dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
+      UINT32 dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
 		bool bEventExist = IsDatabaseRecordExist(g_hCoreDB, _T("event_cfg"), _T("event_code"), dwEventCode);
 
       // Check that we are not trying to create event below 100000
@@ -1892,7 +1892,7 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
 void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwEventCode;
+   UINT32 dwEventCode;
 
    // Prepare reply message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1939,7 +1939,7 @@ void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
 /**
  * Generate event code for new event template
  */
-void ClientSession::generateEventCode(DWORD dwRqId)
+void ClientSession::generateEventCode(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -1966,7 +1966,7 @@ void ClientSession::generateEventCode(DWORD dwRqId)
  */
 void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 {
-   DWORD dwTimeStamp;
+   UINT32 dwTimeStamp;
    CSCPMessage msg;
 
    // Send confirmation message
@@ -2034,11 +2034,11 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
    else
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
 
-   DWORD dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
-	DWORD numObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
-	DWORD *objects = (DWORD *)malloc(sizeof(DWORD) * numObjects);
+   UINT32 dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
+	UINT32 numObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
+	UINT32 *objects = (UINT32 *)malloc(sizeof(UINT32) * numObjects);
 	pRequest->GetVariableInt32Array(VID_OBJECT_LIST, numObjects, objects);
-	DWORD options = pRequest->GetVariableShort(VID_FLAGS);
+	UINT32 options = pRequest->GetVariableShort(VID_FLAGS);
 
    MutexLock(m_mutexSendObjects);
 
@@ -2046,7 +2046,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
 	msg.SetCode((options & OBJECT_SYNC_SEND_UPDATES) ? CMD_OBJECT_UPDATE : CMD_OBJECT);
 
    // Send objects, one per message
-   for(DWORD i = 0; i < numObjects; i++)
+   for(UINT32 i = 0; i < numObjects; i++)
 	{
 		NetObj *object = FindObjectById(objects[i]);
       if ((object != NULL) && 
@@ -2081,7 +2081,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
    CSCPMessage msg;
    DB_ASYNC_RESULT hResult = NULL;
    DB_RESULT hTempResult;
-   DWORD dwRqId, dwMaxRecords, dwNumRows, dwId;
+   UINT32 dwRqId, dwMaxRecords, dwNumRows, dwId;
    TCHAR szQuery[1024], szBuffer[1024];
    WORD wRecOrder;
 
@@ -2164,7 +2164,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
          msg.SetVariable(dwId++, szBuffer);
          DBGetFieldAsync(hResult, 6, szBuffer, 1024);
          msg.SetVariable(dwId++, szBuffer);
-         msg.SetVariable(dwId++, (DWORD)0);	// Do not send parameters
+         msg.SetVariable(dwId++, (UINT32)0);	// Do not send parameters
       }
       DBFreeAsyncResult(hResult);
 
@@ -2186,9 +2186,9 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
 /**
  * Send all configuration variables to client
  */
-void ClientSession::sendAllConfigVars(DWORD dwRqId)
+void ClientSession::sendAllConfigVars(UINT32 dwRqId)
 {
-   DWORD i, dwId, dwNumRecords;
+   UINT32 i, dwId, dwNumRecords;
    CSCPMessage msg;
    DB_RESULT hResult;
    TCHAR szBuffer[MAX_DB_STRING];
@@ -2433,7 +2433,7 @@ void ClientSession::onObjectChange(NetObj *pObject)
 /**
  * Send notification message to server
  */
-void ClientSession::notify(DWORD dwCode, DWORD dwData)
+void ClientSession::notify(UINT32 dwCode, UINT32 dwData)
 {
    CSCPMessage msg;
 
@@ -2448,7 +2448,7 @@ void ClientSession::notify(DWORD dwCode, DWORD dwData)
  */
 void ClientSession::modifyObject(CSCPMessage *pRequest)
 {
-   DWORD dwObjectId, dwResult = RCC_SUCCESS;
+   UINT32 dwObjectId, dwResult = RCC_SUCCESS;
    NetObj *pObject;
    CSCPMessage msg;
 
@@ -2518,7 +2518,7 @@ void ClientSession::modifyObject(CSCPMessage *pRequest)
 /**
  * Send users database to client
  */
-void ClientSession::sendUserDB(DWORD dwRqId)
+void ClientSession::sendUserDB(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	UserDatabaseObject **users;
@@ -2571,7 +2571,7 @@ void ClientSession::createUser(CSCPMessage *pRequest)
    }
    else
    {
-      DWORD dwResult, dwUserId;
+      UINT32 dwResult, dwUserId;
       BOOL bIsGroup;
       TCHAR szUserName[MAX_USER_NAME];
 
@@ -2631,7 +2631,7 @@ void ClientSession::updateUser(CSCPMessage *pRequest)
 void ClientSession::deleteUser(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwUserId;
+   UINT32 dwUserId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2679,7 +2679,7 @@ void ClientSession::deleteUser(CSCPMessage *pRequest)
 /**
  * Lock/unlock user database
  */
-void ClientSession::lockUserDB(DWORD dwRqId, BOOL bLock)
+void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
 {
    CSCPMessage msg;
    TCHAR szBuffer[256];
@@ -2728,7 +2728,7 @@ void ClientSession::lockUserDB(DWORD dwRqId, BOOL bLock)
 // Notify client on user database update
 //
 
-void ClientSession::onUserDBUpdate(int code, DWORD id, UserDatabaseObject *object)
+void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 {
    CSCPMessage msg;
 
@@ -2761,7 +2761,7 @@ void ClientSession::onUserDBUpdate(int code, DWORD id, UserDatabaseObject *objec
 void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwObjectId;
+   UINT32 dwObjectId;
    NetObj *pObject;
 
    // Prepare response message
@@ -2810,7 +2810,7 @@ void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 void ClientSession::setPassword(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwUserId;
+   UINT32 dwUserId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2822,7 +2822,7 @@ void ClientSession::setPassword(CSCPMessage *pRequest)
         !((dwUserId == 0) && (m_dwUserId != 0))) ||   // Only administrator can change password for UID 0
        (dwUserId == m_dwUserId))     // User can change password for itself
    {
-      DWORD dwResult;
+      UINT32 dwResult;
       TCHAR newPassword[1024], oldPassword[1024];
 
 #ifdef UNICODE
@@ -2855,7 +2855,7 @@ void ClientSession::setPassword(CSCPMessage *pRequest)
 void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwObjectId;
+   UINT32 dwObjectId;
    NetObj *pObject;
    BOOL bSuccess = FALSE;
    TCHAR szLockInfo[MAX_SESSION_NAME];
@@ -2883,7 +2883,7 @@ void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
                // Modify list of open nodes DCI lists
-               m_pOpenDCIList = (DWORD *)realloc(m_pOpenDCIList, sizeof(DWORD) * (m_dwOpenDCIListSize + 1));
+               m_pOpenDCIList = (UINT32 *)realloc(m_pOpenDCIList, sizeof(UINT32) * (m_dwOpenDCIListSize + 1));
                m_pOpenDCIList[m_dwOpenDCIListSize] = dwObjectId;
                m_dwOpenDCIListSize++;
             }
@@ -2922,7 +2922,7 @@ void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
 void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwObjectId;
+   UINT32 dwObjectId;
    NetObj *pObject;
 
    // Prepare response message
@@ -2950,14 +2950,14 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
             // Modify list of open nodes DCI lists
             if (bSuccess)
             {
-               DWORD i;
+               UINT32 i;
 
                for(i = 0; i < m_dwOpenDCIListSize; i++)
                   if (m_pOpenDCIList[i] == dwObjectId)
                   {
                      m_dwOpenDCIListSize--;
                      memmove(&m_pOpenDCIList[i], &m_pOpenDCIList[i + 1],
-                             sizeof(DWORD) * (m_dwOpenDCIListSize - i));
+                             sizeof(UINT32) * (m_dwOpenDCIListSize - i));
                      break;
                   }
             }
@@ -2992,7 +2992,7 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
 void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwObjectId;
+   UINT32 dwObjectId;
    NetObj *pObject;
 
    // Prepare response message
@@ -3013,7 +3013,7 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
          {
             if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
-               DWORD i, dwItemId, dwNumMaps, *pdwMapId, *pdwMapIndex;
+               UINT32 i, dwItemId, dwNumMaps, *pdwMapId, *pdwMapIndex;
                DCObject *dcObject;
                BOOL bSuccess = FALSE;
 
@@ -3074,8 +3074,8 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
 										pdwMapId[i] = htonl(pdwMapId[i]);
 										pdwMapIndex[i] = htonl(pdwMapIndex[i]);
 									}
-									msg.SetVariable(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(DWORD) * dwNumMaps);
-									msg.SetVariable(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(DWORD) * dwNumMaps);
+									msg.SetVariable(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(UINT32) * dwNumMaps);
+									msg.SetVariable(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(UINT32) * dwNumMaps);
 									safe_free(pdwMapId);
 									safe_free(pdwMapIndex);
 								}
@@ -3143,12 +3143,12 @@ void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
          {
             if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
-               DWORD dwNumItems, *pdwItemList;
+               UINT32 dwNumItems, *pdwItemList;
                int iStatus;
 
                iStatus = pRequest->GetVariableShort(VID_DCI_STATUS);
                dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
-               pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+               pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
                pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
                if (((Template *)pObject)->setItemStatus(dwNumItems, pdwItemList, iStatus))
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -3187,7 +3187,7 @@ void ClientSession::clearDCIData(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
-	DWORD dwItemId;
+	UINT32 dwItemId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -3268,14 +3268,14 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
                if ((pDestination->Id() == pSource->Id()) ||
                    (((Template *)pDestination)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo)))
                {
-                  DWORD i, *pdwItemList, dwNumItems;
+                  UINT32 i, *pdwItemList, dwNumItems;
                   const DCObject *pSrcItem;
                   DCObject *pDstItem;
                   int iErrors = 0;
 
                   // Get list of items to be copied/moved
                   dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
-                  pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+                  pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
                   pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
 
                   // Copy items
@@ -3423,7 +3423,7 @@ void ClientSession::sendDCIThresholds(CSCPMessage *request)
 /**
  * Prepare statement for reading data from idata table
  */
-static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRows, const TCHAR *condition)
+static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxRows, const TCHAR *condition)
 {
 	TCHAR query[512];
 
@@ -3453,7 +3453,7 @@ static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRow
 /**
  * Prepare statement for reading data from tdata table
  */
-static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRows, const TCHAR *condition)
+static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxRows, const TCHAR *condition)
 {
 	TCHAR query[512];
 
@@ -3514,9 +3514,9 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 	}
 
 	// Get request parameters
-	DWORD maxRows = request->GetVariableLong(VID_MAX_ROWS);
-	DWORD timeFrom = request->GetVariableLong(VID_TIME_FROM);
-	DWORD timeTo = request->GetVariableLong(VID_TIME_TO);
+	UINT32 maxRows = request->GetVariableLong(VID_MAX_ROWS);
+	UINT32 timeFrom = request->GetVariableLong(VID_TIME_FROM);
+	UINT32 timeTo = request->GetVariableLong(VID_TIME_TO);
 
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
@@ -3568,7 +3568,7 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
-		   static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 516, 12 };
+		   static UINT32 m_dwRowSize[] = { 8, 8, 12, 12, 516, 12 };
 #if !defined(UNICODE) || defined(UNICODE_UCS4)
 			TCHAR szBuffer[MAX_DCI_STRING_VALUE];
 #endif
@@ -3579,7 +3579,7 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 				((DCItem *)dci)->fillMessageWithThresholds(response);
 			sendMessage(response);
 
-			DWORD numRows = (DWORD)DBGetNumRows(hResult);
+			UINT32 numRows = (UINT32)DBGetNumRows(hResult);
 
 			int dataType;
 			switch(dciType)
@@ -3597,12 +3597,12 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 
 			// Allocate memory for data and prepare data header
 			pData = (DCI_DATA_HEADER *)malloc(numRows * m_dwRowSize[dataType] + sizeof(DCI_DATA_HEADER));
-			pData->dwDataType = htonl((DWORD)dataType);
+			pData->dwDataType = htonl((UINT32)dataType);
 			pData->dwItemId = htonl(dci->getId());
 
 			// Fill memory block with records
 			pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-			for(DWORD i = 0; i < numRows; i++)
+			for(UINT32 i = 0; i < numRows; i++)
 			{
 				pCurr->dwTimeStamp = htonl(DBGetFieldULong(hResult, i, 0));
 				switch(dataType)
@@ -3843,7 +3843,7 @@ void ClientSession::getTableLastValues(CSCPMessage *pRequest)
 /**
  * Open event processing policy
  */
-void ClientSession::openEPP(DWORD dwRqId)
+void ClientSession::openEPP(UINT32 dwRqId)
 {
    CSCPMessage msg;
    TCHAR szBuffer[256];
@@ -3885,7 +3885,7 @@ void ClientSession::openEPP(DWORD dwRqId)
 /**
  * Close event processing policy
  */
-void ClientSession::closeEPP(DWORD dwRqId)
+void ClientSession::closeEPP(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -4025,11 +4025,11 @@ void ClientSession::sendMib(CSCPMessage *request)
 // Send timestamp of compiled MIB file to client
 //
 
-void ClientSession::sendMIBTimestamp(DWORD dwRqId)
+void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
 {
    CSCPMessage msg;
    TCHAR szBuffer[MAX_PATH];
-   DWORD dwResult, dwTimeStamp;
+   UINT32 dwResult, dwTimeStamp;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -4074,7 +4074,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    int iClass, iServiceType;
    TCHAR szObjectName[MAX_OBJECT_NAME], nodePrimaryName[MAX_DNS_NAME], deviceId[MAX_OBJECT_NAME];
    TCHAR *pszRequest, *pszResponse, *pszComments;
-   DWORD dwIpAddr, zoneId, nodeId;
+   UINT32 dwIpAddr, zoneId, nodeId;
    WORD wIpProto, wIpPort;
 	BYTE macAddr[MAC_ADDR_LENGTH];
    BOOL bParentAlwaysValid = FALSE;
@@ -4280,7 +4280,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								break;
 							default:
 								// Try to create unknown classes by modules
-								for(DWORD i = 0; i < g_dwNumModules; i++)
+								for(UINT32 i = 0; i < g_dwNumModules; i++)
 								{
 									if (g_pModuleList[i].pfCreateObject != NULL)
 									{
@@ -4610,7 +4610,7 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
 /**
  * Process changes in alarms
  */
-void ClientSession::onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
+void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
 {
    UPDATE_INFO *pUpdate;
    NetObj *pObject;
@@ -4633,7 +4633,7 @@ void ClientSession::onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 /**
  * Send all alarms to client
  */
-void ClientSession::sendAllAlarms(DWORD dwRqId)
+void ClientSession::sendAllAlarms(UINT32 dwRqId)
 {
    MutexLock(m_mutexSendAlarms);
    g_alarmMgr.sendAlarmsToClient(dwRqId, this);
@@ -4652,7 +4652,7 @@ void ClientSession::getAlarm(CSCPMessage *request)
    msg.SetId(request->GetId());
 
    // Get alarm id and it's source object
-   DWORD dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
+   UINT32 dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
    NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
    if (object != NULL)
    {
@@ -4689,7 +4689,7 @@ void ClientSession::getAlarmEvents(CSCPMessage *request)
    msg.SetId(request->GetId());
 
    // Get alarm id and it's source object
-   DWORD dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
+   UINT32 dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
    NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
    if (object != NULL)
    {
@@ -4722,7 +4722,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
-   DWORD dwAlarmId;
+   UINT32 dwAlarmId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -4761,7 +4761,7 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
 {
    CSCPMessage msg;
    NetObj *pObject;
-   DWORD dwAlarmId;
+   UINT32 dwAlarmId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -4802,7 +4802,7 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
-   DWORD dwAlarmId;
+   UINT32 dwAlarmId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -4851,7 +4851,7 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
    msg.SetId(request->GetId());
 
    // Get alarm id and it's source object
-   DWORD alarmId = request->GetVariableLong(VID_ALARM_ID);
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
    NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
    if (object != NULL)
    {
@@ -4890,14 +4890,14 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
    msg.SetId(request->GetId());
 
    // Get alarm id and it's source object
-   DWORD alarmId = request->GetVariableLong(VID_ALARM_ID);
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
    NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "acknowledge alarm" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-			DWORD noteId = request->GetVariableLong(VID_NOTE_ID);
+			UINT32 noteId = request->GetVariableLong(VID_NOTE_ID);
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
 			msg.SetVariable(VID_RCC, g_alarmMgr.updateAlarmNote(alarmId, noteId, CHECK_NULL(text), m_dwUserId));
 			safe_free(text);
@@ -4934,7 +4934,7 @@ void ClientSession::createAction(CSCPMessage *pRequest)
    // Check user rights
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
-      DWORD dwResult, dwActionId;
+      UINT32 dwResult, dwActionId;
       TCHAR szActionName[MAX_OBJECT_NAME];
 
       pRequest->GetVariableStr(VID_ACTION_NAME, szActionName, MAX_OBJECT_NAME);
@@ -4994,7 +4994,7 @@ void ClientSession::updateAction(CSCPMessage *pRequest)
 void ClientSession::deleteAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwActionId;
+   UINT32 dwActionId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -5028,7 +5028,7 @@ void ClientSession::deleteAction(CSCPMessage *pRequest)
 // Process changes in actions
 //
 
-void ClientSession::onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
+void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
 {
    UPDATE_INFO *pUpdate;
 
@@ -5051,7 +5051,7 @@ void ClientSession::onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
 // Send all actions to client
 //
 
-void ClientSession::sendAllActions(DWORD dwRqId)
+void ClientSession::sendAllActions(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -5081,10 +5081,10 @@ void ClientSession::sendAllActions(DWORD dwRqId)
 // Send list of configured container categories to client
 //
 
-void ClientSession::SendContainerCategories(DWORD dwRqId)
+void ClientSession::SendContainerCategories(UINT32 dwRqId)
 {
    CSCPMessage msg;
-   DWORD i;
+   UINT32 i;
 
    // Prepare response message
    msg.SetCode(CMD_CONTAINER_CAT_DATA);
@@ -5101,7 +5101,7 @@ void ClientSession::SendContainerCategories(DWORD dwRqId)
    }
 
    // Send end-of-list indicator
-   msg.SetVariable(VID_CATEGORY_ID, (DWORD)0);
+   msg.SetVariable(VID_CATEGORY_ID, (UINT32)0);
    sendMessage(&msg);
 }
 
@@ -5175,7 +5175,7 @@ void ClientSession::forcedNodePoll(CSCPMessage *pRequest)
 // Send message from poller to client
 //
 
-void ClientSession::sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg)
+void ClientSession::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg)
 {
    CSCPMessage msg;
 
@@ -5191,7 +5191,7 @@ void ClientSession::sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg)
 // Node poller thread
 //
 
-void ClientSession::pollerThread(Node *pNode, int iPollType, DWORD dwRqId)
+void ClientSession::pollerThread(Node *pNode, int iPollType, UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -5232,7 +5232,7 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, DWORD dwRqId)
 void ClientSession::onTrap(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwObjectId, dwEventCode;
+   UINT32 dwObjectId, dwEventCode;
    int i, iNumArgs;
    NetObj *pObject;
    TCHAR *pszArgList[32], szUserTag[MAX_USERTAG_LENGTH] = _T("");
@@ -5253,7 +5253,7 @@ void ClientSession::onTrap(CSCPMessage *pRequest)
 	{
 		if (m_clientAddr->sa_family == AF_INET)
 		{
-			DWORD addr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
+			UINT32 addr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
 			if (addr == 0x7F000001)
 				pObject = FindObjectById(g_dwMgmtNode);	// Client on loopback
 			else
@@ -5339,7 +5339,7 @@ void ClientSession::onWakeUpNode(CSCPMessage *pRequest)
       {
          if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
-            DWORD dwResult;
+            UINT32 dwResult;
 
             if (pObject->Type() == OBJECT_NODE)
                dwResult = ((Node *)pObject)->wakeUp();
@@ -5386,7 +5386,7 @@ void ClientSession::queryParameter(CSCPMessage *pRequest)
       {
          if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-            DWORD dwResult;
+            UINT32 dwResult;
             TCHAR szBuffer[256], szName[MAX_PARAM_NAME];
 
             pRequest->GetVariableStr(VID_NAME, szName, MAX_PARAM_NAME);
@@ -5439,7 +5439,7 @@ void ClientSession::queryAgentTable(CSCPMessage *pRequest)
 				pRequest->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
 				
 				Table *table;
-				DWORD rcc = ((Node *)pObject)->getTableForClient(name, &table);
+				UINT32 rcc = ((Node *)pObject)->getTableForClient(name, &table);
 				msg.SetVariable(VID_RCC, rcc);
 				if (rcc == RCC_SUCCESS)
 				{
@@ -5472,7 +5472,7 @@ void ClientSession::queryAgentTable(CSCPMessage *pRequest)
 void ClientSession::editTrap(int iOperation, CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwTrapId, dwResult;
+   UINT32 dwTrapId, dwResult;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -5514,7 +5514,7 @@ void ClientSession::editTrap(int iOperation, CSCPMessage *pRequest)
 /**
  * Send all trap configuration records to client
  */
-void ClientSession::sendAllTraps(DWORD dwRqId)
+void ClientSession::sendAllTraps(UINT32 dwRqId)
 {
    CSCPMessage msg;
    BOOL bSuccess = FALSE;
@@ -5545,7 +5545,7 @@ void ClientSession::sendAllTraps(DWORD dwRqId)
  * Send all trap configuration records to client
  * Send all in one message with less information and don't need a lock
  */
-void ClientSession::sendAllTraps2(DWORD dwRqId)
+void ClientSession::sendAllTraps2(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -5572,7 +5572,7 @@ void ClientSession::sendAllTraps2(DWORD dwRqId)
 // Lock/unlock package database
 //
 
-void ClientSession::LockPackageDB(DWORD dwRqId, BOOL bLock)
+void ClientSession::LockPackageDB(UINT32 dwRqId, BOOL bLock)
 {
    CSCPMessage msg;
    TCHAR szBuffer[256];
@@ -5621,7 +5621,7 @@ void ClientSession::LockPackageDB(DWORD dwRqId, BOOL bLock)
 // Send list of all installed packages to client
 //
 
-void ClientSession::SendAllPackages(DWORD dwRqId)
+void ClientSession::SendAllPackages(UINT32 dwRqId)
 {
    CSCPMessage msg;
    DB_ASYNC_RESULT hResult;
@@ -5660,7 +5660,7 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
                msg.DeleteAllVariables();
             }
 
-            msg.SetVariable(VID_PACKAGE_ID, (DWORD)0);
+            msg.SetVariable(VID_PACKAGE_ID, (UINT32)0);
             sendMessage(&msg);
 
             DBFreeAsyncResult(hResult);
@@ -5801,7 +5801,7 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
 void ClientSession::RemovePackage(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwPkgId;
+   UINT32 dwPkgId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -5875,7 +5875,7 @@ void ClientSession::getParametersList(CSCPMessage *pRequest)
 void ClientSession::DeployPackage(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD i, dwNumObjects, *pdwObjectList, dwPkgId;
+   UINT32 i, dwNumObjects, *pdwObjectList, dwPkgId;
    NetObj *pObject;
    TCHAR szQuery[256], szPkgFile[MAX_PATH];
    TCHAR szVersion[MAX_AGENT_VERSION_LEN], szPlatform[MAX_PLATFORM_NAME_LEN];
@@ -5908,7 +5908,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
 
                // Create list of nodes to be upgraded
                dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
-               pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * dwNumObjects);
+               pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * dwNumObjects);
                pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
 					nodeList = new ObjectArray<Node>((int)dwNumObjects);
                for(i = 0; i < dwNumObjects; i++)
@@ -6109,7 +6109,7 @@ void ClientSession::getUserVariable(CSCPMessage *pRequest)
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[MAX_VARIABLE_NAME + 256];
    DB_RESULT hResult;
-   DWORD dwUserId;
+   UINT32 dwUserId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -6165,7 +6165,7 @@ void ClientSession::setUserVariable(CSCPMessage *pRequest)
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[8192], *pszValue, *pszRawValue;
    DB_RESULT hResult;
    BOOL bExist = FALSE;
-   DWORD dwUserId;
+   UINT32 dwUserId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -6235,7 +6235,7 @@ void ClientSession::enumUserVariables(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szPattern[MAX_VARIABLE_NAME], szQuery[256], szName[MAX_DB_STRING];
-   DWORD i, dwNumRows, dwNumVars, dwId, dwUserId;
+   UINT32 i, dwNumRows, dwNumVars, dwId, dwUserId;
    DB_RESULT hResult;
 
    // Prepare response message
@@ -6285,7 +6285,7 @@ void ClientSession::deleteUserVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[MAX_VARIABLE_NAME + 256];
-   DWORD dwUserId;
+   UINT32 dwUserId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -6326,7 +6326,7 @@ void ClientSession::copyUserVariable(CSCPMessage *pRequest)
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szCurrVar[MAX_VARIABLE_NAME],
          szQuery[32768], *pszValue;
-   DWORD dwSrcUserId, dwDstUserId;
+   UINT32 dwSrcUserId, dwDstUserId;
    int i, nRows;
    BOOL bMove, bExist;
    DB_RESULT hResult, hResult2;
@@ -6425,7 +6425,7 @@ void ClientSession::changeObjectZone(CSCPMessage *pRequest)
 			if (object->Type() == OBJECT_NODE)
 			{
 				Node *node = (Node *)object;
-				DWORD zoneId = pRequest->GetVariableLong(VID_ZONE_ID);
+				UINT32 zoneId = pRequest->GetVariableLong(VID_ZONE_ID);
 				Zone *zone = FindZoneByGUID(zoneId);
 				if (zone != NULL)
 				{
@@ -6507,7 +6507,7 @@ void ClientSession::getAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
-   DWORD dwResult, dwSize;
+   UINT32 dwResult, dwSize;
    TCHAR *pszConfig;
 
    // Prepare response message
@@ -6575,7 +6575,7 @@ void ClientSession::updateAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
-   DWORD dwResult;
+   UINT32 dwResult;
    TCHAR *pszConfig;
 
    // Prepare response message
@@ -6656,7 +6656,7 @@ void ClientSession::executeAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
-   DWORD dwResult;
+   UINT32 dwResult;
    TCHAR szAction[MAX_PARAM_NAME];
 
    // Prepare response message
@@ -6726,11 +6726,11 @@ void ClientSession::executeAction(CSCPMessage *pRequest)
 /**
  * Send tool list to client
  */
-void ClientSession::sendObjectTools(DWORD dwRqId)
+void ClientSession::sendObjectTools(UINT32 dwRqId)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD i, j, dwAclSize, dwNumTools, dwNumMsgRec, dwToolId, dwId;
+   UINT32 i, j, dwAclSize, dwNumTools, dwNumMsgRec, dwToolId, dwId;
    OBJECT_TOOL_ACL *pAccessList;
    TCHAR *pszStr, szBuffer[MAX_DB_STRING];
 
@@ -6835,7 +6835,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD dwToolId, dwId, *pdwAcl;
+   UINT32 dwToolId, dwId, *pdwAcl;
    TCHAR *pszStr, szQuery[1024], szBuffer[MAX_DB_STRING];
    int i, iNumRows, nType;
 
@@ -6883,10 +6883,10 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
             if (hResult != NULL)
             {
                iNumRows = DBGetNumRows(hResult);
-               msg.SetVariable(VID_ACL_SIZE, (DWORD)iNumRows);
+               msg.SetVariable(VID_ACL_SIZE, (UINT32)iNumRows);
                if (iNumRows > 0)
                {
-                  pdwAcl = (DWORD *)malloc(sizeof(DWORD) * iNumRows);
+                  pdwAcl = (UINT32 *)malloc(sizeof(UINT32) * iNumRows);
                   for(i = 0; i < iNumRows; i++)
                      pdwAcl[i] = DBGetFieldULong(hResult, i, 0);
                   msg.SetVariableToInt32Array(VID_ACL, iNumRows, pdwAcl);
@@ -6981,7 +6981,7 @@ void ClientSession::updateObjectTool(CSCPMessage *pRequest)
 void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwToolId;
+   UINT32 dwToolId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -7005,7 +7005,7 @@ void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
 /**
  * Generate ID for new object tool
  */
-void ClientSession::generateObjectToolId(DWORD dwRqId)
+void ClientSession::generateObjectToolId(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -7033,7 +7033,7 @@ void ClientSession::generateObjectToolId(DWORD dwRqId)
 void ClientSession::execTableTool(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwToolId;
+   UINT32 dwToolId;
    NetObj *pObject;
 
    // Prepare response message
@@ -7086,7 +7086,7 @@ void ClientSession::execTableTool(CSCPMessage *pRequest)
 void ClientSession::changeSubscription(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwFlags;
+   UINT32 dwFlags;
 
    dwFlags = pRequest->GetVariableLong(VID_FLAGS);
    if (pRequest->GetVariableShort(VID_OPERATION) != 0)
@@ -7110,13 +7110,13 @@ void ClientSession::changeSubscription(CSCPMessage *pRequest)
  */
 static void DciCountCallback(NetObj *object, void *data)
 {
-	*((DWORD *)data) += ((Node *)object)->getItemCount();
+	*((UINT32 *)data) += ((Node *)object)->getItemCount();
 }
 
 /**
  * Send server statistics
  */
-void ClientSession::sendServerStats(DWORD dwRqId)
+void ClientSession::sendServerStats(UINT32 dwRqId)
 {
    CSCPMessage msg;
 #ifdef _WIN32
@@ -7130,17 +7130,17 @@ void ClientSession::sendServerStats(DWORD dwRqId)
 
    // Server version, etc.
    msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
-   msg.SetVariable(VID_SERVER_UPTIME, (DWORD)(time(NULL) - g_tServerStartTime));
+   msg.SetVariable(VID_SERVER_UPTIME, (UINT32)(time(NULL) - g_tServerStartTime));
 
    // Number of objects and DCIs
-	DWORD dciCount = 0;
+	UINT32 dciCount = 0;
 	g_idxNodeById.forEach(DciCountCallback, &dciCount);
    msg.SetVariable(VID_NUM_ITEMS, dciCount);
-	msg.SetVariable(VID_NUM_OBJECTS, (DWORD)g_idxObjectById.getSize());
-	msg.SetVariable(VID_NUM_NODES, (DWORD)g_idxNodeById.getSize());
+	msg.SetVariable(VID_NUM_OBJECTS, (UINT32)g_idxObjectById.getSize());
+	msg.SetVariable(VID_NUM_NODES, (UINT32)g_idxNodeById.getSize());
 
    // Client sessions
-   msg.SetVariable(VID_NUM_SESSIONS, (DWORD)GetSessionCount());
+   msg.SetVariable(VID_NUM_SESSIONS, (UINT32)GetSessionCount());
 
    // Alarms
    g_alarmMgr.getAlarmStats(&msg);
@@ -7150,8 +7150,8 @@ void ClientSession::sendServerStats(DWORD dwRqId)
    mc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
    if (GetProcessMemoryInfo(GetCurrentProcess(), &mc, sizeof(PROCESS_MEMORY_COUNTERS)))
    {
-      msg.SetVariable(VID_NETXMSD_PROCESS_WKSET, (DWORD)(mc.WorkingSetSize / 1024));
-      msg.SetVariable(VID_NETXMSD_PROCESS_VMSIZE, (DWORD)(mc.PagefileUsage / 1024));
+      msg.SetVariable(VID_NETXMSD_PROCESS_WKSET, (UINT32)(mc.WorkingSetSize / 1024));
+      msg.SetVariable(VID_NETXMSD_PROCESS_VMSIZE, (UINT32)(mc.PagefileUsage / 1024));
    }
 #endif
 
@@ -7175,11 +7175,11 @@ void ClientSession::sendServerStats(DWORD dwRqId)
 // Send script list
 //
 
-void ClientSession::sendScriptList(DWORD dwRqId)
+void ClientSession::sendScriptList(UINT32 dwRqId)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD i, dwNumScripts, dwId;
+   UINT32 i, dwNumScripts, dwId;
    TCHAR szBuffer[MAX_DB_STRING];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -7220,7 +7220,7 @@ void ClientSession::sendScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD dwScriptId;
+   UINT32 dwScriptId;
    TCHAR *pszCode, szQuery[256];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -7267,7 +7267,7 @@ void ClientSession::updateScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR *pszCode, *pszQuery, szName[MAX_DB_STRING];
-   DWORD dwScriptId;
+   UINT32 dwScriptId;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -7335,7 +7335,7 @@ void ClientSession::renameScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szQuery[4096], szName[MAX_DB_STRING];
-   DWORD dwScriptId;
+   UINT32 dwScriptId;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -7383,7 +7383,7 @@ void ClientSession::deleteScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szQuery[256];
-   DWORD dwScriptId;
+   UINT32 dwScriptId;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -7422,7 +7422,7 @@ void ClientSession::deleteScript(CSCPMessage *pRequest)
  */
 static void CopySessionData(ClientSession *pSession, void *pArg)
 {
-   DWORD dwId, dwIndex;
+   UINT32 dwId, dwIndex;
 
    dwIndex = ((CSCPMessage *)pArg)->GetVariableLong(VID_NUM_SESSIONS);
    ((CSCPMessage *)pArg)->SetVariable(VID_NUM_SESSIONS, dwIndex + 1);
@@ -7437,7 +7437,7 @@ static void CopySessionData(ClientSession *pSession, void *pArg)
 /**
  * Send list of connected client sessions
  */
-void ClientSession::SendSessionList(DWORD dwRqId)
+void ClientSession::SendSessionList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -7445,7 +7445,7 @@ void ClientSession::SendSessionList(DWORD dwRqId)
    msg.SetId(dwRqId);
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
-      msg.SetVariable(VID_NUM_SESSIONS, (DWORD)0);
+      msg.SetVariable(VID_NUM_SESSIONS, (UINT32)0);
       EnumerateClientSessions(CopySessionData, &msg);
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
    }
@@ -7501,7 +7501,7 @@ void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
 void ClientSession::sendSyslog(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwMaxRecords, dwNumRows, dwId;
+   UINT32 dwMaxRecords, dwNumRows, dwId;
    DB_RESULT hTempResult;
    DB_ASYNC_RESULT hResult;
    TCHAR szQuery[1024], szBuffer[1024];
@@ -7630,7 +7630,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szBuffer[4096], szQuery[1024];
-   DWORD dwId, dwNumRows, dwMaxRecords;
+   UINT32 dwId, dwNumRows, dwMaxRecords;
    DB_RESULT hTempResult;
    DB_ASYNC_RESULT hResult;
    WORD wRecOrder;
@@ -7739,7 +7739,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
 typedef struct
 {
    ClientSession *pSession;
-   DWORD dwRqId;
+   UINT32 dwRqId;
    NetObj *pObject;
    TCHAR szBaseOID[MAX_OID_LEN * 4];
 } WALKER_THREAD_ARGS;
@@ -7752,15 +7752,15 @@ typedef struct
 typedef struct
 {
    CSCPMessage *pMsg;
-   DWORD dwId;
-   DWORD dwNumVars;
+   UINT32 dwId;
+   UINT32 dwNumVars;
    ClientSession *pSession;
 } WALKER_ENUM_CALLBACK_ARGS;
 
 /**
  * SNMP walker enumeration callback
  */
-static DWORD WalkerCallback(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 WalkerCallback(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    CSCPMessage *pMsg = ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pMsg;
    TCHAR szBuffer[4096];
@@ -7768,7 +7768,7 @@ static DWORD WalkerCallback(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport
 
 	pVar->getValueAsPrintableString(szBuffer, 4096, &convertToHex);
    pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->GetName()->getValueAsText());
-	pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (DWORD)0xFFFF : pVar->GetType());
+	pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->GetType());
    pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, szBuffer);
    ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars++;
    if (((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars == 50)
@@ -7864,11 +7864,11 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
 /**
  * Resolve single DCI name
  */
-DWORD ClientSession::resolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName)
+UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszName)
 {
    NetObj *pObject;
    DCObject *pItem;
-   DWORD dwResult;
+   UINT32 dwResult;
 
    pObject = FindObjectById(dwNode);
    if (pObject != NULL)
@@ -7913,7 +7913,7 @@ DWORD ClientSession::resolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
  */
 void ClientSession::resolveDCINames(CSCPMessage *pRequest)
 {
-   DWORD i, dwId, dwNumDCI, *pdwNodeList, *pdwDCIList, dwResult = RCC_INVALID_ARGUMENT;
+   UINT32 i, dwId, dwNumDCI, *pdwNodeList, *pdwDCIList, dwResult = RCC_INVALID_ARGUMENT;
    TCHAR *pszName;
    CSCPMessage msg;
 
@@ -7921,8 +7921,8 @@ void ClientSession::resolveDCINames(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    dwNumDCI = pRequest->GetVariableLong(VID_NUM_ITEMS);
-   pdwNodeList = (DWORD *)malloc(sizeof(DWORD) * dwNumDCI);
-   pdwDCIList = (DWORD *)malloc(sizeof(DWORD) * dwNumDCI);
+   pdwNodeList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
+   pdwDCIList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
    pRequest->GetVariableInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
    pRequest->GetVariableInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
    
@@ -7944,11 +7944,11 @@ void ClientSession::resolveDCINames(CSCPMessage *pRequest)
 /**
  * Send list of available agent configs to client
  */
-void ClientSession::sendAgentCfgList(DWORD dwRqId)
+void ClientSession::sendAgentCfgList(UINT32 dwRqId)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD i, dwId, dwNumRows;
+   UINT32 i, dwId, dwNumRows;
    TCHAR szText[MAX_DB_STRING];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -7994,7 +7994,7 @@ void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD dwCfgId;
+   UINT32 dwCfgId;
    TCHAR *pszStr, szQuery[256], szBuffer[MAX_DB_STRING];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8048,7 +8048,7 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD dwCfgId, dwSeqNum;
+   UINT32 dwCfgId, dwSeqNum;
    TCHAR szQuery[256], szName[MAX_DB_STRING], *pszFilter, *pszText;
    TCHAR *pszQuery, *pszEscFilter, *pszEscText, *pszEscName;
    BOOL bCreate;
@@ -8148,7 +8148,7 @@ void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD dwCfgId;
+   UINT32 dwCfgId;
    TCHAR szQuery[256];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8277,7 +8277,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
    DB_RESULT hResult;
    NXSL_Program *pScript;
    NXSL_Value *ppArgList[5], *pValue;
-   DWORD dwCfgId;
+   UINT32 dwCfgId;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -8437,7 +8437,7 @@ void ClientSession::updateObjectComments(CSCPMessage *pRequest)
 void ClientSession::pushDCIData(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD i, dwObjectId, dwNumItems, dwId, dwItemId;
+   UINT32 i, dwObjectId, dwNumItems, dwId, dwItemId;
    NetObj *pObject;
    DataCollectionTarget **dcTargetList = NULL;
    DCItem **ppItemList = NULL;
@@ -8470,7 +8470,7 @@ void ClientSession::pushDCIData(CSCPMessage *pRequest)
             pRequest->GetVariableStr(dwId++, szName, 256);
 				if (szName[0] == _T('@'))
 				{
-					DWORD ipAddr = ntohl(ResolveHostName(&szName[1]));
+					UINT32 ipAddr = ntohl(ResolveHostName(&szName[1]));
 					pObject = FindNodeByIP(0, ipAddr);
 				}
 				else
@@ -8576,7 +8576,7 @@ void ClientSession::getAddrList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szQuery[256];
-   DWORD i, dwNumRec, dwId;
+   UINT32 i, dwNumRec, dwId;
    DB_RESULT hResult;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8619,7 +8619,7 @@ void ClientSession::getAddrList(CSCPMessage *pRequest)
 void ClientSession::setAddrList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD i, dwId, dwNumRec, dwListType;
+   UINT32 i, dwId, dwNumRec, dwListType;
    TCHAR szQuery[256], szIpAddr1[24], szIpAddr2[24];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8676,7 +8676,7 @@ void ClientSession::setAddrList(CSCPMessage *pRequest)
 void ClientSession::resetComponent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwCode;
+   UINT32 dwCode;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -8712,7 +8712,7 @@ void ClientSession::sendDCIEventList(CSCPMessage *request)
 {
    CSCPMessage msg;
    NetObj *pObject;
-   DWORD *pdwEventList, dwCount;
+   UINT32 *pdwEventList, dwCount;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(request->GetId());
@@ -8735,7 +8735,7 @@ void ClientSession::sendDCIEventList(CSCPMessage *request)
             }
             else
             {
-               msg.SetVariable(VID_NUM_EVENTS, (DWORD)0);
+               msg.SetVariable(VID_NUM_EVENTS, (UINT32)0);
             }
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
@@ -8765,8 +8765,8 @@ void ClientSession::sendDCIEventList(CSCPMessage *request)
 void ClientSession::exportConfiguration(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD i, dwCount, dwNumTemplates;
-   DWORD *pdwList, *pdwTemplateList;
+   UINT32 i, dwCount, dwNumTemplates;
+   UINT32 *pdwList, *pdwTemplateList;
    NetObj *pObject;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8777,7 +8777,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
       dwNumTemplates = pRequest->GetVariableLong(VID_NUM_OBJECTS);
       if (dwNumTemplates > 0)
       {
-         pdwTemplateList = (DWORD *)malloc(sizeof(DWORD) * dwNumTemplates);
+         pdwTemplateList = (UINT32 *)malloc(sizeof(UINT32) * dwNumTemplates);
          pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
       }
       else
@@ -8825,7 +8825,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
          // Write events
          str += _T("\t<events>\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_EVENTS);
-         pdwList = (DWORD *)malloc(sizeof(DWORD) * dwCount);
+         pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwCount);
          pRequest->GetVariableInt32Array(VID_EVENT_LIST, dwCount, pdwList);
          for(i = 0; i < dwCount; i++)
             CreateNXMPEventRecord(str, pdwList[i]);
@@ -8847,7 +8847,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
          // Write traps
          str += _T("\t<traps>\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_TRAPS);
-         pdwList = (DWORD *)malloc(sizeof(DWORD) * dwCount);
+         pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwCount);
          pRequest->GetVariableInt32Array(VID_TRAP_LIST, dwCount, pdwList);
          for(i = 0; i < dwCount; i++)
             CreateNXMPTrapRecord(str, pdwList[i]);
@@ -8881,7 +8881,7 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szLockInfo[MAX_SESSION_NAME], szError[1024];
-   DWORD dwFlags;
+   UINT32 dwFlags;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -9002,8 +9002,8 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
 // Check access to the graph
 //
 
-static BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, DWORD dwGraphId,
-									  DWORD dwUserId, DWORD dwDesiredAccess)
+static BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 dwGraphId,
+									  UINT32 dwUserId, UINT32 dwDesiredAccess)
 {
 	int i;
 
@@ -9027,7 +9027,7 @@ static BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, DWORD dwGraphI
 // Load graph's ACL - load for all graphs if dwGraphId is 0
 //
 
-static GRAPH_ACL_ENTRY *LoadGraphACL(DWORD dwGraphId, int *pnACLSize)
+static GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 dwGraphId, int *pnACLSize)
 {
 	int i, nSize;
 	GRAPH_ACL_ENTRY *pACL = NULL;
@@ -9072,14 +9072,14 @@ static GRAPH_ACL_ENTRY *LoadGraphACL(DWORD dwGraphId, int *pnACLSize)
 // Send list of available graphs to client
 //
 
-void ClientSession::SendGraphList(DWORD dwRqId)
+void ClientSession::SendGraphList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	DB_RESULT hResult;
 	GRAPH_ACL_ENTRY *pACL = NULL;
 	int i, j, nRows, nACLSize;
-	DWORD dwId, dwNumGraphs, dwGraphId, dwOwner;
-	DWORD *pdwUsers, *pdwRights, dwGraphACLSize;
+	UINT32 dwId, dwNumGraphs, dwGraphId, dwOwner;
+	UINT32 *pdwUsers, *pdwRights, dwGraphACLSize;
 	TCHAR *pszStr;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -9091,8 +9091,8 @@ void ClientSession::SendGraphList(DWORD dwRqId)
 		hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
 		if (hResult != NULL)
 		{
-			pdwUsers = (DWORD *)malloc(sizeof(DWORD) * nACLSize);
-			pdwRights = (DWORD *)malloc(sizeof(DWORD) * nACLSize);
+			pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
+			pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
 			nRows = DBGetNumRows(hResult);
 			for(i = 0, dwNumGraphs = 0, dwId = VID_GRAPH_LIST_BASE; i < nRows; i++)
 			{
@@ -9164,7 +9164,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	BOOL bNew, bSuccess;
-	DWORD dwId, dwGraphId, dwOwner, dwUserId, dwAccess;
+	UINT32 dwId, dwGraphId, dwOwner, dwUserId, dwAccess;
 	TCHAR szQuery[16384], *pszEscName, *pszEscData, *pszTemp;
 	GRAPH_ACL_ENTRY *pACL = NULL;
 	int i, nACLSize;
@@ -9309,7 +9309,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-	DWORD dwGraphId, dwOwner;
+	UINT32 dwGraphId, dwOwner;
 	GRAPH_ACL_ENTRY *pACL = NULL;
 	int nACLSize;
 	DB_RESULT hResult;
@@ -9418,7 +9418,7 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 #ifdef _WITH_ENCRYPTION
-	DWORD dwLen, dwQLen, dwCertId;
+	UINT32 dwLen, dwQLen, dwCertId;
 	BYTE *pData;
 	OPENSSL_CONST BYTE *p;
 	X509 *pCert;
@@ -9455,7 +9455,7 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 				pszEscComments = EncodeSQLString(pszComments);
 				free(pszComments);
 				dwCertId = CreateUniqueId(IDG_CERTIFICATE);
-				dwQLen = dwLen * 2 + (DWORD)_tcslen(pszEscComments) + (DWORD)_tcslen(pszEscSubject) + 256;
+				dwQLen = dwLen * 2 + (UINT32)_tcslen(pszEscComments) + (UINT32)_tcslen(pszEscSubject) + 256;
 				pszQuery = (TCHAR *)malloc(dwQLen * sizeof(TCHAR));
 				_sntprintf(pszQuery, dwQLen, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
 				           dwCertId, CERT_TYPE_TRUSTED_CA, pszEscSubject, pszEscComments);
@@ -9505,7 +9505,7 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 #ifdef _WITH_ENCRYPTION
-	DWORD dwCertId;
+	UINT32 dwCertId;
 	TCHAR szQuery[256];
 #endif
 
@@ -9546,7 +9546,7 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 
 void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 {
-	DWORD dwCertId, qlen;
+	UINT32 dwCertId, qlen;
 	TCHAR *pszQuery, *pszComments, *pszEscComments;
 	DB_RESULT hResult;
    CSCPMessage msg;
@@ -9563,7 +9563,7 @@ void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 		{
 			pszEscComments = EncodeSQLString(pszComments);
 			free(pszComments);
-			qlen = (DWORD)_tcslen(pszEscComments) + 256;
+			qlen = (UINT32)_tcslen(pszEscComments) + 256;
 			pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
 			_sntprintf(pszQuery, qlen, _T("SELECT subject FROM certificates WHERE cert_id=%d"), dwCertId);
 			hResult = DBSelect(g_hCoreDB, pszQuery);
@@ -9610,12 +9610,12 @@ void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 /**
  * Send list of installed certificates to client
  */
-void ClientSession::getCertificateList(DWORD dwRqId)
+void ClientSession::getCertificateList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	DB_RESULT hResult;
 	int i, nRows;
-	DWORD dwId;
+	UINT32 dwId;
 	TCHAR *pszText;
 
 	msg.SetId(dwRqId);
@@ -9629,7 +9629,7 @@ void ClientSession::getCertificateList(DWORD dwRqId)
 		{
 			nRows = DBGetNumRows(hResult);
 			msg.SetVariable(VID_RCC, RCC_SUCCESS);
-			msg.SetVariable(VID_NUM_CERTIFICATES, (DWORD)nRows);
+			msg.SetVariable(VID_NUM_CERTIFICATES, (UINT32)nRows);
 			for(i = 0, dwId = VID_CERT_LIST_BASE; i < nRows; i++, dwId += 6)
 			{
 				msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
@@ -9679,7 +9679,7 @@ void ClientSession::queryL2Topology(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	NetObj *pObject;
-	DWORD dwResult;
+	UINT32 dwResult;
 
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -9762,11 +9762,11 @@ void ClientSession::sendSMS(CSCPMessage *pRequest)
 // Send SNMP community list
 //
 
-void ClientSession::SendCommunityList(DWORD dwRqId)
+void ClientSession::SendCommunityList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	int i, count;
-	DWORD id;
+	UINT32 id;
 	TCHAR buffer[256];
 	DB_RESULT hResult;
 
@@ -9779,7 +9779,7 @@ void ClientSession::SendCommunityList(DWORD dwRqId)
 		if (hResult != NULL)
 		{
 			count = DBGetNumRows(hResult);
-			msg.SetVariable(VID_NUM_STRINGS, (DWORD)count);
+			msg.SetVariable(VID_NUM_STRINGS, (UINT32)count);
 			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
 			{
 				DBGetField(hResult, i, 0, buffer, 256);
@@ -9811,7 +9811,7 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
    CSCPMessage msg;
 	TCHAR value[256], query[1024];
 	int i, count;
-	DWORD id;
+	UINT32 id;
 
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -9860,7 +9860,7 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 // Send situation list to client
 //
 
-void ClientSession::SendSituationList(DWORD dwRqId)
+void ClientSession::SendSituationList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -10254,7 +10254,7 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
 // Send list of server jobs
 //
 
-void ClientSession::sendJobList(DWORD dwRqId)
+void ClientSession::sendJobList(UINT32 dwRqId)
 {
 	CSCPMessage msg;
 
@@ -10322,8 +10322,8 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(request->GetId());
 
-	DWORD policyId = request->GetVariableLong(VID_POLICY_ID);
-	DWORD targetId = request->GetVariableLong(VID_OBJECT_ID);
+	UINT32 policyId = request->GetVariableLong(VID_POLICY_ID);
+	UINT32 targetId = request->GetVariableLong(VID_OBJECT_ID);
 
 	NetObj *policy = FindObjectById(policyId);
 	if ((policy != NULL) && (policy->Type() >= OBJECT_AGENTPOLICY))
@@ -10436,8 +10436,8 @@ void ClientSession::openServerLog(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	TCHAR name[256];
-	DWORD rcc;
-	DWORD handle;
+	UINT32 rcc;
+	UINT32 handle;
 
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(request->GetId());
@@ -10447,7 +10447,7 @@ void ClientSession::openServerLog(CSCPMessage *request)
 	if (handle != -1)
 	{
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
-		msg.SetVariable(VID_LOG_HANDLE, (DWORD)handle);
+		msg.SetVariable(VID_LOG_HANDLE, (UINT32)handle);
 
 		LogHandle *log = AcquireLogHandleObject(this, handle);
 		log->getColumnInfo(msg);
@@ -10557,11 +10557,11 @@ void ClientSession::getServerLogQueryData(CSCPMessage *request)
 /**
  * Send SNMP v3 USM credentials
  */
-void ClientSession::sendUsmCredentials(DWORD dwRqId)
+void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	int i, count;
-	DWORD id;
+	UINT32 id;
 	TCHAR buffer[MAX_DB_STRING];
 	DB_RESULT hResult;
 
@@ -10574,7 +10574,7 @@ void ClientSession::sendUsmCredentials(DWORD dwRqId)
 		if (hResult != NULL)
 		{
 			count = DBGetNumRows(hResult);
-			msg.SetVariable(VID_NUM_RECORDS, (DWORD)count);
+			msg.SetVariable(VID_NUM_RECORDS, (UINT32)count);
 			for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
 			{
 				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// security name
@@ -10625,7 +10625,7 @@ void ClientSession::updateUsmCredentials(CSCPMessage *request)
 			if (DBBegin(hdb))
 			{
 				TCHAR query[4096];
-				DWORD id;
+				UINT32 id;
 				int i = -1;
 				int count = (int)request->GetVariableLong(VID_NUM_RECORDS);
 
@@ -10688,7 +10688,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	DWORD objectId = request->GetVariableLong(VID_OBJECT_ID);
+	UINT32 objectId = request->GetVariableLong(VID_OBJECT_ID);
 	NetObj *object = FindObjectById(objectId);
 	if ((object != NULL) && !object->isDeleted())
 	{
@@ -10696,7 +10696,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 		{
 			debugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
 			Interface *iface = NULL;
-			DWORD localNodeId, localIfId;
+			UINT32 localNodeId, localIfId;
 			BYTE localMacAddr[MAC_ADDR_LENGTH];
 			bool exactMatch;
 			if (object->Type() == OBJECT_NODE)
@@ -10771,7 +10771,7 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 	debugPrintf(5, _T("findMacAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
 	if (iface != NULL)
 	{
-		DWORD localNodeId, localIfId;
+		UINT32 localNodeId, localIfId;
 
 		Interface *localIf = FindInterfaceByMAC(macAddr);
 		if (localIf != NULL)
@@ -10791,7 +10791,7 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 		msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
 		msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
 		msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-		msg.SetVariable(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (DWORD)0);
+		msg.SetVariable(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (UINT32)0);
 		msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
 		debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 	}
@@ -10814,8 +10814,8 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 	BYTE macAddr[6];
 	bool found = false;
 
-	DWORD zoneId = request->GetVariableLong(VID_ZONE_ID);
-	DWORD ipAddr = request->GetVariableLong(VID_IP_ADDRESS);
+	UINT32 zoneId = request->GetVariableLong(VID_ZONE_ID);
+	UINT32 ipAddr = request->GetVariableLong(VID_IP_ADDRESS);
 	Interface *iface = FindInterfaceByIP(zoneId, ipAddr);
 	if ((iface != NULL) && memcmp(iface->getMacAddr(), "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH))
 	{
@@ -10848,7 +10848,7 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 		debugPrintf(5, _T("findIpAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
 		if (iface != NULL)
 		{
-			DWORD localNodeId, localIfId;
+			UINT32 localNodeId, localIfId;
 
 			Interface *localIf = FindInterfaceByMAC(macAddr);
 			if (localIf != NULL)
@@ -10884,7 +10884,7 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	TCHAR guidText[64], absFileName[MAX_PATH];
-	DWORD rcc = RCC_SUCCESS;
+	UINT32 rcc = RCC_SUCCESS;
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -10993,7 +10993,7 @@ static void SendLibraryImageDelete(ClientSession *pSession, void *pArg)
 void ClientSession::updateLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
-	DWORD rcc = RCC_SUCCESS;
+	UINT32 rcc = RCC_SUCCESS;
 
 	uuid_t guid;
 	uuid_clear(guid);
@@ -11023,7 +11023,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	request->GetVariableStr(VID_CATEGORY, category, MAX_OBJECT_NAME);
 	request->GetVariableStr(VID_IMAGE_MIMETYPE, mimetype, MAX_DB_STRING);
 
-	//DWORD imageSize = request->GetVariableBinary(VID_IMAGE_DATA, NULL, 0);
+	//UINT32 imageSize = request->GetVariableBinary(VID_IMAGE_DATA, NULL, 0);
 	//BYTE *imageData = (BYTE *)malloc(imageSize);
 	//request->GetVariableBinary(VID_IMAGE_DATA, imageData, imageSize);
 
@@ -11137,7 +11137,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 void ClientSession::deleteLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
-	DWORD rcc = RCC_SUCCESS;
+	UINT32 rcc = RCC_SUCCESS;
 	uuid_t guid;
 	TCHAR guidText[64];
 	TCHAR query[MAX_DB_STRING];
@@ -11202,7 +11202,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	TCHAR query[MAX_DB_STRING * 2];
 	TCHAR buffer[MAX_DB_STRING];
 	uuid_t guid;
-	DWORD rcc = RCC_SUCCESS;
+	UINT32 rcc = RCC_SUCCESS;
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -11228,8 +11228,8 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	if (result != NULL)
 	{
 		int count = DBGetNumRows(result);
-		msg.SetVariable(VID_NUM_RECORDS, (DWORD)count);
-		DWORD varId = VID_IMAGE_LIST_BASE;
+		msg.SetVariable(VID_NUM_RECORDS, (UINT32)count);
+		UINT32 varId = VID_IMAGE_LIST_BASE;
 		for (int i = 0; i < count; i++)
 		{
 			DBGetFieldGUID(result, i, 0, guid);	// guid
@@ -11280,7 +11280,7 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	DWORD nodeId = request->GetVariableLong(VID_OBJECT_ID);
+	UINT32 nodeId = request->GetVariableLong(VID_OBJECT_ID);
 	NetObj *object = FindObjectById(nodeId);
 	if (object != NULL)
 	{
@@ -11326,7 +11326,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	DWORD nodeId = request->GetVariableLong(VID_OBJECT_ID);
+	UINT32 nodeId = request->GetVariableLong(VID_OBJECT_ID);
 	NetObj *object = FindObjectById(nodeId);
 	if (object != NULL)
 	{
@@ -11416,7 +11416,7 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
 #else
 		struct stat st;
 #endif
-		DWORD count = 0, varId = VID_INSTANCE_LIST_BASE;
+		UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
 		while((d = _treaddir(dir)) != NULL)
 		{
 			if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
@@ -11452,7 +11452,7 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
 // Open server console
 //
 
-void ClientSession::openConsole(DWORD rqId)
+void ClientSession::openConsole(UINT32 rqId)
 {
 	CSCPMessage msg;
 
@@ -11483,7 +11483,7 @@ void ClientSession::openConsole(DWORD rqId)
 // Close server console
 //
 
-void ClientSession::closeConsole(DWORD rqId)
+void ClientSession::closeConsole(UINT32 rqId)
 {
 	CSCPMessage msg;
 
@@ -11716,7 +11716,7 @@ void ClientSession::executeReport(CSCPMessage *request)
 				StringMap *parameters = new StringMap;
 
 				int count = request->GetVariableLong(VID_NUM_PARAMETERS);
-				DWORD varId = VID_PARAM_LIST_BASE;
+				UINT32 varId = VID_PARAM_LIST_BASE;
 				for(int i = 0; i < count; i++)
 				{
 					TCHAR *name = request->GetVariableStr(varId++);
@@ -11724,7 +11724,7 @@ void ClientSession::executeReport(CSCPMessage *request)
 					parameters->setPreallocated(name, value);
 				}
 
-				DWORD jobId = ((Report *)object)->execute(parameters, m_dwUserId);
+				UINT32 jobId = ((Report *)object)->execute(parameters, m_dwUserId);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 				msg.SetVariable(VID_JOB_ID, jobId);
 			}
@@ -11774,9 +11774,9 @@ void ClientSession::getReportResults(CSCPMessage *request)
 					if (hResult != NULL)
 					{
 						int count = DBGetNumRows(hResult);
-						msg.SetVariable(VID_NUM_ROWS, (DWORD)count);
+						msg.SetVariable(VID_NUM_ROWS, (UINT32)count);
 
-						DWORD varId = VID_ROW_DATA_BASE;
+						UINT32 varId = VID_ROW_DATA_BASE;
 						for(int i = 0; i < count; i++)
 						{
 							msg.SetVariable(varId++, DBGetFieldULong(hResult, i, 0));
@@ -11842,8 +11842,8 @@ void ClientSession::deleteReportResults(CSCPMessage *request)
 					int count = request->GetVariableLong(VID_NUM_RESULTS);
 					if (count > 0)
 					{
-						DWORD *idList = (DWORD *)malloc(sizeof(DWORD) * count);
-						request->GetVariableInt32Array(VID_RESULT_ID_LIST, (DWORD)count, idList);
+						UINT32 *idList = (UINT32 *)malloc(sizeof(UINT32) * count);
+						request->GetVariableInt32Array(VID_RESULT_ID_LIST, (UINT32)count, idList);
 						for(int i = 0; i < count; i++)
 						{
 							DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, idList[i]);
@@ -11900,8 +11900,8 @@ void ClientSession::renderReport(CSCPMessage *request)
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(request->GetId());
 
-	DWORD jobId = request->GetVariableLong(VID_JOB_ID);
-	DWORD format = request->GetVariableLong(VID_RENDER_FORMAT);
+	UINT32 jobId = request->GetVariableLong(VID_JOB_ID);
+	UINT32 format = request->GetVariableLong(VID_RENDER_FORMAT);
 
 	TCHAR reportFileName[MAX_PATH];
 	TCHAR outputFileName[MAX_PATH];
@@ -12137,7 +12137,7 @@ void ClientSession::getThresholdSummary(CSCPMessage *request)
 			{
 				ObjectArray<DataCollectionTarget> *targets = new ObjectArray<DataCollectionTarget>();
 				object->addChildDCTargetsToList(targets, m_dwUserId);
-				DWORD varId = VID_THRESHOLD_BASE;
+				UINT32 varId = VID_THRESHOLD_BASE;
 				for(int i = 0; i < targets->size(); i++)
 				{
 					if (targets->get(i)->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -12220,7 +12220,7 @@ void ClientSession::updateMappingTable(CSCPMessage *request)
 	{
 		LONG id;
 		msg.SetVariable(VID_RCC, UpdateMappingTable(request, &id));
-		msg.SetVariable(VID_MAPPING_TABLE_ID, (DWORD)id);
+		msg.SetVariable(VID_MAPPING_TABLE_ID, (UINT32)id);
 	}
 	else
 	{
@@ -12299,7 +12299,7 @@ void ClientSession::getWirelessStations(CSCPMessage *request)
 /**
  * Get list of configured DCI summary tables
  */
-void ClientSession::getSummaryTables(DWORD rqId)
+void ClientSession::getSummaryTables(UINT32 rqId)
 {
    CSCPMessage msg;
 
@@ -12313,14 +12313,14 @@ void ClientSession::getSummaryTables(DWORD rqId)
    {
       TCHAR buffer[256];
       int count = DBGetNumRows(hResult);
-      msg.SetVariable(VID_NUM_ELEMENTS, (DWORD)count);
-      DWORD varId = VID_ELEMENT_LIST_BASE;
+      msg.SetVariable(VID_NUM_ELEMENTS, (UINT32)count);
+      UINT32 varId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         msg.SetVariable(varId++, (DWORD)DBGetFieldLong(hResult, i, 0));
+         msg.SetVariable(varId++, (UINT32)DBGetFieldLong(hResult, i, 0));
          msg.SetVariable(varId++, DBGetField(hResult, i, 1, buffer, 256));
          msg.SetVariable(varId++, DBGetField(hResult, i, 2, buffer, 256));
-         msg.SetVariable(varId++, (DWORD)DBGetFieldLong(hResult, i, 3));
+         msg.SetVariable(varId++, (UINT32)DBGetFieldLong(hResult, i, 3));
          varId += 6;
       }
       DBFreeResult(hResult);
@@ -12360,7 +12360,7 @@ void ClientSession::getSummaryTableDetails(CSCPMessage *request)
             if (DBGetNumRows(hResult) > 0)
             {
                TCHAR buffer[256];
-               msg.SetVariable(VID_SUMMARY_TABLE_ID, (DWORD)id);
+               msg.SetVariable(VID_SUMMARY_TABLE_ID, (UINT32)id);
                msg.SetVariable(VID_MENU_PATH, DBGetField(hResult, 0, 0, buffer, 256));
                msg.SetVariable(VID_TITLE, DBGetField(hResult, 0, 1, buffer, 256));
                TCHAR *tmp = DBGetField(hResult, 0, 2, NULL, 0);
@@ -12419,7 +12419,7 @@ void ClientSession::modifySummaryTable(CSCPMessage *request)
 	{
 		LONG id;
 		msg.SetVariable(VID_RCC, ModifySummaryTable(request, &id));
-		msg.SetVariable(VID_SUMMARY_TABLE_ID, (DWORD)id);
+		msg.SetVariable(VID_SUMMARY_TABLE_ID, (UINT32)id);
 	}
 	else
 	{
@@ -12465,7 +12465,7 @@ void ClientSession::querySummaryTable(CSCPMessage *request)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(request->GetId());
 
-   DWORD rcc;
+   UINT32 rcc;
    Table *result = QuerySummaryTable((LONG)request->GetVariableLong(VID_SUMMARY_TABLE_ID),
                                       request->GetVariableLong(VID_OBJECT_ID), 
                                       m_dwUserId, &rcc);

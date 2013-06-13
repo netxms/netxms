@@ -40,11 +40,11 @@ nxmap_ObjList::nxmap_ObjList()
 
 nxmap_ObjList::nxmap_ObjList(CSCPMessage *pMsg)
 {
-	DWORD i, dwId;
+	UINT32 i, dwId;
 
    m_dwNumObjects = pMsg->GetVariableLong(VID_NUM_OBJECTS);
 	m_allocatedObjects = m_dwNumObjects;
-   m_pdwObjectList = (DWORD *)malloc(m_dwNumObjects * sizeof(DWORD));
+   m_pdwObjectList = (UINT32 *)malloc(m_dwNumObjects * sizeof(UINT32));
 	pMsg->GetVariableInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
    m_dwNumLinks = pMsg->GetVariableLong(VID_NUM_LINKS);
 	m_allocatedLinks = m_dwNumLinks;
@@ -63,7 +63,7 @@ nxmap_ObjList::nxmap_ObjList(nxmap_ObjList *pSrc)
 {
    m_dwNumObjects = pSrc->m_dwNumObjects;
 	m_allocatedObjects = m_dwNumObjects;
-   m_pdwObjectList = (DWORD *)nx_memdup(pSrc->m_pdwObjectList, sizeof(DWORD) * m_dwNumObjects);
+   m_pdwObjectList = (UINT32 *)nx_memdup(pSrc->m_pdwObjectList, sizeof(UINT32) * m_dwNumObjects);
    m_dwNumLinks = pSrc->m_dwNumLinks;
 	m_allocatedLinks = m_dwNumLinks;
    m_pLinkList = (OBJLINK *)nx_memdup(pSrc->m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
@@ -94,9 +94,9 @@ void nxmap_ObjList::clear()
 /**
  * Add object to list
  */
-void nxmap_ObjList::addObject(DWORD dwId)
+void nxmap_ObjList::addObject(UINT32 dwId)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumObjects; i++)
    {
@@ -109,7 +109,7 @@ void nxmap_ObjList::addObject(DWORD dwId)
 		if (m_dwNumObjects == m_allocatedObjects)
 		{
 			m_allocatedObjects += 64;
-	      m_pdwObjectList = (DWORD *)realloc(m_pdwObjectList, sizeof(DWORD) * m_allocatedObjects);
+	      m_pdwObjectList = (UINT32 *)realloc(m_pdwObjectList, sizeof(UINT32) * m_allocatedObjects);
 		}
       m_pdwObjectList[m_dwNumObjects++] = dwId;
    }
@@ -118,9 +118,9 @@ void nxmap_ObjList::addObject(DWORD dwId)
 /**
  * Link two objects
  */
-void nxmap_ObjList::linkObjects(DWORD dwId1, DWORD dwId2)
+void nxmap_ObjList::linkObjects(UINT32 dwId1, UINT32 dwId2)
 {
-   DWORD i;
+   UINT32 i;
    int nCount;
 
    // Validate object IDs
@@ -171,9 +171,9 @@ static void UpdatePortNames(OBJLINK *link, const TCHAR *port1, const TCHAR *port
 /**
  * Link two objects with named links
  */
-void nxmap_ObjList::linkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, DWORD portId1, DWORD portId2)
+void nxmap_ObjList::linkObjectsEx(UINT32 dwId1, UINT32 dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, UINT32 portId1, UINT32 portId2)
 {
-   DWORD i;
+   UINT32 i;
    int nCount;
 
    // Validate object IDs
@@ -253,7 +253,7 @@ void nxmap_ObjList::linkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort
  */
 void nxmap_ObjList::createMessage(CSCPMessage *pMsg)
 {
-	DWORD i, dwId;
+	UINT32 i, dwId;
 
 	// Object list
 	pMsg->SetVariable(VID_NUM_OBJECTS, m_dwNumObjects);
@@ -275,9 +275,9 @@ void nxmap_ObjList::createMessage(CSCPMessage *pMsg)
 /**
  * Check if link between two given objects exist
  */
-bool nxmap_ObjList::isLinkExist(DWORD objectId1, DWORD objectId2)
+bool nxmap_ObjList::isLinkExist(UINT32 objectId1, UINT32 objectId2)
 {
-   for(DWORD i = 0; i < m_dwNumLinks; i++)
+   for(UINT32 i = 0; i < m_dwNumLinks; i++)
    {
 		if ((m_pLinkList[i].dwId1 == objectId1) && (m_pLinkList[i].dwId2 == objectId2))
 			return true;
@@ -288,9 +288,9 @@ bool nxmap_ObjList::isLinkExist(DWORD objectId1, DWORD objectId2)
 /**
  * Check if given object exist
  */
-bool nxmap_ObjList::isObjectExist(DWORD objectId)
+bool nxmap_ObjList::isObjectExist(UINT32 objectId)
 {
-	for(DWORD i = 0; i < m_dwNumObjects; i++)
+	for(UINT32 i = 0; i < m_dwNumObjects; i++)
 	{
 		if (m_pdwObjectList[i] == objectId)
 			return true;

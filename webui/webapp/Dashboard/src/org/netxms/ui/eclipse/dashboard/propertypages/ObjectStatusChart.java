@@ -39,8 +39,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class ObjectStatusChart extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private ObjectStatusChartConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;

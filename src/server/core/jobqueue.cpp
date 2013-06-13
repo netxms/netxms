@@ -113,7 +113,7 @@ void ServerJobQueue::jobCompleted(ServerJob *job)
 /**
  * Cancel job
  */
-bool ServerJobQueue::cancel(DWORD jobId)
+bool ServerJobQueue::cancel(UINT32 jobId)
 {
 	int i;
 	bool success = false;
@@ -147,7 +147,7 @@ bool ServerJobQueue::cancel(DWORD jobId)
 /**
  * Hold job
  */
-bool ServerJobQueue::hold(DWORD jobId)
+bool ServerJobQueue::hold(UINT32 jobId)
 {
 	int i;
 	bool success = false;
@@ -174,7 +174,7 @@ bool ServerJobQueue::hold(DWORD jobId)
 /**
  * Unhold job
  */
-bool ServerJobQueue::unhold(DWORD jobId)
+bool ServerJobQueue::unhold(UINT32 jobId)
 {
 	int i;
 	bool success = false;
@@ -234,7 +234,7 @@ void ServerJobQueue::cleanup()
 /**
  * Find job by ID
  */
-ServerJob *ServerJobQueue::findJob(DWORD jobId)
+ServerJob *ServerJobQueue::findJob(UINT32 jobId)
 {
 	ServerJob *job = NULL;
 
@@ -254,9 +254,9 @@ ServerJob *ServerJobQueue::findJob(DWORD jobId)
  * Fill NXCP message with jobs' information
  * Increments base variable id; returns number of jobs added to message
  */
-DWORD ServerJobQueue::fillMessage(CSCPMessage *msg, DWORD *varIdBase)
+UINT32 ServerJobQueue::fillMessage(CSCPMessage *msg, UINT32 *varIdBase)
 {
-	DWORD id = *varIdBase;
+	UINT32 id = *varIdBase;
 	int i;
 
 	MutexLock(m_accessMutex);

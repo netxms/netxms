@@ -49,7 +49,7 @@ void EF_CloseSession(ISCSession *)
 BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *response)
 {
 	int i, numArgs;
-	DWORD code, id;
+	UINT32 code, id;
 	TCHAR userTag[MAX_USERTAG_LENGTH], *argList[32], *name;
    char format[] = "ssssssssssssssssssssssssssssssss";
 	NetObj *object;

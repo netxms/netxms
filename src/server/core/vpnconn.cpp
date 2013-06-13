@@ -69,11 +69,11 @@ VPNConnector::~VPNConnector()
 // Create object from database data
 //
 
-BOOL VPNConnector::CreateFromDB(DWORD dwId)
+BOOL VPNConnector::CreateFromDB(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
-   DWORD i, dwNodeId;
+   UINT32 i, dwNodeId;
    NetObj *pObject;
    BOOL bResult = FALSE;
 
@@ -163,7 +163,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
    BOOL bNewObject = TRUE;
    Node *pNode;
-   DWORD i, dwNodeId;
+   UINT32 i, dwNodeId;
    DB_RESULT hResult;
 
    // Lock object's access
@@ -245,7 +245,7 @@ bool VPNConnector::deleteFromDB(DB_HANDLE hdb)
  */
 Node *VPNConnector::GetParentNode()
 {
-   DWORD i;
+   UINT32 i;
    Node *pNode = NULL;
 
    LockParentList(FALSE);
@@ -266,7 +266,7 @@ Node *VPNConnector::GetParentNode()
 
 void VPNConnector::CreateMessage(CSCPMessage *pMsg)
 {
-   DWORD i, dwId;
+   UINT32 i, dwId;
 
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_PEER_GATEWAY, m_dwPeerGateway);
@@ -291,9 +291,9 @@ void VPNConnector::CreateMessage(CSCPMessage *pMsg)
 // Modify object from message
 //
 
-DWORD VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
-   DWORD i, dwId;
+   UINT32 i, dwId;
 
    if (!bAlreadyLocked)
       LockData();
@@ -347,9 +347,9 @@ DWORD VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked
 // Check if given address falls into one of the local nets
 //
 
-BOOL VPNConnector::IsLocalAddr(DWORD dwIpAddr)
+BOOL VPNConnector::IsLocalAddr(UINT32 dwIpAddr)
 {
-   DWORD i;
+   UINT32 i;
    BOOL bResult = FALSE;
 
    LockData();
@@ -370,9 +370,9 @@ BOOL VPNConnector::IsLocalAddr(DWORD dwIpAddr)
 // Check if given address falls into one of the remote nets
 //
 
-BOOL VPNConnector::IsRemoteAddr(DWORD dwIpAddr)
+BOOL VPNConnector::IsRemoteAddr(UINT32 dwIpAddr)
 {
-   DWORD i;
+   UINT32 i;
    BOOL bResult = FALSE;
 
    LockData();
@@ -393,10 +393,10 @@ BOOL VPNConnector::IsRemoteAddr(DWORD dwIpAddr)
 // Get address of peer gateway
 //
 
-DWORD VPNConnector::GetPeerGatewayAddr(void)
+UINT32 VPNConnector::GetPeerGatewayAddr(void)
 {
    NetObj *pObject;
-   DWORD dwAddr = 0;
+   UINT32 dwAddr = 0;
 
    pObject = FindObjectById(m_dwPeerGateway);
    if (pObject != NULL)

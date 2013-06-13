@@ -36,10 +36,10 @@ SNMP_ObjectId::SNMP_ObjectId()
 /**
  * Create OID from existing binary value
  */
-SNMP_ObjectId::SNMP_ObjectId(DWORD dwLength, const DWORD *pdwValue)
+SNMP_ObjectId::SNMP_ObjectId(UINT32 dwLength, const UINT32 *pdwValue)
 {
    m_dwLength = dwLength;
-   m_pdwValue = (DWORD *)nx_memdup(pdwValue, sizeof(DWORD) * dwLength);
+   m_pdwValue = (UINT32 *)nx_memdup(pdwValue, sizeof(UINT32) * dwLength);
    m_pszTextValue = NULL;
    convertToText();
 }
@@ -67,7 +67,7 @@ void SNMP_ObjectId::convertToText()
  */
 int SNMP_ObjectId::compare(const TCHAR *pszOid)
 {
-   DWORD dwBuffer[MAX_OID_LEN], dwLength;
+   UINT32 dwBuffer[MAX_OID_LEN], dwLength;
 
    dwLength = SNMPParseOID(pszOid, dwBuffer, MAX_OID_LEN);
    if (dwLength == 0)
@@ -78,12 +78,12 @@ int SNMP_ObjectId::compare(const TCHAR *pszOid)
 /**
  * Compare this OID to another
  */
-int SNMP_ObjectId::compare(const DWORD *pdwOid, DWORD dwLen)
+int SNMP_ObjectId::compare(const UINT32 *pdwOid, UINT32 dwLen)
 {
    if ((pdwOid == NULL) || (dwLen == 0) || (m_pdwValue == NULL))
       return OID_ERROR;
 
-   if (memcmp(m_pdwValue, pdwOid, min(dwLen, m_dwLength) * sizeof(DWORD)))
+   if (memcmp(m_pdwValue, pdwOid, min(dwLen, m_dwLength) * sizeof(UINT32)))
       return OID_NOT_EQUAL;
 
    return (dwLen == m_dwLength) ? OID_EQUAL : 
@@ -103,11 +103,11 @@ int SNMP_ObjectId::compare(SNMP_ObjectId *oid)
 /**
  * Set new value
  */
-void SNMP_ObjectId::setValue(DWORD *pdwValue, DWORD dwLength)
+void SNMP_ObjectId::setValue(UINT32 *pdwValue, UINT32 dwLength)
 {
    safe_free(m_pdwValue);
    m_dwLength = dwLength;
-   m_pdwValue = (DWORD *)nx_memdup(pdwValue, sizeof(DWORD) * dwLength);
+   m_pdwValue = (UINT32 *)nx_memdup(pdwValue, sizeof(UINT32) * dwLength);
    convertToText();
 }
 
@@ -116,9 +116,9 @@ void SNMP_ObjectId::setValue(DWORD *pdwValue, DWORD dwLength)
  *
  * @param subId sub-identifier to add
  */
-void SNMP_ObjectId::extend(DWORD subId)
+void SNMP_ObjectId::extend(UINT32 subId)
 {
-   m_pdwValue = (DWORD *)realloc(m_pdwValue, sizeof(DWORD) * (m_dwLength + 1));
+   m_pdwValue = (UINT32 *)realloc(m_pdwValue, sizeof(UINT32) * (m_dwLength + 1));
    m_pdwValue[m_dwLength++] = subId;
    convertToText();
 }

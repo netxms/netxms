@@ -79,7 +79,7 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 BOOL ExecSQLBatch(DB_HANDLE hConn, TCHAR *pszFile)
 {
    BYTE *pBatch, *pQuery, *pNext;
-   DWORD dwSize;
+   UINT32 dwSize;
    BOOL bResult = FALSE;
 
    pBatch = LoadFile(pszFile, &dwSize);

@@ -64,7 +64,7 @@ NetworkMap::NetworkMap() : NetObj()
 /**
  * Create network map object from user session
  */
-NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
+NetworkMap::NetworkMap(int type, UINT32 seed) : NetObj()
 {
 	m_mapType = type;
 	m_seedObject = seed;
@@ -221,7 +221,7 @@ bool NetworkMap::deleteFromDB(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL NetworkMap::CreateFromDB(DWORD dwId)
+BOOL NetworkMap::CreateFromDB(UINT32 dwId)
 {
 	m_dwId = dwId;
 
@@ -265,7 +265,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 			for(int i = 0; i < count; i++)
 			{
 				NetworkMapElement *e;
-				DWORD id = DBGetFieldULong(hResult, i, 0);
+				UINT32 id = DBGetFieldULong(hResult, i, 0);
 				Config *config = new Config();
 				TCHAR *data = DBGetField(hResult, i, 2, NULL, 0);
 				if (data != NULL)
@@ -343,24 +343,24 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_LAYOUT, (WORD)m_layout);
 	msg->SetVariable(VID_FLAGS, m_flags);
 	msg->SetVariable(VID_SEED_OBJECT, m_seedObject);
-	msg->SetVariable(VID_DISCOVERY_RADIUS, (DWORD)m_discoveryRadius);
+	msg->SetVariable(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
 	msg->SetVariable(VID_BACKGROUND, m_background, UUID_LENGTH);
 	msg->SetVariable(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
 	msg->SetVariable(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
 	msg->SetVariable(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
-	msg->SetVariable(VID_LINK_COLOR, (DWORD)m_defaultLinkColor);
+	msg->SetVariable(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
 	msg->SetVariable(VID_LINK_ROUTING, (WORD)m_defaultLinkRouting);
-	msg->SetVariable(VID_BACKGROUND_COLOR, (DWORD)m_backgroundColor);
+	msg->SetVariable(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
 
-	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_elements->size());
-	DWORD varId = VID_ELEMENT_LIST_BASE;
+	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
+	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_elements->size(); i++)
 	{
 		m_elements->get(i)->fillMessage(msg, varId);
 		varId += 100;
 	}
 
-	msg->SetVariable(VID_NUM_LINKS, (DWORD)m_links->size());
+	msg->SetVariable(VID_NUM_LINKS, (UINT32)m_links->size());
 	varId = VID_LINK_LIST_BASE;
 	for(int i = 0; i < m_links->size(); i++)
 	{
@@ -372,7 +372,7 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 /**
  * Update network map object from NXCP message
  */
-DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
+UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
 		LockData();
@@ -416,7 +416,7 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		int numElements = (int)request->GetVariableLong(VID_NUM_ELEMENTS);
 		if (numElements > 0)
 		{
-			DWORD varId = VID_ELEMENT_LIST_BASE;
+			UINT32 varId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < numElements; i++)
 			{
 				NetworkMapElement *e;
@@ -445,7 +445,7 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		int numLinks = request->GetVariableLong(VID_NUM_LINKS);
 		if (numLinks > 0)
 		{
-			DWORD varId = VID_LINK_LIST_BASE;
+			UINT32 varId = VID_LINK_LIST_BASE;
 			for(int i = 0; i < numLinks; i++)
 			{
 				m_links->add(new NetworkMapLink(request, varId));
@@ -470,7 +470,7 @@ void NetworkMap::updateContent()
 			seed = (Node *)FindObjectById(m_seedObject, OBJECT_NODE);
 			if (seed != NULL)
 			{
-				DWORD status;
+				UINT32 status;
 				nxmap_ObjList *objects = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
 				if (objects != NULL)
 				{
@@ -491,7 +491,7 @@ void NetworkMap::updateContent()
 			seed = (Node *)FindObjectById(m_seedObject, OBJECT_NODE);
 			if (seed != NULL)
 			{
-				DWORD status;
+				UINT32 status;
 				nxmap_ObjList *objects = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
 				if (objects != NULL)
 				{
@@ -553,7 +553,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 	}
 
 	// add new objects
-	for(DWORD i = 0; i < objects->getNumObjects(); i++)
+	for(UINT32 i = 0; i < objects->getNumObjects(); i++)
 	{
 		bool found = false;
 		for(int j = 0; j < m_elements->size(); j++)
@@ -577,14 +577,14 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 	}
 
 	// add new links
-	for(DWORD i = 0; i < objects->getNumLinks(); i++)
+	for(UINT32 i = 0; i < objects->getNumLinks(); i++)
 	{
 		bool found = false;
 		for(int j = 0; j < m_links->size(); j++)
 		{
 			NetworkMapLink *l = m_links->get(j);
-			DWORD obj1 = objectIdFromElementId(l->getElement1());
-			DWORD obj2 = objectIdFromElementId(l->getElement2());
+			UINT32 obj1 = objectIdFromElementId(l->getElement1());
+			UINT32 obj2 = objectIdFromElementId(l->getElement2());
 			if ((objects->getLinks()[i].dwId1 == obj1) && (objects->getLinks()[i].dwId2 == obj2))
 			{
 				found = true;
@@ -593,8 +593,8 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 		}
 		if (!found)
 		{
-			DWORD e1 = elementIdFromObjectId(objects->getLinks()[i].dwId1);
-			DWORD e2 = elementIdFromObjectId(objects->getLinks()[i].dwId2);
+			UINT32 e1 = elementIdFromObjectId(objects->getLinks()[i].dwId1);
+			UINT32 e2 = elementIdFromObjectId(objects->getLinks()[i].dwId2);
 			NetworkMapLink *l = new NetworkMapLink(e1, e2, LINK_TYPE_NORMAL);
 			l->setConnector1Name(objects->getLinks()[i].szPort1);
 			l->setConnector2Name(objects->getLinks()[i].szPort2);
@@ -615,7 +615,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
  * Get object ID from map element ID
  * Assumes that object data already locked
  */
-DWORD NetworkMap::objectIdFromElementId(DWORD eid)
+UINT32 NetworkMap::objectIdFromElementId(UINT32 eid)
 {
 	for(int i = 0; i < m_elements->size(); i++)
 	{
@@ -639,7 +639,7 @@ DWORD NetworkMap::objectIdFromElementId(DWORD eid)
  * Get map element ID from object ID
  * Assumes that object data already locked
  */
-DWORD NetworkMap::elementIdFromObjectId(DWORD oid)
+UINT32 NetworkMap::elementIdFromObjectId(UINT32 oid)
 {
 	for(int i = 0; i < m_elements->size(); i++)
 	{

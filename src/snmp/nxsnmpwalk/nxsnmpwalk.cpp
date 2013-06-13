@@ -36,8 +36,8 @@ static char m_contextName[256] = "";
 static int m_authMethod = SNMP_AUTH_NONE;
 static int m_encryptionMethod = SNMP_ENCRYPT_NONE;
 static WORD m_port = 161;
-static DWORD m_snmpVersion = SNMP_VERSION_2C;
-static DWORD m_timeout = 3000;
+static UINT32 m_snmpVersion = SNMP_VERSION_2C;
+static UINT32 m_timeout = 3000;
 
 /**
  * Get data
@@ -46,8 +46,8 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
 {
    SNMP_UDPTransport *pTransport;
    SNMP_PDU *pRqPDU, *pRespPDU;
-   DWORD dwResult, dwRootLen, dwNameLen;
-   DWORD pdwRootName[MAX_OID_LEN], pdwName[MAX_OID_LEN];
+   UINT32 dwResult, dwRootLen, dwNameLen;
+   UINT32 pdwRootName[MAX_OID_LEN], pdwName[MAX_OID_LEN];
    TCHAR szBuffer[1024], typeName[256];
    int i, iExit = 0;
    BOOL bRunning = TRUE;
@@ -88,7 +88,7 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
       }
       else
       {
-         memcpy(pdwName, pdwRootName, dwRootLen * sizeof(DWORD));
+         memcpy(pdwName, pdwRootName, dwRootLen * sizeof(UINT32));
          dwNameLen = dwRootLen;
 
          // Walk the MIB
@@ -111,9 +111,9 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
                   {
                      // Should we stop walking?
                      if ((pVar->GetName()->getLength() < dwRootLen) ||
-                         (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(DWORD))) ||
+                         (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(UINT32))) ||
                          ((pVar->GetName()->getLength() == dwNameLen) &&
-                          (!memcmp(pVar->GetName()->getValue(), pdwName, pVar->GetName()->getLength() * sizeof(DWORD)))))
+                          (!memcmp(pVar->GetName()->getValue(), pdwName, pVar->GetName()->getLength() * sizeof(UINT32)))))
                      {
                         bRunning = FALSE;
                         delete pRespPDU;
@@ -121,7 +121,7 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
                         break;
                      }
                      memcpy(pdwName, pVar->GetName()->getValue(), 
-                            pVar->GetName()->getLength() * sizeof(DWORD));
+                            pVar->GetName()->getLength() * sizeof(UINT32));
                      dwNameLen = pVar->GetName()->getLength();
 
                      // Print OID and value
@@ -174,7 +174,7 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
 int main(int argc, char *argv[])
 {
    int ch, iExit = 1;
-   DWORD dwValue;
+   UINT32 dwValue;
    char *eptr;
    BOOL bStart = TRUE;
 

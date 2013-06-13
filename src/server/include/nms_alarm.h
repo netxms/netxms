@@ -29,10 +29,10 @@
 class NXCORE_EXPORTABLE AlarmManager
 {
 private:
-   DWORD m_dwNumAlarms;
+   UINT32 m_dwNumAlarms;
    NXC_ALARM *m_pAlarmList;
    MUTEX m_mutex;
-   DWORD m_dwNotifyCode;
+   UINT32 m_dwNotifyCode;
    NXC_ALARM *m_pNotifyAlarmInfo;
 	CONDITION m_condShutdown;
 	THREAD m_hWatchdogThread;
@@ -43,8 +43,8 @@ private:
    static void sendAlarmNotification(ClientSession *pSession, void *pArg);
 
    void updateAlarmInDB(NXC_ALARM *pAlarm);
-   void notifyClients(DWORD dwCode, NXC_ALARM *pAlarm);
-   void updateObjectStatus(DWORD dwObjectId);
+   void notifyClients(UINT32 dwCode, NXC_ALARM *pAlarm);
+   void updateObjectStatus(UINT32 dwObjectId);
 
 public:
    AlarmManager();
@@ -54,32 +54,32 @@ public:
 
    BOOL init();
    void newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
-	              int iSeverity, DWORD dwTimeout, DWORD dwTimeoutEvent, Event *pEvent);
-   DWORD ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky);
-   DWORD resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate);
+	              int iSeverity, UINT32 dwTimeout, UINT32 dwTimeoutEvent, Event *pEvent);
+   UINT32 ackById(UINT32 dwAlarmId, UINT32 dwUserId, bool sticky);
+   UINT32 resolveById(UINT32 dwAlarmId, UINT32 dwUserId, bool terminate);
    void resolveByKey(const TCHAR *key, bool useRegexp, bool terminate);
-   void deleteAlarm(DWORD dwAlarmId, bool objectCleanup);
-   bool deleteObjectAlarms(DWORD objectId, DB_HANDLE hdb);
-	DWORD updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId);
+   void deleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
+   bool deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
+	UINT32 updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
 
-   DWORD getAlarm(DWORD dwAlarmId, CSCPMessage *msg);
-   DWORD getAlarmEvents(DWORD dwAlarmId, CSCPMessage *msg);
-   void sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession);
+   UINT32 getAlarm(UINT32 dwAlarmId, CSCPMessage *msg);
+   UINT32 getAlarmEvents(UINT32 dwAlarmId, CSCPMessage *msg);
+   void sendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession);
    void getAlarmStats(CSCPMessage *pMsg);
-	DWORD getAlarmNotes(DWORD alarmId, CSCPMessage *msg);
+	UINT32 getAlarmNotes(UINT32 alarmId, CSCPMessage *msg);
 
-   NetObj *getAlarmSourceObject(DWORD dwAlarmId);
-   int getMostCriticalStatusForObject(DWORD dwObjectId);
+   NetObj *getAlarmSourceObject(UINT32 dwAlarmId);
+   int getMostCriticalStatusForObject(UINT32 dwObjectId);
 
-   ObjectArray<NXC_ALARM> *getAlarms(DWORD objectId);
+   ObjectArray<NXC_ALARM> *getAlarms(UINT32 objectId);
 };
 
 /**
  * Functions
  */
 void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm);
-void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId);
-void DeleteAlarmEvents(DB_HANDLE hdb, DWORD alarmId);
+void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId);
+void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
 
 /**
  * Global instance of alarm manager

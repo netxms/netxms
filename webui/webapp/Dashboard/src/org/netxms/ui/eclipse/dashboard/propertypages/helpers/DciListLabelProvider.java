@@ -40,8 +40,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private NXCSession session;
 	private Map<NodeItemPair, String> dciNameCache = new HashMap<NodeItemPair, String>();
 	private List<ChartDciConfig> elementList;

@@ -42,7 +42,7 @@ VrrpInfo::~VrrpInfo()
 /**
  * Router constructor
  */
-VrrpRouter::VrrpRouter(DWORD id, DWORD ifIndex, int state, BYTE *macAddr)
+VrrpRouter::VrrpRouter(UINT32 id, UINT32 ifIndex, int state, BYTE *macAddr)
 {
 	m_id = id;
 	m_ifIndex = ifIndex;
@@ -69,18 +69,18 @@ void VrrpRouter::addVirtualIP(SNMP_Variable *var)
 		return;	// Ignore non-active VIPs
 
 	// IP is encoded in last 4 elements of the OID
-	const DWORD *oid = var->GetName()->getValue();
-	DWORD vip = (oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16];
+	const UINT32 *oid = var->GetName()->getValue();
+	UINT32 vip = (oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16];
 
 	if (m_ipAddrCount % 16 == 0)
-		m_ipAddrList = (DWORD *)realloc(m_ipAddrList, (m_ipAddrCount + 16) * sizeof(DWORD));
+		m_ipAddrList = (UINT32 *)realloc(m_ipAddrList, (m_ipAddrCount + 16) * sizeof(UINT32));
 	m_ipAddrList[m_ipAddrCount++] = vip; 
 }
 
 /**
  * VRRP walker callback
  */
-DWORD VrrpRouter::walkerCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+UINT32 VrrpRouter::walkerCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	((VrrpRouter *)arg)->addVirtualIP(var);
 	return SNMP_ERR_SUCCESS;
@@ -89,7 +89,7 @@ DWORD VrrpRouter::walkerCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Tra
 /**
  * Read VRs virtual IPs
  */
-bool VrrpRouter::readVirtualIP(DWORD snmpVersion, SNMP_Transport *transport)
+bool VrrpRouter::readVirtualIP(UINT32 snmpVersion, SNMP_Transport *transport)
 {
 	TCHAR oid[256];
 	_sntprintf(oid, 256, _T(".1.3.6.1.2.1.68.1.4.1.2.%u.%u"), m_ifIndex, m_id);
@@ -99,17 +99,17 @@ bool VrrpRouter::readVirtualIP(DWORD snmpVersion, SNMP_Transport *transport)
 /**
  * VRRP virtual router table walker's callback
  */
-DWORD VRRPHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+UINT32 VRRPHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	SNMP_ObjectId *oid = var->GetName();
 
 	// Entries indexed by ifIndex and VRID
-	DWORD ifIndex = oid->getValue()[11];
-	DWORD vrid = oid->getValue()[12];
+	UINT32 ifIndex = oid->getValue()[11];
+	UINT32 vrid = oid->getValue()[12];
 	int state = var->GetValueAsInt();
 
-	DWORD oidMac[64];
-	memcpy(oidMac, oid->getValue(), oid->getLength() * sizeof(DWORD));
+	UINT32 oidMac[64];
+	memcpy(oidMac, oid->getValue(), oid->getLength() * sizeof(UINT32));
 	oidMac[10] = 2;	// .1.3.6.1.2.1.68.1.3.1.2.ifIndex.vrid = virtual MAC
 	BYTE macAddr[MAC_ADDR_LENGTH];
 	if (SnmpGet(snmpVersion, transport, NULL, oidMac, 13, &macAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)

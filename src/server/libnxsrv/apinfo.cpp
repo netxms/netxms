@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -36,7 +36,7 @@ AgentPolicyInfo::AgentPolicyInfo(CSCPMessage *msg)
 		m_typeList = (int *)malloc(sizeof(int) * m_size);
 		m_serverList = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
 
-		DWORD varId = VID_ELEMENT_LIST_BASE;
+		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < m_size; i++, varId += 7)
 		{
 			msg->GetVariableBinary(varId++, &m_guidList[i * UUID_LENGTH], UUID_LENGTH);

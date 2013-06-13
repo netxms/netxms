@@ -569,7 +569,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
       for(i = 0; i < dwNumProc; i++)
       {
 			value->addRow();
-			value->set(0, pdwProcList[i]);
+			value->set(0, (UINT32)pdwProcList[i]);
          hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
          if (hProcess != NULL)
          {

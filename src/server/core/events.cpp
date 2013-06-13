@@ -33,7 +33,7 @@ const TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"),
 /**
  * Static data
  */
-static DWORD m_dwNumTemplates = 0;
+static UINT32 m_dwNumTemplates = 0;
 static EVENT_TEMPLATE *m_pEventTemplates = NULL;
 static RWLOCK m_rwlockTemplateAccess;
 
@@ -60,7 +60,7 @@ Event::Event()
 /**
  * Construct event from template
  */
-Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args)
+Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args)
 {
 	_tcscpy(m_szName, pTemplate->szName);
    m_tTimeStamp = time(NULL);
@@ -115,17 +115,17 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTa
             case 'x':
             case 'i':
                buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, DWORD));
+               _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, UINT32));
 					m_parameters.add(buffer);
                break;
             case 'a':
                buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               IpToStr(va_arg(args, DWORD), buffer);
+               IpToStr(va_arg(args, UINT32), buffer);
 					m_parameters.add(buffer);
                break;
             default:
                buffer = (TCHAR *)malloc(64 * sizeof(TCHAR));
-               _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), szFormat[i], va_arg(args, DWORD));
+               _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), szFormat[i], va_arg(args, UINT32));
 					m_parameters.add(buffer);
                break;
          }
@@ -176,11 +176,11 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
+TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 {
    const TCHAR *pCurr;
-   DWORD dwPos, dwSize, dwParam;
-	DWORD sourceId = (event != NULL) ? event->getSourceId() : sourceObject;
+   UINT32 dwPos, dwSize, dwParam;
+	UINT32 sourceId = (event != NULL) ? event->getSourceId() : sourceObject;
    NetObj *pObject;
    struct tm *lt;
    TCHAR *pText, szBuffer[4], scriptName[256];
@@ -197,7 +197,7 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 		if (pObject == NULL)
 			pObject = g_pEntireNet;
    }
-   dwSize = (DWORD)_tcslen(pszTemplate) + 1;
+   dwSize = (UINT32)_tcslen(pszTemplate) + 1;
    pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
    for(pCurr = pszTemplate, dwPos = 0; *pCurr != 0; pCurr++)
    {
@@ -216,35 +216,35 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
                   pText[dwPos++] = '%';
                   break;
                case 'n':   // Name of event source
-                  dwSize += (DWORD)_tcslen(pObject->Name());
+                  dwSize += (UINT32)_tcslen(pObject->Name());
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   _tcscpy(&pText[dwPos], pObject->Name());
-                  dwPos += (DWORD)_tcslen(pObject->Name());
+                  dwPos += (UINT32)_tcslen(pObject->Name());
                   break;
                case 'a':   // IP address of event source
                   dwSize += 16;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   IpToStr(pObject->IpAddr(), &pText[dwPos]);
-                  dwPos = (DWORD)_tcslen(pText);
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'g':   // Source object's GUID
                   dwSize += 36;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 						pObject->getGuid(guid);
 						uuid_to_string(guid, &pText[dwPos]);
-                  dwPos = (DWORD)_tcslen(pText);
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'i':   // Source object identifier in form 0xhhhhhhhh
                   dwSize += 10;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   _sntprintf(&pText[dwPos], 11, _T("0x%08X"), sourceId);
-                  dwPos = (DWORD)_tcslen(pText);
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'I':   // Source object identifier in decimal form
                   dwSize += 10;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   _sntprintf(&pText[dwPos], 11, _T("%u"), (unsigned int)sourceId);
-                  dwPos = (DWORD)_tcslen(pText);
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
                case 't':   // Event's timestamp
                   dwSize += 32;
@@ -259,27 +259,27 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 							lt = localtime(&t);
 						}
                   _tcsftime(&pText[dwPos], 32, _T("%d-%b-%Y %H:%M:%S"), lt);
-                  dwPos = (DWORD)_tcslen(pText);
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
                   dwSize += 16;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 						_sntprintf(&pText[dwPos], 16, _T("%lu"), (unsigned long)((event != NULL) ? event->m_tTimeStamp : time(NULL)));
-                  dwPos = (DWORD)_tcslen(pText);
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'c':   // Event code
                   dwSize += 16;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 						_sntprintf(&pText[dwPos], 16, _T("%u"), (unsigned int)((event != NULL) ? event->m_dwCode : 0));
-                  dwPos = (DWORD)_tcslen(pText);
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'N':   // Event name
 						if (event != NULL)
 						{
-							dwSize += (DWORD)_tcslen(event->m_szName);
+							dwSize += (UINT32)_tcslen(event->m_szName);
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 							_tcscpy(&pText[dwPos], event->m_szName);
-							dwPos += (DWORD)_tcslen(event->m_szName);
+							dwPos += (UINT32)_tcslen(event->m_szName);
 						}
                   break;
                case 's':   // Severity code
@@ -288,58 +288,58 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 							dwSize += 3;
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 							_sntprintf(&pText[dwPos], 4, _T("%d"), (int)event->m_dwSeverity);
-							dwPos = (DWORD)_tcslen(pText);
+							dwPos = (UINT32)_tcslen(pText);
 						}
                   break;
                case 'S':   // Severity text
 						if (event != NULL)
 						{
-							dwSize += (DWORD)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
+							dwSize += (UINT32)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 							_tcscpy(&pText[dwPos], g_szStatusTextSmall[event->m_dwSeverity]);
-							dwPos += (DWORD)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
+							dwPos += (UINT32)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
 						}
                   break;
                case 'v':   // NetXMS server version
-                  dwSize += (DWORD)_tcslen(NETXMS_VERSION_STRING);
+                  dwSize += (UINT32)_tcslen(NETXMS_VERSION_STRING);
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   _tcscpy(&pText[dwPos], NETXMS_VERSION_STRING);
-                  dwPos += (DWORD)_tcslen(NETXMS_VERSION_STRING);
+                  dwPos += (UINT32)_tcslen(NETXMS_VERSION_STRING);
                   break;
                case 'm':
                   if ((event != NULL) && (event->m_pszMessageText != NULL))
                   {
-                     dwSize += (DWORD)_tcslen(event->m_pszMessageText);
+                     dwSize += (UINT32)_tcslen(event->m_pszMessageText);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                      _tcscpy(&pText[dwPos], event->m_pszMessageText);
-                     dwPos += (DWORD)_tcslen(event->m_pszMessageText);
+                     dwPos += (UINT32)_tcslen(event->m_pszMessageText);
                   }
                   break;
                case 'M':	// Custom message (usually set by matching script in EPP)
                   if ((event != NULL) && (event->m_pszCustomMessage != NULL))
                   {
-                     dwSize += (DWORD)_tcslen(event->m_pszCustomMessage);
+                     dwSize += (UINT32)_tcslen(event->m_pszCustomMessage);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                      _tcscpy(&pText[dwPos], event->m_pszCustomMessage);
-                     dwPos += (DWORD)_tcslen(event->m_pszCustomMessage);
+                     dwPos += (UINT32)_tcslen(event->m_pszCustomMessage);
                   }
                   break;
                case 'A':   // Associated alarm message
                   if (pszAlarmMsg != NULL)
                   {
-                     dwSize += (DWORD)_tcslen(pszAlarmMsg);
+                     dwSize += (UINT32)_tcslen(pszAlarmMsg);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                      _tcscpy(&pText[dwPos], pszAlarmMsg);
-                     dwPos += (DWORD)_tcslen(pszAlarmMsg);
+                     dwPos += (UINT32)_tcslen(pszAlarmMsg);
                   }
                   break;
                case 'u':	// User tag
                   if ((event != NULL) && (event->m_pszUserTag != NULL))
                   {
-                     dwSize += (DWORD)_tcslen(event->m_pszUserTag);
+                     dwSize += (UINT32)_tcslen(event->m_pszUserTag);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                      _tcscpy(&pText[dwPos], event->m_pszUserTag);
-                     dwPos += (DWORD)_tcslen(event->m_pszUserTag);
+                     dwPos += (UINT32)_tcslen(event->m_pszUserTag);
                   }
                   break;
                case '0':
@@ -366,15 +366,15 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 								szBuffer[1] = 0;
 							}
 							dwParam = _tcstoul(szBuffer, NULL, 10);
-							if ((dwParam > 0) && (dwParam <= (DWORD)event->m_parameters.size()))
+							if ((dwParam > 0) && (dwParam <= (UINT32)event->m_parameters.size()))
 							{
 								const TCHAR *value = (TCHAR *)event->m_parameters.get(dwParam - 1);
 								if (value == NULL)
 									value = _T("");
-								dwSize += (DWORD)_tcslen(value);
+								dwSize += (UINT32)_tcslen(value);
 								pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 								_tcscpy(&pText[dwPos], value);
-								dwPos += (DWORD)_tcslen(value);
+								dwPos += (UINT32)_tcslen(value);
 							}
 						}
                   break;
@@ -423,10 +423,10 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 										const TCHAR *temp = result->getValueAsCString();
 										if (temp != NULL)
 										{
-											dwSize += (DWORD)_tcslen(temp);
+											dwSize += (UINT32)_tcslen(temp);
 											pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 											_tcscpy(&pText[dwPos], temp);
-											dwPos += (DWORD)_tcslen(temp);
+											dwPos += (UINT32)_tcslen(temp);
 											DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s executed successfully"),
 												(int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName);
 										}
@@ -463,10 +463,10 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 							const TCHAR *temp = pObject->getCustomAttribute(scriptName);
 							if (temp != NULL)
 							{
-								dwSize += (DWORD)_tcslen(temp);
+								dwSize += (UINT32)_tcslen(temp);
 								pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 								_tcscpy(&pText[dwPos], temp);
-								dwPos += (DWORD)_tcslen(temp);
+								dwPos += (UINT32)_tcslen(temp);
 							}
 						}
 						break;
@@ -491,10 +491,10 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 									const TCHAR *temp = (TCHAR *)event->m_parameters.get(index);
 									if (temp != NULL)
 									{
-										dwSize += (DWORD)_tcslen(temp);
+										dwSize += (UINT32)_tcslen(temp);
 										pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 										_tcscpy(&pText[dwPos], temp);
-										dwPos += (DWORD)_tcslen(temp);
+										dwPos += (UINT32)_tcslen(temp);
 									}
 								}
 							}
@@ -572,18 +572,18 @@ void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 
 void Event::prepareMessage(CSCPMessage *pMsg)
 {
-	DWORD dwId = VID_EVENTLOG_MSG_BASE;
+	UINT32 dwId = VID_EVENTLOG_MSG_BASE;
 
-	pMsg->SetVariable(VID_NUM_RECORDS, (DWORD)1);
+	pMsg->SetVariable(VID_NUM_RECORDS, (UINT32)1);
 	pMsg->SetVariable(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
 	pMsg->SetVariable(dwId++, m_qwId);
 	pMsg->SetVariable(dwId++, m_dwCode);
-	pMsg->SetVariable(dwId++, (DWORD)m_tTimeStamp);
+	pMsg->SetVariable(dwId++, (UINT32)m_tTimeStamp);
 	pMsg->SetVariable(dwId++, m_dwSource);
 	pMsg->SetVariable(dwId++, (WORD)m_dwSeverity);
 	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszMessageText));
 	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszUserTag));
-	pMsg->SetVariable(dwId++, (DWORD)m_parameters.size());
+	pMsg->SetVariable(dwId++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
 		pMsg->SetVariable(dwId++, (TCHAR *)m_parameters.get(i));
 }
@@ -596,7 +596,7 @@ void Event::prepareMessage(CSCPMessage *pMsg)
 static BOOL LoadEvents()
 {
    DB_RESULT hResult;
-   DWORD i;
+   UINT32 i;
    BOOL bSuccess = FALSE;
 
    hResult = DBSelect(g_hCoreDB, _T("SELECT event_code,severity,flags,message,description,event_name FROM event_cfg ORDER BY event_code"));
@@ -666,7 +666,7 @@ void ShutdownEventSubsystem()
 
    if (m_pEventTemplates != NULL)
    {
-      DWORD i;
+      UINT32 i;
       for(i = 0; i < m_dwNumTemplates; i++)
       {
          safe_free(m_pEventTemplates[i].pszDescription);
@@ -687,7 +687,7 @@ void ShutdownEventSubsystem()
 
 void ReloadEvents()
 {
-   DWORD i;
+   UINT32 i;
 
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
    if (m_pEventTemplates != NULL)
@@ -710,9 +710,9 @@ void ReloadEvents()
 // Delete event template from list
 //
 
-void DeleteEventTemplateFromList(DWORD dwEventCode)
+void DeleteEventTemplateFromList(UINT32 dwEventCode)
 {
-   DWORD i;
+   UINT32 i;
 
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
    for(i = 0; i < m_dwNumTemplates; i++)
@@ -736,9 +736,9 @@ void DeleteEventTemplateFromList(DWORD dwEventCode)
 // Returns INULL if key not found or pointer to appropriate template
 //
 
-static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
+static EVENT_TEMPLATE *FindEventTemplate(UINT32 dwCode)
 {
-   DWORD dwFirst, dwLast, dwMid;
+   UINT32 dwFirst, dwLast, dwMid;
 
    dwFirst = 0;
    dwLast = m_dwNumTemplates - 1;
@@ -782,7 +782,7 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
 // event queue. Both functions uses RealPostEvent to do real job.
 //
 
-static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
+static BOOL RealPostEvent(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId,
                           const TCHAR *pszUserTag, const char *pszFormat, const TCHAR **names, va_list args)
 {
    EVENT_TEMPLATE *pEventTemplate;
@@ -811,7 +811,7 @@ static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
    return bResult;
 }
 
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...)
+BOOL PostEvent(UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
@@ -822,7 +822,7 @@ BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...)
    return bResult;
 }
 
-BOOL PostEventWithNames(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, const TCHAR **names, ...)
+BOOL PostEventWithNames(UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, const TCHAR **names, ...)
 {
    va_list args;
    BOOL bResult;
@@ -833,7 +833,7 @@ BOOL PostEventWithNames(DWORD dwEventCode, DWORD dwSourceId, const char *pszForm
    return bResult;
 }
 
-BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...)
+BOOL PostEventWithTag(UINT32 dwEventCode, UINT32 dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
@@ -844,7 +844,7 @@ BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, const TCHAR *pszUserT
    return bResult;
 }
 
-BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...)
+BOOL PostEventEx(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
@@ -872,7 +872,7 @@ void ResendEvents(Queue *pQueue)
 /**
  * Create NXMP record for event
  */
-void CreateNXMPEventRecord(String &str, DWORD dwCode)
+void CreateNXMPEventRecord(String &str, UINT32 dwCode)
 {
    EVENT_TEMPLATE *p;
    String strText, strDescr;
@@ -905,7 +905,7 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
 /**
  * Resolve event name
  */
-BOOL EventNameFromCode(DWORD dwCode, TCHAR *pszBuffer)
+BOOL EventNameFromCode(UINT32 dwCode, TCHAR *pszBuffer)
 {
    EVENT_TEMPLATE *p;
    BOOL bRet = FALSE;
@@ -940,7 +940,7 @@ BOOL EventNameFromCode(DWORD dwCode, TCHAR *pszBuffer)
 // Find event template by code - suitable for external call
 //
 
-EVENT_TEMPLATE *FindEventTemplateByCode(DWORD dwCode)
+EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 dwCode)
 {
    EVENT_TEMPLATE *p = NULL;
 
@@ -958,7 +958,7 @@ EVENT_TEMPLATE *FindEventTemplateByCode(DWORD dwCode)
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName)
 {
    EVENT_TEMPLATE *p = NULL;
-   DWORD i;
+   UINT32 i;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
    for(i = 0; i < m_dwNumTemplates; i++)
@@ -977,7 +977,7 @@ EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName)
  * Translate event name to code
  * If event with given name does not exist, returns supplied default value
  */
-DWORD EventCodeFromName(const TCHAR *name, DWORD defaultValue)
+UINT32 EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
 {
 	EVENT_TEMPLATE *p = FindEventTemplateByName(name);
 	return (p != NULL) ? p->dwCode : defaultValue;

@@ -101,9 +101,9 @@
 /**
  * nxlog_open() flags
  */
-#define NXLOG_USE_SYSLOG		((DWORD)0x00000001)
-#define NXLOG_PRINT_TO_STDOUT	((DWORD)0x00000002)
-#define NXLOG_IS_OPEN         ((DWORD)0x80000000)
+#define NXLOG_USE_SYSLOG		((UINT32)0x00000001)
+#define NXLOG_PRINT_TO_STDOUT	((UINT32)0x00000002)
+#define NXLOG_IS_OPEN         ((UINT32)0x80000000)
 
 /**
  * nxlog rotation policy
@@ -186,77 +186,6 @@ public:
 	bool restart();
 };
 
-class CSCPMessage;
-
-/**
- * Class for table data storage
- */
-class LIBNETXMS_EXPORTABLE Table
-{
-private:
-   int m_nNumRows;
-   int m_nNumCols;
-   TCHAR **m_ppData;
-   TCHAR **m_ppColNames;
-	LONG *m_colFormats;
-	TCHAR *m_title;
-   int m_source;
-	TCHAR m_instanceColumn[MAX_COLUMN_NAME];
-
-	void createFromMessage(CSCPMessage *msg);
-	void destroy();
-
-public:
-   Table();
-   Table(CSCPMessage *msg);
-   ~Table();
-
-	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
-	void updateFromMessage(CSCPMessage *msg);
-
-   void merge(Table *t, const TCHAR *instanceColumn);
-
-   int getNumRows() { return m_nNumRows; }
-   int getNumColumns() { return m_nNumCols; }
-	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
-   int getSource() { return m_source; }
-   const TCHAR *getInstanceColumn() { return m_instanceColumn; }
-
-	const TCHAR *getColumnName(int col) { return ((col >= 0) && (col < m_nNumCols)) ? m_ppColNames[col] : NULL; }
-	LONG getColumnFormat(int col) { return ((col >= 0) && (col < m_nNumCols)) ? m_colFormats[col] : 0; }
-	int getColumnIndex(const TCHAR *name);
-
-	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = (title != NULL) ? _tcsdup(title) : NULL; }
-   void setSource(int source) { m_source = source; }
-   void setInstanceColumn(const TCHAR *column);
-   int addColumn(const TCHAR *name, LONG format = 0);
-   void setColumnFormat(int col, int format) { if ((col >= 0) && (col < m_nNumCols)) m_colFormats[col] = format; }
-   int addRow();
-
-   void setAt(int nRow, int nCol, LONG nData);
-   void setAt(int nRow, int nCol, DWORD dwData);
-   void setAt(int nRow, int nCol, double dData);
-   void setAt(int nRow, int nCol, INT64 nData);
-   void setAt(int nRow, int nCol, QWORD qwData);
-   void setAt(int nRow, int nCol, const TCHAR *pszData);
-   void setPreallocatedAt(int nRow, int nCol, TCHAR *pszData);
-
-   void set(int nCol, LONG nData) { setAt(m_nNumRows - 1, nCol, nData); }
-   void set(int nCol, DWORD dwData) { setAt(m_nNumRows - 1, nCol, dwData); }
-   void set(int nCol, double dData) { setAt(m_nNumRows - 1, nCol, dData); }
-   void set(int nCol, INT64 nData) { setAt(m_nNumRows - 1, nCol, nData); }
-   void set(int nCol, QWORD qwData) { setAt(m_nNumRows - 1, nCol, qwData); }
-   void set(int nCol, const TCHAR *pszData) { setAt(m_nNumRows - 1, nCol, pszData); }
-   void setPreallocated(int nCol, TCHAR *pszData) { setPreallocatedAt(m_nNumRows - 1, nCol, pszData); }
-
-   const TCHAR *getAsString(int nRow, int nCol);
-   LONG getAsInt(int nRow, int nCol);
-   DWORD getAsUInt(int nRow, int nCol);
-   INT64 getAsInt64(int nRow, int nCol);
-   QWORD getAsUInt64(int nRow, int nCol);
-   double getAsDouble(int nRow, int nCol);
-};
-
 /**
  * Dynamic string class
  */
@@ -264,7 +193,7 @@ class LIBNETXMS_EXPORTABLE String
 {
 protected:
    TCHAR *m_pszBuffer;
-   DWORD m_dwBufSize;
+   UINT32 m_dwBufSize;
 
 public:
 	static const int npos;
@@ -284,16 +213,16 @@ public:
 
 	char *getUTF8String();
 
-	void addString(const TCHAR *pStr, DWORD dwLen);
+	void addString(const TCHAR *pStr, UINT32 dwLen);
 	void addDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
 
-	void addMultiByteString(const char *pStr, DWORD dwSize, int nCodePage);
-	void addWideCharString(const WCHAR *pStr, DWORD dwSize);
+	void addMultiByteString(const char *pStr, UINT32 dwSize, int nCodePage);
+	void addWideCharString(const WCHAR *pStr, UINT32 dwSize);
 
    void addFormattedString(const TCHAR *format, ...);
    void addFormattedStringV(const TCHAR *format, va_list args);
 
-	DWORD getSize() { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
+	UINT32 getSize() { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
 	BOOL isEmpty() { return m_dwBufSize <= 1; }
 
 	TCHAR *subStr(int nStart, int nLen, TCHAR *pszBuffer);
@@ -312,14 +241,14 @@ public:
 class LIBNETXMS_EXPORTABLE StringMapBase
 {
 protected:
-	DWORD m_size;
+	UINT32 m_size;
 	TCHAR **m_keys;
 	void **m_values;
 	bool m_objectOwner;
    bool m_ignoreCase;
 	void (*m_objectDestructor)(void *);
 
-	DWORD find(const TCHAR *key);
+	UINT32 find(const TCHAR *key);
 	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
 	void *getObject(const TCHAR *key);
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
@@ -334,8 +263,8 @@ public:
 	void remove(const TCHAR *key);
 	void clear();
 
-	DWORD getSize() { return m_size; }
-	const TCHAR *getKeyByIndex(DWORD idx) { return (idx < m_size) ? CHECK_NULL_EX(m_keys[idx]) : NULL; }
+	UINT32 getSize() { return m_size; }
+	const TCHAR *getKeyByIndex(UINT32 idx) { return (idx < m_size) ? CHECK_NULL_EX(m_keys[idx]) : NULL; }
 };
 
 /**
@@ -352,13 +281,13 @@ public:
 
 	void set(const TCHAR *key, const TCHAR *value) { setObject((TCHAR *)key, _tcsdup(value), false); }
 	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
-	void set(const TCHAR *key, DWORD value);
+	void set(const TCHAR *key, UINT32 value);
 
 	const TCHAR *get(const TCHAR *key) { return (const TCHAR *)getObject(key); }
-	DWORD getULong(const TCHAR *key, DWORD defaultValue);
+	UINT32 getULong(const TCHAR *key, UINT32 defaultValue);
 	bool getBoolean(const TCHAR *key, bool defaultValue);
 
-	const TCHAR *getValueByIndex(DWORD idx) { return (idx < m_size) ? CHECK_NULL_EX((TCHAR *)m_values[idx]) : NULL; }
+	const TCHAR *getValueByIndex(UINT32 idx) { return (idx < m_size) ? CHECK_NULL_EX((TCHAR *)m_values[idx]) : NULL; }
 };
 
 /**
@@ -374,7 +303,7 @@ public:
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	T *get(const TCHAR *key) { return (T*)getObject(key); }
-	T *getValueByIndex(DWORD idx) { return (idx < m_size) ? (T *)m_values[idx] : NULL; }
+	T *getValueByIndex(UINT32 idx) { return (idx < m_size) ? (T *)m_values[idx] : NULL; }
 };
 
 /**
@@ -395,10 +324,10 @@ public:
 
 	void add(const TCHAR *value);
 	void addPreallocated(TCHAR *value);
-	void add(LONG value);
-	void add(DWORD value);
+	void add(INT32 value);
+	void add(UINT32 value);
 	void add(INT64 value);
-	void add(QWORD value);
+	void add(UINT64 value);
 	void add(double value);
 	void replace(int index, const TCHAR *value);
 	void clear();
@@ -520,6 +449,102 @@ public:
 	void decRefCount();
 };
 
+class CSCPMessage;
+
+/**
+ * Table column definition
+ */
+class LIBNETXMS_EXPORTABLE TableColumnDefinition
+{
+private:
+   TCHAR *m_name;
+   TCHAR *m_displayName;
+   INT32 m_dataType;
+   bool m_instanceColumn;
+
+public:
+   TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, INT32 dataType, bool isInstance);
+   TableColumnDefinition(CSCPMessage *msg, UINT32 baseId);
+   TableColumnDefinition(TableColumnDefinition *src);
+   ~TableColumnDefinition();
+
+   void fillMessage(CSCPMessage *msg, UINT32 baseId);
+
+   const TCHAR *getName() { return m_name; }
+   const TCHAR *getDisplayName() { return m_displayName; }
+   INT32 getDataType() { return m_dataType; }
+   bool isInstanceColumn() { return m_instanceColumn; }
+
+   void setDataType(INT32 type) { m_dataType = type; }
+   void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
+};
+
+/**
+ * Class for table data storage
+ */
+class LIBNETXMS_EXPORTABLE Table
+{
+private:
+   int m_nNumRows;
+   int m_nNumCols;
+   TCHAR **m_ppData;
+   ObjectArray<TableColumnDefinition> *m_columns;
+	TCHAR *m_title;
+   int m_source;
+
+	void createFromMessage(CSCPMessage *msg);
+	void destroy();
+
+public:
+   Table();
+   Table(CSCPMessage *msg);
+   ~Table();
+
+	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
+	void updateFromMessage(CSCPMessage *msg);
+
+   void merge(Table *t);
+
+   int getNumRows() { return m_nNumRows; }
+   int getNumColumns() { return m_nNumCols; }
+	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
+   int getSource() { return m_source; }
+
+   const TCHAR *getColumnName(int col) { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : NULL; }
+   INT32 getColumnDataType(int col) { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
+	int getColumnIndex(const TCHAR *name);
+   ObjectArray<TableColumnDefinition> *getColumnDefinitions() { return m_columns; }
+
+	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = (title != NULL) ? _tcsdup(title) : NULL; }
+   void setSource(int source) { m_source = source; }
+   int addColumn(const TCHAR *name, INT32 dataType = 0, bool isInstance = false, const TCHAR *displayName = NULL);
+   void setColumnDataType(int col, INT32 dataType) { if ((col >= 0) && (col < m_columns->size())) m_columns->get(col)->setDataType(dataType); }
+   int addRow();
+
+   void setAt(int nRow, int nCol, INT32 nData);
+   void setAt(int nRow, int nCol, UINT32 dwData);
+   void setAt(int nRow, int nCol, double dData);
+   void setAt(int nRow, int nCol, INT64 nData);
+   void setAt(int nRow, int nCol, UINT64 qwData);
+   void setAt(int nRow, int nCol, const TCHAR *pszData);
+   void setPreallocatedAt(int nRow, int nCol, TCHAR *pszData);
+
+   void set(int nCol, INT32 nData) { setAt(m_nNumRows - 1, nCol, nData); }
+   void set(int nCol, UINT32 dwData) { setAt(m_nNumRows - 1, nCol, dwData); }
+   void set(int nCol, double dData) { setAt(m_nNumRows - 1, nCol, dData); }
+   void set(int nCol, INT64 nData) { setAt(m_nNumRows - 1, nCol, nData); }
+   void set(int nCol, UINT64 qwData) { setAt(m_nNumRows - 1, nCol, qwData); }
+   void set(int nCol, const TCHAR *pszData) { setAt(m_nNumRows - 1, nCol, pszData); }
+   void setPreallocated(int nCol, TCHAR *pszData) { setPreallocatedAt(m_nNumRows - 1, nCol, pszData); }
+
+   const TCHAR *getAsString(int nRow, int nCol);
+   INT32 getAsInt(int nRow, int nCol);
+   UINT32 getAsUInt(int nRow, int nCol);
+   INT64 getAsInt64(int nRow, int nCol);
+   UINT64 getAsUInt64(int nRow, int nCol);
+   double getAsDouble(int nRow, int nCol);
+};
+
 /**
  * Network connection
  */
@@ -534,18 +559,18 @@ public:
 	SocketConnection();
 	virtual ~SocketConnection();
 
-	bool connectTCP(const TCHAR *hostName, WORD port, DWORD timeout);
-	bool connectTCP(DWORD ip, WORD port, DWORD timeout);
+	bool connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout);
+	bool connectTCP(UINT32 ip, WORD port, UINT32 timeout);
 	void disconnect();
 
-	bool canRead(DWORD timeout);
-	virtual int read(char *pBuff, int nSize, DWORD timeout = INFINITE);
+	bool canRead(UINT32 timeout);
+	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE);
 	bool waitForText(const char *text, int timeout);
 	
 	int write(const char *pBuff, int nSize);
 	bool writeLine(const char *line);
 
-	static SocketConnection *createTCPConnection(const TCHAR *hostName, WORD port, DWORD timeout);
+	static SocketConnection *createTCPConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
 };
 
 /**
@@ -554,16 +579,16 @@ public:
 class LIBNETXMS_EXPORTABLE TelnetConnection : public SocketConnection
 {
 protected:
-	bool connectTCP(const TCHAR *hostName, WORD port, DWORD timeout);
-	bool connectTCP(DWORD ip, WORD port, DWORD timeout);
+	bool connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout);
+	bool connectTCP(UINT32 ip, WORD port, UINT32 timeout);
 
 public:
-	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, DWORD timeout);
+	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
 
-   bool connect(const TCHAR *hostName, WORD port, DWORD timeout);
-	bool connect(DWORD ip, WORD port, DWORD timeout);
-	virtual int read(char *pBuff, int nSize, DWORD timeout = INFINITE);
-	int readLine(char *buffer, int size, DWORD timeout = INFINITE);
+   bool connect(const TCHAR *hostName, WORD port, UINT32 timeout);
+	bool connect(UINT32 ip, WORD port, UINT32 timeout);
+	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE);
+	int readLine(char *buffer, int size, UINT32 timeout = INFINITE);
 };
 
 #endif   /* __cplusplus */
@@ -577,8 +602,8 @@ typedef struct
    BYTE iType;
    BYTE cSeparator;     // Separator character for lists
    WORD wListElements;  // Number of list elements, should be set to 0 before calling NxLoadConfig()
-   DWORD dwBufferSize;  // Buffer size for strings or flag to be set for CT_BOOLEAN
-   DWORD dwBufferPos;   // Should be set to 0
+   UINT32 dwBufferSize;  // Buffer size for strings or flag to be set for CT_BOOLEAN
+   UINT32 dwBufferPos;   // Should be set to 0
    void *pBuffer;
 } NX_CFG_TEMPLATE;
 
@@ -745,10 +770,10 @@ typedef struct _dir_struc_w
 #define nx_strncpy_mb nx_strncpy
 #endif
 
-int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWORD timeout);
+int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET, const void *, size_t, int, MUTEX);
 int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
-                                size_t nSize, int nFlags, DWORD dwTimeout);
+                                size_t nSize, int nFlags, UINT32 dwTimeout);
 #endif
 
 #ifdef __cplusplus
@@ -756,10 +781,10 @@ extern "C"
 {
 #endif
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
-   DWORD LIBNETXMS_EXPORTABLE __bswap_32(DWORD dwVal);
+   UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 dwVal);
 #endif
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
-   QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
+   UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 qwVal);
 #endif
    double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
    void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
@@ -776,43 +801,43 @@ extern "C"
 
    INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
 
-	QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
-	QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
+	UINT64 LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
+	UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #ifdef UNICODE
 #define FileSize FileSizeW
 #else
 #define FileSize FileSizeA
 #endif
 
-   int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
-   TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
+   int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask);
+   TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer);
 #ifdef UNICODE
-   char LIBNETXMS_EXPORTABLE *IpToStrA(DWORD dwAddr, char *szBuffer);
+   char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer);
 #else
 #define IpToStrA IpToStr
 #endif
 	TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer);
 	TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
-   DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
+   UINT32 LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
 #ifdef UNICODE
-   DWORD LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName);
+   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName);
 #else
 #define ResolveHostNameA ResolveHostName
 #endif
 
-   void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
-   void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize);
+   void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, UINT32 dwSize);
+   void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, UINT32 dwSize);
 
-   WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, DWORD dwSize, WCHAR *pStr);
-   char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, DWORD dwSize, char *pStr);
+   WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, UINT32 dwSize, WCHAR *pStr);
+   char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pStr);
 #ifdef UNICODE
 #define BinToStr BinToStrW
 #else
 #define BinToStr BinToStrA
 #endif
 
-   DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize);
+   UINT32 LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, UINT32 dwSize);
    TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
@@ -867,29 +892,29 @@ extern "C"
    /* deprecated */ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
    const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName);
    void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
-	BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize);
+	BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize);
 #ifdef UNICODE
-	BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, DWORD *pdwFileSize);
+	BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSize);
 #else
 #define LoadFileA LoadFile
 #endif
 
-   DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, DWORD dwSize, DWORD dwCRC);
+   UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, UINT32 dwSize, UINT32 dwCRC);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
 	void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash);
    void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);
    void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t patternSize, size_t fullSize, unsigned char *hash);
    BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash);
    BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash);
-   BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, DWORD *pResult);
+   BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult);
 
 	void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
 	void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
 
 	BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd);
 
-   DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout,
-                                       DWORD *pdwRTT, DWORD dwPacketSize);
+   UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries, UINT32 dwTimeout,
+                                       UINT32 *pdwRTT, UINT32 dwPacketSize);
 
    int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
@@ -908,7 +933,7 @@ extern "C"
 #endif
 
 #ifdef _WIN32
-   TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, size_t iBufSize);
+   TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer, size_t iBufSize);
 	BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize);
 	INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 #endif
@@ -917,14 +942,14 @@ extern "C"
    int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
 #endif
 
-   DWORD LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);
+   UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);
 
 #ifndef _WIN32
 	BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
-   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, 
+   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, UINT32 dwFlags, const WCHAR *pWideCharStr, 
                                                 int cchWideChar, char *pByteStr, int cchByteChar, 
                                                 char *pDefaultChar, BOOL *pbUsedDefChar);
-   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr, 
+   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, const char *pByteStr, 
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
 
@@ -1047,14 +1072,14 @@ extern "C"
 	INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
 #endif
 #if !HAVE_STRTOULL
-	QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
+	UINT64 LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
 #endif
 
 #if !HAVE_WCSTOLL
 	INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
 #if !HAVE_WCSTOULL
-	QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
+	UINT64 LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
 
 #if !HAVE_WCSDUP && !defined(_WIN32)
@@ -1101,7 +1126,7 @@ extern "C"
    int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
 #endif
 
-BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags, const TCHAR *msgModule,
+BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
                                      unsigned int msgCount, const TCHAR **messages);
 void LIBNETXMS_EXPORTABLE nxlog_close(void);
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
@@ -1144,7 +1169,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length = -1);
 const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
 int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
-DWORD LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal);
+UINT32 LIBNETXMS_EXPORTABLE XMLGetAttrUINT32(const char **attrs, const char *name, UINT32 defVal);
 bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
 #if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
@@ -1152,9 +1177,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
 #endif
 
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-                                          void (* sendTrap1)(DWORD, const TCHAR *, const char *, va_list),
-                                          void (* sendTrap2)(DWORD, const TCHAR *, int, TCHAR **),
-                                          BOOL (* sendFile)(void *, DWORD, const TCHAR *, long),
+                                          void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
+                                          void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
+                                          BOOL (* sendFile)(void *, UINT32, const TCHAR *, long),
                                           BOOL (* pushData)(const TCHAR *, const TCHAR *));
 
 #endif

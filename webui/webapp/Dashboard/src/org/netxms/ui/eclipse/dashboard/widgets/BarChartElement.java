@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
  */
 public class BarChartElement extends ComparisonChartElement
 {
-	private static final long serialVersionUID = 1L;
-
 	private BarChartConfig config;
 	
 	/**

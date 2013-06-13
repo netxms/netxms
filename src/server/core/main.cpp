@@ -101,9 +101,9 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
  */
 TCHAR NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 TCHAR NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
-DWORD g_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
-DWORD g_dwMaxLogSize = 16384 * 1024;
-DWORD g_dwLogHistorySize = 4;
+UINT32 g_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
+UINT32 g_dwMaxLogSize = 16384 * 1024;
+UINT32 g_dwLogHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
 TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
 char g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE_A;
@@ -112,27 +112,27 @@ TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("0.0.0.0");
 TCHAR NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
 #endif
 DB_HANDLE g_hCoreDB = 0;
-DWORD g_dwDiscoveryPollingInterval;
-DWORD g_dwStatusPollingInterval;
-DWORD g_dwConfigurationPollingInterval;
-DWORD g_dwRoutingTableUpdateInterval;
-DWORD g_dwTopologyPollingInterval;
-DWORD g_dwConditionPollingInterval;
-DWORD g_dwPingSize;
-DWORD g_dwAuditFlags;
-DWORD g_dwSlmPollingInterval;
+UINT32 g_dwDiscoveryPollingInterval;
+UINT32 g_dwStatusPollingInterval;
+UINT32 g_dwConfigurationPollingInterval;
+UINT32 g_dwRoutingTableUpdateInterval;
+UINT32 g_dwTopologyPollingInterval;
+UINT32 g_dwConditionPollingInterval;
+UINT32 g_dwPingSize;
+UINT32 g_dwAuditFlags;
+UINT32 g_dwSlmPollingInterval;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
 TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
 TCHAR g_szJavaLibDir[MAX_PATH] = DEFAULT_JAVA_LIBDIR;
 TCHAR NXCORE_EXPORTABLE g_szJavaPath[MAX_DB_NAME] = _T("java");
 int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
-DWORD NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
+UINT32 NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
 time_t g_tServerStartTime = 0;
-DWORD g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
-DWORD g_dwAgentCommandTimeout = 4000;  // Default timeout for requests to agent
-DWORD g_dwThresholdRepeatInterval = 0;	// Disabled by default
+UINT32 g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
+UINT32 g_dwAgentCommandTimeout = 4000;  // Default timeout for requests to agent
+UINT32 g_dwThresholdRepeatInterval = 0;	// Disabled by default
 int g_nRequiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
 
@@ -352,7 +352,7 @@ static BOOL InitCryptografy()
 	TCHAR szKeyFile[MAX_PATH];
 	BOOL bResult = FALSE;
 	int fd, iPolicy;
-	DWORD dwLen;
+	UINT32 dwLen;
 	BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
 
 	if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x1F)))
@@ -378,7 +378,7 @@ static BOOL InitCryptografy()
 				pBufPos = pKeyBuffer;
 				i2d_RSAPublicKey(g_pServerKey, &pBufPos);
 				i2d_RSAPrivateKey(g_pServerKey, &pBufPos);
-				write(fd, &dwLen, sizeof(DWORD));
+				write(fd, &dwLen, sizeof(UINT32));
 				write(fd, pKeyBuffer, dwLen);
 
 				CalculateSHA1Hash(pKeyBuffer, dwLen, hash);
@@ -417,7 +417,7 @@ static BOOL InitCryptografy()
 /**
  * Check if process with given PID exists and is a NetXMS server process
  */
-static BOOL IsNetxmsdProcess(DWORD dwPID)
+static BOOL IsNetxmsdProcess(UINT32 dwPID)
 {
 #ifdef _WIN32
 	HANDLE hProcess;
@@ -512,7 +512,7 @@ static void LogConsoleWriter(const TCHAR *format, ...)
 BOOL NXCORE_EXPORTABLE Initialize()
 {
 	int i, iDBVersion;
-	DWORD dwAddr;
+	UINT32 dwAddr;
 	TCHAR szInfo[256];
 
 	g_tServerStartTime = time(NULL);
@@ -642,7 +642,7 @@ retry_db_lock:
 			// Check for lock from crashed/terminated local process
 			if (dwAddr == GetLocalIpAddr())
 			{
-				DWORD dwPID;
+				UINT32 dwPID;
 
 				dwPID = ConfigReadULong(_T("DBLockPID"), 0);
 				if (!IsNetxmsdProcess(dwPID) || (dwPID == GetCurrentProcessId()))
@@ -816,7 +816,7 @@ retry_db_lock:
 	DbgPrintf(2, _T("LIBDIR: %s"), g_szLibDir);
 
 	// Call shutdown functions for the modules
-   for(DWORD i = 0; i < g_dwNumModules; i++)
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
 		if (g_pModuleList[i].pfServerStarted != NULL)
 			g_pModuleList[i].pfServerStarted();
@@ -847,7 +847,7 @@ void NXCORE_EXPORTABLE Shutdown()
 #endif
 
 	// Call shutdown functions for the modules
-   for(DWORD i = 0; i < g_dwNumModules; i++)
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
 		if (g_pModuleList[i].pfShutdown != NULL)
 			g_pModuleList[i].pfShutdown();
@@ -1010,7 +1010,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		int level = (int)_tcstol(szBuffer, &eptr, 0);
 		if ((*eptr == 0) && (level >= 0) && (level <= 9))
 		{
-			g_debugLevel = (DWORD)level;
+			g_debugLevel = (UINT32)level;
 			ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
 		}
 		else if (IsCommand(_T("OFF"), szBuffer, 2))
@@ -1116,7 +1116,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			// Get argument
 			pArg = ExtractWord(pArg, szBuffer);
-			DWORD dwNode = _tcstoul(szBuffer, NULL, 0);
+			UINT32 dwNode = _tcstoul(szBuffer, NULL, 0);
 			if (dwNode != 0)
 			{
 				NetObj *pObject = FindObjectById(dwNode);
@@ -1251,7 +1251,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		}
 		else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
 		{
-			DWORD dwNode;
+			UINT32 dwNode;
 			NetObj *pObject;
 
 			pArg = ExtractWord(pArg, szBuffer);
@@ -1318,7 +1318,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		}
 		else if (IsCommand(_T("VLANS"), szBuffer, 1))
 		{
-			DWORD dwNode;
+			UINT32 dwNode;
 			NetObj *pObject;
 
 			pArg = ExtractWord(pArg, szBuffer);
@@ -1392,7 +1392,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			g_pScriptLibrary->unlock();
 			libraryLocked = false;
 			char *script;
-			DWORD fileSize;
+			UINT32 fileSize;
 			if ((script = (char *)LoadFile(szBuffer, &fileSize)) != NULL)
 			{
 				const int errorMsgLen = 512;
@@ -1447,7 +1447,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	}
 	else if (IsCommand(_T("TRACE"), szBuffer, 1))
 	{
-		DWORD dwNode1, dwNode2;
+		UINT32 dwNode1, dwNode2;
 		NetObj *pObject1, *pObject2;
 		NetworkPath *pTrace;
 		TCHAR szNextHop[16];

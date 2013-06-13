@@ -54,7 +54,7 @@ static int m_iNumPollers = 0;
 /**
  * Create management node object
  */
-static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
+static void CreateManagementNode(UINT32 ipAddr, UINT32 netMask)
 {
 	TCHAR buffer[256];
 
@@ -356,13 +356,13 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
  */
 static bool PollerQueueElementComparator(void *key, void *element)
 {
-	return CAST_FROM_POINTER(key, DWORD) == ((NEW_NODE *)element)->dwIpAddr;
+	return CAST_FROM_POINTER(key, UINT32) == ((NEW_NODE *)element)->dwIpAddr;
 }
 
 /**
  * Check potential new node from ARP cache or routing table
  */
-static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex, BYTE *macAddr = NULL)
+static void CheckPotentialNode(Node *node, UINT32 ipAddr, UINT32 ifIndex, BYTE *macAddr = NULL)
 {
 	TCHAR buffer[32];
 
@@ -442,7 +442,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
    TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[16];
    ARP_CACHE *pArpCache;
 	ROUTING_TABLE *rt;
-	DWORD i;
+	UINT32 i;
 
    // Initialize state info
    m_pPollerState[(long)arg].iType = 'D';
@@ -488,7 +488,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 		rt = pNode->getRoutingTable();
 		if (rt != NULL)
 		{
-			for(i = 0; i < (DWORD)rt->iNumEntries; i++)
+			for(i = 0; i < (UINT32)rt->iNumEntries; i++)
 			{
 				CheckPotentialNode(pNode, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex);
 				if ((rt->pRoutes[i].dwDestMask == 0xFFFFFFFF) && (rt->pRoutes[i].dwDestAddr != 0))
@@ -602,9 +602,9 @@ static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
 /**
  * Check given address range with ICMP ping for new nodes
  */
-static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
+static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
 {
-   DWORD dwAddr, dwFrom, dwTo;
+   UINT32 dwAddr, dwFrom, dwTo;
    TCHAR szIpAddr1[16], szIpAddr2[16];
 
    if (nType == 0)
@@ -801,7 +801,7 @@ static void QueueForPolling(NetObj *object, void *data)
  */
 THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
-   DWORD dwWatchdogId;
+   UINT32 dwWatchdogId;
    int i, iCounter, iNumStatusPollers, iNumConfigPollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
    int iNumConditionPollers, iNumTopologyPollers, iNumBusinessServicePollers;

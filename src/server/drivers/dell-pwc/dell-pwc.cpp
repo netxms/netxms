@@ -94,7 +94,7 @@ InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, StringMap
 	if (ifList == NULL)
 		return NULL;
 
-	DWORD slotSize = attributes->getULong(_T(".powerConnect.slotSize"), 52);
+	UINT32 slotSize = attributes->getULong(_T(".powerConnect.slotSize"), 52);
 
 	// Find physical ports
 	for(int i = 0; i < ifList->getSize(); i++)

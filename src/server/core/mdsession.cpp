@@ -46,7 +46,7 @@
 /**
  * Externals
  */
-void UnregisterMobileDeviceSession(DWORD dwIndex);
+void UnregisterMobileDeviceSession(UINT32 dwIndex);
 
 /**
  * Client communication read thread starter
@@ -163,7 +163,7 @@ void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void MobileDeviceSession::readThread()
 {
-	DWORD msgBufferSize = 1024;
+	UINT32 msgBufferSize = 1024;
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
    BYTE *pDecryptionBuffer = NULL;
@@ -332,7 +332,7 @@ void MobileDeviceSession::processingThread()
 {
    CSCPMessage *pMsg;
    TCHAR szBuffer[128];
-   DWORD i;
+   UINT32 i;
 	int status;
 
    while(1)
@@ -407,7 +407,7 @@ void MobileDeviceSession::processingThread()
 /**
  * Respond to client's keepalive message
  */
-void MobileDeviceSession::respondToKeepalive(DWORD dwRqId)
+void MobileDeviceSession::respondToKeepalive(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -456,7 +456,7 @@ void MobileDeviceSession::sendMessage(CSCPMessage *msg)
 /**
  * Send server information to client
  */
-void MobileDeviceSession::sendServerInfo(DWORD dwRqId)
+void MobileDeviceSession::sendServerInfo(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -475,7 +475,7 @@ void MobileDeviceSession::sendServerInfo(DWORD dwRqId)
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
    msg.SetVariable(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
-   msg.SetVariable(VID_PROTOCOL_VERSION, (DWORD)MOBILE_DEVICE_PROTOCOL_VERSION);
+   msg.SetVariable(VID_PROTOCOL_VERSION, (UINT32)MOBILE_DEVICE_PROTOCOL_VERSION);
 	msg.SetVariable(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
 
    // Send response
@@ -491,7 +491,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false;
-   DWORD dwResult;
+   UINT32 dwResult;
 #ifdef _WITH_ENCRYPTION
 	X509 *pCert;
 #endif
@@ -516,7 +516,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
    {
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)pRequest->GetVariableShort(VID_AUTH_TYPE);
-		DWORD userRights;
+		UINT32 userRights;
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
@@ -534,7 +534,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 				if (pCert != NULL)
 				{
 					BYTE signature[256];
-					DWORD dwSigLen;
+					UINT32 dwSigLen;
 
 					dwSigLen = pRequest->GetVariableBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,

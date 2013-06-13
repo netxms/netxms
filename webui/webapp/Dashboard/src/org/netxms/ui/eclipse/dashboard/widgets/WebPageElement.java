@@ -31,8 +31,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
  */
 public class WebPageElement extends ElementWidget
 {
-	private static final long serialVersionUID = 1L;
-
 	private Browser browser;
 	private WebPageConfig config;
 	

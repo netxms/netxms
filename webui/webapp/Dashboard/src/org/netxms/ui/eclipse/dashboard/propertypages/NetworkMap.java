@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class NetworkMap extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private NetworkMapConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;

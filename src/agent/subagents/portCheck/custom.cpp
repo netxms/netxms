@@ -30,13 +30,13 @@ LONG H_CheckCustom(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
+	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckCustom(szHost, 0, nPort, dwTimeout));
 	return nRet;
 }
 
 
-int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, DWORD dwTimeout)
+int CheckCustom(char *szAddr, UINT32 dwAddr, short nPort, UINT32 dwTimeout)
 {
 	int nRet;
 	SOCKET nSd;

@@ -157,11 +157,11 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
  *
  * @param dwId object ID
  */
-BOOL Template::CreateFromDB(DWORD dwId)
+BOOL Template::CreateFromDB(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
-   DWORD i, dwNumNodes, dwNodeId;
+   UINT32 i, dwNumNodes, dwNodeId;
    NetObj *pObject;
    BOOL bResult = TRUE;
 
@@ -201,7 +201,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    // Load DCI and access list
    loadACLFromDB();
    loadItemsFromDB();
-   for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
+   for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
       if (!m_dcObjects->get(i)->loadThresholdsFromDB())
          bResult = FALSE;
 
@@ -286,7 +286,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 		_sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d"), m_dwId);
 		DBQuery(hdb, query);
 		LockChildList(FALSE);
-		for(DWORD i = 0; i < m_dwChildCount; i++)
+		for(UINT32 i = 0; i < m_dwChildCount; i++)
 		{
 			_sntprintf(query, 256, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
 			DBQuery(hdb, query);
@@ -425,7 +425,7 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
 /**
  * Delete data collection object from node
  */
-bool Template::deleteDCObject(DWORD dcObjectId, bool needLock)
+bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 {
    bool success = false;
 
@@ -466,7 +466,7 @@ bool Template::deleteDCObject(DWORD dcObjectId, bool needLock)
 /**
  * Modify data collection object from NXCP message
  */
-bool Template::updateDCObject(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId)
+bool Template::updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId)
 {
    bool success = false;
 
@@ -499,12 +499,12 @@ bool Template::updateDCObject(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMa
 /**
  * Set status for group of DCIs
  */
-bool Template::setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
+bool Template::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus)
 {
    bool success = true;
 
    lockDciAccess();
-   for(DWORD i = 0; i < dwNumItems; i++)
+   for(UINT32 i = 0; i < dwNumItems; i++)
    {
 		int j;
       for(j = 0; j < m_dcObjects->size(); j++)
@@ -525,7 +525,7 @@ bool Template::setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
 /**
  * Lock data collection items list
  */
-BOOL Template::lockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
+BOOL Template::lockDCIList(UINT32 dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
 {
    BOOL bSuccess;
 
@@ -550,7 +550,7 @@ BOOL Template::lockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *p
 /**
  * Unlock data collection items list
  */
-BOOL Template::unlockDCIList(DWORD dwSessionId)
+BOOL Template::unlockDCIList(UINT32 dwSessionId)
 {
    BOOL bSuccess = FALSE;
 
@@ -573,7 +573,7 @@ BOOL Template::unlockDCIList(DWORD dwSessionId)
 /**
  * Send DCI list to client
  */
-void Template::sendItemsToClient(ClientSession *pSession, DWORD dwRqId)
+void Template::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -604,7 +604,7 @@ void Template::sendItemsToClient(ClientSession *pSession, DWORD dwRqId)
 /**
  * Get DCI's data type
  */
-int Template::getItemType(DWORD dwItemId)
+int Template::getItemType(UINT32 dwItemId)
 {
    int iType = -1;
 
@@ -630,7 +630,7 @@ int Template::getItemType(DWORD dwItemId)
 /**
  * Get item by it's id
  */
-DCObject *Template::getDCObjectById(DWORD itemId)
+DCObject *Template::getDCObjectById(UINT32 itemId)
 {
    DCObject *object = NULL;
 
@@ -653,7 +653,7 @@ DCObject *Template::getDCObjectById(DWORD itemId)
 /**
  * Get item by template item id
  */
-DCObject *Template::getDCObjectByTemplateId(DWORD tmplItemId)
+DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId)
 {
    DCObject *object = NULL;
 
@@ -750,7 +750,7 @@ void Template::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from NXCP message
  */
-DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -791,7 +791,7 @@ DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
  */
 BOOL Template::applyToTarget(DataCollectionTarget *target)
 {
-   DWORD *pdwItemList;
+   UINT32 *pdwItemList;
    BOOL bErrors = FALSE;
 
    // Link node to template
@@ -801,7 +801,7 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
       target->AddParent(this);
    }
 
-   pdwItemList = (DWORD *)malloc(sizeof(DWORD) * m_dcObjects->size());
+   pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
    DbgPrintf(2, _T("Apply %d items from template \"%s\" to target \"%s\""),
              m_dcObjects->size(), m_szName, target->Name());
 
@@ -830,7 +830,7 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
  */
 void Template::queueUpdate()
 {
-   DWORD i;
+   UINT32 i;
    TEMPLATE_UPDATE_INFO *pInfo;
 
    LockData();
@@ -850,7 +850,7 @@ void Template::queueUpdate()
 /**
  * Queue template remove from node
  */
-void Template::queueRemoveFromTarget(DWORD targetId, BOOL bRemoveDCI)
+void Template::queueRemoveFromTarget(UINT32 targetId, BOOL bRemoveDCI)
 {
    TEMPLATE_UPDATE_INFO *pInfo;
 
@@ -868,16 +868,16 @@ void Template::queueRemoveFromTarget(DWORD targetId, BOOL bRemoveDCI)
 /**
  * Get list of events used by DCIs
  */
-DWORD *Template::getDCIEventsList(DWORD *pdwCount)
+UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
 {
-   DWORD i, j, *pdwList;
+   UINT32 i, j, *pdwList;
    DCItem *pItem = NULL;
 
    pdwList = NULL;
    *pdwCount = 0;
 
    lockDciAccess();
-   for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
+   for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
    {
       m_dcObjects->get(i)->getEventList(&pdwList, pdwCount);
    }
@@ -891,7 +891,7 @@ DWORD *Template::getDCIEventsList(DWORD *pdwCount)
          if (pdwList[i] == pdwList[j])
          {
             (*pdwCount)--;
-            memmove(&pdwList[j], &pdwList[j + 1], sizeof(DWORD) * (*pdwCount - j));
+            memmove(&pdwList[j], &pdwList[j + 1], sizeof(UINT32) * (*pdwCount - j));
             j--;
          }
       }
@@ -928,7 +928,7 @@ void Template::CreateNXMPRecord(String &str)
 /**
  * Enumerate all DCIs
  */
-bool Template::enumDCObjects(bool (* pfCallback)(DCObject *, DWORD, void *), void *pArg)
+bool Template::enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg)
 {
 	bool success = true;
 
@@ -963,7 +963,7 @@ void Template::prepareForDeletion()
 {
 	if (Type() == OBJECT_TEMPLATE)
 	{
-		DWORD i;
+		UINT32 i;
 	
 		LockChildList(FALSE);
 		for(i = 0; i < m_dwChildCount; i++)
@@ -1015,11 +1015,11 @@ BOOL Template::isApplicable(Node *node)
  * derived from DataCollectionTarget actual values will always be empty strings
  * with data type DCI_DT_NULL.
  */
-DWORD Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly)
+UINT32 Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly)
 {
    lockDciAccess();
 
-	DWORD dwId = VID_DCI_VALUES_BASE, dwCount = 0;
+	UINT32 dwId = VID_DCI_VALUES_BASE, dwCount = 0;
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);

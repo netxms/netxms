@@ -34,14 +34,14 @@
 // Read PDU from network
 //
 
-static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, DWORD *pdwSize)
+static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 {
    fd_set rdfs;
    struct timeval tv;
 	int nBytes;
 #ifndef _WIN32
    int iErr;
-	DWORD dwTimeout = g_dwSNMPTimeout;
+	UINT32 dwTimeout = g_dwSNMPTimeout;
    QWORD qwTime;
 
    do
@@ -70,7 +70,7 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, DWORD *pdwSize)
          }
       }
       qwTime = GetCurrentTimeMs() - qwTime;  // Elapsed time
-      dwTimeout -= min(((DWORD)qwTime), dwTimeout);
+      dwTimeout -= min(((UINT32)qwTime), dwTimeout);
    } while(iErr < 0);
 #endif
 
@@ -91,7 +91,7 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, DWORD *pdwSize)
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse)
 {
 	BYTE *pduIn, *pduOut;
-	DWORD dwSizeIn, dwSizeOut;
+	UINT32 dwSizeIn, dwSizeOut;
 	SOCKET hSocket;
 	int nRetries;
 	struct sockaddr_in addr;

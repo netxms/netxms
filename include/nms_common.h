@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -103,7 +103,7 @@
 #define MAX_PARAM_NAME           256
 #define MAX_COLUMN_NAME          64
 #define MAX_DNS_NAME             256
-#define GROUP_FLAG               ((DWORD)0x80000000)
+#define GROUP_FLAG               ((UINT32)0x80000000)
 
 #define NETXMS_MAX_CIPHERS       5
 #define NETXMS_RSA_KEYLEN        2048
@@ -140,7 +140,7 @@ typedef int bool;
  */
 #ifdef ORACLE_PROC
 #undef BYTE
-#undef DWORD
+#undef UINT32
 #endif
 
 
@@ -219,10 +219,9 @@ typedef int bool;
 #define lseek(f,o,w) _lseek(f,o,w)
 #define unlink(x)    _unlink(x)
 
-typedef unsigned __int64 QWORD;
-typedef __int64 INT64;
+typedef UINT64 QWORD;   // for compatibility
 typedef int socklen_t;
-typedef DWORD pid_t;
+typedef UINT32 pid_t;
 typedef LONG ssize_t;
 
 typedef signed __int8 int8_t;
@@ -243,10 +242,10 @@ typedef unsigned __int64 uint64_t;
 #define UINT64X_FMT(m)  _T("%") m _T("I64X")
 #if defined(__64BIT__) || (_MSC_VER > 1300)
 #define TIME_T_FMT      _T("%I64u")
-#define TIME_T_FCAST(x) ((QWORD)(x))
+#define TIME_T_FCAST(x) ((UINT64)(x))
 #else
 #define TIME_T_FMT      _T("%u")
-#define TIME_T_FCAST(x) ((DWORD)(x))
+#define TIME_T_FCAST(x) ((UINT32)(x))
 #endif
 
 // Socket compatibility
@@ -334,16 +333,19 @@ typedef unsigned __int64 uint64_t;
 
 typedef int BOOL;
 #if (SIZEOF_LONG == 4)
-typedef long LONG;
+typedef long INT32;
 #else
-typedef int LONG;
+typedef int INT32;
 #endif
 #if (SIZEOF_LONG == 4)
-typedef unsigned long DWORD;
+typedef unsigned long UINT32;
 #else
-typedef unsigned int DWORD;
+typedef unsigned int UINT32;
 #endif
-typedef unsigned short WORD;
+typedef INT32 LONG;
+typedef UINT32 UINT32;
+typedef unsigned short UINT16;
+typedef UINT16 WORD;
 typedef unsigned char BYTE;
 typedef void * HANDLE;
 typedef void * HMODULE;
@@ -355,7 +357,8 @@ typedef X_INT64_X INT64;
 #endif
 
 #ifdef X_UINT64_X
-typedef X_UINT64_X QWORD;
+typedef X_UINT64_X UINT64;
+typedef UINT64 QWORD;
 #else
 #error Target system does not have unsigned 64bit integer type
 #endif
@@ -368,7 +371,7 @@ typedef X_UINT64_X QWORD;
 #define UINT64_FMTA		"%llu"
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
 #define TIME_T_FMT		_T("%u")
-#define TIME_T_FCAST(x) ((DWORD)(x))
+#define TIME_T_FCAST(x) ((UINT32)(x))
 
 #ifndef MAX_PATH
 #define MAX_PATH 256
@@ -401,48 +404,7 @@ typedef int SOCKET;
 
 #define SELECT_NFDS(x)  (x)
 
-#elif defined(__SYMBIAN32__)
-
-/********** SYMBIAN ********************/
-
-#define _SYMBIAN
-
-#include <e32base.h>
-#include <e32std.h>
-
-#include <sys/types.h>
-#include <stdlib_r.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-
-#define FS_PATH_SEPARATOR       _T("\\")
-#define FS_PATH_SEPARATOR_A     "\\"
-#define FS_PATH_SEPARATOR_W     L"\\"
-#define FS_PATH_SEPARATOR_CHAR  _T('\\')
-
-typedef int BOOL;
-typedef TInt32 LONG;
-typedef TUint32 DWORD;
-typedef TUint16 WORD;
-typedef unsigned char BYTE;
-typedef TInt64 INT64;
-typedef TUint64 QWORD;
-
-#define INT64_FMT			_T("%lld")
-#define INT64_FMTW		L"%lld"
-#define INT64_FMTA		"%lld"
-#define UINT64_FMT		_T("%llu")
-#define UINT64_FMTW		L"%llu"
-#define UINT64_FMTA		"%llu"
-#define UINT64X_FMT(m)  _T("%") m _T("llX")
-#define TIME_T_FMT		_T("%u")
-#define TIME_T_FCAST(x) ((DWORD)(x))
-
-#ifndef MAX_PATH
-#define MAX_PATH 256
-#endif
-
-#else    /* not _WIN32, _NETWARE, or __SYMBIAN32__ */
+#else    /* not _WIN32 or _NETWARE */
 
 /*********** UNIX *********************/
 
@@ -523,18 +485,22 @@ typedef TUint64 QWORD;
 
 typedef int BOOL;
 #if (SIZEOF_LONG == 4)
-typedef long LONG;
-typedef unsigned long DWORD;
+typedef long INT32;
+typedef unsigned long UINT32;
 #undef __64BIT__
 #else
-typedef int LONG;
-typedef unsigned int DWORD;
+typedef int INT32;
+typedef unsigned int UINT32;
 #ifndef __64BIT__
 #define __64BIT__
 #endif
 #endif
-typedef unsigned short WORD;
+typedef unsigned short UINT16;
+typedef short INT16;
 typedef unsigned char BYTE;
+typedef INT32 LONG;  // for compatibility
+typedef UINT32 UINT32;  // for compatibility
+typedef UINT16 WORD;  // for compatibility
 typedef void * HANDLE;
 typedef void * HMODULE;
 
@@ -551,14 +517,15 @@ typedef int64_t INT64;
 #endif
 
 #if HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
-typedef unsigned long long QWORD;
+typedef unsigned long long UINT64;
 #elif HAVE_UINT64_T
-typedef uint64_t QWORD;
+typedef uint64_t UINT64;
 #elif HAVE_U_INT64_T
-typedef u_int64_t QWORD;
+typedef u_int64_t UINT64;
 #else
 #error Target system does not have unsigned 64bit integer type
 #endif
+typedef UINT64 QWORD;   // for compatibility
 
 #define INT64_FMT			_T("%lld")
 #define INT64_FMTW		L"%lld"
@@ -569,10 +536,10 @@ typedef u_int64_t QWORD;
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
 #ifdef __64BIT__
 #define TIME_T_FMT		_T("%llu")
-#define TIME_T_FCAST(x)         ((QWORD)(x))
+#define TIME_T_FCAST(x)         ((UINT64)(x))
 #else
 #define TIME_T_FMT		_T("%u")
-#define TIME_T_FCAST(x)         ((DWORD)(x))
+#define TIME_T_FCAST(x)         ((UINT32)(x))
 #endif
 
 #ifndef TRUE
@@ -648,8 +615,8 @@ typedef struct hostent HOSTENT;
  * Casting between pointer and 32-bit integer
  */
 #ifdef __64BIT__
-#define CAST_FROM_POINTER(p, t) ((t)((QWORD)(p)))
-#define CAST_TO_POINTER(v, t) ((t)((QWORD)(v)))
+#define CAST_FROM_POINTER(p, t) ((t)((UINT64)(p)))
+#define CAST_TO_POINTER(v, t) ((t)((UINT64)(v)))
 #else
 #define CAST_FROM_POINTER(p, t) ((t)(p))
 #define CAST_TO_POINTER(v, t) ((t)(v))

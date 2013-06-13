@@ -63,11 +63,11 @@ static NETXMS_SUBAGENT_LIST *m_pEnumList = NULL;
 static int m_iNumEnums = 0;
 static NETXMS_SUBAGENT_TABLE *m_pTableList = NULL;
 static int m_iNumTables = 0;
-static DWORD m_dwTimedOutRequests = 0;
-static DWORD m_dwAuthenticationFailures = 0;
-static DWORD m_dwProcessedRequests = 0;
-static DWORD m_dwFailedRequests = 0;
-static DWORD m_dwUnsupportedRequests = 0;
+static UINT32 m_dwTimedOutRequests = 0;
+static UINT32 m_dwAuthenticationFailures = 0;
+static UINT32 m_dwProcessedRequests = 0;
+static UINT32 m_dwFailedRequests = 0;
+static UINT32 m_dwUnsupportedRequests = 0;
 
 /**
  * Handler for parameters which always returns string constant
@@ -79,11 +79,11 @@ static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 }
 
 /**
- * Handler for parameters which returns DWORD value from specific variable
+ * Handler for parameters which returns UINT32 value from specific variable
  */
 static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   ret_uint(value, *((DWORD *)arg));
+   ret_uint(value, *((UINT32 *)arg));
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -92,7 +92,7 @@ static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
  */ 
 static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
-   DWORD dwCiphers;
+   UINT32 dwCiphers;
 
    dwCiphers = CSCPGetSupportedCiphers();
    if (dwCiphers == 0)
@@ -463,10 +463,10 @@ BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec) //to be TCHAR
 /**
  * Get parameter's value
  */
-DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
+UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 {
    int i, rc;
-   DWORD dwErrorCode;
+   UINT32 dwErrorCode;
 
    DebugPrintf(dwSessionId, 5, _T("Requesting parameter \"%s\""), pszParam);
    for(i = 0; i < m_iNumParams; i++)
@@ -538,10 +538,10 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 /**
  * Get list's value
  */
-DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
+UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue)
 {
    int i, rc;
-   DWORD dwErrorCode;
+   UINT32 dwErrorCode;
 
    DebugPrintf(dwSessionId, 5, _T("Requesting list \"%s\""), pszParam);
    for(i = 0; i < m_iNumEnums; i++)
@@ -598,10 +598,10 @@ DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
 /**
  * Get table's value
  */
-DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
+UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue)
 {
    int i, rc;
-   DWORD dwErrorCode;
+   UINT32 dwErrorCode;
 
    DebugPrintf(dwSessionId, 5, _T("Requesting table \"%s\""), pszParam);
    for(i = 0; i < m_iNumTables; i++)
@@ -612,8 +612,6 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
-               if (pValue->getInstanceColumn()[0] == 0)
-                  pValue->setInstanceColumn(m_pTableList[i].instanceColumns);
                dwErrorCode = ERR_SUCCESS;
                m_dwProcessedRequests++;
                break;
@@ -663,7 +661,7 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
 void GetParameterList(CSCPMessage *pMsg)
 {
    int i;
-   DWORD dwId, count;
+   UINT32 dwId, count;
 
 	// Parameters
    for(i = 0, count = 0, dwId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
@@ -681,7 +679,7 @@ void GetParameterList(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_NUM_PARAMETERS, count);
 
 	// Push parameters
-   pMsg->SetVariable(VID_NUM_PUSH_PARAMETERS, (DWORD)m_iNumPushParams);
+   pMsg->SetVariable(VID_NUM_PUSH_PARAMETERS, (UINT32)m_iNumPushParams);
    for(i = 0, dwId = VID_PUSHPARAM_LIST_BASE; i < m_iNumPushParams; i++)
    {
       pMsg->SetVariable(dwId++, m_pPushParamList[i].name);
@@ -690,7 +688,7 @@ void GetParameterList(CSCPMessage *pMsg)
    }
 
 	// Lists
-   pMsg->SetVariable(VID_NUM_ENUMS, (DWORD)m_iNumEnums);
+   pMsg->SetVariable(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
    for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
       pMsg->SetVariable(dwId++, m_pEnumList[i].name);
@@ -698,7 +696,7 @@ void GetParameterList(CSCPMessage *pMsg)
 	ListListsFromExtSubagents(pMsg, &dwId, &count);
 
 	// Tables
-   pMsg->SetVariable(VID_NUM_TABLES, (DWORD)m_iNumTables);
+   pMsg->SetVariable(VID_NUM_TABLES, (UINT32)m_iNumTables);
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
       pMsg->SetVariable(dwId++, m_pTableList[i].name);
@@ -714,9 +712,9 @@ void GetParameterList(CSCPMessage *pMsg)
 void GetTableList(CSCPMessage *pMsg)
 {
    int i;
-   DWORD dwId, count;
+   UINT32 dwId, count;
 
-   pMsg->SetVariable(VID_NUM_TABLES, (DWORD)m_iNumTables);
+   pMsg->SetVariable(VID_NUM_TABLES, (UINT32)m_iNumTables);
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
       pMsg->SetVariable(dwId++, m_pTableList[i].name);
@@ -732,9 +730,9 @@ void GetTableList(CSCPMessage *pMsg)
 void GetEnumList(CSCPMessage *pMsg)
 {
    int i;
-   DWORD dwId, count;
+   UINT32 dwId, count;
 
-   pMsg->SetVariable(VID_NUM_ENUMS, (DWORD)m_iNumEnums);
+   pMsg->SetVariable(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
    for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
       pMsg->SetVariable(dwId++, m_pEnumList[i].name);

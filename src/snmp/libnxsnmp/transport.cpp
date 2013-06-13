@@ -29,7 +29,7 @@
 static struct
 {
 	const TCHAR *oid;
-	DWORD errorCode;
+	UINT32 errorCode;
 } m_oidToErrorMap[] =
 {
 	{ _T(".1.3.6.1.6.3.15.1.1.1.0"), SNMP_ERR_UNSUPP_SEC_LEVEL },
@@ -78,9 +78,9 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 /**
  * Send a request and wait for respone with respect for timeouts and retransmissions
  */
-DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, DWORD timeout, int numRetries)
+UINT32 SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout, int numRetries)
 {
-   DWORD rc;
+   UINT32 rc;
    int bytes;
 
    if ((request == NULL) || (response == NULL) || (numRetries == 0))
@@ -247,9 +247,9 @@ SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
  * Will try to resolve host name if it's not null, otherwise
  * IP address will be used
  */
-DWORD SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, DWORD dwHostAddr, WORD wPort)
+UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, UINT32 dwHostAddr, WORD wPort)
 {
-   DWORD dwResult;
+   UINT32 dwResult;
 
 #ifdef UNICODE
    char szHostName[256];
@@ -277,7 +277,7 @@ DWORD SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, DWORD dwHo
       hs = gethostbyname(HOSTNAME_VAR);
       if (hs != NULL)
       {
-         memcpy(&m_peerAddr.sin_addr.s_addr, hs->h_addr, sizeof(DWORD));
+         memcpy(&m_peerAddr.sin_addr.s_addr, hs->h_addr, sizeof(UINT32));
       }
       else
       {
@@ -360,7 +360,7 @@ void SNMP_UDPTransport::clearBuffer()
 /**
  * Receive data from socket
  */
-int SNMP_UDPTransport::recvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
+int SNMP_UDPTransport::recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
 {
    fd_set rdfs;
    struct timeval tv;
@@ -395,7 +395,7 @@ retry_wait:
             }
          }
          qwTime = GetCurrentTimeMs() - qwTime;  // Elapsed time
-         dwTimeout -= min(((DWORD)qwTime), dwTimeout);
+         dwTimeout -= min(((UINT32)qwTime), dwTimeout);
       } while(iErr < 0);
 #endif
    }
@@ -428,9 +428,9 @@ retry_wait:
 /**
  * Pre-parse PDU
  */
-DWORD SNMP_UDPTransport::preParsePDU()
+UINT32 SNMP_UDPTransport::preParsePDU()
 {
-   DWORD dwType, dwLength, dwIdLength;
+   UINT32 dwType, dwLength, dwIdLength;
    BYTE *pbCurrPos;
 
    if (!BER_DecodeIdentifier(&m_pBuffer[m_dwBufferPos], m_dwBytesInBuffer, 
@@ -445,12 +445,12 @@ DWORD SNMP_UDPTransport::preParsePDU()
 /**
  * Read PDU from socket
  */
-int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout, 
+int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout, 
                                    struct sockaddr *pSender, socklen_t *piAddrSize,
                                    SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
    int iBytes;
-   DWORD dwPDULength;
+   UINT32 dwPDULength;
 
    if (m_dwBytesInBuffer < 2)
    {
@@ -516,7 +516,7 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
 int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
 {
    BYTE *pBuffer;
-   DWORD dwSize;
+   UINT32 dwSize;
    int nBytes = 0;
 
    dwSize = pPDU->encode(&pBuffer, m_securityContext);
@@ -532,7 +532,7 @@ int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
 /**
  * Get peer IPv4 address (in host byte order)
  */
-DWORD SNMP_UDPTransport::getPeerIpAddress()
+UINT32 SNMP_UDPTransport::getPeerIpAddress()
 {
    return ntohl(m_peerAddr.sin_addr.s_addr);
 }

@@ -25,9 +25,9 @@
 /**
  * Create column filter object from NXCP message
  */
-ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId)
+ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, UINT32 baseId)
 {
-	DWORD varId;
+	UINT32 varId;
 
 	m_column = _tcsdup(column);
 	m_type = (int)msg->GetVariableShort(baseId);
@@ -164,7 +164,7 @@ String ColumnFilter::generateSql()
 				sql += _T("NOT ");
 
 			{
-				NetObj *object = FindObjectById((DWORD)m_value.numericValue);
+				NetObj *object = FindObjectById((UINT32)m_value.numericValue);
 				if (object != NULL)
 				{
 					ObjectArray<NetObj> *childObjects = object->getFullChildList(true);

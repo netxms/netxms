@@ -236,7 +236,7 @@ typedef struct value_pair
 	int			type;
 	int			length; /* of strvalue */
 	ATTR_FLAGS  flags;
-	DWORD			lvalue;
+	UINT32			lvalue;
 	int			op;
 	char			strvalue[AUTH_STRING_LEN];
 	int			group;
@@ -244,7 +244,7 @@ typedef struct value_pair
 } VALUE_PAIR;
 
 typedef struct auth_req {
-	DWORD			ipaddr;
+	UINT32			ipaddr;
 	WORD			udp_port;
 	BYTE			id;
 	BYTE			code;
@@ -253,15 +253,15 @@ typedef struct auth_req {
 	BYTE			username[AUTH_STRING_LEN];
 	VALUE_PAIR		*request;
 	int			child_pid;	/* Process ID of child */
-	DWORD			timestamp;
+	UINT32			timestamp;
 	BYTE			*data;		/* Raw received data */
 	int			data_len;
 	VALUE_PAIR		*proxy_pairs;
 	/* Proxy support fields */
 	char			realm[64];
 	int			validated;	/* Already md5 checked */
-	DWORD			server_ipaddr;
-	DWORD			server_id;
+	UINT32			server_ipaddr;
+	UINT32			server_id;
 	VALUE_PAIR		*server_reply;	/* Reply from other server */
 	int			server_code;	/* Reply code from other srv */
 	struct auth_req		*next;		/* Next active request */

@@ -34,7 +34,7 @@
 // Texts for ISC error codes
 //
 
-const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code)
+const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code)
 {
    static const TCHAR *errorText[] =
 	{
@@ -101,7 +101,7 @@ ISC::ISC()
 // Normal constructor for ISC
 //
 
-ISC::ISC(DWORD addr, WORD port)
+ISC::ISC(UINT32 addr, WORD port)
 {
 	m_flags = 0;
    m_addr = addr;
@@ -275,12 +275,12 @@ void ISC::ReceiverThread()
 // Connect to ISC peer
 //
 
-DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
+UINT32 ISC::Connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
    BOOL bForceEncryption = FALSE, bSecondPass = FALSE;
-   DWORD rcc = ISC_ERR_INTERNAL_ERROR;
+   UINT32 rcc = ISC_ERR_INTERNAL_ERROR;
 
    // Check if already connected
    if (m_flags & ISCF_IS_CONNECTED)
@@ -477,10 +477,10 @@ BOOL ISC::SendMessage(CSCPMessage *pMsg)
 // Wait for request completion code
 //
 
-DWORD ISC::WaitForRCC(DWORD rqId, DWORD timeOut)
+UINT32 ISC::WaitForRCC(UINT32 rqId, UINT32 timeOut)
 {
    CSCPMessage *pMsg;
-   DWORD dwRetCode;
+   UINT32 dwRetCode;
 
    pMsg = m_msgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, rqId, timeOut);
    if (pMsg != NULL)
@@ -500,11 +500,11 @@ DWORD ISC::WaitForRCC(DWORD rqId, DWORD timeOut)
 // Setup encryption
 //
 
-DWORD ISC::SetupEncryption(RSA *pServerKey)
+UINT32 ISC::SetupEncryption(RSA *pServerKey)
 {
 #ifdef _WITH_ENCRYPTION
    CSCPMessage msg(m_protocolVersion), *pResp;
-   DWORD dwRqId, dwError, dwResult;
+   UINT32 dwRqId, dwError, dwResult;
 
    dwRqId = m_requestId++;
 
@@ -557,10 +557,10 @@ DWORD ISC::SetupEncryption(RSA *pServerKey)
 // Send dummy command to peer (can be used for keepalive)
 //
 
-DWORD ISC::Nop()
+UINT32 ISC::Nop()
 {
    CSCPMessage msg(m_protocolVersion);
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = m_requestId++;
    msg.SetCode(CMD_KEEPALIVE);
@@ -576,10 +576,10 @@ DWORD ISC::Nop()
 // Connect to requested service
 //
 
-DWORD ISC::ConnectToService(DWORD service)
+UINT32 ISC::ConnectToService(UINT32 service)
 {
    CSCPMessage msg(m_protocolVersion);
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = m_requestId++;
    msg.SetCode(CMD_ISC_CONNECT_TO_SERVICE);

@@ -36,8 +36,6 @@ import org.netxms.ui.eclipse.tools.ImageCache;
  */
 public class IdMatchingLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private ImageCache imageCache = new ImageCache();
 	
 	/* (non-Javadoc)

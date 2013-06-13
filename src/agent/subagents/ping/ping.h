@@ -38,15 +38,15 @@
  */
 struct PING_TARGET
 {
-   DWORD ipAddr;
+   UINT32 ipAddr;
    TCHAR dnsName[MAX_DB_STRING];
    TCHAR name[MAX_DB_STRING];
-   DWORD packetSize;
-   DWORD avgRTT;
-   DWORD lastRTT;
-   DWORD stdDevRTT;
-   DWORD packetLoss;
-   DWORD history[MAX_POLLS_PER_MINUTE];
+   UINT32 packetSize;
+   UINT32 avgRTT;
+   UINT32 lastRTT;
+   UINT32 stdDevRTT;
+   UINT32 packetLoss;
+   UINT32 history[MAX_POLLS_PER_MINUTE];
    int bufPos;
 	int ipAddrAge;
    THREAD hThread;

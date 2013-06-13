@@ -157,7 +157,7 @@ bool Report::deleteFromDB(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL Report::CreateFromDB(DWORD dwId)
+BOOL Report::CreateFromDB(UINT32 dwId)
 {
 	m_dwId = dwId;
 
@@ -213,7 +213,7 @@ void Report::CreateMessage(CSCPMessage *msg)
 // Update network map object from NXCP message
 //
 
-DWORD Report::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
+UINT32 Report::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
 		LockData();
@@ -233,7 +233,7 @@ DWORD Report::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 // Returns assigned job ID
 //
 
-DWORD Report::execute(StringMap *parameters, DWORD userId)
+UINT32 Report::execute(StringMap *parameters, UINT32 userId)
 {
 	ReportJob *job = new ReportJob(this, parameters, userId);
 	AddJob(job);

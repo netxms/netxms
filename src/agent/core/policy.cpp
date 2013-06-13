@@ -29,12 +29,10 @@
 
 #define POLICY_REGISTRY_PATH _T("/policyRegistry")
 
-
-//
-// Register policy in persistent storage
-//
-
-static void RegisterPolicy(CommSession *session, DWORD type, uuid_t guid)
+/**
+ * Register policy in persistent storage
+ */
+static void RegisterPolicy(CommSession *session, UINT32 type, uuid_t guid)
 {
 	TCHAR path[256], buffer[64];
 	int tail;
@@ -90,11 +88,11 @@ static int GetPolicyType(uuid_t guid)
 // Deploy configuration file
 //
 
-static DWORD DeployConfig(DWORD session, uuid_t guid, CSCPMessage *msg)
+static UINT32 DeployConfig(UINT32 session, uuid_t guid, CSCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
 	int fh;
-	DWORD rcc;
+	UINT32 rcc;
 
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
 	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
@@ -104,7 +102,7 @@ static DWORD DeployConfig(DWORD session, uuid_t guid, CSCPMessage *msg)
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
 	{
-		DWORD size = msg->GetVariableBinary(VID_CONFIG_FILE_DATA, NULL, 0);
+		UINT32 size = msg->GetVariableBinary(VID_CONFIG_FILE_DATA, NULL, 0);
 		BYTE *data = (BYTE *)malloc(size);
 		if (data != NULL)
 		{
@@ -140,7 +138,7 @@ static DWORD DeployConfig(DWORD session, uuid_t guid, CSCPMessage *msg)
 // Deploy log parser policy
 //
 
-static DWORD DeployLogParser(DWORD session, uuid_t guid, CSCPMessage *msg)
+static UINT32 DeployLogParser(UINT32 session, uuid_t guid, CSCPMessage *msg)
 {
 	return ERR_NOT_IMPLEMENTED;
 }
@@ -150,9 +148,9 @@ static DWORD DeployLogParser(DWORD session, uuid_t guid, CSCPMessage *msg)
 // Deploy policy on agent
 //
 
-DWORD DeployPolicy(CommSession *session, CSCPMessage *request)
+UINT32 DeployPolicy(CommSession *session, CSCPMessage *request)
 {
-	DWORD type, rcc;
+	UINT32 type, rcc;
 	uuid_t guid;
 
 	type = request->GetVariableShort(VID_POLICY_TYPE);
@@ -183,10 +181,10 @@ DWORD DeployPolicy(CommSession *session, CSCPMessage *request)
 // Remove configuration file
 //
 
-static DWORD RemoveConfig(DWORD session, uuid_t guid,  CSCPMessage *msg)
+static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  CSCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
-	DWORD rcc;
+	UINT32 rcc;
 
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
 	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
@@ -209,10 +207,10 @@ static DWORD RemoveConfig(DWORD session, uuid_t guid,  CSCPMessage *msg)
 // Remove log parser file
 //
 
-static DWORD RemoveLogParser(DWORD session, uuid_t guid,  CSCPMessage *msg)
+static UINT32 RemoveLogParser(UINT32 session, uuid_t guid,  CSCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
-	DWORD rcc;
+	UINT32 rcc;
 
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
 	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
@@ -235,9 +233,9 @@ static DWORD RemoveLogParser(DWORD session, uuid_t guid,  CSCPMessage *msg)
 // Uninstall policy from agent
 //
 
-DWORD UninstallPolicy(CommSession *session, CSCPMessage *request)
+UINT32 UninstallPolicy(CommSession *session, CSCPMessage *request)
 {
-	DWORD rcc;
+	UINT32 rcc;
 	int type;
 	uuid_t guid;
 	TCHAR buffer[64];
@@ -270,15 +268,15 @@ DWORD UninstallPolicy(CommSession *session, CSCPMessage *request)
 // Get policy inventory
 //
 
-DWORD GetPolicyInventory(CommSession *session, CSCPMessage *msg)
+UINT32 GetPolicyInventory(CommSession *session, CSCPMessage *msg)
 {
 	Config *registry = OpenRegistry();
 
 	ConfigEntryList *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
 	if (list != NULL)
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)list->getSize());
-		DWORD varId = VID_ELEMENT_LIST_BASE;
+		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)list->getSize());
+		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < list->getSize(); i++, varId += 7)
 		{
 			ConfigEntry *e = list->getEntry(i);
@@ -296,7 +294,7 @@ DWORD GetPolicyInventory(CommSession *session, CSCPMessage *msg)
 	}
 	else
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)0);
+		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)0);
 	}
 	
 	CloseRegistry(false);

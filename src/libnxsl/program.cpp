@@ -166,9 +166,7 @@ NXSL_Program::NXSL_Program()
  */
 NXSL_Program::~NXSL_Program()
 {
-   DWORD i;
-
-   for(i = 0; i < m_dwCodeSize; i++)
+   for(UINT32 i = 0; i < m_dwCodeSize; i++)
       delete m_ppInstructionSet[i];
    safe_free(m_ppInstructionSet);
    
@@ -185,7 +183,7 @@ NXSL_Program::~NXSL_Program()
    safe_free(m_pFunctionList);
    safe_free(m_pModuleList);
 
-   for(i = 0; i < m_dwNumPreloads; i++)
+   for(UINT32 i = 0; i < m_dwNumPreloads; i++)
       safe_free(m_ppszPreloadList[i]);
    safe_free(m_ppszPreloadList);
 
@@ -208,7 +206,7 @@ void NXSL_Program::addInstruction(NXSL_Instruction *pInstruction)
  */
 void NXSL_Program::resolveLastJump(int nOpCode)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = m_dwCodeSize; i > 0;)
    {
@@ -225,7 +223,7 @@ void NXSL_Program::resolveLastJump(int nOpCode)
 /**
  * Create jump at given address replacing another instruction (usually NOP)
  */
-void NXSL_Program::createJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr)
+void NXSL_Program::createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr)
 {
 	int nLine;
 
@@ -242,9 +240,9 @@ void NXSL_Program::createJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr)
  * Will use first free address if dwAddr == INVALID_ADDRESS
  * Name must be in UTF-8
  */
-BOOL NXSL_Program::addFunction(const char *pszName, DWORD dwAddr, char *pszError)
+BOOL NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszError)
 {
-   DWORD i;
+   UINT32 i;
 
    // Check for duplicate function names
 #ifdef UNICODE
@@ -295,7 +293,7 @@ void NXSL_Program::addPreload(char *pszName)
  */
 void NXSL_Program::resolveFunctions()
 {
-   DWORD i, j;
+   UINT32 i, j;
 
    for(i = 0; i < m_dwCodeSize; i++)
    {
@@ -321,7 +319,7 @@ void NXSL_Program::resolveFunctions()
  */
 void NXSL_Program::dump(FILE *pFile)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwCodeSize; i++)
    {
@@ -405,11 +403,11 @@ void NXSL_Program::error(int nError)
  * Run program
  * Returns 0 on success and -1 on error
  */
-int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
+int NXSL_Program::run(NXSL_Environment *pEnv, UINT32 argc, NXSL_Value **argv,
                       NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
 							 NXSL_VariableSystem *pConstants, const TCHAR *entryPoint)
 {
-   DWORD i, dwOrigCodeSize, dwOrigNumFn;
+   UINT32 i, dwOrigCodeSize, dwOrigNumFn;
    NXSL_VariableSystem *pSavedGlobals, *pSavedConstants = NULL;
    NXSL_Value *pValue;
    TCHAR szBuffer[32];
@@ -612,7 +610,7 @@ void NXSL_Program::execute()
    NXSL_Value *pValue;
    NXSL_Variable *pVar;
    NXSL_ExtFunction *pFunc;
-   DWORD dwNext = m_dwCurrPos + 1;
+   UINT32 dwNext = m_dwCurrPos + 1;
    TCHAR szBuffer[256];
    int i, nRet;
 
@@ -966,7 +964,7 @@ void NXSL_Program::execute()
          }
          else
          {
-            DWORD dwAddr;
+            UINT32 dwAddr;
 
             dwAddr = getFunctionAddress(cp->m_operand.m_pszString);
             if (dwAddr != INVALID_ADDRESS)
@@ -1035,7 +1033,7 @@ void NXSL_Program::execute()
             m_dwSubLevel--;
             delete m_pLocals;
             m_pLocals = (NXSL_VariableSystem *)m_pCodeStack->pop();
-            dwNext = CAST_FROM_POINTER(m_pCodeStack->pop(), DWORD);
+            dwNext = CAST_FROM_POINTER(m_pCodeStack->pop(), UINT32);
          }
          else
          {
@@ -1283,7 +1281,7 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
 {
    NXSL_Value *pVal1, *pVal2, *pRes = NULL;
    const TCHAR *pszText1, *pszText2;
-   DWORD dwLen1, dwLen2;
+   UINT32 dwLen1, dwLen2;
    int nType;
    LONG nResult;
 
@@ -1594,9 +1592,9 @@ void NXSL_Program::doUnaryOperation(int nOpCode)
 /**
  * Relocate code block
  */
-void NXSL_Program::relocateCode(DWORD dwStart, DWORD dwLen, DWORD dwShift)
+void NXSL_Program::relocateCode(UINT32 dwStart, UINT32 dwLen, UINT32 dwShift)
 {
-   DWORD i, dwLast;
+   UINT32 i, dwLast;
 
    dwLast = min(dwStart + dwLen, m_dwCodeSize);
    for(i = dwStart; i < dwLast; i++)
@@ -1618,7 +1616,7 @@ void NXSL_Program::relocateCode(DWORD dwStart, DWORD dwLen, DWORD dwShift)
  */
 void NXSL_Program::useModule(NXSL_Program *pModule, const TCHAR *pszName)
 {
-   DWORD i, j, dwStart;
+   UINT32 i, j, dwStart;
 
    // Check if module already loaded
    for(i = 0; i < m_dwNumModules; i++)
@@ -1702,9 +1700,9 @@ void NXSL_Program::callFunction(int nArgCount)
 /**
  * Find function address by name
  */
-DWORD NXSL_Program::getFunctionAddress(const TCHAR *pszName)
+UINT32 NXSL_Program::getFunctionAddress(const TCHAR *pszName)
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumFunctions; i++)
       if (!_tcscmp(m_pFunctionList[i].m_szName, pszName))
@@ -1723,7 +1721,7 @@ NXSL_Value *NXSL_Program::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, B
    NXSL_Variable *pVar;
    const TCHAR *regExp, *value;
 	TCHAR szName[16];
-	DWORD regExpLen, valueLen;
+	UINT32 regExpLen, valueLen;
    int i;
 
 	regExp = pRegexp->getValueAsString(&regExpLen);
@@ -1760,7 +1758,7 @@ NXSL_Value *NXSL_Program::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, B
 /**
  * Get final jump destination from a jump chain
  */
-DWORD NXSL_Program::getFinalJumpDestination(DWORD dwAddr, int srcJump)
+UINT32 NXSL_Program::getFinalJumpDestination(UINT32 dwAddr, int srcJump)
 {
 	if ((m_ppInstructionSet[dwAddr]->m_nOpCode == OPCODE_JMP) || (m_ppInstructionSet[dwAddr]->m_nOpCode == srcJump))
 		return getFinalJumpDestination(m_ppInstructionSet[dwAddr]->m_operand.m_dwAddr, srcJump);
@@ -1772,7 +1770,7 @@ DWORD NXSL_Program::getFinalJumpDestination(DWORD dwAddr, int srcJump)
  */
 void NXSL_Program::optimize()
 {
-	DWORD i;
+	UINT32 i;
 
 	// Convert push constant followed by NEG to single push constant
 	for(i = 0; (m_dwCodeSize > 1) && (i < m_dwCodeSize - 1); i++)
@@ -1845,18 +1843,18 @@ void NXSL_Program::optimize()
  * @param start start offset
  * @param count number of instructions to remove
  */
-void NXSL_Program::removeInstructions(DWORD start, int count)
+void NXSL_Program::removeInstructions(UINT32 start, int count)
 {
-	if ((count <= 0) || (start + (DWORD)count >= m_dwCodeSize))
+	if ((count <= 0) || (start + (UINT32)count >= m_dwCodeSize))
 		return;
 
-	for(DWORD i = 0; i < (DWORD)count; i++)
+	for(UINT32 i = 0; i < (UINT32)count; i++)
 		delete m_ppInstructionSet[start + i];
 	memmove(&m_ppInstructionSet[start], &m_ppInstructionSet[start + count], sizeof(NXSL_Instruction *) * (m_dwCodeSize - start - count));
-	m_dwCodeSize -= (DWORD)count;
+	m_dwCodeSize -= (UINT32)count;
 
 	// Change jump destination addresses
-	for(DWORD i = 0; i < m_dwCodeSize; i++)
+	for(UINT32 i = 0; i < m_dwCodeSize; i++)
 	{
 		if (((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
 		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||

@@ -111,7 +111,7 @@ BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
    _sntprintf(query, 256, _T("DELETE FROM ap_bindings WHERE policy_id=%d"), m_dwId);
    DBQuery(hdb, query);
    LockChildList(FALSE);
-   for(DWORD i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
    {
       _sntprintf(query, 256, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
       DBQuery(hdb, query);
@@ -158,7 +158,7 @@ bool AgentPolicy::deleteFromDB(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL AgentPolicy::CreateFromDB(DWORD dwId)
+BOOL AgentPolicy::CreateFromDB(UINT32 dwId)
 {
 	m_dwId = dwId;
 
@@ -191,7 +191,7 @@ BOOL AgentPolicy::CreateFromDB(DWORD dwId)
          int numNodes = DBGetNumRows(hResult);
          for(int i = 0; i < numNodes; i++)
          {
-            DWORD nodeId = DBGetFieldULong(hResult, i, 0);
+            UINT32 nodeId = DBGetFieldULong(hResult, i, 0);
             NetObj *object = FindObjectById(nodeId);
             if (object != NULL)
             {
@@ -235,7 +235,7 @@ void AgentPolicy::CreateMessage(CSCPMessage *msg)
 // Modify policy from message
 //
 
-DWORD AgentPolicy::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AgentPolicy::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();

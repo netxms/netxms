@@ -41,7 +41,7 @@ int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 int main(int argc, char *argv[])
 {
    TCHAR *pszSource, szError[1024], entryPoint[256] = _T("");
-   DWORD dwSize;
+   UINT32 dwSize;
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;

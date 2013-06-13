@@ -44,7 +44,7 @@ UniversalRoot::~UniversalRoot()
  */
 void UniversalRoot::LinkChildObjects()
 {
-   DWORD i, dwNumChilds, dwObjectId;
+   UINT32 i, dwNumChilds, dwObjectId;
    NetObj *pObject;
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -75,7 +75,7 @@ void UniversalRoot::LinkChildObjects()
 BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
-   DWORD i;
+   UINT32 i;
 
    LockData();
 

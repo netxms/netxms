@@ -226,7 +226,7 @@ public class SummaryTable extends ViewPart
 	{
 		if (!viewer.isInitialized())
 		{
-			final String[] names = table.getColumnNames();
+			final String[] names = table.getColumnDisplayNames();
 			final int[] widths = new int[names.length];
 			Arrays.fill(widths, 100);
 			viewer.createColumns(names, widths, 0, SWT.UP);
@@ -238,7 +238,7 @@ public class SummaryTable extends ViewPart
 					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SummaryTable." + Integer.toString(tableId)); //$NON-NLS-1$
 				}
 			});
-			viewer.setComparator(new TableItemComparator(table.getColumnFormats()));
+			viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
 		}
 		viewer.setInput(table);
 	}
