@@ -483,6 +483,10 @@ typedef int SOCKET;
 #include <pth.h>
 #endif
 
+#ifdef __sun
+#include <sys/atomic.h>
+#endif
+
 typedef int BOOL;
 #if (SIZEOF_LONG == 4)
 typedef long INT32;
