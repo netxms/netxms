@@ -58,5 +58,6 @@ public class AlarmViewerElement extends ElementWidget
 
 		viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList"); //$NON-NLS-1$
 		viewer.setRootObject(config.getObjectId());
+		viewer.setSeverityFilter(config.getSeverityFilter());
 	}
 }

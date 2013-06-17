@@ -37,6 +37,9 @@ public class NetworkMapConfig extends DashboardElementConfig
 
 	@Element(required=false)
 	private String title = ""; //$NON-NLS-1$
+	
+	@Element(required=false)
+	private int zoomLevel = 100;	// in percents
 
 	/**
 	 * Create line chart settings object from XML document
@@ -116,5 +119,21 @@ public class NetworkMapConfig extends DashboardElementConfig
 	public void setObjectId(long objectId)
 	{
 		this.objectId = objectId;
+	}
+
+	/**
+	 * @return the zoomLevel
+	 */
+	public int getZoomLevel()
+	{
+		return zoomLevel;
+	}
+
+	/**
+	 * @param zoomLevel the zoomLevel to set
+	 */
+	public void setZoomLevel(int zoomLevel)
+	{
+		this.zoomLevel = zoomLevel;
 	}
 }

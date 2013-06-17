@@ -19,10 +19,15 @@
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Scale;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
@@ -37,6 +42,8 @@ public class NetworkMap extends PropertyPage
 	private NetworkMapConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;
+	private Scale zoomLevelScale;
+	private Spinner zoomLevelSpinner;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -49,6 +56,7 @@ public class NetworkMap extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
@@ -58,6 +66,7 @@ public class NetworkMap extends PropertyPage
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
@@ -66,7 +75,54 @@ public class NetworkMap extends PropertyPage
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
+		
+		Label label = new Label(dialogArea, SWT.NONE);
+		label.setText("Zoom level (%)");
+		gd = new GridData();
+		gd.horizontalSpan = 2;
+		label.setLayoutData(gd);
+		
+		zoomLevelScale = new Scale(dialogArea, SWT.HORIZONTAL);
+		zoomLevelScale.setMinimum(10);
+		zoomLevelScale.setMaximum(400);
+		zoomLevelScale.setSelection(config.getZoomLevel());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		zoomLevelScale.setLayoutData(gd);
+		zoomLevelScale.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				zoomLevelSpinner.setSelection(zoomLevelScale.getSelection());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+		
+		zoomLevelSpinner = new Spinner(dialogArea, SWT.BORDER);
+		zoomLevelSpinner.setMinimum(10);
+		zoomLevelSpinner.setMaximum(400);
+		zoomLevelSpinner.setSelection(config.getZoomLevel());
+		zoomLevelSpinner.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				zoomLevelScale.setSelection(zoomLevelSpinner.getSelection());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 
 		return dialogArea;
 	}
@@ -79,6 +135,7 @@ public class NetworkMap extends PropertyPage
 	{
 		config.setObjectId(objectSelector.getObjectId());
 		config.setTitle(title.getText());
+		config.setZoomLevel(zoomLevelSpinner.getSelection());
 		return true;
 	}
 }

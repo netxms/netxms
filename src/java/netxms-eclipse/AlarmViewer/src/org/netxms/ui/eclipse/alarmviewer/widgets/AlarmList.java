@@ -520,6 +520,14 @@ public class AlarmList extends Composite
 	}
 	
 	/**
+	 * @param filter
+	 */
+	public void setSeverityFilter(int filter)
+	{
+		alarmFilter.setSeverityFilter(filter);
+	}
+	
+	/**
 	 * Acknowledge selected alarms
 	 * 
 	 * @param sticky

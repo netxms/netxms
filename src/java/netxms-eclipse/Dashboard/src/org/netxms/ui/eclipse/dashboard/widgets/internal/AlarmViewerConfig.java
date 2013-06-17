@@ -37,6 +37,9 @@ public class AlarmViewerConfig extends DashboardElementConfig
 
 	@Element(required=false)
 	private String title = ""; //$NON-NLS-1$
+	
+	@Element(required=false)
+	private int severityFilter = 0xFF;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -116,5 +119,21 @@ public class AlarmViewerConfig extends DashboardElementConfig
 	public void setObjectId(long objectId)
 	{
 		this.objectId = objectId;
+	}
+
+	/**
+	 * @return the severityFilter
+	 */
+	public int getSeverityFilter()
+	{
+		return severityFilter;
+	}
+
+	/**
+	 * @param severityFilter the severityFilter to set
+	 */
+	public void setSeverityFilter(int severityFilter)
+	{
+		this.severityFilter = severityFilter;
 	}
 }

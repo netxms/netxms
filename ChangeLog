@@ -11,6 +11,8 @@
 - Empty containters have "Normal" status instead of "Unknown"
 - Management console:
 	- Charts can be created from table data
+	- Severity filter in dashboard element "Alarm Viewer"
+	- Zoom level can be configured for "Network Map" dashboard elements
 
 
 *

@@ -18,9 +18,13 @@
  */
 package org.netxms.ui.eclipse.networkmaps.widgets;
 
+import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
@@ -29,12 +33,17 @@ import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
+import org.netxms.base.NXCommon;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.objects.NetworkMap;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Widget for embedding network map into dashboards
@@ -49,7 +58,13 @@ public class NetworkMapWidget extends Composite
 	
 	protected ExtendedGraphViewer viewer;
 	protected MapLabelProvider labelProvider;
+	
+	private Color defaultLinkColor = null;
 
+	/**
+	 * @param parent
+	 * @param style
+	 */
 	public NetworkMapWidget(Composite parent, int style)
 	{
 		super(parent, style);
@@ -60,14 +75,60 @@ public class NetworkMapWidget extends Composite
 		viewer.setContentProvider(new MapContentProvider(viewer));
 		labelProvider = new MapLabelProvider(viewer);
 		viewer.setLabelProvider(labelProvider);
+		
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				if (defaultLinkColor != null)
+					defaultLinkColor.dispose();
+			}
+		});
 	}
 	
 	/**
+	 * Set content from map page
+	 * 
 	 * @param page
 	 */
 	public void setContent(NetworkMapPage page)
 	{
 		viewer.setInput(page);
+	}
+	
+	/**
+	 * Set content from preconfigured map object
+	 * 
+	 * @param mapObject
+	 */
+	public void setContent(NetworkMap mapObject)
+	{
+		setMapLayout(mapObject.getLayout());
+		
+		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
+		{
+			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
+				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			else
+				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+		}
+
+		setConnectionRouter(mapObject.getDefaultLinkRouting());
+		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
+		
+		if (mapObject.getDefaultLinkColor() >= 0)
+		{
+			if (defaultLinkColor != null)
+				defaultLinkColor.dispose();
+			defaultLinkColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getDefaultLinkColor()));
+			labelProvider.setDefaultLinkColor(defaultLinkColor);
+		}
+		
+		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
+		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
+		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
+		
+		viewer.setInput(mapObject.createMapPage());
 	}
 	
 	/**
@@ -125,5 +186,32 @@ public class NetworkMapWidget extends Composite
 				break;
 		}
 		viewer.setLayoutAlgorithm(algorithm);
+	}
+
+	/**
+	 * Set map default connection routing algorithm
+	 * 
+	 * @param routingAlgorithm
+	 */
+	public void setConnectionRouter(int routingAlgorithm)
+	{
+		switch(routingAlgorithm)
+		{
+			case NetworkMapLink.ROUTING_MANHATTAN:
+				viewer.getGraphControl().setRouter(new ManhattanConnectionRouter());
+				break;
+			default:
+				viewer.getGraphControl().setRouter(null);
+				break;
+		}
+		viewer.refresh();
+	}
+	
+	/**
+	 * @param zoomLevel
+	 */
+	public void zoomTo(double zoomLevel)
+	{
+		viewer.zoomTo(zoomLevel);
 	}
 }

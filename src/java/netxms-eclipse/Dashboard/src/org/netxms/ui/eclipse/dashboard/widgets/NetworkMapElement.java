@@ -67,8 +67,9 @@ public class NetworkMapElement extends ElementWidget
 		if (mapObject != null)
 		{
 			mapWidget = new NetworkMapWidget(this, SWT.NONE);
-			mapWidget.setMapLayout(mapObject.getLayout());
-			mapWidget.setContent(mapObject.createMapPage());
+			mapWidget.setContent(mapObject);
 		}
+		
+		mapWidget.zoomTo((double)config.getZoomLevel() / 100.0);
 	}
 }
