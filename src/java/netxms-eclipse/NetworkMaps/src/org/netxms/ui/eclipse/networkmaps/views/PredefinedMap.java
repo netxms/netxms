@@ -478,7 +478,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		if (added > 0)
 		{
 			saveMap();
-			viewer.setInput(mapPage);
 		}
 	}
 
