@@ -235,7 +235,7 @@ public class TableToolResults extends ViewPart
 	{
 		if (!viewer.isInitialized())
 		{
-			final String[] names = table.getColumnNames();
+			String[] names = table.getColumnDisplayNames();
 			final int[] widths = new int[names.length];
 			Arrays.fill(widths, 100);
 			viewer.createColumns(names, widths, 0, SWT.UP);
@@ -247,7 +247,7 @@ public class TableToolResults extends ViewPart
 					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableToolResults." + Long.toString(tool.getId()));
 				}
 			});
-			viewer.setComparator(new TableItemComparator(table.getColumnFormats()));
+			viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
 		}
 		viewer.setInput(table);
 	}

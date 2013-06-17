@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,23 +21,27 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * alarm viewer element properties
+ * Alarm viewer element properties
  */
 public class AlarmViewer extends PropertyPage
 {
 	private AlarmViewerConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;
+	private Button[] checkSeverity;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -68,6 +72,26 @@ public class AlarmViewer extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		title.setLayoutData(gd);
+		
+		Group severityGroup = new Group(dialogArea, SWT.NONE);
+		severityGroup.setText("Severity Filter");
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		severityGroup.setLayoutData(gd);
+		
+		layout = new GridLayout();
+		layout.numColumns = 5;
+		layout.makeColumnsEqualWidth = true;
+		severityGroup.setLayout(layout);
+		
+		checkSeverity = new Button[5];
+		for(int severity = 4; severity >= 0; severity--)
+		{
+			checkSeverity[severity] = new Button(severityGroup, SWT.CHECK);
+			checkSeverity[severity].setText(StatusDisplayInfo.getStatusText(severity));
+			checkSeverity[severity].setSelection((config.getSeverityFilter() & (1 << severity)) != 0);
+		}
 
 		return dialogArea;
 	}
@@ -80,6 +104,13 @@ public class AlarmViewer extends PropertyPage
 	{
 		config.setObjectId(objectSelector.getObjectId());
 		config.setTitle(title.getText());
+		
+		int severityFilter = 0;
+		for(int i = 0; i < checkSeverity.length; i++)
+			if (checkSeverity[i].getSelection())
+				severityFilter |= (1 << i);
+		config.setSeverityFilter(severityFilter);
+		
 		return true;
 	}
 }

@@ -32,6 +32,7 @@ public class AlarmListFilter extends ViewerFilter
 {
 	private long rootObject = 0;
 	private int stateFilter = -1;
+	private int severityFilter = 0xFF;
 	
 	/**
 	 * 
@@ -48,6 +49,9 @@ public class AlarmListFilter extends ViewerFilter
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
 		if ((stateFilter != -1) && (((Alarm)element).getState() != stateFilter))
+			return false;
+		
+		if (((1 << ((Alarm)element).getCurrentSeverity()) & severityFilter) == 0)
 			return false;
 				
 		if ((rootObject == 0) || (rootObject == ((Alarm)element).getSourceObjectId()))
@@ -73,5 +77,13 @@ public class AlarmListFilter extends ViewerFilter
 	public void setStateFilter(int stateFilter)
 	{
 		this.stateFilter = stateFilter;
+	}
+
+	/**
+	 * @param severityFilter the severityFilter to set
+	 */
+	public void setSeverityFilter(int severityFilter)
+	{
+		this.severityFilter = severityFilter;
 	}
 }

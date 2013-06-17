@@ -503,6 +503,16 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/**
+	 * Zoom to specific level
+	 * 
+	 * @param zoomLevel
+	 */
+	public void zoomTo(double zoomLevel)
+	{
+		getZoomManager().setZoom(zoomLevel);
+	}
+	
+	/**
 	 * Create zoom actions
 	 * @return
 	 */
