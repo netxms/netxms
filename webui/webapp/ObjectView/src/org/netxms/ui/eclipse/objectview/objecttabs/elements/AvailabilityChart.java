@@ -43,8 +43,6 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class AvailabilityChart extends OverviewPageElement
 {
-	private static final long serialVersionUID = 1L;
-
 	DataComparisonChart dayChart;
 	DataComparisonChart weekChart;
 	DataComparisonChart monthChart;
@@ -105,8 +103,6 @@ public class AvailabilityChart extends OverviewPageElement
 		
 		Canvas legend = new Canvas(clientArea, SWT.NONE);
 		legend.addPaintListener(new PaintListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void paintControl(PaintEvent e)
 			{

@@ -28,8 +28,6 @@ import org.netxms.client.objects.AbstractObject;
  */
 public class Capabilities extends TableElement
 {
-	private static final long serialVersionUID = 1L;
-
 	/**
 	 * @param parent
 	 * @param object

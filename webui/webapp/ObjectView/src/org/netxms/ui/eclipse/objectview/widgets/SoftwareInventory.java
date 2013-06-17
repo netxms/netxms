@@ -54,8 +54,6 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
  */
 public class SoftwareInventory extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VERSION = 1;
 	public static final int COLUMN_VENDOR = 2;
@@ -94,8 +92,6 @@ public class SoftwareInventory extends Composite
 		viewer = new SortableTableViewer(this, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
 		WidgetHelper.restoreColumnViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
 		viewer.getControl().addDisposeListener(new DisposeListener() {			
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -122,8 +118,6 @@ public class SoftwareInventory extends Composite
 		viewer = new SortableTreeViewer(this, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
 		WidgetHelper.restoreColumnViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
 		viewer.getControl().addDisposeListener(new DisposeListener() {			
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

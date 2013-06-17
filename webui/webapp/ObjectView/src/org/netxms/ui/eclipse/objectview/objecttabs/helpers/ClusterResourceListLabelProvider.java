@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ClusterResourceListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-	
 	private NXCSession session;
 	
 	/**

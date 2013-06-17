@@ -28,8 +28,6 @@ import org.netxms.client.SoftwarePackage;
  */
 public class SoftwareInventoryContentProvider implements ITreeContentProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
 	 */

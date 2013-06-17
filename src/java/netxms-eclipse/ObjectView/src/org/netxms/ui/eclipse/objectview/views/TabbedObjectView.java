@@ -156,7 +156,8 @@ public class TabbedObjectView extends ViewPart
 					tab.selected();
 					selectionProvider.setSelectionProviderDelegate(tab.getSelectionProvider());
 				}
-				sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, tab);
+				if (sourceProvider != null)
+					sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, tab);
 			}
 
 			@Override
@@ -173,7 +174,8 @@ public class TabbedObjectView extends ViewPart
 			@Override
 			public void selectionChanged(IWorkbenchPart part, ISelection selection)
 			{
-				if ((selection instanceof IStructuredSelection) && !selection.isEmpty())
+				if ((part.getSite().getId().equals("org.netxms.ui.eclipse.view.navigation.objectbrowser")) && 
+				    (selection instanceof IStructuredSelection) && !selection.isEmpty())
 				{
 					Object object = ((IStructuredSelection)selection).getFirstElement();
 					if (object instanceof AbstractObject)

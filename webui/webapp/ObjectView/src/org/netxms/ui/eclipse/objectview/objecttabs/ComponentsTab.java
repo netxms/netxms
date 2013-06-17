@@ -82,8 +82,6 @@ public class ComponentsTab extends ObjectTab
 		viewer.getTree().setLinesVisible(true);
 		WidgetHelper.restoreColumnSettings(viewer.getTree(), Activator.getDefault().getDialogSettings(), "ComponentTree");
 		viewer.getTree().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -113,8 +111,6 @@ public class ComponentsTab extends ObjectTab
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager manager)
 			{
 				fillContextMenu(manager);
@@ -155,8 +151,6 @@ public class ComponentsTab extends ObjectTab
 	private void createActions()
 	{
 		actionCollapseAll = new Action("C&ollapse all", SharedIcons.COLLAPSE_ALL) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -165,8 +159,6 @@ public class ComponentsTab extends ObjectTab
 		};
 
 		actionExpandAll = new Action("&Expand all", SharedIcons.EXPAND_ALL) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{

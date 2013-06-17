@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.objectview.widgets.SoftwareInventory;
  */
 public class SoftwarePackageLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private WorkbenchLabelProvider wbl = new WorkbenchLabelProvider();
 	private Image imgPackage = Activator.getImageDescriptor("icons/package.gif").createImage();
 	private boolean treeMode;

@@ -60,6 +60,8 @@ public class Commands extends OverviewPageElement
 	 */
 	private void createActions()
 	{
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		
 		actionWakeup = new Action("Wakeup node using Wake-on-LAN") {
 			@Override
 			public void run()
@@ -69,7 +71,6 @@ public class Commands extends OverviewPageElement
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
-						NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 						session.wakeupNode(object.getObjectId());
 					}
 
@@ -94,7 +95,6 @@ public class Commands extends OverviewPageElement
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 							session.executeAction(object.getObjectId(), "Agent.Restart");
 						}
 	
@@ -120,7 +120,6 @@ public class Commands extends OverviewPageElement
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 							session.executeAction(object.getObjectId(), "System.Restart");
 						}
 	
@@ -146,7 +145,6 @@ public class Commands extends OverviewPageElement
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 							session.executeAction(object.getObjectId(), "System.Shutdown");
 						}
 	

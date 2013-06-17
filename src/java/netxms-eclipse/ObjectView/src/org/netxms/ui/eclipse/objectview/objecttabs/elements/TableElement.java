@@ -182,7 +182,7 @@ public abstract class TableElement extends OverviewPageElement
 			return;
 		TableItem item = new TableItem(table, SWT.NONE);
 		item.setText(0, attr);
-		item.setText(1, value);
+		item.setText(1, (value != null) ? value : "");
 	}
 
 	/**

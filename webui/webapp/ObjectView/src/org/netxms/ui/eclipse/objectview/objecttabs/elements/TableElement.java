@@ -15,8 +15,6 @@ import org.netxms.ui.eclipse.console.resources.SharedColors;
 
 public abstract class TableElement extends OverviewPageElement
 {
-	private static final long serialVersionUID = 1L;
-
 	private Table table;
 
 	/**
@@ -72,8 +70,6 @@ public abstract class TableElement extends OverviewPageElement
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

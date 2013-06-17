@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceContainer;
@@ -156,7 +155,7 @@ public class AvailabilityChart extends OverviewPageElement
 	private void paintLegend(GC gc)
 	{
 		final int th = gc.textExtent("UptimeDowntime").y;
-		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, Display.getCurrent());
+		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, getDisplay());
 		
 		gc.setBackground(colors.create(127, 154, 72));
 		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg, 0.2f, colors));

@@ -29,8 +29,6 @@ import org.netxms.ui.eclipse.widgets.CGroup;
  */
 public abstract class OverviewPageElement extends CGroup
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractObject object;
 	
 	/**

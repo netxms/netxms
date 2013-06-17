@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
  */
 public class NodeStatusWidget extends Canvas implements PaintListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractNode node;
 	
 	/**

@@ -82,8 +82,6 @@ import org.netxms.ui.eclipse.shared.IActionConstants;
  */
 public class ObjectStatusMap extends ScrolledComposite implements ISelectionProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private IViewPart viewPart;
 	private long rootObjectId;
 	private NXCSession session;
@@ -121,8 +119,6 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		};
 		session.addListener(sessionListener);
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -134,8 +130,6 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		setExpandHorizontal(true);
 		setExpandVertical(true);
 		addControlListener(new ControlAdapter() {
-			private static final long serialVersionUID = 1L;
-
 			public void controlResized(ControlEvent e)
 			{
 				Rectangle r = getClientArea();
@@ -155,8 +149,6 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		menuManager = new MenuManager();
 		menuManager.setRemoveAllWhenShown(true);
 		menuManager.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager manager)
 			{
 				fillContextMenu(manager);
@@ -351,8 +343,6 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		NodeStatusWidget w = new NodeStatusWidget(parent, node);
 		w.setBackground(getBackground());
 		w.addMouseListener(new MouseListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void mouseUp(MouseEvent e)
 			{
