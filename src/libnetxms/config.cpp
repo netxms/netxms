@@ -1036,7 +1036,7 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
 	bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
 	if (!success)
 	{
-		error(_T("%s at line %d"), XML_ErrorString(XML_GetErrorCode(parser)),
+		error(_T("%hs at line %d"), XML_ErrorString(XML_GetErrorCode(parser)),
             XML_GetCurrentLineNumber(parser));
 	}
 	XML_ParserFree(parser);
