@@ -92,7 +92,7 @@ public class TabbedObjectView extends ViewPart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		sourceProvider = Activator.getDefault().getSourceProvider();
+		sourceProvider = SourceProvider.getInstance();
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
 	}
 

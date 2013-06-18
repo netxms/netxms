@@ -25,11 +25,9 @@
 #include <nxconfig.h>
 #include <expat.h>
 
-
-//
-// Constructor for config entry
-//
-
+/**
+ * Constructor for config entry
+ */
 ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line, int id)
 {
 	m_name = _tcsdup(CHECK_NULL(name));
@@ -44,11 +42,9 @@ ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *fi
 	m_id = id;
 }
 
-
-//
-// Destructor for config entry
-//
-
+/**
+ * Destructor for config entry
+ */
 ConfigEntry::~ConfigEntry()
 {
 	ConfigEntry *entry, *next;
@@ -66,22 +62,18 @@ ConfigEntry::~ConfigEntry()
 	safe_free(m_values);
 }
 
-
-//
-// Set entry's name
-//
-
+/**
+ * Set entry's name
+ */
 void ConfigEntry::setName(const TCHAR *name)
 {
 	safe_free(m_name);
 	m_name = _tcsdup(CHECK_NULL(name));
 }
 
-
-//
-// Find entry by name
-//
-
+/**
+ * Find entry by name
+ */
 ConfigEntry *ConfigEntry::findEntry(const TCHAR *name)
 {
 	ConfigEntry *e;
@@ -720,11 +712,9 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
 	return entry;
 }
 
-
-//
-// Delete entry
-//
-
+/**
+ * Delete entry
+ */
 void Config::deleteEntry(const TCHAR *path)
 {
 	ConfigEntry *entry = getEntry(path);
@@ -796,12 +786,10 @@ bool Config::setValue(const TCHAR *path, uuid_t value)
 	return setValue(path, buffer);
 }
 
-
-//
-// Find comment start in INI style config line
-// Comment starts with # character, characters within double quotes ignored
-//
-
+/**
+ * Find comment start in INI style config line
+ * Comment starts with # character, characters within double quotes ignored
+ */
 static TCHAR *FindComment(TCHAR *str)
 {
 	TCHAR *curr;
@@ -821,11 +809,9 @@ static TCHAR *FindComment(TCHAR *str)
 	return NULL;
 }
 
-
-//
-// Load INI-style config
-//
-
+/**
+ * Load INI-style config
+ */
 bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
 	FILE *cfg;
@@ -914,13 +900,14 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
 	return ignoreErrors || validConfig;
 }
 
-
-//
-// Load config from XML file
-//
-
+/**
+ * Max stack depth for XML config
+ */
 #define MAX_STACK_DEPTH		256
 
+/**
+ * State information for XML parser
+ */
 typedef struct
 {
 	const char *topLevelTag;
@@ -933,6 +920,9 @@ typedef struct
 	bool trimValue[MAX_STACK_DEPTH];
 } XML_PARSER_STATE;
 
+/**
+ * Element start handler for XML parser
+ */
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
@@ -993,6 +983,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 }
 
+/**
+ * Element end handler for XML parser
+ */
 static void EndElement(void *userData, const char *name)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
@@ -1010,6 +1003,9 @@ static void EndElement(void *userData, const char *name)
 	}
 }
 
+/**
+ * Data handler for XML parser
+ */
 static void CharData(void *userData, const XML_Char *s, int len)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
@@ -1018,6 +1014,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 		ps->charData[ps->level - 1].addMultiByteString(s, len, CP_UTF8);
 }
 
+/**
+ * Load config from XML in memory
+ */
 bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name, const char *topLevelTag)
 {
 	XML_PARSER_STATE state;
@@ -1043,6 +1042,9 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
 	return success;
 }
 
+/**
+ * Load config from XML file
+ */
 bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
 {
 	BYTE *xml;
@@ -1062,11 +1064,9 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
 	return success;
 }
 
-
-//
-// Load config file with format auto detection
-//
-
+/**
+ * Load config file with format auto detection
+ */
 bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
 	FILE *f;

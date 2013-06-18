@@ -35,11 +35,9 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, DWORD dwNodeId
    return ((NXCL_Session *)hSession)->OpenNodeDCIList(dwNodeId, ppItemList);
 }
 
-
-//
-// Unlock and destroy previously opened node's DCI list
-//
-
+/**
+ * Unlock and destroy previously opened node's DCI list
+ */
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST *pItemList)
 {
    DWORD i, j, dwRetCode = RCC_INVALID_ARGUMENT, dwRqId;

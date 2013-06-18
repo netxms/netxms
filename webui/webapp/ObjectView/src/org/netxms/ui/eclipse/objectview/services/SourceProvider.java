@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,20 +20,34 @@ package org.netxms.ui.eclipse.objectview.services;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 import org.eclipse.ui.services.IServiceLocator;
-import org.netxms.ui.eclipse.objectview.Activator;
 
 /**
  * Source provider
  */
 public class SourceProvider extends AbstractSourceProvider
 {
+	private static final String INSTANCE_ATTRIBUTE = SourceProvider.class.getSimpleName() + ".INSTANCE";
+	
 	public static final String ACTIVE_TAB = "nxmcObjectViewActiveTab";
 	
 	private static final String[] PROVIDED_SOURCE_NAMES = new String[] { ACTIVE_TAB };
-	private static final Map<String, Object> stateMap = new HashMap<String, Object>(1);
+	
+	private final Map<String, Object> stateMap = new HashMap<String, Object>(1);
+	
+	/**
+	 * Get source provider instance.
+	 * 
+	 * @return
+	 */
+	public static SourceProvider getInstance()
+	{
+		return (SourceProvider) RWT.getUISession().getAttribute(INSTANCE_ATTRIBUTE);
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.AbstractSourceProvider#initialize(org.eclipse.ui.services.IServiceLocator)
@@ -42,8 +56,9 @@ public class SourceProvider extends AbstractSourceProvider
 	public void initialize(IServiceLocator locator)
 	{
 		super.initialize(locator);
-		Activator.getDefault().setSourceProvider(this);
 		stateMap.put(ACTIVE_TAB, null);
+		
+		RWT.getUISession().setAttribute(INSTANCE_ATTRIBUTE, this);
 	}
 
 	/* (non-Javadoc)
@@ -71,6 +86,7 @@ public class SourceProvider extends AbstractSourceProvider
 	@Override
 	public void dispose()
 	{
+		RWT.getUISession().removeAttribute(INSTANCE_ATTRIBUTE);
 	}
 	
 	/**

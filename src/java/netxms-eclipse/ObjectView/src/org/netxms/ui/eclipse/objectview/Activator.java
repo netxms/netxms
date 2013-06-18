@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectview;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.ui.eclipse.objectview.services.SourceProvider;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -34,8 +33,6 @@ public class Activator extends AbstractUIPlugin
 
 	// The shared instance
 	private static Activator plugin;
-
-	private SourceProvider sourceProvider = null;
 	
 	/**
 	 * The constructor
@@ -91,22 +88,6 @@ public class Activator extends AbstractUIPlugin
 	public static ImageDescriptor getImageDescriptor(String path)
 	{
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
-	}
-
-	/**
-	 * @return the sourceProvider
-	 */
-	public SourceProvider getSourceProvider()
-	{
-		return sourceProvider;
-	}
-
-	/**
-	 * @param sourceProvider the sourceProvider to set
-	 */
-	public void setSourceProvider(SourceProvider sourceProvider)
-	{
-		this.sourceProvider = sourceProvider;
 	}
 
 	/**
