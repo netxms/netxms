@@ -920,6 +920,8 @@ typedef struct
 #define VID_MENU_PATH               ((UINT32)445)
 #define VID_COLUMNS                 ((UINT32)446)
 #define VID_TITLE                   ((UINT32)447)
+#define VID_DAY_OF_WEEK             ((UINT32)448)
+#define VID_DAY_OF_MONTH            ((UINT32)449)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
