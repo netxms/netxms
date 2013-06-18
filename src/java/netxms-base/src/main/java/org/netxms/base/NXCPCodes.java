@@ -761,6 +761,8 @@ public class NXCPCodes
 	public static final long VID_MENU_PATH               = 445;
 	public static final long VID_COLUMNS                 = 446;
 	public static final long VID_TITLE                   = 447;
+	public static final long VID_DAY_OF_WEEK             = 448;
+	public static final long VID_DAY_OF_MONTH            = 449;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
