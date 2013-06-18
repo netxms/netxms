@@ -56,4 +56,5 @@ public class CommonRCC
 	public static final int WEAK_PASSWORD = 87;
 	public static final int REUSED_PASSWORD = 88;
 	public static final int ENCRYPTION_ERROR = 98;
+	public static final int XML_PARSE_ERROR = 103;
 }

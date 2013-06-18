@@ -527,6 +527,7 @@ enum
 #define RCC_NO_SOFTWARE_PACKAGE_DATA ((UINT32)100)
 #define RCC_INVALID_SUMMARY_TABLE_ID ((UINT32)101)
 #define RCC_USER_LOGGED_IN           ((UINT32)102)
+#define RCC_XML_PARSE_ERROR          ((UINT32)103)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
