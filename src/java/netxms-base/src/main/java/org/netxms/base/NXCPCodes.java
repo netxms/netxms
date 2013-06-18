@@ -306,6 +306,13 @@ public class NXCPCodes
 	public static final int CMD_GET_SUMMARY_TABLE_DETAILS = 0x0118;
 	public static final int CMD_QUERY_SUMMARY_TABLE       = 0x0119;
 
+	// CMD_RS_ - Reporting Server related codes
+	public static final int CMD_RS_LIST_REPORTS           = 0x1100;
+	public static final int CMD_RS_GET_REPORT             = 0x1101;
+	public static final int CMD_RS_SCHEDULE_EXECUTION     = 0x1102;
+	public static final int CMD_RS_LIST_RESULTS           = 0x1103;
+	public static final int CMD_RS_GET_RESULT             = 0x1104;
+
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
 	public static final long VID_PASSWORD                = 2;
@@ -835,4 +842,5 @@ public class NXCPCodes
 	public static final long VID_NETWORK_PATH_BASE        = 0x40000000L;
 	public static final long VID_COMPONENT_LIST_BASE      = 0x20000000L;
 	public static final long VID_RADIO_LIST_BASE          = 0x30000000L;
+	public static final long VID_UUID_LIST_BASE           = 0x10000000L;
 }
