@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension-point id="org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers" name="Object Open Handler" schema="schema/org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers.exsd"/>
+   <extension-point id="org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers" name="Object Open Handlers" schema="schema/org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers.exsd"/>
    <extension-point id="org.netxms.ui.eclipse.objectbrowser.objectActionValidators" name="Object Action Validators" schema="schema/org.netxms.ui.eclipse.objectbrowser.objectActionValidators.exsd"/>
    <extension point="org.eclipse.core.runtime.preferences">
       <initializer class="org.netxms.ui.eclipse.objectbrowser.PreferenceInitializer"/>

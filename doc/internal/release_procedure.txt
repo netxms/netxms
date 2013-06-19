@@ -1,0 +1,14 @@
+Release Procedure
+
+1. Build Windows binaries (x86 and x64)
+2. Export desktop console to src/java/build/
+3. Run src/java/build/pack.cmd
+4. Export web console to nxmc-<version>.war
+5. Copy nxmc-<version>.jar to src/install/windows/nxmc/nxmc.war
+6. Create installers from:
+	src/install/windows
+		netxms.iss netxms-minimal.iss netxms-x64.iss netxms-x64-minimal.iss webui.iss webui-x64.iss 
+	src/agent/install
+		nxagent.iss nxagent-x64.iss 
+7. Export Android client to netxms-console-<version>.apk
+8. Export Android agent to netxms-mobile-agent-<version>.apk

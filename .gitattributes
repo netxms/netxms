@@ -334,6 +334,7 @@ contrib/startup/archlinux/nxagentd.service -text
 contrib/startup/debian/Makefile.am -text
 contrib/startup/debian/netxmsd.in -text
 contrib/startup/debian/nxagentd.in -text
+doc/RadenSolutions-C-Formatter.xml -text
 doc/RadenSolutions.xml -text
 doc/comparison_netxms_nnm.doc -text
 doc/doxygen.md -text
@@ -345,6 +346,7 @@ doc/internal/dci_perftab.txt -text
 doc/internal/netxms_architecture.gxml -text
 doc/internal/netxms_architecture.png -text
 doc/internal/netxms_architecture.svg -text
+doc/internal/release_procedure.txt -text
 doc/internal/report_definition.docx -text
 doc/internal/sleak_debug.options -text
 doc/logo.png -text svneol=unset#unset
@@ -2859,6 +2861,8 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/EditElementXm
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/ImportDashboardDialog.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/messages.properties -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/messages_es.properties -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/messages_ru.properties -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/messages_zh_CN.properties -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AbstractChart.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AlarmViewer.java -text

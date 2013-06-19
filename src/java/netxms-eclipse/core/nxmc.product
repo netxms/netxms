@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.7" useFeatures="false" includeLaunchers="true">
+<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.8" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
-      <image path="/nxmc-core/icons/launcher/128x128.png"/>
+      <image path="/Core/icons/launcher/128x128.png"/>
       <text>
          NetXMS Management Console
 
-Version 1.2.7
+Version 1.2.8
 Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       </text>
    </aboutInfo>
@@ -22,17 +22,17 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages i16="/nxmc-core/icons/launcher/16x16.png" i32="/nxmc-core/icons/launcher/32x32.png" i48="/nxmc-core/icons/launcher/48x48.png" i64="/nxmc-core/icons/launcher/64x64.png" i128="/nxmc-core/icons/launcher/128x128.png"/>
+   <windowImages i16="/Core/icons/launcher/16x16.png" i32="/Core/icons/launcher/32x32.png" i48="/Core/icons/launcher/48x48.png" i64="/Core/icons/launcher/64x64.png" i128="/Core/icons/launcher/128x128.png"/>
 
    <splash
       startupProgressRect="500,284,455,10"
       startupMessageRect="7,275,441,18"
       startupForegroundColor="410B73" />
    <launcher name="nxmc">
-      <macosx icon="/nxmc-core/icons/launcher/nxmc.icns"/>
+      <macosx icon="/Core/icons/launcher/nxmc.icns"/>
       <solaris/>
       <win useIco="true">
-         <ico path="/nxmc-core/icons/launcher/nxmc.ico"/>
+         <ico path="/Core/icons/launcher/nxmc.ico"/>
          <bmp/>
       </win>
    </launcher>
@@ -318,7 +318,7 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.netxms.ui.eclipse.switchmanager"/>
       <plugin id="org.netxms.ui.eclipse.topology"/>
       <plugin id="org.netxms.ui.eclipse.usermanager"/>
-      <plugin id="org.swtchart"/>
+      <plugin id="org.swtchart" fragment=""/>
    </plugins>
 
 
