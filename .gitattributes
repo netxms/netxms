@@ -1700,6 +1700,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/zone.gif -text
 src/java/netxms-eclipse/ObjectBrowser/plugin.xml -text
 src/java/netxms-eclipse/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectActionValidators.exsd -text
 src/java/netxms-eclipse/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers.exsd -text
+src/java/netxms-eclipse/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectSelectionFilterFactories.exsd -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Messages.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
@@ -1708,6 +1709,7 @@ src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ac
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectActionValidator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenHandler.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenListener.java -text
+src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectSelectionFilterFactory.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/SubtreeType.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/ChildObjectListDialog.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/CreateObjectDialog.java -text

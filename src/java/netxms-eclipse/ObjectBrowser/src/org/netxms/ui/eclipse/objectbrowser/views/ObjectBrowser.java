@@ -551,7 +551,7 @@ public class ObjectBrowser extends ViewPart
 	 */
 	private void registerOpenHandlers()
 	{
-		// Read all registered extensions and create tabs
+		// Read all registered extensions and create handlers
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
@@ -587,7 +587,6 @@ public class ObjectBrowser extends ViewPart
 			}
 		});
 	}
-
 	
 	/**
 	 * Register object action validators

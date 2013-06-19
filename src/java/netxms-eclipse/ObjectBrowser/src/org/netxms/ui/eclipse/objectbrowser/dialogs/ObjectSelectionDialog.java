@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,13 +36,13 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectSelectionFilterFactory;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Object selection dialog
- * 
  */
 public class ObjectSelectionDialog extends Dialog
 {
@@ -52,7 +52,7 @@ public class ObjectSelectionDialog extends Dialog
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
 	private boolean multiSelection;
-	
+
 	/**
 	 * Create filter for node selection - it allows node objects and possible
 	 * parents - subnets and containers.
@@ -61,18 +61,7 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createNodeSelectionFilter(boolean allowMobileDevices)
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(7);
-		classFilter.add(AbstractObject.OBJECT_NETWORK);
-		classFilter.add(AbstractObject.OBJECT_ZONE);
-		classFilter.add(AbstractObject.OBJECT_SUBNET);
-		classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
-		classFilter.add(AbstractObject.OBJECT_CONTAINER);
-		classFilter.add(AbstractObject.OBJECT_CLUSTER);
-		classFilter.add(AbstractObject.OBJECT_RACK);
-		classFilter.add(AbstractObject.OBJECT_NODE);
-		if (allowMobileDevices)
-			classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
-		return classFilter;
+		return ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(allowMobileDevices);
 	}
 
 	/**
@@ -82,10 +71,7 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createZoneSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(AbstractObject.OBJECT_NETWORK);
-		classFilter.add(AbstractObject.OBJECT_ZONE);
-		return classFilter;
+		return ObjectSelectionFilterFactory.getInstance().createZoneSelectionFilter();
 	}
 
 	/**
@@ -95,11 +81,7 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createNetworkMapSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(3);
-		classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
-		classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
-		classFilter.add(AbstractObject.OBJECT_NETWORKMAP);
-		return classFilter;
+		return ObjectSelectionFilterFactory.getInstance().createNetworkMapSelectionFilter();
 	}
 
 	/**
@@ -110,11 +92,7 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createTemplateSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(3);
-		classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
-		classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
-		classFilter.add(AbstractObject.OBJECT_TEMPLATE);
-		return classFilter;
+		return ObjectSelectionFilterFactory.getInstance().createTemplateSelectionFilter();
 	}
 
 	/**
@@ -125,19 +103,7 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createNodeAndTemplateSelectionFilter(boolean allowMobileDevices)
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(9);
-		classFilter.add(AbstractObject.OBJECT_NETWORK);
-		classFilter.add(AbstractObject.OBJECT_SUBNET);
-		classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
-		classFilter.add(AbstractObject.OBJECT_CONTAINER);
-		classFilter.add(AbstractObject.OBJECT_CLUSTER);
-		classFilter.add(AbstractObject.OBJECT_NODE);
-		classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
-		classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
-		classFilter.add(AbstractObject.OBJECT_TEMPLATE);
-		if (allowMobileDevices)
-			classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
-		return classFilter;
+		return ObjectSelectionFilterFactory.getInstance().createNodeAndTemplateSelectionFilter(allowMobileDevices);
 	}
 
 	/**
@@ -148,10 +114,7 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createContainerSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
-		classFilter.add(AbstractObject.OBJECT_CONTAINER);
-		return classFilter;
+		return ObjectSelectionFilterFactory.getInstance().createContainerSelectionFilter();
 	}
 
 	/**
@@ -161,12 +124,9 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createBusinessServiceSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
-		classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
-		return classFilter;
+		return ObjectSelectionFilterFactory.getInstance().createBusinessServiceSelectionFilter();
 	}
-
+	
 	/**
 	 * Create object selection dialog.
 	 * 
