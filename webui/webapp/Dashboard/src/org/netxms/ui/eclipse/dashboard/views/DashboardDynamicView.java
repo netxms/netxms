@@ -181,4 +181,15 @@ public class DashboardDynamicView extends ViewPart
 			dbc = null;
 		}
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		if ((selectionService != null) && (selectionListener != null))
+			selectionService.removeSelectionListener(selectionListener);
+		super.dispose();
+	}
 }
