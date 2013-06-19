@@ -3293,6 +3293,9 @@ webui/webapp/ObjectBrowser.AdapterFactory/build.properties -text
 webui/webapp/ObjectBrowser.AdapterFactory/fragment.xml -text
 webui/webapp/ObjectBrowser/META-INF/MANIFEST.MF -text
 webui/webapp/ObjectBrowser/OSGI-INF/l10n/bundle.properties -text
+webui/webapp/ObjectBrowser/OSGI-INF/l10n/bundle_es.properties -text
+webui/webapp/ObjectBrowser/OSGI-INF/l10n/bundle_ru.properties -text
+webui/webapp/ObjectBrowser/OSGI-INF/l10n/bundle_zh_CN.properties -text
 webui/webapp/ObjectBrowser/build.properties -text
 webui/webapp/ObjectBrowser/icons/access_point.png -text
 webui/webapp/ObjectBrowser/icons/business_service.png -text
@@ -3338,6 +3341,7 @@ webui/webapp/ObjectBrowser/icons/zone.gif -text
 webui/webapp/ObjectBrowser/plugin.xml -text
 webui/webapp/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectActionValidators.exsd -text
 webui/webapp/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers.exsd -text
+webui/webapp/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectSelectionFilterFactories.exsd -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Messages.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
@@ -3346,6 +3350,7 @@ webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/actions/OpenO
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectActionValidator.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenHandler.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenListener.java -text
+webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectSelectionFilterFactory.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/SubtreeType.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/ChildObjectListDialog.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/CreateObjectDialog.java -text
