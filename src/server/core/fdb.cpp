@@ -183,19 +183,24 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
 
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		int port = pRespPDU->getVariable(0)->GetValueAsInt();
-		int status = pRespPDU->getVariable(1)->GetValueAsInt();
-		if ((port > 0) && (status == 3))		// status 3 == learned
-		{
-			FDB_ENTRY entry;
+      SNMP_Variable *varPort = pRespPDU->getVariable(0);
+      SNMP_Variable *varStatus = pRespPDU->getVariable(1);
+      if (varPort != NULL && varStatus != NULL)
+      {
+         int port = varPort->GetValueAsInt();
+         int status = varStatus->GetValueAsInt();
+         if ((port > 0) && (status == 3))		// status 3 == learned
+         {
+            FDB_ENTRY entry;
 
-			memset(&entry, 0, sizeof(FDB_ENTRY));
-			entry.port = (UINT32)port;
-			pVar->getRawValue(entry.macAddr, MAC_ADDR_LENGTH);
-			Node *node = FindNodeByMAC(entry.macAddr);
-			entry.nodeObject = (node != NULL) ? node->Id() : 0;
-			((ForwardingDatabase *)arg)->addEntry(&entry);
-		}
+            memset(&entry, 0, sizeof(FDB_ENTRY));
+            entry.port = (UINT32)port;
+            pVar->getRawValue(entry.macAddr, MAC_ADDR_LENGTH);
+            Node *node = FindNodeByMAC(entry.macAddr);
+            entry.nodeObject = (node != NULL) ? node->Id() : 0;
+            ((ForwardingDatabase *)arg)->addEntry(&entry);
+         }
+      }
       delete pRespPDU;
 	}
 
