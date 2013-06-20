@@ -153,7 +153,7 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 /**
  * Add new column
  */
-int Table::addColumn(const TCHAR *name, INT32 dataType, bool isInstance, const TCHAR *displayName)
+int Table::addColumn(const TCHAR *name, INT32 dataType, const TCHAR *displayName, bool isInstance)
 {
    m_columns->add(new TableColumnDefinition(name, displayName, dataType, isInstance));
    if (m_nNumRows > 0)

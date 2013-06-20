@@ -517,7 +517,7 @@ public:
 
 	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = (title != NULL) ? _tcsdup(title) : NULL; }
    void setSource(int source) { m_source = source; }
-   int addColumn(const TCHAR *name, INT32 dataType = 0, bool isInstance = false, const TCHAR *displayName = NULL);
+   int addColumn(const TCHAR *name, INT32 dataType = 0, const TCHAR *displayName = NULL, bool isInstance = false);
    void setColumnDataType(int col, INT32 dataType) { if ((col >= 0) && (col < m_columns->size())) m_columns->get(col)->setDataType(dataType); }
    int addRow();
 
