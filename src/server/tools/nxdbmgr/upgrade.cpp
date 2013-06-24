@@ -310,6 +310,118 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Re-create TDATA tables
+ */
+static BOOL RecreateTData(const TCHAR *className)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         DWORD id = DBGetFieldULong(hResult, i, 0);
+
+         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), id);
+         if (!SQLQuery(query))
+         {
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+         }
+
+         if (!CreateTDataTables(id))
+         {
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+   return TRUE;
+}
+
+/**
+ * Upgrade from V280 to V281
+ */
+static BOOL H_UpgradeFromV280(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("DELETE FROM metadata WHERE var_name='TDataTableCreationCommand'\n")
+      _T("INSERT INTO metadata (var_name,var_value)")
+      _T("   VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,record_id $SQL:INT64 not null)')\n")
+      _T("INSERT INTO metadata (var_name,var_value)")
+	   _T("   VALUES ('TDataTableCreationCommand_1','CREATE TABLE tdata_records_%d (record_id $SQL:INT64 not null,row_id $SQL:INT64 not null,instance varchar(255) null,PRIMARY KEY(record_id,row_id))')\n")
+      _T("INSERT INTO metadata (var_name,var_value)")
+	   _T("   VALUES ('TDataTableCreationCommand_2','CREATE TABLE tdata_rows_%d (row_id $SQL:INT64 not null,column_id integer not null,value varchar(255) null,PRIMARY KEY(row_id,column_id))')\n")
+      _T("INSERT INTO metadata (var_name,var_value)")
+	   _T("   VALUES ('TDataIndexCreationCommand_1','CREATE INDEX idx_tdata_rec_%d_instance ON tdata_records_%d(instance)')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   RecreateTData(_T("nodes"));
+   RecreateTData(_T("clusters"));
+   RecreateTData(_T("mobile_devices"));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='281' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V279 to V280
+ */
+static BOOL H_UpgradeFromV279(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE dc_table_columns ADD flags integer\n")
+      _T("UPDATE dc_table_columns SET flags=data_type\n")
+      _T("ALTER TABLE dc_table_columns DROP COLUMN data_type\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT item_id,instance_column FROM dc_tables"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR columnName[MAX_COLUMN_NAME] = _T("");
+         DBGetField(hResult, i, 1, columnName, MAX_COLUMN_NAME);
+         if (columnName[0] != 0)
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("UPDATE dc_table_columns SET flags=flags+256 WHERE table_id=%d AND column_name=%s"),
+               DBGetFieldLong(hResult, i, 0), (const TCHAR *)DBPrepareString(g_hCoreDB, columnName));
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables DROP COLUMN instance_column")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='280' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V278 to V279
  */
 static BOOL H_UpgradeFromV278(int currVersion, int newVersion)
@@ -341,7 +453,7 @@ static BOOL H_UpgradeFromV277(int currVersion, int newVersion)
                return FALSE;
             }
          }
-         if (!CreateTDataTable(id))
+         if (!CreateTDataTable_preV281(id))
          {
             if (!g_bIgnoreErrors)
             {
@@ -6881,6 +6993,8 @@ static struct
    { 276, 277, H_UpgradeFromV276 },
    { 277, 278, H_UpgradeFromV277 },
    { 278, 279, H_UpgradeFromV278 },
+   { 279, 280, H_UpgradeFromV279 },
+   { 280, 281, H_UpgradeFromV280 },
    { 0, 0, NULL }
 };
 

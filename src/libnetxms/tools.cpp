@@ -1449,11 +1449,9 @@ long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, c
 	return defVal;
 }
 
-
-//
-// Split string
-//
-
+/**
+ * Split string
+ */
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings)
 {
 	TCHAR **strings;

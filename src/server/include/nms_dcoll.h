@@ -392,8 +392,8 @@ class NXCORE_EXPORTABLE DCTableColumn
 {
 private:
 	TCHAR m_name[MAX_COLUMN_NAME];
-	int m_dataType;
 	SNMP_ObjectId *m_snmpOid;
+	UINT16 m_flags;
 
 public:
 	DCTableColumn(const DCTableColumn *src);
@@ -402,8 +402,11 @@ public:
 	~DCTableColumn();
 
 	const TCHAR *getName() { return m_name; }
-	int getDataType() { return m_dataType; }
+   UINT16 getFlags() { return m_flags; }
+   int getDataType() { return TCF_GET_DATA_TYPE(m_flags); }
+   int getAggregationFunction() { return TCF_GET_AGGREGATION_FUNCTION(m_flags); }
 	SNMP_ObjectId *getSnmpOid() { return m_snmpOid; }
+   bool isInstanceColumn() { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
 };
 
 /**
@@ -421,7 +424,6 @@ struct TC_ID_MAP_ENTRY
 class NXCORE_EXPORTABLE DCTable : public DCObject
 {
 protected:
-	TCHAR m_instanceColumn[MAX_COLUMN_NAME];
 	ObjectArray<DCTableColumn> *m_columns;
 	Table *m_lastValue;
 
@@ -436,7 +438,7 @@ public:
 	DCTable();
    DCTable(const DCTable *src);
    DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
-	        Template *node, const TCHAR *instanceColumn = NULL, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
+	        Template *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
    DCTable(DB_RESULT hResult, int iRow, Template *pNode);
 	virtual ~DCTable();
 
@@ -457,7 +459,6 @@ public:
 	void fillLastValueMessage(CSCPMessage *msg);
    void fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId);
 
-	INT32 getInstanceColumnId();
    int getColumnDataType(const TCHAR *name);
 
 	static INT32 columnIdFromName(const TCHAR *name);

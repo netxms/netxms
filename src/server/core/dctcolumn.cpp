@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 DCTableColumn::DCTableColumn(const DCTableColumn *src)
 {
 	nx_strncpy(m_name, src->m_name, MAX_COLUMN_NAME);
-	m_dataType = src->m_dataType;
+	m_flags = src->m_flags;
 	m_snmpOid = (src->m_snmpOid != NULL) ? new SNMP_ObjectId(src->m_snmpOid->getLength(), src->m_snmpOid->getValue()) : NULL;
 }
 
@@ -38,7 +38,7 @@ DCTableColumn::DCTableColumn(const DCTableColumn *src)
 DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
 {
 	msg->GetVariableStr(baseId, m_name, MAX_COLUMN_NAME);
-	m_dataType = (int)msg->GetVariableShort(baseId + 1);
+	m_flags = msg->GetVariableShort(baseId + 1);
 
    if (msg->IsVariableExist(baseId + 2))
 	{
@@ -62,12 +62,12 @@ DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
 /**
  * Create column object from database result set
  * Expected field order is following:
- *    column_name,data_type,snmp_oid
+ *    column_name,flags,snmp_oid
  */
 DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 {
 	DBGetField(hResult, row, 0, m_name, MAX_COLUMN_NAME);
-	m_dataType = DBGetFieldLong(hResult, row, 1);
+	m_flags = (UINT16)DBGetFieldULong(hResult, row, 1);
 
 	TCHAR oid[1024];
 	oid[0] = 0;

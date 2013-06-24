@@ -12,6 +12,7 @@
 #define SQL_TEXT        text
 #define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       bigint
+#define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE
 #define CRLF            char(13)+char(10)
 #define CONCAT          +
@@ -22,6 +23,7 @@
 #define SQL_TEXT        text
 #define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       bigint
+#define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE
 #define CRLF            '\015\012'
 #define CONCAT          ||
@@ -32,6 +34,7 @@
 #define SQL_TEXT        clob
 #define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       number(20)
+#define SQL_INT64_TEXT  'number(20)'
 #define TABLE_TYPE
 #define CRLF            chr(13)||chr(10)
 #define CONCAT          ||
@@ -42,6 +45,7 @@
 #define SQL_TEXT        varchar
 #define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       number(20)
+#define SQL_INT64_TEXT  'number(20)'
 #define TABLE_TYPE
 #define CRLF            char(13,10)
 #define CONCAT          ||
@@ -52,6 +56,7 @@
 #define SQL_TEXT        text
 #define SQL_TEXT4K      text
 #define SQL_INT64       bigint
+#define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE
 #define CRLF            '\r\n'
 #define CONCAT
@@ -62,6 +67,7 @@
 #define SQL_TEXT        LONG VARCHAR
 #define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       BIGINT
+#define SQL_INT64_TEXT  'BIGINT'
 #define TABLE_TYPE
 #define CRLF            chr(13)||chr(10)
 #define CONCAT          ||

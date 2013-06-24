@@ -344,7 +344,6 @@ double Table::getAsDouble(int nRow, int nCol)
  * Identical table format assumed.
  *
  * @param t table to merge into this table
- * @param instanceColumn name of instance column, may be NULL
  */
 void Table::merge(Table *t)
 {
@@ -362,6 +361,33 @@ void Table::merge(Table *t)
          m_ppData[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
       }
    }
+}
+
+/**
+ * Build instance string
+ */
+void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
+{
+   if ((row < 0) || (row >= m_nNumRows))
+   {
+      buffer[0] = 0;
+      return;
+   }
+
+   TCHAR **data = m_ppData + row * m_nNumCols;
+   String instance;
+   bool first = true;
+   for(int i = 0; i < m_nNumCols; i++)
+   {
+      if (m_columns->get(i)->isInstanceColumn())
+      {
+         if (!first)
+            instance += _T("~~~");
+         first = false;
+         instance += data[i];
+      }
+   }
+   nx_strncpy(buffer, (const TCHAR *)instance, bufLen);
 }
 
 /**

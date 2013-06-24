@@ -543,6 +543,8 @@ public:
    INT64 getAsInt64(int nRow, int nCol);
    UINT64 getAsUInt64(int nRow, int nCol);
    double getAsDouble(int nRow, int nCol);
+
+   void buildInstanceString(int row, TCHAR *buffer, size_t bufLen);
 };
 
 /**

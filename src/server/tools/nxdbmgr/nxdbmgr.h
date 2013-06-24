@@ -79,7 +79,8 @@ BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
                        int iVisible, int iNeedRestart, BOOL bForceUpdate = FALSE);
 
 BOOL CreateIDataTable(DWORD nodeId);
-BOOL CreateTDataTable(DWORD nodeId);
+BOOL CreateTDataTables(DWORD nodeId);
+BOOL CreateTDataTable_preV281(DWORD nodeId);
 
 //
 // Global variables

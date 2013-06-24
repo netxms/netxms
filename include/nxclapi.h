@@ -690,11 +690,9 @@ enum
 #define USER_DB_DELETE              1
 #define USER_DB_MODIFY              2
 
-
-//
-// Situation change notification types
-//
-
+/**
+ * Situation change notification types
+ */
 #define SITUATION_CREATE            1
 #define SITUATION_DELETE            2
 #define SITUATION_UPDATE            3
@@ -717,18 +715,37 @@ enum
 /**
  * DCI flags
  */
-#define DCF_ADVANCED_SCHEDULE       ((WORD)0x0001)
-#define DCF_ALL_THRESHOLDS          ((WORD)0x0002)
-#define DCF_RAW_VALUE_OCTET_STRING  ((WORD)0x0004)
-#define DCF_SHOW_ON_OBJECT_TOOLTIP  ((WORD)0x0008)
-#define DCF_AGGREGATE_FUNCTION_MASK ((WORD)0x0070)
-#define DCF_AGGREGATE_FOR_CLUSTER   ((WORD)0x0080)
+#define DCF_ADVANCED_SCHEDULE       ((UINT16)0x0001)
+#define DCF_ALL_THRESHOLDS          ((UINT16)0x0002)
+#define DCF_RAW_VALUE_OCTET_STRING  ((UINT16)0x0004)
+#define DCF_SHOW_ON_OBJECT_TOOLTIP  ((UINT16)0x0008)
+#define DCF_AGGREGATE_FUNCTION_MASK ((UINT16)0x0070)
+#define DCF_AGGREGATE_FOR_CLUSTER   ((UINT16)0x0080)
 
 /**
- * Get cluster aggregation function from flags
+ * Get cluster aggregation function from DCI flags
  */
 #define DCF_GET_AGGREGATION_FUNCTION(flags) (((flags) & DCF_AGGREGATE_FUNCTION_MASK) >> 4)
 #define DCF_SET_AGGREGATION_FUNCTION(flags,func) (((flags) & ~DCF_AGGREGATE_FUNCTION_MASK) | (((func) & 0x07) << 4))
+
+/**
+ * DCTable column flags
+ */
+#define TCF_DATA_TYPE_MASK          ((UINT16)0x000F)
+#define TCF_AGGREGATE_FUNCTION_MASK ((UINT16)0x0070)
+#define TCF_INSTANCE_COLUMN         ((UINT16)0x0100)
+
+/**
+ * Get cluster aggregation function from column flags
+ */
+#define TCF_GET_AGGREGATION_FUNCTION(flags) (((flags) & TCF_AGGREGATE_FUNCTION_MASK) >> 4)
+#define TCF_SET_AGGREGATION_FUNCTION(flags,func) (((flags) & ~DCF_AGGREGATE_FUNCTION_MASK) | (((func) & 0x07) << 4))
+
+/**
+ * Get data type from column flags
+ */
+#define TCF_GET_DATA_TYPE(flags) ((flags) & TCF_DATA_TYPE_MASK)
+#define TCF_SET_DATA_TYPE(flags,dt) (((flags) & ~TCF_DATA_TYPE_MASK) | ((dt) & 0x0F))
 
 /**
  * Aggregation functions
@@ -776,11 +793,9 @@ enum
 #define DCM_AVERAGE_PER_SECOND   2
 #define DCM_AVERAGE_PER_MINUTE   3
 
-
-//
-// Threshold functions and operations
-//
-
+/**
+ * Threshold functions
+ */
 #define F_LAST       0
 #define F_AVERAGE    1
 #define F_DEVIATION  2
@@ -788,6 +803,9 @@ enum
 #define F_ERROR      4
 #define F_SUM        5
 
+/**
+ * Threshold operations
+ */
 #define OP_LE        0
 #define OP_LE_EQ     1
 #define OP_EQ        2

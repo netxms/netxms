@@ -23,7 +23,11 @@ INSERT INTO metadata (var_name,var_value)
 #endif
 
 INSERT INTO metadata (var_name,var_value)
-	VALUES ('TDataTableCreationCommand','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,tdata_row integer not null,tdata_column integer not null,tdata_value varchar(255) null)');
+	VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,record_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null)');
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('TDataTableCreationCommand_1','CREATE TABLE tdata_records_%d (record_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,row_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,instance varchar(255) null,PRIMARY KEY(record_id,row_id))');
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('TDataTableCreationCommand_2','CREATE TABLE tdata_rows_%d (row_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,column_id integer not null,value varchar(255) null,PRIMARY KEY(row_id,column_id))');
 #if defined(DB_POSTGRESQL)
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d_timestamp_id ON tdata_%d(tdata_timestamp,item_id)');
@@ -34,3 +38,5 @@ INSERT INTO metadata (var_name,var_value)
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d_id_timestamp ON tdata_%d(item_id,tdata_timestamp)');
 #endif
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('TDataIndexCreationCommand_1','CREATE INDEX idx_tdata_rec_%d_instance ON tdata_records_%d(instance)');

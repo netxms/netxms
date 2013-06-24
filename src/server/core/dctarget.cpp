@@ -59,6 +59,16 @@ bool DataCollectionTarget::deleteFromDB(DB_HANDLE hdb)
          _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_dwId);
          success = DBQuery(hdb, query) ? true : false;
       }
+      if (success)
+      {
+         _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), (int)m_dwId);
+         success = DBQuery(hdb, query) ? true : false;
+      }
+      if (success)
+      {
+         _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), (int)m_dwId);
+         success = DBQuery(hdb, query) ? true : false;
+      }
    }
    return success;
 }

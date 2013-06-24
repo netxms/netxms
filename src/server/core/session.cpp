@@ -3460,24 +3460,24 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 	switch(g_nDBSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, 512, _T("SELECT TOP %d b.tdata_timestamp, b.tdata_value FROM tdata_%d a, tdata_%d b")
-			                       _T(" WHERE a.item_id=? AND a.tdata_column=? AND a.tdata_value=? AND a.item_id=b.item_id AND a.tdata_row=b.tdata_row AND b.tdata_column=?")
-										  _T("%s AND a.tdata_timestamp=b.tdata_timestamp ORDER BY b.tdata_timestamp DESC"),
-			           (int)maxRows, (int)nodeId, (int)nodeId, condition);
+			_sntprintf(query, 512, _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d, tdata_records_%d rec, tdata_rows_%d r")
+			                       _T(" WHERE d.item_id=? AND rec.record_id=d.record_id AND rec.instance=? AND r.row_id=rec.row_id")
+										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC"),
+			           (int)maxRows, (int)nodeId, (int)nodeId, (int)nodeId, condition);
 			break;
 		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, 512, _T("SELECT * FROM (SELECT b.tdata_timestamp, b.tdata_value FROM tdata_%d a, tdata_%d b")
-			                       _T(" WHERE a.item_id=? AND a.tdata_column=? AND a.tdata_value=? AND a.item_id=b.item_id AND a.tdata_row=b.tdata_row AND b.tdata_column=?")
-										  _T("%s AND a.tdata_timestamp=b.tdata_timestamp ORDER BY b.tdata_timestamp DESC) WHERE ROWNUM<=%d"),
-			           (int)nodeId, (int)nodeId, condition, (int)maxRows);
+			_sntprintf(query, 512, _T("SELECT * FROM (SELECT d.tdata_timestamp, r.value FROM tdata_%d d, tdata_records_%d rec, tdata_rows_%d r")
+			                       _T(" WHERE d.item_id=? AND rec.record_id=d.record_id AND rec.instance=? AND r.row_id=rec.row_id")
+										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC) WHERE ROWNUM<=%d"),
+			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
 			break;
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
-			_sntprintf(query, 512, _T("SELECT b.tdata_timestamp, b.tdata_value FROM tdata_%d a, tdata_%d b")
-			                       _T(" WHERE a.item_id=? AND a.tdata_column=? AND a.tdata_value=? AND a.item_id=b.item_id AND a.tdata_row=b.tdata_row AND b.tdata_column=?")
-										  _T("%s AND a.tdata_timestamp=b.tdata_timestamp ORDER BY b.tdata_timestamp DESC LIMIT %d"),
-			           (int)nodeId, (int)nodeId, condition, (int)maxRows);
+			_sntprintf(query, 512, _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d, tdata_records_%d rec, tdata_rows_%d r")
+			                       _T(" WHERE d.item_id=? AND rec.record_id=d.record_id AND rec.instance=? AND r.row_id=rec.row_id")
+										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC LIMIT %d"),
+			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
 			break;
 		default:
 			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareIDataSelect"));
@@ -3523,9 +3523,9 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 
 	TCHAR condition[256] = _T("");
 	if (timeFrom != 0)
-		_tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND a.tdata_timestamp>=?") : _T(" AND idata_timestamp>=?"));
+		_tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND d.tdata_timestamp>=?") : _T(" AND idata_timestamp>=?"));
 	if (timeTo != 0)
-		_tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND a.tdata_timestamp<=?") : _T(" AND idata_timestamp<=?"));
+		_tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND d.tdata_timestamp<=?") : _T(" AND idata_timestamp<=?"));
 
 	DCI_DATA_HEADER *pData = NULL;
 	DCI_DATA_ROW *pCurr;
@@ -3556,7 +3556,6 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 		{
 			request->GetVariableStr(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
 
-			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, ((DCTable *)dci)->getInstanceColumnId());
 			DBBind(hStmt, pos++, DB_SQLTYPE_VARCHAR, request->GetVariableStr(VID_INSTANCE), DB_BIND_DYNAMIC);
 			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, DCTable::columnIdFromName(dataColumn));
 		}

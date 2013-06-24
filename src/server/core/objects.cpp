@@ -297,9 +297,16 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             }
          }
 
-         MetaDataReadStr(_T("TDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id());
-         DBQuery(g_hCoreDB, szQuery);
+         for(i = 0; i < 10; i++)
+         {
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("TDataTableCreationCommand_%d"), i);
+            MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+            if (szQueryTemplate[0] != 0)
+            {
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id());
+               DBQuery(g_hCoreDB, szQuery);
+            }
+         }
 
          for(i = 0; i < 10; i++)
          {

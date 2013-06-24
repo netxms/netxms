@@ -685,9 +685,9 @@ BOOL CreateIDataTable(DWORD nodeId)
 }
 
 /**
- * Create tdata_xx table
+ * Create tdata_xx table - pre V281 version
  */
-BOOL CreateTDataTable(DWORD nodeId)
+BOOL CreateTDataTable_preV281(DWORD nodeId)
 {
    TCHAR szQuery[256], szQueryTemplate[256];
    DWORD i;
@@ -696,6 +696,41 @@ BOOL CreateTDataTable(DWORD nodeId)
    _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
    if (!SQLQuery(szQuery))
 		return FALSE;
+
+   for(i = 0; i < 10; i++)
+   {
+      _sntprintf(szQuery, 256, _T("TDataIndexCreationCommand_%d"), i);
+      MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+      if (szQueryTemplate[0] != 0)
+      {
+         _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
+         if (!SQLQuery(szQuery))
+				return FALSE;
+      }
+   }
+
+	return TRUE;
+}
+
+/**
+ * Create tdata_*_xx tables
+ */
+BOOL CreateTDataTables(DWORD nodeId)
+{
+   TCHAR szQuery[256], szQueryTemplate[256];
+   DWORD i;
+
+   for(i = 0; i < 10; i++)
+   {
+      _sntprintf(szQuery, 256, _T("TDataTableCreationCommand_%d"), i);
+      MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+      if (szQueryTemplate[0] != 0)
+      {
+         _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
+         if (!SQLQuery(szQuery))
+		      return FALSE;
+      }
+   }
 
    for(i = 0; i < 10; i++)
    {

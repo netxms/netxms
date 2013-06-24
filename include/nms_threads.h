@@ -892,6 +892,81 @@ inline THREAD GetCurrentThreadId()
 
 #include <rwlock.h>
 
+/* Interlocked increment/decrement functions */
+#ifndef _WIN32
+
+#ifdef __sun
+
+/**
+ * Atomically increment 32-bit value by 1
+ */
+inline INT64 InterlockedIncrement(INT32 volatile *v)
+{
+   return atomic_inc_32_nv((volatile uint32_t *)v);
+}
+
+/**
+ * Atomically decrement 32-bit value by 1
+ */
+inline INT64 InterlockedDecrement(INT32 volatile *v)
+{
+   return atomic_dec_32_nv((volatile uint32_t *)v);
+}
+
+/**
+ * Atomically increment 64-bit value by 1
+ */
+inline INT64 InterlockedIncrement64(INT64 volatile *v)
+{
+   return atomic_inc_64_nv((volatile uint64_t *)v);
+}
+
+/**
+ * Atomically decrement 64-bit value by 1
+ */
+inline INT64 InterlockedDecrement64(INT64 volatile *v)
+{
+   return atomic_dec_64_nv((volatile uint64_t *)v);
+}
+
+#else /* not Solaris */
+
+/**
+ * Atomically increment 32-bit value by 1
+ */
+inline INT64 InterlockedIncrement(INT32 volatile *v)
+{
+   return __sync_add_and_fetch(v, 1);
+}
+
+/**
+ * Atomically decrement 32-bit value by 1
+ */
+inline INT64 InterlockedDecrement(INT32 volatile *v)
+{
+   return __sync_sub_and_fetch(v, 1);
+}
+
+/**
+ * Atomically increment 64-bit value by 1
+ */
+inline INT64 InterlockedIncrement64(INT64 volatile *v)
+{
+   return __sync_add_and_fetch(v, 1);
+}
+
+/**
+ * Atomically decrement 64-bit value by 1
+ */
+inline INT64 InterlockedDecrement64(INT64 volatile *v)
+{
+   return __sync_sub_and_fetch(v, 1);
+}
+
+#endif   /* __sun */
+
+#endif   /* _WIN32 */
+
 #endif   /* __cplusplus */
 
 #endif   /* _nms_threads_h_ */

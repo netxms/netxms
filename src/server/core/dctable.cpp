@@ -123,7 +123,6 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
  */
 DCTable::DCTable() : DCObject()
 {
-	m_instanceColumn[0] = 0;
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 }
@@ -133,7 +132,6 @@ DCTable::DCTable() : DCObject()
  */
 DCTable::DCTable(const DCTable *src) : DCObject(src)
 {
-	nx_strncpy(m_instanceColumn, src->m_instanceColumn, MAX_COLUMN_NAME);
 	m_columns = new ObjectArray<DCTableColumn>(src->m_columns->size(), 8, true);
 	for(int i = 0; i < src->m_columns->size(); i++)
 		m_columns->add(new DCTableColumn(src->m_columns->get(i)));
@@ -144,10 +142,9 @@ DCTable::DCTable(const DCTable *src) : DCObject(src)
  * Constructor for creating new DCTable from scratch
  */
 DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
-	              Template *node, const TCHAR *instanceColumn, const TCHAR *description, const TCHAR *systemTag)
+	              Template *node, const TCHAR *description, const TCHAR *systemTag)
         : DCObject(id, name, source, pollingInterval, retentionTime, node, description, systemTag)
 {
-	nx_strncpy(m_instanceColumn, CHECK_NULL_EX(instanceColumn), MAX_COLUMN_NAME);
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 }
@@ -155,7 +152,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
 /**
  * Constructor for creating DCTable from database
  * Assumes that fields in SELECT query are in following order:
- *    item_id,template_id,template_item_id,name,instance_column,
+ *    item_id,template_id,template_item_id,name,
  *    description,flags,source,snmp_port,polling_interval,retention_time,
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
  *    transformation_script
@@ -166,19 +163,18 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 2);
 	DBGetField(hResult, iRow, 3, m_szName, MAX_ITEM_NAME);
-	DBGetField(hResult, iRow, 4, m_instanceColumn, MAX_COLUMN_NAME);
-   DBGetField(hResult, iRow, 5, m_szDescription, MAX_DB_STRING);
-   m_flags = (WORD)DBGetFieldLong(hResult, iRow, 6);
-   m_source = (BYTE)DBGetFieldLong(hResult, iRow, 7);
-	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 8);
-   m_iPollingInterval = DBGetFieldLong(hResult, iRow, 9);
-   m_iRetentionTime = DBGetFieldLong(hResult, iRow, 10);
-   m_status = (BYTE)DBGetFieldLong(hResult, iRow, 11);
-	DBGetField(hResult, iRow, 12, m_systemTag, MAX_DB_STRING);
-	m_dwResourceId = DBGetFieldULong(hResult, iRow, 13);
-	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 14);
-	m_pszPerfTabSettings = DBGetField(hResult, iRow, 15, NULL, 0);
-   TCHAR *pszTmp = DBGetField(hResult, iRow, 16, NULL, 0);
+   DBGetField(hResult, iRow, 4, m_szDescription, MAX_DB_STRING);
+   m_flags = (WORD)DBGetFieldLong(hResult, iRow, 5);
+   m_source = (BYTE)DBGetFieldLong(hResult, iRow, 6);
+	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 7);
+   m_iPollingInterval = DBGetFieldLong(hResult, iRow, 8);
+   m_iRetentionTime = DBGetFieldLong(hResult, iRow, 9);
+   m_status = (BYTE)DBGetFieldLong(hResult, iRow, 10);
+	DBGetField(hResult, iRow, 11, m_systemTag, MAX_DB_STRING);
+	m_dwResourceId = DBGetFieldULong(hResult, iRow, 12);
+	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 13);
+	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
+   TCHAR *pszTmp = DBGetField(hResult, iRow, 15, NULL, 0);
    setTransformationScript(pszTmp);
    free(pszTmp);
 
@@ -186,7 +182,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,data_type,snmp_oid FROM dc_table_columns WHERE table_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,flags,snmp_oid FROM dc_table_columns WHERE table_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -275,33 +271,80 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 
 	// Save data to database
 	// Object is unlocked, so only local variables can be used
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,tdata_row,tdata_column,tdata_value) VALUES (?,?,?,?,?)"), (int)nodeId);
-
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+   	DBConnectionPoolReleaseConnection(hdb);
+      return;
+   }
+
+   INT64 recordId = (INT64)time(NULL) << 24;
+   BOOL success = FALSE;
+	Table *data = (Table *)value;
+
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,record_id) VALUES (?,?,?)"), (int)nodeId);
 	DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)nTimeStamp);
-
-		Table *data = (Table *)value;
-		for(int col = 0; col < data->getNumColumns(); col++)
-		{
-			INT32 colId = columnIdFromName(data->getColumnName(col));
-			if (colId == 0)
-				continue;	// cannot get column ID
-
-			for(int row = 0; row < data->getNumRows(); row++)
-			{
-				DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)row);
-				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, colId);
-				DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, data->getAsString(row, col), DB_BIND_STATIC);
-				DBExecute(hStmt);
-			}
-		}
+		DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, recordId);
+	   success = DBExecute(hStmt);
 		DBFreeStatement(hStmt);
 	}
+
+   if (success)
+   {
+	   _sntprintf(query, 256, _T("INSERT INTO tdata_records_%d (record_id,row_id,instance) VALUES (?,?,?)"), (int)nodeId);
+	   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	   if (hStmt != NULL)
+	   {
+         DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId);
+         for(int row = 0; row < data->getNumRows(); row++)
+         {
+            TCHAR instance[MAX_RESULT_LENGTH];
+            data->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
+            DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
+		      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, instance, DB_BIND_STATIC);
+	         success = DBExecute(hStmt);
+            if (!success)
+               break;
+         }
+	      DBFreeStatement(hStmt);
+	   }
+   }
+
+   if (success)
+   {
+	   _sntprintf(query, 256, _T("INSERT INTO tdata_rows_%d (row_id,column_id,value) VALUES (?,?,?)"), (int)nodeId);
+	   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	   if (hStmt != NULL)
+	   {
+		   for(int col = 0; col < data->getNumColumns(); col++)
+		   {
+			   INT32 colId = columnIdFromName(data->getColumnName(col));
+			   if (colId == 0)
+				   continue;	// cannot get column ID
+
+			   for(int row = 0; row < data->getNumRows(); row++)
+			   {
+               DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
+				   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, colId);
+				   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, data->getAsString(row, col), DB_BIND_STATIC);
+				   success = DBExecute(hStmt);
+               if (!success)
+                  break;
+			   }
+		   }
+	      DBFreeStatement(hStmt);
+      }
+   }
+
+   if (success)
+      DBCommit(hdb);
+   else
+      DBRollback(hdb);
 
 	DBConnectionPoolReleaseConnection(hdb);
 }
@@ -350,16 +393,16 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	if (IsDatabaseRecordExist(hdb, _T("dc_tables"), _T("item_id"), m_dwId))
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE dc_tables SET node_id=?,template_id=?,template_item_id=?,name=?,")
-		                       _T("instance_column=?,description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
+		                       _T("description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
                              _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
 									  _T("perftab_settings=?,transformation_script=? WHERE item_id=?"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
-		                       _T("instance_column,description,flags,source,snmp_port,polling_interval,")
+		                       _T("description,flags,source,snmp_port,polling_interval,")
 		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("transformation_script,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+									  _T("transformation_script,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -370,20 +413,19 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
 	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_szName, DB_BIND_STATIC);
-	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_instanceColumn, DB_BIND_STATIC);
-	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_szDescription, DB_BIND_STATIC);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_source);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (UINT32)m_snmpPort);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_iPollingInterval);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_iRetentionTime);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_status);
-	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwResourceId);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwProxyNode);
-	DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
-   DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_szDescription, DB_BIND_STATIC);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_source);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (UINT32)m_snmpPort);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_iPollingInterval);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_iRetentionTime);
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_status);
+	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwResourceId);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwProxyNode);
+	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
+   DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_dwId);
 
 	BOOL result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -405,7 +447,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 
 		if (result && (m_columns->size() > 0))
 		{
-			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,column_name,snmp_oid,data_type) VALUES (?,?,?,?)"));
+			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,column_name,snmp_oid,flags) VALUES (?,?,?,?)"));
 			if (hStmt != NULL)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -415,7 +457,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, column->getName(), DB_BIND_STATIC);
 					SNMP_ObjectId *oid = column->getSnmpOid();
 					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (oid != NULL) ? oid->getValueAsText() : NULL, DB_BIND_STATIC);
-					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)column->getDataType());
+					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)column->getFlags());
 
 					result = DBExecute(hStmt);
 					if (!result)
@@ -443,9 +485,9 @@ void DCTable::deleteFromDB()
 
 	DCObject::deleteFromDB();
 
+   deleteAllData();
+
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_tables WHERE item_id=%d"), (int)m_dwId);
-   QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM tdata_%d WHERE item_id=%d"), (int)m_pNode->Id(), (int)m_dwId);
    QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_table_columns WHERE table_id=%d"), (int)m_dwId);
    QueueSQLRequest(szQuery);
@@ -459,14 +501,13 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 	DCObject::createMessage(pMsg);
 
    lock();
-   pMsg->SetVariable(VID_INSTANCE_COLUMN, m_instanceColumn);
 	pMsg->SetVariable(VID_NUM_COLUMNS, (UINT32)m_columns->size());
 	UINT32 varId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < m_columns->size(); i++)
 	{
 		DCTableColumn *column = m_columns->get(i);
 		pMsg->SetVariable(varId++, column->getName());
-		pMsg->SetVariable(varId++, (WORD)column->getDataType());
+		pMsg->SetVariable(varId++, column->getFlags());
 		SNMP_ObjectId *oid = column->getSnmpOid();
 		if (oid != NULL)
 			pMsg->SetVariableToInt32Array(varId++, oid->getLength(), oid->getValue());
@@ -485,8 +526,6 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 	DCObject::updateFromMessage(pMsg);
 
    lock();
-
-	pMsg->GetVariableStr(VID_INSTANCE_COLUMN, m_instanceColumn, MAX_DB_STRING);
 
 	m_columns->clear();
 	int count = (int)pMsg->GetVariableLong(VID_NUM_COLUMNS);
@@ -509,8 +548,6 @@ void DCTable::fillLastValueMessage(CSCPMessage *msg)
 	if (m_lastValue != NULL)
 	{
 		m_lastValue->fillMessage(*msg, 0, -1);
-		if (m_instanceColumn[0] != 0)
-			msg->SetVariable(VID_INSTANCE_COLUMN, m_instanceColumn);
 	}
    unlock();
 }
@@ -535,16 +572,6 @@ void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId)
    pMsg->SetVariable(dwId++, (WORD)0);            // compatibility: number of thresholds
 
 	unlock();
-}
-
-/**
- * Get ID of instance column
- */
-INT32 DCTable::getInstanceColumnId()
-{
-	if (m_instanceColumn[0] != 0)
-		return columnIdFromName(m_instanceColumn);
-	return 0;	/* TODO: try to auto-detect instance column */
 }
 
 /**
