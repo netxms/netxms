@@ -278,7 +278,7 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
       return;
    }
 
-   INT64 recordId = (INT64)time(NULL) << 24;
+   INT64 recordId = ((INT64)time(NULL) << 30) | (((INT64)tableId & 0xFFFF) << 14);
    BOOL success = FALSE;
 	Table *data = (Table *)value;
 
