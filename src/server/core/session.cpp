@@ -1595,12 +1595,6 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	msg.SetVariable(VID_TIMEZONE, szBuffer);
 	debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
-	ConfigReadStr(_T("WindowsConsoleUpgradeURL"), szBuffer, 1024,
-	              _T("http://www.netxms.org/download/netxms-console-%version%.exe"));
-	strURL = szBuffer;
-	strURL.replace(_T("%version%"), NETXMS_VERSION_STRING);
-	msg.SetVariable(VID_CONSOLE_UPGRADE_URL, (const TCHAR *)strURL);
-
 	ConfigReadStr(_T("TileServerURL"), szBuffer, 1024, _T("http://tile.openstreetmap.org/"));
 	msg.SetVariable(VID_TILE_SERVER_URL, szBuffer);
 

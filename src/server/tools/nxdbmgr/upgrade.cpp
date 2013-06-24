@@ -354,6 +354,18 @@ static BOOL RecreateTData(const TCHAR *className)
 }
 
 /**
+ * Upgrade from V281 to V282
+ */
+static BOOL H_UpgradeFromV281(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='WindowsConsoleUpgradeURL'")));
+   CHK_EXEC(CreateConfigParam(_T("EnableObjectTransactions"), _T("0"), 1, 1));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='282' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V280 to V281
  */
 static BOOL H_UpgradeFromV280(int currVersion, int newVersion)
@@ -6995,6 +7007,7 @@ static struct
    { 278, 279, H_UpgradeFromV278 },
    { 279, 280, H_UpgradeFromV279 },
    { 280, 281, H_UpgradeFromV280 },
+   { 281, 282, H_UpgradeFromV281 },
    { 0, 0, NULL }
 };
 

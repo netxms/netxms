@@ -37,7 +37,8 @@ static RWLOCK s_objectTxnLock = RWLockCreate();
  */
 void NXCORE_EXPORTABLE ObjectTransactionStart()
 {
-   RWLockReadLock(s_objectTxnLock, INFINITE);
+   if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
+      RWLockReadLock(s_objectTxnLock, INFINITE);
 }
 
 /**
@@ -45,7 +46,8 @@ void NXCORE_EXPORTABLE ObjectTransactionStart()
  */
 void NXCORE_EXPORTABLE ObjectTransactionEnd()
 {
-   RWLockUnlock(s_objectTxnLock);
+   if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
+      RWLockUnlock(s_objectTxnLock);
 }
 
 /**
@@ -53,7 +55,8 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd()
  */
 void SaveObjects(DB_HANDLE hdb)
 {
-   RWLockWriteLock(s_objectTxnLock, INFINITE);
+   if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
+      RWLockWriteLock(s_objectTxnLock, INFINITE);
 
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
 	for(int i = 0; i < objects->size(); i++)
@@ -96,7 +99,8 @@ void SaveObjects(DB_HANDLE hdb)
 		}
    }
 
-   RWLockUnlock(s_objectTxnLock);
+   if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
+      RWLockUnlock(s_objectTxnLock);
 	delete objects;
 }
 
