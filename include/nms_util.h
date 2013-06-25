@@ -438,15 +438,24 @@ public:
 class LIBNETXMS_EXPORTABLE RefCountObject
 {
 private:
-	int m_refCount;
-	MUTEX m_mutex;
+	VolatileCounter m_refCount;
 
 public:
-	RefCountObject();
-	virtual ~RefCountObject();
+	RefCountObject()
+   {
+      m_refCount = 1;
+   }
 
-	void incRefCount();
-	void decRefCount();
+	void incRefCount()
+   {
+      InterlockedIncrement(&m_refCount);
+   }
+
+	void decRefCount()
+   {
+      if (InterlockedDecrement(&m_refCount) == 0)
+         delete this;
+   }
 };
 
 class CSCPMessage;

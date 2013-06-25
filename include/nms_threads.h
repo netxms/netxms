@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -893,48 +893,59 @@ inline THREAD GetCurrentThreadId()
 #include <rwlock.h>
 
 /* Interlocked increment/decrement functions */
-#ifndef _WIN32
+#ifdef _WIN32
+
+typedef volatile LONG VolatileCounter;
+typedef volatile LONGLONG VolatileCounter64;
+
+#else
 
 #ifdef __sun
+
+typedef volatile uint32_t VolatileCounter;
+typedef volatile uint64_t VolatileCounter64;
 
 /**
  * Atomically increment 32-bit value by 1
  */
-inline INT64 InterlockedIncrement(INT32 volatile *v)
+inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 {
-   return atomic_inc_32_nv((volatile uint32_t *)v);
+   return atomic_inc_32_nv(v);
 }
 
 /**
  * Atomically decrement 32-bit value by 1
  */
-inline INT64 InterlockedDecrement(INT32 volatile *v)
+inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 {
-   return atomic_dec_32_nv((volatile uint32_t *)v);
+   return atomic_dec_32_nv(v);
 }
 
 /**
  * Atomically increment 64-bit value by 1
  */
-inline INT64 InterlockedIncrement64(INT64 volatile *v)
+inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
 {
-   return atomic_inc_64_nv((volatile uint64_t *)v);
+   return atomic_inc_64_nv(v);
 }
 
 /**
  * Atomically decrement 64-bit value by 1
  */
-inline INT64 InterlockedDecrement64(INT64 volatile *v)
+inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
 {
-   return atomic_dec_64_nv((volatile uint64_t *)v);
+   return atomic_dec_64_nv(v);
 }
 
 #else /* not Solaris */
 
+typedef volatile INT32 VolatileCounter;
+typedef volatile INT64 VolatileCounter64;
+
 /**
  * Atomically increment 32-bit value by 1
  */
-inline INT64 InterlockedIncrement(INT32 volatile *v)
+inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 {
    return __sync_add_and_fetch(v, 1);
 }
@@ -942,7 +953,7 @@ inline INT64 InterlockedIncrement(INT32 volatile *v)
 /**
  * Atomically decrement 32-bit value by 1
  */
-inline INT64 InterlockedDecrement(INT32 volatile *v)
+inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 {
    return __sync_sub_and_fetch(v, 1);
 }
@@ -956,7 +967,7 @@ inline INT64 InterlockedDecrement(INT32 volatile *v)
 /**
  * Atomically increment 64-bit value by 1
  */
-inline INT64 InterlockedIncrement64(INT64 volatile *v)
+inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
 {
    return __sync_add_and_fetch(v, 1);
 }
@@ -964,7 +975,7 @@ inline INT64 InterlockedIncrement64(INT64 volatile *v)
 /**
  * Atomically decrement 64-bit value by 1
  */
-inline INT64 InterlockedDecrement64(INT64 volatile *v)
+inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
 {
    return __sync_sub_and_fetch(v, 1);
 }

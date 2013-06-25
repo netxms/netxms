@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1961,45 +1961,6 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 }
 
 /**
- * RefCountObject implementation
- *
- * Auxilliary class for objects which counts references and
- * destroys itself wheren reference count falls to 0
- */
-RefCountObject::RefCountObject()
-{
-	m_refCount = 1;
-	m_mutex = MutexCreate();
-}
-
-RefCountObject::~RefCountObject()
-{
-	MutexDestroy(m_mutex);
-}
-
-void RefCountObject::incRefCount()
-{
-	MutexLock(m_mutex);
-	m_refCount++;
-	MutexUnlock(m_mutex);
-}
-
-void RefCountObject::decRefCount()
-{
-	MutexLock(m_mutex);
-	m_refCount--;
-	if (m_refCount == 0)
-	{
-		MutexUnlock(m_mutex);
-		delete this;
-	}
-	else
-	{
-		MutexUnlock(m_mutex);
-	}
-}
-
-/**
  * mkstemp() implementation for Windows
  */
 #ifdef _WIN32
@@ -2022,13 +1983,11 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl)
 
 #endif
 
-
-//
-// strcat_s/wcscat_s implementation
-//
-
 #ifndef _WIN32
 
+/**
+ * strcat_s implementation
+ */
 int LIBNETXMS_EXPORTABLE strcat_s(char *dst, size_t dstSize, const char *src)
 {
 	if (strlen(dst) + strlen(src) + 1 >= dstSize)
@@ -2037,6 +1996,9 @@ int LIBNETXMS_EXPORTABLE strcat_s(char *dst, size_t dstSize, const char *src)
 	return 0;
 }
 
+/**
+ * wcscat_s implementation
+ */
 int LIBNETXMS_EXPORTABLE wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src)
 {
 	if (wcslen(dst) + wcslen(src) + 1 >= dstSize)
