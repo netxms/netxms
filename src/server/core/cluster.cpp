@@ -654,7 +654,7 @@ bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
 }
 
 /**
- * Collect aggregated data for cluster nodes
+ * Collect aggregated data for cluster nodes - single value
  */
 UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
@@ -708,6 +708,49 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 
    for(int i = 0; i < valueCount; i++)
       delete values[i];
+   safe_free(values);
+
+   return rcc;
+}
+
+/**
+ * Collect aggregated data for cluster nodes - table
+ */
+UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
+{
+   LockChildList(TRUE);
+   Table **values = (Table **)malloc(sizeof(Table *) * m_dwChildCount);
+   int valueCount = 0;
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Type() != OBJECT_NODE)
+         continue;
+
+      Node *node = (Node *)m_pChildList[i];
+      DCObject *dco = node->getDCObjectByTemplateId(table->getId());
+      if ((dco != NULL) && (dco->getType() == DCO_TYPE_TABLE))
+      {
+         Table *v = ((DCTable *)dco)->getLastValue();
+         if (v != NULL)
+            values[valueCount++] = v;
+      }
+   }
+   UnlockChildList();
+
+   UINT32 rcc = DCE_SUCCESS;
+   if (valueCount > 0)
+   {
+      *result = new Table(values[0]);
+      for(int i = 1; i < valueCount; i++)
+         table->mergeValues(*result, values[i], i);
+   }
+   else
+   {
+      rcc = DCE_COMM_ERROR;
+   }
+
+   for(int i = 0; i < valueCount; i++)
+      values[i]->decRefCount();
    safe_free(values);
 
    return rcc;

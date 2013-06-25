@@ -123,18 +123,38 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32 *error)
 {
 	Table *result = NULL;
-   switch(table->getDataSource())
+   if (dcTarget->Type() == OBJECT_CLUSTER)
    {
-		case DS_NATIVE_AGENT:
-			if (dcTarget->Type() == OBJECT_NODE)
-				*error = ((Node *)dcTarget)->getTableFromAgent(table->getName(), &result);
-			else
-				*error = DCE_NOT_SUPPORTED;
-			break;
-		default:
-			*error = DCE_NOT_SUPPORTED;
-			break;
-	}
+      if (table->isAggregateOnCluster())
+      {
+         *error = ((Cluster *)dcTarget)->collectAggregatedData(table, &result);
+      }
+      else
+      {
+         *error = DCE_NOT_SUPPORTED;
+      }
+   }
+   else
+   {
+      switch(table->getDataSource())
+      {
+		   case DS_NATIVE_AGENT:
+			   if (dcTarget->Type() == OBJECT_NODE)
+            {
+				   *error = ((Node *)dcTarget)->getTableFromAgent(table->getName(), &result);
+               if ((*error == DCE_SUCCESS) && (result != NULL))
+                  table->updateResultColumns(result);
+            }
+			   else
+            {
+				   *error = DCE_NOT_SUPPORTED;
+            }
+			   break;
+		   default:
+			   *error = DCE_NOT_SUPPORTED;
+			   break;
+	   }
+   }
 	return result;
 }
 

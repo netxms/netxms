@@ -446,6 +446,8 @@ public:
 
 	virtual int getType() const { return DCO_TYPE_TABLE; }
 
+   virtual void updateFromTemplate(DCObject *dcObject);
+
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDB();
 
@@ -462,6 +464,11 @@ public:
    void fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId);
 
    int getColumnDataType(const TCHAR *name);
+   Table *getLastValue();
+
+   void mergeValues(Table *dest, Table *src, int count);
+
+   void updateResultColumns(Table *t);
 
 	static INT32 columnIdFromName(const TCHAR *name);
 };

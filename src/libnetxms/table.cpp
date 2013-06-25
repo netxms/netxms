@@ -25,7 +25,7 @@
 /**
  * Create empty table
  */
-Table::Table()
+Table::Table() : RefCountObject()
 {
    m_nNumRows = 0;
    m_nNumCols = 0;
@@ -38,10 +38,27 @@ Table::Table()
 /**
  * Create table from NXCP message
  */
-Table::Table(CSCPMessage *msg)
+Table::Table(CSCPMessage *msg) : RefCountObject()
 {
    m_columns = new ObjectArray<TableColumnDefinition>(8, 8, true);
 	createFromMessage(msg);
+}
+
+/**
+ * Copy constructor
+ */
+Table::Table(Table *src) : RefCountObject()
+{
+   m_nNumRows = src->m_nNumRows;
+   m_nNumCols = src->m_nNumCols;
+   m_ppData = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * m_nNumCols);
+	for(int i = 0; i < m_nNumCols * m_nNumRows; i++)
+      m_ppData[i] = _tcsdup(CHECK_NULL_EX(src->m_ppData[i]));
+   m_title = (src->m_title != NULL) ? _tcsdup(src->m_title) : NULL;
+   m_source = src->m_source;
+   m_columns = new ObjectArray<TableColumnDefinition>(m_nNumCols, 8, true);
+	for(int i = 0; i < m_nNumCols; i++)
+      m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
 }
 
 /**
@@ -339,28 +356,50 @@ double Table::getAsDouble(int nRow, int nCol)
 }
 
 /**
- * Merge with another table. If instance column given, values from rows
- * with same values in instance column will be summarized.
+ * Add all rows from another table.
  * Identical table format assumed.
  *
- * @param t table to merge into this table
+ * @param src source table
  */
-void Table::merge(Table *t)
+void Table::addAll(Table *src)
 {
-   if (m_nNumCols != t->m_nNumCols)
+   if (m_nNumCols != src->m_nNumCols)
       return;
 
-   m_ppData = (TCHAR **)realloc(m_ppData, sizeof(TCHAR *) * (m_nNumRows + t->m_nNumRows) * m_nNumCols);
+   m_ppData = (TCHAR **)realloc(m_ppData, sizeof(TCHAR *) * (m_nNumRows + src->m_nNumRows) * m_nNumCols);
    int dpos = m_nNumRows * m_nNumCols;
    int spos = 0;
-   for(int i = 0; i < t->m_nNumRows; i++)
+   for(int i = 0; i < src->m_nNumRows; i++)
    {
       for(int j = 0; j < m_nNumCols; j++)
       {
-         const TCHAR *value = t->m_ppData[spos++];
+         const TCHAR *value = src->m_ppData[spos++];
          m_ppData[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
       }
    }
+   m_nNumRows += src->m_nNumRows;
+}
+
+/**
+ * Copy one row from source table
+ */
+void Table::copyRow(Table *src, int row)
+{
+   if (m_nNumCols != src->m_nNumCols)
+      return;
+
+   if ((row < 0) || (row >= src->m_nNumRows))
+      return;
+
+   m_ppData = (TCHAR **)realloc(m_ppData, sizeof(TCHAR *) * (m_nNumRows + 1) * m_nNumCols);
+   int dpos = m_nNumRows * m_nNumCols;
+   int spos = row * src->m_nNumCols;
+   for(int i = 0; i < m_nNumCols; i++)
+   {
+      const TCHAR *value = src->m_ppData[spos++];
+      m_ppData[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
+   }
+   m_nNumRows++;
 }
 
 /**
@@ -388,6 +427,23 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
       }
    }
    nx_strncpy(buffer, (const TCHAR *)instance, bufLen);
+}
+
+/**
+ * Find row by instance value
+ *
+ * @return row number or -1 if no such row
+ */
+int Table::findRowByInstance(const TCHAR *instance)
+{
+   for(int i = 0; i < m_nNumRows; i++)
+   {
+      TCHAR currInstance[256];
+      buildInstanceString(i, currInstance, 256);
+      if (!_tcscmp(instance, currInstance))
+         return i;
+   }
+   return -1;
 }
 
 /**

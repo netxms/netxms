@@ -904,6 +904,7 @@ public:
    }
 
    UINT32 collectAggregatedData(DCItem *item, TCHAR *buffer);
+   UINT32 collectAggregatedData(DCTable *table, Table **result);
 };
 
 /**

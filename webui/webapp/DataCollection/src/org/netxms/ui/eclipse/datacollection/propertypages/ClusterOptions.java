@@ -117,33 +117,34 @@ public class ClusterOptions extends PropertyPage
 	      clusterResource.setEnabled(false);
       }
       
+   	Group aggregationGroup = new Group(dialogArea, SWT.NONE);
+   	aggregationGroup.setText(Messages.ClusterOptions_DataAggregation);
+   	aggregationGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+   	
+   	layout = new GridLayout();
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+		aggregationGroup.setLayout(layout);
+   	
+   	checkAggregate = new Button(aggregationGroup, SWT.CHECK);
+   	checkAggregate.setText(Messages.ClusterOptions_AggregateFromNodes);
+   	checkAggregate.setSelection(editor.getObject().isAggregateOnCluster());
+      	
       if (editor.getObject() instanceof DataCollectionItem)
       {
-      	Group aggregationGroup = new Group(dialogArea, SWT.NONE);
-      	aggregationGroup.setText(Messages.ClusterOptions_DataAggregation);
-      	aggregationGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-      	
-      	layout = new GridLayout();
-   		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
-   		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-   		aggregationGroup.setLayout(layout);
-      	
-      	checkAggregate = new Button(aggregationGroup, SWT.CHECK);
-      	checkAggregate.setText(Messages.ClusterOptions_AggregateFromNodes);
-      	checkAggregate.setSelection(editor.getObjectAsItem().isAggregateOnCluster());
       	checkAggregate.addSelectionListener(new SelectionListener() {
-				@Override
-				public void widgetSelected(SelectionEvent e)
-				{
-					aggregationFunction.setEnabled(checkAggregate.getSelection());
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					widgetSelected(e);
-				}
-			});
+   			@Override
+   			public void widgetSelected(SelectionEvent e)
+   			{
+   				aggregationFunction.setEnabled(checkAggregate.getSelection());
+   			}
+   			
+   			@Override
+   			public void widgetDefaultSelected(SelectionEvent e)
+   			{
+   				widgetSelected(e);
+   			}
+   		});
       	
       	aggregationFunction = WidgetHelper.createLabeledCombo(aggregationGroup, SWT.BORDER | SWT.READ_ONLY, Messages.ClusterOptions_AggrFunction, WidgetHelper.DEFAULT_LAYOUT_DATA);
       	aggregationFunction.add(Messages.ClusterOptions_Total);
@@ -165,9 +166,9 @@ public class ClusterOptions extends PropertyPage
 	protected boolean applyChanges(final boolean isApply)
 	{
 		editor.getObject().setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
+		editor.getObject().setAggregateOnCluster(checkAggregate.getSelection());
 		if (editor.getObject() instanceof DataCollectionItem)
 		{
-			editor.getObjectAsItem().setAggregateOnCluster(checkAggregate.getSelection());
 			editor.getObjectAsItem().setAggregationFunction(aggregationFunction.getSelectionIndex());
 		}
 		editor.modify();

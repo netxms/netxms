@@ -206,7 +206,8 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 DCTable::~DCTable()
 {
 	delete m_columns;
-	delete m_lastValue;
+   if (m_lastValue != NULL)
+      m_lastValue->decRefCount();
 }
 
 /**
@@ -258,7 +259,8 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
    transform((Table *)value);
 
    m_dwErrorCount = 0;
-	delete m_lastValue;
+   if (m_lastValue != NULL)
+      m_lastValue->decRefCount();
 	m_lastValue = (Table *)value;
 	m_lastValue->setTitle(m_szDescription);
    m_lastValue->setSource(m_source);
@@ -607,4 +609,152 @@ int DCTable::getColumnDataType(const TCHAR *name)
 
    unlock();
    return dt;
+}
+
+/**
+ * Get last collected value
+ */
+Table *DCTable::getLastValue()
+{
+   lock();
+   Table *value;
+   if (m_lastValue != NULL)
+   {
+      value = m_lastValue;
+      value->incRefCount();
+   }
+   else
+   {
+      value = NULL;
+   }
+   unlock();
+   return value;
+}
+
+/**
+ * Update destination value from source value
+ */
+#define RECALCULATE_VALUE(dst, src, func, count) \
+   { \
+      switch(func) \
+      { \
+         case DCF_FUNCTION_MIN: \
+            if (src < dst) dst = src; \
+            break; \
+         case DCF_FUNCTION_MAX: \
+            if (src > dst) dst = src; \
+            break; \
+         case DCF_FUNCTION_SUM: \
+            dst += src; \
+            break; \
+         case DCF_FUNCTION_AVG: \
+            dst = (dst * count + src) / (count + 1); \
+            break; \
+      } \
+   }
+
+/**
+ * Merge values
+ */
+void DCTable::mergeValues(Table *dest, Table *src, int count)
+{
+   for(int sRow = 0; sRow < src->getNumRows(); sRow++)
+   {
+      TCHAR instance[MAX_RESULT_LENGTH];
+
+      src->buildInstanceString(sRow, instance, MAX_RESULT_LENGTH);
+      int dRow = dest->findRowByInstance(instance);
+      if (dRow >= 0)
+      {
+         for(int j = 0; j < m_columns->size(); j++)
+         {
+            DCTableColumn *cd = m_columns->get(j);
+            if ((cd == NULL) || cd->isInstanceColumn() || (cd->getDataType() == DCI_DT_STRING))
+               continue;
+            int column = dest->getColumnIndex(cd->getName());
+            if (column == -1)
+               continue;
+
+            if (cd->getDataType() == DCI_DT_FLOAT)
+            {
+               double sval = src->getAsDouble(sRow, column);
+               double dval = dest->getAsDouble(dRow, column);
+
+               RECALCULATE_VALUE(dval, sval, cd->getAggregationFunction(), count);
+
+               dest->setAt(dRow, column, dval);
+            }
+            if ((cd->getDataType() == DCI_DT_UINT) || (cd->getDataType() == DCI_DT_UINT64))
+            {
+               UINT64 sval = src->getAsUInt64(sRow, column);
+               UINT64 dval = dest->getAsUInt64(dRow, column);
+
+               RECALCULATE_VALUE(dval, sval, cd->getAggregationFunction(), count);
+
+               dest->setAt(dRow, column, dval);
+            }
+            else
+            {
+               INT64 sval = src->getAsInt64(sRow, column);
+               INT64 dval = dest->getAsInt64(dRow, column);
+
+               RECALCULATE_VALUE(dval, sval, cd->getAggregationFunction(), count);
+
+               dest->setAt(dRow, column, dval);
+            }
+         }
+      }
+      else
+      {
+         // no such instance
+         dest->copyRow(src, sRow);
+      }
+   }
+}
+
+/**
+ * Update columns in resulting table according to definition
+ */
+void DCTable::updateResultColumns(Table *t)
+{
+   lock();
+   for(int i = 0; i < m_columns->size(); i++)
+   {
+      DCTableColumn *col = m_columns->get(i);
+      int index = t->getColumnIndex(col->getName());
+      if (index != -1)
+      {
+         TableColumnDefinition *cd = t->getColumnDefinitions()->get(index);
+         if (cd != NULL)
+         {
+            cd->setDataType(col->getDataType());
+            cd->setInstanceColumn(col->isInstanceColumn());
+            cd->setDisplayName(col->getDisplayName());
+         }
+      }
+   }
+   unlock();
+}
+
+/**
+ * Update from template item
+ */
+void DCTable::updateFromTemplate(DCObject *src)
+{
+	DCObject::updateFromTemplate(src);
+
+	if (src->getType() != DCO_TYPE_TABLE)
+	{
+		DbgPrintf(2, _T("INTERNAL ERROR: DCTable::updateFromTemplate(%d, %d): source type is %d"), (int)m_dwId, (int)src->getId(), src->getType());
+		return;
+	}
+
+   lock();
+	DCTable *table = (DCTable *)src;
+
+   m_columns->clear();
+	for(int i = 0; i < table->m_columns->size(); i++)
+		m_columns->add(new DCTableColumn(table->m_columns->get(i)));
+   
+   unlock();
 }

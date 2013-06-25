@@ -58,6 +58,7 @@ public abstract class DataCollectionObject
 	
 	// common data collection flags
 	public static final int DCF_ADVANCED_SCHEDULE = 0x0001;
+	public static final int DCF_AGGREGATE_ON_CLUSTER = 0x0080;
 	
 	protected DataCollectionConfiguration owner;
 	protected long id;
@@ -481,5 +482,24 @@ public abstract class DataCollectionObject
 	public void setUserData(Object userData)
 	{
 		this.userData = userData;
+	}
+	
+	/**
+	 * @return the processAllThresholds
+	 */
+	public boolean isAggregateOnCluster()
+	{
+		return (flags & DCF_AGGREGATE_ON_CLUSTER) != 0;
+	}
+
+	/**
+	 * @param enable
+	 */
+	public void setAggregateOnCluster(boolean enable)
+	{
+		if (enable)
+			flags |= DCF_AGGREGATE_ON_CLUSTER;
+		else
+			flags &= ~DCF_AGGREGATE_ON_CLUSTER;
 	}
 }

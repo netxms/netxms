@@ -477,12 +477,13 @@ public:
 
    void setDataType(INT32 type) { m_dataType = type; }
    void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
+   void setDisplayName(const TCHAR *name) { safe_free(m_displayName); m_displayName = _tcsdup(CHECK_NULL_EX(name)); }
 };
 
 /**
  * Class for table data storage
  */
-class LIBNETXMS_EXPORTABLE Table
+class LIBNETXMS_EXPORTABLE Table : public RefCountObject
 {
 private:
    int m_nNumRows;
@@ -497,13 +498,15 @@ private:
 
 public:
    Table();
+   Table(Table *src);
    Table(CSCPMessage *msg);
    ~Table();
 
 	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
 	void updateFromMessage(CSCPMessage *msg);
 
-   void merge(Table *t);
+   void addAll(Table *src);
+   void copyRow(Table *src, int row);
 
    int getNumRows() { return m_nNumRows; }
    int getNumColumns() { return m_nNumCols; }
@@ -545,6 +548,7 @@ public:
    double getAsDouble(int nRow, int nCol);
 
    void buildInstanceString(int row, TCHAR *buffer, size_t bufLen);
+   int findRowByInstance(const TCHAR *instance);
 };
 
 /**

@@ -45,7 +45,10 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
@@ -68,13 +71,13 @@ public class TableLastValues extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TableLastValues";
 	
 	private NXCSession session;
-	private long nodeId;
+	private long objectId;
+	private String objectName;
 	private long dciId;
 	private long uniqueId = 1;
 	private Table currentData = null;
 	private SortableTableViewer viewer;
 	private CellSelectionManager cellSelectionManager;
-	private String nodeName;
 	private Action actionRefresh;
 	private Action actionExportAllToCsv;
 	private Action actionShowLineChart;
@@ -96,15 +99,15 @@ public class TableLastValues extends ViewPart
 		if (parts.length != 2)
 			throw new PartInitException("Internal error");
 		
-		nodeId = Long.parseLong(parts[0]);
-		AbstractObject object = session.findObjectById(nodeId);
-		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
+		objectId = Long.parseLong(parts[0]);
+		AbstractObject object = session.findObjectById(objectId);
+		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof Cluster) && !(object instanceof MobileDevice)))
 			throw new PartInitException("Invalid object ID");
-		nodeName = object.getObjectName();
+		objectName = object.getObjectName();
 		
 		dciId = Long.parseLong(parts[1]);
 		
-		setPartName(nodeName + ": [" + Long.toString(dciId) + "]");
+		setPartName(objectName + ": [" + Long.toString(dciId) + "]");
 	}
 
 	/* (non-Javadoc)
@@ -257,12 +260,12 @@ public class TableLastValues extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Table table = session.getTableLastValues(nodeId, dciId);
+				final Table table = session.getTableLastValues(objectId, dciId);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						setPartName(nodeName + ": " + table.getTitle());
+						setPartName(objectName + ": " + table.getTitle());
 						updateViewer(table);
 					}
 				});
@@ -323,7 +326,7 @@ public class TableLastValues extends ViewPart
 			String instance = cells[i].getViewerRow().getText(instanceColumnIndex);
 			int source = currentData.getSource();
 			
-			id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + 
+			id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + 
 					Integer.toString(source) + "@" + Integer.toString(column.getDataType()) + "@" + 
 					safeEncode(currentData.getTitle()) + "@" + safeEncode(column.getDisplayName() + ": " + instance) + 
 					"@" + safeEncode(instance) + "@" + safeEncode(column.getName());
@@ -359,7 +362,7 @@ public class TableLastValues extends ViewPart
 			String instance = cells[i].getViewerRow().getText(instanceColumnIndex);
 			int source = currentData.getSource();
 			
-			id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + 
+			id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + 
 					Integer.toString(source) + "@" + Integer.toString(column.getDataType()) + "@" + 
 					safeEncode(currentData.getTitle()) + "@" + safeEncode(column.getDisplayName() + ": " + instance) + 
 					"@" + safeEncode(instance) + "@" + safeEncode(column.getName());
