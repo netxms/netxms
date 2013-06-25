@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import org.netxms.ui.eclipse.datacollection.Messages;
 public class TableColumnLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private HashMap<Integer, String> dtTexts = new HashMap<Integer, String>();
+	private HashMap<Integer, String> afTexts = new HashMap<Integer, String>();
 	
 	/**
 	 * Default constructor
@@ -45,6 +46,11 @@ public class TableColumnLabelProvider extends LabelProvider implements ITableLab
 		dtTexts.put(DataCollectionItem.DT_UINT64, Messages.TableColumnLabelProvider_uint64);
 		dtTexts.put(DataCollectionItem.DT_FLOAT, Messages.TableColumnLabelProvider_float);
 		dtTexts.put(DataCollectionItem.DT_STRING, Messages.TableColumnLabelProvider_string);
+		
+		afTexts.put(DataCollectionItem.DCF_FUNCTION_AVG, Messages.TableColumnLabelProvider_AVG);
+		afTexts.put(DataCollectionItem.DCF_FUNCTION_MAX, Messages.TableColumnLabelProvider_MAX);
+		afTexts.put(DataCollectionItem.DCF_FUNCTION_MIN, Messages.TableColumnLabelProvider_MIN);
+		afTexts.put(DataCollectionItem.DCF_FUNCTION_SUM, Messages.TableColumnLabelProvider_SUM);
 	}
 	
 	/* (non-Javadoc)
@@ -65,11 +71,16 @@ public class TableColumnLabelProvider extends LabelProvider implements ITableLab
 		switch(columnIndex)
 		{
 			case 0:
-			case 1:
 				return ((ColumnDefinition)element).getName();
+			case 1:
+				return ((ColumnDefinition)element).getDisplayName();
 			case 2:
 				return dtTexts.get(((ColumnDefinition)element).getDataType());
 			case 3:
+				return ((ColumnDefinition)element).isInstanceColumn() ? Messages.TableColumnLabelProvider_Yes : Messages.TableColumnLabelProvider_No;
+			case 4:
+				return afTexts.get(((ColumnDefinition)element).getAggregationFunction());
+			case 5:
 				SnmpObjectId oid = ((ColumnDefinition)element).getSnmpObjectId();
 				return (oid != null) ? oid.toString() : null;
 		}

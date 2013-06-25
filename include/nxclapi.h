@@ -734,6 +734,7 @@ enum
 #define TCF_DATA_TYPE_MASK          ((UINT16)0x000F)
 #define TCF_AGGREGATE_FUNCTION_MASK ((UINT16)0x0070)
 #define TCF_INSTANCE_COLUMN         ((UINT16)0x0100)
+#define TCF_INSTANCE_LABEL_COLUMN   ((UINT16)0x0200)
 
 /**
  * Get cluster aggregation function from column flags

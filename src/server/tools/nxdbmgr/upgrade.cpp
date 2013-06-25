@@ -354,6 +354,21 @@ static BOOL RecreateTData(const TCHAR *className)
 }
 
 /**
+ * Upgrade from V282 to V283
+ */
+static BOOL H_UpgradeFromV282(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE dc_table_columns ADD display_name varchar(255)\n")
+      _T("UPDATE dc_table_columns SET display_name=column_name\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='283' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V281 to V282
  */
 static BOOL H_UpgradeFromV281(int currVersion, int newVersion)
@@ -7008,6 +7023,7 @@ static struct
    { 279, 280, H_UpgradeFromV279 },
    { 280, 281, H_UpgradeFromV280 },
    { 281, 282, H_UpgradeFromV281 },
+   { 282, 283, H_UpgradeFromV282 },
    { 0, 0, NULL }
 };
 

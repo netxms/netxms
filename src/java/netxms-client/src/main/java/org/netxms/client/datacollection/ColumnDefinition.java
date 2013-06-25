@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,14 @@ import org.netxms.client.snmp.SnmpObjectId;
  */
 public class ColumnDefinition
 {
+	public static final int TCF_DATA_TYPE_MASK          = 0x000F;
+	public static final int TCF_AGGREGATE_FUNCTION_MASK = 0x0070;
+	public static final int TCF_INSTANCE_COLUMN         = 0x0100;
+	public static final int TCF_INSTANCE_LABEL_COLUMN   = 0x0200;
+
 	private String name;
-	private int dataType;
+	private String displayName;
+	private int flags;
 	private SnmpObjectId snmpObjectId;
 
 	/**
@@ -35,10 +41,12 @@ public class ColumnDefinition
 	 * 
 	 * @param name column name
 	 */
-	public ColumnDefinition(String name)
+	public ColumnDefinition(String name, String displayName)
 	{
 		this.name = name;
-		dataType = DataCollectionObject.DT_STRING;
+		this.displayName = displayName;
+		flags = 0;
+		setDataType(DataCollectionObject.DT_STRING);
 		snmpObjectId = null;
 	}
 	
@@ -50,7 +58,8 @@ public class ColumnDefinition
 	public ColumnDefinition(ColumnDefinition src)
 	{
 		name = src.name;
-		dataType = src.dataType;
+		displayName = src.displayName;
+		flags = src.flags;
 		snmpObjectId = src.snmpObjectId;
 	}
 	
@@ -63,9 +72,12 @@ public class ColumnDefinition
 	protected ColumnDefinition(NXCPMessage msg, long baseId)
 	{
 		name = msg.getVariableAsString(baseId);
-		dataType = msg.getVariableAsInteger(baseId + 1);
+		flags = msg.getVariableAsInteger(baseId + 1);
 		long[] oid = msg.getVariableAsUInt32Array(baseId + 2);
 		snmpObjectId = (oid != null) ? new SnmpObjectId(oid) : null;
+		displayName = msg.getVariableAsString(baseId + 3);
+		if ((displayName == null) || (displayName.length() == 0))
+			displayName = name;
 	}
 
 	/**
@@ -77,9 +89,10 @@ public class ColumnDefinition
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
 		msg.setVariable(baseId, name);
-		msg.setVariableInt16(baseId + 1, dataType);
+		msg.setVariableInt16(baseId + 1, flags);
 		if (snmpObjectId != null)
 			snmpObjectId.setNXCPVariable(msg, baseId + 2);
+		msg.setVariable(baseId + 3, displayName);
 	}
 	
 	/**
@@ -87,7 +100,7 @@ public class ColumnDefinition
 	 */
 	public int getDataType()
 	{
-		return dataType;
+		return flags & TCF_DATA_TYPE_MASK;
 	}
 
 	/**
@@ -95,7 +108,23 @@ public class ColumnDefinition
 	 */
 	public void setDataType(int dataType)
 	{
-		this.dataType = dataType;
+		flags = (flags & ~TCF_DATA_TYPE_MASK) | (dataType & TCF_DATA_TYPE_MASK);
+	}
+
+	/**
+	 * @return the dataType
+	 */
+	public int getAggregationFunction()
+	{
+		return (flags & TCF_AGGREGATE_FUNCTION_MASK) >> 4;
+	}
+
+	/**
+	 * @param function new aggregation function
+	 */
+	public void setAggregationFunction(int function)
+	{
+		flags = (flags & ~TCF_AGGREGATE_FUNCTION_MASK) | ((function << 4) & TCF_AGGREGATE_FUNCTION_MASK);
 	}
 
 	/**
@@ -120,5 +149,83 @@ public class ColumnDefinition
 	public String getName()
 	{
 		return name;
+	}
+
+	/**
+	 * @return the displayName
+	 */
+	public String getDisplayName()
+	{
+		return displayName;
+	}
+
+	/**
+	 * @param displayName the displayName to set
+	 */
+	public void setDisplayName(String displayName)
+	{
+		this.displayName = displayName;
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
+	}
+
+	/**
+	 * @param flags the flags to set
+	 */
+	public void setFlags(int flags)
+	{
+		this.flags = flags;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isInstanceColumn()
+	{
+		return (flags & TCF_INSTANCE_COLUMN) != 0;
+	}
+	
+	/**
+	 * @param isInstance
+	 */
+	public void setInstanceColumn(boolean isInstance)
+	{
+		if (isInstance)
+			flags |= TCF_INSTANCE_COLUMN;
+		else
+			flags &= ~TCF_INSTANCE_COLUMN;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isInstanceLabelColumn()
+	{
+		return (flags & TCF_INSTANCE_LABEL_COLUMN) != 0;
+	}
+	
+	/**
+	 * @param isInstance
+	 */
+	public void setInstanceLabelColumn(boolean isInstanceLabel)
+	{
+		if (isInstanceLabel)
+			flags |= TCF_INSTANCE_LABEL_COLUMN;
+		else
+			flags &= ~TCF_INSTANCE_LABEL_COLUMN;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name)
+	{
+		this.name = name;
 	}
 }

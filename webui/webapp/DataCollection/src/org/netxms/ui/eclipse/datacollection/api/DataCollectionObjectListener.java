@@ -41,5 +41,5 @@ public interface DataCollectionObjectListener
 	 * @param description
 	 * @param instanceColumn
 	 */
-	public void onSelectTable(int origin, String name, String description, String instanceColumn);
+	public void onSelectTable(int origin, String name, String description);
 }

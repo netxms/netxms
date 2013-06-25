@@ -127,12 +127,11 @@ public class DataCollectionObjectEditor
 	 * @param origin
 	 * @param name
 	 * @param description
-	 * @param instanceColumn
 	 */
-	public void fireOnSelectTableListeners(int origin, String name, String description, String instanceColumn)
+	public void fireOnSelectTableListeners(int origin, String name, String description)
 	{
 		for(DataCollectionObjectListener l : listeners)
-			l.onSelectTable(origin, name, description, instanceColumn);
+			l.onSelectTable(origin, name, description);
 	}
 
 	/**

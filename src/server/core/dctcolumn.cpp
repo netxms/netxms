@@ -30,6 +30,7 @@ DCTableColumn::DCTableColumn(const DCTableColumn *src)
 	nx_strncpy(m_name, src->m_name, MAX_COLUMN_NAME);
 	m_flags = src->m_flags;
 	m_snmpOid = (src->m_snmpOid != NULL) ? new SNMP_ObjectId(src->m_snmpOid->getLength(), src->m_snmpOid->getValue()) : NULL;
+   m_displayName = (src->m_displayName != NULL) ? _tcsdup(src->m_displayName) : NULL;
 }
 
 /**
@@ -39,6 +40,7 @@ DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
 {
 	msg->GetVariableStr(baseId, m_name, MAX_COLUMN_NAME);
 	m_flags = msg->GetVariableShort(baseId + 1);
+   m_displayName = msg->GetVariableStr(baseId + 3);
 
    if (msg->IsVariableExist(baseId + 2))
 	{
@@ -62,12 +64,13 @@ DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
 /**
  * Create column object from database result set
  * Expected field order is following:
- *    column_name,flags,snmp_oid
+ *    column_name,flags,snmp_oid,display_name
  */
 DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 {
 	DBGetField(hResult, row, 0, m_name, MAX_COLUMN_NAME);
 	m_flags = (UINT16)DBGetFieldULong(hResult, row, 1);
+   m_displayName = DBGetField(hResult, row, 3, NULL, 0);
 
 	TCHAR oid[1024];
 	oid[0] = 0;
@@ -98,4 +101,5 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 DCTableColumn::~DCTableColumn()
 {
 	delete m_snmpOid;
+   safe_free(m_displayName);
 }

@@ -643,6 +643,7 @@ CREATE TABLE dc_table_columns
 	column_name varchar(63) not null,
 	snmp_oid varchar(1023) null,		// SNMP OID for this column, valid only for SNMP tables
 	flags integer not null,
+	display_name varchar(255) null,
 	PRIMARY KEY(table_id,column_name)
 ) TABLE_TYPE;
 

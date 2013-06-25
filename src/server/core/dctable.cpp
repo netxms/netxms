@@ -182,7 +182,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,flags,snmp_oid FROM dc_table_columns WHERE table_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -447,7 +447,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 
 		if (result && (m_columns->size() > 0))
 		{
-			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,column_name,snmp_oid,flags) VALUES (?,?,?,?)"));
+			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,column_name,snmp_oid,flags,display_name) VALUES (?,?,?,?,?)"));
 			if (hStmt != NULL)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -458,6 +458,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 					SNMP_ObjectId *oid = column->getSnmpOid();
 					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (oid != NULL) ? oid->getValueAsText() : NULL, DB_BIND_STATIC);
 					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)column->getFlags());
+					DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, column->getDisplayName(), DB_BIND_STATIC);
 
 					result = DBExecute(hStmt);
 					if (!result)
@@ -513,7 +514,8 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 			pMsg->SetVariableToInt32Array(varId++, oid->getLength(), oid->getValue());
 		else
 			varId++;
-		varId += 7;
+		pMsg->SetVariable(varId++, column->getDisplayName());
+		varId += 6;
 	}
    unlock();
 }

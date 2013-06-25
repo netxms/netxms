@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -64,7 +62,6 @@ import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableColumnLab
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "Columns" property page for table DCI
@@ -76,11 +73,12 @@ public class TableColumns extends PropertyPage
 	private DataCollectionObjectEditor editor;
 	private DataCollectionTable dci;
 	private List<ColumnDefinition> columns;
-	private LabeledText instanceColumn;
 	private TableViewer columnList;
 	private Button addButton;
 	private Button modifyButton;
 	private Button deleteButton;
+	private Button upButton;
+	private Button downButton;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -103,16 +101,8 @@ public class TableColumns extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      instanceColumn = new LabeledText(dialogArea, SWT.NONE);
-      instanceColumn.setLabel(Messages.TableColumns_InstanceColumn);
-      instanceColumn.setText(dci.getInstanceColumn());
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      instanceColumn.setLayoutData(gd);
-      
       Composite columnListArea = new Composite(dialogArea, SWT.NONE);
-      gd = new GridData();
+      GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
@@ -252,9 +242,8 @@ public class TableColumns extends PropertyPage
 			}
 
 			@Override
-			public void onSelectTable(int origin, String name, String description, String instanceColumn)
+			public void onSelectTable(int origin, String name, String description)
 			{
-				TableColumns.this.instanceColumn.setText(instanceColumn);
 				if (origin == DataCollectionObject.AGENT)
 					updateColumnsFromAgent(name);
 			}
@@ -293,6 +282,14 @@ public class TableColumns extends PropertyPage
 		column.setWidth(80);
 		
 		column = new TableColumn(table, SWT.LEFT);
+		column.setText("Instance");
+		column.setWidth(50);
+		
+		column = new TableColumn(table, SWT.LEFT);
+		column.setText("Aggregation");
+		column.setWidth(80);
+		
+		column = new TableColumn(table, SWT.LEFT);
 		column.setText(Messages.TableColumns_OID);
 		column.setWidth(200);
 		
@@ -300,13 +297,6 @@ public class TableColumns extends PropertyPage
 		
 		columnList.setContentProvider(new ArrayContentProvider());
 		columnList.setLabelProvider(new TableColumnLabelProvider());
-		columnList.setComparator(new ViewerComparator() {
-			@Override
-			public int compare(Viewer viewer, Object e1, Object e2)
-			{
-				return ((ColumnDefinition)e1).getName().compareToIgnoreCase(((ColumnDefinition)e2).getName());
-			}
-		});
 	}
 
 	/**
@@ -360,7 +350,7 @@ public class TableColumns extends PropertyPage
 		});
 		if (idlg.open() == Window.OK)
 		{
-			final ColumnDefinition column = new ColumnDefinition(idlg.getValue());
+			final ColumnDefinition column = new ColumnDefinition(idlg.getValue(), idlg.getValue());
 			final EditColumnDialog dlg = new EditColumnDialog(getShell(), column);
 			if (dlg.open() == Window.OK)
 			{
@@ -378,7 +368,6 @@ public class TableColumns extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		dci.setInstanceColumn(instanceColumn.getText());
 		dci.getColumns().clear();
 		dci.getColumns().addAll(columns);
 		editor.modify();
@@ -443,8 +432,9 @@ public class TableColumns extends PropertyPage
 							columns.clear();
 							for(int i = 0; i < table.getColumnCount(); i++)
 							{
-								ColumnDefinition c = new ColumnDefinition(table.getColumnName(i));
-								c.setDataType(table.getColumnFormat(i));
+								ColumnDefinition c = new ColumnDefinition(table.getColumnName(i), table.getColumnDisplayName(i));
+								c.setDataType(table.getColumnDefinition(i).getDataType());
+								c.setInstanceColumn(table.getColumnDefinition(i).isInstanceColumn());
 								columns.add(c);
 							}
 							columnList.setInput(columns.toArray());

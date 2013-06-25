@@ -388,12 +388,18 @@ public class Messages extends NLS
 	public static String SummaryTablesDynamicMenu_Error;
 	public static String SummaryTablesDynamicMenu_MenuName;
 	public static String SummaryTablesDynamicMenu_QueryTableJob;
+	public static String TableColumnLabelProvider_AVG;
 	public static String TableColumnLabelProvider_float;
 	public static String TableColumnLabelProvider_in32;
 	public static String TableColumnLabelProvider_int64;
+	public static String TableColumnLabelProvider_MAX;
+	public static String TableColumnLabelProvider_MIN;
+	public static String TableColumnLabelProvider_No;
 	public static String TableColumnLabelProvider_string;
+	public static String TableColumnLabelProvider_SUM;
 	public static String TableColumnLabelProvider_uint32;
 	public static String TableColumnLabelProvider_uint64;
+	public static String TableColumnLabelProvider_Yes;
 	public static String TableColumns_Add;
 	public static String TableColumns_ColumnName;
 	public static String TableColumns_Columns;

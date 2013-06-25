@@ -428,7 +428,7 @@ public class GeneralTable extends PropertyPage
 			IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
 			description.setText(pd.getParameterDescription());
 			parameter.setText(pd.getParameterName());
-			editor.fireOnSelectTableListeners(origin.getSelectionIndex(), pd.getParameterName(), pd.getParameterDescription(), pd.getInstanceColumn());
+			editor.fireOnSelectTableListeners(origin.getSelectionIndex(), pd.getParameterName(), pd.getParameterDescription());
 		}
 	}
 	

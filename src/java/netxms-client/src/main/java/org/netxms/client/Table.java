@@ -173,6 +173,18 @@ public class Table
 	}
 
 	/**
+	 * Get column display name
+	 *
+	 * @param column Column index (zero-based)
+	 * @return Column name
+	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
+	 */
+	public String getColumnDisplayName(final int column) throws IndexOutOfBoundsException
+	{
+		return columns.get(column).getDisplayName();
+	}
+
+	/**
 	 * Get column format
 	 *
 	 * @param column Column index (zero-based)

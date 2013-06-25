@@ -392,6 +392,7 @@ class NXCORE_EXPORTABLE DCTableColumn
 {
 private:
 	TCHAR m_name[MAX_COLUMN_NAME];
+   TCHAR *m_displayName;
 	SNMP_ObjectId *m_snmpOid;
 	UINT16 m_flags;
 
@@ -402,6 +403,7 @@ public:
 	~DCTableColumn();
 
 	const TCHAR *getName() { return m_name; }
+   const TCHAR *getDisplayName() { return (m_displayName != NULL) ? m_displayName : m_name; }
    UINT16 getFlags() { return m_flags; }
    int getDataType() { return TCF_GET_DATA_TYPE(m_flags); }
    int getAggregationFunction() { return TCF_GET_AGGREGATION_FUNCTION(m_flags); }
