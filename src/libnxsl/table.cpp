@@ -229,7 +229,7 @@ NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const TCHAR *att
    }
    else if (!_tcscmp(attr, _T("isInstanceColumn")))
    {
-      value = new NXSL_Value(tc->isInstanceColumn());
+      value = new NXSL_Value((INT32)(tc->isInstanceColumn() ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("name")))
    {

@@ -947,6 +947,12 @@ inline INT64 InterlockedDecrement(INT32 volatile *v)
    return __sync_sub_and_fetch(v, 1);
 }
 
+#if (defined(__IBMC__) || defined(__IBMCPP__)) && !defined(__LP64__)
+
+/* interlocked ops on 64bit values not supported by 32 bit xlC */
+
+#else
+
 /**
  * Atomically increment 64-bit value by 1
  */
@@ -962,6 +968,8 @@ inline INT64 InterlockedDecrement64(INT64 volatile *v)
 {
    return __sync_sub_and_fetch(v, 1);
 }
+
+#endif   /* __IBMC__ */
 
 #endif   /* __sun */
 
