@@ -32,6 +32,8 @@ import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,6 +59,7 @@ import org.netxms.api.client.mt.MappingTable;
 import org.netxms.api.client.mt.MappingTableDescriptor;
 import org.netxms.api.client.reporting.ReportDefinition;
 import org.netxms.api.client.reporting.ReportParameter;
+import org.netxms.api.client.reporting.ReportResult;
 import org.netxms.api.client.reporting.ReportingServerManager;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
@@ -148,7 +151,6 @@ import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.client.reports.ReportRenderFormat;
-import org.netxms.client.reports.ReportResult;
 import org.netxms.client.situations.Situation;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
@@ -6117,31 +6119,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
-	 * Get list of report execution results. Results returned are ready for rendering.
-	 * 
-	 * @param reportId report object ID
-	 * @return list of report execution results
-	 * @throws IOException if socket or file I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public List<ReportResult> getReportResults(long reportId) throws IOException, NXCException
-	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_REPORT_RESULTS);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
-		sendMessage(msg);
-		NXCPMessage response = waitForRCC(msg.getMessageId());
-		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ROWS);
-		List<ReportResult> results = new ArrayList<ReportResult>(count);
-		long varId = NXCPCodes.VID_ROW_DATA_BASE;
-		for(int i = 0; i < count; i++)
-		{
-			results.add(new ReportResult(response, varId));
-			varId += 10;
-		}
-		return results;
-	}
-
-	/**
 	 * Delete report execution results. Logged in user must have CONTROL access right on
 	 * report object to perform this operation. 
 	 * 
@@ -6755,6 +6732,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return new Table(response);
 	}
 
+	/**
+	 * 
+	 */
 	@Override
 	public List<UUID> listReports() throws NXCException, IOException
 	{
@@ -6789,6 +6769,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			ReportParameter parameter = ReportParameter.createFromMessage(response, base);
 			definition.addParameter(parameter);
 		}
+		Collections.sort(definition.getParameters(), new Comparator<ReportParameter>() {
+			@Override
+			public int compare(ReportParameter o1, ReportParameter o2)
+			{
+				return o1.getIndex() - o2.getIndex();
+			}
+		});
 		return definition;
 	}
 
@@ -6807,5 +6794,35 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsUUID(NXCPCodes.VID_JOB_ID);
+	}
+
+	@Override
+	public List<ReportResult> listReportResults(UUID reportId) throws NetXMSClientException, IOException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_LIST_RESULTS);
+		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
+		sendMessage(msg);
+		NXCPMessage response = waitForRCC(msg.getMessageId());
+
+		List<ReportResult> results = new ArrayList<ReportResult>();
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
+		long base = NXCPCodes.VID_ROW_DATA_BASE;
+		for(int i = 0; i < count; i++, base += 10)
+		{
+			ReportResult result = ReportResult.createFromMessage(response, base);
+			results.add(result);
+		}
+
+		return results;
+	}
+
+	@Override
+	public void deleteReportResult(UUID reportId, UUID jobId) throws NetXMSClientException, IOException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_DELETE_RESULT);
+		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
+		msg.setVariable(NXCPCodes.VID_JOB_ID, jobId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }

@@ -6,9 +6,11 @@ public class ReportParameter
 {
 	private int index;
 	private String name;
+	private String dependsOn;
 	private String description;
 	private String type;
-	private String logicalType;
+	private String defaultValue;
+	private int span;
 
 	public int getIndex()
 	{
@@ -30,6 +32,16 @@ public class ReportParameter
 		this.name = name;
 	}
 
+	public String getDependsOn()
+	{
+		return dependsOn;
+	}
+
+	public void setDependsOn(String dependsOn)
+	{
+		this.dependsOn = dependsOn;
+	}
+
 	public String getDescription()
 	{
 		return description;
@@ -38,16 +50,6 @@ public class ReportParameter
 	public void setDescription(String description)
 	{
 		this.description = description;
-	}
-
-	public String getLogicalType()
-	{
-		return logicalType;
-	}
-
-	public void setLogicalType(String logicalType)
-	{
-		this.logicalType = logicalType;
 	}
 
 	public String getType()
@@ -60,6 +62,33 @@ public class ReportParameter
 		this.type = type;
 	}
 
+	public String getDefaultValue()
+	{
+		return defaultValue;
+	}
+
+	public void setDefaultValue(String defaultValue)
+	{
+		this.defaultValue = defaultValue;
+	}
+
+	public int getSpan()
+	{
+		return span;
+	}
+
+	public void setSpan(int span)
+	{
+		if (span < 1 || span > 2)
+		{
+			this.span = 1;
+		}
+		else
+		{
+			this.span = span;
+		}
+	}
+
 	public static ReportParameter createFromMessage(NXCPMessage response, long base)
 	{
 		long id = base;
@@ -68,14 +97,16 @@ public class ReportParameter
 		ret.setName(response.getVariableAsString(id++));
 		ret.setDescription(response.getVariableAsString(id++));
 		ret.setType(response.getVariableAsString(id++));
-		ret.setLogicalType(response.getVariableAsString(id++));
+		ret.setDefaultValue(response.getVariableAsString(id++));
+		ret.setDependsOn(response.getVariableAsString(id++));
+		ret.setSpan(response.getVariableAsInteger(id++));
 		return ret;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "ReportParameter [index=" + index + ", name=" + name + ", description=" + description + ", type=" + type
-				+ ", logicalType=" + logicalType + "]";
+		return "ReportParameter [index=" + index + ", name=" + name + ", dependsOn=" + dependsOn + ", description=" + description
+				+ ", type=" + type + ", defaultValue=" + defaultValue + ", span=" + span + "]";
 	}
 }

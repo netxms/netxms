@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2013 Alex Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -46,14 +51,14 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
+import org.netxms.api.client.reporting.ReportDefinition;
+import org.netxms.api.client.reporting.ReportParameter;
+import org.netxms.api.client.reporting.ReportResult;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Report;
 import org.netxms.client.reports.ReportRenderFormat;
-import org.netxms.client.reports.ReportResult;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
-import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportDefinition;
-import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
+import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportResultLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -67,19 +72,19 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class ReportExecutionForm extends Composite
 {
 	private IWorkbenchPart workbenchPart = null;
-	private Report report;
+	private ReportDefinition report;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
-	private List<ReportParameter> parameters;
 	private SortableTableViewer resultList;
 	private ImageCache imageCache;
+	private List<ReportParameter> parameters;
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public ReportExecutionForm(Composite parent, int style, Report report)
+	public ReportExecutionForm(Composite parent, int style, ReportDefinition report)
 	{
 		super(parent, style);
 		this.report = report;
@@ -90,14 +95,11 @@ public class ReportExecutionForm extends Composite
 		/* FORM */
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
-		form.setText(report.getObjectName());
+		form.setText(report.getName());
 
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
-
-		if (!report.getComments().isEmpty())
-			toolkit.createLabel(form.getBody(), report.getComments(), SWT.WRAP);
 
 		/* Parameters section */
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
@@ -133,8 +135,7 @@ public class ReportExecutionForm extends Composite
 		ImageHyperlink link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
 		link.setImage(SharedIcons.IMG_EXECUTE);
 		link.setText("Execute report");
-		link.addHyperlinkListener(new HyperlinkAdapter()
-		{
+		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
@@ -145,8 +146,7 @@ public class ReportExecutionForm extends Composite
 		link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/schedule.png")));
 		link.setText("Schedule report execution");
-		link.addHyperlinkListener(new HyperlinkAdapter()
-		{
+		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
@@ -179,46 +179,56 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void createParamEntryFields(Composite parent)
 	{
-		try
-		{
-			final ReportDefinition definition = ReportDefinition.createFromXml(report.getDefinition());
-			parameters = definition.getParameters();
-			for(ReportParameter p : parameters)
-			{
-				FieldEditor editor;
-				switch(p.getDataType())
-				{
-					case ReportParameter.INTEGER:
-						editor = new StringFieldEditor(p, toolkit, parent);
-						break;
-					case ReportParameter.TIMESTAMP:
-					case ReportParameter.START_DATE:
-					case ReportParameter.END_DATE:
-						editor = new TimestampFieldEditor(p, toolkit, parent);
-						break;
-					case ReportParameter.OBJECT_ID:
-						editor = new ObjectFieldEditor(p, toolkit, parent);
-						break;
-					case ReportParameter.OBJECT_LIST:
-						editor = new ObjectListFieldEditor(p, toolkit, parent);
-						break;
-					default: // everything else as string
-						editor = new StringFieldEditor(p, toolkit, parent);
-						break;
-				}
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.reporter.customfields"); //$NON-NLS-1$
 
-				TableWrapData td = new TableWrapData();
-				td.align = TableWrapData.FILL;
-				td.grabHorizontal = true;
-				td.colspan = p.getColumnSpan();
-				editor.setLayoutData(td);
-				fields.add(editor);
-			}
-		}
-		catch(Exception e)
+		parameters = report.getParameters();
+
+		Map<String, FieldEditor> editors = new HashMap<String, FieldEditor>();
+
+		for(ReportParameter parameter : parameters)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			FieldEditor editor = null;
+			for(int i = 0; i < elements.length; i++)
+			{
+				try
+				{
+					final CustomControlFactory provider = (CustomControlFactory)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
+					editor = provider.editorForType(parent, parameter, toolkit);
+					if (editor != null)
+					{
+						break;
+					}
+				}
+				catch(CoreException e)
+				{
+					// TODO: log error
+				}
+			}
+			if (editor == null)
+			{
+				editor = new StringFieldEditor(parameter, toolkit, parent);
+			}
+
+			editors.put(parameter.getName(), editor);
+
+			TableWrapData td = new TableWrapData();
+			td.align = TableWrapData.FILL;
+			td.grabHorizontal = true;
+			System.out.println(parameter.getSpan());
+			// td.colspan = parameter.getSpan();
+			editor.setLayoutData(td);
+			fields.add(editor);
+		}
+
+		for(ReportParameter parameter : parameters)
+		{
+			final FieldEditor editor = editors.get(parameter.getName());
+			final FieldEditor parentEditor = editors.get(parameter.getDependsOn());
+			if (editor != null && parentEditor != null)
+			{
+				parentEditor.setDependantEditor(editor);
+			}
 		}
 	}
 
@@ -236,8 +246,7 @@ public class ReportExecutionForm extends Composite
 		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(SharedIcons.IMG_REFRESH);
 		link.setText("Refresh");
-		link.addHyperlinkListener(new HyperlinkAdapter()
-		{
+		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
@@ -248,8 +257,8 @@ public class ReportExecutionForm extends Composite
 		gd.horizontalAlignment = SWT.RIGHT;
 		link.setLayoutData(gd);
 
-		final String[] names = { "Job ID", "Execution Time" };
-		final int[] widths = { 90, 160 };
+		final String[] names = { "Execution Time", "Job ID" };
+		final int[] widths = { 130, 250 };
 		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -263,15 +272,14 @@ public class ReportExecutionForm extends Composite
 		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/pdf.png")));
 		link.setText("Render to PDF");
-		link.addHyperlinkListener(new HyperlinkAdapter()
-		{
+		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
 				final ReportResult firstElement = (ReportResult)((IStructuredSelection)resultList.getSelection()).getFirstElement();
 				if (firstElement != null)
 				{
-					renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.PDF);
+					// renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.PDF);
 				}
 			}
 		});
@@ -279,8 +287,7 @@ public class ReportExecutionForm extends Composite
 		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		link.setText("Delete");
-		link.addHyperlinkListener(new HyperlinkAdapter()
-		{
+		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
@@ -298,7 +305,7 @@ public class ReportExecutionForm extends Composite
 	private void renderReport(final long jobId, Date executeTime, final ReportRenderFormat format)
 	{
 		StringBuilder nameTemplate = new StringBuilder();
-		nameTemplate.append(report.getObjectName());
+		nameTemplate.append(report.getName());
 		nameTemplate.append(" ");
 		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executeTime));
 		nameTemplate.append(".");
@@ -312,8 +319,7 @@ public class ReportExecutionForm extends Composite
 
 		if (fileName != null)
 		{
-			new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null)
-			{
+			new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -342,8 +348,7 @@ public class ReportExecutionForm extends Composite
 						outputStream.close();
 						outputStream = null;
 
-						getDisplay().asyncExec(new Runnable()
-						{
+						getDisplay().asyncExec(new Runnable() {
 							@Override
 							public void run()
 							{
@@ -367,7 +372,7 @@ public class ReportExecutionForm extends Composite
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot render report " + report.getObjectName() + " job " + jobId;
+					return "Cannot render report " + report.getName() + " job " + jobId;
 				}
 			}.start();
 		}
@@ -387,20 +392,20 @@ public class ReportExecutionForm extends Composite
 			}
 		}
 
-		new ConsoleJob("Execute report", workbenchPart, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob("Execute report", workbenchPart, Activator.PLUGIN_ID, null) {
+
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				final long jobId = session.executeReport(report.getObjectId(), execParameters);
-				getDisplay().asyncExec(new Runnable()
-				{
+				final UUID jobId = session.executeReport(report.getId(), execParameters);
+				getDisplay().asyncExec(new Runnable() {
+
 					@Override
 					public void run()
 					{
-						MessageDialogHelper.openInformation(getShell(), "Report Execution", "Report " + report.getObjectName()
-								+ " execution started successfully. Job ID is " + jobId + ".");
+						MessageDialogHelper.openInformation(getShell(), "Report Execution", report.getName()
+								+ " execution started successfully.");
 					}
 				});
 			}
@@ -408,7 +413,7 @@ public class ReportExecutionForm extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot execute report " + report.getObjectName();
+				return "Cannot execute report " + report.getName();
 			}
 		}.start();
 	}
@@ -427,20 +432,23 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void refreshResultList()
 	{
+
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Refresh result list for report " + report.getObjectName(), workbenchPart, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob("Refresh result list for report " + report.getName(), workbenchPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<ReportResult> results = session.getReportResults(report.getObjectId());
-				getDisplay().asyncExec(new Runnable()
-				{
+				final List<ReportResult> results = session.listReportResults(report.getId());
+
+				getDisplay().asyncExec(new Runnable() {
+
 					@Override
 					public void run()
 					{
 						if (ReportExecutionForm.this.isDisposed())
+						{
 							return;
+						}
 
 						resultList.setInput(results.toArray());
 						ReportExecutionForm.this.getParent().layout(true, true);
@@ -451,9 +459,10 @@ public class ReportExecutionForm extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get result list for report " + report.getObjectName();
+				return "Cannot get result list for report " + report.getName();
 			}
 		}.start();
+
 	}
 
 	/**
@@ -471,7 +480,8 @@ public class ReportExecutionForm extends Composite
 		}
 		else
 		{
-			MessageDialogHelper.openError(getShell(), "Error", "Report was rendered successfully, but external viewer cannot be opened");
+			MessageDialogHelper.openError(getShell(), "Error",
+					"Report was rendered successfully, but external viewer cannot be opened");
 		}
 	}
 
@@ -482,26 +492,33 @@ public class ReportExecutionForm extends Composite
 	{
 		IStructuredSelection selection = (IStructuredSelection)resultList.getSelection();
 		if (selection.size() == 0)
+		{
 			return;
+		}
 
 		if (!MessageDialogHelper.openConfirm(getShell(), "Delete Report Results", "Do you really want to delete selected results?"))
+		{
 			return;
+		}
 
-		final List<Long> resultIdList = new ArrayList<Long>(selection.size());
+		final List<UUID> resultIdList = new ArrayList<UUID>(selection.size());
 		for(Object o : selection.toList())
 		{
 			resultIdList.add(((ReportResult)o).getJobId());
 		}
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Delete report execution results", workbenchPart, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob("Delete report execution results", workbenchPart, Activator.PLUGIN_ID, null) {
+
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.deleteReportResults(report.getObjectId(), resultIdList);
-				getDisplay().asyncExec(new Runnable()
+				for(UUID uuid : resultIdList)
 				{
+					session.deleteReportResult(report.getId(), uuid);
+				}
+				getDisplay().asyncExec(new Runnable() {
+
 					@Override
 					public void run()
 					{
@@ -517,5 +534,6 @@ public class ReportExecutionForm extends Composite
 				return null;
 			}
 		}.start();
+
 	}
 }

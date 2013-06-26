@@ -958,7 +958,6 @@ src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolTab
 src/java/netxms-client/src/main/java/org/netxms/client/packages/PackageDeploymentListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/packages/PackageInfo.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/reports/ReportRenderFormat.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/reports/ReportResult.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/situations/Situation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/situations/SituationInstance.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/MibObject.java -text
@@ -1934,12 +1933,8 @@ src/java/netxms-eclipse/Reporter/icons/pdf.png -text
 src/java/netxms-eclipse/Reporter/icons/report.png -text
 src/java/netxms-eclipse/Reporter/icons/schedule.png -text
 src/java/netxms-eclipse/Reporter/plugin.xml -text
+src/java/netxms-eclipse/Reporter/schema/org.netxms.ui.eclipse.reporter.customfields.exsd -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/Activator.java -text
-src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/CreateReport.java -text
-src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/CreateReportGroup.java -text
-src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/OpenReport.java -text
-src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/dialogs/CreateReportDialog.java -text
-src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/propertypages/ReportDefinition.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/views/ReportView.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/FieldEditor.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/ObjectFieldEditor.java -text

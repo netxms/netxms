@@ -10,6 +10,7 @@ Require-Bundle: org.eclipse.ui,
  org.netxms.ui.eclipse.console;bundle-version="1.2.7",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.7",
  org.netxms.ui.eclipse.filemanager;bundle-version="1.2.7",
- org.eclipse.ui.forms;bundle-version="3.5.100"
+ org.eclipse.ui.forms;bundle-version="3.5.100",
+ org.netxms.ui.eclipse.usermanager;bundle-version="1.2.7"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

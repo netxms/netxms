@@ -23,7 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
+import org.netxms.api.client.reporting.ReportParameter;
 
 /**
  * Editor for string fields
@@ -33,17 +33,7 @@ public class StringFieldEditor extends FieldEditor
 {
 	private Text text;
 
-	/**
-	 * @param parameter
-	 * @param toolkit
-	 * @param parent
-	 */
 	public StringFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
-	{
-		super(parameter, toolkit, parent);
-	}
-
-	public StringFieldEditor(org.netxms.api.client.reporting.ReportParameter parameter, FormToolkit toolkit, Composite parent)
 	{
 		super(parameter, toolkit, parent);
 	}
@@ -51,7 +41,7 @@ public class StringFieldEditor extends FieldEditor
 	@Override
 	protected void createContent(Composite parent)
 	{
-		text = toolkit.createText(this, parameter != null ? parameter.getDefaultValue() : "");
+		text = toolkit.createText(this, parameter.getDefaultValue());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

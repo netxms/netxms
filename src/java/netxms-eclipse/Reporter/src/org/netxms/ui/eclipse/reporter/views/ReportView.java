@@ -28,7 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.reporting.ReportDefinition;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.reporter.widgets.NewReportExecutionForm;
+import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 
 /**
  * Report view
@@ -38,7 +38,7 @@ public class ReportView extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.reporter.views.ReportView";
 
 	private NXCSession session;
-	private NewReportExecutionForm executionForm;
+	private ReportExecutionForm executionForm;
 	private ISelectionListener selectionListener;
 	private ISelectionService selectionService;
 	private ReportDefinition definition;
@@ -92,7 +92,7 @@ public class ReportView extends ViewPart
 			executionForm.dispose();
 		}
 
-		executionForm = new NewReportExecutionForm(parentComposite, SWT.NONE, definition);
+		executionForm = new ReportExecutionForm(parentComposite, SWT.NONE, definition);
 		executionForm.setWorkbenchPart(this);
 
 		parentComposite.layout();

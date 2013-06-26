@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.reports.ReportResult;
+import org.netxms.api.client.reporting.ReportResult;
 
 public class ReportResultLabelProvider extends LabelProvider implements ITableLabelProvider
 {
@@ -23,9 +23,9 @@ public class ReportResultLabelProvider extends LabelProvider implements ITableLa
 		switch(columnIndex)
 		{
 			case 0:
-				return String.valueOf(reportResult.getJobId());
-			case 1:
 				return dateFormat.format(reportResult.getExecutionTime());
+			case 1:
+				return String.valueOf(reportResult.getJobId());
 		}
 		return "<INTERNAL ERROR>";
 	}

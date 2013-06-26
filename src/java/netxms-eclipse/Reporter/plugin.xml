@@ -1,59 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.reporter.actions.popup.object.ReportRoot"
-            objectClass="org.netxms.client.objects.ReportRoot">
-         <action
-               class="org.netxms.ui.eclipse.reporter.actions.CreateReportGroup"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.reporter.popupActions.CreateReportGroup_ReportRoot"
-               label="Create report &amp;group..."
-               menubarPath="objectcreation">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.reporter.actions.CreateReport"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.reporter.popupActions.CreateReport_ReportRoot"
-               label="Create &amp;report..."
-               menubarPath="objectcreation">
-         </action>
-      </objectContribution>
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.reporter.actions.popup.object.ReportGroup"
-            objectClass="org.netxms.client.objects.ReportGroup">
-         <action
-               class="org.netxms.ui.eclipse.reporter.actions.CreateReportGroup"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.reporter.popupActions.CreateReportGroup_ReportGroup"
-               label="Create report &amp;group..."
-               menubarPath="objectcreation">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.reporter.actions.CreateReport"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.reporter.popupActions.CreateReport_ReportGroup"
-               label="Create &amp;report..."
-               menubarPath="objectcreation">
-         </action>
-      </objectContribution>
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.reporter.actions.popup.object.Report"
-            objectClass="org.netxms.client.objects.Report">
-         <action
-               class="org.netxms.ui.eclipse.reporter.actions.OpenReport"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.reporter.popupActions.OpenReport"
-               label="&amp;Open report"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-   </extension>
+   <extension-point id="org.netxms.ui.eclipse.reporter.customfields" name="Factory for custom types" schema="schema/org.netxms.ui.eclipse.reporter.customfields.exsd"/>
    <extension
          point="org.eclipse.ui.views">
       <view
@@ -74,19 +22,6 @@
       </view>
    </extension>
    <extension
-         point="org.eclipse.ui.propertyPages">
-      <page
-            class="org.netxms.ui.eclipse.reporter.propertypages.ReportDefinition"
-            id="org.netxms.ui.eclipse.reporter.propertypages.ReportDefinition#10"
-            name="Report Definition">
-         <enabledWhen>
-            <instanceof
-                  value="org.netxms.client.objects.Report">
-            </instanceof>
-         </enabledWhen>
-      </page>
-   </extension>
-   <extension
          point="org.eclipse.ui.perspectives">
       <perspective
             class="org.netxms.ui.eclipse.reporter.perspectives.ReportPerspective"
@@ -94,6 +29,13 @@
             id="&quot;org.netxms.ui.eclipse.reporter.ReportPerspective&quot;"
             name="Reports">
       </perspective>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.reporter.customfields">
+      <customControlFactory
+            class="org.netxms.ui.eclipse.reporter.StandardTypesControlFactory"
+            className="org.netxms.ui.eclipse.reporter.TestControlFactory">
+      </customControlFactory>
    </extension>
 
 </plugin>

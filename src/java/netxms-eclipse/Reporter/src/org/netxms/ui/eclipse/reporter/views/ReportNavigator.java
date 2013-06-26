@@ -1,9 +1,9 @@
 package org.netxms.ui.eclipse.reporter.views;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -14,15 +14,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.api.client.reporting.ReportDefinition;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.widgets.internal.ReportTreeContentProvider;
 import org.netxms.ui.eclipse.reporter.widgets.internal.ReportTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -159,32 +159,33 @@ public class ReportNavigator extends ViewPart
 	 */
 	private void refresh()
 	{
-		try
-		{
-			final List<ReportDefinition> definitions = new ArrayList<ReportDefinition>();
-			final List<UUID> reportIds = session.listReports();
-			for(UUID reportId : reportIds)
+		new ConsoleJob("Load Reports", null, Activator.PLUGIN_ID, null) {
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final ReportDefinition definition = session.getReportDefinition(reportId);
-				definitions.add(definition);
+				final List<ReportDefinition> definitions = new ArrayList<ReportDefinition>();
+				final List<UUID> reportIds = session.listReports();
+				for(UUID reportId : reportIds)
+				{
+					final ReportDefinition definition = session.getReportDefinition(reportId);
+					definitions.add(definition);
+				}
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						reportTree.setInput(definitions);
+					}
+				});
 			}
-			reportTree.setInput(definitions);
-		}
-		catch(NXCException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(NetXMSClientException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Failed to reports from the server";
+			}
+		}.start();
 	}
 
 	@Override

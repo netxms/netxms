@@ -13,4 +13,8 @@ public interface ReportingServerManager
 	ReportDefinition getReportDefinition(UUID reportId) throws NetXMSClientException, IOException;
 
 	UUID executeReport(UUID reportId, Map<String, String> parameters) throws NetXMSClientException, IOException;
+
+	List<ReportResult> listReportResults(UUID reportId) throws NetXMSClientException, IOException;
+
+	void deleteReportResult(UUID reportId, UUID jobId) throws NetXMSClientException, IOException;
 }

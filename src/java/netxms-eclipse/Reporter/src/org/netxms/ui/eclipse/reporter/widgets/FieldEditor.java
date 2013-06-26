@@ -24,7 +24,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
+import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -34,23 +34,14 @@ public abstract class FieldEditor extends Composite
 {
 	protected ReportParameter parameter;
 	protected FormToolkit toolkit;
+	protected FieldEditor dependantEditor;
 
 	private Label label;
 
-	/**
-	 * @param parameter
-	 * @param toolkit
-	 * @param parent
-	 */
 	public FieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
 	{
 		super(parent, SWT.NONE);
 		this.parameter = parameter;
-		createWidget(toolkit, parameter.getDisplayName());
-	}
-
-	private void createWidget(FormToolkit toolkit, final String displayName)
-	{
 		this.toolkit = toolkit;
 
 		GridLayout layout = new GridLayout();
@@ -61,18 +52,12 @@ public abstract class FieldEditor extends Composite
 		layout.marginHeight = 0;
 		setLayout(layout);
 
-		label = toolkit.createLabel(this, displayName);
+		label = toolkit.createLabel(this, parameter.getDescription());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
 
 		createContent(this);
-	}
-
-	public FieldEditor(org.netxms.api.client.reporting.ReportParameter parameter, FormToolkit toolkit, Composite parent)
-	{
-		super(parent, SWT.NONE);
-		createWidget(toolkit, parameter.getDescription());
 	}
 
 	/**
@@ -88,4 +73,13 @@ public abstract class FieldEditor extends Composite
 	 * @return current value for parameter
 	 */
 	abstract public String getValue();
+
+	public void setDependantEditor(FieldEditor editor)
+	{
+		this.dependantEditor = editor;
+	}
+
+	public void parentEditorChanged(FieldEditor parentEditor)
+	{
+	}
 }
