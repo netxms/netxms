@@ -28,14 +28,14 @@
 // Create management pack file
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCExportConfiguration(NXC_SESSION hSession, TCHAR *pszDescr,
-                                                DWORD dwNumEvents, DWORD *pdwEventList,
-                                                DWORD dwNumTemplates, DWORD *pdwTemplateList,
-                                                DWORD dwNumTraps, DWORD *pdwTrapList,
+UINT32 LIBNXCL_EXPORTABLE NXCExportConfiguration(NXC_SESSION hSession, TCHAR *pszDescr,
+                                                UINT32 dwNumEvents, UINT32 *pdwEventList,
+                                                UINT32 dwNumTemplates, UINT32 *pdwTemplateList,
+                                                UINT32 dwNumTraps, UINT32 *pdwTrapList,
                                                 TCHAR **ppszContent)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwResult;
+   UINT32 dwRqId, dwResult;
 
    *ppszContent = NULL;
 
@@ -74,11 +74,11 @@ DWORD LIBNXCL_EXPORTABLE NXCExportConfiguration(NXC_SESSION hSession, TCHAR *psz
 // Install management pack
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCImportConfiguration(NXC_SESSION hSession, TCHAR *pszContent,
-                                                DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen)
+UINT32 LIBNXCL_EXPORTABLE NXCImportConfiguration(NXC_SESSION hSession, TCHAR *pszContent,
+                                                UINT32 dwFlags, TCHAR *pszErrorText, int nErrorLen)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwResult;
+   UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

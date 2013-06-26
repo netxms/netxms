@@ -41,10 +41,10 @@ void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
    // Process group-specific fields
    if (pUser->dwId & GROUP_FLAG)
    {
-      DWORD i, dwId;
+      UINT32 i, dwId;
 
       pUser->dwNumMembers = pMsg->GetVariableLong(VID_NUM_MEMBERS);
-      pUser->pdwMemberList = (DWORD *)realloc(pUser->pdwMemberList, sizeof(DWORD) * pUser->dwNumMembers);
+      pUser->pdwMemberList = (UINT32 *)realloc(pUser->pdwMemberList, sizeof(UINT32) * pUser->dwNumMembers);
       for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pUser->dwNumMembers; i++, dwId++)
          pUser->pdwMemberList[i] = pMsg->GetVariableLong(dwId);
 		pUser->pszCertMappingData = NULL;
@@ -65,7 +65,7 @@ void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCLoadUserDB(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->LoadUserDB();
 }
@@ -75,7 +75,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(NXC_SESSION hSession)
 // Find user in database by ID
 //
 
-NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(NXC_SESSION hSession, DWORD dwId)
+NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(NXC_SESSION hSession, UINT32 dwId)
 {
    return ((NXCL_Session *)hSession)->FindUserById(dwId);
 }
@@ -86,7 +86,7 @@ NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(NXC_SESSION hSession, DWORD dwId)
 //
 
 BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_SESSION hSession, NXC_USER **ppUserList, 
-                                     DWORD *pdwNumUsers)
+                                     UINT32 *pdwNumUsers)
 {
    return ((NXCL_Session *)hSession)->GetUserDB(ppUserList, pdwNumUsers);
 }
@@ -96,11 +96,11 @@ BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_SESSION hSession, NXC_USER **ppUserList
 // Create new user or group on server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName,
-                                       BOOL bIsGroup, DWORD *pdwNewId)
+UINT32 LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName,
+                                       BOOL bIsGroup, UINT32 *pdwNewId)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -130,10 +130,10 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName,
 // Delete user or group
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, DWORD dwId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, UINT32 dwId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -150,7 +150,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, DWORD dwId)
 // Lock user database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCLockUserDB(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_USER_DB);
 }
@@ -160,7 +160,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(NXC_SESSION hSession)
 // Unlock user database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCUnlockUserDB(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_USER_DB);
 }
@@ -170,15 +170,15 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(NXC_SESSION hSession)
 // Modify user record
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo)
+UINT32 LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo)
 {
 	return NXCModifyUserEx(hSession, pUserInfo, 0xFFFFFFFF);
 }
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserInfo, DWORD dwFields)
+UINT32 LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserInfo, UINT32 dwFields)
 {
    CSCPMessage msg;
-   DWORD i, dwId, dwRqId;
+   UINT32 i, dwId, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -218,11 +218,11 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserIn
 // Set password for user
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD userId, 
+UINT32 LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, UINT32 userId, 
                                         const TCHAR *newPassword, const TCHAR *oldPassword)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -242,11 +242,11 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD userId,
 // Get user variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
-                                            TCHAR *pszVarName, TCHAR *pszValue, DWORD dwSize)
+UINT32 LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, UINT32 dwUserId,
+                                            TCHAR *pszVarName, TCHAR *pszValue, UINT32 dwSize)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwResult;
+   UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -278,11 +278,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, DWORD dwUserId
 // Set user variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
+UINT32 LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, UINT32 dwUserId,
                                             TCHAR *pszVarName, TCHAR *pszValue)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -302,12 +302,12 @@ DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, DWORD dwUserId
 // Copy or move user variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCopyUserVariable(NXC_SESSION hSession, DWORD dwSrcUserId,
-                                             DWORD dwDstUserId, TCHAR *pszVarName,
+UINT32 LIBNXCL_EXPORTABLE NXCCopyUserVariable(NXC_SESSION hSession, UINT32 dwSrcUserId,
+                                             UINT32 dwDstUserId, TCHAR *pszVarName,
                                              BOOL bMove)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -328,11 +328,11 @@ DWORD LIBNXCL_EXPORTABLE NXCCopyUserVariable(NXC_SESSION hSession, DWORD dwSrcUs
 // Delete user variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, DWORD dwUserId,
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, UINT32 dwUserId,
                                                TCHAR *pszVarName)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -351,12 +351,12 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, DWORD dwUse
 // Enumerate user variables
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, DWORD dwUserId,
-                                              TCHAR *pszPattern, DWORD *pdwNumVars,
+UINT32 LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, UINT32 dwUserId,
+                                              TCHAR *pszPattern, UINT32 *pdwNumVars,
                                               TCHAR ***pppszVarList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwId, dwRqId, dwResult;
+   UINT32 i, dwId, dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -400,11 +400,11 @@ DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, DWORD dwUser
 // Get session list
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, DWORD *pdwNumSessions,
+UINT32 LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, UINT32 *pdwNumSessions,
                                            NXC_CLIENT_SESSION_INFO **ppList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwId, dwRqId, dwResult;
+   UINT32 i, dwId, dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -450,10 +450,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, DWORD *pdwNumSe
 // Forcibly close client session
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, DWORD dwSessionId)
+UINT32 LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, UINT32 dwSessionId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -470,7 +470,7 @@ DWORD LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, DWORD dwSessionId)
 // Get Id of currently logged in user
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->GetCurrentUserId();
 }
@@ -480,7 +480,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession)
 // Get system access rights of currently logged in user
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->GetCurrentSystemAccess();
 }

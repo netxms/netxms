@@ -244,15 +244,15 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 #ifdef __HP_aCC
 extern "C"
 #endif
-DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const TCHAR *pszLogin, 
-                                    const TCHAR *pszPassword, DWORD dwCertLen,
-                                    BOOL (* pfSign)(BYTE *, DWORD, BYTE *, DWORD *, void *),
+UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, const TCHAR *pszLogin, 
+                                    const TCHAR *pszPassword, UINT32 dwCertLen,
+                                    BOOL (* pfSign)(BYTE *, UINT32, BYTE *, UINT32 *, void *),
                                     void *pSignArg, NXC_SESSION *phSession, const TCHAR *pszClientInfo,
                                     TCHAR **ppszUpgradeURL)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
-   DWORD dwRetCode = RCC_COMM_FAILURE;
+   UINT32 dwRetCode = RCC_COMM_FAILURE;
    SOCKET hSocket;
    THREAD hThread;
    TCHAR  *pszPort, szBuffer[64], szHostName[128];
@@ -365,7 +365,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const
 							if (dwFlags & NXCF_USE_CERTIFICATE)
 							{
 								BYTE signature[256];
-								DWORD dwSigLen;
+								UINT32 dwSigLen;
 
 								dwSigLen = 256;
 								if (!pfSign(challenge, CLIENT_CHALLENGE_SIZE, signature, &dwSigLen, pSignArg))

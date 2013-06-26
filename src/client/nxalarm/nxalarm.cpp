@@ -35,9 +35,9 @@ static TCHAR m_outFormat[MAX_DB_STRING] = _T("%I %S %H %m");
 // List alarms
 //
 
-static DWORD ListAlarms(NXC_SESSION session)
+static UINT32 ListAlarms(NXC_SESSION session)
 {
-	DWORD i, numAlarms, rcc;
+	UINT32 i, numAlarms, rcc;
 	NXC_ALARM *alarmList;
 	TCHAR *text;
 
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	      password[MAX_DB_STRING] = _T("");
 	char *eptr;
 	BOOL isDebug = FALSE, isEncrypt = FALSE;
-	DWORD rcc, alarmId, timeout = 3;
+	UINT32 rcc, alarmId, timeout = 3;
    NXC_SESSION session;
 	int ch;
 

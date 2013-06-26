@@ -28,12 +28,12 @@
 // Get list of configuration variables
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession, 
+UINT32 LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession, 
                                                NXC_SERVER_VARIABLE **ppVarList, 
-                                               DWORD *pdwNumVars)
+                                               UINT32 *pdwNumVars)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwId, dwRqId, dwRetCode;
+   UINT32 i, dwId, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -79,11 +79,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession,
 // Set value of server's variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, const TCHAR *pszVarName,
+UINT32 LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, const TCHAR *pszVarName,
                                               const TCHAR *pszValue)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -101,10 +101,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, const TCHAR 
 // Delete server's variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, const TCHAR *pszVarName)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, const TCHAR *pszVarName)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -121,10 +121,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, const TCH
 // Get server statistics
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STATS *pStats)
+UINT32 LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STATS *pStats)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwRetCode;
+   UINT32 dwRqId, dwRetCode;
 
    memset(pStats, 0, sizeof(NXC_SERVER_STATS));
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -173,10 +173,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STAT
 // Get address list
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, DWORD dwListType,
-                                        DWORD *pdwAddrCount, NXC_ADDR_ENTRY **ppAddrList)
+UINT32 LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, UINT32 dwListType,
+                                        UINT32 *pdwAddrCount, NXC_ADDR_ENTRY **ppAddrList)
 {
-   DWORD i, dwRetCode, dwRqId, dwId;
+   UINT32 i, dwRetCode, dwRqId, dwId;
    CSCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -215,10 +215,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, DWORD dwListType,
 // Set address list
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetAddrList(NXC_SESSION hSession, DWORD dwListType,
-                                        DWORD dwAddrCount, NXC_ADDR_ENTRY *pAddrList)
+UINT32 LIBNXCL_EXPORTABLE NXCSetAddrList(NXC_SESSION hSession, UINT32 dwListType,
+                                        UINT32 dwAddrCount, NXC_ADDR_ENTRY *pAddrList)
 {
-   DWORD i, dwRqId, dwId;
+   UINT32 i, dwRqId, dwId;
    CSCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -243,9 +243,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSetAddrList(NXC_SESSION hSession, DWORD dwListType,
 // Reset server's component
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCResetServerComponent(NXC_SESSION hSession, DWORD dwComponent)
+UINT32 LIBNXCL_EXPORTABLE NXCResetServerComponent(NXC_SESSION hSession, UINT32 dwComponent)
 {
-   DWORD dwRqId;
+   UINT32 dwRqId;
    CSCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -263,10 +263,10 @@ DWORD LIBNXCL_EXPORTABLE NXCResetServerComponent(NXC_SESSION hSession, DWORD dwC
 // Get value of CLOB config variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetServerConfigCLOB(NXC_SESSION hSession, const TCHAR *name, TCHAR **value)
+UINT32 LIBNXCL_EXPORTABLE NXCGetServerConfigCLOB(NXC_SESSION hSession, const TCHAR *name, TCHAR **value)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwRetCode;
+   UINT32 dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 	*value = NULL;
@@ -303,10 +303,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerConfigCLOB(NXC_SESSION hSession, const TCHA
 // Set value of CLOB config variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetServerConfigCLOB(NXC_SESSION hSession, const TCHAR *name, const TCHAR *value)
+UINT32 LIBNXCL_EXPORTABLE NXCSetServerConfigCLOB(NXC_SESSION hSession, const TCHAR *name, const TCHAR *value)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

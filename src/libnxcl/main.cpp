@@ -63,7 +63,7 @@ void LIBNXCL_EXPORTABLE NXCShutdown()
 /**
  * Get library version
  */
-DWORD LIBNXCL_EXPORTABLE NXCGetVersion()
+UINT32 LIBNXCL_EXPORTABLE NXCGetVersion()
 {
    return (NETXMS_VERSION_MAJOR << 24) | (NETXMS_VERSION_MINOR << 16) | NETXMS_VERSION_BUILD;
 }
@@ -87,7 +87,7 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
 /**
  * Set command timeout
  */
-void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeout)
+void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, UINT32 dwTimeout)
 {
    if ((dwTimeout >= 1000) && (dwTimeout <= 60000))
       ((NXCL_Session *)hSession)->m_dwCommandTimeout = dwTimeout;
@@ -104,7 +104,7 @@ void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId)
 /**
  * Subscribe to channel
  */
-DWORD LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, DWORD dwChannels)
+UINT32 LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, UINT32 dwChannels)
 {
    return ((NXCL_Session *)hSession)->SetSubscriptionStatus(dwChannels, 1);
 }
@@ -112,7 +112,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, DWORD dwChannels)
 /**
  * Unsubscribe from channel
  */
-DWORD LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, DWORD dwChannels)
+UINT32 LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, UINT32 dwChannels)
 {
    return ((NXCL_Session *)hSession)->SetSubscriptionStatus(dwChannels, 0);
 }
@@ -173,10 +173,10 @@ void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuff
 /**
  * Send SMS via server
  */
-DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message)
+UINT32 LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
 	CHECK_SESSION_HANDLE();
 
@@ -194,10 +194,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *m
 /**
  * Check connection status by sending keepalive message
  */
-DWORD LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
 	CHECK_SESSION_HANDLE();
 
@@ -225,7 +225,7 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession)
 /**
  * Generate Message ID
  */
-DWORD LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->CreateRqId();
 }
@@ -242,7 +242,7 @@ BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
 /**
  * Wait for message
  */
-CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, DWORD dwRqId)
+CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId)
 {
 	return (hSession != NULL) ? ((NXCL_Session *)hSession)->WaitForMessage(wCode, dwRqId) : NULL;
 }
@@ -250,7 +250,7 @@ CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCo
 /**
  * Wait for CMD_REQUEST_COMPLETED message and return value of VID_RCC
  */
-DWORD LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, DWORD dwRqId)
+UINT32 LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, UINT32 dwRqId)
 {
 	CHECK_SESSION_HANDLE();
 	return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -259,7 +259,7 @@ DWORD LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, DWORD dwRqId)
 /**
  * Get text for error
  */
-const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
+const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(UINT32 dwError)
 {
    static const TCHAR *pszErrorText[] =
    {

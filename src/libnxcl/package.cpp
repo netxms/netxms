@@ -28,7 +28,7 @@
 // Lock package database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLockPackageDB(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCLockPackageDB(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_PACKAGE_DB);
 }
@@ -38,7 +38,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLockPackageDB(NXC_SESSION hSession)
 // Unlock package database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_PACKAGE_DB);
 }
@@ -48,11 +48,11 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession)
 // Retrieve package list from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPackages, 
+UINT32 LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, UINT32 *pdwNumPackages, 
                                            NXC_PACKAGE_INFO **ppList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwResult, dwRqId, dwPkgId;
+   UINT32 dwResult, dwRqId, dwPkgId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -115,10 +115,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
 // Remove package from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId)
+UINT32 LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, UINT32 dwPkgId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -135,11 +135,11 @@ DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId)
 // Install package to server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INFO *pInfo,
+UINT32 LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INFO *pInfo,
                                            TCHAR *pszFullPkgPath)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwResult;
+   UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -188,10 +188,10 @@ DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INF
 // Parse NPI file
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *pInfo)
+UINT32 LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *pInfo)
 {
    FILE *fp;
-   DWORD dwResult = RCC_SUCCESS;
+   UINT32 dwResult = RCC_SUCCESS;
    TCHAR szBuffer[256], szTag[256], *ptr;
 
    fp = _tfopen(pszInfoFile, _T("r"));
@@ -253,12 +253,12 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
 // Start package deployment
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
-                                          DWORD dwNumObjects, DWORD *pdwObjectList,
-                                          DWORD *pdwRqId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, UINT32 dwPkgId,
+                                          UINT32 dwNumObjects, UINT32 *pdwObjectList,
+                                          UINT32 *pdwRqId)
 {
    CSCPMessage msg, *pInfo;
-   DWORD dwRqId, dwResult;
+   UINT32 dwRqId, dwResult;
    NXC_DEPLOYMENT_STATUS status;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();

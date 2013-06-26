@@ -28,11 +28,11 @@
 // Get list of available agent configs
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, DWORD *pdwNumRecs,
+UINT32 LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, UINT32 *pdwNumRecs,
                                                NXC_AGENT_CONFIG_INFO **ppList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwRetCode, dwRqId, dwId;
+   UINT32 i, dwRetCode, dwRqId, dwId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -72,11 +72,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, DWORD *pdwN
 // Open agent's config
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCOpenAgentConfig(NXC_SESSION hSession, DWORD dwCfgId,
+UINT32 LIBNXCL_EXPORTABLE NXCOpenAgentConfig(NXC_SESSION hSession, UINT32 dwCfgId,
                                             NXC_AGENT_CONFIG *pConfig)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -111,10 +111,10 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenAgentConfig(NXC_SESSION hSession, DWORD dwCfgId,
 // Save agent's config
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CONFIG *pConfig)
+UINT32 LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CONFIG *pConfig)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -153,10 +153,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CONF
 // Delete agent config
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, DWORD dwCfgId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, UINT32 dwCfgId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -173,10 +173,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, DWORD dwCfgI
 // Swap sequence numbers of two agent configs
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSwapAgentConfigs(NXC_SESSION hSession, DWORD dwCfgId1, DWORD dwCfgId2)
+UINT32 LIBNXCL_EXPORTABLE NXCSwapAgentConfigs(NXC_SESSION hSession, UINT32 dwCfgId1, UINT32 dwCfgId2)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

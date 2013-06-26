@@ -46,7 +46,7 @@ static void EventTemplateFromMsg(CSCPMessage *pMsg, NXC_EVENT_TEMPLATE *pEventTe
 void ProcessEventDBUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_EVENT_TEMPLATE et;
-   DWORD dwCode;
+   UINT32 dwCode;
 
    dwCode = pMsg->GetVariableShort(VID_NOTIFICATION_CODE);
 	et.dwCode = pMsg->GetVariableLong(VID_EVENT_CODE);
@@ -85,7 +85,7 @@ void LIBNXCL_EXPORTABLE NXCAddEventTemplate(NXC_SESSION hSession, NXC_EVENT_TEMP
 // Delete record from list
 //
 
-void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(NXC_SESSION hSession, DWORD dwEventCode)
+void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(NXC_SESSION hSession, UINT32 dwEventCode)
 {
    ((NXCL_Session *)hSession)->DeleteEDBRecord(dwEventCode);
 }
@@ -98,7 +98,7 @@ void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(NXC_SESSION hSession, DWORD dwEventCo
 void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_EVENT_TEMPLATE *pEventTemplate;
-   DWORD dwEventCode;
+   UINT32 dwEventCode;
 
    if (pMsg->GetCode() == CMD_EVENT_DB_RECORD)
    {
@@ -122,7 +122,7 @@ void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg)
 // Load event configuration database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCLoadEventDB(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->LoadEventDB();
 }
@@ -132,10 +132,10 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(NXC_SESSION hSession)
 // Set event information
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pArg)
+UINT32 LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pArg)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -159,10 +159,10 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_SESSION hSession, NXC_EVENT_
 // Delete event template
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(NXC_SESSION hSession, DWORD dwEventCode)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(NXC_SESSION hSession, UINT32 dwEventCode)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -181,10 +181,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(NXC_SESSION hSession, DWORD dwEv
 // Generate ID for new event
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(NXC_SESSION hSession, DWORD *pdwEventCode)
+UINT32 LIBNXCL_EXPORTABLE NXCGenerateEventCode(NXC_SESSION hSession, UINT32 *pdwEventCode)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwRetCode;
+   UINT32 dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -215,7 +215,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(NXC_SESSION hSession, DWORD *pdwEv
 
 BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_SESSION hSession, 
                                       NXC_EVENT_TEMPLATE ***pppTemplateList, 
-                                      DWORD *pdwNumRecords)
+                                      UINT32 *pdwNumRecords)
 {
    return ((NXCL_Session *)hSession)->GetEventDB(pppTemplateList, pdwNumRecords);
 }
@@ -225,7 +225,7 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_SESSION hSession,
 // Resolve event id to name
 //
 
-const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(NXC_SESSION hSession, DWORD dwId)
+const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(NXC_SESSION hSession, UINT32 dwId)
 {
    return ((NXCL_Session *)hSession)->GetEventName(dwId);
 }
@@ -235,8 +235,8 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(NXC_SESSION hSession, DWORD dwId
 // Resolve event id to name using application-provided buffer
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(NXC_SESSION hSession, DWORD dwId, 
-                                          TCHAR *pszBuffer, DWORD dwBufSize)
+BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(NXC_SESSION hSession, UINT32 dwId, 
+                                          TCHAR *pszBuffer, UINT32 dwBufSize)
 {
    return ((NXCL_Session *)hSession)->GetEventNameEx(dwId, pszBuffer, dwBufSize);
 }
@@ -246,7 +246,7 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(NXC_SESSION hSession, DWORD dwId,
 // Get severity for given event id. Will return -1 for unknown id.
 //
 
-int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, DWORD dwId)
+int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, UINT32 dwId)
 {
    return ((NXCL_Session *)hSession)->GetEventSeverity(dwId);
 }
@@ -257,7 +257,7 @@ int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, DWORD dwId)
 // If there are no template with such ID, empty string will be returned.
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
+BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize)
 {
    return ((NXCL_Session *)hSession)->GetEventText(dwId, pszBuffer, dwBufSize);
 }

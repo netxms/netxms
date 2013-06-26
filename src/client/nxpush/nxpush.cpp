@@ -312,8 +312,8 @@ BOOL AddValue(char *pair)
 BOOL AddValuePair(char *name, char *value)
 {
 	BOOL ret = TRUE;
-	DWORD dciId = 0;
-	DWORD nodeId = 0;
+	UINT32 dciId = 0;
+	UINT32 nodeId = 0;
 	char *dciName = NULL;
 	char *nodeName = NULL;
 
@@ -406,7 +406,7 @@ static void DebugCallback(TCHAR *pMsg)
 BOOL Startup()
 {
 	BOOL ret = FALSE;
-	DWORD dwResult;
+	UINT32 dwResult;
 
 #ifdef _WIN32
 	WSADATA wsaData;
@@ -482,7 +482,7 @@ BOOL Startup()
 BOOL Send()
 {
 	BOOL ret = TRUE;
-	DWORD errIdx;
+	UINT32 errIdx;
 	
 	int i, size;
 	int batches = 1;
@@ -522,7 +522,7 @@ BOOL Send()
 			}
 		}
 
-		DWORD dwResult = NXCPushDCIData(hSession, size, &queue[optBatchSize * i], &errIdx);
+		UINT32 dwResult = NXCPushDCIData(hSession, size, &queue[optBatchSize * i], &errIdx);
 		if (dwResult != RCC_SUCCESS)
 		{
 			if (optVerbose > 0)

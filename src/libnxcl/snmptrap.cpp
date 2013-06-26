@@ -30,13 +30,13 @@
 
 static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
 {
-   DWORD i, dwId1, dwId2, dwId3, dwId4;
+   UINT32 i, dwId1, dwId2, dwId3, dwId4;
 
    pTrap->dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
    pMsg->GetVariableStr(VID_DESCRIPTION, pTrap->szDescription, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_USER_TAG, pTrap->szUserTag, MAX_USERTAG_LENGTH);
    pTrap->dwOidLen = pMsg->GetVariableLong(VID_TRAP_OID_LEN);
-   pTrap->pdwObjectId = (DWORD *)malloc(sizeof(DWORD) * pTrap->dwOidLen);
+   pTrap->pdwObjectId = (UINT32 *)malloc(sizeof(UINT32) * pTrap->dwOidLen);
    pMsg->GetVariableInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
    pTrap->dwNumMaps = pMsg->GetVariableLong(VID_TRAP_NUM_MAPS);
    pTrap->pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * pTrap->dwNumMaps);
@@ -46,7 +46,7 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
       pTrap->pMaps[i].dwOidLen = pMsg->GetVariableLong(dwId1);
       if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
       {
-         pTrap->pMaps[i].pdwObjectId = (DWORD *)malloc(sizeof(DWORD) * pTrap->pMaps[i].dwOidLen);
+         pTrap->pMaps[i].pdwObjectId = (UINT32 *)malloc(sizeof(UINT32) * pTrap->pMaps[i].dwOidLen);
          pMsg->GetVariableInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
       }
       else
@@ -66,7 +66,7 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
 void ProcessTrapCfgUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_TRAP_CFG_ENTRY trapCfg;
-   DWORD dwCode;
+   UINT32 dwCode;
 
 	memset(&trapCfg, 0, sizeof(NXC_TRAP_CFG_ENTRY));
 
@@ -77,7 +77,7 @@ void ProcessTrapCfgUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 
    pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &trapCfg);
    
-	for(DWORD i = 0; i < trapCfg.dwNumMaps; i++)
+	for(UINT32 i = 0; i < trapCfg.dwNumMaps; i++)
       safe_free(trapCfg.pMaps[i].pdwObjectId);
    safe_free(trapCfg.pMaps);
    safe_free(trapCfg.pdwObjectId);
@@ -92,14 +92,14 @@ void LIBNXCL_EXPORTABLE NXCCopyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *dst, NXC_TRAP_CF
 {
 	memcpy(dst, src, sizeof(NXC_TRAP_CFG_ENTRY));
 	if (src->pdwObjectId != NULL)
-		dst->pdwObjectId = (DWORD *)nx_memdup(src->pdwObjectId, sizeof(DWORD) * src->dwOidLen);
+		dst->pdwObjectId = (UINT32 *)nx_memdup(src->pdwObjectId, sizeof(UINT32) * src->dwOidLen);
 	if (src->pMaps != NULL)
 	{
 		dst->pMaps = (NXC_OID_MAP *)nx_memdup(src->pMaps, sizeof(NXC_OID_MAP) * src->dwNumMaps);
-		for(DWORD i = 0; i < src->dwNumMaps; i++)
+		for(UINT32 i = 0; i < src->dwNumMaps; i++)
 		{
 			if (src->pMaps[i].pdwObjectId != NULL)
-				dst->pMaps[i].pdwObjectId = (DWORD *)nx_memdup(src->pMaps[i].pdwObjectId, sizeof(DWORD) * src->pMaps[i].dwOidLen);
+				dst->pMaps[i].pdwObjectId = (UINT32 *)nx_memdup(src->pMaps[i].pdwObjectId, sizeof(UINT32) * src->pMaps[i].dwOidLen);
 		}
 	}
 }
@@ -126,7 +126,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *e)
 	if (e == NULL)
 		return;
 
-	for(DWORD i = 0; i < e->dwNumMaps; i++)
+	for(UINT32 i = 0; i < e->dwNumMaps; i++)
       safe_free(e->pMaps[i].pdwObjectId);
    safe_free(e->pMaps);
    safe_free(e->pdwObjectId);
@@ -138,10 +138,10 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *e)
 // Load trap configuration from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, DWORD *pdwNumTraps, NXC_TRAP_CFG_ENTRY **ppTrapList)
+UINT32 LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, UINT32 *pdwNumTraps, NXC_TRAP_CFG_ENTRY **ppTrapList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumTraps = 0, dwTrapId = 0;
+   UINT32 dwRqId, dwRetCode = RCC_SUCCESS, dwNumTraps = 0, dwTrapId = 0;
    NXC_TRAP_CFG_ENTRY *pList = NULL;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -199,9 +199,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, DWORD *pdwNumTraps
 // Destroy list of traps
 //
 
-void LIBNXCL_EXPORTABLE NXCDestroyTrapList(DWORD dwNumTraps, NXC_TRAP_CFG_ENTRY *pTrapList)
+void LIBNXCL_EXPORTABLE NXCDestroyTrapList(UINT32 dwNumTraps, NXC_TRAP_CFG_ENTRY *pTrapList)
 {
-   DWORD i, j;
+   UINT32 i, j;
 
    if (pTrapList == NULL)
       return;
@@ -221,10 +221,10 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapList(DWORD dwNumTraps, NXC_TRAP_CFG_ENTRY 
 // Delete trap configuration record by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, DWORD dwTrapId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, UINT32 dwTrapId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -241,10 +241,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, DWORD dwTrapId)
 // Create new trap configuration record
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId)
+UINT32 LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, UINT32 *pdwTrapId)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwResult;
+   UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -273,10 +273,10 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId)
 // Update trap configuration record
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY *pTrap)
+UINT32 LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY *pTrap)
 {
    CSCPMessage msg;
-   DWORD i, dwRqId, dwId1, dwId2, dwId3, dwId4;
+   UINT32 i, dwRqId, dwId1, dwId2, dwId3, dwId4;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -310,7 +310,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY 
 
 void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
-   DWORD i, dwNumRecords, dwId;
+   UINT32 i, dwNumRecords, dwId;
    NXC_SNMP_TRAP_LOG_RECORD rec;
    int nOrder;
 
@@ -343,10 +343,10 @@ void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, DWORD dwMaxRecords)
+UINT32 LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, UINT32 dwMaxRecords)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
    ((NXCL_Session *)hSession)->PrepareForSync(SYNC_TRAP_LOG);
@@ -370,11 +370,11 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, DWORD dwMaxRec
 // Get read-only trap configuration without parameter bindings
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetTrapCfgRO(NXC_SESSION hSession, DWORD *pdwNumTraps,
+UINT32 LIBNXCL_EXPORTABLE NXCGetTrapCfgRO(NXC_SESSION hSession, UINT32 *pdwNumTraps,
                                          NXC_TRAP_CFG_ENTRY **ppTrapList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwId, dwRqId, dwRetCode;
+   UINT32 i, dwId, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -396,7 +396,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetTrapCfgRO(NXC_SESSION hSession, DWORD *pdwNumTrap
          {
             (*ppTrapList)[i].dwId = pResponse->GetVariableLong(dwId++);
             (*ppTrapList)[i].dwOidLen = pResponse->GetVariableLong(dwId++);
-            (*ppTrapList)[i].pdwObjectId = (DWORD *)malloc(sizeof(DWORD) * (*ppTrapList)[i].dwOidLen);
+            (*ppTrapList)[i].pdwObjectId = (UINT32 *)malloc(sizeof(UINT32) * (*ppTrapList)[i].dwOidLen);
             pResponse->GetVariableInt32Array(dwId++, (*ppTrapList)[i].dwOidLen, (*ppTrapList)[i].pdwObjectId);
             (*ppTrapList)[i].dwEventCode = pResponse->GetVariableLong(dwId++);
             pResponse->GetVariableStr(dwId++, (*ppTrapList)[i].szDescription, MAX_DB_STRING);

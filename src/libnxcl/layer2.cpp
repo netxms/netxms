@@ -29,10 +29,10 @@
 // Query layer 2 topology from device
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId, void **ppTopology)
+UINT32 LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, UINT32 dwNodeId, void **ppTopology)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
 	*ppTopology = NULL;
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -64,10 +64,10 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId
 // Find connection point for node or interface
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD objectId, NXC_CONNECTION_POINT *cpInfo)
+UINT32 LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, UINT32 objectId, NXC_CONNECTION_POINT *cpInfo)
 {
    CSCPMessage msg, *response;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -103,10 +103,10 @@ DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD obje
 // Find connection point for given MAC address
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCFindMACAddress(NXC_SESSION hSession, BYTE *macAddr, NXC_CONNECTION_POINT *cpInfo)
+UINT32 LIBNXCL_EXPORTABLE NXCFindMACAddress(NXC_SESSION hSession, BYTE *macAddr, NXC_CONNECTION_POINT *cpInfo)
 {
    CSCPMessage msg, *response;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

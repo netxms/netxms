@@ -28,9 +28,9 @@
 // Get list of configured graphs
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGraphs, NXC_GRAPH **ppGraphList)
+UINT32 LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, UINT32 *pdwNumGraphs, NXC_GRAPH **ppGraphList)
 {
-   DWORD i, j, dwId, dwRqId, dwResult;
+   UINT32 i, j, dwId, dwRqId, dwResult;
    CSCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -62,10 +62,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGrap
 					(*ppGraphList)[i].dwAclSize = pResponse->GetVariableLong(dwId++);
 					if ((*ppGraphList)[i].dwAclSize > 0)
 					{
-						DWORD *pdwData;
+						UINT32 *pdwData;
 
 						(*ppGraphList)[i].pACL = (NXC_GRAPH_ACL_ENTRY *)malloc(sizeof(NXC_GRAPH_ACL_ENTRY) * (*ppGraphList)[i].dwAclSize);
-						pdwData = (DWORD *)malloc(sizeof(DWORD) * (*ppGraphList)[i].dwAclSize * 2);
+						pdwData = (UINT32 *)malloc(sizeof(UINT32) * (*ppGraphList)[i].dwAclSize * 2);
 						pResponse->GetVariableInt32Array(dwId++, (*ppGraphList)[i].dwAclSize, pdwData);
 						pResponse->GetVariableInt32Array(dwId++, (*ppGraphList)[i].dwAclSize, pdwData + (*ppGraphList)[i].dwAclSize);
 						for(j = 0; j < (*ppGraphList)[i].dwAclSize; j++)
@@ -97,9 +97,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGrap
 // Destroy graph list
 //
 
-void LIBNXCL_EXPORTABLE NXCDestroyGraphList(DWORD dwNumGraphs, NXC_GRAPH *pList)
+void LIBNXCL_EXPORTABLE NXCDestroyGraphList(UINT32 dwNumGraphs, NXC_GRAPH *pList)
 {
-	DWORD i;
+	UINT32 i;
 
 	for(i = 0; i < dwNumGraphs; i++)
 	{
@@ -115,9 +115,9 @@ void LIBNXCL_EXPORTABLE NXCDestroyGraphList(DWORD dwNumGraphs, NXC_GRAPH *pList)
 // Delete graph
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, DWORD dwGraphId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, UINT32 dwGraphId)
 {
-   DWORD dwRqId;
+   UINT32 dwRqId;
    CSCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -135,9 +135,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, DWORD dwGraphId)
 // Define graph
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDefineGraph(NXC_SESSION hSession, NXC_GRAPH *pGraph)
+UINT32 LIBNXCL_EXPORTABLE NXCDefineGraph(NXC_SESSION hSession, NXC_GRAPH *pGraph)
 {
-   DWORD i, dwId, dwRqId;
+   UINT32 i, dwId, dwRqId;
    CSCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();

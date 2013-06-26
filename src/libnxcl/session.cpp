@@ -174,7 +174,7 @@ void NXCL_Session::disconnect()
 
 void NXCL_Session::destroyAllObjects()
 {
-   DWORD i;
+   UINT32 i;
 
    MutexLock(m_mutexIndexAccess);
    for(i = 0; i < m_dwNumObjects; i++)
@@ -190,7 +190,7 @@ void NXCL_Session::destroyAllObjects()
 // Wait for specific message
 //
 
-CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
 {
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return NULL;
@@ -203,7 +203,7 @@ CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOu
 // Wait for specific raw message
 //
 
-CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
 {
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return NULL;
@@ -217,10 +217,10 @@ CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTi
 // from recived message
 //
 
-DWORD NXCL_Session::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
+UINT32 NXCL_Session::WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 {
    CSCPMessage *pResponse;
-   DWORD dwRetCode;
+   UINT32 dwRetCode;
 
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
    {
@@ -295,17 +295,17 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
 // Wait for synchronization operation completion
 //
 
-DWORD NXCL_Session::WaitForSync(int nSyncOp, DWORD dwTimeOut)
+UINT32 NXCL_Session::WaitForSync(int nSyncOp, UINT32 dwTimeOut)
 {
 #ifdef _WIN32
-   DWORD dwRetCode;
+   UINT32 dwRetCode;
 
    dwRetCode = WaitForSingleObject(m_condSyncOp[nSyncOp], dwTimeOut);
    MutexUnlock(m_mutexSyncOpAccess[nSyncOp]);
    return (dwRetCode == WAIT_TIMEOUT) ? RCC_TIMEOUT : m_dwSyncExitCode[nSyncOp];
 #else
    int iRetCode;
-   DWORD dwResult;
+   UINT32 dwResult;
 
    pthread_mutex_lock(&m_mutexSyncOp[nSyncOp]);
    if (!m_bSyncFinished[nSyncOp])
@@ -365,7 +365,7 @@ void NXCL_Session::PrepareForSync(int nSyncOp)
 // Complete synchronization operation
 //
 
-void NXCL_Session::CompleteSync(int nSyncOp, DWORD dwRetCode)
+void NXCL_Session::CompleteSync(int nSyncOp, UINT32 dwRetCode)
 {
 #ifdef _WIN32
    m_dwSyncExitCode[nSyncOp] = dwRetCode;
@@ -392,7 +392,7 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
 	}
 	else if (m_pItemList != NULL)
    {
-      DWORD i, j, dwId;
+      UINT32 i, j, dwId;
 
       i = m_pItemList->dwNumItems;
       m_pItemList->dwNumItems++;
@@ -448,10 +448,10 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD NXCL_Session::OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
+UINT32 NXCL_Session::OpenNodeDCIList(UINT32 dwNodeId, NXC_DCI_LIST **ppItemList)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
    PrepareForSync(SYNC_DCI_LIST);
@@ -496,10 +496,10 @@ DWORD NXCL_Session::OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
 // Load event configuration database
 //
 
-DWORD NXCL_Session::LoadEventDB()
+UINT32 NXCL_Session::LoadEventDB()
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
    PrepareForSync(SYNC_EVENT_DB);
@@ -530,7 +530,7 @@ DWORD NXCL_Session::LoadEventDB()
 
 void NXCL_Session::destroyEventDB()
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumTemplates; i++)
    {
@@ -548,9 +548,9 @@ void NXCL_Session::destroyEventDB()
 // Delete record from list
 //
 
-void NXCL_Session::DeleteEDBRecord(DWORD dwEventCode)
+void NXCL_Session::DeleteEDBRecord(UINT32 dwEventCode)
 {
-   DWORD i;
+   UINT32 i;
 
    MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
@@ -589,7 +589,7 @@ void NXCL_Session::AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate, BOOL bLo
 // Get pointer to event templates list
 //
 
-BOOL NXCL_Session::GetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords)
+BOOL NXCL_Session::GetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, UINT32 *pdwNumRecords)
 {
    *pppTemplateList = m_ppEventTemplates;
    *pdwNumRecords = m_dwNumTemplates;
@@ -601,9 +601,9 @@ BOOL NXCL_Session::GetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwN
 // Resolve event id to name
 //
 
-const TCHAR *NXCL_Session::GetEventName(DWORD dwId)
+const TCHAR *NXCL_Session::GetEventName(UINT32 dwId)
 {
-   DWORD i;
+   UINT32 i;
 
    MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
@@ -621,9 +621,9 @@ const TCHAR *NXCL_Session::GetEventName(DWORD dwId)
 // Resolve event id to name using application-provided buffer
 //
 
-BOOL NXCL_Session::GetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
+BOOL NXCL_Session::GetEventNameEx(UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize)
 {
-   DWORD i;
+   UINT32 i;
 
    MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
@@ -643,9 +643,9 @@ BOOL NXCL_Session::GetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
 // Get severity for given event id. Will return -1 for unknown id.
 //
 
-int NXCL_Session::GetEventSeverity(DWORD dwId)
+int NXCL_Session::GetEventSeverity(UINT32 dwId)
 {
-   DWORD i;
+   UINT32 i;
 
    MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
@@ -664,9 +664,9 @@ int NXCL_Session::GetEventSeverity(DWORD dwId)
 // If there are no template with such ID, empty string will be returned.
 //
 
-BOOL NXCL_Session::GetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
+BOOL NXCL_Session::GetEventText(UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize)
 {
-   DWORD i;
+   UINT32 i;
 
    MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
@@ -688,7 +688,7 @@ BOOL NXCL_Session::GetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
 
 void NXCL_Session::destroyUserDB()
 {
-   DWORD i;
+   UINT32 i;
 
    for(i = 0; i < m_dwNumUsers; i++)
       safe_free(m_pUserList[i].pdwMemberList);
@@ -730,7 +730,7 @@ void NXCL_Session::processUserDBRecord(CSCPMessage *pMsg)
 void NXCL_Session::processUserDBUpdate(CSCPMessage *pMsg)
 {
    int iCode;
-   DWORD dwUserId;
+   UINT32 dwUserId;
    NXC_USER *pUser;
 
    iCode = pMsg->GetVariableShort(VID_UPDATE_TYPE);
@@ -781,9 +781,9 @@ void NXCL_Session::processUserDBUpdate(CSCPMessage *pMsg)
 // Find user in database by ID
 //
 
-NXC_USER *NXCL_Session::FindUserById(DWORD dwId)
+NXC_USER *NXCL_Session::FindUserById(UINT32 dwId)
 {
-   DWORD i;
+   UINT32 i;
    NXC_USER *pUser = NULL;
 
    if (m_dwFlags & NXC_SF_USERDB_LOADED)
@@ -804,7 +804,7 @@ NXC_USER *NXCL_Session::FindUserById(DWORD dwId)
 // Get pointer to user list and number of users
 //
 
-BOOL NXCL_Session::GetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers)
+BOOL NXCL_Session::GetUserDB(NXC_USER **ppUserList, UINT32 *pdwNumUsers)
 {
    if (!(m_dwFlags & NXC_SF_USERDB_LOADED))
       return FALSE;
@@ -820,10 +820,10 @@ BOOL NXCL_Session::GetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers)
 // This function is NOT REENTRANT
 //
 
-DWORD NXCL_Session::LoadUserDB(void)
+UINT32 NXCL_Session::LoadUserDB(void)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
    PrepareForSync(SYNC_USER_DB);
@@ -854,7 +854,7 @@ DWORD NXCL_Session::LoadUserDB(void)
 // Send file to server
 //
 
-DWORD NXCL_Session::SendFile(DWORD dwRqId, TCHAR *pszFileName)
+UINT32 NXCL_Session::SendFile(UINT32 dwRqId, TCHAR *pszFileName)
 {
    return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, 0, NULL, NULL, m_mutexSendMsg) ? RCC_SUCCESS : RCC_IO_ERROR;
 }
@@ -864,10 +864,10 @@ DWORD NXCL_Session::SendFile(DWORD dwRqId, TCHAR *pszFileName)
 // Set subscription status for given channel(s)
 //
 
-DWORD NXCL_Session::SetSubscriptionStatus(DWORD dwChannels, int nOperation)
+UINT32 NXCL_Session::SetSubscriptionStatus(UINT32 dwChannels, int nOperation)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = CreateRqId();
 
@@ -885,9 +885,9 @@ DWORD NXCL_Session::SetSubscriptionStatus(DWORD dwChannels, int nOperation)
 // Prepares file transfer from server to client
 //
 
-DWORD NXCL_Session::PrepareFileTransfer(const TCHAR *pszFile, DWORD dwRqId)
+UINT32 NXCL_Session::PrepareFileTransfer(const TCHAR *pszFile, UINT32 dwRqId)
 {
-   DWORD dwResult;
+   UINT32 dwResult;
 
    MutexLock(m_mutexFileRq);
    if (m_hCurrFile == -1)
@@ -911,9 +911,9 @@ DWORD NXCL_Session::PrepareFileTransfer(const TCHAR *pszFile, DWORD dwRqId)
 // Wait for file transfer completion
 //
 
-DWORD NXCL_Session::WaitForFileTransfer(DWORD dwTimeout)
+UINT32 NXCL_Session::WaitForFileTransfer(UINT32 dwTimeout)
 {
-   DWORD dwResult;
+   UINT32 dwResult;
    BOOL bSuccess;
 
    MutexLock(m_mutexFileRq);
@@ -964,10 +964,10 @@ void NXCL_Session::AbortFileTransfer(void)
 // Execute simple command (command without arguments and returnning only RCC)
 //
 
-DWORD NXCL_Session::SimpleCommand(WORD wCmd)
+UINT32 NXCL_Session::SimpleCommand(WORD wCmd)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = CreateRqId();
 
@@ -1023,7 +1023,7 @@ THREAD_RESULT THREAD_CALL NXCL_Session::watchdogThreadStarter(void *pArg)
 void NXCL_Session::watchdogThread()
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
    BOOL bConnBroken = FALSE;
 
    msg.SetCode(CMD_KEEPALIVE);
@@ -1064,7 +1064,7 @@ void NXCL_Session::watchdogThread()
 
 void NXCL_Session::OnNotify(CSCPMessage *pMsg)
 {
-   DWORD dwCode;
+   UINT32 dwCode;
 
    dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
    if (dwCode == NX_NOTIFY_SHUTDOWN)

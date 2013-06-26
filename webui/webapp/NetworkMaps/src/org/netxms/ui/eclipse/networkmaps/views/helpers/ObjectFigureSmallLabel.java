@@ -10,9 +10,9 @@ import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
@@ -23,8 +23,6 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 	private static final int BORDER_WIDTH = 2;
 	private static final int MARGIN_WIDTH = 4;
 	private static final int MARGIN_HEIGHT = 2;
-	
-	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 	
 	private Label label;
 	
@@ -45,7 +43,7 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 		add(label, BorderLayout.CENTER);
 		
 		setOpaque(true);
-		setBackgroundColor(BACKGROUND_COLOR);
+		setBackgroundColor(SharedColors.getColor(SharedColors.MAP_SMALL_LABEL_BACKGROUND, Display.getCurrent()));
 		
 		updateSize();
 	}
@@ -77,7 +75,7 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 	protected void paintFigure(Graphics gc)
 	{
 		gc.setAntialias(SWT.ON);
-		gc.setBackgroundColor(BACKGROUND_COLOR);
+		gc.setBackgroundColor(SharedColors.getColor(SharedColors.MAP_SMALL_LABEL_BACKGROUND, Display.getCurrent()));
 		gc.setForegroundColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		Rectangle rect = new Rectangle(getBounds());
 		rect.x += BORDER_WIDTH / 2;

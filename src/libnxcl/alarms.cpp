@@ -56,7 +56,7 @@ static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_ALARM alarm;
-   DWORD dwCode;
+   UINT32 dwCode;
 
    dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
    alarm.dwAlarmId = pMsg->GetVariableLong(VID_ALARM_ID);
@@ -67,10 +67,10 @@ void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 /**
  * Load all alarms from server
  */
-DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList)
+UINT32 LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, UINT32 *pdwNumAlarms, NXC_ALARM **ppAlarmList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumAlarms = 0, dwAlarmId = 0;
+   UINT32 dwRqId, dwRetCode = RCC_SUCCESS, dwNumAlarms = 0, dwAlarmId = 0;
    NXC_ALARM *pList = NULL;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -121,10 +121,10 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, DWORD *pdwNumAla
 /**
  * Acknowledge alarm by ID
  */
-DWORD LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
+UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -141,10 +141,10 @@ DWORD LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, DWORD dwAlarm
 // Terminate alarm by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
+UINT32 LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -161,10 +161,10 @@ DWORD LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, DWORD dwAlarmId
 // Delete alarm by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -181,10 +181,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
 // Set helpdesk state to "Open"
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCOpenAlarm(NXC_SESSION hSession, DWORD dwAlarmId, TCHAR *pszHelpdeskRef)
+UINT32 LIBNXCL_EXPORTABLE NXCOpenAlarm(NXC_SESSION hSession, UINT32 dwAlarmId, TCHAR *pszHelpdeskRef)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -203,10 +203,10 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenAlarm(NXC_SESSION hSession, DWORD dwAlarmId, TCH
 // Set helpdesk state to "Closed"
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
+UINT32 LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -264,7 +264,7 @@ TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *ala
 			out += prev;
 			break;
 		}
-		out.addString(prev, (DWORD)(curr - prev));
+		out.addString(prev, (UINT32)(curr - prev));
 		curr++;
 		switch(*curr)
 		{

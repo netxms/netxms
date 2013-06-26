@@ -28,11 +28,11 @@
 // Get list of scripts in the library
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetScriptList(NXC_SESSION hSession, DWORD *pdwNumScripts,
+UINT32 LIBNXCL_EXPORTABLE NXCGetScriptList(NXC_SESSION hSession, UINT32 *pdwNumScripts,
                                           NXC_SCRIPT_INFO **ppList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwId, dwResult, dwRqId;
+   UINT32 i, dwId, dwResult, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -71,10 +71,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetScriptList(NXC_SESSION hSession, DWORD *pdwNumScr
 // Get script
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetScript(NXC_SESSION hSession, DWORD dwId, TCHAR **ppszCode)
+UINT32 LIBNXCL_EXPORTABLE NXCGetScript(NXC_SESSION hSession, UINT32 dwId, TCHAR **ppszCode)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwResult, dwRqId;
+   UINT32 dwResult, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -107,11 +107,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGetScript(NXC_SESSION hSession, DWORD dwId, TCHAR **
 // Update script
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, DWORD *pdwId,
+UINT32 LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, UINT32 *pdwId,
                                          TCHAR *pszName, TCHAR *pszCode)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwResult;
+   UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -142,11 +142,11 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, DWORD *pdwId,
 // Rename script
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCRenameScript(NXC_SESSION hSession, DWORD dwId,
+UINT32 LIBNXCL_EXPORTABLE NXCRenameScript(NXC_SESSION hSession, UINT32 dwId,
                                          TCHAR *pszName)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -164,10 +164,10 @@ DWORD LIBNXCL_EXPORTABLE NXCRenameScript(NXC_SESSION hSession, DWORD dwId,
 // Delete script
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteScript(NXC_SESSION hSession, DWORD dwId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteScript(NXC_SESSION hSession, UINT32 dwId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

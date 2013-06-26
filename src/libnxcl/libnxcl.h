@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -79,7 +79,7 @@
 
 typedef struct
 {
-   DWORD dwKey;
+   UINT32 dwKey;
    NXC_OBJECT *pObject;
 } INDEX;
 
@@ -90,10 +90,10 @@ typedef struct
 
 typedef struct
 {
-   DWORD dwMagic;
-   DWORD dwStructSize;  // sizeof(NXC_OBJECT)
-   DWORD dwTimeStamp;
-   DWORD dwNumObjects;
+   UINT32 dwMagic;
+   UINT32 dwStructSize;  // sizeof(NXC_OBJECT)
+   UINT32 dwTimeStamp;
+   UINT32 dwNumObjects;
    BYTE bsServerId[8];
 } OBJECT_CACHE_HEADER;
 
@@ -108,17 +108,17 @@ class NXCL_Session
 
    // Attributes
 private:
-   DWORD m_dwFlags;
-   DWORD m_dwMsgId;
-   DWORD m_dwState;
-   DWORD m_dwTimeStamp;    // Last known server's timestamp
-   DWORD m_dwNumObjects;
+   UINT32 m_dwFlags;
+   UINT32 m_dwMsgId;
+   UINT32 m_dwState;
+   UINT32 m_dwTimeStamp;    // Last known server's timestamp
+   UINT32 m_dwNumObjects;
    INDEX *m_pIndexById;
    MUTEX m_mutexIndexAccess;
    SOCKET m_hSocket;
 	NXCPEncryptionContext *m_pCtx;
    MsgWaitQueue m_msgWaitQueue;
-   DWORD m_dwReceiverBufferSize;
+   UINT32 m_dwReceiverBufferSize;
    NXC_DCI_LIST *m_pItemList;
    THREAD m_hRecvThread;
    THREAD m_hWatchdogThread;
@@ -128,24 +128,24 @@ private:
 	TCHAR m_szServerTimeZone[MAX_TZ_LEN];
 	MUTEX m_mutexSendMsg;
 
-   DWORD m_dwUserId;          // Id of logged-in user
-   DWORD m_dwSystemAccess;    // System access rights for current user
+   UINT32 m_dwUserId;          // Id of logged-in user
+   UINT32 m_dwSystemAccess;    // System access rights for current user
 
    int m_hCurrFile;
-   DWORD m_dwFileRqId;
-   DWORD m_dwFileRqCompletion;
+   UINT32 m_dwFileRqId;
+   UINT32 m_dwFileRqCompletion;
    CONDITION m_condFileRq;
    MUTEX m_mutexFileRq;
 
    NXC_EVENT_TEMPLATE **m_ppEventTemplates;
-   DWORD m_dwNumTemplates;
+   UINT32 m_dwNumTemplates;
    MUTEX m_mutexEventAccess;
 
-   DWORD m_dwNumUsers;
+   UINT32 m_dwNumUsers;
    NXC_USER *m_pUserList;
 
    MUTEX m_mutexSyncOpAccess[SYNC_OP_COUNT];
-   DWORD m_dwSyncExitCode[SYNC_OP_COUNT];
+   UINT32 m_dwSyncExitCode[SYNC_OP_COUNT];
 #ifdef _WIN32
    HANDLE m_condSyncOp[SYNC_OP_COUNT];
 #else
@@ -155,7 +155,7 @@ private:
 #endif
 
 public:
-   DWORD m_dwCommandTimeout;
+   UINT32 m_dwCommandTimeout;
    NXC_EVENT_HANDLER m_pEventHandler;
    BYTE m_bsServerId[8];
 
@@ -186,53 +186,53 @@ public:
    void StartWatchdogThread(void);
 
    BOOL SendMsg(CSCPMessage *pMsg);
-   CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);
-   CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);
-   DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut = 0);
-   DWORD CreateRqId(void) { return m_dwMsgId++; }
-   DWORD SendFile(DWORD dwRqId, TCHAR *pszFileName);
-   DWORD SimpleCommand(WORD wCmd);
+   CSCPMessage *WaitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut = 0);
+   CSCP_MESSAGE *WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut = 0);
+   UINT32 WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut = 0);
+   UINT32 CreateRqId(void) { return m_dwMsgId++; }
+   UINT32 SendFile(UINT32 dwRqId, TCHAR *pszFileName);
+   UINT32 SimpleCommand(WORD wCmd);
 
-   void callEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
+   void callEventHandler(UINT32 dwEvent, UINT32 dwCode, void *pArg);
 
-   DWORD WaitForSync(int nSyncOp, DWORD dwTimeOut);
+   UINT32 WaitForSync(int nSyncOp, UINT32 dwTimeOut);
    void PrepareForSync(int nSyncOp);
-   void CompleteSync(int nSyncOp, DWORD dwRetCode);
+   void CompleteSync(int nSyncOp, UINT32 dwRetCode);
    void UnlockSyncOp(int nSyncOp) { MutexUnlock(m_mutexSyncOpAccess[nSyncOp]); }
 
-   DWORD OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
+   UINT32 OpenNodeDCIList(UINT32 dwNodeId, NXC_DCI_LIST **ppItemList);
 
-   DWORD LoadEventDB(void);
+   UINT32 LoadEventDB(void);
    void AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate, BOOL bLock);
-   void DeleteEDBRecord(DWORD dwEventCode);
-   BOOL GetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
-   const TCHAR *GetEventName(DWORD dwId);
-   BOOL GetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
-   int GetEventSeverity(DWORD dwId);
-   BOOL GetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
+   void DeleteEDBRecord(UINT32 dwEventCode);
+   BOOL GetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, UINT32 *pdwNumRecords);
+   const TCHAR *GetEventName(UINT32 dwId);
+   BOOL GetEventNameEx(UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize);
+   int GetEventSeverity(UINT32 dwId);
+   BOOL GetEventText(UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize);
 
-   DWORD LoadUserDB(void);
-   BOOL GetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
-   NXC_USER *FindUserById(DWORD dwId);
+   UINT32 LoadUserDB(void);
+   BOOL GetUserDB(NXC_USER **ppUserList, UINT32 *pdwNumUsers);
+   NXC_USER *FindUserById(UINT32 dwId);
 
-   DWORD syncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments);
+   UINT32 syncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments);
    void lockObjectIndex() { MutexLock(m_mutexIndexAccess); }
    void unlockObjectIndex() { MutexUnlock(m_mutexIndexAccess); }
-   NXC_OBJECT *findObjectById(DWORD id, BOOL lock);
-   NXC_OBJECT *findObjectByName(const TCHAR *name, DWORD currObject);
-   NXC_OBJECT *findObjectByComments(const TCHAR *comments, DWORD currObject);
-   NXC_OBJECT *findObjectByIPAddress(DWORD ipAddr, DWORD currObject);
+   NXC_OBJECT *findObjectById(UINT32 id, BOOL lock);
+   NXC_OBJECT *findObjectByName(const TCHAR *name, UINT32 currObject);
+   NXC_OBJECT *findObjectByComments(const TCHAR *comments, UINT32 currObject);
+   NXC_OBJECT *findObjectByIPAddress(UINT32 ipAddr, UINT32 currObject);
    void EnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
-   NXC_OBJECT *GetRootObject(DWORD dwId, DWORD dwIndex);
-   void *GetObjectIndex(DWORD *pdwNumObjects);
+   NXC_OBJECT *GetRootObject(UINT32 dwId, UINT32 dwIndex);
+   void *GetObjectIndex(UINT32 *pdwNumObjects);
 
-   void SetTimeStamp(DWORD dwTimeStamp) { m_dwTimeStamp = dwTimeStamp; }
-   DWORD GetTimeStamp(void) { return m_dwTimeStamp; }
+   void SetTimeStamp(UINT32 dwTimeStamp) { m_dwTimeStamp = dwTimeStamp; }
+   UINT32 GetTimeStamp(void) { return m_dwTimeStamp; }
 
-   DWORD SetSubscriptionStatus(DWORD dwChannels, int nOperation);
+   UINT32 SetSubscriptionStatus(UINT32 dwChannels, int nOperation);
 
-   DWORD PrepareFileTransfer(const TCHAR *pszFile, DWORD dwRqId);
-   DWORD WaitForFileTransfer(DWORD dwTimeout);
+   UINT32 PrepareFileTransfer(const TCHAR *pszFile, UINT32 dwRqId);
+   UINT32 WaitForFileTransfer(UINT32 dwTimeout);
    void AbortFileTransfer(void);
 
    void SetClientData(void *pData) { m_pClientData = pData; }
@@ -240,8 +240,8 @@ public:
 
    void OnNotify(CSCPMessage *pMsg);
    void ParseLoginMessage(CSCPMessage *pMsg);
-   DWORD GetCurrentUserId(void) { return m_dwUserId; }
-   DWORD GetCurrentSystemAccess(void) { return m_dwSystemAccess; }
+   UINT32 GetCurrentUserId(void) { return m_dwUserId; }
+   UINT32 GetCurrentSystemAccess(void) { return m_dwSystemAccess; }
    BOOL NeedPasswordChange(void) { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
    BOOL IsDBConnLost() { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
 
@@ -251,7 +251,7 @@ public:
 	TCHAR *getServerTimeZone() { return m_szServerTimeZone; }
 };
 
-inline void NXCL_Session::callEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+inline void NXCL_Session::callEventHandler(UINT32 dwEvent, UINT32 dwCode, void *pArg)
 {
    if (m_pEventHandler != NULL)
       m_pEventHandler(this, dwEvent, dwCode, pArg);

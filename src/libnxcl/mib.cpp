@@ -32,9 +32,9 @@
 // Download MIB file from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *pszName)
+UINT32 LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *pszName)
 {
-   DWORD dwRqId, dwRetCode;
+   UINT32 dwRqId, dwRetCode;
    CSCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -56,9 +56,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *p
 // Get timestamp of server's MIB file
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdwTimeStamp)
+UINT32 LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, UINT32 *pdwTimeStamp)
 {
-   DWORD dwRqId, dwRetCode;
+   UINT32 dwRqId, dwRetCode;
    CSCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();

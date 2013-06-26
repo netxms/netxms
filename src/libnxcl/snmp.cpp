@@ -28,12 +28,12 @@
 // Do SNMP walk
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, DWORD dwNode,
+UINT32 LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, UINT32 dwNode,
                                      TCHAR *pszRootOID, void *pUserData,
-                                     void (* pfCallback)(TCHAR *, DWORD, TCHAR *, void *))
+                                     void (* pfCallback)(TCHAR *, UINT32, TCHAR *, void *))
 {
    CSCPMessage msg, *pData;
-   DWORD i, dwNumVars, dwRetCode, dwRqId, dwId, dwType;
+   UINT32 i, dwNumVars, dwRetCode, dwRqId, dwId, dwType;
    TCHAR szVarName[4096], szValue[4096];
    BOOL bStop = FALSE;
 
@@ -79,8 +79,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, DWORD dwNode,
 // Set SNMP variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSnmpSet(NXC_SESSION hSession, DWORD dwNode,
-                                    TCHAR *pszVarName, DWORD dwType, void *pValue)
+UINT32 LIBNXCL_EXPORTABLE NXCSnmpSet(NXC_SESSION hSession, UINT32 dwNode,
+                                    TCHAR *pszVarName, UINT32 dwType, void *pValue)
 {
    return 0;
 }
@@ -90,11 +90,11 @@ DWORD LIBNXCL_EXPORTABLE NXCSnmpSet(NXC_SESSION hSession, DWORD dwNode,
 // Get list of community strings
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, DWORD *pdwNumStrings,
+UINT32 LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, UINT32 *pdwNumStrings,
 																 TCHAR ***pppszStringList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, count, dwRetCode, dwRqId, id;
+   UINT32 i, count, dwRetCode, dwRqId, id;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -137,11 +137,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, DWORD *pd
 // Update list of community strings
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, DWORD dwNumStrings,
+UINT32 LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, UINT32 dwNumStrings,
 											    					 TCHAR **ppszStringList)
 {
    CSCPMessage msg;
-   DWORD i, id, dwRqId;
+   UINT32 i, id, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -164,10 +164,10 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, DWORD 
 // Get list of USM credentials
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, DWORD *listSize, NXC_SNMP_USM_CRED **list)
+UINT32 LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, UINT32 *listSize, NXC_SNMP_USM_CRED **list)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, count, dwRetCode, dwRqId, id;
+   UINT32 i, count, dwRetCode, dwRqId, id;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -215,10 +215,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, DWORD *l
 // Update list of USM credentials
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpUsmCredentials(NXC_SESSION hSession, DWORD count, NXC_SNMP_USM_CRED *list)
+UINT32 LIBNXCL_EXPORTABLE NXCUpdateSnmpUsmCredentials(NXC_SESSION hSession, UINT32 count, NXC_SNMP_USM_CRED *list)
 {
    CSCPMessage msg;
-   DWORD i, id, dwRqId;
+   UINT32 i, id, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

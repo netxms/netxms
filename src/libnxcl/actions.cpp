@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -46,7 +46,7 @@ static void ActionFromMsg(CSCPMessage *pMsg, NXC_ACTION *pAction)
 void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_ACTION action;
-   DWORD dwCode;
+   UINT32 dwCode;
 
    dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
    action.dwId = pMsg->GetVariableLong(VID_ACTION_ID);
@@ -60,10 +60,10 @@ void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 // Load all actions from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActions, NXC_ACTION **ppActionList)
+UINT32 LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, UINT32 *pdwNumActions, NXC_ACTION **ppActionList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumActions = 0, dwActionId = 0;
+   UINT32 dwRqId, dwRetCode = RCC_SUCCESS, dwNumActions = 0, dwActionId = 0;
    NXC_ACTION *pList = NULL;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -120,10 +120,10 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActio
 // Create new action on server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, DWORD *pdwNewId)
+UINT32 LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, UINT32 *pdwNewId)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -152,10 +152,10 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, D
 // Delete action by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteAction(NXC_SESSION hSession, DWORD dwActionId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteAction(NXC_SESSION hSession, UINT32 dwActionId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -172,10 +172,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteAction(NXC_SESSION hSession, DWORD dwActionId)
 // Modify action record
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyAction(NXC_SESSION hSession, NXC_ACTION *pAction)
+UINT32 LIBNXCL_EXPORTABLE NXCModifyAction(NXC_SESSION hSession, NXC_ACTION *pAction)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

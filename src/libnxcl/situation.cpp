@@ -32,7 +32,7 @@ static void SituationFromMessage(CSCPMessage *msg, NXC_SITUATION *situation)
 {
 	int i, j, attrCount;
 	TCHAR *attr, *value;
-	DWORD id;
+	UINT32 id;
 
 	situation->m_id = msg->GetVariableLong(VID_SITUATION_ID);
 	situation->m_name = msg->GetVariableStr(VID_NAME);
@@ -61,7 +61,7 @@ static void SituationFromMessage(CSCPMessage *msg, NXC_SITUATION *situation)
 void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_SITUATION st;
-   DWORD dwCode;
+   UINT32 dwCode;
 
    dwCode = pMsg->GetVariableShort(VID_NOTIFICATION_CODE);
 	SituationFromMessage(pMsg, &st);
@@ -73,10 +73,10 @@ void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg)
 // Create situation
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *name, const TCHAR *comments, DWORD *pdwId)
+UINT32 LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *name, const TCHAR *comments, UINT32 *pdwId)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, rcc;
+   UINT32 dwRqId, rcc;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -108,11 +108,11 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *n
 // Modify situation
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifySituation(NXC_SESSION hSession, DWORD id,
+UINT32 LIBNXCL_EXPORTABLE NXCModifySituation(NXC_SESSION hSession, UINT32 id,
                                             const TCHAR *name, const TCHAR *comments)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -133,10 +133,10 @@ DWORD LIBNXCL_EXPORTABLE NXCModifySituation(NXC_SESSION hSession, DWORD id,
 // Delete situation
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteSituation(NXC_SESSION hSession, DWORD id)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteSituation(NXC_SESSION hSession, UINT32 id)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -153,10 +153,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteSituation(NXC_SESSION hSession, DWORD id)
 // Delete situation instance
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, DWORD id, const TCHAR *instance)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, UINT32 id, const TCHAR *instance)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -174,10 +174,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, DWORD 
 // Get situation list
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION_LIST **list)
+UINT32 LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION_LIST **list)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, rcc;
+   UINT32 dwRqId, rcc;
 	int i;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -252,7 +252,7 @@ static void CopySituation(NXC_SITUATION *dst, NXC_SITUATION *src)
 // Find situation in list
 //
 
-static int FindSituationInList(NXC_SITUATION_LIST *list, DWORD id)
+static int FindSituationInList(NXC_SITUATION_LIST *list, UINT32 id)
 {
 	int i;
 

@@ -28,11 +28,11 @@
 // Add trusted CA certificate
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCAddCACertificate(NXC_SESSION hSession, DWORD dwCertLen,
+UINT32 LIBNXCL_EXPORTABLE NXCAddCACertificate(NXC_SESSION hSession, UINT32 dwCertLen,
                                              BYTE *pCert, TCHAR *pszComments)
 {
 	CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -50,11 +50,11 @@ DWORD LIBNXCL_EXPORTABLE NXCAddCACertificate(NXC_SESSION hSession, DWORD dwCertL
 // Update certificate's comments
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUpdateCertificateComments(NXC_SESSION hSession, DWORD dwCertId,
+UINT32 LIBNXCL_EXPORTABLE NXCUpdateCertificateComments(NXC_SESSION hSession, UINT32 dwCertId,
                                                       TCHAR *pszComments)
 {
 	CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -72,10 +72,10 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateCertificateComments(NXC_SESSION hSession, DWOR
 // Delete certificate
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteCertificate(NXC_SESSION hSession, DWORD dwCertId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteCertificate(NXC_SESSION hSession, UINT32 dwCertId)
 {
 	CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -92,10 +92,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteCertificate(NXC_SESSION hSession, DWORD dwCert
 // Get list of installed certificates
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetCertificateList(NXC_SESSION hSession, NXC_CERT_LIST **ppList)
+UINT32 LIBNXCL_EXPORTABLE NXCGetCertificateList(NXC_SESSION hSession, NXC_CERT_LIST **ppList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwId, dwRetCode, dwRqId;
+   UINT32 i, dwId, dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 	*ppList = NULL;
@@ -144,7 +144,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetCertificateList(NXC_SESSION hSession, NXC_CERT_LI
 
 void LIBNXCL_EXPORTABLE NXCDestroyCertificateList(NXC_CERT_LIST *pList)
 {
-	DWORD i;
+	UINT32 i;
 
 	if (pList == NULL)
 		return;

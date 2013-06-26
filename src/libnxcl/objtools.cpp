@@ -28,11 +28,11 @@
 // Get list of object tools
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, DWORD *pdwNumTools,
+UINT32 LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, UINT32 *pdwNumTools,
                                            NXC_OBJECT_TOOL **ppToolList)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwResult, dwRqId, dwId;
+   UINT32 i, dwResult, dwRqId, dwId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -78,9 +78,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, DWORD *pdwNumTo
 // Destroy list of object tools previously created by NXCGetObjectTools
 //
 
-void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TOOL *pList)
+void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(UINT32 dwNumTools, NXC_OBJECT_TOOL *pList)
 {
-   DWORD i;
+   UINT32 i;
 
    if (pList != NULL)
    {
@@ -99,11 +99,11 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TO
 // Execute table tool
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeId,
-                                             DWORD dwToolId, Table **ppData)
+UINT32 LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, UINT32 dwNodeId,
+                                             UINT32 dwToolId, Table **ppData)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwResult, dwRqId;
+   UINT32 dwResult, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -142,10 +142,10 @@ DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeI
 // Delete object tool
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteObjectTool(NXC_SESSION hSession, DWORD dwToolId)
+UINT32 LIBNXCL_EXPORTABLE NXCDeleteObjectTool(NXC_SESSION hSession, UINT32 dwToolId)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -162,11 +162,11 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteObjectTool(NXC_SESSION hSession, DWORD dwToolI
 // Get object tool details
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, DWORD dwToolId,
+UINT32 LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, UINT32 dwToolId,
                                                  NXC_OBJECT_TOOL_DETAILS **ppData)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwResult;
+   UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -192,16 +192,16 @@ DWORD LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, DWORD dwT
          pResponse->GetVariableStr(VID_DESCRIPTION, (*ppData)->szDescription, MAX_DB_STRING);
          (*ppData)->pszMatchingOID = pResponse->GetVariableStr(VID_TOOL_OID);
          (*ppData)->dwACLSize = pResponse->GetVariableLong(VID_ACL_SIZE);
-         (*ppData)->pdwACL = (DWORD *)malloc(sizeof(DWORD) * (*ppData)->dwACLSize);
+         (*ppData)->pdwACL = (UINT32 *)malloc(sizeof(UINT32) * (*ppData)->dwACLSize);
          pResponse->GetVariableInt32Array(VID_ACL, (*ppData)->dwACLSize, (*ppData)->pdwACL);
          if (((*ppData)->wType == TOOL_TYPE_TABLE_SNMP) ||
              ((*ppData)->wType == TOOL_TYPE_TABLE_AGENT))
          {
-            DWORD i, dwId;
+            UINT32 i, dwId;
 
             (*ppData)->wNumColumns = pResponse->GetVariableShort(VID_NUM_COLUMNS);
             (*ppData)->pColList = (NXC_OBJECT_TOOL_COLUMN *)malloc(sizeof(NXC_OBJECT_TOOL_COLUMN) * (*ppData)->wNumColumns);
-            for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < (DWORD)(*ppData)->wNumColumns; i++)
+            for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < (UINT32)(*ppData)->wNumColumns; i++)
             {
                pResponse->GetVariableStr(dwId++, (*ppData)->pColList[i].szName, MAX_DB_STRING);
                pResponse->GetVariableStr(dwId++, (*ppData)->pColList[i].szOID, MAX_DB_STRING);
@@ -241,10 +241,10 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pDa
 // Generate ID for new object tool
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, DWORD *pdwToolId)
+UINT32 LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, UINT32 *pdwToolId)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, dwRetCode;
+   UINT32 dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -273,11 +273,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, DWORD *pd
 // Update object tool configuration
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
+UINT32 LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
                                              NXC_OBJECT_TOOL_DETAILS *pData)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -298,7 +298,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
        (pData->wType == TOOL_TYPE_TABLE_AGENT))
    {
       int i;
-      DWORD dwId;
+      UINT32 dwId;
 
       msg.SetVariable(VID_NUM_COLUMNS, pData->wNumColumns);
       for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < (int)pData->wNumColumns; i++)
@@ -359,10 +359,10 @@ BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT 
 // Run server script for object
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCExecuteServerCommand(NXC_SESSION hSession, DWORD nodeId, const TCHAR *command)
+UINT32 LIBNXCL_EXPORTABLE NXCExecuteServerCommand(NXC_SESSION hSession, UINT32 nodeId, const TCHAR *command)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

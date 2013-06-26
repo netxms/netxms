@@ -28,7 +28,7 @@
  */
 void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
-   DWORD i, dwNumRecords, dwId;
+   UINT32 i, dwNumRecords, dwId;
    NXC_EVENT event;
    int nOrder;
 
@@ -47,7 +47,7 @@ void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
       pMsg->GetVariableStr(dwId++, event.szUserTag, MAX_USERTAG_LENGTH);
 		
 		// Skip parameters
-		DWORD count = pMsg->GetVariableLong(dwId++);
+		UINT32 count = pMsg->GetVariableLong(dwId++);
 		dwId += count;
 
       // Call client's callback to handle new record
@@ -65,10 +65,10 @@ void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, DWORD dwMaxRecords)
+UINT32 LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, UINT32 dwMaxRecords)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
    ((NXCL_Session *)hSession)->PrepareForSync(SYNC_EVENTS);
@@ -92,12 +92,12 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, DWORD dwMaxRecords)
 // Send event to server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode, 
-                                      DWORD dwObjectId, int iNumArgs, TCHAR **pArgList,
+UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, 
+                                      UINT32 dwObjectId, int iNumArgs, TCHAR **pArgList,
 												  TCHAR *pszUserTag)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   UINT32 dwRqId;
    int i;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -122,7 +122,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode,
 
 void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
-   DWORD i, dwNumRecords, dwId;
+   UINT32 i, dwNumRecords, dwId;
    NXC_SYSLOG_RECORD rec;
    int nOrder;
 
@@ -157,10 +157,10 @@ void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, DWORD dwMaxRecords)
+UINT32 LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, UINT32 dwMaxRecords)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
    ((NXCL_Session *)hSession)->PrepareForSync(SYNC_SYSLOG);

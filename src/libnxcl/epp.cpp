@@ -34,9 +34,9 @@ NXC_EPP_RULE LIBNXCL_EXPORTABLE *NXCCopyEventPolicyRule(NXC_EPP_RULE *src)
 
 	dst = (NXC_EPP_RULE *)nx_memdup(src, sizeof(NXC_EPP_RULE));
 	dst->pszComment = (src->pszComment != NULL) ? _tcsdup(src->pszComment) : NULL;
-	dst->pdwActionList = (DWORD *)nx_memdup(src->pdwActionList, src->dwNumActions * sizeof(DWORD));
-	dst->pdwSourceList = (DWORD *)nx_memdup(src->pdwSourceList, src->dwNumSources * sizeof(DWORD));
-	dst->pdwEventList = (DWORD *)nx_memdup(src->pdwEventList, src->dwNumEvents * sizeof(DWORD));
+	dst->pdwActionList = (UINT32 *)nx_memdup(src->pdwActionList, src->dwNumActions * sizeof(UINT32));
+	dst->pdwSourceList = (UINT32 *)nx_memdup(src->pdwSourceList, src->dwNumSources * sizeof(UINT32));
+	dst->pdwEventList = (UINT32 *)nx_memdup(src->pdwEventList, src->dwNumEvents * sizeof(UINT32));
 	dst->pszScript = (src->pszScript != NULL) ? _tcsdup(src->pszScript) : NULL;
 	return dst;
 }
@@ -50,9 +50,9 @@ void LIBNXCL_EXPORTABLE NXCCopyEventPolicyRuleToBuffer(NXC_EPP_RULE *dst, NXC_EP
 {
 	memcpy(dst, src, sizeof(NXC_EPP_RULE));
 	dst->pszComment = (src->pszComment != NULL) ? _tcsdup(src->pszComment) : NULL;
-	dst->pdwActionList = (DWORD *)nx_memdup(src->pdwActionList, src->dwNumActions * sizeof(DWORD));
-	dst->pdwSourceList = (DWORD *)nx_memdup(src->pdwSourceList, src->dwNumSources * sizeof(DWORD));
-	dst->pdwEventList = (DWORD *)nx_memdup(src->pdwEventList, src->dwNumEvents * sizeof(DWORD));
+	dst->pdwActionList = (UINT32 *)nx_memdup(src->pdwActionList, src->dwNumActions * sizeof(UINT32));
+	dst->pdwSourceList = (UINT32 *)nx_memdup(src->pdwSourceList, src->dwNumSources * sizeof(UINT32));
+	dst->pdwEventList = (UINT32 *)nx_memdup(src->pdwEventList, src->dwNumEvents * sizeof(UINT32));
 	dst->pszScript = (src->pszScript != NULL) ? _tcsdup(src->pszScript) : NULL;
 }
 
@@ -77,7 +77,7 @@ NXC_EPP LIBNXCL_EXPORTABLE *NXCCreateEmptyEventPolicy()
 
 void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy)
 {
-   DWORD i;
+   UINT32 i;
 
 	if (pEventPolicy == NULL)
 		return;
@@ -99,10 +99,10 @@ void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy)
 // Open and load to client event processing policy
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy)
+UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, j, dwRqId, dwRetCode, count, id;
+   UINT32 i, j, dwRqId, dwRetCode, count, id;
 	TCHAR *attr, *value;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -141,7 +141,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
                (*ppEventPolicy)->pRuleList[i].dwNumActions = 
                   pResponse->GetVariableLong(VID_NUM_ACTIONS);
                (*ppEventPolicy)->pRuleList[i].pdwActionList = 
-                  (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumActions);
+                  (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumActions);
                pResponse->GetVariableInt32Array(VID_RULE_ACTIONS, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumActions,
                                                 (*ppEventPolicy)->pRuleList[i].pdwActionList);
@@ -149,7 +149,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
                (*ppEventPolicy)->pRuleList[i].dwNumEvents = 
                   pResponse->GetVariableLong(VID_NUM_EVENTS);
                (*ppEventPolicy)->pRuleList[i].pdwEventList = 
-                  (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumEvents);
+                  (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumEvents);
                pResponse->GetVariableInt32Array(VID_RULE_EVENTS, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumEvents,
                                                 (*ppEventPolicy)->pRuleList[i].pdwEventList);
@@ -157,7 +157,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
                (*ppEventPolicy)->pRuleList[i].dwNumSources = 
                   pResponse->GetVariableLong(VID_NUM_SOURCES);
                (*ppEventPolicy)->pRuleList[i].pdwSourceList = 
-                  (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumSources);
+                  (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumSources);
                pResponse->GetVariableInt32Array(VID_RULE_SOURCES, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumSources,
                                                 (*ppEventPolicy)->pRuleList[i].pdwSourceList);
@@ -228,7 +228,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
 // Close event policy (without saving)
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession)
+UINT32 LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->SimpleCommand(CMD_CLOSE_EPP);
 }
@@ -238,10 +238,10 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession)
 // Save (and install) new event policy
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEventPolicy)
+UINT32 LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEventPolicy)
 {
    CSCPMessage msg;
-   DWORD i, j, id, count, dwRqId, dwRetCode;
+   UINT32 i, j, id, count, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -321,7 +321,7 @@ void LIBNXCL_EXPORTABLE NXCAddPolicyRule(NXC_EPP *policy, NXC_EPP_RULE *rule, BO
 // Delete rule from policy
 //
 
-void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule)
+void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, UINT32 dwRule)
 {
    if (dwRule < pEventPolicy->dwNumRules)
    {

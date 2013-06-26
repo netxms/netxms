@@ -50,6 +50,7 @@ public class SharedColors
 	public static final String GEOMAP_TITLE = "GeoMap.Title";  //$NON-NLS-1$
 	public static final String MAP_GROUP_BOX_TITLE = "Map.GroupBox.Title";  //$NON-NLS-1$
 	public static final String MAP_LAST_VALUES_TEXT = "Map.LastValues.Text";  //$NON-NLS-1$
+	public static final String MAP_SMALL_LABEL_BACKGROUND = "Map.ObjectFigure.SmallLabel.Background";  //$NON-NLS-1$
 	public static final String MIB_EXPLORER_HEADER_BACKGROUND = "MibExplorer.Header.Background";  //$NON-NLS-1$
 	public static final String MIB_EXPLORER_HEADER_TEXT = "MibExplorer.Header.Text";  //$NON-NLS-1$
 	public static final String OBJECT_TAB_BACKGROUND = "ObjectTab.Background";  //$NON-NLS-1$
@@ -102,6 +103,7 @@ public class SharedColors
 		defaultColors.put(GEOMAP_TITLE, new RGB(0, 0, 0));
 		defaultColors.put(MAP_GROUP_BOX_TITLE, new RGB(255, 255, 255));
 		defaultColors.put(MAP_LAST_VALUES_TEXT, new RGB(0, 64, 0));
+		defaultColors.put(MAP_SMALL_LABEL_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(MIB_EXPLORER_HEADER_BACKGROUND, new RGB(153, 180, 209));
 		defaultColors.put(MIB_EXPLORER_HEADER_TEXT, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_BACKGROUND, new RGB(255, 255, 255));

@@ -193,7 +193,7 @@ int CUserEditor::AddListItem(NXC_USER *pUser)
 void CUserEditor::OnViewRefresh() 
 {
    NXC_USER *pUserList;
-   DWORD i, dwNumUsers;
+   UINT32 i, dwNumUsers;
 
    m_wndListCtrl.DeleteAllItems();
    
@@ -427,8 +427,8 @@ void CUserEditor::OnUserProperties()
                userInfo.dwNumMembers = dlg.m_dwNumMembers;
                if (userInfo.dwNumMembers > 0)
                {
-                  userInfo.pdwMemberList = (DWORD *)malloc(sizeof(DWORD) * userInfo.dwNumMembers);
-                  memcpy(userInfo.pdwMemberList, dlg.m_pdwMembers, sizeof(DWORD) * userInfo.dwNumMembers);
+                  userInfo.pdwMemberList = (UINT32 *)malloc(sizeof(UINT32) * userInfo.dwNumMembers);
+                  memcpy(userInfo.pdwMemberList, dlg.m_pdwMembers, sizeof(UINT32) * userInfo.dwNumMembers);
                }
                bModify = TRUE;
             }
