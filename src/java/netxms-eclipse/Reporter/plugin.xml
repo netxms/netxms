@@ -64,6 +64,14 @@
             name="Report"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.reporter.views.ReportNavigator"
+            icon="icons/report.png"
+            id="org.netxms.ui.eclipse.reporter.views.ReportNavigator"
+            name="Report Navigator"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.propertyPages">
@@ -77,6 +85,15 @@
             </instanceof>
          </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="org.netxms.ui.eclipse.reporter.perspectives.ReportPerspective"
+            icon="icons/report.png"
+            id="&quot;org.netxms.ui.eclipse.reporter.ReportPerspective&quot;"
+            name="Reports">
+      </perspective>
    </extension>
 
 </plugin>

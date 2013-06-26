@@ -27,7 +27,6 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
-
 /**
  * Abstract field editor for report
  */
@@ -37,7 +36,7 @@ public abstract class FieldEditor extends Composite
 	protected FormToolkit toolkit;
 
 	private Label label;
-	
+
 	/**
 	 * @param parameter
 	 * @param toolkit
@@ -47,6 +46,11 @@ public abstract class FieldEditor extends Composite
 	{
 		super(parent, SWT.NONE);
 		this.parameter = parameter;
+		createWidget(toolkit, parameter.getDisplayName());
+	}
+
+	private void createWidget(FormToolkit toolkit, final String displayName)
+	{
 		this.toolkit = toolkit;
 
 		GridLayout layout = new GridLayout();
@@ -56,22 +60,28 @@ public abstract class FieldEditor extends Composite
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		setLayout(layout);
-		
-		label = toolkit.createLabel(this, parameter.getDisplayName());
+
+		label = toolkit.createLabel(this, displayName);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
-		
+
 		createContent(this);
 	}
-	
+
+	public FieldEditor(org.netxms.api.client.reporting.ReportParameter parameter, FormToolkit toolkit, Composite parent)
+	{
+		super(parent, SWT.NONE);
+		createWidget(toolkit, parameter.getDescription());
+	}
+
 	/**
 	 * Create editor's content.
 	 * 
 	 * @param parent parent composite
 	 */
 	abstract protected void createContent(Composite parent);
-	
+
 	/**
 	 * Get current value for parameter being edited.
 	 * 
