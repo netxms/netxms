@@ -128,17 +128,21 @@ public:
 	int getMacCountOnPort(UINT32 ifIndex);
 };
 
+/**
+ * Link layer discovery protocols
+ */
+enum LinkLayerProtocol
+{
+   LL_PROTO_FDB  = 0,	/* obtained from switch forwarding database */
+   LL_PROTO_CDP  = 1,	/* Cisco Discovery Protocol */
+   LL_PROTO_LLDP = 2,	/* Link Layer Discovery Protocol */
+   LL_PROTO_NDP  = 3,	/* Nortel Discovery Protocol */
+   LL_PROTO_EDP  = 4		/* Extreme Discovery Protocol */
+};
 
-//
-// link layer neighbors
-//
-
-#define LL_PROTO_FDB    0		/* obtained from switch forwarding database */
-#define LL_PROTO_CDP    1		/* Cisco Discovery Protocol */
-#define LL_PROTO_LLDP   2		/* Link Layer Discovery Protocol */
-#define LL_PROTO_NDP    3		/* Nortel Discovery Protocol */
-#define LL_PROTO_EDP    4		/* Extreme Discovery Protocol */
-
+/**
+ * Link layer neighbor information
+ */
 struct LL_NEIGHBOR_INFO
 {
 	UINT32 ifLocal;			// Local interface index
@@ -148,6 +152,9 @@ struct LL_NEIGHBOR_INFO
 	int protocol;			// Protocol used to obtain information
 };
 
+/**
+ * link layer neighbors
+ */
 class LinkLayerNeighbors : public RefCountObject
 {
 private:

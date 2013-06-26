@@ -178,11 +178,9 @@ public:
    void setHoldTime(UINT32 dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
 };
 
-
-//
-// NXCP encryption context
-//
-
+/**
+ * NXCP encryption context
+ */
 class LIBNETXMS_EXPORTABLE NXCPEncryptionContext : public RefCountObject
 {
 private:

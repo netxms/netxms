@@ -2008,3 +2008,10 @@ int LIBNETXMS_EXPORTABLE wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src)
 }
 
 #endif
+
+/**
+ * Destructor for RefCountObject
+ */
+RefCountObject::~RefCountObject()
+{
+}

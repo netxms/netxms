@@ -445,6 +445,7 @@ public:
    {
       m_refCount = 1;
    }
+   virtual ~RefCountObject();
 
 	void incRefCount()
    {
@@ -509,7 +510,7 @@ public:
    Table();
    Table(Table *src);
    Table(CSCPMessage *msg);
-   ~Table();
+   virtual ~Table();
 
 	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
 	void updateFromMessage(CSCPMessage *msg);
