@@ -557,7 +557,7 @@ private:
 	WORD m_port;
    SOCKET m_socket;
    int m_protocolVersion;
-	UINT32 m_requestId;
+	VolatileCounter m_requestId;
 	UINT32 m_recvTimeout;
    MsgWaitQueue *m_msgWaitQueue;
    MUTEX m_mutexDataLock;
@@ -566,32 +566,33 @@ private:
    NXCPEncryptionContext *m_ctx;
 	UINT32 m_commandTimeout;
 
-   void ReceiverThread();
-   static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
+   void receiverThread();
+   static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
 
 protected:
-   void DestroyResultData(void);
-   UINT32 SetupEncryption(RSA *pServerKey);
-	UINT32 ConnectToService(UINT32 service);
+   UINT32 setupEncryption(RSA *pServerKey);
+	UINT32 connectToService(UINT32 service);
 
    void Lock() { MutexLock(m_mutexDataLock); }
    void Unlock() { MutexUnlock(m_mutexDataLock); }
 
    virtual void PrintMsg(const TCHAR *format, ...);
+   virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
 
 public:
    ISC();
    ISC(UINT32 addr, WORD port = NETXMS_ISC_PORT);
    virtual ~ISC();
 
-   UINT32 Connect(UINT32 service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);
-	void Disconnect();
+   UINT32 connect(UINT32 service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);
+	void disconnect();
 
-   BOOL SendMessage(CSCPMessage *msg);
-   CSCPMessage *WaitForMessage(WORD code, UINT32 id, UINT32 timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
-   UINT32 WaitForRCC(UINT32 rqId, UINT32 timeOut);
+   BOOL sendMessage(CSCPMessage *msg);
+   CSCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
+   UINT32 waitForRCC(UINT32 rqId, UINT32 timeOut);
+   UINT32 generateMessageId() { return (UINT32)InterlockedIncrement(&m_requestId); }
 
-   UINT32 Nop();
+   UINT32 nop();
 };
 
 

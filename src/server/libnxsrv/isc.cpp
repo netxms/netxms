@@ -22,18 +22,14 @@
 
 #include "libnxsrv.h"
 
-
-//
-// Constants
-//
-
+/**
+ * Default receiver buffer size
+ */
 #define RECEIVER_BUFFER_SIZE        262144
 
-
-//
-// Texts for ISC error codes
-//
-
+/**
+ * Texts for ISC error codes
+ */
 const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code)
 {
    static const TCHAR *errorText[] =
@@ -64,22 +60,18 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code)
    return _T("Unknown error code");
 }
 
-
-//
-// Receiver thread starter
-//
-
-THREAD_RESULT THREAD_CALL ISC::ReceiverThreadStarter(void *arg)
+/**
+ * Receiver thread starter
+ */
+THREAD_RESULT THREAD_CALL ISC::receiverThreadStarter(void *arg)
 {
-   ((ISC *)arg)->ReceiverThread();
+   ((ISC *)arg)->receiverThread();
    return THREAD_OK;
 }
 
-
-//
-// Default constructor for ISC - normally shouldn't be used
-//
-
+/**
+ * Default constructor for ISC - normally shouldn't be used
+ */
 ISC::ISC()
 {
 	m_flags = 0;
@@ -96,11 +88,9 @@ ISC::ISC()
 	m_socketLock = MutexCreate();
 }
 
-
-//
-// Normal constructor for ISC
-//
-
+/**
+ * Create ISC connector for give IP address and port
+ */
 ISC::ISC(UINT32 addr, WORD port)
 {
 	m_flags = 0;
@@ -117,15 +107,13 @@ ISC::ISC(UINT32 addr, WORD port)
 	m_socketLock = MutexCreate();
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 ISC::~ISC()
 {
    // Disconnect from peer
-   Disconnect();
+   disconnect();
 
    // Wait for receiver thread termination
    ThreadJoin(m_hReceiverThread);
@@ -163,12 +151,10 @@ void ISC::PrintMsg(const TCHAR *format, ...)
    _tprintf(_T("\n"));
 }
 
-
-//
-// Receiver thread
-//
-
-void ISC::ReceiverThread()
+/**
+ * Receiver thread
+ */
+void ISC::receiverThread()
 {
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
@@ -235,11 +221,9 @@ void ISC::ReceiverThread()
 		if (ntohs(pRawMsg->wFlags) & MF_BINARY)
 		{
          // Convert message header to host format
-         pRawMsg->dwId = ntohl(pRawMsg->dwId);
-         pRawMsg->wCode = ntohs(pRawMsg->wCode);
-         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
          DbgPrintf(6, _T("ISC: Received raw message %s from peer at %s"),
-			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(m_addr, szIpAddr));
+			          NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer), IpToStr(m_addr, szIpAddr));
+         onBinaryMessage(pRawMsg);
 		}
 		else
 		{
@@ -270,12 +254,10 @@ void ISC::ReceiverThread()
 #endif
 }
 
-
-//
-// Connect to ISC peer
-//
-
-UINT32 ISC::Connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
+/**
+ * Connect to ISC peer
+ */
+UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
@@ -315,7 +297,7 @@ UINT32 ISC::Connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    sa.sin_port = htons(m_port);
 
    // Connect to server
-   if (connect(m_socket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
+   if (::connect(m_socket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
 		rcc = ISC_ERR_CONNECT_FAILED;
       PrintMsg(_T("Cannot establish connection with ISC peer %s"),
@@ -343,13 +325,13 @@ UINT32 ISC::Connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    }
 
    // Start receiver thread
-   m_hReceiverThread = ThreadCreateEx(ReceiverThreadStarter, 0, this);
+   m_hReceiverThread = ThreadCreateEx(receiverThreadStarter, 0, this);
 
    // Setup encryption
 setup_encryption:
    if (pServerKey != NULL)
    {
-      rcc = SetupEncryption(pServerKey);
+      rcc = setupEncryption(pServerKey);
       if ((rcc != ERR_SUCCESS) &&
 			 (m_flags & ISCF_REQUIRE_ENCRYPTION))
 		{
@@ -371,7 +353,7 @@ setup_encryption:
 
    // Test connectivity
 	m_flags |= ISCF_IS_CONNECTED;
-   if ((rcc = Nop()) != ERR_SUCCESS)
+   if ((rcc = nop()) != ERR_SUCCESS)
    {
       if (rcc == ISC_ERR_ENCRYPTION_REQUIRED)
       {
@@ -383,7 +365,7 @@ setup_encryption:
       goto connect_cleanup;
    }
 
-   rcc = ConnectToService(service);
+   rcc = connectToService(service);
 
 connect_cleanup:
    if (rcc != ISC_ERR_SUCCESS)
@@ -415,12 +397,10 @@ connect_cleanup:
    return rcc;
 }
 
-
-//
-// Disconnect from ISC peer
-//
-
-void ISC::Disconnect()
+/**
+ * Disconnect from ISC peer
+ */
+void ISC::disconnect()
 {
    Lock();
    if (m_socket != -1)
@@ -431,12 +411,10 @@ void ISC::Disconnect()
    Unlock();
 }
 
-
-//
-// Send message to peer
-//
-
-BOOL ISC::SendMessage(CSCPMessage *pMsg)
+/**
+ * Send message to peer
+ */
+BOOL ISC::sendMessage(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
    CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -447,7 +425,7 @@ BOOL ISC::SendMessage(CSCPMessage *pMsg)
 
    if (pMsg->GetId() == 0)
    {
-      pMsg->SetId(m_requestId++);
+      pMsg->SetId((UINT32)InterlockedIncrement(&m_requestId));
    }
 
    pRawMsg = pMsg->CreateMessage();
@@ -472,12 +450,10 @@ BOOL ISC::SendMessage(CSCPMessage *pMsg)
    return bResult;
 }
 
-
-//
-// Wait for request completion code
-//
-
-UINT32 ISC::WaitForRCC(UINT32 rqId, UINT32 timeOut)
+/**
+ * Wait for request completion code
+ */
+UINT32 ISC::waitForRCC(UINT32 rqId, UINT32 timeOut)
 {
    CSCPMessage *pMsg;
    UINT32 dwRetCode;
@@ -495,24 +471,22 @@ UINT32 ISC::WaitForRCC(UINT32 rqId, UINT32 timeOut)
    return dwRetCode;
 }
 
-
-//
-// Setup encryption
-//
-
-UINT32 ISC::SetupEncryption(RSA *pServerKey)
+/**
+ * Setup encryption
+ */
+UINT32 ISC::setupEncryption(RSA *pServerKey)
 {
 #ifdef _WITH_ENCRYPTION
    CSCPMessage msg(m_protocolVersion), *pResp;
    UINT32 dwRqId, dwError, dwResult;
 
-   dwRqId = m_requestId++;
+   dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
 
    PrepareKeyRequestMsg(&msg, pServerKey, false);
    msg.SetId(dwRqId);
-   if (SendMessage(&msg))
+   if (sendMessage(&msg))
    {
-      pResp = WaitForMessage(CMD_SESSION_KEY, dwRqId, m_commandTimeout);
+      pResp = waitForMessage(CMD_SESSION_KEY, dwRqId, m_commandTimeout);
       if (pResp != NULL)
       {
          dwResult = SetupEncryptionContext(pResp, &m_ctx, NULL, pServerKey, m_protocolVersion);
@@ -552,41 +526,44 @@ UINT32 ISC::SetupEncryption(RSA *pServerKey)
 #endif
 }
 
-
-//
-// Send dummy command to peer (can be used for keepalive)
-//
-
-UINT32 ISC::Nop()
+/**
+ * Send dummy command to peer (can be used for keepalive)
+ */
+UINT32 ISC::nop()
 {
    CSCPMessage msg(m_protocolVersion);
    UINT32 dwRqId;
 
-   dwRqId = m_requestId++;
+   dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
    msg.SetCode(CMD_KEEPALIVE);
    msg.SetId(dwRqId);
-   if (SendMessage(&msg))
-      return WaitForRCC(dwRqId, m_commandTimeout);
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, m_commandTimeout);
    else
       return ISC_ERR_CONNECTION_BROKEN;
 }
 
-
-//
-// Connect to requested service
-//
-
-UINT32 ISC::ConnectToService(UINT32 service)
+/**
+ * Connect to requested service
+ */
+UINT32 ISC::connectToService(UINT32 service)
 {
    CSCPMessage msg(m_protocolVersion);
    UINT32 dwRqId;
 
-   dwRqId = m_requestId++;
+   dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
    msg.SetCode(CMD_ISC_CONNECT_TO_SERVICE);
    msg.SetId(dwRqId);
 	msg.SetVariable(VID_SERVICE_ID, service);
-   if (SendMessage(&msg))
-      return WaitForRCC(dwRqId, m_commandTimeout);
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, m_commandTimeout);
    else
       return ISC_ERR_CONNECTION_BROKEN;
+}
+
+/**
+ * Binary message handler. Default implementation do nothing.
+ */
+void ISC::onBinaryMessage(CSCP_MESSAGE *rawMsg)
+{
 }

@@ -470,6 +470,13 @@ typedef struct
 #define CMD_GET_SUMMARY_TABLE_DETAILS  0x0118
 #define CMD_QUERY_SUMMARY_TABLE        0x0119
 
+#define CMD_RS_LIST_REPORTS            0x1100
+#define CMD_RS_GET_REPORT              0x1101
+#define CMD_RS_SCHEDULE_EXECUTION      0x1102
+#define CMD_RS_LIST_RESULTS            0x1103
+#define CMD_RS_GET_RESULT              0x1104
+#define CMD_RS_DELETE_RESULT           0x1105
+
 /**
  * Variable identifiers
  */

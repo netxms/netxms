@@ -22,8 +22,55 @@
 
 #include "nxcore.h"
 
+/**
+ * File request information
+ */
+struct FileRequest
+{
+   UINT32 originalRequestId;
+   UINT32 serverRequestId;
+   ClientSession *session;
+
+   FileRequest(UINT32 originalRequestId, UINT32 serverRequestId, ClientSession *session)
+   {
+      this->originalRequestId = originalRequestId;
+      this->serverRequestId = serverRequestId;
+      this->session = session;
+   }
+};
+
+/**
+ * Outstanding file requests
+ */
+static ObjectArray<FileRequest> s_fileRequests(16, 16, true);
+static MUTEX s_fileRequestLock = MutexCreate();
+
+/**
+ * Remove all pending file transfer requests for session
+ */
+void RemovePendingFileTransferRequests(ClientSession *session)
+{
+   MutexLock(s_fileRequestLock);
+   for(int i = 0; i < s_fileRequests.size(); i++)
+   {
+      FileRequest *f = s_fileRequests.get(i);
+      if (f->session == session)
+      {
+         s_fileRequests.remove(i);
+         i--;
+      }
+   }
+   MutexUnlock(s_fileRequestLock);
+}
+
+/**
+ * Reporting server connector
+ */
 class RSConnector : public ISC
 {
+protected:
+   virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
+
 public:
    RSConnector(UINT32 addr, WORD port) : ISC(addr, port)
    {
@@ -38,8 +85,40 @@ public:
    }
 };
 
+/**
+ * Custom handler for binary messages
+ */
+void RSConnector::onBinaryMessage(CSCP_MESSAGE *rawMsg)
+{
+   if ((ntohs(rawMsg->wCode) != CMD_FILE_DATA) && (ntohs(rawMsg->wCode) != CMD_ABORT_FILE_TRANSFER))
+      return;
+
+   MutexLock(s_fileRequestLock);
+   for(int i = 0; i < s_fileRequests.size(); i++)
+   {
+      FileRequest *f = s_fileRequests.get(i);
+      if (f->serverRequestId == ntohl(rawMsg->dwId))
+      {
+         rawMsg->dwId = htonl(f->originalRequestId);
+         f->session->sendRawMessage(rawMsg);
+         if ((ntohs(rawMsg->wFlags) & MF_END_OF_FILE) || (ntohs(rawMsg->wCode) == CMD_ABORT_FILE_TRANSFER))
+         {
+            s_fileRequests.remove(i);
+         }
+         break;
+      }
+   }
+   MutexUnlock(s_fileRequestLock);
+}
+
+/**
+ * Reporting server connector instance
+ */
 static RSConnector *m_connector = NULL;
 
+/**
+ * Reporting server connection manager
+ */
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
 {
 	TCHAR hostname[256];
@@ -50,25 +129,17 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
 
    // Keep connection open
    m_connector = new RSConnector(ResolveHostName(hostname), port);
-   while(!IsShutdownInProgress())
+   while(!SleepAndCheckForShutdown(15))
    {
-      if (m_connector->Nop() == ISC_ERR_SUCCESS)
+      if (m_connector->nop() != ISC_ERR_SUCCESS)
       {
-         ThreadSleep(1);
-      }
-      else
-      {
-         if (m_connector->Connect(0) == ISC_ERR_SUCCESS)
+         if (m_connector->connect(0) == ISC_ERR_SUCCESS)
          {
             DbgPrintf(6, _T("Connection to Reporting Server restored"));
          }
-         else
-         {
-            ThreadSleep(1);
-         }
       }
 	}
-   m_connector->Disconnect();
+   m_connector->disconnect();
 	delete m_connector;
    m_connector = NULL;
 
@@ -76,19 +147,30 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
    return THREAD_OK;
 }
 
-CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request)
+/**
+ * Forward client message to reporting server
+ */
+CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession *session)
 {
-   CSCPMessage *reply = NULL;
+   if (m_connector == NULL)
+      return NULL;
 
    UINT32 originalId = request->GetId();
+   UINT32 rqId = m_connector->generateMessageId();
+   request->SetId(rqId);
 
-   if (m_connector != NULL)
+   // File transfer requests
+   if (request->GetCode() == CMD_RS_GET_RESULT)
    {
-      request->SetId(0); // force ISC to generate unique ID
-      if (m_connector->SendMessage(request))
-      {
-         reply = m_connector->WaitForMessage(CMD_REQUEST_COMPLETED, request->GetId(), 10000);
-      }
+      MutexLock(s_fileRequestLock);
+      s_fileRequests.add(new FileRequest(originalId, rqId, session));
+      MutexUnlock(s_fileRequestLock);
+   }
+
+   CSCPMessage *reply = NULL;
+   if (m_connector->sendMessage(request))
+   {
+      reply = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->GetId(), 10000);
    }
 
    if (reply != NULL)

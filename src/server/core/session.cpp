@@ -71,7 +71,8 @@ extern Queue *g_pItemQueue;
 
 void UnregisterClientSession(UINT32 dwIndex);
 void ResetDiscoveryPoller();
-CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request);
+CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession *session);
+void RemovePendingFileTransferRequests(ClientSession *session);
 
 /**
  * Node poller start data
@@ -533,6 +534,9 @@ void ClientSession::readThread()
       m_hCurrFile = -1;
       onFileUpload(FALSE);
    }
+
+   // remove all pending file transfers from reporting server
+   RemovePendingFileTransferRequests(this);
 
    // Remove all locks created by this session
    RemoveAllSessionLocks(m_dwIndex);
@@ -12485,7 +12489,7 @@ void ClientSession::forwardToReportingServer(CSCPMessage *request)
    TCHAR buffer[256];
    debugPrintf(7, _T("RS: Forwarding message %s"), NXCPMessageCodeName(request->GetCode(), buffer));
 
-   CSCPMessage *msg = ForwardMessageToReportingServer(request);
+   CSCPMessage *msg = ForwardMessageToReportingServer(request, this);
    if (msg == NULL)
    {
       msg = new CSCPMessage();

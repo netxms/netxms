@@ -293,7 +293,7 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 	}
 
 	isc = new ISC(addr);
-	rcc = isc->Connect(ISC_SERVICE_EVENT_FORWARDER);
+	rcc = isc->connect(ISC_SERVICE_EVENT_FORWARDER);
 	if (rcc == ISC_ERR_SUCCESS)
 	{
 		CSCPMessage msg;
@@ -313,9 +313,9 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 			for(i = 0; i < event->getParametersCount(); i++)
 				msg.SetVariable(VID_EVENT_ARG_BASE + i, event->getParameter(i));
 
-			if (isc->SendMessage(&msg))
+			if (isc->sendMessage(&msg))
 			{
-				rcc = isc->WaitForRCC(1, 10000);
+				rcc = isc->waitForRCC(1, 10000);
 			}
 			else
 			{
@@ -326,7 +326,7 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 		{
 			rcc = ISC_ERR_INTERNAL_ERROR;
 		}
-		isc->Disconnect();
+		isc->disconnect();
 	}
 	delete isc;
 	if (rcc != ISC_ERR_SUCCESS)
