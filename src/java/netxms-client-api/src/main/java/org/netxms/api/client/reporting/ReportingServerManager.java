@@ -1,5 +1,6 @@
 package org.netxms.api.client.reporting;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -17,4 +18,6 @@ public interface ReportingServerManager
 	List<ReportResult> listReportResults(UUID reportId) throws NetXMSClientException, IOException;
 
 	void deleteReportResult(UUID reportId, UUID jobId) throws NetXMSClientException, IOException;
+
+	File renderReport(UUID reportId, UUID jobId, ReportRenderFormat format) throws NetXMSClientException, IOException;
 }

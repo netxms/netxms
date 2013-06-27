@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */package org.netxms.client.reports;
+ */package org.netxms.api.client.reporting;
 
 /**
  * Formats for report rendering
@@ -23,7 +23,7 @@
 public enum ReportRenderFormat
 {
 	PDF(1, "pdf"),
-	HTML(2, "html");
+	XLS(2, "xls");
 	
 	private final int code;
 	private final String extension; 

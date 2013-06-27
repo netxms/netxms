@@ -59,6 +59,7 @@ import org.netxms.api.client.mt.MappingTable;
 import org.netxms.api.client.mt.MappingTableDescriptor;
 import org.netxms.api.client.reporting.ReportDefinition;
 import org.netxms.api.client.reporting.ReportParameter;
+import org.netxms.api.client.reporting.ReportRenderFormat;
 import org.netxms.api.client.reporting.ReportResult;
 import org.netxms.api.client.reporting.ReportingServerManager;
 import org.netxms.api.client.scripts.Script;
@@ -150,7 +151,6 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
-import org.netxms.client.reports.ReportRenderFormat;
 import org.netxms.client.situations.Situation;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
@@ -6138,31 +6138,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
-	 * Render report into desired format
-	 * 
-	 * @param jobId
-	 * @return report's File object
-	 * @throws IOException if socket or file I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public File renderReport(final long jobId, ReportRenderFormat format) throws IOException, NXCException
-	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENDER_REPORT);
-		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
-		msg.setVariableInt32(NXCPCodes.VID_RENDER_FORMAT, format.getCode());
-		sendMessage(msg);
-		waitForRCC(msg.getMessageId());
-
-		final File file = waitForFile(msg.getMessageId(), 600000);
-		if (file == null)
-		{
-			throw new NXCException(RCC.IO_ERROR);
-		}
-
-		return file;
-	}
-
-	/**
 	 * Get address list.
 	 * 
 	 * @param list list identifier (defined in NXCSession as ADDRESS_LIST_xxx)
@@ -6754,7 +6729,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	@Override
 	public ReportDefinition getReportDefinition(UUID reportId) throws NetXMSClientException, IOException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_GET_REPORT);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_GET_REPORT_DEFINITION);
 		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
 		msg.setVariable(NXCPCodes.VID_LOCALE, Locale.getDefault().getLanguage());
 		sendMessage(msg);
@@ -6825,4 +6800,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+
+	@Override
+	public File renderReport(UUID reportId, UUID jobId, ReportRenderFormat format) throws NetXMSClientException, IOException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_RENDER_RESULT);
+		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
+		msg.setVariable(NXCPCodes.VID_JOB_ID, jobId);
+		msg.setVariableInt32(NXCPCodes.VID_RENDER_FORMAT, format.getCode());
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		final File file = waitForFile(msg.getMessageId(), 600000);
+		if (file == null)
+		{
+			throw new NXCException(RCC.IO_ERROR);
+		}
+		return file;
+	}
+
 }

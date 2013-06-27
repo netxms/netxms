@@ -308,10 +308,10 @@ public class NXCPCodes
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
-	public static final int CMD_RS_GET_REPORT = 0x1101;
+	public static final int CMD_RS_GET_REPORT_DEFINITION = 0x1101;
 	public static final int CMD_RS_SCHEDULE_EXECUTION = 0x1102;
 	public static final int CMD_RS_LIST_RESULTS = 0x1103;
-	public static final int CMD_RS_GET_RESULT = 0x1104;
+	public static final int CMD_RS_RENDER_RESULT = 0x1104;
 	public static final int CMD_RS_DELETE_RESULT = 0x1105;
 
 	// Variable codes

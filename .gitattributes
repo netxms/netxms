@@ -829,6 +829,7 @@ src/java/netxms-client-api/src/main/java/org/netxms/api/client/SessionNotificati
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/constants/UserAccessRights.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/images/ImageLibraryManager.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/images/LibraryImage.java -text
+src/java/netxms-client-api/src/main/java/org/netxms/api/client/reporting/ReportRenderFormat.java -text svneol=native#unset
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/scripts/Script.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/scripts/ScriptLibraryManager.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/servermanager/ServerManager.java -text
@@ -957,7 +958,6 @@ src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolDet
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolTableColumn.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/packages/PackageDeploymentListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/packages/PackageInfo.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/reports/ReportRenderFormat.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/situations/Situation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/situations/SituationInstance.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/MibObject.java -text
