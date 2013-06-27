@@ -947,7 +947,16 @@ typedef volatile INT64 VolatileCounter64;
  */
 inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 {
+#if (defined(__IBMC__) || defined(__IBMCPP__)) && !HAVE_DECL___SYNC_ADD_AND_FETCH
+   VolatileCounter oldval;
+   do
+   {
+      oldval = __lwarx(v);
+   } while(__stwcx(v, oldval + 1) == 0);
+   return oldval + 1;
+#else
    return __sync_add_and_fetch(v, 1);
+#endif
 }
 
 /**
@@ -955,7 +964,16 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
  */
 inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 {
+#if (defined(__IBMC__) || defined(__IBMCPP__)) && !HAVE_DECL___SYNC_SUB_AND_FETCH
+   VolatileCounter oldval;
+   do
+   {
+      oldval = __lwarx(v);
+   } while(__stwcx(v, oldval - 1) == 0);
+   return oldval - 1;
+#else
    return __sync_sub_and_fetch(v, 1);
+#endif
 }
 
 #if (defined(__IBMC__) || defined(__IBMCPP__)) && !defined(__LP64__)
@@ -969,7 +987,16 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
  */
 inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
 {
+#if (defined(__IBMC__) || defined(__IBMCPP__)) && !HAVE_DECL___SYNC_ADD_AND_FETCH
+   VolatileCounter64 oldval;
+   do
+   {
+      oldval = __ldarx(v);
+   } while(__stdcx(v, oldval + 1) == 0);
+   return oldval + 1;
+#else
    return __sync_add_and_fetch(v, 1);
+#endif
 }
 
 /**
@@ -977,7 +1004,16 @@ inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
  */
 inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
 {
+#if (defined(__IBMC__) || defined(__IBMCPP__)) && !HAVE_DECL___SYNC_ADD_AND_FETCH
+   VolatileCounter64 oldval;
+   do
+   {
+      oldval = __ldarx(v);
+   } while(__stdcx(v, oldval - 1) == 0);
+   return oldval - 1;
+#else
    return __sync_sub_and_fetch(v, 1);
+#endif
 }
 
 #endif   /* __IBMC__ */

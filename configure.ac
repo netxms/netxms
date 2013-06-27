@@ -1455,7 +1455,7 @@ fi
 
 if test "x$PLATFORM" = "xAIX"; then
 	AC_CHECK_HEADERS([procinfo.h],,,[[ ]])
-	AC_CHECK_DECLS([getkerninfo, getprocs, getprocs64],,,[
+	AC_CHECK_DECLS([getkerninfo, getprocs, getprocs64, __sync_add_and_fetch, __sync_sub_and_fetch],,,[
 #if HAVE_PROCINFO_H
 #include <procinfo.h>
 #endif

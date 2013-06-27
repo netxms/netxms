@@ -487,10 +487,19 @@ typedef int SOCKET;
 #include <sys/atomic.h>
 #endif
 
+#ifdef __IBMCPP__
+#include <builtins.h>
+#endif
+
 typedef int BOOL;
 #if (SIZEOF_LONG == 4)
+#if (SIZEOF_INT == 4)
+typedef int INT32;
+typedef unsigned int UINT32;
+#else
 typedef long INT32;
 typedef unsigned long UINT32;
+#endif
 #undef __64BIT__
 #else
 typedef int INT32;
