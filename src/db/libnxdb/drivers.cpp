@@ -22,29 +22,27 @@
 
 #include "libnxdb.h"
 
-
-//
-// Global data
-//
-
+/**
+ * Log message codes
+ */
 DWORD g_logMsgCode = 0;
 DWORD g_sqlErrorMsgCode = 0;
 
-
-//
-// Static data
-//
-
+/**
+ * Loaded drivers
+ */
 static DB_DRIVER s_drivers[MAX_DB_DRIVERS];
 static MUTEX s_driverListLock;
+
+/**
+ * Options
+ */
 static bool s_writeLog = false;
 static bool s_logSqlErrors = false;
 
-
-//
-// Get symbol address and log errors
-//
-
+/**
+ * Get symbol address and log errors
+ */
 static void *DLGetSymbolAddrEx(HMODULE hModule, const char *pszSymbol)
 {
    void *pFunc;
@@ -56,11 +54,9 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, const char *pszSymbol)
    return pFunc;
 }
 
-
-//
-// Init library
-//
-
+/**
+ * Init DB library
+ */
 bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode)
 {
 	memset(s_drivers, 0, sizeof(s_drivers));
@@ -74,14 +70,13 @@ bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode)
 	return true;
 }
 
-
-//
-// Load and initialize database driver
-// If logMsgCode == 0, logging will be disabled
-// If sqlErrorMsgCode == 0, failed SQL queries will not be logged
-// Returns driver handle on success, NULL on failure
-//
-
+/**
+ * Load and initialize database driver
+ * If logMsgCode == 0, logging will be disabled
+ * If sqlErrorMsgCode == 0, failed SQL queries will not be logged
+ *
+ * @return driver handle on success, NULL on failure
+ */
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
 														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, void *),
 														void *userArg)
@@ -94,6 +89,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	DB_DRIVER driver;
 	bool alreadyLoaded = false;
 	int position = -1;
+   int i; // have to define it here because otherwise HP aCC complains at goto statements
 
 	MutexLock(s_driverListLock);
 
@@ -148,7 +144,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 		goto failure;
 	}
 
-	for(int i = 0; i < MAX_DB_DRIVERS; i++)
+	for(i = 0; i < MAX_DB_DRIVERS; i++)
 	{
 		if ((s_drivers[i] != NULL) && (!stricmp(s_drivers[i]->m_name, driverName)))
 		{
@@ -262,11 +258,9 @@ reuse_driver:
 	return s_drivers[position];
 }
 
-
-//
-// Unload driver
-//
-
+/**
+ * Unload driver
+ */
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 {
 	MutexLock(s_driverListLock);
@@ -291,11 +285,9 @@ void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 	MutexUnlock(s_driverListLock);
 }
 
-
-//
-// Get name of loaded driver
-//
-
+/**
+ * Get name of loaded driver
+ */
 const char LIBNXDB_EXPORTABLE *DBGetDriverName(DB_DRIVER driver)
 {
 	return driver->m_name;
