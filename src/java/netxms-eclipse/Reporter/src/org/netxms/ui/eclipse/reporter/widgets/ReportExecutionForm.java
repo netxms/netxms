@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2013 Alex Kirhenshtein
+ * Copyright (C) 2013 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -53,9 +55,9 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.netxms.api.client.reporting.ReportDefinition;
 import org.netxms.api.client.reporting.ReportParameter;
+import org.netxms.api.client.reporting.ReportRenderFormat;
 import org.netxms.api.client.reporting.ReportResult;
 import org.netxms.client.NXCSession;
-import org.netxms.client.reports.ReportRenderFormat;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
@@ -181,6 +183,7 @@ public class ReportExecutionForm extends Composite
 	{
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.reporter.customfields"); //$NON-NLS-1$
+		sortFieldProviders(elements);
 
 		parameters = report.getParameters();
 
@@ -232,11 +235,50 @@ public class ReportExecutionForm extends Composite
 		}
 	}
 
+	private void sortFieldProviders(IConfigurationElement[] elements)
+	{
+		Arrays.sort(elements, new Comparator<IConfigurationElement>() {
+
+			@Override
+			public int compare(IConfigurationElement o1, IConfigurationElement o2)
+			{
+				String attribute1 = o1.getAttribute("priority");
+				String attribute2 = o2.getAttribute("priority");
+				int priority1 = 0;
+				int priority2 = 0;
+				if (attribute1 != null)
+				{
+					try
+					{
+						priority1 = Integer.parseInt(attribute1);
+					}
+					catch(Exception e)
+					{
+						// ignore
+					}
+				}
+				if (attribute2 != null)
+				{
+					try
+					{
+						priority2 = Integer.parseInt(attribute2);
+					}
+					catch(Exception e)
+					{
+						// ignore
+					}
+				}
+
+				return priority2 - priority1;
+			}
+		});
+	}
+
 	/**
 	 * Create "Results" section's content
 	 * 
 	 * @param parent
-	 *           parent composite
+	 *            parent composite
 	 */
 	private void createResultsSection(Composite parent)
 	{
@@ -279,7 +321,7 @@ public class ReportExecutionForm extends Composite
 				final ReportResult firstElement = (ReportResult)((IStructuredSelection)resultList.getSelection()).getFirstElement();
 				if (firstElement != null)
 				{
-					// renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.PDF);
+					renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.PDF);
 				}
 			}
 		});
@@ -296,18 +338,12 @@ public class ReportExecutionForm extends Composite
 		});
 	}
 
-	/**
-	 * Render report
-	 * 
-	 * @param jobId
-	 * @param executeTime
-	 */
-	private void renderReport(final long jobId, Date executeTime, final ReportRenderFormat format)
+	protected void renderReport(final UUID jobId, Date executionTime, final ReportRenderFormat format)
 	{
 		StringBuilder nameTemplate = new StringBuilder();
 		nameTemplate.append(report.getName());
 		nameTemplate.append(" ");
-		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executeTime));
+		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime));
 		nameTemplate.append(".");
 		nameTemplate.append(format.getExtension());
 
@@ -324,7 +360,7 @@ public class ReportExecutionForm extends Composite
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					final File reportFile = session.renderReport(jobId, format);
+					final File reportFile = session.renderReport(report.getId(), jobId, format);
 
 					// save
 					FileInputStream inputStream = null;
@@ -397,7 +433,7 @@ public class ReportExecutionForm extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				final UUID jobId = session.executeReport(report.getId(), execParameters);
 				getDisplay().asyncExec(new Runnable() {
 
@@ -420,7 +456,7 @@ public class ReportExecutionForm extends Composite
 
 	/**
 	 * @param workbenchPart
-	 *           the workbenchPart to set
+	 *            the workbenchPart to set
 	 */
 	public void setWorkbenchPart(IWorkbenchPart workbenchPart)
 	{
@@ -432,7 +468,6 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void refreshResultList()
 	{
-
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Refresh result list for report " + report.getName(), workbenchPart, Activator.PLUGIN_ID, null) {
 			@Override
@@ -463,26 +498,6 @@ public class ReportExecutionForm extends Composite
 			}
 		}.start();
 
-	}
-
-	/**
-	 * Open rendered report in appropriate external program (like PDF viewer)
-	 * 
-	 * @param fileName
-	 *           rendered report file
-	 */
-	private void openReport(String fileName, ReportRenderFormat format)
-	{
-		final Program p = Program.findProgram(format.getExtension());
-		if (p != null)
-		{
-			p.execute(fileName);
-		}
-		else
-		{
-			MessageDialogHelper.openError(getShell(), "Error",
-					"Report was rendered successfully, but external viewer cannot be opened");
-		}
 	}
 
 	/**
@@ -535,5 +550,25 @@ public class ReportExecutionForm extends Composite
 			}
 		}.start();
 
+	}
+
+	/**
+	 * Open rendered report in appropriate external program (like PDF viewer)
+	 * 
+	 * @param fileName
+	 *            rendered report file
+	 */
+	private void openReport(String fileName, ReportRenderFormat format)
+	{
+		final Program program = Program.findProgram(format.getExtension());
+		if (program != null)
+		{
+			program.execute(fileName);
+		}
+		else
+		{
+			MessageDialogHelper.openError(getShell(), "Error",
+					"Report was rendered successfully, but external viewer cannot be opened");
+		}
 	}
 }

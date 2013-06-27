@@ -7,7 +7,7 @@ Bundle-Activator: org.netxms.ui.eclipse.reporter.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.netxms.ui.eclipse.console;bundle-version="1.2.7",
+ org.netxms.ui.eclipse.console,
  org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.7",
  org.netxms.ui.eclipse.filemanager;bundle-version="1.2.7",
  org.eclipse.ui.forms;bundle-version="3.5.100",
