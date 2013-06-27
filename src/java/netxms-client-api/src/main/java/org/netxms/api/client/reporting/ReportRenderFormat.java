@@ -15,19 +15,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */package org.netxms.api.client.reporting;
+ */
+package org.netxms.api.client.reporting;
+
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Formats for report rendering
  */
 public enum ReportRenderFormat
 {
-	PDF(1, "pdf"),
-	XLS(2, "xls");
-	
+	PDF(1, "pdf"), XLS(2, "xls");
+
 	private final int code;
-	private final String extension; 
-	
+	private final String extension;
+
+	private static final Map<Integer, ReportRenderFormat> lookupTable = new HashMap<Integer, ReportRenderFormat>(2);
+
+	static
+	{
+		for(ReportRenderFormat element : EnumSet.allOf(ReportRenderFormat.class))
+		{
+			lookupTable.put(element.getCode(), element);
+		}
+	}
+
 	/**
 	 * @param code
 	 * @param extenstion
@@ -44,6 +58,14 @@ public enum ReportRenderFormat
 	public int getCode()
 	{
 		return code;
+	}
+
+	/**
+	 * Get by code
+	 */
+	public static final ReportRenderFormat valueOf(Integer code)
+	{
+		return lookupTable.containsKey(code) ? lookupTable.get(code) : PDF;
 	}
 
 	/**
