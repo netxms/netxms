@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -6707,8 +6707,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return new Table(response);
 	}
 
-	/**
-	 * 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.reporting.ReportingServerManager#listReports()
 	 */
 	@Override
 	public List<UUID> listReports() throws NXCException, IOException
@@ -6726,6 +6726,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return ret;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.reporting.ReportingServerManager#getReportDefinition(java.util.UUID)
+	 */
 	@Override
 	public ReportDefinition getReportDefinition(UUID reportId) throws NetXMSClientException, IOException
 	{
@@ -6754,6 +6757,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return definition;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.reporting.ReportingServerManager#executeReport(java.util.UUID, java.util.Map)
+	 */
 	@Override
 	public UUID executeReport(UUID reportId, Map<String, String> parameters) throws NetXMSClientException, IOException
 	{
@@ -6771,6 +6777,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return response.getVariableAsUUID(NXCPCodes.VID_JOB_ID);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.reporting.ReportingServerManager#listReportResults(java.util.UUID)
+	 */
 	@Override
 	public List<ReportResult> listReportResults(UUID reportId) throws NetXMSClientException, IOException
 	{
@@ -6791,6 +6800,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return results;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.reporting.ReportingServerManager#deleteReportResult(java.util.UUID, java.util.UUID)
+	 */
 	@Override
 	public void deleteReportResult(UUID reportId, UUID jobId) throws NetXMSClientException, IOException
 	{
@@ -6801,6 +6813,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		waitForRCC(msg.getMessageId());
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.reporting.ReportingServerManager#renderReport(java.util.UUID, java.util.UUID, org.netxms.api.client.reporting.ReportRenderFormat)
+	 */
 	@Override
 	public File renderReport(UUID reportId, UUID jobId, ReportRenderFormat format) throws NetXMSClientException, IOException
 	{
@@ -6809,7 +6824,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariable(NXCPCodes.VID_JOB_ID, jobId);
 		msg.setVariableInt32(NXCPCodes.VID_RENDER_FORMAT, format.getCode());
 		sendMessage(msg);
-		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		waitForRCC(msg.getMessageId());
 		final File file = waitForFile(msg.getMessageId(), 600000);
 		if (file == null)
 		{
