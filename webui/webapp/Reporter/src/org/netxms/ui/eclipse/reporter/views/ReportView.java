@@ -18,16 +18,17 @@
  */
 package org.netxms.ui.eclipse.reporter.views;
 
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.api.client.reporting.ReportDefinition;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Report;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Report view
@@ -35,41 +36,66 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ReportView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.reporter.views.ReportView";
-	
+
 	private NXCSession session;
-	private Report report;
 	private ReportExecutionForm executionForm;
+	private ISelectionListener selectionListener;
+	private ISelectionService selectionService;
+	private ReportDefinition definition;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
-	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
+	private Composite parentComposite;
 
-		session = (NXCSession)ConsoleSharedData.getSession();
-		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		report = ((obj != null) && (obj instanceof Report)) ? (Report)obj : null;
-		setPartName("Report - " + ((report != null) ? report.getObjectName() : "<error>"));
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		executionForm = new ReportExecutionForm(parent, SWT.NONE, report);
-		executionForm.setWorkbenchPart(this);
+		this.parentComposite = parent;
+
+		selectionService = getSite().getWorkbenchWindow().getSelectionService();
+		selectionListener = new ISelectionListener() {
+			@Override
+			public void selectionChanged(IWorkbenchPart part, ISelection selection)
+			{
+				if ((part instanceof ReportNavigator) && (selection instanceof IStructuredSelection) && !selection.isEmpty())
+				{
+					ReportDefinition object = (ReportDefinition)((IStructuredSelection)selection).getFirstElement();
+					setObject(object);
+				}
+			}
+		};
+		selectionService.addSelectionListener(selectionListener);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+	@Override
+	public void dispose()
+	{
+		if ((selectionService != null) && (selectionListener != null))
+		{
+			selectionService.removeSelectionListener(selectionListener);
+		}
+		super.dispose();
+	}
+
 	@Override
 	public void setFocus()
 	{
-		executionForm.setFocus();
+		if (executionForm != null)
+		{
+			executionForm.setFocus();
+		}
+	}
+
+	protected void setObject(ReportDefinition definition)
+	{
+		this.definition = definition;
+		if (executionForm != null)
+		{
+			executionForm.dispose();
+		}
+
+		executionForm = new ReportExecutionForm(parentComposite, SWT.NONE, definition);
+		executionForm.setWorkbenchPart(this);
+
+		parentComposite.layout();
+		setPartName(definition.getName());
 	}
 }

@@ -33,11 +33,19 @@ public class StringFieldEditor extends FieldEditor
 {
 	private Text text;
 
+	/**
+	 * @param parameter
+	 * @param toolkit
+	 * @param parent
+	 */
 	public StringFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
 	{
 		super(parameter, toolkit, parent);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected void createContent(Composite parent)
 	{
@@ -49,6 +57,9 @@ public class StringFieldEditor extends FieldEditor
 		text.setLayoutData(gd);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+	 */
 	@Override
 	public String getValue()
 	{

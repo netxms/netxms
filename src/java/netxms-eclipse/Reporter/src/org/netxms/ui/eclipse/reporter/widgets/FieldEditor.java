@@ -37,7 +37,12 @@ public abstract class FieldEditor extends Composite
 	protected FieldEditor dependantEditor;
 
 	private Label label;
-
+	
+	/**
+	 * @param parameter
+	 * @param toolkit
+	 * @param parent
+	 */
 	public FieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
 	{
 		super(parent, SWT.NONE);

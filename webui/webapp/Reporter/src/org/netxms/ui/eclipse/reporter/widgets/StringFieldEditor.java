@@ -23,7 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
+import org.netxms.api.client.reporting.ReportParameter;
 
 /**
  * Editor for string fields
@@ -31,10 +31,8 @@ import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
  */
 public class StringFieldEditor extends FieldEditor
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text text;
-	
+
 	/**
 	 * @param parameter
 	 * @param toolkit

@@ -52,6 +52,9 @@ public class TimestampFieldEditor extends FieldEditor
 		super(parameter, toolkit, parent);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected void createContent(Composite parent)
 	{

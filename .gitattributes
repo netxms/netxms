@@ -3575,6 +3575,14 @@ webui/webapp/Reporter/icons/pdf.png -text
 webui/webapp/Reporter/icons/report.png -text
 webui/webapp/Reporter/icons/schedule.png -text
 webui/webapp/Reporter/plugin.xml -text
+webui/webapp/Reporter/schema/org.netxms.ui.eclipse.reporter.customfields.exsd -text
+webui/webapp/Reporter/src/org/netxms/ui/eclipse/reporter/StandardTypesControlFactory.java -text
+webui/webapp/Reporter/src/org/netxms/ui/eclipse/reporter/api/CustomControlFactory.java -text
+webui/webapp/Reporter/src/org/netxms/ui/eclipse/reporter/perspectives/ReportPerspective.java -text
+webui/webapp/Reporter/src/org/netxms/ui/eclipse/reporter/views/ReportNavigator.java -text
+webui/webapp/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/UserFieldEditor.java -text
+webui/webapp/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/internal/ReportTreeContentProvider.java -text
+webui/webapp/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/internal/ReportTreeLabelProvider.java -text
 webui/webapp/SLM/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/SLM/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/SLM/META-INF/MANIFEST.MF -text

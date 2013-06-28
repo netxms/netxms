@@ -25,7 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
+import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -33,11 +33,15 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class TimestampFieldEditor extends FieldEditor
 {
-	private static final long serialVersionUID = 1L;
+	public enum Type
+	{
+		START_DATE, END_DATE, TIMESTAMP;
+	};
 
 	private DateTime datePicker;
 	private DateTime timePicker;
-	
+	private Type type;
+
 	/**
 	 * @param parameter
 	 * @param toolkit
@@ -54,6 +58,8 @@ public class TimestampFieldEditor extends FieldEditor
 	@Override
 	protected void createContent(Composite parent)
 	{
+		parseType();
+
 		final Composite area = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -61,7 +67,7 @@ public class TimestampFieldEditor extends FieldEditor
 		layout.marginWidth = 0;
 		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
 		area.setLayout(layout);
-		
+
 		Date date;
 		try
 		{
@@ -71,41 +77,56 @@ public class TimestampFieldEditor extends FieldEditor
 		{
 			date = new Date();
 		}
-		
+
 		final Calendar c = Calendar.getInstance();
 		c.setTime(date);
-		
+
 		datePicker = new DateTime(area, SWT.DATE | SWT.DROP_DOWN);
 		datePicker.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
 
-		if (parameter.getDataType() == ReportParameter.TIMESTAMP)
+		if (type == Type.TIMESTAMP)
 		{
 			timePicker = new DateTime(area, SWT.TIME);
 			timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
-	 */
+	private void parseType()
+	{
+		final String parameterType = parameter.getType();
+		if (parameterType.equals("START_DATE"))
+		{
+			type = Type.START_DATE;
+		}
+		else if (parameterType.equals("END_DATE"))
+		{
+			type = Type.END_DATE;
+		}
+		else
+		{
+			type = Type.TIMESTAMP;
+		}
+	}
+
 	@Override
 	public String getValue()
 	{
-		final Calendar c = Calendar.getInstance();
-		c.clear();
-		switch(parameter.getDataType())
+		final Calendar calendar = Calendar.getInstance();
+		calendar.clear();
+		switch(type)
 		{
-			case ReportParameter.TIMESTAMP:
-				c.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(),
-						timePicker.getHours(), timePicker.getMinutes(), timePicker.getSeconds());
+			case START_DATE:
+				calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), 0, 0, 0);
 				break;
-			case ReportParameter.START_DATE:
-				c.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), 0, 0, 0);
+			case END_DATE:
+				calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), 23, 59, 59);
 				break;
-			case ReportParameter.END_DATE:
-				c.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), 23, 59, 59);
+			case TIMESTAMP:
+				calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), timePicker.getHours(),
+						timePicker.getMinutes(), timePicker.getSeconds());
 				break;
 		}
-		return Long.toString(c.getTimeInMillis() / 1000);
+
+		return Long.toString(calendar.getTimeInMillis() / 1000);
 	}
 }

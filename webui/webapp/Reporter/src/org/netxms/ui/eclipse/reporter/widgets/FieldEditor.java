@@ -24,19 +24,17 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
+import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-
 
 /**
  * Abstract field editor for report
  */
 public abstract class FieldEditor extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	protected ReportParameter parameter;
 	protected FormToolkit toolkit;
+	protected FieldEditor dependantEditor;
 
 	private Label label;
 	
@@ -58,26 +56,35 @@ public abstract class FieldEditor extends Composite
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		setLayout(layout);
-		
-		label = toolkit.createLabel(this, parameter.getDisplayName());
+
+		label = toolkit.createLabel(this, parameter.getDescription());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
-		
+
 		createContent(this);
 	}
-	
+
 	/**
 	 * Create editor's content.
 	 * 
 	 * @param parent parent composite
 	 */
 	abstract protected void createContent(Composite parent);
-	
+
 	/**
 	 * Get current value for parameter being edited.
 	 * 
 	 * @return current value for parameter
 	 */
 	abstract public String getValue();
+
+	public void setDependantEditor(FieldEditor editor)
+	{
+		this.dependantEditor = editor;
+	}
+
+	public void parentEditorChanged(FieldEditor parentEditor)
+	{
+	}
 }

@@ -31,9 +31,9 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -42,7 +42,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectFieldEditor extends FieldEditor
 {
-	private static final long serialVersionUID = 1L;
 	private static final String EMPTY_SELECTION_TEXT = "<none>";
 	
 	private CLabel text;
@@ -59,8 +58,6 @@ public class ObjectFieldEditor extends FieldEditor
 		super(parameter, toolkit, parent);
 		labelProvider = new WorkbenchLabelProvider();
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
