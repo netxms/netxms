@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -171,8 +171,8 @@ public class SelectDciDialog extends Dialog
 				{
 					AbstractObject object = objectTree.getFirstSelectedObject2();
 					if ((object != null) && 
-					    ((object instanceof AbstractNode) || (object instanceof MobileDevice) ||
-					     (allowTemplateItems && ((object instanceof Template) || (object instanceof Cluster)))))
+					    ((object instanceof AbstractNode) || (object instanceof MobileDevice) || (object instanceof Cluster) ||
+					     (allowTemplateItems && (object instanceof Template))))
 					{
 						dciList.setNode(object);
 					}

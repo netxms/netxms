@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
@@ -101,14 +101,14 @@ public class DciSelector extends AbstractSelector
 					@Override
 					public void run()
 					{
-						AbstractNode node = (AbstractNode)session.findObjectById(nodeId, AbstractNode.class);
+						AbstractObject object = session.findObjectById(nodeId);
 						
 						StringBuilder sb = new StringBuilder();
 						if (!fixedNode)
 						{
-							if (node != null)
+							if (object != null)
 							{
-								sb.append(node.getObjectName());
+								sb.append(object.getObjectName());
 							}
 							else
 							{

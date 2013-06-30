@@ -1177,6 +1177,37 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 }
 
 /**
+ * Read table value from agent
+ * Syntax:
+ *    AgentReadTable(object, name)
+ * where:
+ *     object - NetXMS node object
+ *     name   - name of the table
+ * Return value:
+ *     table value on success and null on failure
+ */
+static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Table *table;
+   UINT32 rcc = ((Node *)object->getData())->getTableFromAgent(argv[1]->getValueAsCString(), &table);
+	if (rcc == DCE_SUCCESS)
+      *ppResult = new NXSL_Value(new NXSL_Object(&g_nxslTableClass, table));
+	else
+		*ppResult = new NXSL_Value;
+	return 0;
+}
+
+/**
  * Get server's configuration variable
  * First argument is a variable name
  * Optional second argumet is default value
@@ -1210,6 +1241,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
 	{ _T("map"), F_map, -1 },
 	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
+	{ _T("AgentReadTable"), F_AgentReadTable, 2 },
 	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
    { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
