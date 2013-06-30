@@ -54,11 +54,9 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 }
 
 /**
- * NXSL function: Get DCI value from within transformation script
- * First argument is a node object (passed to script via $node variable),
- * and second is DCI ID
+ * Common handler for GetDCIValue and GetDCIRawValue
  */
-static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -74,7 +72,7 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
 	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-		*ppResult = ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
+      *ppResult = rawValue ? ((DCItem *)dci)->getRawValueForNXSL() : ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
 	}
 	else
 	{
@@ -82,6 +80,26 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 	}
 
 	return 0;
+}
+
+/**
+ * NXSL function: Get DCI value from within transformation script
+ * First argument is a node object (passed to script via $node variable),
+ * and second is DCI ID
+ */
+static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return GetDCIValueImpl(false, argc, argv, ppResult, program);
+}
+
+/**
+ * NXSL function: Get raw DCI value from within transformation script
+ * First argument is a node object (passed to script via $node variable),
+ * and second is DCI ID
+ */
+static int F_GetDCIRawValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return GetDCIValueImpl(true, argc, argv, ppResult, program);
 }
 
 /**
@@ -365,6 +383,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 	{ _T("GetAvgDCIValue"), F_GetAvgDCIValue, 4 },
    { _T("GetDCIObject"), F_GetDCIObject, 2 },
    { _T("GetDCIValue"), F_GetDCIValue, 2 },
+   { _T("GetDCIRawValue"), F_GetDCIRawValue, 2 },
    { _T("GetDCIValueByDescription"), F_GetDCIValueByDescription, 2 },
    { _T("GetDCIValueByName"), F_GetDCIValueByName, 2 },
 	{ _T("GetMaxDCIValue"), F_GetMaxDCIValue, 4 },

@@ -10,13 +10,13 @@
 - Default background color for new network maps made configurable
 - Logged in users cannot be deleted
 - Empty containters have "Normal" status instead of "Unknown"
-- New NXSL functions: AgentReadTable, DeleteObject
+- New NXSL functions: AgentReadTable, DeleteObject, GetDCIRawValue
 - Management console:
 	- Simplified table DCI configuration
 	- Charts can be created from table data
 	- Severity filter in dashboard element "Alarm Viewer"
 	- Zoom level can be configured for "Network Map" dashboard elements
-- Fixed issues: #57, #195, #286, #293
+- Fixed issues: #57, #195, #281, #286, #293
 
 
 *

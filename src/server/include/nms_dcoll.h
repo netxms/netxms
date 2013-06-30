@@ -351,6 +351,7 @@ public:
 
    void fillLastValueMessage(CSCPMessage *pMsg, UINT32 dwId);
    NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
+   NXSL_Value *getRawValueForNXSL();
    const TCHAR *getLastValue();
    ItemValue *getInternalLastValue();
 

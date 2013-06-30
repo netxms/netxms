@@ -1099,6 +1099,17 @@ void DCItem::fillLastValueMessage(CSCPMessage *pMsg, UINT32 dwId)
 /**
  * Get item's last value for use in NXSL
  */
+NXSL_Value *DCItem::getRawValueForNXSL()
+{
+	lock();
+   NXSL_Value *value = new NXSL_Value(m_prevRawValue.getString());
+   unlock();
+   return value;
+}
+
+/**
+ * Get item's last value for use in NXSL
+ */
 NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
 {
    NXSL_Value *pValue;
@@ -1107,7 +1118,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    switch(nFunction)
    {
       case F_LAST:
-         pValue = (m_dwCacheSize > 0) ? new NXSL_Value((const TCHAR *)m_ppValueCache[0]->getString()) : new NXSL_Value;
+         pValue = (m_dwCacheSize > 0) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
          break;
       case F_DIFF:
          if (m_dwCacheSize >= 2)
