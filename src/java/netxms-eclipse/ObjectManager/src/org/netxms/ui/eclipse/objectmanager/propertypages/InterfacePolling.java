@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,9 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -41,9 +43,11 @@ public class InterfacePolling extends PropertyPage
 {
 	private Spinner pollCount;
 	private Combo expectedState;
+	private Button checkExcludeFromTopology;
 	private Interface object;
 	private int currentPollCount;
 	private int currentExpectedState;
+	private boolean currentExcludeFlag;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -59,6 +63,7 @@ public class InterfacePolling extends PropertyPage
 		
 		currentPollCount = object.getRequiredPollCount();
 		currentExpectedState = object.getExpectedState();
+		currentExcludeFlag = object.isExcludedFromTopology();
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -76,6 +81,11 @@ public class InterfacePolling extends PropertyPage
       expectedState.add("IGNORE");
       expectedState.select(object.getExpectedState());
       
+      checkExcludeFromTopology = new Button(dialogArea, SWT.CHECK);
+      checkExcludeFromTopology.setText("&Exclude this interface from network topology");
+      checkExcludeFromTopology.setSelection(object.isExcludedFromTopology());
+      checkExcludeFromTopology.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+      
 		return dialogArea;
 	}
 	
@@ -86,7 +96,9 @@ public class InterfacePolling extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if ((expectedState.getSelectionIndex() == currentExpectedState) && (pollCount.getSelection() == currentPollCount))
+		if ((expectedState.getSelectionIndex() == currentExpectedState) && 
+			 (pollCount.getSelection() == currentPollCount) &&
+			 (checkExcludeFromTopology.getSelection() == currentExcludeFlag))
 			return;	// nothing to change 
 		
 		if (isApply)
@@ -96,7 +108,8 @@ public class InterfacePolling extends PropertyPage
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setExpectedState(expectedState.getSelectionIndex());
 		data.setRequiredPolls(pollCount.getSelection());
-		new ConsoleJob("Rename object", null, Activator.PLUGIN_ID, null) {
+		data.setObjectFlags(checkExcludeFromTopology.getSelection() ? Interface.IF_EXCLUDE_FROM_TOPOLOGY : 0);
+		new ConsoleJob("Update interface polling configuration", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -106,7 +119,7 @@ public class InterfacePolling extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot modify object";
+				return String.format("Cannot modify interface object %s", object.getObjectName());
 			}
 
 			@Override
@@ -120,6 +133,7 @@ public class InterfacePolling extends PropertyPage
 						{
 							currentExpectedState = data.getExpectedState();
 							currentPollCount = data.getRequiredPolls();
+							currentExcludeFlag = ((data.getObjectFlags() & Interface.IF_EXCLUDE_FROM_TOPOLOGY) != 0);
 							InterfacePolling.this.setValid(true);
 						}
 					});

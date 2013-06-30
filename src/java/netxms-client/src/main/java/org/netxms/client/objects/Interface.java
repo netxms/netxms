@@ -393,4 +393,12 @@ public class Interface extends GenericObject
 	{
 		return (flags & IF_LOOPBACK) != 0;
 	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isExcludedFromTopology()
+	{
+		return (flags & IF_EXCLUDE_FROM_TOPOLOGY) != 0;
+	}
 }

@@ -713,6 +713,15 @@ UINT32 Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_flags |= expectedState << 28;
 	}
 
+	// Flags
+	if (pRequest->IsVariableExist(VID_FLAGS))
+	{
+      UINT32 newFlags = pRequest->GetVariableLong(VID_FLAGS);
+      newFlags &= IF_USER_FLAGS_MASK;
+		m_flags &= ~IF_USER_FLAGS_MASK;
+		m_flags |= newFlags;
+	}
+
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
