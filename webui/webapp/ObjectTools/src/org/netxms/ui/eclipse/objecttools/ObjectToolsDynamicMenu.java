@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -327,7 +327,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+			MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
 		}
 	}
 
@@ -338,22 +338,23 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	private void executeAgentAction(final AbstractNode node, final ObjectTool tool)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Execute action on node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		final String action = substituteMacros(tool.getData(), node);
+		new ConsoleJob(String.format("Execute action on node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot execute action on node " + node.getObjectName();
+				return String.format("Cannot execute action on node %s", node.getObjectName());
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.executeAction(node.getObjectId(), tool.getData());
+				session.executeAction(node.getObjectId(), action);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						MessageDialogHelper.openInformation(null, "Tool Execution", "Action " + tool.getData() + " executed successfully on node " + node.getObjectName());
+						MessageDialogHelper.openInformation(null, "Tool Execution", String.format("Action %s executed successfully on node %s", action, node.getObjectName()));
 					}
 				});
 			}
@@ -398,18 +399,19 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	private void executeFileDownload(final AbstractNode node, final ObjectTool tool)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final String fileName = substituteMacros(tool.getData(), node);
 		
 		ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot download file " + tool.getData() + " from node " + node.getObjectName();
+				return String.format("Cannot download file %s from node %s", fileName, node.getObjectName());
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final File file = session.downloadFileFromAgent(node.getObjectId(), tool.getData());
+				final File file = session.downloadFileFromAgent(node.getObjectId(), fileName);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -417,13 +419,13 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 						final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 						try
 						{
-							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(tool.getData(), "UTF-8");
+							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8");
 							FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
 							view.showFile(file);
 						}
 						catch(Exception e)
 						{
-							MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+							MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
 						}
 					}
 				});
@@ -455,12 +457,64 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 */
 	private void openURL(final AbstractNode node, final ObjectTool tool)
 	{
-		String temp = tool.getData();
-		temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
-		temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
-		final String url = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+		final String url = substituteMacros(tool.getData(), node);
 		
 		final String sid = Long.toString(node.getObjectId()) + "&" + Long.toString(tool.getId());
 		ExternalBrowser.open(sid, url, ExternalBrowser.LOCATION_BAR | ExternalBrowser.NAVIGATION_BAR | ExternalBrowser.STATUS);
+	}
+	
+	/**
+	 * Substitute macros in string
+	 * 
+	 * @param s
+	 * @param node
+	 * @return
+	 */
+	private static String substituteMacros(String s, AbstractNode node)
+	{
+		StringBuilder sb = new StringBuilder();
+		
+		char[] src = s.toCharArray();
+		for(int i = 0; i < s.length(); i++)
+		{
+			if (src[i] == '%')
+			{
+				StringBuilder p = new StringBuilder();
+				for(i++; src[i] != '%' && i < s.length(); i++)
+					p.append(src[i]);
+				if (p.length() == 0)		// %%
+				{
+					sb.append('%');
+				}
+				else
+				{
+					String name = p.toString();
+					if (name.equals("OBJECT_IP_ADDR"))
+					{
+						sb.append(node.getPrimaryIP().getHostAddress());
+					}
+					else if (name.equals("OBJECT_NAME"))
+					{
+						sb.append(node.getObjectName());
+					}
+					else if (name.equals("OBJECT_ID"))
+					{
+						sb.append(node.getObjectId());
+					}
+					else
+					{
+						String custAttr = node.getCustomAttributes().get(name);
+						if (custAttr != null)
+							sb.append(custAttr);
+					}
+				}
+			}
+			else
+			{
+				sb.append(src[i]);
+			}
+		}
+		
+		return sb.toString();
 	}
 }

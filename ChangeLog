@@ -16,7 +16,8 @@
 	- Charts can be created from table data
 	- Severity filter in dashboard element "Alarm Viewer"
 	- Zoom level can be configured for "Network Map" dashboard elements
-- Fixed issues: #57, #195, #281, #286, #293
+	- Values of custom attributes can be used in object tools
+- Fixed issues: #57, #195, #281, #284, #286, #293
 
 
 *
