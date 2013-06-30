@@ -42,6 +42,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerAction;
 import org.netxms.ui.eclipse.epp.Activator;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.dialogs.helpers.ActionComparator;
 import org.netxms.ui.eclipse.epp.dialogs.helpers.ActionListFilter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -52,8 +53,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ActionSelectionDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private boolean multiSelection;
 	private Text filterText;
 	private TableViewer eventList;
@@ -78,7 +77,7 @@ public class ActionSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Action");
+		newShell.setText(Messages.ActionSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -105,14 +104,14 @@ public class ActionSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText("Filter:");
+		new Label(dialogArea, SWT.NONE).setText(Messages.ActionSelectionDialog_Filter);
 		
 		filterText = new Text(dialogArea, SWT.NONE);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		filterText.setLayoutData(gd);
-		final String filterString = settings.get("SelectAction.Filter");
+		final String filterString = settings.get("SelectAction.Filter"); //$NON-NLS-1$
 		if (filterString != null)
 			filterText.setText(filterString);
 		
@@ -135,8 +134,6 @@ public class ActionSelectionDialog extends Dialog
 		eventList.getTable().setLayoutData(gd);
 		
 		filterText.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{

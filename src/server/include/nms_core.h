@@ -583,11 +583,11 @@ private:
 	void sendSMS(CSCPMessage *pRequest);
 	void SendCommunityList(UINT32 dwRqId);
 	void UpdateCommunityList(CSCPMessage *pRequest);
-	void SendSituationList(UINT32 dwRqId);
-	void CreateSituation(CSCPMessage *pRequest);
-	void UpdateSituation(CSCPMessage *pRequest);
-	void DeleteSituation(CSCPMessage *pRequest);
-	void DeleteSituationInstance(CSCPMessage *pRequest);
+	void getSituationList(UINT32 dwRqId);
+	void createSituation(CSCPMessage *pRequest);
+	void updateSituation(CSCPMessage *pRequest);
+	void deleteSituation(CSCPMessage *pRequest);
+	void deleteSituationInstance(CSCPMessage *pRequest);
 	void setConfigCLOB(CSCPMessage *pRequest);
 	void getConfigCLOB(CSCPMessage *pRequest);
 	void registerAgent(CSCPMessage *pRequest);

@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -34,8 +35,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class RuleCondition extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private Button checkDisabled;
@@ -55,7 +54,7 @@ public class RuleCondition extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkDisabled = new Button(dialogArea, SWT.CHECK);
-      checkDisabled.setText("Rule is &disabled");
+      checkDisabled.setText(Messages.RuleCondition_RuleDisabled);
       checkDisabled.setSelection((rule.getFlags() & EventProcessingPolicyRule.DISABLED) != 0);
       
 		return dialogArea;

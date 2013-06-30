@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS Event Processing Policy Editor
 Bundle-SymbolicName: org.netxms.ui.eclipse.epp;singleton:=true
-Bundle-Version: 1.2.7
+Bundle-Version: 1.2.8
 Bundle-Activator: org.netxms.ui.eclipse.epp.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",

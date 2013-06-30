@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@
 package org.netxms.ui.eclipse.epp.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 public class OpenPolicyEditor implements IWorkbenchWindowActionDelegate
 {
@@ -61,7 +62,7 @@ public class OpenPolicyEditor implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenPolicyEditor_Error, Messages.OpenPolicyEditor_ErrorText + e.getMessage());
 			}
 		}
 	}

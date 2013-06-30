@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.situations.Situation;
 import org.netxms.ui.eclipse.epp.Activator;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.SituationCache;
 import org.netxms.ui.eclipse.epp.dialogs.helpers.SituationComparator;
 import org.netxms.ui.eclipse.epp.dialogs.helpers.SituationLabelProvider;
@@ -51,8 +52,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class SituationSelectionDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private boolean multiSelection;
 	private Text filterText;
 	private TableViewer viewer;
@@ -75,7 +74,7 @@ public class SituationSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Situation");
+		newShell.setText(Messages.SituationSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -102,14 +101,14 @@ public class SituationSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText("Filter:");
+		new Label(dialogArea, SWT.NONE).setText(Messages.SituationSelectionDialog_Filter);
 		
 		filterText = new Text(dialogArea, SWT.NONE);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		filterText.setLayoutData(gd);
-		final String filterString = settings.get("SelectSituation.Filter");
+		final String filterString = settings.get("SelectSituation.Filter"); //$NON-NLS-1$
 		if (filterString != null)
 			filterText.setText(filterString);
 		
@@ -132,8 +131,6 @@ public class SituationSelectionDialog extends Dialog
 		viewer.getTable().setLayoutData(gd);
 		
 		filterText.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{

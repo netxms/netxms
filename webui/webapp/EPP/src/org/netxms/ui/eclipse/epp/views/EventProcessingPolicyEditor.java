@@ -65,18 +65,18 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Event processing policy editor
- *
+ * 
  */
 public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor";
-	public static final String JOB_FAMILY = "PolicyEditorJob";
+	public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor"; //$NON-NLS-1$
+	public static final String JOB_FAMILY = "PolicyEditorJob"; //$NON-NLS-1$
 
 	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
-	
+
 	private NXCSession session;
 	private boolean policyLocked = false;
-	private EventProcessingPolicy policy; 
+	private EventProcessingPolicy policy;
 	private NXCListener sessionListener;
 	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	private ScrolledComposite scroller;

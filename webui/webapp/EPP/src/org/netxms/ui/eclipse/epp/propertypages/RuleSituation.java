@@ -56,8 +56,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class RuleSituation extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private SituationSelector situation;

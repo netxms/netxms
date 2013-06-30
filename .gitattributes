@@ -991,6 +991,7 @@ src/java/netxms-client/src/test/java/org/netxms/client/SendEventTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ServerConfigTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ServerFilesTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/SessionTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/SituationsTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/SnmpTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/UserTest.java -text
 src/java/netxms-eclipse/ActionManager/.classpath -text
@@ -1366,6 +1367,7 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleSour
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/helpers/AttributeLabelProvider.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/EventProcessingPolicyEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/SituationsManager.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/AttributeComparator.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/SituationTreeContentProvider.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/SituationTreeLabelProvider.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/RuleEditor.java -text
@@ -3043,6 +3045,9 @@ webui/webapp/EPP/plugin.xml -text
 webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/Messages.java -text
 webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/messages.properties -text
 webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/messages_es.properties -text
+webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/messages_ru.properties -text
+webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/messages_zh_CN.properties -text
+webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/AttributeComparator.java -text
 webui/webapp/EventManager/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/EventManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/EventManager/META-INF/MANIFEST.MF -text

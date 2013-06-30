@@ -50,7 +50,7 @@ public class Situation
 		{
 			final SituationInstance si = new SituationInstance(this, msg, varId);
 			instances.add(si);
-			varId += si.getAttributeCount() * 2 + 2; 
+			varId += si.getAttributeCount() * 2 + 2;
 		}
 	}
 

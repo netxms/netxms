@@ -28,8 +28,6 @@ import org.netxms.client.situations.Situation;
  */
 public class SituationListFilter extends ViewerFilter
 {
-	private static final long serialVersionUID = 1L;
-
 	private String filterString = null;
 	
 	/* (non-Javadoc)

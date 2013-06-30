@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +24,14 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.situations.Situation;
 import org.netxms.client.situations.SituationInstance;
+import org.netxms.ui.eclipse.epp.Messages;
 
 /**
  * Content provider for situations tree
  */
 public class SituationTreeContentProvider implements ITreeContentProvider
 {
-	private static final long serialVersionUID = 1L;
-	private static final String ROOT = "[root]";
+	private static final String ROOT = Messages.SituationTreeContentProvider_Root;
 	
 	private Map<Long, Situation> situations;
 	

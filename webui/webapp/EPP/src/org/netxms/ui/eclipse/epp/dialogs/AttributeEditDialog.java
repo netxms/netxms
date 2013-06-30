@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -34,8 +35,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AttributeEditDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabeledText textName;
 	private LabeledText textValue;
 	private String attrName;
@@ -66,7 +65,7 @@ public class AttributeEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel("Name");
+      textName.setLabel(Messages.AttributeEditDialog_Name);
       textName.getTextControl().setTextLimit(63);
       if (attrName != null)
       {
@@ -80,7 +79,7 @@ public class AttributeEditDialog extends Dialog
       textName.setLayoutData(gd);
       
       textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel("Value");
+      textValue.setLabel(Messages.AttributeEditDialog_Value);
       if (attrValue != null)
       	textValue.setText(attrValue);
       gd = new GridData();
@@ -101,7 +100,7 @@ public class AttributeEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((attrName == null) ? "Add Attribute" : "Edit Attribute");
+		newShell.setText((attrName == null) ? Messages.AttributeEditDialog_TitleAdd : Messages.AttributeEditDialog_TitleEdit);
 	}
 	
 	/**

@@ -85,21 +85,17 @@ void SituationInstance::UpdateAttribute(const TCHAR *attribute, const TCHAR *val
 	m_attributes.set(attribute, value);
 }
 
-
-//
-// Get atribute's value
-//
-
+/**
+ * Get atribute's value
+ */
 const TCHAR *SituationInstance::GetAttribute(const TCHAR *attribute)
 {
 	return m_attributes.get(attribute);
 }
 
-
-//
-// Create NXCP message
-//
-
+/**
+ * Create NXCP message
+ */
 UINT32 SituationInstance::CreateMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	UINT32 i, id = baseId;
@@ -114,11 +110,9 @@ UINT32 SituationInstance::CreateMessage(CSCPMessage *msg, UINT32 baseId)
 	return id;
 }
 
-
-//
-// Situation constructor
-//
-
+/**
+ * Situation constructor
+ */
 Situation::Situation(const TCHAR *name)
 {
 	m_id = CreateUniqueId(IDG_SITUATION);
@@ -306,11 +300,9 @@ SituationInstance *Situation::FindInstance(const TCHAR *name)
 	return instance;
 }
 
-
-//
-// Create NXCP message
-//
-
+/**
+ * Create NXCP message
+ */
 void Situation::CreateMessage(CSCPMessage *msg)
 {
 	int i;
@@ -331,11 +323,9 @@ void Situation::CreateMessage(CSCPMessage *msg)
 	Unlock();
 }
 
-
-//
-// Update situation configuration from NXCP message
-//
-
+/**
+ * Update situation configuration from NXCP message
+ */
 void Situation::UpdateFromMessage(CSCPMessage *msg)
 {
 	Lock();
@@ -449,11 +439,9 @@ UINT32 DeleteSituation(UINT32 id)
    return rcc;
 }
 
-
-//
-// Send all situations to client
-//
-
+/**
+ * Send all situations to client
+ */
 void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
 {
 	ObjectArray<NetObj> *list = s_idxSituations.getObjects();
@@ -472,11 +460,9 @@ void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
 	delete list;
 }
 
-
-//
-// NXSL "Situation" class
-//
-
+/**
+ * NXSL "Situation" class
+ */
 class NXSL_SituationClass : public NXSL_Class
 {
 public:

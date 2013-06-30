@@ -29,12 +29,9 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 /**
  * Situation selector widget. Provides uniform way to display selected
  * situation object and change selection.
- *
  */
 public class SituationSelector extends AbstractSelector
 {
-	private static final long serialVersionUID = 1L;
-
 	private long situationId = 0;
 	
 	/**

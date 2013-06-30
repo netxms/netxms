@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,8 +45,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class RuleAlarm extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final int ALARM_NO_ACTION = 0;
 	private static final int ALARM_CREATE = 1;
 	private static final int ALARM_RESOLVE = 2;
@@ -101,8 +99,6 @@ public class RuleAlarm extends PropertyPage
 		alarmNoAction.setText("Do not change alarms");
 		alarmNoAction.setSelection(alarmAction == ALARM_NO_ACTION);
 		alarmNoAction.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -120,8 +116,6 @@ public class RuleAlarm extends PropertyPage
 		alarmCreate.setText("Create new alarm");
 		alarmCreate.setSelection(alarmAction == ALARM_CREATE);
 		alarmCreate.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -139,8 +133,6 @@ public class RuleAlarm extends PropertyPage
 		alarmResolve.setText("Resolve alarms");
 		alarmResolve.setSelection(alarmAction == ALARM_RESOLVE);
 		alarmResolve.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -158,8 +150,6 @@ public class RuleAlarm extends PropertyPage
 		alarmTerminate.setText("Terminate alarms");
 		alarmTerminate.setSelection(alarmAction == ALARM_TERMINATE);
 		alarmTerminate.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

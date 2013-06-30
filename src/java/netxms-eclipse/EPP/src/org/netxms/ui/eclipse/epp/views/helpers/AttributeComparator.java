@@ -16,40 +16,37 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.views.helpers;
+package org.netxms.ui.eclipse.epp.views.helpers;
 
+import java.util.Map.Entry;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.datacollection.DciSummaryTableDescriptor;
-import org.netxms.ui.eclipse.datacollection.views.SummaryTableManager;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Comparator for DCI summary table descriptors
+ * Situation attribute comparator
  */
-public class SummaryTableComparator extends ViewerComparator
+public class AttributeComparator extends ViewerComparator
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		DciSummaryTableDescriptor d1 = (DciSummaryTableDescriptor)e1;
-		DciSummaryTableDescriptor d2 = (DciSummaryTableDescriptor)e2;
+		Entry<String, String> a1 = (Entry<String, String>)e1;
+		Entry<String, String> a2 = (Entry<String, String>)e2;
 		
 		int result;
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-			case SummaryTableManager.COLUMN_ID:
-				result = d1.getId() - d2.getId();
+			case 0:
+				result = a1.getKey().compareToIgnoreCase(a2.getKey());
 				break;
-			case SummaryTableManager.COLUMN_MENU_PATH:
-				result = d1.getMenuPath().compareToIgnoreCase(d2.getMenuPath());
-				break;
-			case SummaryTableManager.COLUMN_TITLE:
-				result = d1.getTitle().compareToIgnoreCase(d2.getTitle());
+			case 1:
+				result = a1.getValue().compareToIgnoreCase(a2.getValue());
 				break;
 			default:
 				result = 0;

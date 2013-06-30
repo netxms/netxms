@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,8 +73,6 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 @SuppressWarnings("restriction")
 public class RuleEditor extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final int INDENT = 20;
 	
 	private EventProcessingPolicyRule rule;
@@ -122,8 +120,6 @@ public class RuleEditor extends Composite
 		setLayout(layout);
 		
 		ruleMouseListener = new MouseListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -157,8 +153,6 @@ public class RuleEditor extends Composite
 		createPopupMenu(new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
 		
 		condition = new CGroup(mainArea, Messages.RuleEditor_Filter) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -169,8 +163,6 @@ public class RuleEditor extends Composite
 		};
 		configureLayout(condition);
 		final Action editRuleCondition = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -181,8 +173,6 @@ public class RuleEditor extends Composite
 		condition.setDoubleClickAction(editRuleCondition);
 
 		action = new CGroup(mainArea, Messages.RuleEditor_Action) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -193,8 +183,6 @@ public class RuleEditor extends Composite
 		};
 		configureLayout(action);
 		final Action editRuleAction = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -274,8 +262,6 @@ public class RuleEditor extends Composite
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				editor.fillRuleContextMenu(mgr);
@@ -320,8 +306,6 @@ public class RuleEditor extends Composite
 		gd.grabExcessHorizontalSpace = true;
 		headerLabel.setLayoutData(gd);
 		headerLabel.addMouseListener(new MouseListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -348,8 +332,6 @@ public class RuleEditor extends Composite
 		editButton.setImage(editor.getImageEdit());
 		editButton.setToolTipText(Messages.RuleEditor_Tooltip_EditRule);
 		editButton.addMouseListener(new MouseListener() {
-			private static final long serialVersionUID = 1L;
-
 			private boolean doAction = false;
 			
 			@Override
@@ -380,8 +362,6 @@ public class RuleEditor extends Composite
 		expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
 		expandButton.setToolTipText(collapsed ? Messages.RuleEditor_Tooltip_ExpandRule : Messages.RuleEditor_Tooltip_CollapseRule);
 		expandButton.addMouseListener(new MouseListener() {
-			private static final long serialVersionUID = 1L;
-
 			private boolean doAction = false;
 			
 			@Override
@@ -430,8 +410,6 @@ public class RuleEditor extends Composite
 	private MouseListener createMouseListener(final String pageId)
 	{
 		return new MouseListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void mouseUp(MouseEvent e)
 			{
@@ -858,8 +836,6 @@ public class RuleEditor extends Composite
 		}
 		title = NLS.bind(WorkbenchMessages.get().PropertyDialog_propertyMessage, name);
 		PropertyDialog propertyDialog = new PropertyDialog(shell, pageManager, new StructuredSelection(element)) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			protected TreeViewer createTreeViewer(Composite parent)
 			{

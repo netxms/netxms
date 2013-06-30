@@ -1172,19 +1172,19 @@ void ClientSession::processingThread()
 				updateUsmCredentials(pMsg);
 				break;
 			case CMD_GET_SITUATION_LIST:
-				SendSituationList(pMsg->GetId());
+				getSituationList(pMsg->GetId());
 				break;
 			case CMD_CREATE_SITUATION:
-				CreateSituation(pMsg);
+				createSituation(pMsg);
 				break;
 			case CMD_UPDATE_SITUATION:
-				UpdateSituation(pMsg);
+				updateSituation(pMsg);
 				break;
 			case CMD_DELETE_SITUATION:
-				DeleteSituation(pMsg);
+				deleteSituation(pMsg);
 				break;
 			case CMD_DEL_SITUATION_INSTANCE:
-				DeleteSituationInstance(pMsg);
+				deleteSituationInstance(pMsg);
 				break;
 			case CMD_REGISTER_AGENT:
 				registerAgent(pMsg);
@@ -9852,12 +9852,10 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Send situation list to client
-//
-
-void ClientSession::SendSituationList(UINT32 dwRqId)
+/**
+ * Send situation list to client
+ */
+void ClientSession::getSituationList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 
@@ -9877,12 +9875,10 @@ void ClientSession::SendSituationList(UINT32 dwRqId)
 	}
 }
 
-
-//
-// Create new situation
-//
-
-void ClientSession::CreateSituation(CSCPMessage *pRequest)
+/**
+ * Create new situation
+ */
+void ClientSession::createSituation(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    Situation *st;
@@ -9913,12 +9909,10 @@ void ClientSession::CreateSituation(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Update situation
-//
-
-void ClientSession::UpdateSituation(CSCPMessage *pRequest)
+/**
+ * Update situation
+ */
+void ClientSession::updateSituation(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    Situation *st;
@@ -9947,12 +9941,10 @@ void ClientSession::UpdateSituation(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Delete situation
-//
-
-void ClientSession::DeleteSituation(CSCPMessage *pRequest)
+/**
+ * Delete situation
+ */
+void ClientSession::deleteSituation(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    
@@ -9971,12 +9963,10 @@ void ClientSession::DeleteSituation(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Delete situation instance
-//
-
-void ClientSession::DeleteSituationInstance(CSCPMessage *pRequest)
+/**
+ * Delete situation instance
+ */
+void ClientSession::deleteSituationInstance(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    Situation *st;
@@ -10007,11 +9997,9 @@ void ClientSession::DeleteSituationInstance(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Handler for situation chage
-//
-
+/**
+ * Handler for situation chage
+ */
 void ClientSession::onSituationChange(CSCPMessage *msg)
 {
    UPDATE_INFO *pUpdate;

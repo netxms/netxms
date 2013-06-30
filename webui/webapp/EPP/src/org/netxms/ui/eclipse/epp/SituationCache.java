@@ -24,7 +24,6 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
@@ -35,6 +34,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.situations.Situation;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Local cache for situation objects
@@ -65,11 +65,11 @@ public class SituationCache
 			if ((e instanceof NXCException) && (((NXCException)e).getErrorCode() == RCC.ACCESS_DENIED))
 				return;
 			
-			new UIJob(display, "Notify about situation sync failure") {
+			new UIJob(display, Messages.SituationCache_JobTitle) {
 				@Override
 				public IStatus runInUIThread(IProgressMonitor monitor)
 				{
-					MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot synchronize situations: " + e.getLocalizedMessage());
+					MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.SituationCache_Error, Messages.SituationCache_ErrorText + e.getLocalizedMessage());
 					return Status.OK_STATUS;
 				}
 			}.schedule();
