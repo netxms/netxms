@@ -591,31 +591,29 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 }
 
 /**
- * Remove container object
+ * Delete object
  * Syntax:
- *    RemoveContainer(container)
+ *    DeleteObject(object)
  * where:
- *     container - container to remove
+ *     object - object to remove, must be of class NetObj, Interface, or Node
  * Return value:
  *     null
  */
-static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	NXSL_Object *obj = argv[0]->getValueAsObject();
-	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
+	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()) &&
+       _tcscmp(obj->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+       _tcscmp(obj->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj*)obj->getData();
-	if (netobj->Type() != OBJECT_CONTAINER)
-		return NXSL_ERR_BAD_CLASS;
-
 	netobj->deleteObject();
 
 	*ppResult = new NXSL_Value;
-
 	return 0;
 }
 
@@ -1245,7 +1243,7 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 	{ _T("BindObject"), F_BindObject, 2 },
 	{ _T("CreateContainer"), F_CreateContainer, 2 },
 	{ _T("CreateNode"), F_CreateNode, 3 },
-	{ _T("RemoveContainer"), F_RemoveContainer, 1 },
+	{ _T("DeleteObject"), F_DeleteObject, 1 },
 	{ _T("UnbindObject"), F_UnbindObject, 2 }
 };
 
