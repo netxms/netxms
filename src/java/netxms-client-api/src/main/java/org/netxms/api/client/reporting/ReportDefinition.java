@@ -8,6 +8,7 @@ public class ReportDefinition
 {
 	private UUID id;
 	private String name;
+	private int numberOfColumns = 1;
 	private List<ReportParameter> parameters = new ArrayList<ReportParameter>(0);
 
 	public UUID getId()
@@ -40,9 +41,27 @@ public class ReportDefinition
 		parameters.add(parameter);
 	}
 
+	public int getNumberOfColumns()
+	{
+		return numberOfColumns;
+	}
+
+	public void setNumberOfColumns(int numberOfColumns)
+	{
+		if (numberOfColumns > 0)
+		{
+			this.numberOfColumns = numberOfColumns;
+		}
+		else
+		{
+			this.numberOfColumns = 1;
+		}
+	}
+
 	@Override
 	public String toString()
 	{
-		return "ReportDefinition [id=" + id + ", name=" + name + ", parameters=" + parameters + "]";
+		return "ReportDefinition [id=" + id + ", name=" + name + ", numberOfColumns=" + numberOfColumns + ", parameters="
+				+ parameters + "]";
 	}
 }

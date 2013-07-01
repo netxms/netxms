@@ -6707,7 +6707,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return new Table(response);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.api.client.reporting.ReportingServerManager#listReports()
 	 */
 	@Override
@@ -6726,7 +6728,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return ret;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.api.client.reporting.ReportingServerManager#getReportDefinition(java.util.UUID)
 	 */
 	@Override
@@ -6740,6 +6744,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final ReportDefinition definition = new ReportDefinition();
 		definition.setId(reportId);
 		definition.setName(response.getVariableAsString(NXCPCodes.VID_NAME));
+		definition.setNumberOfColumns(response.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS));
 		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
 		long base = NXCPCodes.VID_ROW_DATA_BASE;
 		for(int i = 0; i < count; i++, base += 10)
@@ -6757,7 +6762,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return definition;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.api.client.reporting.ReportingServerManager#executeReport(java.util.UUID, java.util.Map)
 	 */
 	@Override
@@ -6777,7 +6784,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return response.getVariableAsUUID(NXCPCodes.VID_JOB_ID);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.api.client.reporting.ReportingServerManager#listReportResults(java.util.UUID)
 	 */
 	@Override
@@ -6800,7 +6809,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return results;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.api.client.reporting.ReportingServerManager#deleteReportResult(java.util.UUID, java.util.UUID)
 	 */
 	@Override
@@ -6813,8 +6824,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		waitForRCC(msg.getMessageId());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.reporting.ReportingServerManager#renderReport(java.util.UUID, java.util.UUID, org.netxms.api.client.reporting.ReportRenderFormat)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.netxms.api.client.reporting.ReportingServerManager#renderReport(java.util.UUID, java.util.UUID,
+	 * org.netxms.api.client.reporting.ReportRenderFormat)
 	 */
 	@Override
 	public File renderReport(UUID reportId, UUID jobId, ReportRenderFormat format) throws NetXMSClientException, IOException
