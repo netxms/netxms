@@ -832,6 +832,7 @@ if test "x$CXX" = "xaCC" ; then
 fi
 
 if test "x$CXX" = "xxlC_r" ; then
+	SQLFLAGS="-qnoppline"
         if test "x$FORCE_32BIT_BUILD" = "xyes"; then
                 AC_MSG_CHECKING(whether C compiler accepts -q32)
                 OLD_CPPFLAGS="$CPPFLAGS"
