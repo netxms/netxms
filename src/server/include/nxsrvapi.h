@@ -586,6 +586,7 @@ public:
 
    UINT32 connect(UINT32 service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);
 	void disconnect();
+   bool connected() { return m_flags & ISCF_IS_CONNECTED; };
 
    BOOL sendMessage(CSCPMessage *msg);
    CSCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }

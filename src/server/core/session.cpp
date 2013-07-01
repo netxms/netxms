@@ -12482,6 +12482,7 @@ void ClientSession::forwardToReportingServer(CSCPMessage *request)
    {
       msg = new CSCPMessage();
       msg->SetCode(CMD_REQUEST_COMPLETED);
+      msg->SetId(request->GetId());
       msg->SetVariable(VID_RCC, RCC_COMM_FAILURE);
    }
 

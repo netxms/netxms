@@ -152,8 +152,10 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
  */
 CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession *session)
 {
-   if (m_connector == NULL)
+   if (m_connector == NULL || !m_connector->connected())
+   {
       return NULL;
+   }
 
    UINT32 originalId = request->GetId();
    UINT32 rqId = m_connector->generateMessageId();
