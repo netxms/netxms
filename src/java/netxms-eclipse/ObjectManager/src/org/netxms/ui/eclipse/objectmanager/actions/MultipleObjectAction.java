@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -46,14 +47,14 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 	 * 
 	 * @return Job description
 	 */
-	abstract protected String jobDescription();
+	abstract protected String formatJobDescription(AbstractObject object);
 	
 	/**
 	 * Returns error message prefix (like "Cannot delete object ")
 	 * 
 	 * @return Error message prefix
 	 */
-	abstract protected String errorPrefix();
+	abstract protected String formatErrorMessage(AbstractObject object, Display display);
 	
 	/**
 	 * Run action on given object.
@@ -100,7 +101,7 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 		{
 			final AbstractObject object = it.next();
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(jobDescription() + " " + object.getObjectName() + " [" + object.getObjectId() + "]", part, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(formatJobDescription(object), part, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -110,7 +111,7 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return errorPrefix() + " " + object.getObjectName();
+					return formatErrorMessage(object, getDisplay());
 				}
 			}.start();
 		}

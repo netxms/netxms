@@ -78,7 +78,7 @@ public class CreateRack implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create rack object \"" + dlg.getObjectName() + "\"";
+				return String.format("Cannot create rack object \"%s\"", dlg.getObjectName());
 			}
 		}.start();
 	}

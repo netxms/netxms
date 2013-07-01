@@ -78,7 +78,7 @@ public class CreateMobileDevice implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create mobile device object \"" + dlg.getName() + "\"";
+				return String.format("Cannot create mobile device object \"%s\"", dlg.getName());
 			}
 		}.start();
 	}

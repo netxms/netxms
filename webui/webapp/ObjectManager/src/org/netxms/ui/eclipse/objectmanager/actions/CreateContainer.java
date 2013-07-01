@@ -77,7 +77,7 @@ public class CreateContainer implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create container object \"" + dlg.getObjectName() + "\"";
+				return String.format("Cannot create container object \"%s\"", dlg.getObjectName());
 			}
 		}.start();
 	}

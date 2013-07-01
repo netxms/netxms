@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ public class ChangeZone implements IObjectActionDelegate
 			return;
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Change zone for node " + node.getObjectName(), part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Change zone for node %s [%d]", node.getObjectName(), node.getObjectId()), part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -82,7 +82,7 @@ public class ChangeZone implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change zone for node " + node.getObjectName();
+				return String.format("Cannot change zone for node %s [%d]", node.getObjectName(), node.getObjectId());
 			}
 		}.start();
 	}
