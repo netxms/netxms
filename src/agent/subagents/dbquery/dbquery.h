@@ -35,6 +35,7 @@
 class DBConnection
 {
 private:
+   TCHAR *m_id;
 	TCHAR *m_driver;
 	TCHAR *m_server;
 	TCHAR *m_dbName;
@@ -43,8 +44,32 @@ private:
 	DB_DRIVER m_hDriver;
 	DB_HANDLE m_hdb;
 
+   DBConnection();
+
 public:
+   static DBConnection *createFromConfig(const TCHAR *config);
+
+   ~DBConnection();
+   
+   bool connect();
+
+   const TCHAR *getId() { return m_id; }
+   DB_HANDLE getHandle() { return m_hdb; }
 };
 
+/**
+ * handlers
+ */
+LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value);
+LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+
+/**
+ * Functions
+ */
+bool AddDatabaseFromConfig(const TCHAR *db);
+bool AddQueryFromConfig(const TCHAR *query);
+void ShutdownConnections();
+DB_HANDLE GetConnectionHandle(const TCHAR *dbid);
 
 #endif

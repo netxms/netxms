@@ -25,15 +25,19 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.TableDciValue;
+import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
 import org.netxms.ui.eclipse.perfview.views.TableLastValues;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Display last values for table DCI
  */
-public class ShowTableLastValues implements IObjectActionDelegate
+public class ShowTableLastValues implements IObjectActionDelegate, DciOpenHandler
 {
 	private IWorkbenchWindow window;
 	private Object currentSelection = null;
@@ -94,5 +98,20 @@ public class ShowTableLastValues implements IObjectActionDelegate
 		}
 
 		action.setEnabled(currentSelection != null);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.api.DciOpenHandler#open(org.netxms.client.datacollection.DciValue)
+	 */
+	@Override
+	public boolean open(DciValue dci)
+	{
+		if (dci.getDcObjectType() != DataCollectionObject.DCO_TYPE_TABLE)
+			return false;
+		
+		window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		currentSelection = dci;
+		run(null);
+		return true;
 	}
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -33,19 +33,31 @@ CONDITION g_condShutdown;
  */
 static BOOL SubAgentInit(Config *config)
 {
-   int i;
-
 	// Add database connections
-	ConfigEntryList *databases = config->getSubEntries(_T("/DBQuery"), _T("Database"));
+	ConfigEntry *databases = config->getEntry(_T("/DBQuery/Database"));
+   if (databases != NULL)
+   {
+      for(int i = 0; i < databases->getValueCount(); i++)
+		{
+         if (!AddDatabaseFromConfig(databases->getValue(i)))
+			{
+            AgentWriteLog(EVENTLOG_WARNING_TYPE,
+               _T("Unable to add database connection from configuration file. ")
+									 _T("Original configuration record: %s"), databases->getValue(i));
+			}
+		}
+   }
+
+	// Add queries
 	ConfigEntry *queries = config->getEntry(_T("/DBQuery/Query"));
 	if (queries != NULL)
 	{
-		for(i = 0; i < queries->getValueCount(); i++)
+		for(int i = 0; i < queries->getValueCount(); i++)
 		{
 			if (!AddQueryFromConfig(queries->getValue(i)))
 			{
             AgentWriteLog(EVENTLOG_WARNING_TYPE,
-                            _T("Unable to add ODBC query from configuration file. ")
+                            _T("Unable to add query from configuration file. ")
 									 _T("Original configuration record: %s"), queries->getValue(i));
 			}
 		}
@@ -59,12 +71,13 @@ static BOOL SubAgentInit(Config *config)
    return TRUE;
 }
 
-
 /**
  * Called by master agent at unload
  */
 static void SubAgentShutdown()
 {
+   ConditionSet(g_condShutdown);
+   ShutdownConnections();
 }
 
 /**
