@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -302,8 +303,31 @@ public class TableLastValues extends ViewPart
 			});
 			viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
 		}
+		((TableLabelProvider)viewer.getLabelProvider()).setColumns(table.getColumns());
 		viewer.setInput(table);
 		currentData = table;
+	}
+	
+	/**
+	 * @param viewerRow
+	 * @return
+	 */
+	private String buildInstanceString(ViewerRow viewerRow)
+	{
+		StringBuilder instance = new StringBuilder();
+		boolean first = true;
+		for(int i = 0; i < currentData.getColumnCount(); i++)
+		{
+			TableColumnDefinition cd = currentData.getColumnDefinition(i);
+			if (cd.isInstanceColumn())
+			{
+				if (!first)
+					instance.append("~~~");
+				instance.append(viewerRow.getText(i));
+				first = false;
+			}
+		}
+		return instance.toString();
 	}
 	
 	/**
@@ -318,12 +342,11 @@ public class TableLastValues extends ViewPart
 		if (cells.length == 0)
 			return;
 		
-		int instanceColumnIndex = 0;//currentData.getColumnIndex(currentData.getInstanceColumn());
 		String id = Long.toString(uniqueId++);
 		for(int i = 0; i < cells.length; i++)
 		{
 			TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
-			String instance = cells[i].getViewerRow().getText(instanceColumnIndex);
+			String instance = buildInstanceString(cells[i].getViewerRow());
 			int source = currentData.getSource();
 			
 			id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + 
@@ -354,12 +377,11 @@ public class TableLastValues extends ViewPart
 		if (cells.length == 0)
 			return;
 		
-		int instanceColumnIndex = 0;//currentData.getColumnIndex(currentData.getInstanceColumn());
 		String id = Long.toString(uniqueId++) + "&" + Integer.toString(chartType);
 		for(int i = 0; i < cells.length; i++)
 		{
 			TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
-			String instance = cells[i].getViewerRow().getText(instanceColumnIndex);
+			String instance = buildInstanceString(cells[i].getViewerRow());
 			int source = currentData.getSource();
 			
 			id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + 

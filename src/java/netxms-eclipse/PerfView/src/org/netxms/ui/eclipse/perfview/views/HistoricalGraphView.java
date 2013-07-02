@@ -420,7 +420,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get value for DCI " + session.getObjectName(currentItem.nodeId) + ":\"" + currentItem.name + "\"";
+				return String.format("Cannot get value for DCI %s:\"%s\"", session.getObjectName(currentItem.nodeId), currentItem.name);
 			}
 
 			@Override

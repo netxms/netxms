@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,21 +97,13 @@ public abstract class ComparisonChartElement extends ElementWidget
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				final DciData[] data = new DciData[dciList.length];
 				for(int i = 0; i < dciList.length; i++)
 				{
-					final DciData data = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1);
-					final int index = i;
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							if (!((Widget)chart).isDisposed())
-							{
-								DciDataRow lastValue = data.getLastValue();
-								chart.updateParameter(index, (lastValue != null) ? lastValue.getValueAsDouble() : 0.0, false);
-							}
-						}
-					});
+					if (dciList[i].type == ChartDciConfig.ITEM)
+						data[i] = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1);
+					else
+						data[i] = session.getCollectedTableData(dciList[i].nodeId, dciList[i].dciId, dciList[i].instance, dciList[i].column, null, null, 1);
 				}
 				runInUIThread(new Runnable() {
 					@Override
@@ -119,6 +111,11 @@ public abstract class ComparisonChartElement extends ElementWidget
 					{
 						if (!((Widget)chart).isDisposed())
 						{
+							for(int i = 0; i < data.length; i++)
+							{
+								DciDataRow lastValue = data[i].getLastValue();
+								chart.updateParameter(i, (lastValue != null) ? lastValue.getValueAsDouble() : 0.0, false);
+							}
 							chart.refresh();
 							chart.clearErrors();
 						}

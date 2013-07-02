@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -137,22 +137,14 @@ public class LineChartElement extends ElementWidget
 				final Date from = new Date(System.currentTimeMillis() - config.getTimeRangeMillis());
 				final Date to = new Date(System.currentTimeMillis());
 				final ChartDciConfig[] dciList = config.getDciList();
+				final DciData[] data = new DciData[dciList.length];
 				for(int i = 0; i < dciList.length; i++)
 				{
 					currentDci = dciList[i];
-					final DciData data = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0);
-					final int index = i;
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							if (!((Widget)chart).isDisposed())
-							{
-								chart.setTimeRange(from, to);
-								chart.updateParameter(index, data, false);
-							}
-						}
-					});
+					if (currentDci.type == ChartDciConfig.ITEM)
+						data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0);
+					else
+						data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
 				}
 				runInUIThread(new Runnable() {
 					@Override
@@ -160,6 +152,9 @@ public class LineChartElement extends ElementWidget
 					{
 						if (!((Widget)chart).isDisposed())
 						{
+							chart.setTimeRange(from, to);
+							for(int i = 0; i < data.length; i++)
+								chart.updateParameter(i, data[i], false);
 							chart.refresh();
 							chart.clearErrors();
 						}
@@ -171,7 +166,7 @@ public class LineChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LineChartElement_JobErrorPrefix + session.getObjectName(currentDci.nodeId) + ":\"" + currentDci.name + "\""; //$NON-NLS-1$ //$NON-NLS-2$
+				return String.format("Cannot get value for DCI %s:\"%s\"", session.getObjectName(currentDci.nodeId), currentDci.name);
 			}
 
 			@Override
