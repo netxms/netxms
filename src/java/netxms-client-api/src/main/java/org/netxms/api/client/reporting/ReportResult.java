@@ -8,11 +8,13 @@ public class ReportResult
 {
 	private Date executionTime;
 	private UUID jobId;
+	private String userName;
 
-	public ReportResult(Date executionTime, UUID reportId)
+	public ReportResult(Date executionTime, UUID reportId, String userName)
 	{
 		this.executionTime = executionTime;
 		this.jobId = reportId;
+		this.userName = userName;
 	}
 
 	public Date getExecutionTime()
@@ -35,10 +37,20 @@ public class ReportResult
 		this.jobId = reportId;
 	}
 
+	public String getUserName()
+	{
+		return userName;
+	}
+
+	public void setUserName(String userName)
+	{
+		this.userName = userName;
+	}
+
 	@Override
 	public String toString()
 	{
-		return "ReportResult [executionTime=" + executionTime + ", jobId=" + jobId + "]";
+		return "ReportResult [executionTime=" + executionTime + ", jobId=" + jobId + ", userName=" + userName + "]";
 	}
 
 	public static ReportResult createFromMessage(NXCPMessage response, long base)
@@ -46,6 +58,7 @@ public class ReportResult
 		long id = base;
 		final UUID reportId = response.getVariableAsUUID(id++);
 		final Date date = response.getVariableAsDate(id++);
-		return new ReportResult(date, reportId);
+		final String userName = response.getVariableAsString(id++);
+		return new ReportResult(date, reportId, userName);
 	}
 }
