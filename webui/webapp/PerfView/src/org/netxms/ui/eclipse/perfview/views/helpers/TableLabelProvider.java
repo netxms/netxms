@@ -22,6 +22,7 @@ import java.util.List;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Label provider for NetXMS table
@@ -50,6 +51,6 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		if (columnIndex >= row.size())
 			return null;
 		
-		return row.get(columnIndex);
+		return WidgetHelper.escapeText(row.get(columnIndex));
 	}
 }

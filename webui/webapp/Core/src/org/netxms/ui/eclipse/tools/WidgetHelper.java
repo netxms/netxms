@@ -618,4 +618,39 @@ public class WidgetHelper
 		return px;	// font height is measured in pixels in RAP
 		//return (int)Math.round(px * 72.0 / device.getDPI().y);
 	}
+
+	/**
+	 * Escape text for HTML
+	 * 
+	 * @param text
+	 * @return
+	 */
+	public static String escapeText(final String text)
+	{
+		StringBuffer sb = new StringBuffer();
+		int textLength = text.length();
+		for(int i = 0; i < textLength; i++)
+		{
+			char ch = text.charAt(i);
+			switch(ch)
+			{
+				case '&':
+					sb.append("&amp;");
+					break;
+				case '<':
+					sb.append("&lt;");
+					break;
+				case '>':
+					sb.append("&gt;");
+					break;
+				case '"':
+					sb.append("&quot;");
+					break;
+				default:
+					sb.append(ch);
+					break;
+			}
+		}
+		return sb.toString();
+	}
 }

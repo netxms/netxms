@@ -222,6 +222,10 @@
             class="org.netxms.ui.eclipse.perfview.actions.ShowLineChart"
             priority="10">
       </handler>
+      <handler
+            class="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
+            priority="20">
+      </handler>
    </extension>
 
 </plugin>
