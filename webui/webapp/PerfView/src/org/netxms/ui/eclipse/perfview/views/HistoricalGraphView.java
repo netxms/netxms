@@ -191,8 +191,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 				}
 			}
 			
-			// Set view title to "host name: dci description" if
-			// we have only one DCI
+			// Set view title to "host name: dci description" if we have only one DCI
 			if (items.size() == 1)
 			{
 				ChartDciConfig item = items.get(0);

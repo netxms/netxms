@@ -344,12 +344,13 @@ public class TableLastValues extends ViewPart
 		for(int i = 0; i < cells.length; i++)
 		{
 			TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
-			String instance = buildInstanceString(cells[i].getViewerRow());
+			final String instance = buildInstanceString(cells[i].getViewerRow());
 			int source = currentData.getSource();
 			
 			id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + 
 					Integer.toString(source) + "@" + Integer.toString(column.getDataType()) + "@" + 
-					safeEncode(currentData.getTitle()) + "@" + safeEncode(column.getDisplayName() + ": " + instance) + 
+					safeEncode(currentData.getTitle()) + "@" + 
+					safeEncode(column.getDisplayName() + ": " + instance.replace("~~~", " / ")) + 
 					"@" + safeEncode(instance) + "@" + safeEncode(column.getName());
 		}
 		
@@ -384,7 +385,8 @@ public class TableLastValues extends ViewPart
 			
 			id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + 
 					Integer.toString(source) + "@" + Integer.toString(column.getDataType()) + "@" + 
-					safeEncode(currentData.getTitle()) + "@" + safeEncode(column.getDisplayName() + ": " + instance) + 
+					safeEncode(currentData.getTitle()) + "@" + 
+					safeEncode(column.getDisplayName() + ": " + instance.replace("~~~", " / ")) + 
 					"@" + safeEncode(instance) + "@" + safeEncode(column.getName());
 		}
 		
