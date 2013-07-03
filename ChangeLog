@@ -17,7 +17,7 @@
 	- Severity filter in dashboard element "Alarm Viewer"
 	- Zoom level can be configured for "Network Map" dashboard elements
 	- Values of custom attributes can be used in object tools
-- Fixed issues: #57, #195, #281, #284, #286, #293
+- Fixed issues: #57, #195, #281, #284, #286, #291, #293
 
 
 *

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,18 +23,14 @@
 #include "nxcore.h"
 #include <local_admin.h>
 
-
-//
-// Constants
-//
-
+/**
+ * Max message size
+ */
 #define MAX_MSG_SIZE       32768
 
-
-//
-// Request processing thread
-//
-
+/**
+ * Request processing thread
+ */
 static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
    SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
@@ -98,11 +94,9 @@ close_session:
    return THREAD_OK;
 }
 
-
-//
-// Local administrative interface listener thread
-//
-
+/**
+ * Local administrative interface listener thread
+ */
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 {
    SOCKET sock, sockClient;

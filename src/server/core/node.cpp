@@ -1966,7 +1966,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 		return false;
 	}
 
-	SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity);
+   SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity, m_customAttributes.get(_T("snmp.testoid")));
 	if (newCtx != NULL)
    {
       LockData();
