@@ -255,7 +255,7 @@ int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, siz
 
 	if (nRet == SUCCESS)
 	{
-		nSqlRet = SQLBindCol(pSqlCtx->hStmt, 1, SQL_C_CHAR, szBuf, MAX_STR, &nLen);
+		nSqlRet = SQLBindCol(pSqlCtx->hStmt, 1, SQL_C_TCHAR, szBuf, MAX_STR, &nLen);
 		if (SQLRET_FAIL(nSqlRet))
 		{
 			_tcscpy(pSqlCtx->szOdbcMsg, MSG_EBIND);
