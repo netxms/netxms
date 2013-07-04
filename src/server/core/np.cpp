@@ -386,7 +386,7 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
 		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(ipAddr), 161);
 	}
 	int version;
-	SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL);
+   SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL, NULL);
 	if (ctx != NULL)
 	{
 		delete ctx;

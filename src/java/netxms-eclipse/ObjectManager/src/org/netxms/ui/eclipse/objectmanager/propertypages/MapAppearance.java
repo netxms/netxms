@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ public class MapAppearance extends PropertyPage
 {
 	private AbstractObject object;
 	private ImageSelector image;
-	private ObjectSelector submap;
+	private ObjectSelector submap = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -74,16 +74,18 @@ public class MapAppearance extends PropertyPage
       image.setImageGuid(object.getImage(), false);
       
       // Submap
-      submap = new ObjectSelector(dialogArea, SWT.NONE, true);
-      submap.setLabel("Drill-down submap");
-      submap.setObjectClass(NetworkMap.class);
-      submap.setObjectId(object.getSubmapId());
-      submap.setClassFilter(ObjectSelectionDialog.createNetworkMapSelectionFilter());
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      submap.setLayoutData(gd);
-		
+      if (!(object instanceof NetworkMap))
+      {
+	      submap = new ObjectSelector(dialogArea, SWT.NONE, true);
+	      submap.setLabel("Drill-down submap");
+	      submap.setObjectClass(NetworkMap.class);
+	      submap.setObjectId(object.getSubmapId());
+	      submap.setClassFilter(ObjectSelectionDialog.createNetworkMapSelectionFilter());
+	      gd = new GridData();
+	      gd.horizontalAlignment = SWT.FILL;
+	      gd.grabExcessHorizontalSpace = true;
+	      submap.setLayoutData(gd);
+      }
 		return dialogArea;
 	}
 	
@@ -99,7 +101,8 @@ public class MapAppearance extends PropertyPage
 		
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setImage(image.getImageGuid());
-		data.setSubmapId(submap.getObjectId());
+		if (submap != null)
+			data.setSubmapId(submap.getObjectId());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update object's map appearance", null, Activator.PLUGIN_ID, null) {
 			@Override

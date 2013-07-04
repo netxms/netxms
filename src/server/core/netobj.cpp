@@ -723,7 +723,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
          for(i = 0; i < m_dwParentCount; i++)
             m_pParentList[i]->calculateCompoundStatus();
          UnlockParentList();
-         Modify();   /* LOCK? */
+         LockData();
+         Modify();
+         UnlockData();
       }
    }
 }
@@ -981,6 +983,7 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
  */
 void NetObj::postModify()
 {
+   calculateCompoundStatus(TRUE);
 }
 
 /**

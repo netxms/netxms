@@ -11,13 +11,14 @@
 - Logged in users cannot be deleted
 - Empty containters have "Normal" status instead of "Unknown"
 - New NXSL functions: AgentReadTable, DeleteObject, GetDCIRawValue
+- Map objects can have status calculated from contained objects' status
 - Management console:
 	- Simplified table DCI configuration
 	- Charts can be created from table data
 	- Severity filter in dashboard element "Alarm Viewer"
 	- Zoom level can be configured for "Network Map" dashboard elements
 	- Values of custom attributes can be used in object tools
-- Fixed issues: #57, #195, #281, #284, #286, #291, #293
+- Fixed issues: #57, #195, #277, #281, #284, #286, #291, #293
 
 
 *

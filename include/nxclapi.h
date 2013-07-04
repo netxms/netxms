@@ -879,6 +879,7 @@ enum
 #define MF_SHOW_STATUS_FRAME     0x00000002
 #define MF_SHOW_STATUS_BKGND     0x00000004
 #define MF_SHOW_END_NODES        0x00000008
+#define MF_CALCULATE_STATUS      0x00000010
 
 /**
  * Network map layouts

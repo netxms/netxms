@@ -77,6 +77,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private NXCSession session;
 	private ExtendedGraphViewer viewer;
 	private Image[] statusImages;
+	private Image imgNetMap;
 	private Image imgNodeGeneric;
 	private Image imgNodeWindows;
 	private Image imgNodeOSX;
@@ -121,6 +122,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
 
+		imgNetMap = Activator.getImageDescriptor("icons/objects/netmap.png").createImage();
 		imgNodeGeneric = Activator.getImageDescriptor("icons/objects/node.png").createImage();
 		imgNodeOSX = Activator.getImageDescriptor("icons/objects/macserver.png").createImage();
 		imgNodeWindows = Activator.getImageDescriptor("icons/objects/windowsserver.png").createImage();
@@ -215,6 +217,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						return imgCluster;
 					case AbstractObject.OBJECT_ACCESSPOINT:
 						return imgAccessPoint;
+					case AbstractObject.OBJECT_NETWORKMAP:
+						return imgNetMap;
 					default:
 						return imgOther;
 				}
@@ -301,16 +305,15 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i].dispose();
 
+		imgNetMap.dispose();
 		imgNodeGeneric.dispose();
 		imgNodeWindows.dispose();
 		imgNodeLinux.dispose();
 		imgNodeOSX.dispose();
 		imgNodeFreeBSD.dispose();
-
 		imgNodeSwitch.dispose();
 		imgNodeRouter.dispose();
 		imgNodePrinter.dispose();
-		
 		imgSubnet.dispose();
 		imgService.dispose();
 		imgCluster.dispose();

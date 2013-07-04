@@ -42,6 +42,7 @@ public class MapOptions extends PropertyPage
 	private Button checkIncludeEndNodes;
 	private Button checkCustomRadius;
 	private Spinner topologyRadius;
+	private Button checkCalculateStatus;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -175,6 +176,21 @@ public class MapOptions extends PropertyPage
 	      topologyRadius.setEnabled(object.getDiscoveryRadius() > 0);
       }      
 
+		/**** advanced options ****/
+		Group advGroup = new Group(dialogArea, SWT.NONE);
+		advGroup.setText("Advanced options");
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 2;
+      advGroup.setLayoutData(gd);
+      layout = new GridLayout();
+      advGroup.setLayout(layout);
+
+      checkCalculateStatus = new Button(advGroup, SWT.CHECK);
+      checkCalculateStatus.setText("&Calculate map status based on contained object status");
+      checkCalculateStatus.setSelection((object.getFlags() & NetworkMap.MF_CALCULATE_STATUS) != 0);
+      
 		return dialogArea;
 	}
 
@@ -196,6 +212,8 @@ public class MapOptions extends PropertyPage
 			flags |= NetworkMap.MF_SHOW_STATUS_FRAME;
 		if (checkShowStatusBkgnd.getSelection())
 			flags |= NetworkMap.MF_SHOW_STATUS_BKGND;
+		if (checkCalculateStatus.getSelection())
+			flags |= NetworkMap.MF_CALCULATE_STATUS;
 		md.setObjectFlags(flags);
 		
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);

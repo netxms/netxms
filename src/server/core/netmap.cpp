@@ -99,7 +99,129 @@ NetworkMap::~NetworkMap()
  */
 void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_iStatus = STATUS_NORMAL;
+   if (m_flags & MF_CALCULATE_STATUS)
+   {
+      if (m_iStatus != STATUS_UNMANAGED)
+      {
+         int iMostCriticalStatus, iCount, iStatusAlg;
+         int nSingleThreshold, *pnThresholds, iOldStatus = m_iStatus;
+         int nRating[5], iChildStatus, nThresholds[4];
+
+         LockData();
+         if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
+         {
+            iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
+         }
+         else
+         {
+            iStatusAlg = m_iStatusCalcAlg;
+            nSingleThreshold = m_iStatusSingleThreshold;
+            pnThresholds = m_iStatusThresholds;
+         }
+         if (iStatusAlg == SA_CALCULATE_SINGLE_THRESHOLD)
+         {
+            for(int i = 0; i < 4; i++)
+               nThresholds[i] = nSingleThreshold;
+            pnThresholds = nThresholds;
+         }
+
+         switch(iStatusAlg)
+         {
+            case SA_CALCULATE_MOST_CRITICAL:
+               iCount = 0;
+               iMostCriticalStatus = -1;
+               for(int i = 0; i < m_elements->size(); i++)
+               {
+                  NetworkMapElement *e = m_elements->get(i);
+                  if (e->getType() != MAP_ELEMENT_OBJECT)
+                     continue;
+
+                  NetObj *object = FindObjectById(((NetworkMapObject *)e)->getObjectId());
+                  if (object == NULL)
+                     continue;
+
+                  iChildStatus = object->getPropagatedStatus();
+                  if ((iChildStatus < STATUS_UNKNOWN) && 
+                      (iChildStatus > iMostCriticalStatus))
+                  {
+                     iMostCriticalStatus = iChildStatus;
+                     iCount++;
+                  }
+               }
+               m_iStatus = (iCount > 0) ? iMostCriticalStatus : STATUS_NORMAL;
+               break;
+            case SA_CALCULATE_SINGLE_THRESHOLD:
+            case SA_CALCULATE_MULTIPLE_THRESHOLDS:
+               // Step 1: calculate severity raitings
+               memset(nRating, 0, sizeof(int) * 5);
+               iCount = 0;
+               for(int i = 0; i < m_elements->size(); i++)
+               {
+                  NetworkMapElement *e = m_elements->get(i);
+                  if (e->getType() != MAP_ELEMENT_OBJECT)
+                     continue;
+
+                  NetObj *object = FindObjectById(((NetworkMapObject *)e)->getObjectId());
+                  if (object == NULL)
+                     continue;
+
+                  iChildStatus = object->getPropagatedStatus();
+                  if (iChildStatus < STATUS_UNKNOWN)
+                  {
+                     while(iChildStatus >= 0)
+                        nRating[iChildStatus--]++;
+                     iCount++;
+                  }
+               }
+               UnlockChildList();
+
+               // Step 2: check what severity rating is above threshold
+               if (iCount > 0)
+               {
+                  int i;
+                  for(i = 4; i > 0; i--)
+                     if (nRating[i] * 100 / iCount >= pnThresholds[i - 1])
+                        break;
+                  m_iStatus = i;
+               }
+               else
+               {
+                  m_iStatus = STATUS_NORMAL;
+               }
+               break;
+            default:
+               m_iStatus = STATUS_NORMAL;
+               break;
+         }
+         UnlockData();
+
+         // Cause parent object(s) to recalculate it's status
+         if ((iOldStatus != m_iStatus) || bForcedRecalc)
+         {
+            LockParentList(FALSE);
+            for(UINT32 i = 0; i < m_dwParentCount; i++)
+               m_pParentList[i]->calculateCompoundStatus();
+            UnlockParentList();
+            LockData();
+            Modify();
+            UnlockData();
+         }
+      }
+   }
+   else
+   {
+      if (m_iStatus != STATUS_NORMAL)
+      {
+         m_iStatus = STATUS_NORMAL;
+         LockParentList(FALSE);
+         for(UINT32 i = 0; i < m_dwParentCount; i++)
+            m_pParentList[i]->calculateCompoundStatus();
+         UnlockParentList();
+         LockData();
+         Modify();
+         UnlockData();
+      }
+   }
 }
 
 /**

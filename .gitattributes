@@ -1553,6 +1553,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/objects/cluster.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/freebsdserver.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/linuxserver.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/macserver.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/netmap.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/node.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/other.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/printer.png -text
@@ -3199,6 +3200,7 @@ webui/webapp/NetworkMaps/icons/objects/cluster.png -text
 webui/webapp/NetworkMaps/icons/objects/freebsdserver.png -text
 webui/webapp/NetworkMaps/icons/objects/linuxserver.png -text
 webui/webapp/NetworkMaps/icons/objects/macserver.png -text
+webui/webapp/NetworkMaps/icons/objects/netmap.png -text
 webui/webapp/NetworkMaps/icons/objects/node.png -text
 webui/webapp/NetworkMaps/icons/objects/other.png -text
 webui/webapp/NetworkMaps/icons/objects/printer.png -text

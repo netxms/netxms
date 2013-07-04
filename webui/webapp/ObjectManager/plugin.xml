@@ -169,6 +169,9 @@
                  <instanceof
                        value="org.netxms.client.objects.Interface">
                  </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.NetworkMap">
+                 </instanceof>
               </or>
            </enabledWhen>
         </page>
