@@ -3235,6 +3235,9 @@ webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/algorithms/Sparse
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/dialogs/AddGroupBoxDialog.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/dialogs/CreateNetworkMapDialog.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/messages.properties -text
+webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/messages_es.properties -text
+webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/messages_ru.properties -text
+webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/messages_zh_CN.properties -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/preferencepages/GeneralMapPreferences.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapBackground.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapLinkGeneral.java -text
