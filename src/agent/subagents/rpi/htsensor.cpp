@@ -53,11 +53,11 @@ static bool ReadSensor()
 	bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_OUTP);
 
 	bcm2835_gpio_write(PIN, HIGH);
-	//usleep(500000);
+	//usleep(500);
 	ThreadSleepMs(500);
 	bcm2835_gpio_write(PIN, LOW);
 	ThreadSleepMs(20);
-	//usleep(20000);
+	//usleep(20);
 
 	bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_INPT);
 
@@ -65,7 +65,7 @@ static bool ReadSensor()
 
 	// wait for pin to drop
 	counter = 0;
-	while (bcm2835_gpio_lev(PIN) == 1 && counter < 1000) 
+	while(bcm2835_gpio_lev(PIN) == 1 && counter < 1000) 
 	{
 		struct timespec ts;
 		ts.tv_sec = 0;
@@ -129,6 +129,18 @@ static bool ReadSensor()
 THREAD_RESULT THREAD_CALL SensorPollingThread(void *)
 {
 	AgentWriteDebugLog(1, _T("RPI: sensor polling thread started"));
+
+	struct sched_param sp;
+	sp.sched_priority = 99;
+	int rc = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp);
+	if (rc == 0)
+	{
+		AgentWriteDebugLog(1, _T("RPI: sensor polling thread priority elevated"));
+	}
+	else
+	{
+		AgentWriteDebugLog(1, _T("RPI: call to pthread_set_schedparam failed (%s)"), _tcserror(rc));
+	}
 
 	while(!m_stopCollectorThread) 
 	{
