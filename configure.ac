@@ -1451,6 +1451,25 @@ fi
 
 
 #--------------------------------------------------------------------
+# Linux specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xLinux"; then
+	AC_CHECK_HEADERS([sys/reboot.h],,,[[ ]])
+	AC_CHECK_DECLS([reboot, RB_AUTOBOOT, RB_POWER_OFF, RB_HALT_SYSTEM],,,[
+#if HAVE_SYS_REBOOT_H
+#include <sys/reboot.h>
+#endif
+	])
+	AC_CHECK_FUNCS([reboot],,,[
+#if HAVE_SYS_REBOOT_H
+#include <sys/reboot.h>
+#endif
+	])
+fi
+
+
+#--------------------------------------------------------------------
 # AIX specific checks
 #--------------------------------------------------------------------
 

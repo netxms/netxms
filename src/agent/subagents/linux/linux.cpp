@@ -21,6 +21,77 @@
 **/
 
 #include "linux_subagent.h"
+#if HAVE_SYS_REBOOT_H
+#include <sys/reboot.h>
+#endif
+
+#if HAVE_REBOOT
+
+/**
+ * Shutdown/reboot thread
+ */
+THREAD_RESULT THREAD_CALL RebootThread(void *arg)
+{
+	AgentWriteLog(NXLOG_INFO, _T("Reboot thread started - system %s in 2 seconds"), *((TCHAR *)arg) == _T('R') ? _T("restart") : _T("shutdown"));
+	ThreadSleep(2);	// give time for sending response to server
+	sync();
+	if (*((TCHAR *)arg) == _T('R'))
+	{
+#if HAVE_DECL_RB_AUTOBOOT
+		reboot(RB_AUTOBOOT);
+#endif
+	}
+	else
+	{
+#if HAVE_DECL_RB_POWER_OFF
+		reboot(RB_POWER_OFF);
+#elif HAVE_DECL_RB_HALT_SYSTEM
+		reboot(RB_HALT_SYSTEM);
+#endif
+	}
+	return THREAD_OK;
+}
+
+#endif
+
+/**
+ * Handler for hard shutdown/restart actions
+ */
+static LONG H_HardShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+{
+#if HAVE_REBOOT
+	if (*pData == _T('R'))
+	{
+#if HAVE_DECL_RB_AUTOBOOT
+		ThreadCreate(RebootThread, 0, (void *)pData);
+		return ERR_SUCCESS;
+#else
+		return ERR_INTERNAL_ERROR;
+#endif
+	}
+	else
+	{
+#if HAVE_DECL_RB_POWER_OFF || HAVE_DECL_RB_HALT_SYSTEM
+		ThreadCreate(RebootThread, 0, (void *)pData);
+		return ERR_SUCCESS;
+#else
+		return ERR_INTERNAL_ERROR;
+#endif
+	}
+#else
+	return ERR_INTERNAL_ERROR;
+#endif
+}
+
+/**
+ * Handler for soft shutdown/restart actions
+ */
+static LONG H_SoftShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+{
+	char cmd[128];
+	snprintf(cmd, 128, "shutdown %s now", (*pData == _T('R')) ? "-r" : "-h");
+	return (system(cmd) >= 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+}
 
 /**
  * Initalization callback
@@ -413,6 +484,17 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
 };
 
 /**
+ * Subagent's actions
+ */
+static NETXMS_SUBAGENT_ACTION m_actions[] =
+{
+	{ _T("System.HardRestart"), H_HardShutdown, _T("R"), _T("Restart system (hard reset)") },
+	{ _T("System.HardShutdown"), H_HardShutdown, _T("S"), _T("Shutdown system (hard shutdown/power off)") },
+	{ _T("System.Restart"), H_SoftShutdown, _T("R"), _T("Restart system") },
+	{ _T("System.Shutdown"), H_SoftShutdown, _T("S"), _T("Shutdown system") }
+};
+
+/**
  * Subagent info
  */
 static NETXMS_SUBAGENT_INFO m_info =
@@ -428,7 +510,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_lists,
 	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
 	m_tables,
-	0, NULL,	// actions
+	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+	m_actions,
 	0, NULL	// push parameters
 };
 
