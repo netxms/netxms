@@ -111,7 +111,7 @@ public class TablePieChartElement extends AbstractDashboardElement
 				@Override
 				public void run()
 				{
-					String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : data.getInstanceColumn();
+					String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : "";  // FIXME
 					if (instanceColumn == null)
 						return;
 					
