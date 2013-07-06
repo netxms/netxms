@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ public class DialChart extends PropertyPage
 {
 	private DialChartConfig config;
 	private Button checkLegendInside;
+	private Button checkVertical;
 	private LabeledText minValue;
 	private LabeledText maxValue;
 	private LabeledText leftYellowZone;
@@ -116,6 +117,15 @@ public class DialChart extends PropertyPage
 		gd.horizontalSpan = 2;
 		checkLegendInside.setLayoutData(gd);
 		
+		checkVertical = new Button(dialogArea, SWT.CHECK);
+		checkVertical.setText("&Vertical orientation");
+		checkVertical.setSelection(config.isVertical());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		checkVertical.setLayoutData(gd);
+		
 		return dialogArea;
 	}
 
@@ -148,6 +158,7 @@ public class DialChart extends PropertyPage
 		config.setRightYellowZone(ry);
 		config.setRightRedZone(rr);
 		config.setLegendInside(checkLegendInside.getSelection());
+		config.setVertical(checkVertical.getSelection());
 		return true;
 	}
 }

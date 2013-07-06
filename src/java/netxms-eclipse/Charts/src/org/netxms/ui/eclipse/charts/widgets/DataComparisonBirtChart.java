@@ -57,7 +57,6 @@ import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 
 /**
  * BIRT-based data comparison chart
- *
  */
 public class DataComparisonBirtChart extends GenericBirtChart implements DataComparisonChart
 {

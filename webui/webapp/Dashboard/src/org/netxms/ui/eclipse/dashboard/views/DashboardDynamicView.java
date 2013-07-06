@@ -181,7 +181,7 @@ public class DashboardDynamicView extends ViewPart
 			dbc = null;
 		}
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
 	 */

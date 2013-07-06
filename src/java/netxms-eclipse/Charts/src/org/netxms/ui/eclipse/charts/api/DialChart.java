@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,4 +92,14 @@ public interface DialChart extends DataComparisonChart
 	 * @param legendInside the legendInside to set
 	 */
 	public void setLegendInside(boolean legendInside);
+
+	/**
+	 * @return the vertical
+	 */
+	public boolean isVertical();
+
+	/**
+	 * @param vertical the vertical to set
+	 */
+	public void setVertical(boolean vertical);
 }

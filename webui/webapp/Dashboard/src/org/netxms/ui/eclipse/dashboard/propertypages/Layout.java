@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -38,6 +39,8 @@ public class Layout extends PropertyPage
 {
 	private Combo comboHorizontalAlign;
 	private Combo comboVerticalAlign;
+	private Button checkGrabHorizontalSpace;
+	private Button checkGrabVerticalSpace;
 	private Spinner spinnerHorizontalSpan;
 	private Spinner spinnerVerticalSpan;
 	private Spinner spinnerWidthHint;
@@ -75,6 +78,14 @@ public class Layout extends PropertyPage
 		comboVerticalAlign.add(Messages.Layout_Top);
 		comboVerticalAlign.add(Messages.Layout_Bottom);
 		comboVerticalAlign.select(elementLayout.vertcalAlignment);
+		
+		checkGrabHorizontalSpace = new Button(dialogArea, SWT.CHECK);
+		checkGrabHorizontalSpace.setText("Grab excessive horizontal space");
+		checkGrabHorizontalSpace.setSelection(elementLayout.grabHorizontalSpace);
+		
+		checkGrabVerticalSpace = new Button(dialogArea, SWT.CHECK);
+		checkGrabVerticalSpace.setText("Grab excessive vertical space");
+		checkGrabVerticalSpace.setSelection(elementLayout.grabVerticalSpace);
 		
 		final WidgetFactory factory = new WidgetFactory() {
 			@Override
@@ -118,6 +129,8 @@ public class Layout extends PropertyPage
 	{
 		elementLayout.horizontalAlignment = comboHorizontalAlign.getSelectionIndex();
 		elementLayout.vertcalAlignment = comboVerticalAlign.getSelectionIndex();
+		elementLayout.grabHorizontalSpace = checkGrabHorizontalSpace.getSelection();
+		elementLayout.grabVerticalSpace = checkGrabVerticalSpace.getSelection();
 		elementLayout.horizontalSpan = spinnerHorizontalSpan.getSelection();
 		elementLayout.verticalSpan = spinnerVerticalSpan.getSelection();
 		elementLayout.widthHint = spinnerWidthHint.getSelection();

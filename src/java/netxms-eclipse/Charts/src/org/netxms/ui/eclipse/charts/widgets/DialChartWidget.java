@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	private double rightRedZone = 90.0;
 	private boolean legendInside = true;
 	private boolean gridVisible = true;
+	private boolean vertical = false;
 	
 	/**
 	 * @param parent
@@ -386,13 +387,28 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 			return;
 		}
 		
-		int w = (size.x - OUTER_MARGIN_WIDTH * 2) / parameters.size();
-		int h = size.y - OUTER_MARGIN_HEIGHT - top;
-		if ((w > 40 * parameters.size()) && (h > 40))
+		if (vertical)
 		{
-			for(int i = 0; i < parameters.size(); i++)
+			int w = (size.x - OUTER_MARGIN_WIDTH * 2);
+			int h = (size.y - OUTER_MARGIN_HEIGHT - top) / parameters.size();
+			if ((w > 40) && (h > 40 * parameters.size()))
 			{
-				renderElement(gc, parameters.get(i), i * w, top, w, h);
+				for(int i = 0; i < parameters.size(); i++)
+				{
+					renderElement(gc, parameters.get(i), 0, top + i * h, w, h);
+				}
+			}
+		}
+		else
+		{
+			int w = (size.x - OUTER_MARGIN_WIDTH * 2) / parameters.size();
+			int h = size.y - OUTER_MARGIN_HEIGHT - top;
+			if ((w > 40 * parameters.size()) && (h > 40))
+			{
+				for(int i = 0; i < parameters.size(); i++)
+				{
+					renderElement(gc, parameters.get(i), i * w, top, w, h);
+				}
 			}
 		}
 		
@@ -836,5 +852,51 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void clearErrors()
 	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+	 */
+	@Override
+	public Point computeSize(int wHint, int hHint, boolean changed)
+	{
+		// Try to make sqaure shape if possible
+		if (vertical)
+		{
+			if ((wHint == SWT.DEFAULT) && (hHint == SWT.DEFAULT))
+				return new Point(300, 300 * parameters.size());
+			if (wHint == SWT.DEFAULT)
+				return new Point(hHint, hHint / parameters.size());
+			if (hHint == SWT.DEFAULT)
+				return new Point(wHint * parameters.size(), wHint);
+		}
+		else
+		{
+			if ((wHint == SWT.DEFAULT) && (hHint == SWT.DEFAULT))
+				return new Point(300 * parameters.size(), 300);
+			if (wHint == SWT.DEFAULT)
+				return new Point(hHint * parameters.size(), hHint);
+			if (hHint == SWT.DEFAULT)
+				return new Point(wHint, wHint / parameters.size());
+		}
+		return super.computeSize(wHint, hHint, changed);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#isVertical()
+	 */
+	@Override
+	public boolean isVertical()
+	{
+		return vertical;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#setVertical(boolean)
+	 */
+	@Override
+	public void setVertical(boolean vertical)
+	{
+		this.vertical = vertical;
 	}
 }

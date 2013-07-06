@@ -18,6 +18,7 @@
 	- Severity filter in dashboard element "Alarm Viewer"
 	- Zoom level can be configured for "Network Map" dashboard elements
 	- Values of custom attributes can be used in object tools
+	- Vertical orientation for dial chart elements
 - Fixed issues: #57, #195, #277, #281, #284, #286, #291, #293
 
 

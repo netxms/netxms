@@ -16,6 +16,9 @@ public class DialChartConfig extends AbstractChartConfig
 	private boolean legendInside = false;
 	
 	@Element(required = false)
+	private boolean vertical = false;
+	
+	@Element(required = false)
 	private double minValue = 0.0;
 	
 	@Element(required = false)
@@ -156,5 +159,21 @@ public class DialChartConfig extends AbstractChartConfig
 	public void setLegendInside(boolean legendInside)
 	{
 		this.legendInside = legendInside;
+	}
+
+	/**
+	 * @return the vertical
+	 */
+	public boolean isVertical()
+	{
+		return vertical;
+	}
+
+	/**
+	 * @param vertical the vertical to set
+	 */
+	public void setVertical(boolean vertical)
+	{
+		this.vertical = vertical;
 	}
 }

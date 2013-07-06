@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -242,9 +242,9 @@ public class DashboardControl extends Composite
 
 		final DashboardElementLayout el = w.getElementLayout();
 		final GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = (el.horizontalAlignment == DashboardElement.FILL);
+		gd.grabExcessHorizontalSpace = el.grabHorizontalSpace;
 		gd.horizontalAlignment = mapHorizontalAlignment(el.horizontalAlignment);
-		gd.grabExcessVerticalSpace = (el.vertcalAlignment == DashboardElement.FILL);
+		gd.grabExcessVerticalSpace = el.grabVerticalSpace;
 		gd.verticalAlignment = mapVerticalAlignment(el.vertcalAlignment);
 		gd.horizontalSpan = el.horizontalSpan;
 		gd.verticalSpan = el.verticalSpan;

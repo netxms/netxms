@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ public class DialChartElement extends ComparisonChartElement
 		chart.setTitleVisible(config.isShowTitle());
 		chart.setLegendVisible(config.isShowLegend());
 		((DialChart)chart).setLegendInside(config.isLegendInside());
+		((DialChart)chart).setVertical(config.isVertical());
 		((DialChart)chart).setMinValue(config.getMinValue());
 		((DialChart)chart).setMaxValue(config.getMaxValue());
 		((DialChart)chart).setLeftYellowZone(config.getLeftYellowZone());
