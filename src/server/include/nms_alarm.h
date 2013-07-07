@@ -29,7 +29,7 @@
 class NXCORE_EXPORTABLE AlarmManager
 {
 private:
-   UINT32 m_dwNumAlarms;
+   int m_numAlarms;
    NXC_ALARM *m_pAlarmList;
    MUTEX m_mutex;
    UINT32 m_dwNotifyCode;

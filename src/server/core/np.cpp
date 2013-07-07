@@ -41,8 +41,7 @@ public:
 /**
  * Implementation of discovery class
  */
-NXSL_DiscoveryClass::NXSL_DiscoveryClass()
-                     :NXSL_Class()
+NXSL_DiscoveryClass::NXSL_DiscoveryClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("NewNode"));
 }
