@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -174,6 +174,9 @@ public class ComponentsTab extends ObjectTab
 	public void objectChanged(final AbstractObject object)
 	{
 		viewer.setInput(new Object[0]);
+		if (object == null)
+			return;
+		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		ConsoleJob job = new ConsoleJob("Get node components", getViewPart(), Activator.PLUGIN_ID, null) {
 			@Override
@@ -222,7 +225,7 @@ public class ComponentsTab extends ObjectTab
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get component information for node " + object.getObjectName();
+				return String.format("Cannot get component information for node %s", object.getObjectName());
 			}
 		};
 		job.setUser(false);

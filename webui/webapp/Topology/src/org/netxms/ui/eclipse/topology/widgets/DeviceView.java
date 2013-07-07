@@ -48,8 +48,6 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 public class DeviceView extends DashboardComposite
 {
-	private static final long serialVersionUID = 1L;
-	
 	private long nodeId;
 	private NXCSession session;
 	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();

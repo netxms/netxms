@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -175,12 +175,19 @@ public class TabbedObjectView extends ViewPart
 			public void selectionChanged(IWorkbenchPart part, ISelection selection)
 			{
 				if ((part.getSite().getId().equals("org.netxms.ui.eclipse.view.navigation.objectbrowser")) && 
-				    (selection instanceof IStructuredSelection) && !selection.isEmpty())
+				    (selection instanceof IStructuredSelection))
 				{
-					Object object = ((IStructuredSelection)selection).getFirstElement();
-					if (object instanceof AbstractObject)
+					if (selection.isEmpty())
 					{
-						setObject((AbstractObject)object);
+						setObject(null);
+					}
+					else
+					{
+						Object object = ((IStructuredSelection)selection).getFirstElement();
+						if (object instanceof AbstractObject)
+						{
+							setObject((AbstractObject)object);
+						}
 					}
 				}
 			}
@@ -305,6 +312,7 @@ public class TabbedObjectView extends ViewPart
 				else
 				{
 					tab.hide();
+					tab.changeObject(null);
 				}
 			}
 			
@@ -323,8 +331,12 @@ public class TabbedObjectView extends ViewPart
 		else
 		{
 			for(final ObjectTab tab : tabs)
+			{
 				tab.hide();
+				tab.changeObject(null);
+			}
 			objectId = 0;
+			header.setText("");
 		}
 	}
 

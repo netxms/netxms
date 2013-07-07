@@ -49,8 +49,8 @@ public class SummaryTableComparator extends ViewerComparator
 				result = d1.getMenuPath().compareToIgnoreCase(d2.getMenuPath());
 				break;
 			case SummaryTableManager.COLUMN_TITLE:
-			result = d1.getTitle().compareToIgnoreCase(d2.getTitle());
-			break;
+				result = d1.getTitle().compareToIgnoreCase(d2.getTitle());
+				break;
 			default:
 				result = 0;
 				break;

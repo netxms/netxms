@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ConnectionPointComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	private ITableLabelProvider labelProvider;
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	

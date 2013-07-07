@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.GroupMarker;
@@ -116,6 +117,12 @@ public class ThresholdSummaryWidget extends Composite
 	 */
 	public void refresh()
 	{
+		if (object == null)
+		{
+			viewer.setInput(new ArrayList<ThresholdViolationSummary>(0));
+			return;
+		}
+		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final long rootId = object.getObjectId();
 		ConsoleJob job = new ConsoleJob(Messages.ThresholdSummaryWidget_JobTitle, viewPart, Activator.PLUGIN_ID, null) {

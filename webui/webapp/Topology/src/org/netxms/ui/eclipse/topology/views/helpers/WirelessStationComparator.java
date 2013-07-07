@@ -33,8 +33,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class WirelessStationComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
 	/* (non-Javadoc)

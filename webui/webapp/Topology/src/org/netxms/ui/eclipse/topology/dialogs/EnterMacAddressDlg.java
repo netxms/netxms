@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.topology.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -28,6 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.MacAddress;
 import org.netxms.client.MacAddressFormatException;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -37,8 +37,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EnterMacAddressDlg extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabeledText textMac;
 	private MacAddress macAddress;
 	
@@ -69,6 +67,7 @@ public class EnterMacAddressDlg extends Dialog
 		textMac = new LabeledText(dialogArea, SWT.NONE);
 		textMac.setLabel("MAC address");
 		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
 		textMac.setLayoutData(gd);
@@ -89,7 +88,7 @@ public class EnterMacAddressDlg extends Dialog
 		}
 		catch(MacAddressFormatException e)
 		{
-			MessageDialog.openError(getShell(), "Error", "MAC address entered is incorrect. Please enter correct MAC address.");
+			MessageDialogHelper.openError(getShell(), "Error", "MAC address entered is incorrect. Please enter correct MAC address.");
 		}
 	}
 

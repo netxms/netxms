@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,8 +103,6 @@ public class Ports extends ObjectTab implements ISelectionProvider
 		//scroller.getVerticalBar().setIncrement(20);
 		//scroller.getHorizontalBar().setIncrement(20);
 		scroller.addControlListener(new ControlAdapter() {
-			private static final long serialVersionUID = 1L;
-
 			public void controlResized(ControlEvent e)
 			{
 				scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
@@ -120,7 +118,7 @@ public class Ports extends ObjectTab implements ISelectionProvider
 	@Override
 	public void objectChanged(AbstractObject object)
 	{
-		deviceView.setNodeId(object.getObjectId());
+		deviceView.setNodeId((object != null) ? object.getObjectId() : 0);
 		scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 	}
 
@@ -147,8 +145,6 @@ public class Ports extends ObjectTab implements ISelectionProvider
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
