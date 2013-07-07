@@ -1000,6 +1000,7 @@ protected:
 
    void checkInterfaceNames(InterfaceList *pIfList);
 	void checkSubnetBinding(InterfaceList *pIfList);
+   Subnet *createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);

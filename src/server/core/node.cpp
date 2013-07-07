@@ -870,7 +870,7 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
 				// new subnet with class mask
 				if (dwNetMask == 0)
 				{
-					bSyntheticMask = TRUE;
+					bSyntheticMask = true;
 					if (dwIpAddr < 0xE0000000)
 					{
 						dwNetMask = 0xFFFFFF00;   // Class A, B or C
@@ -890,20 +890,7 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
 				// Ignore mask 255.255.255.254 - it's invalid
 				if ((dwIpAddr < 0xE0000000) && (dwNetMask != 0xFFFFFFFF) && (dwNetMask != 0xFFFFFFFE))
 				{
-					pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_zoneId, bSyntheticMask);
-					NetObjInsert(pSubnet, TRUE);
-					if (IsZoningEnabled())
-					{
-						Zone *zone = FindZoneByGUID(m_zoneId);
-						if (zone != NULL)
-						{
-							zone->addSubnet(pSubnet);
-						}
-					}
-					else
-					{
-						g_pEntireNet->AddSubnet(pSubnet);
-					}
+					pSubnet = createSubnet(dwIpAddr & dwNetMask, dwNetMask, bSyntheticMask);
 				}
 			}
 			else
@@ -5033,6 +5020,35 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 }
 
 /**
+ * Create new subnet and bins to this node
+ */
+Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
+{
+   Subnet *s = new Subnet(ipAddr, netMask, m_zoneId, syntheticMask);
+   NetObjInsert(s, TRUE);
+   if (g_dwFlags & AF_ENABLE_ZONING)
+   {
+	   Zone *zone = FindZoneByGUID(m_zoneId);
+	   if (zone != NULL)
+	   {
+		   zone->addSubnet(s);
+	   }
+	   else
+	   {
+		   DbgPrintf(1, _T("Inconsistent configuration - zone %d does not exist"), (int)m_zoneId);
+	   }
+   }
+   else
+   {
+	   g_pEntireNet->AddSubnet(s);
+   }
+   s->AddNode(this);
+   DbgPrintf(4, _T("Node::CheckSubnetBinding(): Creating new subnet %s [%d] for node %s [%d]"),
+             s->Name(), s->Id(), m_szName, m_dwId);
+   return s;
+}
+
+/**
  * Check subnet bindings
  */
 void Node::checkSubnetBinding(InterfaceList *pIfList)
@@ -5092,28 +5108,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			}
 			else if (!isSync)
 			{
-				// Create subnet
-				pSubnet = new Subnet(iface->dwIpAddr & iface->dwIpNetMask, iface->dwIpNetMask, m_zoneId, FALSE);
-				NetObjInsert(pSubnet, TRUE);
-				if (g_dwFlags & AF_ENABLE_ZONING)
-				{
-					Zone *zone = FindZoneByGUID(m_zoneId);
-					if (zone != NULL)
-					{
-						zone->addSubnet(pSubnet);
-					}
-					else
-					{
-						DbgPrintf(1, _T("Inconsistent configuration - zone %d does not exist"), (int)m_zoneId);
-					}
-				}
-				else
-				{
-					g_pEntireNet->AddSubnet(pSubnet);
-				}
-				pSubnet->AddNode(this);
-				DbgPrintf(4, _T("Node::CheckSubnetBinding(): Creating new subnet %s [%d] for node %s [%d]"),
-				          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+            pSubnet = createSubnet(iface->dwIpAddr & iface->dwIpNetMask, iface->dwIpNetMask, false);
 			}
 
 			// Check if subnet mask is correct on interface
@@ -5125,6 +5120,25 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			}
 		}
 	}
+
+   // Some devices may report interface list, but without IP
+   // To prevent such nodes from hanging at top of the tree, attempt
+   // to find subnet node primary IP
+	pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+   if (pSubnet != NULL)
+   {
+		// Check if node is linked to this subnet
+		if (!pSubnet->isChild(m_dwId))
+		{
+			DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
+						 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+			pSubnet->AddNode(this);
+		}
+   }
+   else
+   {
+		pSubnet = createSubnet(m_dwIpAddr & 0xFFFFFF00, 0xFFFFFF00, true);
+   }
 	
 	// Check if we have incorrect subnets as parents
 	LockParentList(FALSE);
@@ -5135,6 +5149,9 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 		if (m_pParentList[i]->Type() == OBJECT_SUBNET)
 		{
 			pSubnet = (Subnet *)m_pParentList[i];
+			if (pSubnet->IpAddr() == (m_dwIpAddr & pSubnet->getIpNetMask()))
+            continue;   // primary IP is in given subnet
+
 			for(j = 0; j < (int)m_dwChildCount; j++)
 			{
 				if (m_pChildList[j]->Type() == OBJECT_INTERFACE)
