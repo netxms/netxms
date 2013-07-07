@@ -202,7 +202,15 @@ public abstract class ObjectTab implements IPluginContribution
 		if (tabItem != null)
 		{
 			tabItem.setControl(null);
-			tabItem.dispose();
+			// sometimes recursive activation can happen when we hide unneeded tabs
+			// it's OK here
+			try
+			{
+				tabItem.dispose();
+			}
+			catch(RuntimeException e)
+			{
+			}
 			tabItem = null;
 			if (tabImage != null)
 			{
