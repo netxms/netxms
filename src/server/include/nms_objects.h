@@ -907,6 +907,8 @@ public:
    UINT32 collectAggregatedData(DCTable *table, Table **result);
 };
 
+class Subnet;
+
 /**
  * Node
  */
