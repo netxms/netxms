@@ -1455,9 +1455,9 @@ BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), vo
 /**
  * Test DCI's transformation script
  */
-BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
+bool DCItem::testTransformation(Node *node, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
-	BOOL success = FALSE;
+	bool success = false;
 	NXSL_Program *pScript;
 
 	pScript = NXSLCompile(script, buffer, (int)bufSize);
@@ -1468,9 +1468,8 @@ BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
 
       pValue = new NXSL_Value(value);
       pEnv = new NXSL_ServerEnv;
-      pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
 	
-	 	lock();
 		if (pScript->run(pEnv, 1, &pValue) == 0)
       {
          pValue = pScript->getResult();
@@ -1500,13 +1499,12 @@ BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
 			{
 				nx_strncpy(buffer, _T("(null)"), bufSize);
 			}
-			success = TRUE;
+			success = true;
       }
       else
       {
 			nx_strncpy(buffer, pScript->getErrorText(), bufSize);
       }
-		unlock();
    }
 	return success;
 }

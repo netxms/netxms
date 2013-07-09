@@ -10124,11 +10124,9 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Get file from agent
-//
-
+/**
+ * Get file from agent
+ */
 void ClientSession::getAgentFile(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -10167,11 +10165,9 @@ void ClientSession::getAgentFile(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
-//
-// Test DCI transformation script
-//
-
+/**
+ * Test DCI transformation script
+ */
 void ClientSession::testDCITransformation(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -10189,30 +10185,22 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
       {
          if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-				DCObject *dci = ((Node *)pObject)->getDCObjectById(pRequest->GetVariableLong(VID_DCI_ID));
-				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
-				{
-					BOOL success;
-					TCHAR *script, value[256], result[256];
+				BOOL success;
+				TCHAR *script, value[256], result[256];
 
-					script = pRequest->GetVariableStr(VID_SCRIPT);
-					if (script != NULL)
-					{
-						pRequest->GetVariableStr(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
-						success = ((DCItem *)dci)->testTransformation(script, value, result, sizeof(result) / sizeof(TCHAR));
-						free(script);
-						msg.SetVariable(VID_RCC, RCC_SUCCESS);
-						msg.SetVariable(VID_EXECUTION_STATUS, (WORD)success);
-						msg.SetVariable(VID_EXECUTION_RESULT, result);
-					}
-					else
-					{
-		            msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
-					}
+				script = pRequest->GetVariableStr(VID_SCRIPT);
+				if (script != NULL)
+				{
+					pRequest->GetVariableStr(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
+               success = DCItem::testTransformation((Node *)pObject, script, value, result, sizeof(result) / sizeof(TCHAR));
+					free(script);
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					msg.SetVariable(VID_EXECUTION_STATUS, (WORD)success);
+					msg.SetVariable(VID_EXECUTION_RESULT, result);
 				}
 				else
 				{
-	            msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+	            msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
 				}
          }
          else  // User doesn't have READ rights on object
@@ -10234,11 +10222,9 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of server jobs
-//
-
+/**
+ * Send list of server jobs
+ */
 void ClientSession::sendJobList(UINT32 dwRqId)
 {
 	CSCPMessage msg;
@@ -10250,11 +10236,9 @@ void ClientSession::sendJobList(UINT32 dwRqId)
 	sendMessage(&msg);
 }
 
-
-//
-// Cancel server job
-//
-
+/**
+ * Cancel server job
+ */
 void ClientSession::cancelJob(CSCPMessage *pRequest)
 {
 	CSCPMessage msg;
@@ -10265,11 +10249,9 @@ void ClientSession::cancelJob(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Put server job on hold
-//
-
+/**
+ * Put server job on hold
+ */
 void ClientSession::holdJob(CSCPMessage *pRequest)
 {
 	CSCPMessage msg;
@@ -10280,11 +10262,9 @@ void ClientSession::holdJob(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Allow server job on hold for execution
-//
-
+/**
+ * Allow server job on hold for execution
+ */
 void ClientSession::unholdJob(CSCPMessage *pRequest)
 {
 	CSCPMessage msg;
@@ -10295,11 +10275,9 @@ void ClientSession::unholdJob(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Deploy agent policy
-//
-
+/**
+ * Deploy agent policy
+ */
 void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 {
 	CSCPMessage msg;
@@ -10359,11 +10337,9 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 	sendMessage(&msg);
 }
 
-
-//
-// Get custom attribute for current user
-//
-
+/**
+ * Get custom attribute for current user
+ */
 void ClientSession::getUserCustomAttribute(CSCPMessage *request)
 {
 	CSCPMessage msg;

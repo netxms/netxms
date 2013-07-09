@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.Arrays;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -30,6 +32,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
+import org.netxms.ui.eclipse.datacollection.dialogs.TestTransformationDlg;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -100,12 +103,29 @@ public class Transformation extends PropertyPage
       transformationScript.setLayoutData(gd);
       transformationScript.setText(editor.getObject().getTransformationScript());
       
-      testScriptButton = new Button(transformationScript.getParent(), SWT.PUSH);
-      testScriptButton.setText(Messages.Transformation_Test);   
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.RIGHT;
-      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      testScriptButton.setLayoutData(gd);
+      if (editor.getObject() instanceof DataCollectionItem)
+      {
+	      testScriptButton = new Button(transformationScript.getParent(), SWT.PUSH);
+	      testScriptButton.setText(Messages.Transformation_Test);   
+	      gd = new GridData();
+	      gd.horizontalAlignment = SWT.RIGHT;
+	      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+	      testScriptButton.setLayoutData(gd);
+	      testScriptButton.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					TestTransformationDlg dlg = new TestTransformationDlg(getShell(), editor.getObject().getNodeId(), transformationScript.getText());
+					dlg.open();
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e)
+				{
+					widgetSelected(e);
+				}
+			});
+      }
 		
 		return dialogArea;
 	}

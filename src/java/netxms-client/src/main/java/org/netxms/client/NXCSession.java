@@ -96,6 +96,7 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
+import org.netxms.client.datacollection.TransformationTestResult;
 import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmNote;
@@ -4303,16 +4304,38 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param nodeId
 	 *           Node object identifier
 	 * @return Data collection configuration object
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId) throws IOException, NXCException
 	{
 		final DataCollectionConfiguration cfg = new DataCollectionConfiguration(this, nodeId);
 		cfg.open();
 		return cfg;
+	}
+	
+	/**
+	 * Test DCI transformation script.
+	 * 
+	 * @param nodeId ID of the node object to test script on
+	 * @param script script source code
+	 * @param inputValue input value for the script
+	 * @return test execution results
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public TransformationTestResult testTransformationScript(long nodeId, String script, String inputValue) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_TEST_DCI_TRANSFORMATION);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariable(NXCPCodes.VID_SCRIPT, script);
+		msg.setVariable(NXCPCodes.VID_VALUE, inputValue);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		TransformationTestResult r = new TransformationTestResult();
+		r.success = response.getVariableAsBoolean(NXCPCodes.VID_EXECUTION_STATUS);
+		r.result = response.getVariableAsString(NXCPCodes.VID_EXECUTION_RESULT);
+		return r;
 	}
 
 	/**

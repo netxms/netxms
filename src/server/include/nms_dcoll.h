@@ -160,6 +160,17 @@ public:
 	void setValue(const TCHAR *value) { m_value = value; }
 };
 
+/**
+ * Table threshold definition
+ */
+class NXCORE_EXPORTABLE TableThreshold
+{
+private:
+
+public:
+
+};
+
 class Template;
 
 /**
@@ -383,7 +394,7 @@ public:
 	void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = (data != NULL) ? _tcsdup(data) : NULL; }
    void setInstanceFilter(const TCHAR *pszScript);
 
-	BOOL testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
+	static bool testTransformation(Node *node, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
 /**

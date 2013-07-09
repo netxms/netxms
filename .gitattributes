@@ -1253,6 +1253,7 @@ src/java/netxms-eclipse/DataCollection/icons/summary_table.png -text
 src/java/netxms-eclipse/DataCollection/icons/threshold.png -text
 src/java/netxms-eclipse/DataCollection/icons/thresholds.gif -text
 src/java/netxms-eclipse/DataCollection/icons/unsupported.gif -text
+src/java/netxms-eclipse/DataCollection/icons/waiting.png -text
 src/java/netxms-eclipse/DataCollection/plugin.xml -text
 src/java/netxms-eclipse/DataCollection/schema/org.netxms.ui.eclipse.datacollection.dciOpenHandlers.exsd -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
@@ -2957,6 +2958,7 @@ webui/webapp/DataCollection/icons/summary_table.png -text
 webui/webapp/DataCollection/icons/threshold.png -text
 webui/webapp/DataCollection/icons/thresholds.gif -text
 webui/webapp/DataCollection/icons/unsupported.gif -text
+webui/webapp/DataCollection/icons/waiting.png -text
 webui/webapp/DataCollection/plugin.xml -text
 webui/webapp/DataCollection/schema/org.netxms.ui.eclipse.datacollection.dciOpenHandlers.exsd -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text

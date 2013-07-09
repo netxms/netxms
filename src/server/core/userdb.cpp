@@ -213,9 +213,9 @@ void SaveUsers(DB_HANDLE hdb)
 //
 
 UINT32 AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
-							  UINT32 dwSigLen, void *pCert, BYTE *pChallenge,
-							  UINT32 *pdwId, UINT32 *pdwSystemRights,
-							  bool *pbChangePasswd, bool *pbIntruderLockout)
+							   UINT32 dwSigLen, void *pCert, BYTE *pChallenge,
+							   UINT32 *pdwId, UINT32 *pdwSystemRights,
+							   bool *pbChangePasswd, bool *pbIntruderLockout)
 {
    int i, j;
    UINT32 dwResult = RCC_ACCESS_DENIED;
