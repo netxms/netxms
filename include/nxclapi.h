@@ -111,7 +111,7 @@ typedef void * NXC_SESSION;
  */
 #define NETXMS_AUTH_TYPE_PASSWORD       0
 #define NETXMS_AUTH_TYPE_CERTIFICATE    1
-#define NETXMS_AUTH_TYPE_TOKEN          2
+#define NETXMS_AUTH_TYPE_SSO_TICKET     2
 
 /**
  * Client type

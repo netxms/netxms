@@ -166,15 +166,19 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		readAppProperties();
 		
-		String ssoTicket = RWT.getRequest().getParameter("ticket");
-		if (ssoTicket != null) {
-			// login using ticket
-		}
-
 		String password = "";
 		boolean autoLogin = (RWT.getRequest().getParameter("auto") != null); //$NON-NLS-1$
 		
-		if (autoLogin) 
+		String ssoTicket = RWT.getRequest().getParameter("ticket");
+		if (ssoTicket != null) 
+		{
+			autoLogin = true;
+			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
+			if (server == null)
+				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
+			success = connectToServer(server, null, ssoTicket);
+		}
+		else if (autoLogin) 
 		{
 			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
 			if (server == null)

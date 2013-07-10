@@ -209,10 +209,9 @@ public:
 BOOL LoadUsers();
 void SaveUsers(DB_HANDLE hdb);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
-UINT32 AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
-							  UINT32 dwSigLen, void *pCert, BYTE *pChallenge,
-							  UINT32 *pdwId, UINT32 *pdwSystemRights,
-							  bool *pbChangePasswd, bool *pbIntruderLockout);
+UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
+                        BYTE *pChallenge, UINT32 *pdwId, UINT32 *pdwSystemRights,
+							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth);
 
 UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId);
@@ -226,5 +225,11 @@ UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize);
 void DumpUsers(CONSOLE_CTX pCtx);
+
+/**
+ * CAS API
+ */
+void CASReadSettings();
+bool CASAuthenticate(const char *ticket, TCHAR *loginName);
 
 #endif

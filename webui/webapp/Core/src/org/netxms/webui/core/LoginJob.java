@@ -105,6 +105,8 @@ public class LoginJob implements IRunnableWithProgress
 			}
 
 			NXCSession session = createSession(hostName, port);
+			if (loginName == null)	// SSO login with ticket
+				session.setAuthType(NXCSession.AUTH_TYPE_SSO_TICKET);
 			monitor.worked(10);
 
 			session.connect();
@@ -191,14 +193,14 @@ public class LoginJob implements IRunnableWithProgress
 			try
 			{
 				SessionProvider p = (SessionProvider)currentElement.createExecutableExtension("class");
-				return p.createSession(hostName, port, loginName, password, false);
+				return p.createSession(hostName, port, (loginName != null) ? loginName : "?", password, true);
 			}
 			catch(CoreException e)
 			{
 			}
 		}
 		
-		return new NXCSession(hostName, port, loginName, password, false);
+		return new NXCSession(hostName, port, (loginName != null) ? loginName : "?", password, true);
 	}
 	
 	/**

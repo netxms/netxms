@@ -176,7 +176,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
 	public static final int AUTH_TYPE_CERTIFICATE = 1;
-	public static final int AUTH_TYPE_TOKEN = 2;
+	public static final int AUTH_TYPE_SSO_TICKET = 2;
 
 	// Notification channels
 	public static final int CHANNEL_EVENTS = 0x0001;
@@ -228,6 +228,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private boolean connUseEncryption;
 	private String connClientInfo = "nxjclient/" + NXCommon.VERSION;
 	private int clientType = DESKTOP_CLIENT;
+	private int authType = AUTH_TYPE_PASSWORD;
 
 	// Information about logged in user
 	private int sessionId;
@@ -977,6 +978,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		this.connUseEncryption = connUseEncryption;
 	}
 
+	/**
+	 * @return the authType
+	 */
+	public int getAuthType()
+	{
+		return authType;
+	}
+
+	/**
+	 * @param authType the authType to set
+	 */
+	public void setAuthType(int authType)
+	{
+		this.authType = authType;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -1450,9 +1467,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			// Login to server
 			Logger.debug("NXCSession.connect", "Connected to server version " + serverVersion + ", trying to login");
 			request = newMessage(NXCPCodes.CMD_LOGIN);
+			request.setVariableInt16(NXCPCodes.VID_AUTH_TYPE, authType);
 			request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
 			request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
-			request.setVariableInt16(NXCPCodes.VID_AUTH_TYPE, AUTH_TYPE_PASSWORD);
 			request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
 			request.setVariable(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
 			request.setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));

@@ -1650,6 +1650,7 @@ void ClientSession::login(CSCPMessage *pRequest)
    {
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)pRequest->GetVariableShort(VID_AUTH_TYPE);
+      debugPrintf(6, _T("authentication type %d"), nAuthType);
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
@@ -1659,7 +1660,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 				pRequest->GetVariableStrUTF8(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &m_dwSystemAccess, &changePasswd, &intruderLockout);
+													 &m_dwSystemAccess, &changePasswd, &intruderLockout, false);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -1672,7 +1673,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 					dwSigLen = pRequest->GetVariableBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &m_dwSystemAccess,
-														 &changePasswd, &intruderLockout);
+														 &changePasswd, &intruderLockout, false);
 					X509_free(pCert);
 				}
 				else
@@ -1683,11 +1684,21 @@ void ClientSession::login(CSCPMessage *pRequest)
 				dwResult = RCC_NOT_IMPLEMENTED;
 #endif
 				break;
-         case NETXMS_AUTH_TYPE_TOKEN:
-            TCHAR token[1024];
-				pRequest->GetVariableStr(VID_TOKEN, token, 1024);
-				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &m_dwSystemAccess, &changePasswd, &intruderLockout);
+         case NETXMS_AUTH_TYPE_SSO_TICKET:
+            char ticket[1024];
+            pRequest->GetVariableStrA(VID_PASSWORD, ticket, 1024);
+            if (CASAuthenticate(ticket, szLogin))
+            {
+               debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, szLogin);
+				   dwResult = AuthenticateUser(szLogin, NULL, 0, NULL, NULL, &m_dwUserId,
+													    &m_dwSystemAccess, &changePasswd, &intruderLockout, true);
+            }
+            else
+            {
+               debugPrintf(5, _T("SSO ticket %hs is invalid"), ticket);
+               dwResult = RCC_ACCESS_DENIED;
+            }
+            break;
 			default:
 				dwResult = RCC_UNSUPPORTED_AUTH_TYPE;
 				break;

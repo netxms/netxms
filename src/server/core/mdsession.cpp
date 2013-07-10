@@ -526,7 +526,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 				pRequest->GetVariableStrUTF8(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &userRights, &changePasswd, &intruderLockout);
+													 &userRights, &changePasswd, &intruderLockout, false);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -539,7 +539,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 					dwSigLen = pRequest->GetVariableBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &userRights,
-														 &changePasswd, &intruderLockout);
+														 &changePasswd, &intruderLockout, false);
 					X509_free(pCert);
 				}
 				else

@@ -1134,6 +1134,7 @@ public:
 
 	virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
    UINT32 getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer, int interpretRawValue);
+	UINT32 getTableFromSNMP(WORD port, const TCHAR *oid, Table **table);
    UINT32 getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
    UINT32 getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
    UINT32 getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);

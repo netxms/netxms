@@ -203,19 +203,17 @@ void SaveUsers(DB_HANDLE hdb)
    MutexUnlock(m_mutexUserDatabaseAccess);
 }
 
-
-//
-// Authenticate user
-// Checks if provided login name and password are correct, and returns RCC_SUCCESS
-// on success and appropriate RCC otherwise. On success authentication, user's ID is stored
-// int pdwId. If password authentication is used, dwSigLen should be set to zero.
-// For non-UNICODE build, password must be UTF-8 encoded
-//
-
-UINT32 AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
-							   UINT32 dwSigLen, void *pCert, BYTE *pChallenge,
-							   UINT32 *pdwId, UINT32 *pdwSystemRights,
-							   bool *pbChangePasswd, bool *pbIntruderLockout)
+/**
+ * Authenticate user
+ * Checks if provided login name and password are correct, and returns RCC_SUCCESS
+ * on success and appropriate RCC otherwise. On success authentication, user's ID is stored
+ * int pdwId. If password authentication is used, dwSigLen should be set to zero.
+ * For non-UNICODE build, password must be UTF-8 encoded. If user already authenticated by
+ * SSO server, 
+ */
+UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert, 
+                        BYTE *pChallenge, UINT32 *pdwId, UINT32 *pdwSystemRights,
+							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth)
 {
    int i, j;
    UINT32 dwResult = RCC_ACCESS_DENIED;
@@ -225,73 +223,80 @@ UINT32 AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
    for(i = 0; i < m_userCount; i++)
    {
 		if ((!(m_users[i]->getId() & GROUP_FLAG)) &&
-			 (!_tcscmp(pszName, m_users[i]->getName())) &&
+			 (!_tcscmp(login, m_users[i]->getName())) &&
 			 (!m_users[i]->isDeleted()))
       {
 			User *user = (User *)m_users[i];
 
 			// Determine authentication method to use
-			int method = user->getAuthMethod();
-			if ((method == AUTH_CERT_OR_PASSWD) || (method == AUTH_CERT_OR_RADIUS))
-			{
-				if (dwSigLen > 0)
-				{
-					// certificate auth
-					method = AUTH_CERTIFICATE;
-				}
-				else
-				{
-					method = (method == AUTH_CERT_OR_PASSWD) ? AUTH_NETXMS_PASSWORD : AUTH_RADIUS;
-				}
-			}
-
-         switch(method)
+         if (!ssoAuth)
          {
-            case AUTH_NETXMS_PASSWORD:
-					if (dwSigLen == 0)
-					{
-						bPasswordValid = user->validatePassword(pszPassword);
-					}
-					else
-					{
-						// We got certificate instead of password
-						bPasswordValid = FALSE;
-					}
-               break;
-            case AUTH_RADIUS:
-					if (dwSigLen == 0)
-					{
-	               bPasswordValid = RadiusAuth(pszName, pszPassword);
-					}
-					else
-					{
-						// We got certificate instead of password
-						bPasswordValid = FALSE;
-					}
-               break;
-				case AUTH_CERTIFICATE:
-					if ((dwSigLen != 0) && (pCert != NULL))
-					{
+			   int method = user->getAuthMethod();
+			   if ((method == AUTH_CERT_OR_PASSWD) || (method == AUTH_CERT_OR_RADIUS))
+			   {
+				   if (dwSigLen > 0)
+				   {
+					   // certificate auth
+					   method = AUTH_CERTIFICATE;
+				   }
+				   else
+				   {
+					   method = (method == AUTH_CERT_OR_PASSWD) ? AUTH_NETXMS_PASSWORD : AUTH_RADIUS;
+				   }
+			   }
+
+            switch(method)
+            {
+               case AUTH_NETXMS_PASSWORD:
+					   if (dwSigLen == 0)
+					   {
+						   bPasswordValid = user->validatePassword(password);
+					   }
+					   else
+					   {
+						   // We got certificate instead of password
+						   bPasswordValid = FALSE;
+					   }
+                  break;
+               case AUTH_RADIUS:
+					   if (dwSigLen == 0)
+					   {
+	                  bPasswordValid = RadiusAuth(login, password);
+					   }
+					   else
+					   {
+						   // We got certificate instead of password
+						   bPasswordValid = FALSE;
+					   }
+                  break;
+				   case AUTH_CERTIFICATE:
+					   if ((dwSigLen != 0) && (pCert != NULL))
+					   {
 #ifdef _WITH_ENCRYPTION
-						bPasswordValid = ValidateUserCertificate((X509 *)pCert, pszName, pChallenge,
-						                                         (BYTE *)pszPassword, dwSigLen,
-																			  user->getCertMappingMethod(),
-																			  user->getCertMappingData());
+						   bPasswordValid = ValidateUserCertificate((X509 *)pCert, login, pChallenge,
+						                                            (BYTE *)password, dwSigLen,
+																			     user->getCertMappingMethod(),
+																			     user->getCertMappingData());
 #else
-						bPasswordValid = FALSE;
+						   bPasswordValid = FALSE;
 #endif
-					}
-					else
-					{
-						// We got password instead of certificate
-						bPasswordValid = FALSE;
-					}
-					break;
-            default:
-               nxlog_write(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds",
-					            user->getAuthMethod(), pszName);
-               bPasswordValid = FALSE;
-               break;
+					   }
+					   else
+					   {
+						   // We got password instead of certificate
+						   bPasswordValid = FALSE;
+					   }
+					   break;
+               default:
+                  nxlog_write(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds", user->getAuthMethod(), login);
+                  bPasswordValid = FALSE;
+                  break;
+            }
+         }
+         else
+         {
+				DbgPrintf(4, _T("User \"%s\" already authenticated by SSO server"), user->getName());
+            bPasswordValid = TRUE;
          }
 
          if (bPasswordValid)
@@ -299,47 +304,54 @@ UINT32 AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
             if (!user->isDisabled())
             {
 					user->resetAuthFailures();
-					if (user->getFlags() & UF_CHANGE_PASSWORD)
+               if (!ssoAuth)
                {
-						DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
-						if (user->getId() != 0)	// Do not check grace logins for built-in admin user
-						{
-							if (user->getGraceLogins() <= 0)
-							{
-								DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
-								dwResult = RCC_NO_GRACE_LOGINS;
-								break;
-							}
-							user->decreaseGraceLogins();
-						}
-                  *pbChangePasswd = true;
+					   if (user->getFlags() & UF_CHANGE_PASSWORD)
+                  {
+						   DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
+						   if (user->getId() != 0)	// Do not check grace logins for built-in admin user
+						   {
+							   if (user->getGraceLogins() <= 0)
+							   {
+								   DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
+								   dwResult = RCC_NO_GRACE_LOGINS;
+								   break;
+							   }
+							   user->decreaseGraceLogins();
+						   }
+                     *pbChangePasswd = true;
+                  }
+                  else
+                  {
+						   // Check if password was expired
+						   int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
+						   if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) && 
+							    (passwordExpirationTime > 0) && 
+							    ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
+							    (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
+						   {
+							   DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
+							   if (user->getId() != 0)	// Do not check grace logins for built-in admin user
+							   {
+								   if (user->getGraceLogins() <= 0)
+								   {
+									   DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
+									   dwResult = RCC_NO_GRACE_LOGINS;
+									   break;
+								   }
+								   user->decreaseGraceLogins();
+							   }
+							   *pbChangePasswd = true;
+						   }
+						   else
+						   {
+							   *pbChangePasswd = false;
+						   }
+                  }
                }
                else
                {
-						// Check if password was expired
-						int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
-						if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) && 
-							 (passwordExpirationTime > 0) && 
-							 ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
-							 (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
-						{
-							DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
-							if (user->getId() != 0)	// Do not check grace logins for built-in admin user
-							{
-								if (user->getGraceLogins() <= 0)
-								{
-									DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
-									dwResult = RCC_NO_GRACE_LOGINS;
-									break;
-								}
-								user->decreaseGraceLogins();
-							}
-							*pbChangePasswd = true;
-						}
-						else
-						{
-							*pbChangePasswd = false;
-						}
+				      *pbChangePasswd = false;
                }
                *pdwId = user->getId();
                *pdwSystemRights = user->getSystemRights();

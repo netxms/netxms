@@ -56,6 +56,10 @@
 #include <string.h>
 #include <stdarg.h>
 
+#ifdef _WITH_ENCRYPTION
+#include <openssl/ssl.h>
+#endif
+
 #define SHOW_FLAG_VALUE(x) _T("  %-32s = %d\n"), _T(#x), (g_dwFlags & x) ? 1 : 0
 
 

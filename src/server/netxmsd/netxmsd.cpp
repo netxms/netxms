@@ -35,6 +35,10 @@
 #include <signal.h>
 #endif
 
+#ifdef _WITH_ENCRYPTION
+#include <openssl/applink.c>
+#endif
+
 /**
  * Global data
  */

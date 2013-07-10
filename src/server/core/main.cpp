@@ -360,6 +360,8 @@ static BOOL InitCryptografy()
 	if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x1F)))
 		return FALSE;
 
+   SSL_library_init();
+
 	_tcscpy(szKeyFile, g_szDataDir);
 	_tcscat(szKeyFile, DFILE_KEYS);
 	fd = _topen(szKeyFile, O_RDONLY | O_BINARY);
@@ -662,6 +664,7 @@ retry_db_lock:
 
 	// Load global configuration parameters
 	LoadGlobalConfig();
+   CASReadSettings();
 	DbgPrintf(1, _T("Global configuration loaded"));
 
 	// Check data directory
