@@ -1683,6 +1683,11 @@ void ClientSession::login(CSCPMessage *pRequest)
 				dwResult = RCC_NOT_IMPLEMENTED;
 #endif
 				break;
+         case NETXMS_AUTH_TYPE_TOKEN:
+            TCHAR token[1024];
+				pRequest->GetVariableStr(VID_TOKEN, token, 1024);
+				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
+													 &m_dwSystemAccess, &changePasswd, &intruderLockout);
 			default:
 				dwResult = RCC_UNSUPPORTED_AUTH_TYPE;
 				break;

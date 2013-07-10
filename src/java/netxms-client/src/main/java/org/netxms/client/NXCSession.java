@@ -175,6 +175,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
 	public static final int AUTH_TYPE_CERTIFICATE = 1;
+	public static final int AUTH_TYPE_TOKEN = 2;
 
 	// Notification channels
 	public static final int CHANNEL_EVENTS = 0x0001;

@@ -165,6 +165,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		boolean success = false;
 		
 		readAppProperties();
+		
+		String ssoTicket = RWT.getRequest().getParameter("ticket");
+		if (ssoTicket != null) {
+			// login using ticket
+		}
 
 		String password = "";
 		boolean autoLogin = (RWT.getRequest().getParameter("auto") != null); //$NON-NLS-1$
