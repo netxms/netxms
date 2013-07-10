@@ -28,7 +28,8 @@ product
       directory         nxagent=/opt/netxms
       directory         nxagent/bin=/opt/netxms/bin
       file              nxagentd
-      file              nxcptest
+      file              nxappget
+      file              nxapush
       file              nxdevcfg
       directory         nxagent/etc=/opt/netxms/etc
       file              nxagentd.conf
@@ -70,9 +71,12 @@ product
       file              ecs.nsm
       file              hpux.nsm
       file              logwatch.nsm
+      file              oracle.nsm
       file              ping.nsm
       file              portcheck.nsm
       file              sms.nsm
       file              ups.nsm
+      directory         nxagent/lib/netxms/dbdrv=/opt/netxms/lib/netxms/dbdrv
+      file		oracle.ddr
    end
 end

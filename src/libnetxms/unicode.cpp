@@ -1368,7 +1368,11 @@ int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args)
 	int rc;
 
 	fmt = ReplaceFormatSpecs(format);
+#if HAVE_VWSCANF
 	rc = vwscanf(fmt, args);
+#else
+	rc = -1; // FIXME: add workaround implementation
+#endif
 	free(fmt);
 	return rc;
 }
@@ -1379,7 +1383,11 @@ int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args
 	int rc;
 
 	fmt = ReplaceFormatSpecs(format);
+#if HAVE_VFWSCANF
 	rc = vfwscanf(fp, fmt, args);
+#else
+	rc = -1; // FIXME: add workaround implementation
+#endif
 	free(fmt);
 	return rc;
 }
@@ -1390,7 +1398,11 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
 	int rc;
 
 	fmt = ReplaceFormatSpecs(format);
+#if HAVE_VSWSCANF
 	rc = vswscanf(str, fmt, args);
+#else
+	rc = -1; // FIXME: add workaround implementation
+#endif
 	free(fmt);
 	return rc;
 }

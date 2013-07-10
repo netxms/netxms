@@ -647,6 +647,7 @@ case "$PLATFORM" in
    HP-UX)
       CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG"
       if test "x$CXX" = "xaCC"; then
+         CPPFLAGS="$CPPFLAGS -D_HP_ATOMIC_INLINE"
 	 CFLAGS="$CFLAGS -AC99"
          CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
          LDFLAGS="$LDFLAGS -mt"
@@ -1621,6 +1622,7 @@ AC_CHECK_SIZEOF(wchar_t,,[
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper wcserror wcserror_r])
 AC_CHECK_FUNCS([wfopen fputws putws wopen wstat waccess wgetenv wrename wunlink wremove])
 AC_CHECK_FUNCS([wchdir wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod])
+AC_CHECK_FUNCS([vwscanf vswscanf vfwscanf])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,

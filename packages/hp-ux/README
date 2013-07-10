@@ -1,0 +1,6 @@
+Steps to build installation package
+
+1. Populate directories under nxagent according to psf file
+
+2. Create depot file:
+	/usr/sbin/swpackage -s nxagent.psf -d /tmp/nxagent-1.2.8-hpux-ia64.depot -x target_type=tape

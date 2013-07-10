@@ -487,6 +487,10 @@ typedef int SOCKET;
 #include <sys/atomic.h>
 #endif
 
+#ifdef __HP_aCC
+#include <atomic.h>
+#endif
+
 #ifdef __IBMCPP__
 #include <builtins.h>
 #endif
@@ -521,7 +525,9 @@ typedef void * HMODULE;
 typedef int mode_t;
 #endif
 
-#if HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
+#if SIZEOF_LONG == 8
+typedef long INT64;
+#elif HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
 typedef long long INT64;
 #elif HAVE_INT64_T
 typedef int64_t INT64;
@@ -529,7 +535,9 @@ typedef int64_t INT64;
 #error Target system does not have signed 64bit integer type
 #endif
 
-#if HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
+#if SIZEOF_LONG == 8
+typedef unsigned long UINT64;
+#elif HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
 typedef unsigned long long UINT64;
 #elif HAVE_UINT64_T
 typedef uint64_t UINT64;

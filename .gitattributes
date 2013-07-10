@@ -372,6 +372,7 @@ include/netxms_isc.h -text
 include/nxdbapi.h -text
 include/nxlpapi.h -text
 include/uthash.h -text
+packages/hp-ux/README -text
 packages/hp-ux/defaults -text
 packages/hp-ux/nxagent.psf -text
 packages/hp-ux/nxagent/etc/nxagentd.conf -text

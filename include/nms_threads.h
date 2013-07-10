@@ -900,7 +900,7 @@ typedef volatile LONGLONG VolatileCounter64;
 
 #else
 
-#ifdef __sun
+#if defined(__sun)
 
 typedef volatile uint32_t VolatileCounter;
 typedef volatile uint64_t VolatileCounter64;
@@ -937,7 +937,44 @@ inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
    return atomic_dec_64_nv(v);
 }
 
-#else /* not Solaris */
+#elif defined(__HP_aCC)
+
+typedef volatile uint32_t VolatileCounter;
+typedef volatile uint64_t VolatileCounter64;
+
+/**
+ * Atomically increment 32-bit value by 1
+ */
+inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
+{
+   return atomic_inc_32(v) + 1;
+}
+
+/**
+ * Atomically decrement 32-bit value by 1
+ */
+inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
+{
+   return atomic_dec_32(v) - 1;
+}
+
+/**
+ * Atomically increment 64-bit value by 1
+ */
+inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
+{
+   return atomic_inc_64(v) + 1;
+}
+
+/**
+ * Atomically decrement 64-bit value by 1
+ */
+inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
+{
+   return atomic_dec_64(v) - 1;
+}
+
+#else /* not Solaris nor HP-UX */
 
 typedef volatile INT32 VolatileCounter;
 typedef volatile INT64 VolatileCounter64;
