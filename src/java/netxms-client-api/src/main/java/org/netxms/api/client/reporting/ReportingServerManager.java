@@ -2,10 +2,12 @@ package org.netxms.api.client.reporting;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.constants.ScheduleType;
 
 public interface ReportingServerManager
 {
@@ -14,6 +16,9 @@ public interface ReportingServerManager
 	ReportDefinition getReportDefinition(UUID reportId) throws NetXMSClientException, IOException;
 
 	UUID executeReport(UUID reportId, Map<String, String> parameters) throws NetXMSClientException, IOException;
+
+	void scheduleReport(UUID reportId, ScheduleType scheduleType, Date startTime, int daysOfWeek, int daysOfMonth,
+			Map<String, String> parameters) throws NetXMSClientException, IOException;
 
 	List<ReportResult> listReportResults(UUID reportId) throws NetXMSClientException, IOException;
 
