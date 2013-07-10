@@ -612,8 +612,8 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 dwRqId, SNMP_Trans
 		_T("INITIALIZE"),
 		_T("IGNORE")
 	};
-#define PAE_STATE_TEXT(x) ((((x) <= PAE_STATE_RESTART) && ((x) >= 0)) ? paeStateText[x] : paeStateText[0])
-#define BACKEND_STATE_TEXT(x) ((((x) <= BACKEND_STATE_IGNORE) && ((x) >= 0)) ? backendStateText[x] : backendStateText[0])
+#define PAE_STATE_TEXT(x) ((((int)(x) <= PAE_STATE_RESTART) && ((int)(x) >= 0)) ? paeStateText[(int)(x)] : paeStateText[0])
+#define BACKEND_STATE_TEXT(x) ((((int)(x) <= BACKEND_STATE_IGNORE) && ((int)(x) >= 0)) ? backendStateText[(int)(x)] : backendStateText[0])
 
    sendPollerMsg(dwRqId, _T("      Checking port 802.1x status...\r\n"));
 
