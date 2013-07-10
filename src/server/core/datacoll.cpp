@@ -174,14 +174,14 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 		if (pItem->isScheduledForDeletion())
 		{
 	      DbgPrintf(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
-			          pItem->getId(), pItem->getName(), (target != NULL) ? target->Id() : -1);
+			          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->Id() : -1);
 			pItem->deleteFromDB();
 			delete pItem;
 			continue;
 		}
 
       DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d proxy=%d"),
-		          pItem->getId(), pItem->getName(), (target != NULL) ? target->Id() : -1, pItem->getProxyNode());
+		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->Id() : -1, pItem->getProxyNode());
 		if (pItem->getProxyNode() != 0)
 		{
 			NetObj *object = FindObjectById(pItem->getProxyNode(), OBJECT_NODE);
@@ -261,7 +261,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       {
 			Template *n = pItem->getTarget();
          DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d proxy=%d)"),
-			          pItem->getId(), pItem->getName(), (n != NULL) ? n->Id() : -1, pItem->getProxyNode());
+			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->Id() : -1, pItem->getProxyNode());
       }
 
 		// Update item's last poll time and clear busy flag so item can be polled again

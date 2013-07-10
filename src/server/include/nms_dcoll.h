@@ -367,7 +367,7 @@ public:
    ItemValue *getInternalLastValue();
 
    virtual void createMessage(CSCPMessage *pMsg);
-#ifdef __SUNPRO_CC
+#if defined(__SUNPRO_CC) || defined(__HP_aCC)
    using DCObject::updateFromMessage;
 #endif
    void updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);

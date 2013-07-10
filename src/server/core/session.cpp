@@ -1564,10 +1564,10 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 #elif HAVE_DECL_TIMEZONE
 #ifdef UNICODE
 	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (timezone >= 0) ? '+' : '-',
-	         abs(timezone) / 3600, (tzname[1] != NULL) ? tzname[1] : "");
+	         (int)(abs(timezone) / 3600), (tzname[1] != NULL) ? tzname[1] : "");
 #else
 	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (timezone >= 0) ? '+' : '-',
-	        abs(timezone) / 3600, (tzname[1] != NULL) ? tzname[1] : "");
+	        (int)(abs(timezone) / 3600), (tzname[1] != NULL) ? tzname[1] : "");
 #endif
 #elif HAVE_TM_GMTOFF
 	time_t t;
@@ -10412,15 +10412,15 @@ void ClientSession::setUserCustomAttribute(CSCPMessage *request)
 void ClientSession::openServerLog(CSCPMessage *request)
 {
 	CSCPMessage msg;
-	TCHAR name[256];
-	UINT32 rcc;
-	UINT32 handle;
 
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(request->GetId());
 
+	TCHAR name[256];
 	request->GetVariableStr(VID_LOG_NAME, name, 256);
-	handle = OpenLog(name, this, &rcc);
+
+	UINT32 rcc;
+	int handle = OpenLog(name, this, &rcc);
 	if (handle != -1)
 	{
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);

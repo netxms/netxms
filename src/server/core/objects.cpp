@@ -581,22 +581,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 }
 
 /**
- * Get IP netmask for object of any class
- */
-static UINT32 GetObjectNetmask(NetObj *pObject)
-{
-   switch(pObject->Type())
-   {
-      case OBJECT_INTERFACE:
-         return ((Interface *)pObject)->getIpNetMask();
-      case OBJECT_SUBNET:
-         return ((Subnet *)pObject)->getIpNetMask();
-      default:
-         return 0;
-   }
-}
-
-/**
  * Access point MAC address comparator
  */
 static bool AccessPointMACComparator(NetObj *object, void *macAddr)
