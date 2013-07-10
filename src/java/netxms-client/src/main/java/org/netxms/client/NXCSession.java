@@ -61,6 +61,7 @@ import org.netxms.api.client.reporting.ReportDefinition;
 import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.api.client.reporting.ReportRenderFormat;
 import org.netxms.api.client.reporting.ReportResult;
+import org.netxms.api.client.reporting.ReportingJob;
 import org.netxms.api.client.reporting.ReportingServerManager;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
@@ -6869,6 +6870,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			throw new NXCException(RCC.IO_ERROR);
 		}
 		return file;
+	}
+
+	@Override
+	public void scheduleReport(UUID reportId, Date startTime, int daysOfWeek, int daysOfMonth, Map<String, String> parameters)
+			throws NetXMSClientException, IOException
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<ReportingJob> listScheduledJobs()
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
