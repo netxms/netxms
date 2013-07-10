@@ -106,7 +106,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
 static X509 *get_cert_from_file(const char *filename);
 static int valid_cert(X509 *cert, const char *hostname);
 static int arrayContains(char *array[], char *element);
-static char *element_body(char *doc, char *tagname, int n, char *buf, int buflen);
+static char *element_body(const char *doc, const char *tagname, int n, char *buf, int buflen);
 
 /** Returns status of certification:  0 for invalid, 1 for valid. */
 static int valid_cert(X509 *cert, const char *hostname) 
@@ -151,19 +151,14 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    int err, b, ret, total;
    struct sockaddr_in sa;
    struct hostent h, *hp2;
-   SSL_CTX *ctx = NULL;
    SSL *ssl = NULL;
    X509 *s_cert = NULL;
    char buf[4096];
-   const SSL_METHOD *method = NULL;
    char *full_request, *str;
    char netid[14];
    char parsebuf[128];
 
-   SSLeay_add_ssl_algorithms();
-   method = SSLv23_client_method();
-   SSL_load_error_strings();
-   ctx = SSL_CTX_new(method);
+   SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
    if (!ctx) 
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
@@ -320,11 +315,11 @@ static int arrayContains(char *array[], char *element)
  * those representing other elements) within the nth element in the
  * document with the name provided by tagname.
  */
-static char *element_body(char *doc, char *tagname, int n, char *buf, int buflen) 
+static char *element_body(const char *doc, const char *tagname, int n, char *buf, int buflen) 
 {
    char *start_tag_pattern = (char *)malloc(strlen(tagname) + strlen("<") + strlen(">") + 1);
    char *end_tag_pattern = (char *)malloc(strlen(tagname) + strlen("<") + strlen("/") + strlen(">") + 1);
-   char *body_start, *body_end;
+   const char *body_start, *body_end;
    char *ret = NULL;
 
    buf[0] = 0;

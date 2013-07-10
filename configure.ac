@@ -1080,6 +1080,7 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 							 [], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
 			AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
 							 [], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
+			SERVER_LIBS="$SERVER_LIBS -lssl"
 		],
 		[
 			if test "x$REQUIRE_ENCRYPTION" = "xyes"; then

@@ -35,7 +35,7 @@
 #include <signal.h>
 #endif
 
-#ifdef _WITH_ENCRYPTION
+#if defined(_WITH_ENCRYPTION) && defined(_WIN32)
 #include <openssl/applink.c>
 #endif
 
