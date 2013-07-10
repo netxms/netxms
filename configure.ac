@@ -660,6 +660,9 @@ case "$PLATFORM" in
    Linux)
       CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
       ;;
+   Darwin)
+      CPPFLAGS="$CPPFLAGS -Wno-deprecated-declarations"
+      ;;
    *)
       ;;
 esac
