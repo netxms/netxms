@@ -383,7 +383,7 @@ bool CASAuthenticate(const char *ticket, TCHAR *loginName)
       success = true;
    }
 #else
-   int rc = cas_validate(ticket, "", loginName, MAX_USER_NAME, m_proxies);
+   int rc = cas_validate(ticket, m_service, loginName, MAX_USER_NAME, m_proxies);
    if (rc == CAS_SUCCESS)
    {
       success = true;

@@ -209,7 +209,8 @@ void SaveUsers(DB_HANDLE hdb)
  * on success and appropriate RCC otherwise. On success authentication, user's ID is stored
  * int pdwId. If password authentication is used, dwSigLen should be set to zero.
  * For non-UNICODE build, password must be UTF-8 encoded. If user already authenticated by
- * SSO server, 
+ * SSO server, ssoAuth must be set to true. Password expiration, change flag and grace 
+ * count ignored for SSO logins.
  */
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert, 
                         BYTE *pChallenge, UINT32 *pdwId, UINT32 *pdwSystemRights,
