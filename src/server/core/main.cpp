@@ -361,6 +361,7 @@ static BOOL InitCryptografy()
 		return FALSE;
 
    SSL_library_init();
+   SSL_load_error_strings();
 
 	_tcscpy(szKeyFile, g_szDataDir);
 	_tcscat(szKeyFile, DFILE_KEYS);
