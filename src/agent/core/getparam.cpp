@@ -256,17 +256,13 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
 /**
  * Standard agent's tables
  */
-static NETXMS_SUBAGENT_TABLE *m_stdTables = NULL;
-/*
 static NETXMS_SUBAGENT_TABLE m_stdTables[] =
-#endif
 {
    { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
 #ifdef _WIN32
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES }
 #endif
 };
-*/
 
 /**
  * Initialize dynamic parameters list from default static list
@@ -294,8 +290,7 @@ BOOL InitParameterList()
 		memcpy(m_pEnumList, m_stdLists, sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
 	}
 
-   //m_iNumTables = sizeof(m_stdTables) / sizeof(NETXMS_SUBAGENT_TABLE);
-   m_iNumTables = 0;
+   m_iNumTables = sizeof(m_stdTables) / sizeof(NETXMS_SUBAGENT_TABLE);
 	if (m_iNumTables > 0)
 	{
 		m_pTableList = (NETXMS_SUBAGENT_TABLE *)malloc(sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);

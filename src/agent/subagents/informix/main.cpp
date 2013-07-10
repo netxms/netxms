@@ -72,7 +72,6 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 						StringMap* map = (g_paramGroup[k].values[i])[j].attrs;
 						TCHAR* name = (g_paramGroup[k].values[i])[j].name;
 						Trim(name);
-AgentWriteDebugLog(1, _T("%s: name = %s, entity = %s"), MYNAMESTR, name, entity);
 						if (!_tcsnicmp(name, entity, MAX_STR))	// found value which matches the parameters argument
 						{
 							TCHAR key[MAX_STR];
