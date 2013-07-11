@@ -2737,7 +2737,6 @@ webui/webapp/Core/src/org/netxms/webui/core/dialogs/PasswordExpiredDialog.java -
 webui/webapp/Core/src/org/netxms/webui/core/messages.properties -text
 webui/webapp/Core/src/org/netxms/webui/core/messages_es.properties -text
 webui/webapp/Core/src/org/netxms/webui/core/messages_ru.properties -text
-webui/webapp/Core/src/org/netxms/webui/core/nxmc.properties -text
 webui/webapp/Core/theme/resources/arrows/down.gif -text
 webui/webapp/Core/theme/resources/button/arrow-down.png -text
 webui/webapp/Core/theme/resources/button/arrow-left.png -text

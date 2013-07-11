@@ -267,7 +267,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		InputStream in = null;
 		try
 		{
-			in = getClass().getResourceAsStream("nxmc.properties"); //$NON-NLS-1$
+			in = getClass().getResourceAsStream("/nxmc.properties"); //$NON-NLS-1$
 			if (in != null)
 				properties.load(in);
 		}
