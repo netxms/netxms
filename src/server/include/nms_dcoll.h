@@ -476,6 +476,7 @@ public:
    void fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId);
 
    int getColumnDataType(const TCHAR *name);
+   ObjectArray<DCTableColumn> *getColumns() { return m_columns; }
    Table *getLastValue();
 
    void mergeValues(Table *dest, Table *src, int count);

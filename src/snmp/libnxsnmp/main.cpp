@@ -72,14 +72,20 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, UINT32 *pdwBuffer
 /**
  * Check if given OID is syntaxically correct
  */
-BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText)
+bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid)
 {
-   UINT32 dwLength, *pdwBuffer;
+   UINT32 buffer[MAX_OID_LEN];
+   UINT32 len = SNMPParseOID(oid, buffer, MAX_OID_LEN);
+   return (len > 0);
+}
 
-   pdwBuffer = (UINT32 *)malloc(sizeof(UINT32) * MAX_OID_LEN);
-   dwLength = SNMPParseOID(pszText, pdwBuffer, MAX_OID_LEN);
-   free(pdwBuffer);
-   return (dwLength > 0);
+/**
+ * Check if given OID is syntaxically correct
+ */
+UINT32 LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid)
+{
+   UINT32 buffer[MAX_OID_LEN];
+   return SNMPParseOID(oid, buffer, MAX_OID_LEN);
 }
 
 /**

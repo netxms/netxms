@@ -25,14 +25,14 @@
 /**
  * Unique request ID
  */
-static UINT32 m_dwRequestId = 1;
+static VolatileCounter s_requestId = 1;
 
 /**
  * Generate new request ID
  */
 UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId()
 {
-   return m_dwRequestId++;
+   return (UINT32)InterlockedIncrement(&s_requestId);
 }
 
 /**
@@ -51,7 +51,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
 		return SNMP_ERR_COMM;
 
    // Create PDU and send request
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, m_dwRequestId++, dwVersion);
+   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), dwVersion);
    if (szOidStr != NULL)
    {
       dwNameLen = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
@@ -187,7 +187,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
    UINT32 firstObjectNameLen = 0;
    while(bRunning)
    {
-      SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, m_dwRequestId++, dwVersion);
+      SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), dwVersion);
       pRqPDU->bindVariable(new SNMP_Variable(pdwName, dwNameLen));
 	   SNMP_PDU *pRespPDU;
       dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);

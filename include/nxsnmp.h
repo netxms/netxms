@@ -367,6 +367,7 @@ private:
 
 public:
    SNMP_ObjectId();
+   SNMP_ObjectId(SNMP_ObjectId *src);
    SNMP_ObjectId(UINT32 dwLength, const UINT32 *pdwValue);
    ~SNMP_ObjectId();
 
@@ -687,7 +688,8 @@ public:
  */
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(UINT32 dwLength, const UINT32 *pdwValue, TCHAR *pszBuffer, UINT32 dwBufferSize);
 UINT32 LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, UINT32 *pdwBuffer, UINT32 dwBufferSize);
-BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText);
+bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid);
+UINT32 LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid);
 const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 dwError);
 UINT32 LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, UINT32 dwFlags);
 UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot);

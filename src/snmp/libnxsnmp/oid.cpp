@@ -34,6 +34,19 @@ SNMP_ObjectId::SNMP_ObjectId()
 }
 
 /**
+ * Copy constructor
+ */
+SNMP_ObjectId::SNMP_ObjectId(SNMP_ObjectId *src)
+{
+   m_dwLength = src->m_dwLength;
+   m_pdwValue = (UINT32 *)nx_memdup(src->m_pdwValue, sizeof(UINT32) * m_dwLength);
+   if (src->m_pszTextValue != NULL)
+      m_pszTextValue = _tcsdup(src->m_pszTextValue);
+   else
+      convertToText();
+}
+
+/**
  * Create OID from existing binary value
  */
 SNMP_ObjectId::SNMP_ObjectId(UINT32 dwLength, const UINT32 *pdwValue)

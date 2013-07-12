@@ -6,6 +6,7 @@
 - Aggregated DCI values on cluster objects
 - Transformation scripts for table DCIs
 - Support for multi-column keys (instances) in table DCIs
+- Implemented SNMP table DCIs
 - Configurable DCI summary tables
 - Default background color for new network maps made configurable
 - Logged in users cannot be deleted
@@ -19,7 +20,10 @@
 	- Zoom level can be configured for "Network Map" dashboard elements
 	- Values of custom attributes can be used in object tools
 	- Vertical orientation for dial chart elements
-- Fixed issues: #57, #58, #195, #262, #277, #281, #284, #286, #291, #293
+- Web UI:
+	- Single sign-on support using CAS
+	- Configuration file nxmc.properties can be placed outside of war file
+- Fixed issues: #57, #58, #195, #198, #262, #277, #281, #284, #286, #291, #293
 
 
 *

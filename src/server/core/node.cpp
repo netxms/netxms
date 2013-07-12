@@ -2981,6 +2981,114 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, 
 }
 
 /**
+ * Data for SnmpWalk callback in Node::getTableFromSNMP
+ */
+struct TableCallbackData
+{
+   Table *table;
+   ObjectArray<DCTableColumn> *columns;
+   bool indexBySuffix;
+   UINT32 baseOidLen;
+};
+
+/**
+ * Read one row for SNMP table
+ */
+static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, UINT32 baseOidLen, UINT32 index, 
+                               ObjectArray<DCTableColumn> *columns, Table *table)
+{
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   for(int i = 0; i < columns->size(); i++)
+   {
+      DCTableColumn *c = columns->get(i);
+      if (c->getSnmpOid() != NULL)
+      {
+         UINT32 oid[MAX_OID_LEN];
+         UINT32 oidLen = c->getSnmpOid()->getLength();
+         memcpy(oid, c->getSnmpOid()->getValue(), oidLen * sizeof(UINT32));
+         if (rowOid != NULL)
+         {
+            UINT32 suffixLen = rowOid->getLength() - baseOidLen;
+            memcpy(&oid[oidLen], rowOid->getValue() + baseOidLen, suffixLen * sizeof(UINT32));
+            oidLen += suffixLen;
+         }
+         else
+         {
+            oid[oidLen++] = index;
+         }
+         request.bindVariable(new SNMP_Variable(oid, oidLen));
+      }
+   }
+
+   SNMP_PDU *response;
+   UINT32 rc = snmp->doRequest(&request, &response, g_dwSNMPTimeout, 3);
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      if (((int)response->getNumVariables() >= columns->size()) &&
+          (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      {
+         table->addRow();
+         for(UINT32 i = 0; i < response->getNumVariables(); i++)
+         {
+            SNMP_Variable *v = response->getVariable(i);
+            if ((v != NULL) && (v->GetType() != ASN_NO_SUCH_OBJECT) && (v->GetType() != ASN_NO_SUCH_INSTANCE))
+            {
+               bool convert = false;
+               TCHAR buffer[256];
+               table->set((int)i, v->getValueAsPrintableString(buffer, 256, &convert));
+            }
+         }
+      }
+      delete response;
+   }
+   return rc;
+}
+
+/**
+ * Callback for SnmpWalk in Node::getTableFromSNMP
+ */
+static UINT32 SNMPGetTableCallback(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+{
+   ((ObjectArray<SNMP_ObjectId> *)arg)->add(new SNMP_ObjectId(varbind->GetName()));
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get table from SNMP
+ */
+UINT32 Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table)
+{
+   *table = NULL;
+
+   SNMP_Transport *snmp = createSnmpTransport(port);
+   if (snmp == NULL)
+      return DCE_COMM_ERROR;
+
+   ObjectArray<SNMP_ObjectId> oidList(64, 64, true);
+   UINT32 rc = SnmpWalk(snmp->getSnmpVersion(), snmp, oid, SNMPGetTableCallback, &oidList, FALSE);
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      *table = new Table;
+      for(int i = 0; i < columns->size(); i++)
+      {
+         DCTableColumn *c = columns->get(i);
+         if (c->getSnmpOid() != NULL)
+            (*table)->addColumn(c->getName(), c->getDataType(), c->getDisplayName(), c->isInstanceColumn());
+      }
+
+      UINT32 baseOidLen = SNMPGetOIDLength(oid);
+      for(int i = 0; i < oidList.size(); i++)
+      {
+         rc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, *table);
+         if (rc != SNMP_ERR_SUCCESS)
+            break;
+      }
+   }
+   delete snmp;
+   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+}
+
+/**
  * Callback for SnmpWalk in Node::getListFromSNMP
  */
 static UINT32 SNMPGetListCallback(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)

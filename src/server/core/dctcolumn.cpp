@@ -45,7 +45,7 @@ DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
    if (msg->IsVariableExist(baseId + 2))
 	{
 		UINT32 oid[256];
-		UINT32 len = msg->GetVariableInt32Array(baseId + 3, 256, oid);
+		UINT32 len = msg->GetVariableInt32Array(baseId + 2, 256, oid);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(len, oid);

@@ -111,7 +111,15 @@ public abstract class ObjectTab implements IPluginContribution
 	public void selected()
 	{
 		clientArea.moveAbove(null);
-		clientArea.setFocus();
+
+		// sometimes recursive activation can happen when tab selection changed - it's OK here
+		try
+		{
+			clientArea.setFocus();
+		}
+		catch(RuntimeException e)
+		{
+		}
 	}
 	
 	/**
@@ -202,8 +210,7 @@ public abstract class ObjectTab implements IPluginContribution
 		if (tabItem != null)
 		{
 			tabItem.setControl(null);
-			// sometimes recursive activation can happen when we hide unneeded tabs
-			// it's OK here
+			// sometimes recursive activation can happen when we hide unneeded tabs - it's OK here
 			try
 			{
 				tabItem.dispose();

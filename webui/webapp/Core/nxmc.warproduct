@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NXMC" uid="org.netxms.nxmc" version="1.2.7" useFeatures="false" includeLaunchers="false">
+<product name="NXMC" uid="org.netxms.nxmc" version="1.2.8" useFeatures="false" includeLaunchers="false">
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.xml"/>
@@ -129,13 +129,6 @@
       <plugin id="org.eclipse.help.nl_es" fragment="true"/>
       <plugin id="org.eclipse.help.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.help.nl_zh" fragment="true"/>
-      <plugin id="org.eclipse.jetty.continuation"/>
-      <plugin id="org.eclipse.jetty.http"/>
-      <plugin id="org.eclipse.jetty.io"/>
-      <plugin id="org.eclipse.jetty.security"/>
-      <plugin id="org.eclipse.jetty.server"/>
-      <plugin id="org.eclipse.jetty.servlet"/>
-      <plugin id="org.eclipse.jetty.util"/>
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.osgi.nl_de" fragment="true"/>
@@ -257,13 +250,6 @@
       <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.continuation" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.http" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.io" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.security" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.server" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.servlet" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.util" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi.services" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.draw2d" autoStart="true" startLevel="0" />
@@ -314,7 +300,7 @@
 
    <warConfiguration webXml="/Core/WEB-INF/web.xml" launchIni="/Core/WEB-INF/launch.ini">
    <libraries>
-      <library path="org.eclipse.equinox.servletbridge_1.2.300.v20130419-1721.jar" fromTarget="true"/>
+      <library path="org.eclipse.equinox.servletbridge_1.2.300.v20130508-1243.jar" fromTarget="true"/>
    </libraries>
    </warConfiguration>
 </product>

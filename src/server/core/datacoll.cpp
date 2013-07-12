@@ -150,6 +150,18 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 				   *error = DCE_NOT_SUPPORTED;
             }
 			   break;
+         case DS_SNMP_AGENT:
+			   if (dcTarget->Type() == OBJECT_NODE)
+            {
+               *error = ((Node *)dcTarget)->getTableFromSNMP(table->getSnmpPort(), table->getName(), table->getColumns(), &result);
+               if ((*error == DCE_SUCCESS) && (result != NULL))
+                  table->updateResultColumns(result);
+            }
+			   else
+            {
+				   *error = DCE_NOT_SUPPORTED;
+            }
+            break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
 			   break;
