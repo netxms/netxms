@@ -2981,17 +2981,6 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, 
 }
 
 /**
- * Data for SnmpWalk callback in Node::getTableFromSNMP
- */
-struct TableCallbackData
-{
-   Table *table;
-   ObjectArray<DCTableColumn> *columns;
-   bool indexBySuffix;
-   UINT32 baseOidLen;
-};
-
-/**
  * Read one row for SNMP table
  */
 static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, UINT32 baseOidLen, UINT32 index, 
