@@ -155,6 +155,7 @@ static TCHAR *m_pszExtParamList = NULL;
 static TCHAR *m_pszShExtParamList = NULL;
 static TCHAR *m_pszParamProviderList = NULL;
 static TCHAR *m_pszExtSubagentList = NULL;
+static TCHAR *m_pszAppAgentList = NULL;
 static UINT32 m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
@@ -185,6 +186,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("Action"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
    { _T("ActionShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
+   { _T("AppAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszAppAgentList },
    { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
 	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory },
@@ -298,22 +300,18 @@ static void SaveRegistry()
 	}
 }
 
-
-//
-// Open registry
-//
-
+/**
+ * Open registry
+ */
 Config *OpenRegistry()
 {
 	s_registry->lock();
 	return s_registry;
 }
 
-
-//
-// Close registry
-//
-
+/**
+ * Close registry
+ */
 void CloseRegistry(bool modified)
 {
 	if (modified)
@@ -321,13 +319,11 @@ void CloseRegistry(bool modified)
 	s_registry->unlock();
 }
 
-
 #ifdef _WIN32
 
-//
-// Get our own console window handle (an alternative to Microsoft's GetConsoleWindow)
-//
-
+/**
+ * Get our own console window handle (an alternative to Microsoft's GetConsoleWindow)
+ */
 static HWND GetConsoleHWND()
 {
 	HWND hWnd;
@@ -348,11 +344,9 @@ static HWND GetConsoleHWND()
 	return hWnd;
 }
 
-
-//
-// Get proc address and write log file
-//
-
+/**
+ * Get proc address and write log file
+ */
 static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
 {
    FARPROC ptr;
@@ -363,11 +357,9 @@ static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
    return ptr;
 }
 
-
-//
-// Shutdown thread (created by H_RestartAgent)
-//
-
+/**
+ * Shutdown thread (created by H_RestartAgent)
+ */
 static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 {
 	DebugPrintf(INVALID_INDEX, 1, _T("Shutdown thread started"));
@@ -566,11 +558,9 @@ static BOOL SendFileToServer(void *session, UINT32 requestId, const TCHAR *file,
 	return ((CommSession *)session)->sendFile(requestId, file, offset);
 }
 
-
-//
-// Debug callback for DB library
-//
-
+/**
+ * Debug callback for DB library
+ */
 static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
 {
 	if (level <= (int)g_debugLevel)
@@ -582,11 +572,9 @@ static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
 	}
 }
 
-
-//
-// Parser server list
-//
-
+/**
+ * Parser server list
+ */
 static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 {
 	TCHAR *pItem, *pEnd;
@@ -862,6 +850,20 @@ BOOL Initialize()
             nxlog_write(MSG_ADD_EXTERNAL_SUBAGENT_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszExtSubagentList);
+   }
+
+   // Parse application agents list
+	if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszAppAgentList != NULL))
+   {
+      for(pItem = pEnd = m_pszAppAgentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = _tcschr(pItem, _T('\n'));
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         RegisterApplicationAgent(pItem);
+      }
+      free(m_pszAppAgentList);
    }
 
    ThreadSleep(1);

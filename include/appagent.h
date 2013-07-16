@@ -144,5 +144,6 @@ void APPAGENT_EXPORTABLE AppAgentStop();
 bool APPAGENT_EXPORTABLE AppAgentConnect(const TCHAR *name, HPIPE *hPipe);
 void APPAGENT_EXPORTABLE AppAgentDisconnect(HPIPE hPipe);
 int APPAGENT_EXPORTABLE AppAgentGetMetric(HPIPE hPipe, const TCHAR *name, TCHAR *value, int bufferSize);
+int APPAGENT_EXPORTABLE AppAgentListMetrics(HPIPE hPipe, APPAGENT_METRIC **metrics, UINT32 *size);
 
 #endif

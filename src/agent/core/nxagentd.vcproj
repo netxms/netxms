@@ -357,6 +357,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\appagent.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\comm.cpp"
 				>
 			</File>

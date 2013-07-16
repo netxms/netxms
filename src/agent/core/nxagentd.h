@@ -423,6 +423,9 @@ void ListTablesFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 void ListTablesFromExtSubagents(StringList *list);
 CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent);
 
+void RegisterApplicationAgent(const TCHAR *name);
+UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
+
 BOOL WaitForProcess(const TCHAR *name);
 
 UINT32 UpgradeAgent(TCHAR *pszPkgFile);

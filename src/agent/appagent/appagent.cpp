@@ -88,6 +88,49 @@ static APPAGENT_MSG *GetMetric(WCHAR *name, int length)
 }
 
 /**
+ * Encode string into message
+ */
+static BYTE *EncodeString(BYTE *data, const TCHAR *str)
+{
+   BYTE *curr = data;
+   int len = (int)_tcslen(str);
+   if (len > 255)
+      len = 255;
+   *curr = (BYTE)len;
+   curr += sizeof(TCHAR);
+#ifdef UNICODE
+   memcpy(curr, str, len * sizeof(TCHAR));
+#else
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, (WCHAR *)curr, len);
+#endif
+   curr += len * sizeof(WCHAR);
+   return curr;
+}
+
+/**
+ * List available metrics
+ */
+static APPAGENT_MSG *ListMetrics()
+{
+   int msgLen = sizeof(INT16);
+	for(int i = 0; i < s_config.numMetrics; i++)
+      msgLen += (int)((_tcslen(s_config.metrics[i].name) + _tcslen(s_config.metrics[i].description) + 2) * sizeof(TCHAR) + sizeof(INT16));
+
+   APPAGENT_MSG *msg = NewMessage(APPAGENT_CMD_REQUEST_COMPLETED, APPAGENT_RCC_SUCCESS, msgLen);
+   *((INT16 *)msg->payload) = (INT16)s_config.numMetrics;
+
+   BYTE *curr = (BYTE *)msg->payload + sizeof(INT16);
+	for(int i = 0; i < s_config.numMetrics; i++)
+   {
+      *((INT16 *)curr) = (INT16)s_config.metrics[i].type;
+      curr = EncodeString(curr + sizeof(INT16), s_config.metrics[i].name);
+      EncodeString(curr, s_config.metrics[i].description);
+   }
+
+   return msg;
+}
+
+/**
  * Process incoming request
  */
 static void ProcessRequest(HPIPE hPipe)
@@ -107,6 +150,9 @@ static void ProcessRequest(HPIPE hPipe)
 			case APPAGENT_CMD_GET_METRIC:
 				response = GetMetric((WCHAR *)msg->payload, msg->length - APPAGENT_MSG_HEADER_LEN);
 				break;
+         case APPAGENT_CMD_LIST_METRICS:
+				response = ListMetrics();
+            break;
 			default:
 				response = NewMessage(APPAGENT_CMD_REQUEST_COMPLETED, APPAGENT_RCC_BAD_REQUEST, 0);
 				break;

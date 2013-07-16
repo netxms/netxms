@@ -509,7 +509,19 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 		else
 		{
 			dwErrorCode = ERR_UNKNOWN_PARAMETER;
-			m_dwUnsupportedRequests++;
+		}
+   }
+
+   if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == m_iNumParams))
+   {
+		dwErrorCode = GetParameterValueFromAppAgent(pszParam, pszValue);
+		if (dwErrorCode == ERR_SUCCESS)
+		{
+         m_dwProcessedRequests++;
+		}
+		else if (dwErrorCode != ERR_UNKNOWN_PARAMETER)
+		{
+         m_dwFailedRequests++;
 		}
    }
 
