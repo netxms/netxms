@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -52,19 +51,18 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
-import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectFilter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Dialog used to select child object(s) of given object
- *
  */
 public class ChildObjectListDialog extends Dialog
 {
 	private long parentObject;
 	private Set<Integer> classFilter;
-	private ObjectListFilter filter;
+	private ObjectFilter filter;
 	private Text filterText;
 	private TableViewer objectList;
 	private List<AbstractObject> selectedObjects;
@@ -184,7 +182,7 @@ public class ChildObjectListDialog extends Dialog
 		objectList.setContentProvider(new ArrayContentProvider());
 		objectList.setLabelProvider(new WorkbenchLabelProvider());
 		objectList.setComparator(new ViewerComparator());
-		filter = new ObjectListFilter(sourceObjects, classFilter);
+		filter = new ObjectFilter(null, sourceObjects, classFilter);
 		objectList.addFilter(filter);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

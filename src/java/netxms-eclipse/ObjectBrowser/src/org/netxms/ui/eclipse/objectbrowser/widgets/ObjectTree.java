@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
-import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeFilter;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectFilter;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.FilterText;
@@ -83,7 +83,7 @@ public class ObjectTree extends Composite
 	private boolean statusIndicatorEnabled = false;
 	private ObjectTreeViewer objectTree;
 	private FilterText filterText;
-	private ObjectTreeFilter filter;
+	private ObjectFilter filter;
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
 	private NXCListener sessionListener = null;
 	private NXCSession session = null;
@@ -130,7 +130,7 @@ public class ObjectTree extends Composite
 		objectTree.setContentProvider(new ObjectTreeContentProvider(rootObjects));
 		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
-		filter = new ObjectTreeFilter(rootObjects, classFilter);
+		filter = new ObjectFilter(rootObjects, null, classFilter);
 		objectTree.addFilter(filter);
 		objectTree.setInput(session);
 		
