@@ -36,7 +36,7 @@ public:
    ApplicationAgent(const TCHAR *name)
    {
       m_name = _tcsdup(name);
-      m_handle = NULL;
+      m_handle = INVALID_PIPE_HANDLE;
       m_mutex = MutexCreate();
    }
 
@@ -93,7 +93,7 @@ UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer)
       agent->lock();
 
 reconnect:
-		if (agent->m_handle == NULL)
+		if (agent->m_handle == INVALID_PIPE_HANDLE)
 		{
          if (AppAgentConnect(agent->m_name, &agent->m_handle))
          {
@@ -130,7 +130,7 @@ reconnect:
       {
          // try reconnect
          AppAgentDisconnect(agent->m_handle);
-         agent->m_handle = NULL;
+         agent->m_handle = INVALID_PIPE_HANDLE;
          goto reconnect;
       }
       agent->unlock();

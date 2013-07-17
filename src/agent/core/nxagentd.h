@@ -198,7 +198,7 @@
 #define HPIPE HANDLE
 #define INVALID_PIPE_HANDLE INVALID_HANDLE_VALUE
 #else
-#define HPIPE SOCKET
+#define HPIPE int
 #define INVALID_PIPE_HANDLE (-1)
 #endif
 
