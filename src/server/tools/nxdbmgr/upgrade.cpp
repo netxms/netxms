@@ -354,6 +354,17 @@ static BOOL RecreateTData(const TCHAR *className)
 }
 
 /**
+ * Upgrade from V283 to V284
+ */
+static BOOL H_UpgradeFromV283(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("SNMPTrapPort"), _T("162"), 1, 1));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='284' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V282 to V283
  */
 static BOOL H_UpgradeFromV282(int currVersion, int newVersion)
@@ -7024,6 +7035,7 @@ static struct
    { 280, 281, H_UpgradeFromV280 },
    { 281, 282, H_UpgradeFromV281 },
    { 282, 283, H_UpgradeFromV282 },
+   { 283, 284, H_UpgradeFromV283 },
    { 0, 0, NULL }
 };
 

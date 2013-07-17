@@ -40,6 +40,7 @@ static UINT32 m_dwNumTraps = 0;
 static BOOL m_bLogAllTraps = FALSE;
 static INT64 m_qnTrapId = 1;
 static bool s_allowVarbindConversion = true;
+static UINT16 m_wTrapPort = 162;
 
 /**
  * Load trap configuration from database
@@ -136,20 +137,22 @@ static BOOL LoadTrapCfg()
  */
 void InitTraps()
 {
-   DB_RESULT hResult;
+	DB_RESULT hResult;
 
-   m_mutexTrapCfgAccess = MutexCreate();
-   LoadTrapCfg();
-   m_bLogAllTraps = ConfigReadInt(_T("LogAllSNMPTraps"), FALSE);
+	m_mutexTrapCfgAccess = MutexCreate();
+	LoadTrapCfg();
+	m_bLogAllTraps = ConfigReadInt(_T("LogAllSNMPTraps"), FALSE);
 	s_allowVarbindConversion = ConfigReadInt(_T("AllowTrapVarbindsConversion"), 1) ? true : false;
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT max(trap_id) FROM snmp_trap_log"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         m_qnTrapId = DBGetFieldInt64(hResult, 0, 0) + 1;
-      DBFreeResult(hResult);
-   }
+	hResult = DBSelect(g_hCoreDB, _T("SELECT max(trap_id) FROM snmp_trap_log"));
+	if (hResult != NULL)
+	{
+		if (DBGetNumRows(hResult) > 0)
+			m_qnTrapId = DBGetFieldInt64(hResult, 0, 0) + 1;
+		DBFreeResult(hResult);
+	}
+
+	m_wTrapPort = (UINT16)ConfigReadULong(_T("SNMPTrapPort"), m_wTrapPort); // 162 by default;
 }
 
 
@@ -420,21 +423,21 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;
    addr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
-   addr.sin_port = htons(162);
+   addr.sin_port = htons(m_wTrapPort);
 
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", 162, _T("SNMPTrapReceiver"), WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
       closesocket(hSocket);
       return THREAD_OK;
    }
-	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), 162);
+	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), m_wTrapPort);
 
    pTransport = new SNMP_UDPTransport(hSocket);
 	pTransport->enableEngineIdAutoupdate(true);
 	pTransport->setPeerUpdatedOnRecv(true);
-   DbgPrintf(1, _T("SNMP Trap Receiver started"));
+   DbgPrintf(1, _T("SNMP Trap Receiver started on port %u"), m_wTrapPort);
 
    // Wait for packets
    while(!IsShutdownInProgress())
