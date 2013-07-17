@@ -151,6 +151,26 @@ int ForwardingDatabase::getMacCountOnPort(UINT32 ifIndex)
 }
 
 /**
+ * Print to console
+ */
+void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
+{
+   TCHAR macAddrStr[24];
+
+   ConsolePrintf(ctx, _T("\x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m            | \x1b[1mPort\x1b[0m | \x1b[1mNode\x1b[0m  | \x1b[1mNode name\x1b[0m\n"));
+   ConsolePrintf(ctx, _T("------------------+---------+----------------------+------+-------+-----------------------------\n"));
+	for(int i = 0; i < m_fdbSize; i++)
+   {
+      Node *node = (Node *)FindObjectById(m_fdb[i].nodeObject, OBJECT_NODE);
+      Interface *iface = owner->findInterface(m_fdb[i].ifIndex, INADDR_ANY);
+      ConsolePrintf(ctx, _T("%s | %7d | %-20s | %4d | %5d | %s\n"), MACToStr(m_fdb[i].macAddr, macAddrStr),
+         m_fdb[i].ifIndex, (iface != NULL) ? iface->Name() : _T("\x1b[31;1mUNKNOWN\x1b[0m"), 
+         m_fdb[i].port, m_fdb[i].nodeObject, (node != NULL) ? node->Name() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
+   }
+   ConsolePrintf(ctx, _T("\n%d entries\n\n"), m_fdbSize);
+}
+
+/**
  * Sort FDB
  */
 void ForwardingDatabase::sort()

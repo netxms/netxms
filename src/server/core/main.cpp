@@ -1156,6 +1156,44 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			}
 		}
+		else if (IsCommand(_T("FDB"), szBuffer, 3))
+		{
+			// Get argument
+			pArg = ExtractWord(pArg, szBuffer);
+			UINT32 dwNode = _tcstoul(szBuffer, NULL, 0);
+			if (dwNode != 0)
+			{
+				NetObj *pObject = FindObjectById(dwNode);
+				if (pObject != NULL)
+				{
+					if (pObject->Type() == OBJECT_NODE)
+					{
+                  ForwardingDatabase *fdb = ((Node *)pObject)->getSwitchForwardingDatabase();
+						if (fdb != NULL)
+						{
+							fdb->print(pCtx, (Node *)pObject);
+							fdb->decRefCount();
+						}
+						else
+						{
+							ConsolePrintf(pCtx, _T("ERROR: Node does not have forwarding database information\n\n"));
+						}
+					}
+					else
+					{
+						ConsolePrintf(pCtx, _T("ERROR: Object is not a node\n\n"));
+					}
+				}
+				else
+				{
+					ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+				}
+			}
+			else
+			{
+				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+			}
+		}
 		else if (IsCommand(_T("FLAGS"), szBuffer, 1))
 		{
 			ConsolePrintf(pCtx, _T("Flags: 0x%08X\n"), g_dwFlags);
@@ -1536,6 +1574,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
 				_T("   show components <node>    - Show physical components of given node\n")
+				_T("   show fdb <node            - Show forwarding database for node\n")
 				_T("   show flags                - Show internal server flags\n")
 				_T("   show index <index>        - Show internal index\n")
 				_T("   show objects              - Dump network objects to screen\n")

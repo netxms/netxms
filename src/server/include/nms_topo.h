@@ -126,6 +126,8 @@ public:
 	UINT32 findMacAddress(const BYTE *macAddr);
 	bool isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr = NULL);
 	int getMacCountOnPort(UINT32 ifIndex);
+
+   void print(CONSOLE_CTX ctx, Node *owner);
 };
 
 /**
