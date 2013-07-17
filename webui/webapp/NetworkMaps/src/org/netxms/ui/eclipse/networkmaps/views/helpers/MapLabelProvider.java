@@ -39,6 +39,7 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
@@ -300,7 +301,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		// Bug #376478 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=376478) somehow still presented in draw 2D
 		// This call should reset last used font
 		// It can be removed after updating draw 2D to version with this bug fixes
-		FigureUtilities.getTextExtents("", JFaceResources.getDefaultFont());
+		try
+		{
+			FigureUtilities.getTextExtents("", JFaceResources.getDefaultFont());
+		}
+		catch(SWTException e)
+		{
+		}
 		
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i].dispose();

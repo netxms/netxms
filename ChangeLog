@@ -24,6 +24,7 @@
 - Web UI:
 	- Single sign-on support using CAS
 	- Configuration file nxmc.properties can be placed outside of war file
+	- Workbench layout and user preferences saved between sessions
 - Fixed issues: #57, #58, #195, #198, #262, #277, #281, #284, #286, #291, #293
 
 

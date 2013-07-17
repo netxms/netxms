@@ -1,11 +1,26 @@
 package org.netxms.webui.core;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Properties;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.model.ContributionComparator;
 import org.eclipse.ui.model.IContributionService;
+import org.netxms.api.client.Session;
+import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.api.LoginForm;
+import org.netxms.webui.core.dialogs.PasswordExpiredDialog;
 
 /**
  * This workbench advisor creates the window advisor, and specifies the
@@ -40,6 +55,17 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	{
 		super.initialize(configurer);
 		BrandingManager.create();
+		configurer.setSaveAndRestore(true);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.WorkbenchAdvisor#openWindows()
+	 */
+	@Override
+	public boolean openWindows()
+	{
+		doLogin();
+		return super.openWindows();
 	}
 
 	/* (non-Javadoc)
@@ -51,5 +77,201 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		if (contributionType.equals(IContributionService.TYPE_PROPERTY))
 			return new ExtendedContributionComparator();
 		return super.getComparatorFor(contributionType);
+	}
+
+	/**
+	 * Connect to NetXMS server
+	 * 
+	 * @param server
+	 * @param login
+	 * @param password
+	 * @return
+	 */
+	private boolean connectToServer(String server, String login, String password)
+	{
+		boolean success = false;
+		try
+		{
+			LoginJob job = new LoginJob(server, login, password, Display.getCurrent());
+			ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
+			pd.run(false, false, job);
+			success = true;
+		}
+		catch(InvocationTargetException e)
+		{
+			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
+		}
+		return success;
+	}
+
+	/**
+	 * Hex digits
+	 */
+	final private static char[] HEX_DIGITS = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
+	
+	/**
+	 * Convert byte array to hex string
+	 * 
+	 * @param bytes
+	 * @return
+	 */
+	private static String bytesToHexString(byte[] bytes)
+	{
+		char[] hexChars = new char[bytes.length * 2];
+		int v;
+		for(int j = 0; j < bytes.length; j++)
+		{
+			v = bytes[j] & 0xFF;
+			hexChars[j * 2] = HEX_DIGITS[v >>> 4];
+			hexChars[j * 2 + 1] = HEX_DIGITS[v & 0x0F];
+		}
+		return new String(hexChars);
+	}
+	
+	/**
+	 * Show login dialog and perform login
+	 */
+	private void doLogin()
+	{
+		boolean success = false;
+		
+		final Properties properties = readAppProperties();
+		
+		String password = "";
+		boolean autoLogin = (RWT.getRequest().getParameter("auto") != null); //$NON-NLS-1$
+		
+		String ssoTicket = RWT.getRequest().getParameter("ticket");
+		if (ssoTicket != null) 
+		{
+			autoLogin = true;
+			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
+			if (server == null)
+				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
+			success = connectToServer(server, null, ssoTicket);
+		}
+		else if (autoLogin) 
+		{
+			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
+			if (server == null)
+				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
+			String login = RWT.getRequest().getParameter("login"); //$NON-NLS-1$
+			if (login == null)
+				login = "guest";
+			password = RWT.getRequest().getParameter("password"); //$NON-NLS-1$
+			if (password == null)
+				password = "";
+			success = connectToServer(server, login, password);
+		}
+		
+		if (!autoLogin || !success)
+		{
+			Window loginDialog;
+			do
+			{
+				loginDialog = BrandingManager.getInstance().getLoginForm(null, properties);
+				if (loginDialog.open() != Window.OK)
+					continue;
+				password = ((LoginForm)loginDialog).getPassword();
+				
+				success = connectToServer(properties.getProperty("server", "127.0.0.1"),  //$NON-NLS-1$ //$NON-NLS-2$ 
+				                          ((LoginForm)loginDialog).getLogin(),
+				                          password);
+			} while(!success);
+		}
+
+		if (success)
+		{
+			final Session session = (Session)RWT.getUISession().getAttribute("netxms.session"); //$NON-NLS-1$
+			
+			try
+			{
+				RWT.getSettingStore().loadById(session.getUserName() + "@" + bytesToHexString(session.getServerId()));
+			}
+			catch(IOException e)
+			{
+			}
+			
+			// Suggest user to change password if it is expired
+			if (session.isPasswordExpired())
+			{
+				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
+				if (dlg.open() == Window.OK)
+				{
+					final String currentPassword = password;
+					final Display display = Display.getCurrent();
+					IRunnableWithProgress job = new IRunnableWithProgress() {
+						@Override
+						public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
+						{
+							try
+							{
+								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute("netxms.session"); //$NON-NLS-1$
+								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
+							}
+							catch(Exception e)
+							{
+								throw new InvocationTargetException(e);
+							}
+							finally
+							{
+								monitor.done();
+							}
+						}
+					};
+					try
+					{
+						ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
+						pd.run(false, false, job);
+						MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information, Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
+					}
+					catch(InvocationTargetException e)
+					{
+						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, Messages.get().ApplicationWorkbenchWindowAdvisor_CannotChangePswd + e.getCause().getLocalizedMessage());
+					}
+					catch(InterruptedException e)
+					{
+						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Read application properties from nxmc.properties in the root of WAR file
+	 */
+	private Properties readAppProperties()
+	{
+		Properties properties = new Properties();
+		InputStream in = null;
+		try
+		{
+			in = getClass().getResourceAsStream("/nxmc.properties"); //$NON-NLS-1$
+			if (in != null)
+				properties.load(in);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			if (in != null)
+			{
+				try
+				{
+					in.close();
+				}
+				catch(IOException e)
+				{
+				}
+			}
+		}
+		return properties;
 	}
 }

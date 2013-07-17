@@ -18,23 +18,13 @@
  */
 package org.netxms.webui.core;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Properties;
 import org.eclipse.core.commands.common.NotDefinedException;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.bindings.BindingManager;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CBanner;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
@@ -42,10 +32,6 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.internal.keys.BindingService;
 import org.eclipse.ui.keys.IBindingService;
-import org.netxms.api.client.Session;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.console.api.LoginForm;
-import org.netxms.webui.core.dialogs.PasswordExpiredDialog;
 
 /**
  * Configures the initial size and appearance of a workbench window.
@@ -53,8 +39,6 @@ import org.netxms.webui.core.dialogs.PasswordExpiredDialog;
 @SuppressWarnings("restriction")
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
-	private Properties properties;
-	
 	/**
 	 * @param configurer
 	 */
@@ -77,8 +61,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
 	public void preWindowOpen()
 	{
-		doLogin();
-		
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setShowCoolBar(true);
 		configurer.setShowPerspectiveBar(true);
@@ -125,168 +107,5 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		}
 		
 		shell.getMenuBar().setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
-	}
-	
-	/**
-	 * Connect to NetXMS server
-	 * 
-	 * @param server
-	 * @param login
-	 * @param password
-	 * @return
-	 */
-	private boolean connectToServer(String server, String login, String password)
-	{
-		boolean success = false;
-		try
-		{
-			LoginJob job = new LoginJob(server, login, password, Display.getCurrent());
-			ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
-			pd.run(false, false, job);
-			success = true;
-		}
-		catch(InvocationTargetException e)
-		{
-			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
-		}
-		return success;
-	}
-
-	/**
-	 * Show login dialog and perform login
-	 */
-	private void doLogin()
-	{
-		boolean success = false;
-		
-		readAppProperties();
-		
-		String password = "";
-		boolean autoLogin = (RWT.getRequest().getParameter("auto") != null); //$NON-NLS-1$
-		
-		String ssoTicket = RWT.getRequest().getParameter("ticket");
-		if (ssoTicket != null) 
-		{
-			autoLogin = true;
-			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
-			if (server == null)
-				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
-			success = connectToServer(server, null, ssoTicket);
-		}
-		else if (autoLogin) 
-		{
-			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
-			if (server == null)
-				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
-			String login = RWT.getRequest().getParameter("login"); //$NON-NLS-1$
-			if (login == null)
-				login = "guest";
-			password = RWT.getRequest().getParameter("password"); //$NON-NLS-1$
-			if (password == null)
-				password = "";
-			success = connectToServer(server, login, password);
-		}
-		
-		if (!autoLogin || !success)
-		{
-			Window loginDialog;
-			do
-			{
-				loginDialog = BrandingManager.getInstance().getLoginForm(null, properties);
-				if (loginDialog.open() != Window.OK)
-					continue;
-				password = ((LoginForm)loginDialog).getPassword();
-				
-				success = connectToServer(properties.getProperty("server", "127.0.0.1"),  //$NON-NLS-1$ //$NON-NLS-2$ 
-				                          ((LoginForm)loginDialog).getLogin(),
-				                          password);
-				
-			} while(!success);
-		}
-
-		if (success)
-		{
-			// Suggest user to change password if it is expired
-			final Session session = (Session)RWT.getUISession().getAttribute("netxms.session"); //$NON-NLS-1$
-			if (session.isPasswordExpired())
-			{
-				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
-				if (dlg.open() == Window.OK)
-				{
-					final String currentPassword = password;
-					final Display display = Display.getCurrent();
-					IRunnableWithProgress job = new IRunnableWithProgress() {
-						@Override
-						public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
-						{
-							try
-							{
-								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute("netxms.session"); //$NON-NLS-1$
-								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
-							}
-							catch(Exception e)
-							{
-								throw new InvocationTargetException(e);
-							}
-							finally
-							{
-								monitor.done();
-							}
-						}
-					};
-					try
-					{
-						ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
-						pd.run(false, false, job);
-						MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information, Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
-					}
-					catch(InvocationTargetException e)
-					{
-						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, Messages.get().ApplicationWorkbenchWindowAdvisor_CannotChangePswd + e.getCause().getLocalizedMessage());
-					}
-					catch(InterruptedException e)
-					{
-						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Read application properties from nxmc.properties in the root of WAR file
-	 */
-	private void readAppProperties()
-	{
-		properties = new Properties();
-		InputStream in = null;
-		try
-		{
-			in = getClass().getResourceAsStream("/nxmc.properties"); //$NON-NLS-1$
-			if (in != null)
-				properties.load(in);
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			if (in != null)
-			{
-				try
-				{
-					in.close();
-				}
-				catch(IOException e)
-				{
-				}
-			}
-		}
 	}
 }
