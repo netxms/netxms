@@ -37,7 +37,7 @@ static LONG H_Shutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR
 {
    chdir("/");
    char cmd[128];
-   snprintf(cmd, 128, "/sbin/shutdown %s now", (*pData == _T('R')) ? "-r" : "-h");
+   snprintf(cmd, 128, "/sbin/shutdown %s -y now", (*pData == _T('R')) ? "-r" : "-h");
    return (system(cmd) >= 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
