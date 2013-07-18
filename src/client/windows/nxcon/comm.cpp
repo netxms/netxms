@@ -66,7 +66,7 @@ inline void SetInfoText(HWND hWnd, TCHAR *pszText)
 // Wrapper for client library event handler
 //
 
-static void ClientEventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg)
+static void ClientEventHandler(NXC_SESSION hSession, UINT32 dwEvent, UINT32 dwCode, void *pArg)
 {
    theApp.EventHandler(dwEvent, dwCode, pArg);
 }
@@ -115,7 +115,8 @@ static int CompareTools(const void *p1, const void *p2)
 
 DWORD LoadObjectTools()
 {
-   DWORD dwResult, dwTemp;
+   UINT32 dwResult;
+   DWORD dwTemp;
    CMenu *pMenu;
    HMENU hObjMenu;
    static BOOL bReload = FALSE;
@@ -147,7 +148,7 @@ DWORD LoadObjectTools()
 // Callback for signing server's challenge
 //
 
-static BOOL SignChallenge(BYTE *pChallenge, DWORD dwChLen, BYTE *pSinature, DWORD *pdwSigLen, void *pArg)
+static BOOL SignChallenge(BYTE *pChallenge, UINT32 dwChLen, BYTE *pSinature, UINT32 *pdwSigLen, void *pArg)
 {
 	return SignMessageWithCAPI(pChallenge, dwChLen, m_pCert, pSinature, *pdwSigLen, pdwSigLen);
 }
@@ -256,7 +257,7 @@ static DWORD WINAPI LoginThread(void *pArg)
 
    if (dwResult == RCC_SUCCESS)
    {
-      DWORD dwServerTS, dwLocalTS;
+      UINT32 dwServerTS, dwLocalTS;
       TCHAR szFileName[MAX_PATH];
       BOOL bNeedDownload;
 

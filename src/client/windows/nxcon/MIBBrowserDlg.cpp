@@ -86,7 +86,7 @@ END_MESSAGE_MAP()
 BOOL CMIBBrowserDlg::OnInitDialog() 
 {
    RECT rect1, rect2;
-   DWORD dwOIDLen, oid[MAX_OID_LEN];
+   UINT32 dwOIDLen, oid[MAX_OID_LEN];
 
 	CDialog::OnInitDialog();
 
@@ -283,7 +283,7 @@ HBRUSH CMIBBrowserDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 // Select node with given OID
 //
 
-void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, DWORD *pdwOID, unsigned int uNameLen)
+void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, UINT32 *pdwOID, unsigned int uNameLen)
 {
    HTREEITEM hItem;
    SNMP_MIBObject *pNode;
@@ -314,7 +314,7 @@ void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, DWORD *pdwOID, unsigned int uNa
 void CMIBBrowserDlg::OnChangeEditOid() 
 {
    TCHAR szBuffer[1024];
-   DWORD dwOIDLen, oid[MAX_OID_LEN];
+   UINT32 dwOIDLen, oid[MAX_OID_LEN];
 
    // Select node with given OID (or closest match)
    if (!m_bDisableSelUpdate)

@@ -115,7 +115,7 @@ int CDeploymentView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 static THREAD_RESULT THREAD_CALL DeploymentThread(DEPLOYMENT_JOB *pJob)
 {
-   DWORD dwResult;
+   UINT32 dwResult;
 
    dwResult = NXCDeployPackage(g_hSession, pJob->dwPkgId, pJob->dwNumObjects,
                                pJob->pdwObjectList, pJob->pdwRqId);

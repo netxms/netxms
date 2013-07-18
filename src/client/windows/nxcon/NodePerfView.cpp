@@ -424,7 +424,7 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 void CNodePerfView::WorkerThread()
 {
 	WorkerTask *pTask;
-	DWORD dwResult, dwNumItems, numThresholds;
+	UINT32 dwResult, dwNumItems, numThresholds;
 	GraphData *data;
 	NXC_PERFTAB_DCI *pItemList;
 	NXC_DCI_DATA *dciData;

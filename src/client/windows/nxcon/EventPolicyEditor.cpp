@@ -693,8 +693,8 @@ void CEventPolicyEditor::AddSource(void)
             // New object, add it to source list
             m_pEventPolicy->pRuleList[iRow].dwNumSources++;
             m_pEventPolicy->pRuleList[iRow].pdwSourceList = 
-               (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwSourceList,
-                  sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumSources);
+               (UINT32 *)realloc(m_pEventPolicy->pRuleList[iRow].pdwSourceList,
+                  sizeof(UINT32) * m_pEventPolicy->pRuleList[iRow].dwNumSources);
             m_pEventPolicy->pRuleList[iRow].pdwSourceList[j] = dlg.m_pdwObjectList[i];
             Modify();
          }
@@ -729,8 +729,8 @@ void CEventPolicyEditor::AddEvent(void)
             // New object, add it to source list
             m_pEventPolicy->pRuleList[iRow].dwNumEvents++;
             m_pEventPolicy->pRuleList[iRow].pdwEventList = 
-               (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwEventList,
-                  sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumEvents);
+               (UINT32 *)realloc(m_pEventPolicy->pRuleList[iRow].pdwEventList,
+                  sizeof(UINT32) * m_pEventPolicy->pRuleList[iRow].dwNumEvents);
             m_pEventPolicy->pRuleList[iRow].pdwEventList[j] = dlg.m_pdwEventList[i];
             Modify();
          }
@@ -1094,8 +1094,8 @@ void CEventPolicyEditor::AddAction()
             // New object, add it to source list
             m_pEventPolicy->pRuleList[iRow].dwNumActions++;
             m_pEventPolicy->pRuleList[iRow].pdwActionList = 
-               (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwActionList,
-                  sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumActions);
+               (UINT32 *)realloc(m_pEventPolicy->pRuleList[iRow].pdwActionList,
+                  sizeof(UINT32) * m_pEventPolicy->pRuleList[iRow].dwNumActions);
             m_pEventPolicy->pRuleList[iRow].pdwActionList[j] = dlg.m_pdwActionList[i];
             Modify();
          }

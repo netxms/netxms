@@ -480,7 +480,7 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
    {
       safe_free(pData->pdwACL);
       pData->dwACLSize = pgGeneral.m_dwACLSize;
-      pData->pdwACL = (DWORD *)nx_memdup(pgGeneral.m_pdwACL, sizeof(DWORD) * pData->dwACLSize);
+      pData->pdwACL = (UINT32 *)nx_memdup(pgGeneral.m_pdwACL, sizeof(UINT32) * pData->dwACLSize);
       nx_strncpy(pData->szName, (LPCTSTR)pgGeneral.m_strName, MAX_DB_STRING);
       nx_strncpy(pData->szDescription, (LPCTSTR)pgGeneral.m_strDescription, MAX_DB_STRING);
       safe_free(pData->pszData);

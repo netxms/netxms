@@ -180,7 +180,7 @@ void CNodeLastValuesView::OnDestroy()
 
 void CNodeLastValuesView::WorkerThread(void)
 {
-	DWORD dwNodeId, dwResult, dwNumItems;
+	UINT32 dwNodeId, dwResult, dwNumItems;
 	NXC_DCI_VALUE *pValueList;
 
 	while(1)

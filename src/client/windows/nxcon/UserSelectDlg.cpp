@@ -60,7 +60,7 @@ BOOL CUserSelectDlg::OnInitDialog()
 {
    RECT rect;
    NXC_USER *pUserList;
-   DWORD i, dwNumUsers;
+   UINT32 i, dwNumUsers;
    int iItem;
 
 	CDialog::OnInitDialog();

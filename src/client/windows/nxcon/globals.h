@@ -218,11 +218,11 @@ struct DEF_IMG
 
 struct DEPLOYMENT_JOB
 {
-   DWORD dwPkgId;
-   DWORD dwNumObjects;
-   DWORD *pdwObjectList;
+   UINT32 dwPkgId;
+   UINT32 dwNumObjects;
+   UINT32 *pdwObjectList;
    HWND hWnd;
-   DWORD *pdwRqId;
+   UINT32 *pdwRqId;
 };
 
 
@@ -413,20 +413,20 @@ extern CODE_TO_TEXT g_ctSnmpMibAccess[];
 extern CODE_TO_TEXT g_ctSnmpMibType[];
 extern CImageList *g_pObjectSmallImageList;
 extern CImageList *g_pObjectNormalImageList;
-extern DWORD g_dwDefImgListSize;
+extern UINT32 g_dwDefImgListSize;
 extern DEF_IMG *g_pDefImgList;
-extern DWORD g_dwNumActions;
+extern UINT32 g_dwNumActions;
 extern NXC_ACTION *g_pActionList;
 extern HANDLE g_mutexActionListAccess;
 extern NXC_CC_LIST *g_pCCList;
-extern DWORD g_dwNumObjectTools;
+extern UINT32 g_dwNumObjectTools;
 extern NXC_OBJECT_TOOL *g_pObjectToolList;
 extern SNMP_MIBObject *g_pMIBRoot;
 extern ALARM_SOUND_CFG g_soundCfg;
 extern char g_szConfigKeywords[];
 extern char g_szScriptKeywords[];
 extern char g_szLogParserKeywords[];
-extern DWORD g_dwNumGraphs;
+extern UINT32 g_dwNumGraphs;
 extern NXC_GRAPH *g_pGraphList;
 extern HANDLE g_mutexGraphListAccess;
 

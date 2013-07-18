@@ -106,10 +106,10 @@ void CObjectPropsTrustedNodes::OnOK()
 	if (m_pUpdate->qwFlags & OBJ_UPDATE_TRUSTED_NODES)
 	{
 		m_pUpdate->dwNumTrustedNodes = m_wndListCtrl.GetItemCount();
-		m_pUpdate->pdwTrustedNodes = (DWORD *)malloc(sizeof(DWORD) * m_pUpdate->dwNumTrustedNodes);
+		m_pUpdate->pdwTrustedNodes = (UINT32 *)malloc(sizeof(UINT32) * m_pUpdate->dwNumTrustedNodes);
 		for(i = 0; i < m_pUpdate->dwNumTrustedNodes; i++)
 		{
-			m_pUpdate->pdwTrustedNodes[i] = (DWORD)m_wndListCtrl.GetItemData(i);
+			m_pUpdate->pdwTrustedNodes[i] = (UINT32)m_wndListCtrl.GetItemData(i);
 		}
 	}
 }

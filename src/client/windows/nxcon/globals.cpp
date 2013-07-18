@@ -44,7 +44,7 @@ SNMP_MIBObject *g_pMIBRoot = NULL;
 // Graphs
 //
 
-DWORD g_dwNumGraphs = 0;
+UINT32 g_dwNumGraphs = 0;
 NXC_GRAPH *g_pGraphList = NULL;
 HANDLE g_mutexGraphListAccess = INVALID_HANDLE_VALUE;
 
@@ -303,7 +303,7 @@ CODE_TO_TEXT g_ctSnmpMibType[] =
 // Default object image list
 //
 
-DWORD g_dwDefImgListSize = 0;
+UINT32 g_dwDefImgListSize = 0;
 DEF_IMG *g_pDefImgList = NULL;
 
 
@@ -311,7 +311,7 @@ DEF_IMG *g_pDefImgList = NULL;
 // Action list
 //
 
-DWORD g_dwNumActions = 0;
+UINT32 g_dwNumActions = 0;
 NXC_ACTION *g_pActionList = NULL;
 HANDLE g_mutexActionListAccess = INVALID_HANDLE_VALUE;
 
@@ -327,7 +327,7 @@ NXC_CC_LIST *g_pCCList = NULL;
 // Object tools
 //
 
-DWORD g_dwNumObjectTools = 0;
+UINT32 g_dwNumObjectTools = 0;
 NXC_OBJECT_TOOL *g_pObjectToolList = NULL;
 
 

@@ -46,7 +46,7 @@ END_MESSAGE_MAP()
 BOOL CAddDCIDlg::OnInitDialog() 
 {
    NXC_OBJECT_INDEX *pIndex;
-   DWORD i, dwNumObjects;
+   UINT32 i, dwNumObjects;
    RECT rect;
    int iItem;
 

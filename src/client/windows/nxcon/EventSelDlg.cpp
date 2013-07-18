@@ -63,7 +63,7 @@ END_MESSAGE_MAP()
 BOOL CEventSelDlg::OnInitDialog() 
 {
    NXC_EVENT_TEMPLATE **pList;
-   DWORD i, dwListSize;
+   UINT32 i, dwListSize;
    TCHAR szBuffer[32];
    RECT rect;
    int iItem;

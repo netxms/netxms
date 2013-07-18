@@ -192,7 +192,7 @@ protected:
 	CString m_strCustomTimeZone;
 
    NXC_ALARM *m_pAlarmList;
-	DWORD m_dwNumAlarms;
+	UINT32 m_dwNumAlarms;
 
 	NXC_SITUATION_LIST *m_pSituationList;
 

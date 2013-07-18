@@ -128,7 +128,7 @@ void CDesktopManager::OnSize(UINT nType, int cx, int cy)
 
 static DWORD LoadUserDesktops(DWORD dwUserId, CTreeCtrl *pTreeCtrl, HTREEITEM hRoot)
 {
-   DWORD i, dwNumVars, dwResult;
+   UINT32 i, dwNumVars, dwResult;
    TCHAR **ppVarList, *ptr;
    HTREEITEM hItem;
 
@@ -161,7 +161,7 @@ static DWORD LoadUserDesktops(DWORD dwUserId, CTreeCtrl *pTreeCtrl, HTREEITEM hR
 static DWORD LoadDesktopInfo(CTreeCtrl *pTreeCtrl, CDesktopManager *pMgr)
 {
    NXC_USER *pUserList;
-   DWORD i, dwNumUsers, dwResult;
+   UINT32 i, dwNumUsers, dwResult;
    HTREEITEM hItem;
 
    // Show all users only if currently logged in user

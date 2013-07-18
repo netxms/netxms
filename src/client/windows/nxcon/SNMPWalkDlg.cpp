@@ -20,7 +20,7 @@ typedef struct
 {
    HWND hWnd;
    CListCtrl *pListCtrl;
-   DWORD dwObjectId;
+   UINT32 dwObjectId;
    TCHAR *pszRootOID;
 } WALKER_ARGS;
 
@@ -79,7 +79,7 @@ BOOL CSNMPWalkDlg::OnInitDialog()
 // Walker callback
 //
 
-static void WalkerCallback(TCHAR *pszName, DWORD dwType, TCHAR *pszValue, void *pArg)
+static void WalkerCallback(TCHAR *pszName, UINT32 dwType, TCHAR *pszValue, void *pArg)
 {
    int iItem;
 	TCHAR typeName[256];
@@ -103,7 +103,7 @@ static void WalkerCallback(TCHAR *pszName, DWORD dwType, TCHAR *pszValue, void *
 
 static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
 {
-   DWORD dwResult;
+   UINT32 dwResult;
 
    dwResult = NXCSnmpWalk(g_hSession, ((WALKER_ARGS *)pArg)->dwObjectId,
                           ((WALKER_ARGS *)pArg)->pszRootOID,

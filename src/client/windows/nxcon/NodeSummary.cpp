@@ -155,7 +155,7 @@ void CNodeSummary::OnPaint()
 void CNodeSummary::UpdateStatus()
 {
    NXC_OBJECT_INDEX *pIndex;
-   DWORD i, dwNumObjects;
+   UINT32 i, dwNumObjects;
    
    memset(m_dwNodeStats, 0, sizeof(DWORD) * OBJECT_STATUS_COUNT);
    m_dwTotalNodes = 0;

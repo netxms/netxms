@@ -24,7 +24,7 @@ public:
 	CDataCollectionEditor(NXC_DCI_LIST *pList);           // public constructor
 	virtual ~CDataCollectionEditor();
 
-   DWORD MoveItemsToTemplate(DWORD dwTemplate, DWORD dwNumItems, DWORD *pdwItemList);
+   UINT32 MoveItemsToTemplate(UINT32 dwTemplate, UINT32 dwNumItems, UINT32 *pdwItemList);
 	void RefreshItemList(void);
 
 // Overrides

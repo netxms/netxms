@@ -165,7 +165,7 @@ void CTrapSelDlg::SortList()
 // Compare two OIDs
 //
 
-static int CompareOIDs(DWORD dwLen1, DWORD *pdwOid1, DWORD dwLen2, DWORD *pdwOid2)
+static int CompareOIDs(UINT32 dwLen1, UINT32 *pdwOid1, UINT32 dwLen2, UINT32 *pdwOid2)
 {
 	DWORD i, dwLen;
 

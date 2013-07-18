@@ -66,7 +66,7 @@ inline void SetInfoText(HWND hWnd, TCHAR *pszText)
 // Event handler for client library
 //
 
-static void __EventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg)
+static void __EventHandler(NXC_SESSION hSession, UINT32 dwEvent, UINT32 dwCode, void *pArg)
 {
    appAlarmViewer.EventHandler(dwEvent, dwCode, pArg);
 }

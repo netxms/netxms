@@ -243,7 +243,7 @@ void CObjectBrowser::OnViewRefresh()
 {
    NXC_OBJECT **ppRootObjects;
    NXC_OBJECT_INDEX *pIndex;
-   DWORD i, j, dwNumObjects, dwNumRootObj;
+   UINT32 i, j, dwNumObjects, dwNumRootObj;
    
    // Select root objects
    NXCLockObjectIndex(g_hSession);

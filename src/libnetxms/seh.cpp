@@ -92,11 +92,9 @@ void SEHInit(void)
 	m_hExceptionLock = CreateMutex(NULL, FALSE, NULL);
 }
 
-
-//
-// Set exception handler
-//
-
+/**
+ * Set exception handler
+ */
 void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
 															 void (*pfWriter)(const TCHAR *), const TCHAR *pszDumpDir,
 															 const TCHAR *pszBaseProcessName, DWORD dwLogMsgCode,
@@ -113,11 +111,9 @@ void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTE
 	m_printToScreen = printToScreen;
 }
 
-
-//
-// Get exception name from code
-//
-
+/**
+ * Get exception name from code
+ */
 TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code)
 {
    static struct 
@@ -157,11 +153,9 @@ TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code)
    return _T("Unknown");
 }
 
-
-//
-// Default exception handler for console applications
-//
-
+/**
+ * Default exception handler for console applications
+ */
 BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo)
 {
 	_tprintf(_T("EXCEPTION: %08X (%s) at %p\n"),

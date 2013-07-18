@@ -40,7 +40,7 @@ protected:
 	void UpdateItem(int iItem, NXC_EVENT_TEMPLATE *pData);
 	CImageList *m_pImageList;
 	BOOL EditEvent(int iItem);
-	DWORD m_dwNumTemplates;
+	UINT32 m_dwNumTemplates;
 	NXC_EVENT_TEMPLATE ** m_ppEventTemplates;
 	CListCtrl m_wndListCtrl;
 	virtual ~CEventEditor();

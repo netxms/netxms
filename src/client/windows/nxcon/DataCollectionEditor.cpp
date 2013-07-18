@@ -1039,8 +1039,8 @@ void CDataCollectionEditor::OnItemExportdata()
 // Move DCIs to host(s)
 //
 
-DWORD CDataCollectionEditor::MoveItemsToTemplate(DWORD dwTemplate,
-                                                 DWORD dwNumItems, DWORD *pdwItemList)
+UINT32 CDataCollectionEditor::MoveItemsToTemplate(UINT32 dwTemplate,
+                                                 UINT32 dwNumItems, UINT32 *pdwItemList)
 {
    DWORD i, dwResult, dwNode;
    NXC_OBJECT *pObject;
@@ -1098,8 +1098,8 @@ DWORD CDataCollectionEditor::MoveItemsToTemplate(DWORD dwTemplate,
 //
 
 static DWORD __cdecl __MoveItemsToTemplate(CDataCollectionEditor *pCaller,
-                                           DWORD dwTemplate, DWORD dwNumItems,
-                                           DWORD *pdwItemList)
+                                           UINT32 dwTemplate, UINT32 dwNumItems,
+                                           UINT32 *pdwItemList)
 {
    return pCaller->MoveItemsToTemplate(dwTemplate, dwNumItems, pdwItemList);
 }
@@ -1175,10 +1175,10 @@ void CDataCollectionEditor::OnItemMove()
 // Copy DCIs to host(s)
 //
 
-static DWORD __cdecl CopyItems(DWORD dwSourceNode, DWORD dwNumObjects, DWORD *pdwObjectList,
-                               DWORD dwNumItems, DWORD *pdwItemList, BOOL bMove)
+static DWORD __cdecl CopyItems(UINT32 dwSourceNode, UINT32 dwNumObjects, UINT32 *pdwObjectList,
+                               UINT32 dwNumItems, UINT32 *pdwItemList, BOOL bMove)
 {
-   DWORD i, dwResult;
+   UINT32 i, dwResult;
 
    for(i = 0; i < dwNumObjects; i++)
    {
@@ -1199,12 +1199,12 @@ void CDataCollectionEditor::CopyOrMoveItems(BOOL bMove)
 {
    CObjectSelDlg dlg;
    int iPos, iItem, *pnIdxList;
-   DWORD i, dwResult, dwNumItems, *pdwItemList;
+   UINT32 i, dwResult, dwNumItems, *pdwItemList;
 
    dwNumItems = m_wndListCtrl.GetSelectedCount();
    if (dwNumItems > 0)
    {
-      pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+      pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
       if (bMove)
          pnIdxList = (int *)malloc(sizeof(int) * dwNumItems);
 

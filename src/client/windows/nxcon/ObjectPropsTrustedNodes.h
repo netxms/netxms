@@ -16,8 +16,8 @@ class CObjectPropsTrustedNodes : public CPropertyPage
 
 // Construction
 public:
-	DWORD * m_pdwNodeList;
-	DWORD m_dwNumNodes;
+	UINT32 * m_pdwNodeList;
+	UINT32 m_dwNumNodes;
 	CObjectPropsTrustedNodes();
 	~CObjectPropsTrustedNodes();
 

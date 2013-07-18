@@ -66,7 +66,7 @@ BOOL CObjectSelDlg::OnInitDialog()
 {
    RECT rect;
    NXC_OBJECT_INDEX *pIndex;
-   DWORD i, dwNumObjects;
+   UINT32 i, dwNumObjects;
    int iItem;
    CBitmap bmp;
    static DWORD dwClassMask[15] = { 0, SCL_SUBNET, SCL_NODE, SCL_INTERFACE,

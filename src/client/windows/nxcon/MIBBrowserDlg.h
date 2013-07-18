@@ -48,7 +48,7 @@ public:
 // Implementation
 protected:
 	BOOL m_bDisableSelUpdate;
-	void SelectNode(HTREEITEM hRoot, DWORD *pdwOID, unsigned int iNameLen);
+	void SelectNode(HTREEITEM hRoot, UINT32 *pdwOID, unsigned int iNameLen);
 
 	// Generated message map functions
 	//{{AFX_MSG(CMIBBrowserDlg)

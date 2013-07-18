@@ -416,7 +416,7 @@ void CTrapEditor::OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult)
 // Compare two OIDs
 //
 
-static int CompareOID(DWORD *pdwOid1, DWORD *pdwOid2, DWORD dwLen)
+static int CompareOID(UINT32 *pdwOid1, UINT32 *pdwOid2, UINT32 dwLen)
 {
    DWORD i;
 

@@ -81,7 +81,7 @@ void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTE
 															 const TCHAR *pszBaseProcessName, DWORD dwLogMsgCode,
 															 BOOL writeFullDump, BOOL printToScreen);
 BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
-TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(UINT32 code);
+TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code);
 void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx);
 
 void LIBNETXMS_EXPORTABLE SEHServiceExceptionDataWriter(const TCHAR *pszText);

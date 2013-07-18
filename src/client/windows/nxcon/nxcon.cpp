@@ -1942,12 +1942,12 @@ public:
    DWORD dwFlags;
    BOOL bEnable;
    BOOL bActive;
-   DWORD dwNumTargets;
+   UINT32 dwNumTargets;
    NXC_ADDR_ENTRY *pTargetList;
-   DWORD dwNumFilters;
+   UINT32 dwNumFilters;
    NXC_ADDR_ENTRY *pFilterList;
    CString strCommunity;
-	DWORD dwNumStrings;
+	UINT32 dwNumStrings;
 	TCHAR **ppStringList;
 
 	ND_CONFIG()
@@ -1981,7 +1981,7 @@ public:
 
 static DWORD GetDiscoveryConf(ND_CONFIG *pConf)
 {
-   DWORD i, dwNumVars, dwResult;
+   UINT32 i, dwNumVars, dwResult;
    NXC_SERVER_VARIABLE *pVarList;
 
    dwResult = NXCGetServerVariables(g_hSession, &pVarList, &dwNumVars);
@@ -2596,7 +2596,7 @@ void CConsoleApp::DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObj
       pJob = (DEPLOYMENT_JOB *)malloc(sizeof(DEPLOYMENT_JOB));
       pJob->dwPkgId = dwPkgId;
       pJob->dwNumObjects = dwNumObjects;
-      pJob->pdwObjectList = (DWORD *)nx_memdup(pdwObjectList, sizeof(DWORD) * dwNumObjects);
+      pJob->pdwObjectList = (UINT32 *)nx_memdup(pdwObjectList, sizeof(UINT32) * dwNumObjects);
       pWnd->PostMessage(NXCM_START_DEPLOYMENT, 0, (LPARAM)pJob);
    }
 }
@@ -3982,7 +3982,7 @@ static BOOL ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	TCHAR szBuffer[MAX_PATH], szInfoFile[MAX_PATH], szDumpFile[MAX_PATH];
 	HANDLE hFile;
 	time_t t;
-	DWORD dwSize;
+	UINT32 dwSize;
 	MINIDUMP_EXCEPTION_INFORMATION mei;
 	OSVERSIONINFO ver;
    SYSTEM_INFO sysInfo;
@@ -4180,7 +4180,7 @@ static DWORD CreateDCI(NXC_OBJECT *pNode, NXC_OBJECT *pInterface, int nType,
                        NXC_DCI_LIST *pList, LPCTSTR pszText, BOOL bDelta,
                        int nInterval, int nRetention)
 {
-	DWORD dwResult, dwItemId, dwIndex;
+	UINT32 dwResult, dwItemId, dwIndex;
 	NXC_DCI item;
 
 	dwResult = NXCCreateNewDCI(g_hSession, pList, &dwItemId);

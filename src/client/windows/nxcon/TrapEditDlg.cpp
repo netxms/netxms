@@ -134,7 +134,7 @@ void CTrapEditDlg::OnSelectTrap()
 
 void CTrapEditDlg::OnOK() 
 {
-   DWORD pdwOid[MAX_OID_LEN];
+   UINT32 pdwOid[MAX_OID_LEN];
    TCHAR szBuffer[1024];
 
    m_wndEditOID.GetWindowText(szBuffer, 1024);
@@ -145,8 +145,8 @@ void CTrapEditDlg::OnOK()
    }
    else
    {
-      m_trap.pdwObjectId = (DWORD *)realloc(m_trap.pdwObjectId, sizeof(DWORD) * m_trap.dwOidLen);
-      memcpy(m_trap.pdwObjectId, pdwOid, sizeof(DWORD) * m_trap.dwOidLen);
+      m_trap.pdwObjectId = (UINT32 *)realloc(m_trap.pdwObjectId, sizeof(UINT32) * m_trap.dwOidLen);
+      memcpy(m_trap.pdwObjectId, pdwOid, sizeof(UINT32) * m_trap.dwOidLen);
 
       GetDlgItemText(IDC_EDIT_DESCRIPTION, m_trap.szDescription, MAX_DB_STRING);
 		GetDlgItemText(IDC_EDIT_TAG, m_trap.szUserTag, MAX_USERTAG_LENGTH);
@@ -240,7 +240,7 @@ void CTrapEditDlg::UpdateParameterEntry(DWORD dwIndex)
 void CTrapEditDlg::OnButtonAdd() 
 {
    CTrapParamDlg dlg;
-   DWORD pdwOid[MAX_OID_LEN];
+   UINT32 pdwOid[MAX_OID_LEN];
 
    if (dlg.DoModal() == IDOK)
    {
@@ -253,7 +253,7 @@ void CTrapEditDlg::OnButtonAdd()
          m_trap.pMaps[m_trap.dwNumMaps].dwOidLen = 
             SNMPParseOID(dlg.m_strOID, pdwOid, MAX_OID_LEN);
          m_trap.pMaps[m_trap.dwNumMaps].pdwObjectId = 
-            (DWORD *)nx_memdup(pdwOid, sizeof(DWORD) * m_trap.pMaps[m_trap.dwNumMaps].dwOidLen);
+            (UINT32 *)nx_memdup(pdwOid, sizeof(UINT32) * m_trap.pMaps[m_trap.dwNumMaps].dwOidLen);
       }
       else
       {
@@ -302,7 +302,7 @@ void CTrapEditDlg::OnButtonEdit()
       if (iItem != -1)
       {
          CTrapParamDlg dlg;
-         DWORD pdwOid[MAX_OID_LEN];
+         UINT32 pdwOid[MAX_OID_LEN];
          TCHAR szBuffer[1024];
 
          dlg.m_strDescription = m_trap.pMaps[iItem].szDescription;
@@ -327,8 +327,8 @@ void CTrapEditDlg::OnButtonEdit()
                m_trap.pMaps[iItem].dwOidLen = 
                   SNMPParseOID(dlg.m_strOID, pdwOid, MAX_OID_LEN);
                m_trap.pMaps[iItem].pdwObjectId = 
-                  (DWORD *)realloc(m_trap.pMaps[iItem].pdwObjectId, sizeof(DWORD) * m_trap.pMaps[iItem].dwOidLen);
-               memcpy(m_trap.pMaps[iItem].pdwObjectId, pdwOid, sizeof(DWORD) * m_trap.pMaps[iItem].dwOidLen);
+                  (UINT32 *)realloc(m_trap.pMaps[iItem].pdwObjectId, sizeof(UINT32) * m_trap.pMaps[iItem].dwOidLen);
+               memcpy(m_trap.pMaps[iItem].pdwObjectId, pdwOid, sizeof(UINT32) * m_trap.pMaps[iItem].dwOidLen);
             }
             else
             {

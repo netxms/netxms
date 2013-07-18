@@ -36,7 +36,7 @@ protected:
 	CProgressCtrl m_wndProgressCtrl;
 	CFont m_font;
    BOOL m_bFinished;
-	DWORD m_dwRqId;
+	UINT32 m_dwRqId;
 	CListCtrl m_wndListCtrl;
 	virtual ~CDeploymentView();
 
