@@ -50,7 +50,7 @@ Template::Template() : NetObj()
 	m_applyFilter = NULL;
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
-	m_mutexDciAccess = MutexCreateRecursive();
+   m_dciAccessLock = RWLockCreate();
 }
 
 /**
@@ -67,7 +67,7 @@ Template::Template(const TCHAR *pszName) : NetObj()
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
    m_bIsHidden = TRUE;
-	m_mutexDciAccess = MutexCreateRecursive();
+   m_dciAccessLock = RWLockCreate();
 }
 
 /**
@@ -78,7 +78,7 @@ Template::Template(ConfigEntry *config) : NetObj()
    m_bIsHidden = TRUE;
    m_dwDCILockStatus = INVALID_INDEX;
    m_iStatus = STATUS_NORMAL;
-	m_mutexDciAccess = MutexCreateRecursive();
+   m_dciAccessLock = RWLockCreate();
 
 	// Name and version
 	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
@@ -113,7 +113,7 @@ Template::~Template()
 	delete m_dcObjects;
 	delete m_applyFilter;
 	safe_free(m_applyFilterSource);
-	MutexDestroy(m_mutexDciAccess);
+	RWLockDestroy(m_dciAccessLock);
 }
 
 /**
@@ -300,7 +300,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    UnlockData();
 
    // Save data collection items
-	lockDciAccess();
+	lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
       m_dcObjects->get(i)->saveToDB(hdb);
 	unlockDciAccess();
@@ -393,7 +393,7 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
    bool success = false;
 
    if (!alreadyLocked)
-      lockDciAccess(); // write lock
+      lockDciAccess(true); // write lock
 
    // Check if that object exists
    for(i = 0; i < m_dcObjects->size(); i++)
@@ -430,7 +430,7 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
    bool success = false;
 
 	if (needLock)
-		lockDciAccess();  // write lock
+		lockDciAccess(true);  // write lock
 
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -470,7 +470,7 @@ bool Template::updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNum
 {
    bool success = false;
 
-   lockDciAccess();
+   lockDciAccess(false);
 
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -503,7 +503,7 @@ bool Template::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus
 {
    bool success = true;
 
-   lockDciAccess();
+   lockDciAccess(false);
    for(UINT32 i = 0; i < dwNumItems; i++)
    {
 		int j;
@@ -581,7 +581,7 @@ void Template::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId)
    msg.SetId(dwRqId);
    msg.SetCode(CMD_NODE_DCI);
 
-   lockDciAccess();
+   lockDciAccess(false);
 
    // Walk through items list
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -608,7 +608,7 @@ int Template::getItemType(UINT32 dwItemId)
 {
    int iType = -1;
 
-   lockDciAccess();
+   lockDciAccess(false);
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
@@ -634,7 +634,7 @@ DCObject *Template::getDCObjectById(UINT32 itemId)
 {
    DCObject *object = NULL;
 
-   lockDciAccess();
+   lockDciAccess(false);
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
@@ -657,7 +657,7 @@ DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId)
 {
    DCObject *object = NULL;
 
-   lockDciAccess();
+   lockDciAccess(false);
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
@@ -680,7 +680,7 @@ DCObject *Template::getDCObjectByName(const TCHAR *pszName)
 {
    DCObject *object = NULL;
 
-   lockDciAccess();
+   lockDciAccess(false);
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
@@ -702,7 +702,7 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *pszDescription)
 {
    DCObject *object = NULL;
 
-   lockDciAccess();
+   lockDciAccess(false);
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
@@ -722,7 +722,7 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *pszDescription)
  */
 DCObject *Template::getDCObjectByIndex(int index)
 {
-   lockDciAccess();
+   lockDciAccess(false);
 	DCObject *object = m_dcObjects->get(index);
    unlockDciAccess();
    return object;
@@ -876,7 +876,7 @@ UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
    pdwList = NULL;
    *pdwCount = 0;
 
-   lockDciAccess();
+   lockDciAccess(false);
    for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
    {
       m_dcObjects->get(i)->getEventList(&pdwList, pdwCount);
@@ -908,7 +908,7 @@ void Template::CreateNXMPRecord(String &str)
    str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n\t\t\t<dataCollection>\n"),
 	                       m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName), m_flags);
 
-   lockDciAccess();
+   lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
       m_dcObjects->get(i)->createNXMPRecord(str);
    unlockDciAccess();
@@ -932,7 +932,7 @@ bool Template::enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), vo
 {
 	bool success = true;
 
-	lockDciAccess();
+	lockDciAccess(false);
 	for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		if (!pfCallback(m_dcObjects->get(i), i, pArg))
@@ -950,7 +950,7 @@ bool Template::enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), vo
  */
 void Template::associateItems()
 {
-	lockDciAccess();
+	lockDciAccess(false);
 	for(int i = 0; i < m_dcObjects->size(); i++)
 		m_dcObjects->get(i)->changeBinding(0, this, FALSE);
 	unlockDciAccess();
@@ -1017,7 +1017,7 @@ BOOL Template::isApplicable(Node *node)
  */
 UINT32 Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly)
 {
-   lockDciAccess();
+   lockDciAccess(false);
 
 	UINT32 dwId = VID_DCI_VALUES_BASE, dwCount = 0;
    for(int i = 0; i < m_dcObjects->size(); i++)

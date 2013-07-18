@@ -468,7 +468,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    // Save data collection items
    if (bResult)
    {
-		lockDciAccess();
+		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDB(hdb);
 		unlockDciAccess();
@@ -2703,7 +2703,7 @@ void Node::doInstanceDiscovery()
 {
 	// collect instance discovery DCIs
 	ObjectArray<DCItem> rootItems;
-   lockDciAccess();
+   lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
@@ -2771,7 +2771,7 @@ StringList *Node::getInstanceList(DCItem *dci)
  */
 void Node::updateInstances(DCItem *root, StringList *instances)
 {
-   lockDciAccess();
+   lockDciAccess(true);
 
 	// Delete DCIs for missing instances and update existing
 	IntegerArray<UINT32> deleteList;

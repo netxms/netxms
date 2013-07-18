@@ -220,7 +220,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    // Save data collection items
    if (bResult)
    {
-		lockDciAccess();
+		lockDciAccess(false);
       for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDB(hdb);
 		unlockDciAccess();

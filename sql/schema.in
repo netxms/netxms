@@ -609,6 +609,8 @@ CREATE TABLE items
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
+CREATE INDEX idx_items_node_id ON items(node_id);
+
 /*
 ** Data collection tables
 */
@@ -633,6 +635,8 @@ CREATE TABLE dc_tables
 	transformation_script SQL_TEXT null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
+
+CREATE INDEX idx_dc_tables_node_id ON dc_tables(node_id);
 
 /*
 ** Columns for data collection tables

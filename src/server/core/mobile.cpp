@@ -146,7 +146,7 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
    // Save data collection items
    if (bResult)
    {
-		lockDciAccess();
+		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDB(hdb);
 		unlockDciAccess();

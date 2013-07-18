@@ -515,15 +515,15 @@ protected:
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	TCHAR *m_applyFilterSource;
 	NXSL_Program *m_applyFilter;
-	MUTEX m_mutexDciAccess;
+	RWLOCK m_dciAccessLock;
 
    virtual void prepareForDeletion();
 
    void loadItemsFromDB();
    void destroyItems();
 
-	void lockDciAccess() { MutexLock(m_mutexDciAccess); }
-	void unlockDciAccess() { MutexUnlock(m_mutexDciAccess); }
+   void lockDciAccess(bool writeLock) { if (writeLock) { RWLockWriteLock(m_dciAccessLock, INFINITE); } else { RWLockReadLock(m_dciAccessLock, INFINITE); } }
+	void unlockDciAccess() { RWLockUnlock(m_dciAccessLock); }
 
 public:
    Template();
