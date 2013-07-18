@@ -354,6 +354,18 @@ static BOOL RecreateTData(const TCHAR *className)
 }
 
 /**
+ * Upgrade from V284 to V285
+ */
+static BOOL H_UpgradeFromV284(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_items_node_id ON items(node_id)")));
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_dc_tables_node_id ON dc_tables(node_id)")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='285' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V283 to V284
  */
 static BOOL H_UpgradeFromV283(int currVersion, int newVersion)
@@ -6660,11 +6672,9 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V16 to V17
-//
-
+/**
+ * Upgrade from V16 to V17
+ */
 static BOOL H_UpgradeFromV16(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
@@ -7036,6 +7046,7 @@ static struct
    { 281, 282, H_UpgradeFromV281 },
    { 282, 283, H_UpgradeFromV282 },
    { 283, 284, H_UpgradeFromV283 },
+   { 284, 285, H_UpgradeFromV284 },
    { 0, 0, NULL }
 };
 
