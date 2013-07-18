@@ -4,6 +4,6 @@ Section: net
 Priority: optional
 Architecture: @arch@
 Essential: no
-Depends: libssl0.9.8, libexpat1, libtre5, zlib1g
+Depends: libssl0.9.8, libexpat1, zlib1g
 Maintainer: Victor Kirhenshtein <victor@netxms.org>
 Description: NetXMS base libraries

@@ -16,6 +16,7 @@
 - SNMP trap listener port now configurable
 - HP-UX agent improved
 - Some D-Link MIBs added to distribution
+- Debian binaries built in UNICODE mode
 - Management console:
 	- Simplified table DCI configuration
 	- Charts can be created from table data

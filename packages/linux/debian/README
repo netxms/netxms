@@ -1,11 +1,11 @@
 Building binary packages for Debian:
 
 0. Prerequisites:
-	Packages libssl-dev, libexpat1-dev, libtre-dev, libreadline5-dev, and libsensors4-dev must be installed
+	Packages libssl-dev, libexpat1-dev, libreadline5-dev, and libsensors4-dev must be installed
 
 1. Configure and build NetXMS as following:
 
-	./configure --prefix=/usr --with-server --with-odbc --with-sqlite --with-pgsql --with-mysql
+	./configure --prefix=/usr --enable-unicode --with-server --with-odbc --with-sqlite --with-pgsql --with-mysql
 	make clean
 	make
 	make install

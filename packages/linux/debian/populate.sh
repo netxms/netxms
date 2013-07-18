@@ -23,6 +23,7 @@ mkdir netxms-base/usr/lib
 cat netxms-base.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-base/DEBIAN/control
 cp -P /usr/lib/libnetxms.so* netxms-base/usr/lib/
 cp -P /usr/lib/libnxsqlite.so* netxms-base/usr/lib/
+cp -P /usr/lib/libnxtre.so* netxms-base/usr/lib/
 
 # netxms-agent
 mkdir netxms-agent
