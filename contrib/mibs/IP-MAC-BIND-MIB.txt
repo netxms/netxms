@@ -1,0 +1,820 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : IP-MAC Binding Common mib
+-- FILE NAME: IPMacBind.mib
+-- DATE     : 2009/6/11
+-- VERSION  : 2.10
+-- PURPOSE  : To construct the MIB structure of IP-MAC Binding
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.10, 2009/6/11, Eli Lin
+-- [New Object]
+-- [1]Add new object swIpMacBindingAclStatus for indicating
+-- the ACL status.    
+-- [Modification]
+-- [1]Modify the value of objects swIpMacBindingMode for supporting the static
+-- mode and the dhcp-snooping mode.
+-- [2]Modify the DESCRIPTION of objects swIpMacBindingACLMode, 
+-- swIpMacBindingPortMode and swIpMacBindingAction
+
+-- Version 2.09, 2009/5/5, Tina He
+-- [New Object]
+-- [1]Add object swIpMacBindingARPInspectionState.
+--    for support ARP inspection function.
+-- [Modification]
+-- [1]Modify the Access of objects swIpMacBindingPortLearningStatus from
+-- read-write to read-only
+
+-- Version 2.08, 2008/12/16, wesley wang
+-- [New Object]
+-- [1]Add object swIpMacBindingPortLearningStatus in swIpMacBindingPortTable
+--    for display the learning status of a port.
+
+-- Version 2.07, 2008/08/04, jeffers
+-- [New Object]
+-- [1]Add object swIpMacBindingPortMode in swIpMacBindingPortTable;
+-- [2]Add object swIpMacBindingPortStopLearningThreshold,
+-- swIpMacBindingPortRecoverLearning,swIpMacBindingStopLearningTrap
+-- and swIpMacBindingRecoverLearningTrap. 
+-- [Modification]
+-- Modify the description of objects swIpMacBindingMode,swIpMacBindingAction,
+-- swIpMacBindingACLMode,swIpMacBindingViolationMac and swIpMacBindingViolationIP.
+--
+-- Version 2.06, 2008/05/13, Shan Lu
+-- [Modification]
+-- [1]Remove some description of object swIpMacBindingDHCPSnoopState.
+--
+-- Version 2.05, 2008/04/22, Shan Lu
+-- [Modification]
+-- [1]Modify the varible bind of swIpMacBindingViolationTrap,
+--    replace swIpMacBindingPorts with swIpMacBindingPortIndex.
+--
+-- Version 2.04
+-- [New Object]
+-- [1]Add object swIpMacBindingPortDHCPSnoopEntryClearAction in swIpMacBindingPortTable;
+-- [2]Add object swIpMacBindingBlockedStatus in swIpMacBindingBlockedTable;
+-- [Modification]
+-- [1]Change the Status of object swIpMacBindingBlockedType from current to obsolete;
+-- [2]Remove the value range of object swIpMacBindingPortDhcpSnoopMaxEntry;
+-- [3]Modify the swIpMacBindingAllPortState enable with strict and loose mode. 
+-- Request by Yan for DES35XX.
+--
+-- Version 2.03
+-- 2007/12/19 15:40 Ronald Hsu
+-- Modify the swIpMacBindingPortState enable with strict and loose mode.
+-- Add the swIpMacBindingPortForwardDhcpPkt object.
+-- Add the swIpMacBindingPortDhcpSnoopMaxEntry object.
+-- Add the swIpMacBindingDHCPSnoopPort object.
+-- Add the swIpMacBindingDHCPSnoopStatus object.
+-- Add the swIpMacBindingDHCPSnoopEntryClearAllState object.
+--
+-- Revision 2.02 2007/07/24 
+-- [New Object]
+-- [1]Add objects swIpMacBindingDHCPSnoopState and swIpMacBindingRecoveryInterval;
+-- [2]Add table swIpMacBindingDHCPSnoopTable;
+-- [3]Add 'auto(3)' in the value list of object swIpMacBindingMode.
+-- Request by Yan for DES30XXR4.1 and DHS3628
+--
+-- Revision 2.01 2007/5/23 14:35PM by Nic Liu
+-- [New Object]
+-- [1]Add object swIpMacBindingBlockedTime in swIpMacBindingBlockedTable.
+-- Request by Nic for DES30XXR4.1
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+IP-MAC-BIND-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress, Unsigned32
+                                        FROM SNMPv2-SMI
+        MacAddress, RowStatus, DateAndTime           FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+    	SnmpAdminString					FROM SNMP-FRAMEWORK-MIB
+
+        dlink-common-mgmt				FROM DLINK-ID-REC-MIB;
+
+		VlanId					::= INTEGER (1..4094)
+
+    swIpMacBindMIB MODULE-IDENTITY
+	    LAST-UPDATED "0906110000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The structure of IP-MAC binding management for the
+		    proprietary enterprise."
+        ::= { dlink-common-mgmt 23 }
+
+    PortList                ::= OCTET STRING(SIZE (0..127))
+
+
+
+	swIpMacBindingCtrl           OBJECT IDENTIFIER ::= { swIpMacBindMIB 1 }
+	swIpMacBindingInfo           OBJECT IDENTIFIER ::= { swIpMacBindMIB 2 }
+    	swIpMacBindingPortMgmt       OBJECT IDENTIFIER ::= { swIpMacBindMIB 3 }
+	swIpMacBindingMgmt           OBJECT IDENTIFIER ::= { swIpMacBindMIB 4 }
+	swIpMacBindingNotify 	     OBJECT IDENTIFIER ::= { swIpMacBindMIB 5 }
+
+-- -----------------------------------------------------------------------------
+-- swIpMacBindingCtrl           OBJECT IDENTIFIER ::= { swIpMacBindMIB 1 }
+-- -----------------------------------------------------------------------------
+	swIpMacBindingTrapLogState OBJECT-TYPE
+    		SYNTAX  INTEGER {
+                	other(1),
+                	enable(2),
+                	disable(3)
+            	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"When enabled (2), whenever there is a new MAC that violates the pre-defined
+            		 IP MAC Binding configuration, a trap will be sent out and the relevant information
+            		 will be logged into the system."
+        	::= { swIpMacBindingCtrl 1 }
+
+   	swIpMacBindingACLMode OBJECT-TYPE
+    		SYNTAX  INTEGER {
+                	other(1),
+                	enable(2),
+                	disable(3)
+            	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            	"When enabled (2), the IP-MAC Binding function will use the ACL mode.
+				 Note: Supported on IP-MAC binding v3.3 only."
+        	::= { swIpMacBindingCtrl 2 }
+
+	swIpMacBindingRecoveryInterval OBJECT-TYPE
+		SYNTAX		INTEGER(0..65535)
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the seconds in which the switch will delete the blocked 
+			 ARL (Address Resolution Logic) entry in order to relearn the entry. 
+			 This is a mechanism by which the switch can recover an ARL entry 
+			 from blocked state to normal state. 
+			 A value of '0' means an infinite state.
+			 
+			 Note:  This object is specific to models that are unable to recover 
+			        a blocked MAC address without removing the blocked ARL entry 
+			        and relearning the entry.        
+			"
+		::= { swIpMacBindingCtrl 3 }
+		
+   	swIpMacBindingDHCPSnoopState OBJECT-TYPE
+    		SYNTAX  INTEGER {
+                	enabled(1),
+                	disabled(2)
+            	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"When the dhcp_snoop function is enabled, all address_binding 
+            		 disabled ports will act as DHCP server ports (the switch will 
+            		 learned IP address through DHCP server ports (by DHCP OFFER 
+            		 and DHCP ACK packets)).
+            		 
+            		 Note that the DHCP discover packets can not be passed through the 
+            		 user ports if the allow_zeroip function is disabled on this port.
+            		 
+            		 The auto-learned IP-MAC binding entry will be mapped to a specific 
+            		 source port based on the MAC address learning function. This entry 
+            		 will be created as an ACL-mode binding entry for this specific port. 
+            		 Each entry is associated with a lease time. When the lease time 
+            		 expires, the expired entry will be removed from this port. The 
+            		 automatically learned binding entry can be moved from one port to 
+            		 another port if the DHCP snooping function has learned that the MAC 
+            		 address is moved to a different port.
+            		 
+			 Consider a case where DHCP snooping learns a binding entry, and the 
+			 same IP-MAC binding entry has been statically configured. Suppose 
+			 that the learned information is consistent with the statically 
+			 configured entry, then the automatically learned entry will not be 
+			 created. Supposing that the entry is statically configured in ARP 
+			 mode, since the automatically learned entry will be created in ACL 
+			 mode, the entry will become ACL mode. Supposing that the entry is 
+			 statically configured on one port and the entry is automatically 
+			 learned on another port, then both entries will exist.
+			 
+			 When the dhcp_snoop function is disabled, all of the automatically 
+			 learned binding entries will be removed.
+            "
+        	::= { swIpMacBindingCtrl 4 }
+        	
+	swIpMacBindingDHCPSnoopEntryClearAllState OBJECT-TYPE
+		SYNTAX      INTEGER{other(1), start(2)}
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Used to clear all entries created by DHCP packets."
+		::= { swIpMacBindingCtrl 5 }        	
+
+	swIpMacBindingARPInspectionState  OBJECT-TYPE
+    		SYNTAX  INTEGER {
+                	enabled(1),
+                	disabled(2)
+            	}
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Used to set ARP inspection state."
+		::= { swIpMacBindingCtrl 6 } 
+		
+-- -----------------------------------------------------------------------------
+-- swIpMacBindingPortMgmt       OBJECT IDENTIFIER ::= { swIpMacBindMIB 3 }
+-- -----------------------------------------------------------------------------
+	swIpMacBindingAllPortState OBJECT-TYPE
+		SYNTAX		INTEGER{
+					other(1),
+					enable-strict(2),
+					disable(3),
+					enable-loose(4)
+						}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"This object enables/disables IP-MAC binding on all ports of the system.
+			 This action is only applicable when users have write privileges,
+			 and can only be viewed when users have read privileges.
+
+			 Note:
+			 enable-strict (2): This means strict mode (SW learning). All packets are sent 
+			 	    	    to the CPU. If the user chooses, the port will check ARP packets 
+			 	            and IP packets by IP-MAC-PORT Binding entries. If the MAC 
+			 	            address can be found or not found by the entry, the MAC will 
+			 	            be set as dynamic learned or it will set as blocked, respectively. Other 
+			 	            packets will be sent to the CPU and dropped. 
+			 	            
+			 enable-loose (4) : This means loose mode (HW learning): Only ARP packets and IP 
+			 	            broadcast packets will be sent to the CPU. If the  user chooses , 
+			 	            the port will learn MAC address on non-ARP and non-IP 
+			 	            broadcast packets directly, so these packets will be bypassed. 
+			 	            But if the switch receives the ARP or IP broadcast packets and 
+			 	            cannot bypass the IP MAC Binding checking, the switch will set 
+			 	            this MAC address as blocked and all packets from this MAC 
+			 	            address will be dropped.			 
+			"
+		::= { swIpMacBindingPortMgmt 1 }
+
+
+	swIpMacBindingPortTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwIpMacBindingPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "The table specifies the IP-MAC binding function of a specified port."
+		::= { swIpMacBindingPortMgmt 2 }
+
+	swIpMacBindingPortEntry OBJECT-TYPE
+		SYNTAX		SwIpMacBindingPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list of information about the IP-MAC binding function of a port."
+		INDEX { swIpMacBindingPortIndex }
+		::= { swIpMacBindingPortTable 1 }
+
+	SwIpMacBindingPortEntry ::=
+        SEQUENCE {
+            swIpMacBindingPortIndex
+                INTEGER,
+			swIpMacBindingPortState
+				INTEGER,
+			swIpMacBindingPortZeroIPState
+				INTEGER,
+			swIpMacBindingPortForwardDhcpPkt
+			    	INTEGER,
+			swIpMacBindingPortDHCPSnoopMaxEntry
+			    	INTEGER,
+			swIpMacBindingPortDHCPSnoopEntryClearAction
+				INTEGER,
+            swIpMacBindingPortMode
+        	    INTEGER	,
+			swIpMacBindingPortStopLearningThreshold
+				INTEGER,
+			swIpMacBindingPortRecoverLearning
+				INTEGER,		
+			swIpMacBindingPortLearningStatus
+				INTEGER				    	
+       }
+
+	swIpMacBindingPortIndex OBJECT-TYPE
+		SYNTAX		INTEGER(0..65535)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"This object indicates the module's port number. (1..Max port
+			 number in the module)."
+		::= { swIpMacBindingPortEntry 1 }
+
+	swIpMacBindingPortState OBJECT-TYPE
+		SYNTAX		INTEGER{
+					other(1),
+					enable-strict(2),
+					disable(3),
+					enable-loose(4)
+					}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"This object enables (strict or loose mode)/disables IP-MAC binding 
+			 on the specified port.
+			 
+			 Note:
+			 enable-strict (2): This means strict mode (SW learning). All packets are sent 
+			 	    	    to the CPU. If the user chooses this option, the port will check ARP packets 
+			 	            and IP packets by IP-MAC-PORT Binding entries. If the MAC 
+			 	            address can be found or not found by the entry, the MAC will 
+			 	            be set as dynamic learned or it will set as blocked, respectively. Other 
+			 	            packets will be sent to the CPU and dropped. 
+			 	            
+			 enable-loose (4) : This means loose mode (HW learning): Only ARP packets and IP 
+			 	            broadcast packets will be sent to the CPU. If the user chooses, 
+			 	            the port will learn MAC addresses on non-ARP and non-IP 
+			 	            broadcast packets directly, so these packets will be bypassed. 
+			 	            But if the switch receives ARP or IP broadcast packets and 
+			 	            cannot bypass the IP MAC Binding checking, the switch will set 
+			 	            this MAC address as blocked and all packets from this MAC 
+			 	            address will be dropped.	
+			 "
+		::= { swIpMacBindingPortEntry 2 }
+
+	swIpMacBindingPortZeroIPState OBJECT-TYPE
+		SYNTAX		INTEGER{
+						enabled(1),
+						disabled(2)
+						}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies whether to allow ARP packets with the SIP address 0.0.0.0,
+			 regardless if the IP address 0.0.0.0 is set in the binding list or not.
+			 When set to enable, the ARP with SIP 0.0.0.0 is allowed. When set to disable,
+			 ARP with SIP 0.0.0.0 is dropped.
+			Note:
+			 This option does not affect the IP-MAC-Port binding ACL Mode.
+			"
+		::= { swIpMacBindingPortEntry 3 }
+
+	swIpMacBindingPortForwardDhcpPkt OBJECT-TYPE
+		SYNTAX		INTEGER{
+						enabled(1),
+						disabled(2)
+						}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"This object can be set to forward DHCP packets or not on the specified port."
+		::= { swIpMacBindingPortEntry 4 }
+		
+	swIpMacBindingPortDHCPSnoopMaxEntry OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"This object indicates the max entry created by DHCP packets on the 
+			 specified port.
+			 Note:
+			 The max entry range is (0..N), the value N means the max number, it is 
+			 determined by the project itself.
+
+			 When 0 is set on the specified port, the max entry created by DHCP packets 
+			 is no limit.
+			"
+		DEFVAL {0}			
+		::= { swIpMacBindingPortEntry 5 }		
+
+	swIpMacBindingPortDHCPSnoopEntryClearAction OBJECT-TYPE
+		SYNTAX		INTEGER{
+						other(1),
+						start(2)
+						}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"When set to start(2), the address binding entries learned 
+			 for the specified ports will be cleared.
+			 When get, it always returns other (1).
+			"
+		::= { swIpMacBindingPortEntry 6 }
+		
+	 swIpMacBindingPortMode OBJECT-TYPE
+	    SYNTAX    INTEGER {
+	                 arp(1),
+	                 acl(2)
+	                 }
+	    MAX-ACCESS  read-write
+	    STATUS    current
+	    DESCRIPTION
+	      	   "The mode of this entry.
+               arp:   This entry is specified as an ARP mode entry, and this
+               entry will not be added as an access entry. If this
+               object is not specified, the mode defaults to ARP mode.
+               If the system is in ARP mode, the ARP mode entries and
+               ACL mode entries will be effective. If the system is in
+               ACL mode, only the ACL mode entries will be active.
+      			
+      	       acl:   This entry is specified as an ACL mode entry. If the
+		       user enables the ACL mode, this entry will be added as
+	 		   an access entry."
+   	    ::= { swIpMacBindingPortEntry 7 }
+
+ 	 swIpMacBindingPortStopLearningThreshold OBJECT-TYPE
+               SYNTAX    INTEGER
+               MAX-ACCESS	read-write
+               STATUS    current
+               DESCRIPTION
+        	"This object indicates the threshold to stop learning new MAC address on 
+        	 the specified port. When the number of blocked entries exceeds the threshold,
+        	 the port will stop learning new addresses. The packet with new addresses will be dropped.
+         	 Note:
+    	 	 When 0 is set on the specified port, it means no limit."
+    		::= { swIpMacBindingPortEntry 8 }
+
+     swIpMacBindingPortRecoverLearning OBJECT-TYPE
+    	 	SYNTAX    INTEGER{
+            		other(1),
+            		start(2)
+            		}
+   		MAX-ACCESS	read-write
+    		STATUS    current
+    		DESCRIPTION
+        		"When set to start (2), it will change the stop_learning state to normal state
+         		on the specified port.
+         		When get, it always returns other (1)."
+    	::= { swIpMacBindingPortEntry 9 }
+		 
+		 swIpMacBindingPortLearningStatus OBJECT-TYPE
+    	 	SYNTAX    INTEGER{
+            		normal(1),
+            		stop(2)
+            		}
+		MAX-ACCESS	read-only
+    		STATUS    current
+    		DESCRIPTION
+        		"This object indicates the learning status of a port. When the status is stop (2), 
+        		the port will stop learning new addresses and the packet with new addresses will be dropped."
+    	::= { swIpMacBindingPortEntry 10 }
+		 
+-- -----------------------------------------------------------------------------
+-- swIpMacBindingMgmt          OBJECT IDENTIFIER ::= { swIpMacBindMIB 4 }
+-- -----------------------------------------------------------------------------
+	swIpMacBindingTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwIpMacBindingEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "This table specifies IP-MAC binding information."
+		::= { swIpMacBindingMgmt 1 }
+
+	swIpMacBindingEntry OBJECT-TYPE
+		SYNTAX		SwIpMacBindingEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "The IP-MAC binding entry used to add/delete/configure the address
+			  pair of the switch's authorized user database."
+		INDEX { swIpMacBindingIpIndex }
+		::= { swIpMacBindingTable 1 }
+
+	SwIpMacBindingEntry ::=
+        SEQUENCE {
+            		swIpMacBindingIpIndex
+                		IpAddress,
+			swIpMacBindingMac
+				MacAddress,
+			swIpMacBindingStatus
+				RowStatus,
+      			swIpMacBindingPorts
+        			PortList,
+      			swIpMacBindingAction
+      				INTEGER,
+      			swIpMacBindingMode
+      				INTEGER,
+                swIpMacBindingAclStatus
+      				INTEGER
+       }
+
+	swIpMacBindingIpIndex OBJECT-TYPE
+		SYNTAX		IpAddress
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The IP address of the IP-MAC binding entry."
+		::= { swIpMacBindingEntry 1 }
+
+	swIpMacBindingMac OBJECT-TYPE
+		SYNTAX		MacAddress
+		MAX-ACCESS	read-create
+		STATUS		current
+		DESCRIPTION
+			"The MAC address of the IP-MAC binding entry."
+		::= { swIpMacBindingEntry 2 }
+
+	swIpMacBindingStatus OBJECT-TYPE
+		SYNTAX		RowStatus
+		MAX-ACCESS	read-create
+		STATUS		current
+		DESCRIPTION
+			"The status of this entry."
+		::= { swIpMacBindingEntry 3 }
+
+  	swIpMacBindingPorts OBJECT-TYPE
+    		SYNTAX    PortList
+    		MAX-ACCESS  read-create
+    		STATUS    current
+    		DESCRIPTION
+      			"The port members of this entry."
+    		::= { swIpMacBindingEntry 4 }
+
+  	swIpMacBindingAction OBJECT-TYPE
+    		SYNTAX    INTEGER{
+            		inactive(1),
+            		active(2)
+            	}
+    		MAX-ACCESS  read-only
+    		STATUS    current
+    		DESCRIPTION
+      			"The action of this entry.
+				 Note: Supported on IP-MAC binding v3.5 and the earlier version."
+    		::= { swIpMacBindingEntry 5 }
+
+  	swIpMacBindingMode OBJECT-TYPE
+    		SYNTAX    INTEGER{
+            		arp(1),
+            		acl(2),
+            		dhcp-snooping(3),
+            		static(4)
+            	}
+    		MAX-ACCESS  read-create
+    		STATUS    current
+    		DESCRIPTION
+      			"The mode of this entry.
+      			 arp:   This entry is specified as an ARP mode entry, and this 
+      			        entry will not be added as an access entry. If this 
+      			        object is not specified, the mode defaults to ARP mode. 
+      			        If the system is in ARP mode, the ARP mode entries and 
+      			        ACL mode entries will be effective. If the system is in 
+      			        ACL mode, only the ACL mode entries will be active.(Note: 
+                        Supported on IP-MAC binding v3.5 and the earlier version.)
+      			        
+      			 acl:   This entry is specified as an ACL mode entry. If the 
+      			        user enables the ACL mode, this entry will be added as 
+      			        an access entry.(Note: Supported on IP-MAC binding v3.3 
+                        only.)
+      			   	      
+      			 dhcp-snooping: This mode cannot be configured, and when the 
+      			        dhcp-snooping mode is employed, it means this entry is 
+      			        to be learned by DHCP snooping.
+      			    		
+      			 static: This entry is manually configured."      			 		 	 
+    		::= { swIpMacBindingEntry 6 }
+
+  	swIpMacBindingAclStatus OBJECT-TYPE
+    		SYNTAX    INTEGER{
+            		inactive(1),
+            		active(2)
+            	}
+    		MAX-ACCESS  read-only
+    		STATUS    current
+    		DESCRIPTION
+      			"This object indicates the ACL status of this entry."
+    		::= { swIpMacBindingEntry 7 }
+
+	swIpMacBindingBlockedTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwIpMacBindingBlockedEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "This table displays information regarding blocked MAC addresses."
+		::= { swIpMacBindingMgmt 2 }
+
+	swIpMacBindingBlockedEntry OBJECT-TYPE
+		SYNTAX		SwIpMacBindingBlockedEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "The entry cannot be created or configured. It can be deleted only."
+		INDEX { swIpMacBindingBlockedVID, swIpMacBindingBlockedMac }
+		::= { swIpMacBindingBlockedTable 1 }
+
+	SwIpMacBindingBlockedEntry ::=
+        SEQUENCE {
+            		swIpMacBindingBlockedVID
+                		VlanId,
+			swIpMacBindingBlockedMac
+				MacAddress,
+			swIpMacBindingBlockedVlanName
+				DisplayString,
+			swIpMacBindingBlockedPort
+				INTEGER,
+			swIpMacBindingBlockedType
+				INTEGER,
+			swIpMacBindingBlockedTime
+			  	DateAndTime,
+			swIpMacBindingBlockedStatus
+				RowStatus  	
+       }
+
+	swIpMacBindingBlockedVID OBJECT-TYPE
+		SYNTAX		VlanId
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The object specifies the VLAN ID."
+		::= { swIpMacBindingBlockedEntry 1 }
+
+	swIpMacBindingBlockedMac OBJECT-TYPE
+		SYNTAX		MacAddress
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The MAC address that was blocked."
+		::= { swIpMacBindingBlockedEntry 2 }
+
+	swIpMacBindingBlockedVlanName OBJECT-TYPE
+		SYNTAX		DisplayString
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"This object specifies the VLAN name."
+		::= { swIpMacBindingBlockedEntry 3 }
+
+	swIpMacBindingBlockedPort OBJECT-TYPE
+		SYNTAX		INTEGER(0..65535)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The port with which the MAC is associated."
+		::= { swIpMacBindingBlockedEntry 4 }
+
+	swIpMacBindingBlockedType OBJECT-TYPE
+		SYNTAX		INTEGER{
+						other(1),
+						blockByAddrBind(2),
+						delete(3)
+						}
+		MAX-ACCESS	read-write
+		STATUS		obsolete
+		DESCRIPTION
+			"The value is always blockByAddrBind. This entry will be deleted when the value is set to 'delete'."
+		::= { swIpMacBindingBlockedEntry 5 }
+
+	swIpMacBindingBlockedTime OBJECT-TYPE
+		SYNTAX		DateAndTime
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"This object specifies the last time that this entry was generated."
+		::= { swIpMacBindingBlockedEntry 6 }
+
+	swIpMacBindingBlockedStatus OBJECT-TYPE
+		SYNTAX		RowStatus
+		MAX-ACCESS	read-create
+		STATUS		current
+		DESCRIPTION
+			"The status of this entry.
+			 Currently only the destroy (6) option can be usedto delete this entry."
+		::= { swIpMacBindingBlockedEntry 7 }
+		
+-- -----------------------------------------------------------------------------
+        swIpMacBindingDHCPSnoopTable OBJECT-TYPE
+     	        SYNTAX       SEQUENCE OF SwIpMacBindingDHCPSnoopEntry
+     	        MAX-ACCESS   not-accessible
+     	        STATUS   current
+     	        DESCRIPTION
+     	              "The table specifies information regarding the DHCP snooping 
+     	               function learning IP-MAC binding entries."
+               ::={swIpMacBindingMgmt 3}
+
+        swIpMacBindingDHCPSnoopEntry  OBJECT-TYPE
+                 SYNTAX    SwIpMacBindingDHCPSnoopEntry
+                 MAX-ACCESS not-accessible
+                 STATUS    current
+                 DESCRIPTION
+                      "A list of information about the DHCP snooping learning 
+                       IP-MAC binding entry."
+                 INDEX {swIpMacBindingDHCPSnoopIpIndex}
+                 ::={swIpMacBindingDHCPSnoopTable 1}
+
+	SwIpMacBindingDHCPSnoopEntry ::=
+        	SEQUENCE {
+				swIpMacBindingDHCPSnoopIpIndex
+					IpAddress,
+				swIpMacBindingDHCPSnoopMac
+					MacAddress,
+				swIpMacBindingDHCPSnoopLeaseTime
+					INTEGER,
+				swIpMacBindingDHCPSnoopPort
+					INTEGER,
+				swIpMacBindingDHCPSnoopStatus
+					INTEGER
+       }
+
+	swIpMacBindingDHCPSnoopIpIndex OBJECT-TYPE
+		SYNTAX		IpAddress
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The IP address of this entry."
+		::= { swIpMacBindingDHCPSnoopEntry 1 }
+
+	swIpMacBindingDHCPSnoopMac OBJECT-TYPE
+		SYNTAX		MacAddress
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The MAC address of this entry."
+		::= { swIpMacBindingDHCPSnoopEntry 2 }                       
+                        
+        swIpMacBindingDHCPSnoopLeaseTime   OBJECT-TYPE
+                SYNTAX      INTEGER
+                MAX-ACCESS  read-only
+                STATUS     current
+                DESCRIPTION
+                    "Specifies the lease time of this entry.
+                     When the lease time expires,this entry will be removed from 
+                     this port.
+                    "
+                ::={swIpMacBindingDHCPSnoopEntry 3}
+                
+    	swIpMacBindingDHCPSnoopPort   OBJECT-TYPE
+		SYNTAX         INTEGER
+		MAX-ACCESS     read-only
+		STATUS         current
+		DESCRIPTION
+            	    "Specifies the port of this entry."
+   		::= { swIpMacBindingDHCPSnoopEntry 4 }
+   		
+    	swIpMacBindingDHCPSnoopStatus   OBJECT-TYPE
+		SYNTAX    INTEGER{
+        		inactive(1),
+        		active(2)
+        	}
+		MAX-ACCESS     read-only
+		STATUS         current
+		DESCRIPTION
+            	    "Specifies the status (inactive or active) of this entry."
+   		::= { swIpMacBindingDHCPSnoopEntry 5 }
+   		
+-- -----------------------------------------------------------------------------
+-- swIpMacBindingNotify        OBJECT IDENTIFIER ::= { swIpMacBindMIB 5 }
+-- -----------------------------------------------------------------------------
+	swIpMacBindingNotifyPrefix   OBJECT IDENTIFIER ::= { swIpMacBindingNotify 0 }
+
+	swIpMacBindingViolationTrap NOTIFICATION-TYPE
+    	OBJECTS  { 	  swIpMacBindingPortIndex,
+    		  		  swIpMacBindingViolationIP,
+    		  		  swIpMacBindingViolationMac
+                 }
+        STATUS  current
+        	DESCRIPTION
+            		"When the IP-MAC Binding trap is enabled, if there's a new MAC that violates the pre-defined
+            		port security configuration, a trap will be sent out."
+        	::= { swIpMacBindingNotifyPrefix 1 }
+	
+        swIpMacBindingStopLearningTrap NOTIFICATION-TYPE
+        OBJECTS         { swIpMacBindingPortIndex}
+        STATUS  current
+        DESCRIPTION
+            "When the IP-MAC Binding trap is enabled, if the specific port changes from a 
+             normal state to a stop_learning state, a trap will be sent out."
+        ::= { swIpMacBindingNotifyPrefix 2 }
+
+      swIpMacBindingRecoverLearningTrap NOTIFICATION-TYPE
+        OBJECTS         { swIpMacBindingPortIndex}
+        STATUS  current
+        DESCRIPTION
+            "When the IP-MAC Binding trap is enabled, if the specific port changes from a 
+             stop_learning state to a normal state, a trap will be sent out."
+        ::= { swIpMacBindingNotifyPrefix 3 }
+
+	swIpMacBindingNotificationBidings   OBJECT IDENTIFIER ::= { swIpMacBindingNotify 2 }
+
+    	swIpMacBindingViolationIP OBJECT-TYPE
+        	SYNTAX  MacAddress
+        	MAX-ACCESS  accessible-for-notify
+        	STATUS  current
+        	DESCRIPTION
+            		"This object indicates the IP address that violates the IP-MAC Binding configuration."
+        	::= { swIpMacBindingNotificationBidings 1 }
+
+    	swIpMacBindingViolationMac OBJECT-TYPE
+        	SYNTAX  MacAddress
+        	MAX-ACCESS  accessible-for-notify
+        	STATUS  current
+        	DESCRIPTION
+            		"This object indicates the MAC address that violates the IP-MAC Binding configuration."
+        	::= { swIpMacBindingNotificationBidings 2 }
+
+END

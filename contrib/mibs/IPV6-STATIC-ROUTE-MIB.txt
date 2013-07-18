@@ -1,0 +1,307 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : IPV6 Statis Route Common mib
+-- FILE NAME: IPv6StaticRoute.mib
+-- DATE     : 2007/06/15
+-- VERSION  : 2.01
+-- PURPOSE  : To construct the MIB structure of IPv6 static route and ARP table
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.01, 2007/06/15, Yan
+-- Description:
+--  [New Object]
+-- 1. Add object swIPv6StaticRouteBkupState in swIPv6StaticRouteTable.
+-- 2. Add object swIPv6NeighborCacheDeleteAction.
+-- Notes: Requested by Yan for project DGS36xxR2
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+IPV6-STATIC-ROUTE-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress, Unsigned32
+                                        FROM SNMPv2-SMI
+        MacAddress, RowStatus           FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+    	SnmpAdminString					FROM SNMP-FRAMEWORK-MIB
+
+        dlink-common-mgmt				FROM DLINK-ID-REC-MIB;
+
+
+
+    swIPv6StaticRouteMIB MODULE-IDENTITY
+	    LAST-UPDATED "0706150000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The structure of the IPv6 static Route and ARP table management for the
+		    proprietary enterprise."
+        ::= { dlink-common-mgmt 26 }
+
+-- -----------------------------------------------------------------------------
+-- Textual Conventions
+-- -----------------------------------------------------------------------------
+-- This definition may be excluded if IPv6 is not supported
+Ipv6Address ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT "2x:"
+	STATUS       current
+	DESCRIPTION
+		"This data type is used to model IPv6 addresses.
+		This is a binary string of 16 octets in network
+		byte-order."
+	SYNTAX       OCTET STRING (SIZE (16))
+
+   swIPv6StaticRouteCtrl        OBJECT IDENTIFIER ::= { swIPv6StaticRouteMIB 1 }
+   swIPv6StaticRouteInfo        OBJECT IDENTIFIER ::= { swIPv6StaticRouteMIB 2 }
+   swIPv6StaticRouteMgmt        OBJECT IDENTIFIER ::= { swIPv6StaticRouteMIB 3 }
+   swIPv6NeighborCacheMgmt      OBJECT IDENTIFIER ::= { swIPv6StaticRouteMIB 4 }
+
+-- -----------------------------------------------------------------------------
+-- swIPv6StaticRouteMgmt        OBJECT IDENTIFIER ::= { swIPv6StaticRouteMIB 3 }
+-- -----------------------------------------------------------------------------
+   swIPv6StaticRouteTable OBJECT-TYPE
+        SYNTAX   SEQUENCE OF SwIPv6StaticRouteEntry
+        MAX-ACCESS not-accessible
+        STATUS   current
+        DESCRIPTION
+        "This entity's IPv6 static Routing table."
+        ::= { swIPv6StaticRouteMgmt 1 }
+
+    swIPv6StaticRouteEntry OBJECT-TYPE
+        SYNTAX   SwIPv6StaticRouteEntry
+        MAX-ACCESS not-accessible
+        STATUS   current
+        DESCRIPTION
+           "A particular route to  a  particular  destination, under a particular policy.
+            Once an entry is built, it cannot be modified. That is, it just supports create
+            and delete actions."
+        INDEX {
+            swIPv6StaticRouteDest,
+            swIPv6StaticRoutePrefixLen,
+            swIPv6StaticRouteInterfaceName,
+            swIPv6StaticRouteNextHop
+            }
+        ::= { swIPv6StaticRouteTable 1 }
+
+    SwIPv6StaticRouteEntry ::=
+        SEQUENCE {
+            swIPv6StaticRouteDest
+                Ipv6Address,
+            swIPv6StaticRoutePrefixLen
+                INTEGER,
+            swIPv6StaticRouteInterfaceName
+            	DisplayString,
+            swIPv6StaticRouteNextHop
+                Ipv6Address,
+            swIPv6StaticRouteMetric
+                INTEGER,
+            swIPv6StaticRouteWeight
+            	INTEGER,
+            swIPv6StaticProtocol
+                DisplayString,
+            swIPv6StaticRouteStatus
+                RowStatus,
+            swIPv6StaticRouteBkupState
+                INTEGER                  
+        }
+
+    swIPv6StaticRouteDest OBJECT-TYPE
+        SYNTAX   Ipv6Address
+        MAX-ACCESS read-only
+        STATUS   current
+        DESCRIPTION
+           "Specify the destination network IPv6 address for the route.
+            If swIPv6StaticRouteDest and swIPv6StaticRoutePrefixLen are both 0, it means the default route."
+        ::= { swIPv6StaticRouteEntry 1 }
+
+    swIPv6StaticRoutePrefixLen OBJECT-TYPE
+        SYNTAX   INTEGER (0..128)
+        MAX-ACCESS read-only
+        STATUS   current
+        DESCRIPTION
+           "The prefix length for this IPv6 address.
+            If swIPv6StaticRouteDest and swIPv6StaticRoutePrefixLen are both 0, it means the default route."
+        ::= { swIPv6StaticRouteEntry 2 }
+
+    swIPv6StaticRouteInterfaceName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..12))
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the name of the interface."
+        ::= { swIPv6StaticRouteEntry 3 }
+
+    swIPv6StaticRouteNextHop OBJECT-TYPE
+        SYNTAX   Ipv6Address
+        MAX-ACCESS read-only
+        STATUS   current
+        DESCRIPTION
+           "Specify the next hop address for this route."
+        ::= { swIPv6StaticRouteEntry 4 }
+
+    swIPv6StaticRouteMetric OBJECT-TYPE
+        SYNTAX   INTEGER (1..65535)
+        MAX-ACCESS read-create
+        STATUS   current
+        DESCRIPTION
+            "The routing metric for this route."
+        DEFVAL {1}
+        ::= { swIPv6StaticRouteEntry 5 }
+
+    swIPv6StaticRouteWeight OBJECT-TYPE
+        SYNTAX   INTEGER (1..4)
+        MAX-ACCESS read-create
+        STATUS   current
+        DESCRIPTION
+            "Specified weight value. Used for weighted multipath. The default setting is 1."
+        DEFVAL {1}
+        ::= { swIPv6StaticRouteEntry 6 }
+
+    swIPv6StaticProtocol OBJECT-TYPE
+        SYNTAX   DisplayString
+        MAX-ACCESS read-only
+        STATUS   current
+        DESCRIPTION
+            "The protocol state for this route."
+        ::= { swIPv6StaticRouteEntry 7 }
+
+    swIPv6StaticRouteStatus OBJECT-TYPE
+        SYNTAX   RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swIPv6StaticRouteEntry 8 }
+
+    swIPv6StaticRouteBkupState OBJECT-TYPE
+        SYNTAX   INTEGER {
+                    primary(1),
+                    backup(2),
+                    none(3)
+                }
+        MAX-ACCESS read-create
+        STATUS   current
+        DESCRIPTION
+            "primary: Specifies the route as the primary route to the destination.
+             backup:  Specifies the route as the backup route to the destination.
+             none:    The route is not specified. If the route is not specified as the 
+                      primary route or the backup route, then it will be auto-assigned 
+                      by the system. The first created is the primary, the second 
+                      created is the backup."
+        ::= { swIPv6StaticRouteEntry 9 } 
+        
+-- -----------------------------------------------------------------------------
+-- swIPv6NeighborCacheMgmt      OBJECT IDENTIFIER ::= { swIPv6StaticRouteMIB 4 }
+-- -----------------------------------------------------------------------------
+    swIPv6NeighborCacheTable OBJECT-TYPE
+        SYNTAX   SEQUENCE OF SwIPv6NeighborCacheEntry
+        MAX-ACCESS not-accessible
+        STATUS   current
+        DESCRIPTION
+           "This entity's IPv6 NeighborCache table."
+        ::= { swIPv6NeighborCacheMgmt 1 }
+
+    swIPv6NeighborCacheEntry OBJECT-TYPE
+        SYNTAX   SwIPv6NeighborCacheEntry
+        MAX-ACCESS not-accessible
+        STATUS   current
+        DESCRIPTION
+           "A particular route to  a  particular  destination, under a particular policy.
+           Once an entry is built, it cannot be modified. That is, it just supports create
+           and delete actions."
+        INDEX {
+            swIPv6NeighborCacheIPv6Address,
+            swIPv6NeighborCacheMacAddress,
+            swIPv6NeighborCacheInterfaceName
+            }
+        ::= { swIPv6NeighborCacheTable 1 }
+
+    SwIPv6NeighborCacheEntry ::=
+        SEQUENCE {
+            swIPv6NeighborCacheIPv6Address
+                Ipv6Address,
+            swIPv6NeighborCacheMacAddress
+                MacAddress,
+            swIPv6NeighborCacheInterfaceName
+                DisplayString,
+            swIPv6NeighborCacheReachState
+                INTEGER,
+            swIPv6NeighborCacheRouteStatus
+                RowStatus
+        }
+
+    swIPv6NeighborCacheIPv6Address OBJECT-TYPE
+        SYNTAX   Ipv6Address
+        MAX-ACCESS read-only
+        STATUS   current
+        DESCRIPTION
+           "The destination IPv6 address of this neighbor."
+        ::= { swIPv6NeighborCacheEntry 1 }
+
+    swIPv6NeighborCacheMacAddress OBJECT-TYPE
+        SYNTAX   MacAddress
+        MAX-ACCESS read-only
+        STATUS   current
+        DESCRIPTION
+           "The MAC address of this neighbor ."
+        ::= { swIPv6NeighborCacheEntry 2 }
+
+    swIPv6NeighborCacheInterfaceName OBJECT-TYPE
+        SYNTAX   DisplayString(SIZE(1..12))
+        MAX-ACCESS read-only
+        STATUS   current
+        DESCRIPTION
+            "This object indicates the name of the IP interface."
+        ::= { swIPv6NeighborCacheEntry 3 }
+
+    swIPv6NeighborCacheReachState OBJECT-TYPE
+        SYNTAX  INTEGER {
+        	incomplete(1),
+               	reachable(2),
+               	stale(3),
+               	delay(4),
+               	probe(5),
+               	static(6)
+               	}
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the reachability state of this neighbor."
+        ::= { swIPv6NeighborCacheEntry 4 }
+
+    swIPv6NeighborCacheRouteStatus OBJECT-TYPE
+        SYNTAX   RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swIPv6NeighborCacheEntry 5 }
+
+   swIPv6NeighborCacheDeleteAction OBJECT-TYPE
+        SYNTAX  INTEGER {
+        	all(1),
+               	static(2),
+               	dynamic(3),
+               	other(4)
+               	}	
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object will delete the cached neighbor entries.
+             all: 	Deletes all cached neighbor entries include static 
+             		and dynamic entries.
+             static: 	Deletes all the cached static neighbor entries.
+             dynamic: 	Deletes all the cached dynamic neighbor entries.
+            "
+        ::= { swIPv6NeighborCacheMgmt 2 } 
+END

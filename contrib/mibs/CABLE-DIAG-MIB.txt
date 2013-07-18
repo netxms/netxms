@@ -1,0 +1,273 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Cable Diagnostics Common mib
+-- FILE NAME: CableDiag.mib
+-- DATE     : 2008/08/11
+-- VERSION  : 2.01
+-- PURPOSE  : To construct the MIB structure for cable diagnostics feature
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICATION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+-- -----------------------------------------------------------------------------
+-- Version 2.01, 2008/08/11, Marco Visaya
+-- This is the first formal version for universal MIB definition.
+-- added swEtherCableDiagStatus
+-- requested by Marco Visaya for DES30XXP project
+-- -----------------------------------------------------------------------------
+-- Version 2.00, 2008/02/14, Marco
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+CABLE-DIAG-MIB DEFINITIONS ::= BEGIN
+  IMPORTS
+	TEXTUAL-CONVENTION			FROM SNMPv2-TC
+	MODULE-IDENTITY,OBJECT-TYPE,
+	Unsigned32,Integer32			FROM SNMPv2-SMI
+	RowStatus,TruthValue			FROM SNMPv2-TC
+	dlink-common-mgmt				FROM DLINK-ID-REC-MIB;
+		
+	swCableDiagMIB MODULE-IDENTITY
+		LAST-UPDATED "0808110000Z"
+	  	ORGANIZATION "D-Link, Inc."
+	  	CONTACT-INFO
+	   		"D-Link Customer Service
+	    
+	    		Postal: No.20, Park Ave,II, Science-based
+	    	    	Industrial Park, Hsinchu, Taiwan, R.O.C.
+	    		Tel: 886-3-577-9966
+	    		Email:"
+	  	DESCRIPTION
+	    		"The MIB module for determining the status of the cables attached to the device"
+	  	::= {dlink-common-mgmt 58}
+	  	
+	swCableDiagCtrl      OBJECT IDENTIFIER ::= { swCableDiagMIB 1 }	  	
+	  		
+--***************************************************************************
+--	swCableDiagCtrl
+--***************************************************************************	  	
+
+    swEtherCableDiagTable  OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwEtherCableDiagEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table that contains the cable situation for each port."
+        ::= { swCableDiagCtrl 1 }
+
+    swEtherCableDiagEntry OBJECT-TYPE
+        SYNTAX  SwEtherCableDiagEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of cable situations for each port on the device."
+        INDEX   { swEtherCableDiagPortIndex }
+        ::= { swEtherCableDiagTable 1 }
+
+    SwEtherCableDiagEntry ::= 
+        SEQUENCE {
+            swEtherCableDiagPortIndex
+                INTEGER,
+			swEtherCableDiagPortType
+				INTEGER,
+			swEtherCableDiagLinkStatus
+				INTEGER,
+			swEtherCableDiagPair1Status
+				INTEGER,
+			swEtherCableDiagPair2Status
+				INTEGER,
+			swEtherCableDiagPair3Status
+				INTEGER,
+			swEtherCableDiagPair4Status
+				INTEGER,
+			swEtherCableDiagPair1Length
+				INTEGER,
+			swEtherCableDiagPair2Length
+				INTEGER,
+			swEtherCableDiagPair3Length
+				INTEGER,
+			swEtherCableDiagPair4Length
+				INTEGER,
+			swEtherCableDiagAction
+				INTEGER,
+			swEtherCableDiagStatus
+				INTEGER	                
+        }
+
+    swEtherCableDiagPortIndex OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the module's port number.(1..Max port
+        number in the module)"
+    ::= { swEtherCableDiagEntry 1 }
+
+    swEtherCableDiagPortType OBJECT-TYPE
+    	SYNTAX INTEGER {
+    			fastEthernet(0),
+    			gigaEthernet(1),
+    			other(2)
+    	    	}
+        MAX-ACCESS  read-only
+        STATUS current
+        DESCRIPTION
+            "Indicates the supported port data rate classification."
+    ::= { swEtherCableDiagEntry 2 }
+    
+      swEtherCableDiagLinkStatus OBJECT-TYPE
+        SYNTAX INTEGER {
+               link-down(0),
+               link-up(1),
+               other(2)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the link status."
+    ::= { swEtherCableDiagEntry 3 }
+       
+    swEtherCableDiagPair1Status OBJECT-TYPE
+        SYNTAX  INTEGER {
+               ok(0),
+               open(1),
+               short(2),
+               open-short(3),
+               crosstalk(4),
+               unknown(5),
+               count(6),
+               no-cable(7),
+               other(8)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of pair 1 of the cable."
+        ::= { swEtherCableDiagEntry 4 }
+        
+    swEtherCableDiagPair2Status OBJECT-TYPE
+        SYNTAX  INTEGER {
+               ok(0),
+               open(1),
+               short(2),
+               open-short(3),
+               crosstalk(4),
+               unknown(5),
+               count(6),
+               no-cable(7),
+               other(8)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of pair 2 of the cable."
+        ::= { swEtherCableDiagEntry 5 }        
+
+    swEtherCableDiagPair3Status OBJECT-TYPE
+        SYNTAX  INTEGER {
+               ok(0),
+               open(1),
+               short(2),
+               open-short(3),
+               crosstalk(4),
+               unknown(5),
+               count(6),
+               no-cable(7),
+               other(8)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of pair 3 of the cable."
+        ::= { swEtherCableDiagEntry 6 }        
+
+    swEtherCableDiagPair4Status OBJECT-TYPE
+        SYNTAX  INTEGER {
+               ok(0),
+               open(1),
+               short(2),
+               open-short(3),
+               crosstalk(4),
+               unknown(5),
+               count(6),
+               no-cable(7),
+               other(8)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of pair 4 of the cable."
+        ::= { swEtherCableDiagEntry 7 }
+                           
+    swEtherCableDiagPair1Length OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the approx. length or length to the failure of 
+            pair 1 of the cable. This value is in meter units."
+        ::= { swEtherCableDiagEntry 8 } 
+        
+    swEtherCableDiagPair2Length OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the approx. length or length to the failure of 
+            pair 2 of the cable. This value is in meter units."
+        ::= { swEtherCableDiagEntry 9 }  
+        
+    swEtherCableDiagPair3Length OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the approx. length or length to the failure of 
+            pair 3 of the cable. This value is in meter units."
+        ::= { swEtherCableDiagEntry 10 }   
+        
+    swEtherCableDiagPair4Length OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the approx. length or length to the failure of 
+            pair 4 of the cable. This value is in meter units. "
+        ::= { swEtherCableDiagEntry 11 }                         
+        
+	swEtherCableDiagAction OBJECT-TYPE 
+        SYNTAX  INTEGER {
+               action(1),
+               processing(2),
+               other(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Function to run the cable diagnostic on selected port."
+        ::= { swEtherCableDiagEntry 12 } 
+        
+    swEtherCableDiagStatus OBJECT-TYPE 
+        SYNTAX  INTEGER {
+               not-run(1),
+               processing(2),
+               last-test-ok(3),
+               last-test-failed(4)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates the status of cable diagnostics on the port.
+            	not-run - cable diagnostics has never been run for this port
+            	processing - cable diagnostics is currently running on the port
+            	last-test-ok - the last cable diagnostics done on the port was successful
+            	last-test-failed - the last cable diagnostics done on the port failed"
+        ::= { swEtherCableDiagEntry 13 } 
+        
+       
+END
+

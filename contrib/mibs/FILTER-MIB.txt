@@ -1,0 +1,553 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Filter Common mib
+-- FILE NAME: Filter.mib
+-- DATE     : 2009/08/28
+-- VERSION  : 2.05
+-- PURPOSE  : To define MIB objects for filter.
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.05 2009/08/28, Dandelion Zhou
+-- Description:
+-- [New Object]
+-- Add objects "swFilterDhcpServerTrapState" and "swFilterDhcpServerLogState" for 
+-- trap and log state.
+--
+-- Version 2.04 2008/08/12, Richard Shi
+-- Description:
+-- [New Object]
+-- Add swPktEgressFilterCtrlTable.   
+-- [Modification]
+-- Modify the description of swFilterMIB.
+--
+-- Version 2.03 2008/07/30, Jeffers
+-- [New Object]
+-- Add objects swFilterDhcpServerIllegalSerLogSuppressDuration and 
+-- swFilterDhcpServerTrapLogState.
+-- [Modification]
+-- Modify the description of objects swFilterDetectedTrap, swFilterDetectedIP and 
+-- swFilterDetectedport.
+--	
+-- Version 2.02 2008/07/10, Mark Luo
+-- Description:
+--  [New Object]
+-- 1. Add swFilterNotify.
+--
+-- Version 2.01, 2008/01/24, Ronald
+-- Add the swFilterCPUL3CtrlPktTable object.
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+FILTER-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,
+        OBJECT-TYPE,
+        IpAddress               FROM SNMPv2-SMI
+        MacAddress,
+        RowStatus               FROM SNMPv2-TC
+        SnmpAdminString         FROM SNMP-FRAMEWORK-MIB
+
+        dlink-common-mgmt       FROM DLINK-ID-REC-MIB;
+
+    swFilterMIB MODULE-IDENTITY
+        LAST-UPDATED "0908280000Z"
+        ORGANIZATION "D-Link Corp."
+        CONTACT-INFO
+            "http://support.dlink.com"
+        DESCRIPTION
+            "This MIB module defining objects for the management of filter."
+        ::= { dlink-common-mgmt 37 }
+
+    PortList                    ::= OCTET STRING(SIZE (0..127))
+
+    swFilterDhcp                OBJECT IDENTIFIER ::= { swFilterMIB 1 }
+--  swFilterNetbios             OBJECT IDENTIFIER ::= { swFilterMIB 2 }
+--  swFilterExtNetbios          OBJECT IDENTIFIER ::= { swFilterMIB 3 }
+--  swFilterCPU                 OBJECT IDENTIFIER ::= { swFilterMIB 4 }
+--  swFilterEgress              OBJECT IDENTIFIER ::= { swFilterMIB 5 }
+    swFilterNotify              OBJECT IDENTIFIER ::= { swFilterMIB 100 }
+-- -----------------------------------------------------------------------------
+-- swFilterDhcp              OBJECT IDENTIFIER ::= { swFilterMIB 1 }
+-- -----------------------------------------------------------------------------
+    swFilterDhcpPermitTable OBJECT-TYPE
+        SYNTAX          SEQUENCE OF SwFilterDhcpPermitEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "The table specifies DHCP permit information."
+        ::= { swFilterDhcp 1 }
+
+    swFilterDhcpPermitEntry OBJECT-TYPE
+        SYNTAX          SwFilterDhcpPermitEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "This entry includes all port DHCP information which is
+               supported by the device, like server IP address,
+               client MAC address..."
+        INDEX { swFilterDhcpServerIP, swFilterDhcpClientMac }
+        ::= { swFilterDhcpPermitTable 1 }
+
+    SwFilterDhcpPermitEntry ::=
+        SEQUENCE {
+            swFilterDhcpServerIP
+                IpAddress,
+            swFilterDhcpClientMac
+                MacAddress,
+            swFilterDhcpPorts
+                PortList,
+            swFilterDhcpStatus
+                RowStatus
+       }
+
+    swFilterDhcpServerIP OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DHCP server IP address of this entry."
+        ::= { swFilterDhcpPermitEntry 1 }
+
+    swFilterDhcpClientMac OBJECT-TYPE
+        SYNTAX      MacAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DHCP client MAC address of this entry."
+        ::= { swFilterDhcpPermitEntry 2 }
+
+    swFilterDhcpPorts OBJECT-TYPE
+        SYNTAX      PortList
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the operating port list of this entry."
+        ::= { swFilterDhcpPermitEntry 3 }
+
+    swFilterDhcpStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swFilterDhcpPermitEntry 4 }
+
+-- -----------------------------------------------------------------------------
+    swFilterDhcpPortTable OBJECT-TYPE
+        SYNTAX          SEQUENCE OF SwFilterDhcpPortEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "The table specifies the DHCP filter function of a particular port."
+        ::= { swFilterDhcp 2 }
+
+    swFilterDhcpPortEntry OBJECT-TYPE
+        SYNTAX          SwFilterDhcpPortEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "This entry includes all port DHCP states which are
+               supported by the device."
+        INDEX { swFilterDhcpPortIndex }
+        ::= { swFilterDhcpPortTable 1 }
+
+    SwFilterDhcpPortEntry ::=
+        SEQUENCE {
+            swFilterDhcpPortIndex
+                INTEGER,
+            swFilterDhcpPortState
+                INTEGER
+       }
+
+    swFilterDhcpPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the module's port number. The range is from 1 to
+             the maximum port number supported by this module."
+        ::= { swFilterDhcpPortEntry 1 }
+
+    swFilterDhcpPortState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DHCP filter status of this entry."
+        ::= { swFilterDhcpPortEntry 2 }
+        
+    swFilterDhcpServerIllegalSerLogSuppressDuration  OBJECT-TYPE     
+        SYNTAX      INTEGER {
+                       duration_1min(1),
+                       duration_5min(2),
+                       duration_30min(3)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+               "This object indicates the illegal server log suppression duration.
+               The same illegal DHCP server IP address detected is logged just once
+               within the log ceasing unauthorized duration. The log ceasing unauthorized
+               duration is 1 minute, 5 minutes, and 30 minutes. The default value is
+               5 minutes."
+        DEFVAL {duration_5min}
+        ::={swFilterDhcp 3}
+        
+    swFilterDhcpServerTrapLogState  OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+        	"This object indicates the state of the filter DHCP server log or trap on the switch."
+       ::={swFilterDhcp 4}
+
+    swFilterDhcpServerTrapState  OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+        	"This object indicates the state of the filter DHCP server trap on the switch."
+       ::={swFilterDhcp 5}
+
+    swFilterDhcpServerLogState  OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+        	"This object indicates the state of the filter DHCP server log on the switch."
+       ::={swFilterDhcp 6}
+
+-- -----------------------------------------------------------------------------
+-- swFilterNetbios           OBJECT IDENTIFIER ::= { swFilterMIB 2 }
+-- -----------------------------------------------------------------------------
+--  swFilterNetbiosTable OBJECT-TYPE
+--      SYNTAX          SEQUENCE OF SwFilterNetbiosEntry
+--      MAX-ACCESS      not-accessible
+--      STATUS          current
+--      DESCRIPTION
+--            "The table specifies the NetBIOS filter function of a port."
+--      ::= { swFilterNetbios 1 }
+--
+--  swFilterNetbiosEntry OBJECT-TYPE
+--      SYNTAX          SwFilterNetbiosEntry
+--      MAX-ACCESS      not-accessible
+--      STATUS          current
+--      DESCRIPTION
+--            "This entry includes all port NetBIOS states which are
+--             supported by the device."
+--      INDEX { swFilterNetbiosPortIndex }
+--      ::= { swFilterNetbiosTable 1 }
+--
+--  SwFilterNetbiosEntry ::=
+--      SEQUENCE {
+--          swFilterNetbiosPortIndex
+--              INTEGER,
+--          swFilterNetbiosState
+--              INTEGER
+--     }
+--
+--  swFilterNetbiosPortIndex OBJECT-TYPE
+--      SYNTAX      INTEGER (1..65535)
+--      MAX-ACCESS  read-only
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the module's port number. The range is from 1 to
+--           the maximum port number supported by this module."
+--      ::= { swFilterNetbiosEntry 1 }
+--
+--  swFilterNetbiosState OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the status of the NetBIOS filter."
+--      ::= { swFilterNetbiosEntry 2 }
+
+
+-- -----------------------------------------------------------------------------
+-- swFilterExtNetbios        OBJECT IDENTIFIER ::= { swFilterMIB 3 }
+-- -----------------------------------------------------------------------------
+--  swFilterExtNetbiosTable OBJECT-TYPE
+--      SYNTAX          SEQUENCE OF SwFilterExtNetbiosEntry
+--      MAX-ACCESS      not-accessible
+--      STATUS          current
+--      DESCRIPTION
+--            "The table specifies the extensive NetBIOS filter function of a port."
+--      ::= { swFilterExtNetbios 1 }
+--
+--  swFilterExtNetbiosEntry OBJECT-TYPE
+--      SYNTAX          SwFilterExtNetbiosEntry
+--      MAX-ACCESS      not-accessible
+--      STATUS          current
+--      DESCRIPTION
+--            "This entry includes all port extensive NetBIOS states which are
+--             supported by the device."
+--      INDEX { swFilterExtNetbiosPortIndex }
+--      ::= { swFilterExtNetbiosTable 1 }
+--
+--  SwFilterExtNetbiosEntry ::=
+--      SEQUENCE {
+--          swFilterExtNetbiosPortIndex
+--              INTEGER,
+--          swFilterExtNetbiosState
+--              INTEGER
+--     }
+--
+--  swFilterExtNetbiosPortIndex OBJECT-TYPE
+--      SYNTAX      INTEGER (1..65535)
+--      MAX-ACCESS  read-only
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the module's port number. The range is from 1 to
+--           the maximum port number supported by this module."
+--      ::= { swFilterExtNetbiosEntry 1 }
+--
+--  swFilterExtNetbiosState OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the extensive NetBIOS filter status."
+--      ::= { swFilterExtNetbiosEntry 2 }
+
+-- -----------------------------------------------------------------------------
+--    swFilterCPU        OBJECT IDENTIFIER ::= { swFilterMIB 4 }
+-- -----------------------------------------------------------------------------
+--  swFilterCPUL3CtrlPktTable OBJECT-TYPE
+--      SYNTAX          SEQUENCE OF SwFilterCPUL3CtrlPktEntry
+--      MAX-ACCESS      not-accessible
+--      STATUS          current
+--      DESCRIPTION
+--            "The table specifies the CPU filter of the layer 3 control packet function of a port."
+--      ::= { swFilterCPU 1 }
+--      
+--  swFilterCPUL3CtrlPktEntry OBJECT-TYPE
+--      SYNTAX          SwFilterCPUL3CtrlPktEntry
+--      MAX-ACCESS      not-accessible
+--      STATUS          current
+--      DESCRIPTION
+--            "This entry includes all port CPU filters of layer 3 control packet states which are
+--             supported by the device."
+--      INDEX { swFilterCPUL3CtrlPktPortIndex }
+--      ::= { swFilterCPUL3CtrlPktTable 1 }
+--
+--  SwFilterCPUL3CtrlPktEntry ::=
+--      SEQUENCE {
+--          swFilterCPUL3CtrlPktPortIndex
+--              INTEGER,
+--          swFilterCPUL3CtrlPktRIPState
+--              INTEGER,
+--          swFilterCPUL3CtrlPktOSPFState
+--              INTEGER,
+--          swFilterCPUL3CtrlPktVRRPState
+--              INTEGER,
+--          swFilterCPUL3CtrlPktPIMState
+--              INTEGER,
+--          swFilterCPUL3CtrlPktDVMRPState
+--              INTEGER,
+--          swFilterCPUL3CtrlPktIGMPQueryState
+--              INTEGER
+--     }
+--
+--  swFilterCPUL3CtrlPktPortIndex OBJECT-TYPE
+--      SYNTAX      INTEGER (1..65535)
+--      MAX-ACCESS  read-only
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the module's port number. The range is from 1 to
+--           the maximum port number supported by this module."
+--      ::= { swFilterCPUL3CtrlPktEntry 1 }
+--
+--  swFilterCPUL3CtrlPktRIPState OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the RIP status of the layer 3 control packet."
+--      ::= { swFilterCPUL3CtrlPktEntry 2 }
+--
+--  swFilterCPUL3CtrlPktOSPFState OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the OSPF status of the layer 3 control packet."
+--      ::= { swFilterCPUL3CtrlPktEntry 3 }
+--
+--  swFilterCPUL3CtrlPktVRRPState OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the VRRP status of the layer 3 control packet."
+--      ::= { swFilterCPUL3CtrlPktEntry 4 }
+--
+--  swFilterCPUL3CtrlPktPIMState OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the PIM status of the layer 3 control packet."
+--      ::= { swFilterCPUL3CtrlPktEntry 5 }
+--
+--  swFilterCPUL3CtrlPktDVMRPState OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the DVMRP status of the layer 3 control packet."
+--      ::= { swFilterCPUL3CtrlPktEntry 6 }
+--
+--  swFilterCPUL3CtrlPktIGMPQueryState OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS      current
+--      DESCRIPTION
+--          "This object indicates the IGMP query status of the layer 3 control packet."
+--      ::= { swFilterCPUL3CtrlPktEntry 7 }
+        
+
+-- -----------------------------------------------------------------------------
+-- swFilterEgress        OBJECT IDENTIFIER ::= { swFilterMIB 5 }
+-- -----------------------------------------------------------------------------
+
+--    swPktEgressFilterCtrlTable OBJECT-TYPE
+--      SYNTAX  SEQUENCE OF SwPktEgressFilterCtrlEntry
+--      MAX-ACCESS  not-accessible
+--      STATUS  current
+--      DESCRIPTION
+--          "A table that contains information about egress filter control."
+--      ::= { swFilterEgress 1 }
+--
+--   swPktEgressFilterCtrlEntry OBJECT-TYPE
+--      SYNTAX  SwPktEgressFilterCtrlEntry
+--      MAX-ACCESS  not-accessible
+--      STATUS  current
+--      DESCRIPTION
+--          "A list of information for each port of the device.
+--          unicast: Specifies the egress filter state of destination lookup fail packets.
+--          multicast: Specifies the egress filter state of unregistered multicast packets."
+--      INDEX   { swPktEgressFilterPortIndex }
+--      ::= { swPktEgressFilterCtrlTable 1 }
+--
+--  SwPktEgressFilterCtrlEntry ::=
+--      SEQUENCE {
+--          swPktEgressFilterPortIndex
+--              INTEGER,
+--          swPktEgressFilterUnknownUnicastStatus
+--              INTEGER,
+--          swPktEgressFilterUnknownMulticastStatus
+--              INTEGER
+--      }
+--
+--  swPktEgressFilterPortIndex  OBJECT-TYPE
+--      SYNTAX  INTEGER (0..65535)
+--      MAX-ACCESS  read-only
+--      STATUS  current
+--      DESCRIPTION
+--      "This object indicates the device's port number.(1..Max port
+--      number in the device).Used to specify a range of ports to be
+--      configured."
+--  ::= { swPktEgressFilterCtrlEntry 1 }
+--
+--  swPktEgressFilterUnknownUnicastStatus  OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS  current
+--      DESCRIPTION
+--      "This object indicates the egress filter state of destination lookup fail packets."
+--  ::= { swPktEgressFilterCtrlEntry 2 }
+--
+--  swPktEgressFilterUnknownMulticastStatus  OBJECT-TYPE
+--      SYNTAX      INTEGER {
+--                     enabled(1),
+--                     disabled(2)
+--                  }
+--      MAX-ACCESS  read-write
+--      STATUS  current
+--      DESCRIPTION
+--      "This object indicates the egress filter state of unregistered multicast packets."
+--  ::= { swPktEgressFilterCtrlEntry 3 }
+
+        
+-- -----------------------------------------------------------------------------
+-- swFilterNotify        OBJECT IDENTIFIER ::= { swFilterMIB 100 }
+-- -----------------------------------------------------------------------------
+
+  swFilterNotifyPrefix        OBJECT IDENTIFIER ::= { swFilterNotify 0 }
+  
+  swFilterDetectedTrap NOTIFICATION-TYPE
+    OBJECTS { swFilterDetectedIP,swFilterDetectedport}
+    STATUS  current
+    DESCRIPTION
+            "Send trap when illegal DHCP server is detected. 
+            The same illegal DHCP server IP address detected is just sent once 
+            to the trap receivers within the log ceasing unauthorized duration."
+    ::= { swFilterNotifyPrefix 1 }
+                                      
+   swFilterNotificationBindings   OBJECT IDENTIFIER ::= { swFilterNotify 2 }
+
+   swFilterDetectedIP OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  accessible-for-notify
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the detected illegal DHCP server IP address."
+        ::= { swFilterNotificationBindings 1 }
+
+    swFilterDetectedport OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  accessible-for-notify
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the port which detected the illegal DHCP server."
+        ::= { swFilterNotificationBindings 2 }        
+END

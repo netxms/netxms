@@ -1,0 +1,347 @@
+--------------------------------------------------------------------------------
+-- MIB NAME : Time Common mib
+-- FILE NAME: Time.mib
+-- DATE     : 2009/01/13
+-- VERSION  : 2.03
+-- PURPOSE  : To construct the MIB structure of time management
+--            for proprietary enterprise
+--------------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+--------------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.03, 2009/1/13, Eli
+-- Description:
+--  [Modification]
+-- Revise the DESCRIPTION of swSystemBootTime to "swSystemUpTime" from 
+-- "systemUpTime" and to "swSystemCurrentTime" from "swSNTPCurrentTime".
+-- Notes: reported from DES3200
+--
+-- Version 2.02, 2007/4/17, yedda
+-- Description:
+--  [Modification]
+--    add "IpAddress FROM SNMPv2-SMI" in IMPORTS to avoid compile error.
+-- Notes: reported from Yan Zhang
+--
+-- Version 2.01, 2007/4/6, yedda
+-- Description:
+--  [Modification]
+--    add the comma to the SYNTAX of swTimeCapacity for correct the error
+-- Notes: reported from Yan Zhang
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+--------------------------------------------------------------------------------
+
+TIME-MIB DEFINITIONS ::= BEGIN
+
+     IMPORTS
+        MODULE-IDENTITY, OBJECT-TYPE
+            FROM SNMPv2-SMI
+        IpAddress
+            FROM SNMPv2-SMI
+        DateAndTime, TruthValue , DisplayString
+            FROM SNMPv2-TC
+		dlink-common-mgmt
+		    FROM DLINK-ID-REC-MIB;
+
+     swTimeMIB MODULE-IDENTITY
+          LAST-UPDATED "0901130000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+            "http://support.dlink.com"
+          DESCRIPTION
+            "equipments absolute time."
+          ::= { dlink-common-mgmt 10 }
+
+-- -----------------------------------------------------------------------------
+-- OID Tree Allocation in bsoluteTime
+-- -----------------------------------------------------------------------------
+    swSystemTime		OBJECT IDENTIFIER ::= { swTimeMIB 10 }
+    swSNTP          	OBJECT IDENTIFIER ::= { swTimeMIB 11 }
+    swSummerTime		OBJECT IDENTIFIER ::= { swTimeMIB 12 }
+
+    swTimeNotifPrefix  OBJECT IDENTIFIER ::= { swTimeMIB 13 }
+
+-- -----------------------------------------------------------------------------
+-- Object Definition for
+-- -----------------------------------------------------------------------------
+    swTimeCapacity OBJECT-TYPE
+      SYNTAX      BITS {
+      				systemTime(0),
+                    sntp(1),
+                    summerTime(2),
+                    realTimeClock(3)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the time capacity supported in the system .
+         If sntp bit is 1 , indicate the SNTP is supported else if sntp bit is 0, the SNTP
+         is not supported and the subtree swSNTP will not supported also.
+         If summerTime bit is 1 ,indicate the SummerTime is supported else if sntp bit is 0,
+         the SummerTime is not supported and the subtree swSummerTime will not supported
+         also.
+         If realTimeClock bit is 1 , indicate the real time clock is supported else if the
+         bit is 0, the real time clock is not supported . "
+
+
+    ::= { swTimeMIB 1 }
+
+
+    swCurrentClock OBJECT-TYPE
+        SYNTAX      DateAndTime
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The current local date and time for the system.
+             Setting this object is equivalent to setting an automated
+             clock and calendar.  The value of the object will track the
+             date and time from the value set.  Note that due to hardware
+             limitations some systems may not be able to preserve such
+             meaning across reboots of the system, as indicated by
+             swClockLostOnReboot.
+             A constant value of all zeros and length 8 indicates the
+             system is not aware of the present date and time.
+             This object may be read-only on some systems."
+    ::= { swTimeMIB 2 }
+
+    swClockLostOnReboot OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Indication of whether the system can preserve knowledge of
+             current date and time across a system reboot.
+             A value of 'true' indicates the clock must be reset from some
+             external source each time the system reboots.
+             A value of 'false' indicates the system has the ability to
+             keep time across reboots."
+    ::= { swTimeMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- System Time
+-- -----------------------------------------------------------------------------
+	swSystemCurrentTime	OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..32))
+		MAX-ACCESS read-only
+		STATUS	current
+		DESCRIPTION
+			"the mandatory network time was got from the SNTP server"
+		::= { swSystemTime 1 }
+
+	swSystemUpTime			OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..32))
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The time (in second) since the network management portion
+			of the system was last re-initialized. It is the same as
+			sysUptime."
+		::= { swSystemTime 2 }
+
+	swSystemBootTime		OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..32))
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The boot time of the switch is equal to subtract swSystemUpTime
+			from swSystemCurrentTime"
+		::= { swSystemTime 3 }
+
+    swSystemTimeZone OBJECT-TYPE
+        SYNTAX  INTEGER (-779..839)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Local time offset in minutes from GMT."
+        ::= { swSystemTime 4 }
+
+-- -----------------------------------------------------------------------------
+-- SNTP
+-- -----------------------------------------------------------------------------
+	swSNTPState OBJECT-TYPE
+    	SYNTAX	INTEGER {
+                	other(1),
+                	disabled(2),
+                	enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        	"This object enable/disable the SNTP function."
+        ::= { swSNTP 1 }
+
+    swSNTPTimeSource OBJECT-TYPE
+        SYNTAX  INTEGER{
+        			system(0),
+                	server1(1),
+                	server2(2)
+                }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "the SNTP server status for time source changing"
+        ::= { swSNTP 2 }
+
+    swSNTPServer1IPAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Configure the SNTP server #1 IP address"
+        ::= { swSNTP 3 }
+
+    swSNTPServer2IPAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Configure the SNTP server #2 IP address"
+        ::= { swSNTP 4 }
+
+
+
+    swSNTPPollInterval OBJECT-TYPE
+        SYNTAX  INTEGER (30..99999)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Update time in seconds from SNTP server."
+--	    DEFVAL  { 1024 }
+        ::= { swSNTP 5 }
+
+
+
+-- -----------------------------------------------------------------------------
+--  Summer time
+-- -----------------------------------------------------------------------------
+    swSummerTimeStatus OBJECT-TYPE
+        SYNTAX  INTEGER  {
+              		disable(0),
+              		repeating(1),
+              		annual(2)
+
+     }
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION
+            "An indication of whether the summertime feature
+             is disabled or enabled in reprating or annual mode on this device.
+             When this object is set to repeating,then the summertime frature
+             is enabled and swSummerTimeOffset,swSummerTimeRepeatingStart
+             ,swSummerTimeRepeatingEnd objects are work effectively .
+             When this object is set to annual, then the summertime frature
+             is enabled and swSummerTimeOffset, swAnnualSummerTimeStart,
+             swAnnualSummerTimeEnd objects are work effectively. "
+        DEFVAL { disable }
+        ::= { swSummerTime 1 }
+
+    swSummerTimeOffset  OBJECT-TYPE
+        SYNTAX        INTEGER ( 0 .. 1440)
+        UNITS         "Minutes"
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION
+            "The value of this object indicates number of minutes to add
+             or to subtract during summertime. This object is not instantiated
+             when swSummerTimeStatus object is set to disable."
+        DEFVAL { 60 }
+        ::= { swSummerTime 2 }
+
+    swRepeatSummerTimeStart OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (6))
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION
+            "Indicates summertime starts at this time every year.
+             octets    contents     range
+             1         week        1..5,ff last = ff
+             2-3       day         1..7
+                                   where sunday = 1 saturday = 7
+             4         month       1..12
+                                   where january = 1 december = 12
+             5         hour        0..23
+             6         min         0..59
+
+             For example, the first Monday in Feb at 13:30pm
+             should be given as 01 00 02 02 0e 1e
+             For the last Tuesday in dec at 1:20am should be
+             given as ff 00 03 0c 01 14
+             This object is not instantiated when
+             swSummerTimeStatus object is not set to repeating."
+
+        ::= { swSummerTime 3 }
+
+    swRepeatSummerTimeEnd OBJECT-TYPE
+            SYNTAX        OCTET STRING (SIZE (6))
+            MAX-ACCESS    read-write
+            STATUS        current
+            DESCRIPTION
+                "Indicates summertime ends at this time every year.
+                 octets    contents      range
+                 1         week        1..5,ff where ff = last
+                 2-3       day         1..7
+                                       where sunday = 1 saturday = 7
+                 4         month       1..12
+                                       where january = 1 december = 12
+                 5         hour        0..23
+                 6         min         0..59
+
+                 For example, the third friday in February at 3:30am
+                 should be given as 03 00 06 02 03 1e
+                 For the first Tuesday in May at 1:20am  should
+                 be given as 01 00 03 05 01 14
+                 This object is not instantiated when
+                 swSummerTimeStatus object is not set to repeating."
+
+        ::= { swSummerTime 4 }
+    swAnnualSummerTimeStart OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (4))
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION
+            "Indicates summertime starts at this time every year.
+             octets    contents     range
+                 1         monthDay    1..31,
+                 2         month       1..12
+                                       where january = 1 december = 12
+                 3         hour        0..23
+                 4         min         0..59
+
+             For example, the first Feb at 13:30pm
+             should be given as 01 02 0e 1e
+             For the tenth dec at 1:20am should be
+             given as ff 00 03 0c 01 14
+             This object is not instantiated when
+             swSummerTimeStatus object is not set to annual."
+
+        ::= { swSummerTime 5 }
+
+    swAnnualSummerTimeEnd OBJECT-TYPE
+            SYNTAX        OCTET STRING (SIZE (4))
+            MAX-ACCESS    read-write
+            STATUS        current
+            DESCRIPTION
+                "Indicates summertime ends at this time every year.
+                 octets    contents      range
+                 1         monthDay    1..31,
+                 2         month       1..12
+                                       where january = 1 december = 12
+                 3         hour        0..23
+                 4         min         0..59
+
+                 For example, the third February at 3:30am
+                 should be given as 03 02 03 1e
+                 For the first May at 1:20am  should
+                 be given as 01 05 01 14
+                 This object is not instantiated when
+                 swSummerTimeStatus object is not set to annual."
+
+        ::= { swSummerTime 6 }
+
+END

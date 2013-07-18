@@ -1,0 +1,173 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Static Fdb Table Common mib
+-- FILE NAME: StaticFdb.mib
+-- DATE     : 2008/11/18
+-- VERSION  : 1.03
+-- PURPOSE  : To construct the MIB structure of static fdb table management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.03, 2008/11/18, Hans Song
+-- Description:
+-- [Modification]
+-- 1. modify the MAX-ACCESS of object "swStaticFdbMgmtType" from read-only to read-create.
+--
+-- Version 1.02, 2008/10/24, Hans Song
+-- Description:
+-- [New Object]
+-- 1. add permanentdrop(3) in the value list of object "swStaticFdbMgmtType" for
+-- MAC filter via FDB.
+--
+-- Version 1.01, 2008/10/13, Moun
+-- Description:
+-- [New Object]
+-- 1. modify the description of the object "swStaticFdbMgmtPortNum".
+--
+-- Version 1.00, 2008/10/02, Moun
+-- Description:
+-- [New Object]
+-- 1. add table swStaticFdbTable for CLI.
+-- 
+-- -----------------------------------------------------------------------------
+STATICFDB-MIB DEFINITIONS ::= BEGIN
+
+     IMPORTS
+         MODULE-IDENTITY, OBJECT-TYPE     FROM SNMPv2-SMI
+         IpAddress                        FROM RFC1155-SMI
+         MacAddress ,RowStatus, DisplayString
+                                          FROM SNMPv2-TC
+         dlink-common-mgmt                FROM DLINK-ID-REC-MIB;
+
+     swStaticFdbMIB MODULE-IDENTITY
+         LAST-UPDATED "0811180000Z"
+         ORGANIZATION "D-Link Corp."
+         CONTACT-INFO
+             "http://support.dlink.com"
+         DESCRIPTION
+             "This MIB defines a Table for Static Fdb."
+         ::= { dlink-common-mgmt 70 }
+
+
+swStaticFdbMgmt             OBJECT IDENTIFIER ::= { swStaticFdbMIB 1 }
+
+-- -----------------------------------------------------------------------------
+-- swStaticFdbMgmt
+-- -----------------------------------------------------------------------------
+
+        swStaticFdbMgmtTable OBJECT-TYPE
+					  SYNTAX      SEQUENCE OF SwStaticFdbMgmtEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "A table that contains the information of each static fdb."
+            ::= { swStaticFdbMgmt 1 }
+
+
+        swStaticFdbMgmtEntry OBJECT-TYPE
+            SYNTAX      SwStaticFdbMgmtEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "A list of information for each static fdb."
+            INDEX { swStaticFdbMgmtVlanID, swStaticFdbMgmtMacAddr}
+            ::= { swStaticFdbMgmtTable 1 }
+
+
+        SwStaticFdbMgmtEntry ::=
+            SEQUENCE {
+                swStaticFdbMgmtVlanID
+                    INTEGER,
+                swStaticFdbMgmtMacAddr
+                    MacAddress,
+                swStaticFdbMgmtVlanName
+                    DisplayString,
+                swStaticFdbMgmtType
+                		INTEGER,     
+                swStaticFdbMgmtPortNum
+                    INTEGER,
+                swStaticFdbMgmtRowStatus
+                    RowStatus
+           }
+
+		    swStaticFdbMgmtVlanID           OBJECT-TYPE
+            SYNTAX      INTEGER (1..4094)
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "The VLAN ID of the static fdb."
+            ::= { swStaticFdbMgmtEntry 1 }
+            
+            
+        swStaticFdbMgmtMacAddr            OBJECT-TYPE
+            SYNTAX      MacAddress 
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "The MAC address of the static fdb."
+            ::= { swStaticFdbMgmtEntry 2 }  
+            
+            
+	      swStaticFdbMgmtVlanName           OBJECT-TYPE
+            SYNTAX      DisplayString 
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "The VLAN name of the static fdb."
+            ::= { swStaticFdbMgmtEntry 3 }
+            
+        
+        swStaticFdbMgmtType            OBJECT-TYPE
+            SYNTAX      INTEGER {
+                    				self(1),
+                    				permanent(2),
+						permanentdrop(3)
+                				}
+            MAX-ACCESS  read-create
+            STATUS      current
+            DESCRIPTION
+                "This object indicates the status of this entry.
+            		
+            	  		self(1) - This entry is currently in use by the device's
+                MAC address, it can not be created.
+            		            		
+              			permanent(2) - This entry is currently in use
+                and will remain so until after the next reset of
+                the bridge, it can not be created.
+              			permanentdrop(3) - This entry will filter
+		the packet with the specified MAC address 
+		as the source MAC or as the destination MAC.
+		The entry is currently in use and will remain 
+		so after the next reboot of the bridge. 
+            		         
+                The value of this object MUST be retained across
+                reinitializations of the management system."
+            ::= { swStaticFdbMgmtEntry 4 }
+        
+        
+        swStaticFdbMgmtPortNum            OBJECT-TYPE
+            SYNTAX      INTEGER 
+            MAX-ACCESS  read-create
+            STATUS      current
+            DESCRIPTION
+                "The port number of the static fdb.
+                 Port 0 represents the CPU port.
+		 Port -1 represents all the all ports in
+		 The VLAN of the MAC filter entry."
+            ::= { swStaticFdbMgmtEntry 5 }
+            
+
+        swStaticFdbMgmtRowStatus            OBJECT-TYPE
+            SYNTAX      RowStatus 
+            MAX-ACCESS  read-create
+            STATUS      current
+            DESCRIPTION
+                "This object indicates the RowStatus of this entry."
+            ::= { swStaticFdbMgmtEntry 6 }
+END

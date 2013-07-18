@@ -1,0 +1,112 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : ARP-Spoofing-Prevent mib
+-- FILE NAME: ARPSpoofingPrevention.mib
+-- DATE     : 2008/05/12
+-- VERSION  : 0.01
+-- PURPOSE  : To construct the MIB structure of ARP Spoofing Prevention
+--            management for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 0.01, 2008/05/12, Shan Lu
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+ARP-Spoofing-Prevent-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress, Unsigned32,Integer32
+                                        FROM SNMPv2-SMI
+        MacAddress, RowStatus           FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+    	SnmpAdminString			FROM SNMP-FRAMEWORK-MIB
+
+        dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
+
+
+    swARPSpoofingPreventMIB MODULE-IDENTITY
+	    LAST-UPDATED "0805120000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The Structure of ARP Spoofing Prevention management for the
+		    proprietary enterprise."
+        ::= { dlink-common-mgmt 62 }
+
+   PortList                ::= OCTET STRING(SIZE (0..127))
+
+   swARPSpoofingPreventCtrl            OBJECT IDENTIFIER ::= { swARPSpoofingPreventMIB 1 }
+   swARPSpoofingPreventInfo            OBJECT IDENTIFIER ::= { swARPSpoofingPreventMIB 2 }
+   swARPSpoofingPreventMgmt            OBJECT IDENTIFIER ::= { swARPSpoofingPreventMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swARPSpoofingPreventMgmt
+-- -----------------------------------------------------------------------------
+       swARPSpoofingPreventMgmtTable OBJECT-TYPE
+           SYNTAX      SEQUENCE OF SwARPSpoofingPreventMgmtEntry
+           MAX-ACCESS  not-accessible
+           STATUS      current
+           DESCRIPTION
+               "This table specifies ARP Spoofing Prevention information."
+           ::= { swARPSpoofingPreventMgmt 1 }
+
+       swARPSpoofingPreventMgmtEntry OBJECT-TYPE
+           SYNTAX      SwARPSpoofingPreventMgmtEntry
+           MAX-ACCESS  not-accessible
+           STATUS      current
+           DESCRIPTION
+               "A list of information with each ARP Spoofing Prevention entry."
+           INDEX { swARPSpoofingPreventMgmtGatewayIP, swARPSpoofingPreventMgmtGatewayMAC }
+           ::= { swARPSpoofingPreventMgmtTable 1 }
+
+       SwARPSpoofingPreventMgmtEntry ::=
+           SEQUENCE {
+               swARPSpoofingPreventMgmtGatewayIP
+                   IpAddress,
+               swARPSpoofingPreventMgmtGatewayMAC
+                   MacAddress,
+               swARPSpoofingPreventMgmtPorts
+                   PortList,
+               swARPSpoofingPreventMgmtStatus
+                   RowStatus
+           }
+
+       swARPSpoofingPreventMgmtGatewayIP  OBJECT-TYPE
+           SYNTAX      IpAddress
+           MAX-ACCESS  read-only
+           STATUS      current
+           DESCRIPTION
+               "The gateway IP address of ARP Spoofing Prevention."
+           ::= { swARPSpoofingPreventMgmtEntry 1 }
+
+       swARPSpoofingPreventMgmtGatewayMAC OBJECT-TYPE
+           SYNTAX      MacAddress
+           MAX-ACCESS  read-only
+           STATUS      current
+           DESCRIPTION
+               "The gateway MAC address of ARP Spoofing Prevention."
+           ::= { swARPSpoofingPreventMgmtEntry 2 }
+
+       swARPSpoofingPreventMgmtPorts      OBJECT-TYPE
+           SYNTAX      PortList
+           MAX-ACCESS  read-create
+           STATUS      current
+           DESCRIPTION
+                "The port members of ARP Spoofing Prevention."
+           ::= { swARPSpoofingPreventMgmtEntry 3 }
+
+       swARPSpoofingPreventMgmtStatus     OBJECT-TYPE
+           SYNTAX      RowStatus
+           MAX-ACCESS  read-create
+           STATUS      current
+           DESCRIPTION
+               "The status of ARP Spoofing Prevention."
+           ::= { swARPSpoofingPreventMgmtEntry 4 }
+
+END

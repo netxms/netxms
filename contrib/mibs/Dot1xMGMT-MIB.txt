@@ -1,0 +1,72 @@
+-- *****************************************************************************
+-- dot1xMgmt 
+-- *****************************************************************************
+-- Ver 1.1               
+-- 2006/6/22
+-- correct description and add a object dot1xGuestVlanDelState
+-- *****************************************************************************
+-- Ver 1.0                
+-- 2005/12/23 
+-- change object  dot1xGuestVlanID to dot1xGuestVlanName
+-- *****************************************************************************
+-- Revision 0.9                
+-- 2005/10/24 11:32
+-- original draft
+-- *****************************************************************************
+
+Dot1xMGMT-MIB DEFINITIONS ::= BEGIN
+    IMPORTS
+        TEXTUAL-CONVENTION, DisplayString
+        												FROM SNMPv2-TC
+        MODULE-IDENTITY, OBJECT-TYPE,
+        Integer32								FROM SNMPv2-SMI
+        dlink-common-mgmt				FROM DLINK-ID-REC-MIB;
+
+	swdot1xMGMTMIB  MODULE-IDENTITY
+	    LAST-UPDATED "0007150000Z"
+	    ORGANIZATION "  "
+	    CONTACT-INFO
+	        "   "
+	    DESCRIPTION
+		    "The Structure of 802.1x guest VLAN for the proprietary enterprise."
+		    ::= { dlink-common-mgmt 30 }
+
+    
+PortList                ::= OCTET STRING(SIZE (0..127))
+
+dot1xGuestVlan        OBJECT IDENTIFIER ::= { swdot1xMGMTMIB 1 }
+
+
+-- ********************************************************************
+-- The Guest Vlan Group
+-- ********************************************************************
+
+
+dot1xGuestVlanName OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The VLAN name of guest VLAN."
+    ::= { dot1xGuestVlan 1 }
+
+dot1xGuestVlanPort OBJECT-TYPE
+    SYNTAX      PortList
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the guest VLAN port members of this device."
+     ::= { dot1xGuestVlan 2 }
+
+dot1xGuestVlanDelState OBJECT-TYPE
+    SYNTAX      INTEGER{
+    		none(1),
+    		start(2)    		
+    		}
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Used to delete the guest VLAN."
+    ::= { dot1xGuestVlan 3 }
+     
+END

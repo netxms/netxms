@@ -1,0 +1,199 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : VLAN-COUNTER-MIB
+-- FILE NAME: VLANCounter.mib
+-- DATE     : 2008/10/28
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of VLAN counter function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2008/10/28, Kelvin Tao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Integer32,Counter64
+                                        FROM SNMPv2-SMI
+        RowStatus                       FROM SNMPv2-TC
+        dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
+		
+    	
+    swVLANCounterMIB MODULE-IDENTITY
+          LAST-UPDATED "200810280000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of VLAN counter for the proprietary enterprise."
+        ::= { dlink-common-mgmt 65 }
+
+    PortList                ::= OCTET STRING(SIZE (0..127))
+    
+    swVLANCounterCtrl               OBJECT IDENTIFIER ::= { swVLANCounterMIB 1 }
+    swVLANCounterInfo               OBJECT IDENTIFIER ::= { swVLANCounterMIB 2 }
+    swVLANCounterMgmt               OBJECT IDENTIFIER ::= { swVLANCounterMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swVLANCounterCtrl
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swVLANCounterInfo
+-- -----------------------------------------------------------------------------
+	
+-- -----------------------------------------------------------------------------
+-- swVLANCounterMgmt
+-- -----------------------------------------------------------------------------
+
+    swVLANCounterTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwVLANCounterEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table that contains the VLAN level received packets
+            or received bytes ."
+        ::= { swVLANCounterMgmt 1 }
+
+    swVLANCounterEntry OBJECT-TYPE
+        SYNTAX  SwVLANCounterEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list with the VLAN level received packets or received bytes ."
+        INDEX   { swVLANCounterVID,swVLANCounterPort,swVLANCounterPktType,swVLANCounterLevel }
+        ::= { swVLANCounterTable 1 }
+
+    SwVLANCounterEntry ::=
+        SEQUENCE {
+            swVLANCounterVID
+                INTEGER,
+            swVLANCounterPort
+            	INTEGER,
+            swVLANCounterPktType
+                INTEGER,
+            swVLANCounterLevel
+                INTEGER,
+            swVLANCounterTotalStats
+                Counter64,
+            swVLANCounterRateStats
+                Counter64,
+            swVLANCounterRowStatus
+                RowStatus
+        }
+
+    swVLANCounterVID OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the VLAN ID."
+    ::= { swVLANCounterEntry 1 }
+
+    swVLANCounterPort OBJECT-TYPE
+        SYNTAX  INTEGER(0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the port number. 
+        If the port number is 0, it indicates that the rule belongs to the vlan."
+    ::= { swVLANCounterEntry 2 }
+
+    swVLANCounterPktType OBJECT-TYPE
+        SYNTAX INTEGER {
+               broadcast(1),
+               multicast(2),
+               unicast(3),
+               all_frame(4)
+               }
+        MAX-ACCESS  read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the type of packet."
+    	::= { swVLANCounterEntry 3 }
+    	
+    swVLANCounterLevel OBJECT-TYPE
+        SYNTAX INTEGER {
+               packet(1),
+               byte(2)
+               }
+        MAX-ACCESS  read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the level of the count."
+    	::= { swVLANCounterEntry 4 }
+
+    swVLANCounterTotalStats OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS  read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the raw statistics."
+    	::= { swVLANCounterEntry 5 }
+
+    swVLANCounterRateStats OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS  read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the rate statistics."
+    	::= { swVLANCounterEntry 6 }
+	
+    swVLANCounterRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swVLANCounterEntry 7 }
+
+-- -----------------------------------------------------------------------------
+    
+
+    swVLANCounterClearTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwVLANCounterClearEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table is used to clear vlan counter statistics."
+        ::= { swVLANCounterMgmt 2 }
+
+    swVLANCounterClearEntry OBJECT-TYPE
+        SYNTAX  SwVLANCounterClearEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list with the swVLANCounterClearTable."
+        INDEX   { swVLANCounterVID,swVLANCounterPort }
+        ::= { swVLANCounterClearTable 1 }
+        
+    SwVLANCounterClearEntry ::=
+        SEQUENCE {
+            swVLANCounterClearAction
+            	INTEGER
+        }
+          	   
+    swVLANCounterClearAction OBJECT-TYPE
+        SYNTAX  INTEGER{
+                other(1),
+                start(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Used to clear the statistics on the specified VLAN.
+            
+            Setting this value to 'start' will execute the clear action,
+            Once cleared, the value returns to 'other'."
+        ::= { swVLANCounterClearEntry 1 }
+             	
+END

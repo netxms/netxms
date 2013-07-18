@@ -1,0 +1,388 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Packet Strom Control Common mib
+-- FILE NAME: PktStormCtrl.mib
+-- DATE     : 2010/4/15
+-- VERSION  : 2.03
+-- PURPOSE  : To construct the MIB structure of packet storm control management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.03 2010/4/15, Shawn
+-- [Modification]
+-- 1. Remove the description about unit and use the "UNITS¡± macro to define it
+-- for all related objects. Requested by customer.
+-- 2. Add default value to swPktStormCtrlthreshold, swPktStormCtrlCountDown,
+-- swPktStormCtrlTimeinterval, swPktStormCtrlBCastThreshold, 
+-- swPktStormCtrlMCastThreshold and swPktStormCtrlUnicastThreshold. Requested by customer.
+-- 3. Remove value range in swPktStormCtrlCountDown, swPktStormCtrlTimeinterval,
+-- swPktStormCtrlBCastThreshold, swPktStormCtrlMCastThreshold 
+-- and swPktStormCtrlUnicastThreshold. Requested by customer.
+-- 4. Add value "-1" in swPktStormCtrlCountDown to support directly shutdown function.
+-- Notes: Requested by Shawn Chen for project DGS36xxR2.
+--
+-- Version 2.02, 2009/11/23, Henry
+-- Description:
+-- [New Object]
+-- 1. Added swPktStormLogCtrl to support packet storm log control.
+-- 2. Added swPktStormAutoRecoverTime to support packet storm auto recover from 
+-- shutdown status. 
+-- [Modification]
+-- 1. Modified the range of swPktStormCtrlCountDown from (0..30) to (0|3..30).
+-- 2. Modified the range of swPktStormCtrlTimeinterval from (5..30) to (5..600).     
+-- 3. Remove the range for MIB object swPktStormAutoRecoverTime.
+-- Notes: Requested by henry Chen for project DGS36xxR2.
+--
+-- Version 2.01 2008/09/03, Peter
+-- [Modification]
+-- Modified swPktStormRecover and swPktStormCtrlShutdownForever descriptions for
+-- function change
+-- Notes: Requested by project DES3028
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+PKT-STORM-CTRL-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress, Unsigned32,Integer32
+                                        FROM SNMPv2-SMI
+        MacAddress, RowStatus           FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+     SnmpAdminString     FROM SNMP-FRAMEWORK-MIB
+
+        dlink-common-mgmt    FROM DLINK-ID-REC-MIB;
+
+
+
+    swPktStormMIB MODULE-IDENTITY
+     LAST-UPDATED "1004150000Z"
+     ORGANIZATION "D-Link Corp."
+     CONTACT-INFO
+         "http://support.dlink.com"
+     DESCRIPTION
+      "The Structure of packet storm control management for the
+      proprietary enterprise."
+        ::= { dlink-common-mgmt 25 }
+
+   PortList                ::= OCTET STRING(SIZE (0..127))
+
+   swPktStormCtrl            OBJECT IDENTIFIER ::= { swPktStormMIB 1 }
+   swPktStormInfo    OBJECT IDENTIFIER ::= { swPktStormMIB 2 }
+   swPktStormMgmt            OBJECT IDENTIFIER ::= { swPktStormMIB 3 }
+   swPktStormNotify    OBJECT IDENTIFIER ::= { swPktStormMIB 5 }
+
+-- -----------------------------------------------------------------------------
+-- swPktStormCtrl  OBJECT IDENTIFIER ::= { swPktStormMIB 1 }
+-- -----------------------------------------------------------------------------
+swPktStormRecover  OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Manually recover port from shutdown state. If a port has encountered a packet
+             storm continuously for a long period of time as indicated by swPktStormCtrlCountDown, 
+            this port will be shutdown forever. This command recovers it manually. If the 
+            auto-recover mechanism is supported, this object is of no use."
+        ::= { swPktStormCtrl 1 }
+
+swPktStormTrapCtrl OBJECT-TYPE
+     SYNTAX  INTEGER {
+         none          (1),
+         stormOccurred (2),
+         stormCleared  (3),
+         both          (4)
+                     }
+     MAX-ACCESS  read-write
+     STATUS  current
+     DESCRIPTION
+         "This object controls when a storm control notification will be generated.
+
+          If the object is set to
+          none(1): No notifications will be generated.
+          stormOccurred(2):
+          stormCleared(3):A notification will be generated when a storm event is
+                      detected or cleared respectively.
+          both (4): A notification will be generated both when a storm event is detected and
+		cleared.
+
+          NOTE:The default value of this object is none(1)."
+     ::= { swPktStormCtrl 2}
+
+swPktStormLogCtrl OBJECT-TYPE
+     SYNTAX  INTEGER {
+     	enabled(1),
+         disabled(2)
+                     }
+     MAX-ACCESS  read-write
+     STATUS  current
+     DESCRIPTION
+         "This object controls whether a storm control log will be logged."
+     DEFVAL{enabled}
+     ::= { swPktStormCtrl 3}
+
+swPktStormAutoRecoverTime  OBJECT-TYPE
+        SYNTAX  INTEGER
+        UNITS   "minutes"
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Automatically recover port from shutdown state when the auto recover timer timeout.
+            Note:
+            The max entry range is (0..N), the value N means the maximum number, it is 
+            determined by the project itself.
+            The value 0 to disable the function of auto recover from shutdown state."
+        DEFVAL{0}
+        ::= { swPktStormCtrl 4 }
+
+-- -----------------------------------------------------------------------------
+-- swPktStormCtrlTable            OBJECT IDENTIFIER ::= { swPktStormMIB 2 }
+-- -----------------------------------------------------------------------------
+    swPktStormCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwPktStormCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table that contains information about packet storm control.
+           A S/W mechanism is provided to monitor the traffic rate in addition
+            to the H/W storm control mechanism. If the traffic rate is too high,
+            this port will be shut down."
+        ::= { swPktStormMgmt 1 }
+
+    swPktStormCtrlEntry OBJECT-TYPE
+        SYNTAX  SwPktStormCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information for each port of the device."
+        INDEX   { swPktStormCtrlPortIndex }
+        ::= { swPktStormCtrlTable 1 }
+
+    SwPktStormCtrlEntry ::=
+        SEQUENCE {
+            swPktStormCtrlPortIndex
+                INTEGER,
+            swPktStormCtrlthreshold
+                Integer32,
+            swPktStormCtrlBroadcastStatus
+                INTEGER,
+            swPktStormCtrlMulticastStatus
+                INTEGER,
+            swPktStormCtrlUnicastStatus
+                INTEGER,
+            swPktStormCtrlActionStatus
+                INTEGER,
+            swPktStormCtrlCountDown
+                INTEGER,
+            swPktStormCtrlTimeinterval
+                INTEGER,
+            swPktStormCtrlShutdownForever
+                INTEGER,
+            swPktStormCtrlBCastThreshold
+                INTEGER,
+            swPktStormCtrlMCastThreshold
+                INTEGER,
+            swPktStormCtrlUnicastThreshold
+                INTEGER
+        }
+
+    swPktStormCtrlPortIndex  OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the device's port number.(1..Max port
+        number in the device).It is used to specify a range of ports to be
+        configured."
+    ::= { swPktStormCtrlEntry 1 }
+
+    swPktStormCtrlthreshold  OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-write
+        STATUS  obsolete
+        DESCRIPTION
+        "This object is the upper threshold at which the specified storm control will turn on.
+         Note:
+         The max entry range is (M..N), the value M means the minimum number,
+         the value N means the maximuim number, it is determined by the project itself.
+         "
+        DEFVAL{131072}
+    ::= { swPktStormCtrlEntry 2 }
+
+    swPktStormCtrlBroadcastStatus  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                    disabled(1),
+                    enabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "This object indicates whether the broadcast storm control is enabled or disabled."
+    ::= { swPktStormCtrlEntry 3 }
+
+    swPktStormCtrlMulticastStatus  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                    disabled(1),
+                    enabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "This object indicates whether the multicast storm control is enabled or disabled."
+    ::= { swPktStormCtrlEntry 4 }
+
+    swPktStormCtrlUnicastStatus  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                    disabled(1),
+                    enabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "This object indicates whether the unicast(Destination Loopback Fail) storm control is enabled
+         or disabled."
+    ::= { swPktStormCtrlEntry 5 }
+
+   swPktStormCtrlActionStatus  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                    shutdown(1),
+                    drop(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "There are two actions to take for storm control, shutdown and drop. The
+        former is implemented in S/W, and the latter is implemented in H/W. If a user
+        chooses shutdown, they will need to configure both the back_off and the time_interval."
+    ::= { swPktStormCtrlEntry 6 }
+
+    swPktStormCtrlCountDown  OBJECT-TYPE
+        SYNTAX  INTEGER
+        UNITS   "minutes"
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "If a packet storm has been encountered continuously on a given port for a long
+         period of time (indicated by the value of this object), the port will be shut
+         down forever until it's recovered manually.
+         Note:
+         The max entry range is (-1..N), the value N means the maximum number, it is 
+         determined by the project itself.
+
+         Value 0 to disable the function of shutdown forever.
+         
+         Value -1 means disable the countdown timer, When the action is shutdown and countdown time is disabled, 
+		 when the switch detects storm, it will shutdown the port directly.
+         "
+        DEFVAL{0}
+   ::= { swPktStormCtrlEntry 7 }
+
+    swPktStormCtrlTimeinterval  OBJECT-TYPE
+        SYNTAX  INTEGER
+        UNITS   "seconds"
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "This object is the sampling interval of received packet counts.
+         Note:
+         The max entry range is (M..N), the value M means the minimum number,
+         the value N means the max number, it is determined by the project itself.
+         "
+        DEFVAL{5}
+    ::= { swPktStormCtrlEntry 8 }
+
+    swPktStormCtrlShutdownForever  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                    yes(1),
+                    no(2)
+                }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        "This object indicates whether the storm control is shut down forever or not.
+        This command recover it manually. If support auto-recover mechanism, the object is no use."
+    ::= { swPktStormCtrlEntry 9 }
+
+    swPktStormCtrlBCastThreshold  OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "The upper threshold at which the specified storm control will turn on.
+         Note:
+         The max entry range is (M..N), the value M means the minimum number,
+         the value N means the maximuim number, it is determined by the project itself.
+         "
+        DEFVAL{131072}
+    ::= { swPktStormCtrlEntry 10 }
+
+    swPktStormCtrlMCastThreshold  OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the upper threshold at which the specified storm control will turn on.
+         Note:
+         The max entry range is (M..N), the value M means the minimum number,
+         the value N means the maximuim number, it is determined by the project itself.
+         "
+        DEFVAL{131072}
+    ::= { swPktStormCtrlEntry 11 }
+
+    swPktStormCtrlUnicastThreshold  OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the upper threshold at which the specified storm control will turn on.
+         Note:
+         The max entry range is (M..N), the value M means the minimum number,
+         the value N means the maximuim number, it is determined by the project itself.
+         "
+        DEFVAL{131072}
+    ::= { swPktStormCtrlEntry 12 }
+
+
+-- -----------------------------------------------------------------------------
+ swPktStormNotifyPrefix OBJECT IDENTIFIER ::= { swPktStormNotify 0 }
+
+    swPktStormOccurred NOTIFICATION-TYPE
+        OBJECTS         { swPktStormCtrlPortIndex
+                        }
+        STATUS  current
+        DESCRIPTION
+            "This trap is sent when a packet storm is detected by a packet storm mechanism and a shutdown action is taken. "
+
+        ::= { swPktStormNotifyPrefix 1 }
+
+    swPktStormCleared NOTIFICATION-TYPE
+        OBJECTS         { swPktStormCtrlPortIndex
+                        }
+        STATUS  current
+        DESCRIPTION
+            "The trap is sent when the packet storm is cleared by the packet storm mechanism."
+
+        ::= { swPktStormNotifyPrefix 2 }
+
+    swPktStormDisablePort NOTIFICATION-TYPE
+        OBJECTS         { swPktStormCtrlPortIndex
+                        }
+        STATUS  current
+        DESCRIPTION
+            "The trap is sent when the port is disabled by the packet storm mechanism."
+
+        ::= { swPktStormNotifyPrefix 3 }
+
+END

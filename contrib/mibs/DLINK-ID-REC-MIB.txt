@@ -1,0 +1,30 @@
+-- D-Link Common MIBs
+-- DLINK-ID-REC
+-- Version 1.0.12  01-29-2002
+
+DLINK-ID-REC-MIB    DEFINITIONS ::= BEGIN
+    IMPORTS
+        enterprises    FROM RFC1155-SMI;
+        
+        
+    AgentNotifyLevel ::= TEXTUAL-CONVENTION
+        STATUS  current
+        DESCRIPTION
+        	"Notification  leveling."
+        SYNTAX  INTEGER {
+        	critical(0),
+        	major(1),
+        	minor(2),
+        	warning(3)
+     }	         
+        
+    dlink    				OBJECT IDENTIFIER ::= { enterprises 171 }
+    dlink-products    		OBJECT IDENTIFIER ::= { dlink 10 }
+    dlink-mgmt    			OBJECT IDENTIFIER ::= { dlink 11 }
+    dlink-common-mgmt    	OBJECT IDENTIFIER ::= { dlink 12 }
+
+
+
+
+
+END

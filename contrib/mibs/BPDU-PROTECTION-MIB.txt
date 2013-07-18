@@ -1,0 +1,224 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : BPDU Protection Common mib
+-- FILE NAME: BPDUProtection.mib
+-- DATE     : 2009/03/12
+-- VERSION  : 1.02
+-- PURPOSE  : To construct the MIB structure of BPDU Protection
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.02, 2009/03/12, Grace Liu
+-- [Modification]
+-- [1]Modify the swBpduProtectionPortMode element description
+--
+-- Version 1.01, 2008/12/16, Hans Song
+-- [Modification]
+-- [1]Modify the swBpduProtectionTrapLogMode to swBpduProtectionTrapMode and swBpduProtectionLogMode . 
+--
+-- Version 1.00, 2008/12/03, Hans Song
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+BPDU-PROTECTION-MIB DEFINITIONS ::= BEGIN
+
+     IMPORTS
+         MODULE-IDENTITY, OBJECT-TYPE     FROM SNMPv2-SMI
+         dlink-common-mgmt                FROM DLINK-ID-REC-MIB;
+         
+    swBpduProtectionMIB MODULE-IDENTITY
+	    LAST-UPDATED "0812160000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The structure of BPDU Protection management for the
+		    proprietary enterprise."
+        ::= { dlink-common-mgmt 76 }
+
+
+
+	swBpduProtectionCtrl           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 1 }
+	swBpduProtectionInfo           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 2 }
+  	swBpduProtectionMgmt           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 3 }   
+    	swBpduProtectionNotify         OBJECT IDENTIFIER ::= { swBpduProtectionMIB 4 }
+
+-- -----------------------------------------------------------------------------
+-- swBpduProtectionCtrl           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 1 }
+-- -----------------------------------------------------------------------------
+
+    swBpduProtectionAdminState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the BPDU Protection status for the system."
+        ::= { swBpduProtectionCtrl 1 }
+
+    swBpduProtectionRecoveryTime OBJECT-TYPE
+        SYNTAX      INTEGER (0|60..1000000)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the recovery time. The range is from 60 to 1000000 sec.
+             The value of 0 disables the recover function."
+        ::= { swBpduProtectionCtrl 2 }
+
+    swBpduProtectionTrapMode OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       none(1),
+                       attackDetected(2),
+                       attackCleared(3),
+                       both(4)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the BPDU Protection trap mode for the system."
+        ::= { swBpduProtectionCtrl 3 }
+
+    swBpduProtectionLogMode OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       none(1),
+                       attackDetected(2),
+                       attackCleared(3),
+                       both(4)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the BPDU Protection log mode for the system."
+        ::= { swBpduProtectionCtrl 4 }
+
+-- -----------------------------------------------------------------------------
+-- swBpduProtectionInfo           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 2 }
+-- -----------------------------------------------------------------------------
+
+
+-- -----------------------------------------------------------------------------
+-- swBpduProtectionMgmt           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 3 }
+-- -----------------------------------------------------------------------------
+
+    swBpduProtectionPortTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwBpduProtectionPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table specifies the BPDU Protection function specified by port."
+        ::= { swBpduProtectionMgmt 1 }
+
+    swBpduProtectionPortEntry OBJECT-TYPE
+        SYNTAX      SwBpduProtectionPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table specifies the BPDU Protection function specified by port."
+        INDEX  { swBpduProtectionPortIndex }
+        ::= { swBpduProtectionPortTable 1 }
+
+    SwBpduProtectionPortEntry ::=
+        SEQUENCE {
+            swBpduProtectionPortIndex
+                INTEGER,
+            swBpduProtectionPortState
+                INTEGER,
+            swBpduProtectionPortMode
+                INTEGER,
+            swBpduProtectionPortStatus
+                INTEGER
+        }
+
+    swBpduProtectionPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the module's port number. The range is from 1 to
+             the maximum port number specified in the module."
+        ::= { swBpduProtectionPortEntry 1 }
+
+    swBpduProtectionPortState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the BPDU Protection function state on the port."
+        ::= { swBpduProtectionPortEntry 2 }
+
+    swBpduProtectionPortMode OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       drop(1),
+                       block(2),
+                       shutdown(3)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the BPDU Protection function mode on the port."
+        ::= { swBpduProtectionPortEntry 3 }
+
+    swBpduProtectionPortStatus OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       normal(1),
+                       underAttack(2)
+                    }
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the port status."
+        ::= { swBpduProtectionPortEntry 4 }
+
+-- -----------------------------------------------------------------------------
+-- swBpduProtectionNotify        OBJECT IDENTIFIER ::= { swBpduProtectionMIB 4 }
+-- -----------------------------------------------------------------------------
+	swBpduProtectionNotifyPrefix   OBJECT IDENTIFIER ::= { swBpduProtectionNotify 0 }
+	
+        swBpduProtectionUnderAttackingTrap NOTIFICATION-TYPE
+        OBJECTS         {
+        			swBpduProtectionPortIndex,  
+				swBpduProtectionPortMode
+	        	}
+        STATUS  current
+        DESCRIPTION
+            "When the BPDU Protection trap is enabled, if the specific port changes from a 
+             normal state to an under attack state, a trap will be sent out."
+        ::= { swBpduProtectionNotifyPrefix 1 }
+
+      swBpduProtectionRecoveryTrap NOTIFICATION-TYPE
+        OBJECTS         {
+                                swBpduProtectionPortIndex,
+                                swBpduProtectionRecoveryMethod
+                        }
+        STATUS  current
+        DESCRIPTION
+            "When the BPDU Protection trap is enabled, if the specific port changes from an 
+             under attack state to a normal state, a trap will be sent out."
+        ::= { swBpduProtectionNotifyPrefix 2 }
+        
+        
+	swBpduProtectionNotificationBidings   OBJECT IDENTIFIER ::= { swBpduProtectionNotify 2 }
+
+    	swBpduProtectionRecoveryMethod OBJECT-TYPE
+        	SYNTAX  INTEGER {
+                       automatically(1),
+                       manually(2)
+                       }
+        	MAX-ACCESS  accessible-for-notify
+        	STATUS  current
+        	DESCRIPTION
+            		"This object indicates the method of recovery from BPDU under attack."
+        	::= { swBpduProtectionNotificationBidings 1 }
+
+END

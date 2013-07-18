@@ -1,0 +1,482 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : L3 Management MIB
+-- FILE NAME: des3200-18-L3mgmt.mib
+-- DATE     : 2009/11/07
+-- VERSION  : 1.02
+-- PURPOSE  : To construct the MIB structure of Layer 3 Network Management Information
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)  
+--  
+-- Version 1.02 2009/11/07,  Eli
+-- Description:
+-- [New Object]
+-- Add swL3IpCtrlIpDhcpOption12State and swL3IpCtrlIpDhcpOption12HostName to 
+-- support DHCP option 12 host name function.
+--  
+-- Version 1.01 2009/05/16, Eli Lin
+-- Description:
+-- [Remove Object]
+-- swL3Ipv6CtrlRaState, swL3Ipv6CtrlRaMinRtrAdvInterval,
+-- swL3Ipv6CtrlRaMaxRtrAdvInterval, swL3Ipv6CtrlRaLifeTime,
+-- swL3Ipv6CtrlRaReachableTime, swL3Ipv6CtrlRaRetransTime,
+-- swL3Ipv6CtrlRaHopLimit, swL3Ipv6CtrlRaManagedFlag,
+-- swL3Ipv6CtrlRaOtherConfigFlag, swL3Ipv6AddressCtrlPreferredLifeTime,
+-- swL3Ipv6AddressCtrlValidLifeTime, swL3Ipv6AddressCtrlOnLinkFlag,
+-- swL3Ipv6AddressCtrlAutonomousFlag for not supporting
+-- [New Object]
+-- swL3IpCtrlInterfaceName, swL3IpCtrlIpv6LinkLocalAddress,
+-- swL3IpCtrlIpv6LinkLocalPrefixLen, swL3IpCtrlIpv6LinkLocalAutoState
+-- for IPV6 Automatic Link Local Address
+--  
+-- Version 1.00 2009/04/28, Eli Lin
+-- Description:
+-- [New Object]
+-- Add swL2IpCtrlAllIpIfState, swL2Ipv6CtrlTable, 
+-- swL2Ipv6AddressCtrlTable for IPv6
+-- -----------------------------------------------------------------------------
+DES3200-18-L3MGMT-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        Counter32,MODULE-IDENTITY,OBJECT-TYPE,IpAddress,
+        NOTIFICATION-TYPE, Integer32,Unsigned32
+                                                  FROM SNMPv2-SMI
+        TEXTUAL-CONVENTION,PhysAddress,TruthValue,DisplayString,RowStatus,MacAddress,TimeStamp
+        							              FROM SNMPv2-TC
+        des3200-18					              FROM SWPRIMGMT-DES3200-MIB;
+
+    swL3MgmtMIB MODULE-IDENTITY
+		LAST-UPDATED "0911070000Z"
+	  	ORGANIZATION "D-Link, Inc."
+	  	CONTACT-INFO
+	   		"http://support.dlink.com"
+	  	DESCRIPTION
+	    		"The Structure of Layer 3 Network Management Information for enterprise."
+	  	::= {des3200-18 3} 
+
+    swL3DevMgmt             OBJECT IDENTIFIER ::= { swL3MgmtMIB 1 }
+    swL3IpMgmt              OBJECT IDENTIFIER ::= { swL3MgmtMIB 2 }
+    
+    swL3IpCtrlMgmt          OBJECT IDENTIFIER ::= { swL3IpMgmt 1 } 
+   
+-- -----------------------------------------------------------------------------
+-- Textual Conventions
+-- -----------------------------------------------------------------------------
+-- This definition may be excluded if IPv6 Supported
+Ipv6Address ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT "2x:"
+	STATUS       current
+	DESCRIPTION
+		"This data type is used to model IPv6 addresses.
+		This is a binary string of 16 octets in network
+		byte-order."
+	SYNTAX       OCTET STRING (SIZE (16))
+
+-- -----------------------------------------------------------------------------
+--  swL3IpCtrlMgmt        OBJECT IDENTIFIER ::= { swL3IpMgmt 1 }
+-- -----------------------------------------------------------------------------
+
+    swL3IpCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwL3IpCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains IP interface information."
+        ::= { swL3IpCtrlMgmt 3 }
+
+    swL3IpCtrlEntry OBJECT-TYPE
+        SYNTAX  SwL3IpCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about a specific IP interface."
+        INDEX  { swL3IpCtrlInterfaceName }
+        ::= { swL3IpCtrlTable 1 }
+
+    SwL3IpCtrlEntry ::= 
+        SEQUENCE {
+            swL3IpCtrlInterfaceName
+                DisplayString,
+            swL3IpCtrlIpv6LinkLocalAddress
+            	Ipv6Address,
+            swL3IpCtrlIpv6LinkLocalPrefixLen
+                INTEGER,                   
+            swL3IpCtrlIpv6LinkLocalAutoState
+            	INTEGER,
+            swL3IpCtrlIpDhcpOption12State
+            	INTEGER,
+            swL3IpCtrlIpDhcpOption12HostName
+            	DisplayString            	
+        }
+        
+    swL3IpCtrlInterfaceName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (1..12))
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the name of the IP interface."
+        ::= { swL3IpCtrlEntry 1 }
+
+    swL3IpCtrlIpv6LinkLocalAddress  OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The IPv6 link local address for this interface."
+        ::= { swL3IpCtrlEntry 14 }
+
+    swL3IpCtrlIpv6LinkLocalPrefixLen  OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The IPv6 prefix length for this IPv6 link local address."
+        ::= { swL3IpCtrlEntry 15 }
+        
+    swL3IpCtrlIpv6LinkLocalAutoState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               enabled(2),
+               disabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The state of the IPv6 link local auto."
+        ::= { swL3IpCtrlEntry 17 }    
+        	        
+    swL3IpCtrlIpDhcpOption12State OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Enable or disable insertion of option 12 in the DHCPDISCOVER and 
+             DHCPREQUEST message."
+        ::= { swL3IpCtrlEntry 22 }
+
+    swL3IpCtrlIpDhcpOption12HostName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..63))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Specify the host name to be inserted in the DHCPDISCOVER and 
+             DHCPREQUEST message. The specified host name must start with a 
+             letter, end with a letter or digit, and have only letters, digits, 
+             and hyphen as interior characters; the maximal length is 63. By 
+             default, the host name is empty.
+             When set an empty host name, means to clear the host name setting and 
+             use the default value to encode option 12."
+        ::= { swL3IpCtrlEntry 23 }
+                	        
+    swL3Ipv6CtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwL3Ipv6CtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains IPv6 information of an IP interface."
+        ::= { swL3IpCtrlMgmt 4 }
+
+    swL3Ipv6CtrlEntry OBJECT-TYPE
+        SYNTAX  SwL3Ipv6CtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of IPv6 information about a specific IP interface."
+        INDEX  { swL3Ipv6CtrlInterfaceName }
+        ::= { swL3Ipv6CtrlTable 1 }
+
+    SwL3Ipv6CtrlEntry ::= 
+        SEQUENCE {
+            swL3Ipv6CtrlInterfaceName
+                DisplayString,
+            swL3Ipv6CtrlMaxReassmblySize
+                INTEGER,   
+            swL3Ipv6CtrlNsRetransTimer
+                Unsigned32
+--            swL3Ipv6CtrlRsState
+--                INTEGER,
+--            swL3Ipv6CtrlRaState
+--                INTEGER, 
+--            swL3Ipv6CtrlRaMinRtrAdvInterval
+--            	INTEGER,
+--            swL3Ipv6CtrlRaMaxRtrAdvInterval
+--            	INTEGER,	                
+--            swL3Ipv6CtrlRaLifeTime  
+--                INTEGER, 
+--            swL3Ipv6CtrlRaReachableTime   
+--                INTEGER, 
+--            swL3Ipv6CtrlRaRetransTime   
+--                Unsigned32, 
+--            swL3Ipv6CtrlRaHopLimit
+--            	INTEGER,  
+--            swL3Ipv6CtrlRaManagedFlag
+--            	INTEGER,
+--            swL3Ipv6CtrlRaOtherConfigFlag
+--            	INTEGER		 
+        }
+        
+    swL3Ipv6CtrlInterfaceName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (1..12))
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the name of the IP interface."
+        ::= { swL3Ipv6CtrlEntry 1 }
+
+    swL3Ipv6CtrlMaxReassmblySize  OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum Reassembly Size of the IP interface."
+        ::= { swL3Ipv6CtrlEntry 2 }
+        
+    swL3Ipv6CtrlNsRetransTimer  OBJECT-TYPE
+        SYNTAX  Unsigned32 (0..4294967295)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Neighbor solicitation's retransmit timer.
+             The unit is set in milliseconds."
+        ::= { swL3Ipv6CtrlEntry 3 }
+
+--    swL3Ipv6CtrlRsState OBJECT-TYPE
+--        SYNTAX  INTEGER {
+--               enabled(1),
+--               disabled(2)
+--               }
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "Router solicited state."
+--        ::= { swL3Ipv6CtrlEntry 4 }
+--
+--    swL3Ipv6CtrlRaState OBJECT-TYPE
+--        SYNTAX  INTEGER {
+--               enabled(1),
+--               disabled(2)
+--               }
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "Neighbor solicited state."
+--        ::= { swL3Ipv6CtrlEntry 5 }
+--
+--    swL3Ipv6CtrlRaMinRtrAdvInterval  OBJECT-TYPE
+--        SYNTAX  INTEGER (3..1350)
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "The minimum time allowed between sending unsolicited multicast Router 
+--             Advertisements from the interface. The unit is set in seconds.             
+--             It must be no less than 3 seconds and no greater than .75 * MaxRtrAdvInterval.
+--             Default value: 0.33 * MaxRtrAdvInterval"     
+--        ::= { swL3Ipv6CtrlEntry 6 }
+--
+--    swL3Ipv6CtrlRaMaxRtrAdvInterval  OBJECT-TYPE
+--        SYNTAX  INTEGER (4..1800)
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "The maximum time allowed between sending unsolicited multicast Router 
+--            Advertisements from the interface. The unit is set in seconds."
+--        DEFVAL {600}    
+--        ::= { swL3Ipv6CtrlEntry 7 }
+--        
+--    swL3Ipv6CtrlRaLifeTime  OBJECT-TYPE
+--        SYNTAX  INTEGER (0..9000)
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "Indicates the lifetime of the router as the default router."
+--        ::= { swL3Ipv6CtrlEntry 8 }
+--
+--    swL3Ipv6CtrlRaReachableTime  OBJECT-TYPE
+--        SYNTAX  INTEGER (0..3600000)
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "Indicates the amount of time that a node can consider a neighboring 
+--             node reachable after receiving a reachability confirmation."
+--        ::= { swL3Ipv6CtrlEntry 9 }
+--
+--    swL3Ipv6CtrlRaRetransTime  OBJECT-TYPE
+--        SYNTAX  Unsigned32 (0..4294967295)
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "Indicates the amount of time between retransmissions of neighbor 
+--             solicited messages.
+--             The unit is set in millisecond."
+--        ::= { swL3Ipv6CtrlEntry 10 }
+--
+--    swL3Ipv6CtrlRaHopLimit  OBJECT-TYPE
+--        SYNTAX  INTEGER (0..255)
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "Indicates the default value of the hop limit field in the IPv6 header for 
+--             packets sent by hosts that receive this RA message."
+--        ::= { swL3Ipv6CtrlEntry 11 }
+--
+--    swL3Ipv6CtrlRaManagedFlag OBJECT-TYPE
+--        SYNTAX  INTEGER {
+--               enabled(1),
+--               disabled(2)
+--               }
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "When enabled, it indicates that hosts receiving this RA must use a 
+--             stateful address configuration protocol to obtain an address in the addition 
+--             to the addresses derived from the stateless address configuration."
+--        ::= { swL3Ipv6CtrlEntry 12 }
+-- 
+--    swL3Ipv6CtrlRaOtherConfigFlag OBJECT-TYPE
+--        SYNTAX  INTEGER {
+--               enabled(1),
+--               disabled(2)
+--               }
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "When enabled, it indicates that hosts receiving this RA must use a stateful 
+--             address configuration protocol to obtain an on-link address configuration information."
+--        ::= { swL3Ipv6CtrlEntry 13 } 
+        
+    swL3Ipv6AddressCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwL3Ipv6AddressCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains IPv6 address information for each IP interface."
+        ::= { swL3IpCtrlMgmt 5 }
+
+    swL3Ipv6AddressCtrlEntry OBJECT-TYPE
+        SYNTAX  SwL3Ipv6AddressCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about a specific IPv6 address."
+        INDEX  { swL3Ipv6AddressCtrlInterfaceName, swL3Ipv6Address, swL3Ipv6AddressCtrlPrefixLen }
+        ::= { swL3Ipv6AddressCtrlTable 1 }
+        
+    SwL3Ipv6AddressCtrlEntry ::= 
+        SEQUENCE {
+            swL3Ipv6AddressCtrlInterfaceName
+            	DisplayString,
+            swL3Ipv6Address
+                Ipv6Address,
+            swL3Ipv6AddressCtrlPrefixLen
+                INTEGER,
+--            swL3Ipv6AddressCtrlPreferredLifeTime
+--                Unsigned32,
+--            swL3Ipv6AddressCtrlValidLifeTime
+--                Unsigned32,
+--            swL3Ipv6AddressCtrlOnLinkFlag
+--                INTEGER,
+--            swL3Ipv6AddressCtrlAutonomousFlag
+--                INTEGER,
+            swL3Ipv6AddressCtrlState
+                RowStatus     
+            }        
+
+    swL3Ipv6AddressCtrlInterfaceName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (1..12))
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the name of the IP interface. "
+        ::= { swL3Ipv6AddressCtrlEntry 1 }   
+        
+    swL3Ipv6Address OBJECT-TYPE
+        SYNTAX   Ipv6Address
+        MAX-ACCESS read-only
+        STATUS   current
+        DESCRIPTION
+           "Specify the IPv6 address."
+        ::= { swL3Ipv6AddressCtrlEntry 2 }  
+
+    swL3Ipv6AddressCtrlPrefixLen OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates the prefix length of this IPv6 address."
+        ::= { swL3Ipv6AddressCtrlEntry 3 }  
+        
+--    swL3Ipv6AddressCtrlPreferredLifeTime  OBJECT-TYPE
+--        SYNTAX  Unsigned32 (0..4294967294)
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "Indicates the number of seconds that an address, based on the specified prefix, 
+--             using the stateless address configuration, remains in preferred state.  
+--             For an infinite valid lifetime, the value can be set to 0xffffffff."
+--        ::= { swL3Ipv6AddressCtrlEntry 4 }  
+--        
+--    swL3Ipv6AddressCtrlValidLifeTime  OBJECT-TYPE
+--        SYNTAX  Unsigned32 (0..4294967294)
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "Indicates the number of seconds that an address, based on the specified prefix, 
+--             using the stateless address configuration, remains valid.  
+--             For an infinite valid lifetime, the value can be set to 0xffffffff."
+--        ::= { swL3Ipv6AddressCtrlEntry 5 }             
+--
+--    swL3Ipv6AddressCtrlOnLinkFlag OBJECT-TYPE
+--        SYNTAX  INTEGER {
+--               enabled(1),
+--               disabled(2)
+--               }
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "When enabled, the address implied by the specified prefix is available 
+--             on the link where the RA message is received."
+--        ::= { swL3Ipv6AddressCtrlEntry 6 } 
+--
+--    swL3Ipv6AddressCtrlAutonomousFlag OBJECT-TYPE
+--        SYNTAX  INTEGER {
+--               enabled(1),
+--               disabled(2)
+--               }
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "When enabled, the specified prefix will be used to create an autonomous address configuration."
+--        ::= { swL3Ipv6AddressCtrlEntry 7 } 
+
+    swL3Ipv6AddressCtrlState OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This variable displays the status of the entry. The status is used
+            for creating, modifying, and deleting instances of the objects 
+            in this table."
+        ::= { swL3Ipv6AddressCtrlEntry 8 }
+        
+     swL3IpCtrlAllIpIfState OBJECT-TYPE                                       
+    	SYNTAX  INTEGER {
+    	   other(1),                                                 
+           enabled(2),                                                
+           disabled(3)                                                
+           }                                                          
+    	MAX-ACCESS  read-write                                            
+    	STATUS  current                                                   
+    	DESCRIPTION                                                       
+        	"This object indicates all interface function state of the device."
+    	::= { swL3IpCtrlMgmt 7 }       
+       
+END

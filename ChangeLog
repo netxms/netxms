@@ -15,6 +15,7 @@
 - Map objects can have status calculated from contained objects' status
 - SNMP trap listener port now configurable
 - HP-UX agent improved
+- Some D-Link MIBs added to distribution
 - Management console:
 	- Simplified table DCI configuration
 	- Charts can be created from table data

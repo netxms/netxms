@@ -1,0 +1,2632 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : MCAST-SNOOPING-MIB
+-- FILE NAME: McastSnooping.mib
+-- DATE     : 2009/05/07
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of IGMP&MLD snooping  
+--            function for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.01, 2009/05/07, Eli Lin
+--  [New Object]
+-- 1.Add swIGMPSnpGrpReportCount.
+--   For display report counter.
+--
+-- Version 1.00, 2008/10/24, Magic Xiang
+-- This is the first formal version for universal MIB definition.
+-- Notes:Requested by Magic Xiang for project DGS3700	
+-- -----------------------------------------------------------------------------
+
+
+MCAST-SNOOPING-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Unsigned32,Integer32,
+        IpAddress,Counter32                         FROM SNMPv2-SMI
+        DisplayString,RowStatus           FROM SNMPv2-TC
+        dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
+
+		
+    	
+    swMcastSnoopingMIB MODULE-IDENTITY
+          LAST-UPDATED "200810240000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of IGMP&MLD snooping for
+                    the proprietary enterprise."
+        ::= { dlink-common-mgmt 73 }
+        
+-- -----------------------------------------------------------------------------
+-- Textual Conventions
+-- -----------------------------------------------------------------------------
+-- This definition may be excluded if IPv6 SupVlaned
+    Ipv6Address ::= TEXTUAL-CONVENTION
+    	DISPLAY-HINT "2x:"
+    	STATUS       current
+    	DESCRIPTION
+    		"This data type is used to model IPv6 addresses.
+    		This is a binary string of 16 octets in network
+    		byte-order."
+    	SYNTAX       OCTET STRING (SIZE (16))
+
+    PortList                ::= OCTET STRING(SIZE (0..127))
+     	
+    swMcastSnoopingCtrl             OBJECT IDENTIFIER ::= { swMcastSnoopingMIB 1 }
+    swMcastSnoopingInfo             OBJECT IDENTIFIER ::= { swMcastSnoopingMIB 2 }
+    swMcastSnoopingMgmt             OBJECT IDENTIFIER ::= { swMcastSnoopingMIB 3 }
+		 		
+-- -----------------------------------------------------------------------------
+-- swMcastSnoopingCtrl             OBJECT IDENTIFIER ::= { swMcastSnoopingMIB 1 }
+-- -----------------------------------------------------------------------------
+
+     swIGMPSnoopingGlobalState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This indicates the global state of IGMP snooping."
+        ::={ swMcastSnoopingCtrl 1 }
+
+--      swMLDSnoopingGlobalState  OBJECT-TYPE
+--         SYNTAX  INTEGER
+--                 {
+--                   enabled(1),
+--                   disabled(2)
+--                 }
+--         MAX-ACCESS read-write
+--         STATUS current
+--         DESCRIPTION
+--                "This indicates the global state of MLD snooping."
+--         ::={ swMcastSnoopingCtrl 2 }
+
+    swIGMPSnoopingMaxDataDrivenLearningCount  OBJECT-TYPE
+        SYNTAX  INTEGER (1..65535)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This indicates the Max Data Driven Learning Count of the IGMP snooping."
+        ::={ swMcastSnoopingCtrl 3 }
+        
+--     swMLDSnoopingMaxDataDrivenLearningCount  OBJECT-TYPE
+--         SYNTAX  INTEGER (1..65535)
+--         MAX-ACCESS read-write
+--         STATUS current
+--         DESCRIPTION
+--                "This indicates the Max Data Driven Learning Count of the MLD snooping."
+--         ::={ swMcastSnoopingCtrl 4 }
+            
+--      swIGMPSnoopingClearStatisticCounter OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                other(1),
+--                clear(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "When the object is set to clear, all statistical counters of 
+--             IGMP Snooping will be cleared. If set to other, no action."
+--         ::= { swMcastSnoopingCtrl 5 }
+--     
+--      swMLDSnoopingClearStatisticCounter OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                other(1),
+--                clear(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "When the object is set to clear, all statistical counters of 
+--             MLD Snooping will be cleared. If set to other, no action."
+--         ::= { swMcastSnoopingCtrl 6 }    
+        
+-- -----------------------------------------------------------------------------
+-- swMcastSnoopingInfo            OBJECT IDENTIFIER ::= { swMcastSnoopingMIB 2 }
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingInfo		OBJECT IDENTIFIER ::= { swMcastSnoopingInfo 1 }
+-- -----------------------------------------------------------------------------
+
+    swIGMPSnoopingInfo		OBJECT IDENTIFIER ::= { swMcastSnoopingInfo 1 }
+
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingForwardingTable       OBJECT-TYPE ::= { swIGMPSnoopingInfo 1 }
+-- -----------------------------------------------------------------------------
+	 
+    swIGMPSnoopingForwardingTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwIGMPSnoopingForwardingEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This contains information about the IGMP snooping forwarding info table."
+        ::= { swIGMPSnoopingInfo 1 }
+        
+    swIGMPSnoopingForwardingEntry OBJECT-TYPE
+        SYNTAX  SwIGMPSnoopingForwardingEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swIGMPSnoopingForwardingTable."
+        INDEX  { swIGMPSnoopingVlanID,
+        	swIGMPSnpFwdSrcAddr,
+        	swIGMPSnpFwdGrpAddr}
+        ::= { swIGMPSnoopingForwardingTable 1 }
+
+    SwIGMPSnoopingForwardingEntry ::=
+        SEQUENCE {
+            swIGMPSnoopingVlanID
+                INTEGER,
+            swIGMPSnpFwdSrcAddr
+                IpAddress,
+            swIGMPSnpFwdGrpAddr
+                IpAddress,
+            swIGMPSnpFwdMemberPorts
+                PortList
+        }
+        
+		
+    swIGMPSnoopingVlanID OBJECT-TYPE
+        SYNTAX  INTEGER (1..4094)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the VLAN ID of the IGMP snooping forwarding
+             entry."
+        ::= { swIGMPSnoopingForwardingEntry 1 }	
+        
+        
+    swIGMPSnpFwdSrcAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the source IP Address of the IGMP snooping forwarding
+             entry."
+        ::= { swIGMPSnoopingForwardingEntry 2 }	        	        
+
+    swIGMPSnpFwdGrpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the group IP Address of the IGMP snooping forwarding
+             entry."
+        ::= { swIGMPSnoopingForwardingEntry 3 }
+        
+    swIGMPSnpFwdMemberPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the member port list of the IGMP snooping forwarding
+             entry."
+        ::= { swIGMPSnoopingForwardingEntry 4 }
+        
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingGroupTable		OBJECT-TYPE ::= { swIGMPSnoopingInfo 2 }
+-- -----------------------------------------------------------------------------
+ 
+    swIGMPSnoopingGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwIGMPSnoopingGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This contains information about the IGMP snooping group info table.            
+            This table only shows dynamic groups (including data driven learning groups),
+            to show static groups, the swIGMPSnoopingStaticGroupTable should be used."
+        ::= { swIGMPSnoopingInfo 2 }
+        
+    swIGMPSnoopingGroupEntry OBJECT-TYPE
+        SYNTAX  SwIGMPSnoopingGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swIGMPSnoopingGroupTable."
+        INDEX  { swIGMPSnoopingVlanID, swIGMPSnpGrpSrcAddr,
+        				 swIGMPSnpGrpGrpAddr}
+        ::= { swIGMPSnoopingGroupTable 1 }
+
+    SwIGMPSnoopingGroupEntry ::=
+        SEQUENCE {
+            swIGMPSnpGrpSrcAddr
+                IpAddress,
+            swIGMPSnpGrpGrpAddr
+                IpAddress,
+            swIGMPSnpGrpIncludeMemberPorts
+                PortList,
+            swIGMPSnpGrpExcludeMemberPorts
+            	PortList,
+            swIGMPSnpGrpRouterPorts
+                PortList,
+            swIGMPSnpGrpUpTime
+                INTEGER,
+            swIGMPSnpGrpExpiryTime
+                INTEGER,
+			swIGMPSnpGrpReportCount
+                INTEGER
+        }
+        
+    swIGMPSnpGrpSrcAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the source IP Address of the IGMP snooping group
+             entry."
+        ::= { swIGMPSnoopingGroupEntry 1 }	        	        
+
+    swIGMPSnpGrpGrpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the group IP Address of the IGMP snooping group
+             entry."
+        ::= { swIGMPSnoopingGroupEntry 2 }
+        
+    swIGMPSnpGrpIncludeMemberPorts OBJECT-TYPE
+        SYNTAX  PortList 
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the list of  member ports in Include mode for the 
+            IGMP snooping group entry. For data driven groups, 
+            this object should be 0. "
+        ::= { swIGMPSnoopingGroupEntry 3 }	
+
+    swIGMPSnpGrpExcludeMemberPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the list of member ports in Exclude mode for the 
+            IGMP snooping group entry. For data driven groups, 
+            this object should be 0. "
+        ::= { swIGMPSnoopingGroupEntry 4 }
+
+    swIGMPSnpGrpRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the router port list of the IGMP snooping group
+             entry. This is only used for data driven learning groups. For normal groups, 
+             this object should be 0."
+        ::= { swIGMPSnoopingGroupEntry 5 }
+
+    swIGMPSnpGrpUpTime OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the time passed since this group was created. "
+        ::= { swIGMPSnoopingGroupEntry 6 }  
+
+    swIGMPSnpGrpExpiryTime OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the time left until this group will be deleted. "
+        ::= { swIGMPSnoopingGroupEntry 7 }  
+        
+    swIGMPSnpGrpReportCount OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the number of reports received for this group entry. "
+        ::= { swIGMPSnoopingGroupEntry 8 }          	
+
+
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingVlanStatisticCounterTable	OBJECT-TYPE ::= { swIGMPSnoopingInfo 3 }
+-- -----------------------------------------------------------------------------
+
+--     swIGMPSnoopingVlanStatisticCounterTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwIGMPSnoopingVlanStatisticCounterEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This contains information about the IGMP snooping VLAN statistic 
+--             counter info table."
+--         ::= { swIGMPSnoopingInfo 3 }
+--         
+--     swIGMPSnoopingVlanStatisticCounterEntry OBJECT-TYPE
+--         SYNTAX  SwIGMPSnoopingVlanStatisticCounterEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swIGMPSnoopingVlanStatisticCounterTable."
+--         INDEX  { swIGMPSnoopingVlanID}
+--         ::= { swIGMPSnoopingVlanStatisticCounterTable 1 }
+
+--     SwIGMPSnoopingVlanStatisticCounterEntry ::=
+--         SEQUENCE {
+--             swIGMPSnpVlanCounterGrpNumber
+--                 INTEGER,
+--             swIGMPSnpVlanCounterRxV1Query
+--                 Counter32,
+--             swIGMPSnpVlanCounterRxV2Query
+--                 Counter32,
+--             swIGMPSnpVlanCounterRxV3Query
+--                 Counter32,
+--             swIGMPSnpVlanCounterTotalRxQuery
+--                 Counter32,
+--             swIGMPSnpVlanCounterDropRxQueryByRateLimit
+--                 Counter32,
+--             swIGMPSnpVlanCounterDropRxQueryByMcastVlan
+--                 Counter32,
+--             swIGMPSnpVlanCounterRxV1Report
+--                 Counter32,
+--             swIGMPSnpVlanCounterRxV2Report 
+--                 Counter32,
+--             swIGMPSnpVlanCounterRxV3Report
+--                 Counter32,
+--             swIGMPSnpVlanCounterRxV2Leave
+--                 Counter32,                
+--             swIGMPSnpVlanCounterTotalRxReport
+--                 Counter32,
+--             swIGMPSnpVlanCounterDropRxReportByRateLimit
+--                 Counter32,
+--             swIGMPSnpVlanCounterDropRxReportByMaxGrpLimit
+--                 Counter32,
+--             swIGMPSnpVlanCounterDropRxReportByGrpFilter
+--                 Counter32,     
+--             swIGMPSnpVlanCounterDropRxReportByMcastVlan
+--                 Counter32, 
+--             swIGMPSnpVlanCounterTxV1Query
+--                 Counter32,
+--             swIGMPSnpVlanCounterTxV2Query
+--                 Counter32,
+--             swIGMPSnpVlanCounterTxV3Query
+--                 Counter32,
+--             swIGMPSnpVlanCounterTotalTxQuery
+--                 Counter32,
+--             swIGMPSnpVlanCounterTxV1Report
+--                 Counter32,
+--             swIGMPSnpVlanCounterTxV2Report
+--                 Counter32,
+--             swIGMPSnpVlanCounterTxV3Report
+--                 Counter32,
+--             swIGMPSnpVlanCounterTxV2Leave
+--                 Counter32,                
+--             swIGMPSnpVlanCounterTotalTxReport 
+--             	Counter32                                                           
+--         }
+
+--     swIGMPSnpVlanCounterGrpNumber OBJECT-TYPE
+--         SYNTAX  INTEGER (0..65535)
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total group number in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 5 }	
+--         
+--     swIGMPSnpVlanCounterRxV1Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v1 Query packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 10 }	
+--         
+--     swIGMPSnpVlanCounterRxV2Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v2 Query packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 15 }	
+--         
+--     swIGMPSnpVlanCounterRxV3Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v3 Query packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 20 }	
+--         
+--     swIGMPSnpVlanCounterTotalRxQuery OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of received IGMP Query packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 25 }	
+--         
+--     swIGMPSnpVlanCounterDropRxQueryByRateLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of IGMP Query packets dropped by rate limitation 
+--             in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 30 }	
+--         
+--     swIGMPSnpVlanCounterDropRxQueryByMcastVlan OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of IGMP Query packets dropped by Multicast VLAN's 
+--             in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 35 }	
+--         
+--     swIGMPSnpVlanCounterRxV1Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v1 Report packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 40 }	
+--         
+--     swIGMPSnpVlanCounterRxV2Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v2 Report packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 45 }	
+--         
+--     swIGMPSnpVlanCounterRxV3Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v3 Report packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 50 }	
+--         
+--     swIGMPSnpVlanCounterRxV2Leave OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v2 Leave packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 55 }	
+--         
+--     swIGMPSnpVlanCounterTotalRxReport OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of received IGMP Report packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 60 }	
+--         
+--     swIGMPSnpVlanCounterDropRxReportByRateLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP Report packets dropped by 
+--             rate limitation in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 65 }	
+--         
+--     swIGMPSnpVlanCounterDropRxReportByMaxGrpLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP Report packets dropped by 
+--             max group limitation in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 70 }	
+--         
+--     swIGMPSnpVlanCounterDropRxReportByGrpFilter OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP Report packets dropped by 
+--             group filters in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 75 }	
+--         
+--     swIGMPSnpVlanCounterDropRxReportByMcastVlan OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP Report packets dropped by 
+--             Multicast VLANs in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 80 }	
+--         
+--     swIGMPSnpVlanCounterTxV1Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v1 Query packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 85 }	
+--         
+--     swIGMPSnpVlanCounterTxV2Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v2 Query packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 90 }	
+--         
+--     swIGMPSnpVlanCounterTxV3Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v3 Query packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 95 }	
+--         
+--     swIGMPSnpVlanCounterTotalTxQuery OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of sent IGMP Query packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 100 }	
+--         
+--     swIGMPSnpVlanCounterTxV1Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v1 Report packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 105 }	
+--         
+--     swIGMPSnpVlanCounterTxV2Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v2 Report packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 110 }	
+--         
+--     swIGMPSnpVlanCounterTxV3Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v3 Report packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 115 }	
+--         
+--     swIGMPSnpVlanCounterTxV2Leave OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v2 Leave packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 120 }	
+--         
+--     swIGMPSnpVlanCounterTotalTxReport     OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of sent IGMP Report packets in this VLAN."
+--         ::= { swIGMPSnoopingVlanStatisticCounterEntry 125 }	
+        
+        
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingPortStatisticCounterTable	OBJECT-TYPE ::= { swIGMPSnoopingInfo 4 }
+-- -----------------------------------------------------------------------------
+
+--     swIGMPSnoopingPortStatisticCounterTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwIGMPSnoopingPortStatisticCounterEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This contains information about the IGMP snooping Port statistic 
+--             counter info table."
+--         ::= { swIGMPSnoopingInfo 4 }
+--         
+--     swIGMPSnoopingPortStatisticCounterEntry OBJECT-TYPE
+--         SYNTAX  SwIGMPSnoopingPortStatisticCounterEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swIGMPSnoopingPortStatisticCounterTable."
+--         INDEX  { swIGMPSnoopingPortNumber}
+--         ::= { swIGMPSnoopingPortStatisticCounterTable 1 }
+
+--     SwIGMPSnoopingPortStatisticCounterEntry ::=
+--         SEQUENCE {
+--             swIGMPSnoopingPortNumber
+--                 INTEGER,
+--             swIGMPSnpPortCounterGrpNumber
+--                 INTEGER,
+--             swIGMPSnpPortCounterRxV1Query
+--                 Counter32,
+--             swIGMPSnpPortCounterRxV2Query
+--                 Counter32,
+--             swIGMPSnpPortCounterRxV3Query
+--                 Counter32,
+--             swIGMPSnpPortCounterTotalRxQuery
+--                 Counter32,
+--             swIGMPSnpPortCounterDropRxQueryByRateLimit
+--                 Counter32,
+--             swIGMPSnpPortCounterDropRxQueryByMcastVlan
+--                 Counter32,
+--             swIGMPSnpPortCounterRxV1Report
+--                 Counter32,
+--             swIGMPSnpPortCounterRxV2Report
+--                 Counter32,
+--             swIGMPSnpPortCounterRxV3Report
+--                 Counter32,
+--             swIGMPSnpPortCounterRxV2Leave
+--                 Counter32,                
+--             swIGMPSnpPortCounterTotalRxReport
+--                 Counter32,
+--             swIGMPSnpPortCounterDropRxReportByRateLimit
+--                 Counter32,
+--             swIGMPSnpPortCounterDropRxReportByMaxGrpLimit
+--                 Counter32,
+--             swIGMPSnpPortCounterDropRxReportByGrpFilter
+--                 Counter32,     
+--             swIGMPSnpPortCounterDropRxReportByMcastVlan
+--                 Counter32, 
+--             swIGMPSnpPortCounterTxV1Query
+--                 Counter32,
+--             swIGMPSnpPortCounterTxV2Query
+--                 Counter32,
+--             swIGMPSnpPortCounterTxV3Query
+--                 Counter32,
+--             swIGMPSnpPortCounterTotalTxQuery
+--                 Counter32,
+--             swIGMPSnpPortCounterTxV1Report
+--                 Counter32,
+--             swIGMPSnpPortCounterTxV2Report
+--                 Counter32,
+--             swIGMPSnpPortCounterTxV3Report
+--                 Counter32,
+--             swIGMPSnpPortCounterTxV2Leave
+--                 Counter32,                
+--             swIGMPSnpPortCounterTotalTxReport 
+--             	Counter32                                                           
+--         } 
+--         
+-- 		
+--     swIGMPSnoopingPortNumber OBJECT-TYPE
+--         SYNTAX  INTEGER
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Port ID of the IGMP snooping Port statistic 
+--             counter entry."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 1 }	
+--         
+--     swIGMPSnpPortCounterGrpNumber OBJECT-TYPE
+--         SYNTAX  INTEGER (0..65535)
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total group number on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 5 }	
+--         
+--     swIGMPSnpPortCounterRxV1Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v1 Query packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 10 }	
+--         
+--     swIGMPSnpPortCounterRxV2Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v2 Query packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 15 }	
+--         
+--     swIGMPSnpPortCounterRxV3Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v3 Query packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 20 }	
+--         
+--     swIGMPSnpPortCounterTotalRxQuery OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of received IGMP Query packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 25 }	
+--         
+--     swIGMPSnpPortCounterDropRxQueryByRateLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of IGMP Query packets dropped by rate limitation 
+--             on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 30 }	
+--         
+--     swIGMPSnpPortCounterDropRxQueryByMcastVlan OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of IGMP Query packets dropped by a Multicast Port 
+--             on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 35 }	
+--         
+--     swIGMPSnpPortCounterRxV1Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v1 Report packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 40 }	
+--         
+--     swIGMPSnpPortCounterRxV2Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v2 Report packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 45 }	
+--         
+--     swIGMPSnpPortCounterRxV3Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v3 Report packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 50 }	
+--         
+--     swIGMPSnpPortCounterRxV2Leave OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP v2 Leave packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 55 }	
+--         
+--     swIGMPSnpPortCounterTotalRxReport OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of received IGMP Report packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 60 }	
+--         
+--     swIGMPSnpPortCounterDropRxReportByRateLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP Report packets dropped by 
+--             rate limitation on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 65 }	
+--         
+--     swIGMPSnpPortCounterDropRxReportByMaxGrpLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP Report packets dropped by 
+--             max group limitation on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 70 }	
+--         
+--     swIGMPSnpPortCounterDropRxReportByGrpFilter OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP Report packets dropped by 
+--             a group filter on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 75 }	
+--         
+--     swIGMPSnpPortCounterDropRxReportByMcastVlan OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received IGMP Report packets dropped by 
+--             a Multicast Port on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 80 }	
+--         
+--     swIGMPSnpPortCounterTxV1Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v1 Query packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 85 }	
+--         
+--     swIGMPSnpPortCounterTxV2Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v2 Query packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 90 }	
+--         
+--     swIGMPSnpPortCounterTxV3Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v3 Query packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 95 }	
+--         
+--     swIGMPSnpPortCounterTotalTxQuery OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of sent IGMP Query packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 100 }	
+--         
+--     swIGMPSnpPortCounterTxV1Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v1 Report packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 105 }	
+--         
+--     swIGMPSnpPortCounterTxV2Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v2 Report packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 110 }	
+--         
+--     swIGMPSnpPortCounterTxV3Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v3 Report packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 115 }	
+--         
+--     swIGMPSnpPortCounterTxV2Leave OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent IGMP v2 Leave packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 120 }	
+--         
+--     swIGMPSnpPortCounterTotalTxReport     OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of sent IGMP Report packets on this port."
+--         ::= { swIGMPSnoopingPortStatisticCounterEntry 125 }	
+        
+
+                	    
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingInfo		OBJECT IDENTIFIER ::= { swMcastSnoopingInfo 2 }
+-- -----------------------------------------------------------------------------
+    
+     swMLDSnoopingInfo		OBJECT IDENTIFIER ::= { swMcastSnoopingInfo 2 }
+
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingForwardingTable		OBJECT-TYPE ::= { swMLDSnoopingInfo 1 }
+-- -----------------------------------------------------------------------------
+	 
+    swMLDSnoopingForwardingTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMLDSnoopingForwardingEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This contains information about the MLD snooping forwarding info table."
+        ::= { swMLDSnoopingInfo 1 }
+        
+    swMLDSnoopingForwardingEntry OBJECT-TYPE
+        SYNTAX  SwMLDSnoopingForwardingEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swMLDSnoopingForwardingTable."
+        INDEX  { swMLDSnoopingVlanID,
+        	swMLDSnpFwdSrcAddr,
+        	swMLDSnpFwdGrpAddr}
+        ::= { swMLDSnoopingForwardingTable 1 }
+
+     SwMLDSnoopingForwardingEntry ::=
+         SEQUENCE {
+             swMLDSnoopingVlanID
+                 INTEGER,
+             swMLDSnpFwdSrcAddr
+                 Ipv6Address,
+             swMLDSnpFwdGrpAddr
+                 Ipv6Address,
+             swMLDSnpFwdMemberPorts
+                 PortList
+         }
+         
+ 		
+     swMLDSnoopingVlanID OBJECT-TYPE
+         SYNTAX  INTEGER (1..4094)
+         MAX-ACCESS  read-only
+         STATUS  current
+         DESCRIPTION
+             "This indicates the VLAN ID of the MLD snooping forwarding
+              entry."
+         ::= { swMLDSnoopingForwardingEntry 1 }	
+         
+         
+     swMLDSnpFwdSrcAddr OBJECT-TYPE
+         SYNTAX  Ipv6Address
+         MAX-ACCESS  read-only
+         STATUS  current
+         DESCRIPTION
+             "This indicates the source IP Address of the MLD snooping forwarding
+              entry."
+         ::= { swMLDSnoopingForwardingEntry 2 }	        	        
+
+     swMLDSnpFwdGrpAddr OBJECT-TYPE
+         SYNTAX  Ipv6Address
+         MAX-ACCESS  read-only 
+         STATUS  current
+         DESCRIPTION
+             "This indicates the group IP Address of the MLD snooping forwarding
+              entry."
+         ::= { swMLDSnoopingForwardingEntry 3 }
+
+     swMLDSnpFwdMemberPorts OBJECT-TYPE
+         SYNTAX  PortList
+         MAX-ACCESS  read-only
+         STATUS  current
+         DESCRIPTION
+             "This indicates the member port list of the MLD snooping forwarding
+              entry."
+         ::= { swMLDSnoopingForwardingEntry 4 }
+        
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingGroupTable	        OBJECT-TYPE ::= { swMLDSnoopingInfo 2 }
+-- -----------------------------------------------------------------------------
+ 
+--     swMLDSnoopingGroupTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingGroupEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This contains information about the MLD snooping group info table.
+--             This table only shows dynamic groups (including data driven learning groups),
+--             to show static groups, the swMLDSnoopingStaticGroupTable should be used."
+--         ::= { swMLDSnoopingInfo 2 }
+--         
+--     swMLDSnoopingGroupEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingGroupEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingGroupTable."
+--         INDEX  { swMLDSnoopingVlanID, swMLDSnpGrpSrcAddr,
+--         				 swMLDSnpGrpGrpAddr}
+--         ::= { swMLDSnoopingGroupTable 1 }
+
+--     SwMLDSnoopingGroupEntry ::=
+--         SEQUENCE {
+--             swMLDSnpGrpSrcAddr
+--                 Ipv6Address,
+--             swMLDSnpGrpGrpAddr
+--                 Ipv6Address,
+--             swMLDSnpGrpIncludeMemberPorts
+--                 PortList,
+--             swMLDSnpGrpExcludeMemberPorts
+--             	PortList,
+--             swMLDSnpGrpRouterPorts
+--                 PortList,
+--             swMLDSnpGrpUpTime
+--                 INTEGER,
+--             swMLDSnpGrpExpiryTime
+--                 INTEGER
+--         }
+
+--     swMLDSnpGrpSrcAddr OBJECT-TYPE
+--         SYNTAX  Ipv6Address
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the source IP Address of the MLD snooping group
+--              entry."
+--         ::= { swMLDSnoopingGroupEntry 1 }	        	        
+
+--     swMLDSnpGrpGrpAddr OBJECT-TYPE
+--         SYNTAX  Ipv6Address
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the group IP Address of the MLD snooping group
+--              entry."
+--         ::= { swMLDSnoopingGroupEntry 2 }
+--         
+--     swMLDSnpGrpIncludeMemberPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the member ports listed in Include mode of the 
+--             MLD snooping group entry. For data driven groups, 
+--             this object should be 0. "
+--         ::= { swMLDSnoopingGroupEntry 3 }	
+
+--     swMLDSnpGrpExcludeMemberPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the member ports listed in Exclude mode of the 
+--             MLD snooping group entry. For data driven groups, 
+--             this object should be 0. "
+--         ::= { swMLDSnoopingGroupEntry 4 }
+
+--     swMLDSnpGrpRouterPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the router port list of the MLD snooping group
+--              entry. It's only used for data driven learning groups. For normal groups, 
+--              this object should be 0."
+--         ::= { swMLDSnoopingGroupEntry 5 }
+
+--     swMLDSnpGrpUpTime OBJECT-TYPE
+--         SYNTAX  INTEGER
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the time passed since this group was created. "
+--         ::= { swMLDSnoopingGroupEntry 6 }  
+
+--     swMLDSnpGrpExpiryTime OBJECT-TYPE
+--         SYNTAX  INTEGER
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the time left until this group will be deleted. "
+--         ::= { swMLDSnoopingGroupEntry 7 }      	
+
+
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingVlanStatisticCounterTable	OBJECT-TYPE ::= { swMLDSnoopingInfo 3 }
+-- -----------------------------------------------------------------------------
+ 
+     swMLDSnoopingVlanStatisticCounterTable OBJECT-TYPE
+         SYNTAX  SEQUENCE OF SwMLDSnoopingVlanStatisticCounterEntry
+         MAX-ACCESS  not-accessible
+         STATUS  current
+         DESCRIPTION
+             "This contains information about the MLD snooping VLAN statistic 
+             counter info table."
+         ::= { swMLDSnoopingInfo 3 }
+         
+     swMLDSnoopingVlanStatisticCounterEntry OBJECT-TYPE
+         SYNTAX  SwMLDSnoopingVlanStatisticCounterEntry
+         MAX-ACCESS  not-accessible
+         STATUS  current
+         DESCRIPTION
+             "This is an entry of the swMLDSnoopingVlanStatisticCounterTable."
+         INDEX  { swMLDSnoopingVlanID}
+         ::= { swMLDSnoopingVlanStatisticCounterTable 1 }
+
+     SwMLDSnoopingVlanStatisticCounterEntry ::=
+         SEQUENCE {
+--             swMLDSnpVlanCounterGrpNumber
+--                 INTEGER,
+--             swMLDSnpVlanCounterRxV1Query
+--                 Counter32,
+--             swMLDSnpVlanCounterRxV2Query
+--                 Counter32,
+             swMLDSnpVlanCounterTotalRxQuery
+                 Counter32
+--             swMLDSnpVlanCounterDropRxQueryByRateLimit
+--                 Counter32,
+--             swMLDSnpVlanCounterDropRxQueryByMcastVlan
+--                 Counter32,
+--             swMLDSnpVlanCounterRxV1Report
+--                 Counter32,
+--             swMLDSnpVlanCounterRxV2Report
+--                 Counter32,
+--             swMLDSnpVlanCounterRxV1Done
+--                 Counter32,                
+--             swMLDSnpVlanCounterTotalRxReport
+--                 Counter32,
+--             swMLDSnpVlanCounterDropRxReportByRateLimit
+--                 Counter32,
+--             swMLDSnpVlanCounterDropRxReportByMaxGrpLimit
+--                 Counter32,
+--             swMLDSnpVlanCounterDropRxReportByGrpFilter
+--                 Counter32,     
+--             swMLDSnpVlanCounterDropRxReportByMcastVlan
+--                 Counter32, 
+--             swMLDSnpVlanCounterTxV1Query
+--                 Counter32,
+--             swMLDSnpVlanCounterTxV2Query
+--                 Counter32,
+--             swMLDSnpVlanCounterTotalTxQuery
+--                 Counter32,
+--             swMLDSnpVlanCounterTxV1Report
+--                 Counter32,
+--             swMLDSnpVlanCounterTxV2Report
+--                 Counter32,
+--             swMLDSnpVlanCounterTxV1Done
+--                 Counter32,                
+--             swMLDSnpVlanCounterTotalTxReport 
+--             	Counter32                                                           
+        }
+
+--     swMLDSnpVlanCounterGrpNumber OBJECT-TYPE
+--         SYNTAX  INTEGER (0..65535)
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total number of groups in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 5 }	
+--         
+--     swMLDSnpVlanCounterRxV1Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v1 Query packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 10 }	
+--         
+--     swMLDSnpVlanCounterRxV2Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v2 Query packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 15 }	
+--         
+     swMLDSnpVlanCounterTotalRxQuery OBJECT-TYPE
+         SYNTAX  Counter32 
+         MAX-ACCESS  read-only
+         STATUS  current
+         DESCRIPTION
+             "This indicates the total count of received MLD Query packets in this VLAN."
+         ::= { swMLDSnoopingVlanStatisticCounterEntry 20 }	
+--         
+--     swMLDSnpVlanCounterDropRxQueryByRateLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of MLD Query packets dropped by rate limitation 
+--             in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 25 }	
+--         
+--     swMLDSnpVlanCounterDropRxQueryByMcastVlan OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of MLD Query packets dropped by a Multicast VLAN 
+--             in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 30 }	
+--         
+--     swMLDSnpVlanCounterRxV1Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v1 Report packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 35 }	
+--         
+--     swMLDSnpVlanCounterRxV2Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v2 Report packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 40 }	
+--         
+--     swMLDSnpVlanCounterRxV1Done OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v1 Done packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 45 }	
+--         
+--     swMLDSnpVlanCounterTotalRxReport OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of received MLD Report packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 50 }	
+--         
+--     swMLDSnpVlanCounterDropRxReportByRateLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD Report packets dropped by 
+--             rate limitation in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 55 }	
+--         
+--     swMLDSnpVlanCounterDropRxReportByMaxGrpLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD Report packets dropped by 
+--             a max group limitation in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 60 }	
+--         
+--     swMLDSnpVlanCounterDropRxReportByGrpFilter OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD Report packets dropped by 
+--             a group filter in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 65 }	
+--         
+--     swMLDSnpVlanCounterDropRxReportByMcastVlan OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD Report packets dropped by 
+--             s Multicast VLAN in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 70 }	
+--         
+--     swMLDSnpVlanCounterTxV1Query OBJECT-TYPE
+--         SYNTAX  Counter32  
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v1 Query packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 75 }	
+--         
+--     swMLDSnpVlanCounterTxV2Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v2 Query packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 80 }	
+--         
+--     swMLDSnpVlanCounterTotalTxQuery OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of sent MLD Query packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 85 }	
+--         
+--     swMLDSnpVlanCounterTxV1Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v1 Report packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 90 }	
+--         
+--     swMLDSnpVlanCounterTxV2Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v2 Report packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 95 }	
+--         
+--     swMLDSnpVlanCounterTxV1Done OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v1 Done packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 100 }	
+--         
+--     swMLDSnpVlanCounterTotalTxReport     OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of sent MLD Report packets in this VLAN."
+--         ::= { swMLDSnoopingVlanStatisticCounterEntry 105 }	
+        
+        
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingPortStatisticCounterTable	OBJECT-TYPE ::= { swMLDSnoopingInfo 4 }
+-- -----------------------------------------------------------------------------
+
+--     swMLDSnoopingPortStatisticCounterTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingPortStatisticCounterEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This contains information about the MLD snooping Port statistic 
+--             counter info table."
+--         ::= { swMLDSnoopingInfo 4 }
+--         
+--     swMLDSnoopingPortStatisticCounterEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingPortStatisticCounterEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingPortStatisticCounterTable."
+--         INDEX  { swMLDSnoopingPortNumber}
+--         ::= { swMLDSnoopingPortStatisticCounterTable 1 }
+
+--     SwMLDSnoopingPortStatisticCounterEntry ::=
+--         SEQUENCE {
+--             swMLDSnoopingPortNumber
+--                 INTEGER,
+--             swMLDSnpPortCounterGrpNumber
+--                 INTEGER,
+--             swMLDSnpPortCounterRxV1Query
+--                 Counter32,
+--             swMLDSnpPortCounterRxV2Query
+--                 Counter32,
+--             swMLDSnpPortCounterTotalRxQuery
+--                 Counter32,
+--             swMLDSnpPortCounterDropRxQueryByRateLimit
+--                 Counter32,
+--             swMLDSnpPortCounterDropRxQueryByMcastVlan
+--                 Counter32,
+--             swMLDSnpPortCounterRxV1Report
+--                 Counter32,
+--             swMLDSnpPortCounterRxV2Report
+--                 Counter32,
+--             swMLDSnpPortCounterRxV1Done
+--                 Counter32,                
+--             swMLDSnpPortCounterTotalRxReport
+--                 Counter32,
+--             swMLDSnpPortCounterDropRxReportByRateLimit
+--                 Counter32,
+--             swMLDSnpPortCounterDropRxReportByMaxGrpLimit
+--                 Counter32,
+--             swMLDSnpPortCounterDropRxReportByGrpFilter
+--                 Counter32,     
+--             swMLDSnpPortCounterDropRxReportByMcastVlan
+--                 Counter32, 
+--             swMLDSnpPortCounterTxV1Query
+--                 Counter32,
+--             swMLDSnpPortCounterTxV2Query
+--                 Counter32,
+--             swMLDSnpPortCounterTotalTxQuery
+--                 Counter32,
+--             swMLDSnpPortCounterTxV1Report
+--                 Counter32,
+--             swMLDSnpPortCounterTxV2Report
+--                 Counter32,
+--             swMLDSnpPortCounterTxV1Done
+--                 Counter32,                
+--             swMLDSnpPortCounterTotalTxReport 
+--             	Counter32                                                           
+--         }
+--         
+-- 		
+--     swMLDSnoopingPortNumber OBJECT-TYPE
+--         SYNTAX  INTEGER
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Port ID of the MLD snooping Port statistic 
+--             counter entry."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 1 }	
+--         
+--     swMLDSnpPortCounterGrpNumber OBJECT-TYPE
+--         SYNTAX  INTEGER (0..65535)
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total number of groups on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 5 }	
+--         
+--     swMLDSnpPortCounterRxV1Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v1 Query packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 10 }	
+--         
+--     swMLDSnpPortCounterRxV2Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v2 Query packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 15 }	
+--         
+--     swMLDSnpPortCounterTotalRxQuery OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of received MLD Query packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 20 }	
+--         
+--     swMLDSnpPortCounterDropRxQueryByRateLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of MLD Query packets dropped by rate limitation 
+--             on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 25 }	
+--         
+--     swMLDSnpPortCounterDropRxQueryByMcastVlan OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of MLD Query packets dropped by a Multicast Port 
+--             on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 30 }	
+--         
+--     swMLDSnpPortCounterRxV1Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v1 Report packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 35 }	
+--         
+--     swMLDSnpPortCounterRxV2Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v2 Report packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 40 }	
+--         
+--     swMLDSnpPortCounterRxV1Done OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD v1 Done packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 45 }	
+--         
+--     swMLDSnpPortCounterTotalRxReport OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of received MLD Report packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 50 }	
+--         
+--     swMLDSnpPortCounterDropRxReportByRateLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD Report packets dropped by 
+--             rate limitation on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 55 }	
+--         
+--     swMLDSnpPortCounterDropRxReportByMaxGrpLimit OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD Report packets dropped by 
+--             max group limitation on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 60 }	
+--         
+--     swMLDSnpPortCounterDropRxReportByGrpFilter OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD Report packets dropped by 
+--             a group filter on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 65 }	
+--         
+--     swMLDSnpPortCounterDropRxReportByMcastVlan OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of received MLD Report packets dropped by 
+--             a Multicast Port on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 70 }	
+--         
+--     swMLDSnpPortCounterTxV1Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v1 Query packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 75 }	
+--         
+--     swMLDSnpPortCounterTxV2Query OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v2 Query packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 80 }	
+--         
+--     swMLDSnpPortCounterTotalTxQuery OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of sent MLD Query packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 85 }	
+--         
+--     swMLDSnpPortCounterTxV1Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v1 Report packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 90 }	
+--         
+--     swMLDSnpPortCounterTxV2Report OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v2 Report packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 95 }	
+--         
+--     swMLDSnpPortCounterTxV1Done OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the count of sent MLD v1 Done packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 100 }	
+--         
+--     swMLDSnpPortCounterTotalTxReport     OBJECT-TYPE
+--         SYNTAX  Counter32 
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the total count of sent MLD Report packets on this port."
+--         ::= { swMLDSnoopingPortStatisticCounterEntry 105 }		  
+	     	
+-- -----------------------------------------------------------------------------
+-- swMcastSnoopingMgmt            OBJECT IDENTIFIER ::= { swMcastSnoopingMIB 3 }
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingMgmt		OBJECT IDENTIFIER ::= { swMcastSnoopingMgmt 1 }
+-- -----------------------------------------------------------------------------
+
+   swIGMPSnoopingMgmt		OBJECT IDENTIFIER ::= { swMcastSnoopingMgmt 1 }
+ 		
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingCtrlTable	OBJECT-TYPE ::= { swIGMPSnoopingMgmt 1 }
+-- -----------------------------------------------------------------------------
+
+    swIGMPSnoopingCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwIGMPSnoopingCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The table controls the VLAN's IGMP Snooping function."
+        ::= { swIGMPSnoopingMgmt 1 }
+        
+    swIGMPSnoopingCtrlEntry OBJECT-TYPE
+        SYNTAX  SwIGMPSnoopingCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swIGMPSnoopingCtrlTable."
+        INDEX  { swIGMPSnoopingVlanID}
+        ::= { swIGMPSnoopingCtrlTable 1 }
+
+    SwIGMPSnoopingCtrlEntry ::=
+        SEQUENCE {
+            swIGMPSnpCtrlQueryInterval
+                INTEGER,
+            swIGMPSnpCtrlMaxResponseTime
+                INTEGER,
+            swIGMPSnpCtrlRobustnessValue
+                INTEGER,
+            swIGMPSnpCtrlLastMemberQueryInterval
+                INTEGER,
+            swIGMPSnpCtrlQuerierState
+                INTEGER,
+            swIGMPSnpCtrlQuerierRole
+                INTEGER,
+            swIGMPSnpCtrlQuerierIP
+                IpAddress,
+            swIGMPSnpCtrlQuerierExpiryTime
+                INTEGER,  
+            swIGMPSnpCtrlState
+                INTEGER, 
+            swIGMPSnpCtrlFastLeaveState
+                INTEGER, 
+--             swIGMPSnpCtrlReportSuppressionState
+--                 INTEGER, 
+            swIGMPSnpCtrlVersion
+                INTEGER,  
+--             swIGMPSnpCtrlDataDrivenLearningState
+--                 INTEGER,  
+            swIGMPSnpCtrlDataDrivenLearningAgedOutState
+                INTEGER
+--             ,swIGMPSnpCtrlDataDrivenGroupExpiryTime 
+--         	INTEGER			                                                                                                                                                    
+        }
+
+    swIGMPSnpCtrlQueryInterval OBJECT-TYPE
+        SYNTAX  INTEGER (1..65535)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Query Interval of the IGMP snooping in this VLAN. 
+            The default value is 125."
+        ::= { swIGMPSnoopingCtrlEntry 5 }		        
+
+    swIGMPSnpCtrlMaxResponseTime OBJECT-TYPE
+        SYNTAX  INTEGER (1..25)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Max Response Time of the IGMP snooping in this VLAN. 
+            The default value is 10."
+        ::= { swIGMPSnoopingCtrlEntry 10 }	
+
+    swIGMPSnpCtrlRobustnessValue OBJECT-TYPE
+        SYNTAX  INTEGER (1..255)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Robustness Value of the IGMP snooping in this VLAN. 
+            The default value is 2."
+        ::= { swIGMPSnoopingCtrlEntry 15 }	
+
+    swIGMPSnpCtrlLastMemberQueryInterval OBJECT-TYPE
+        SYNTAX  INTEGER (1..25)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Last Member Query Interval of the IGMP snooping in this VLAN. 
+            The default value is 1."
+        ::= { swIGMPSnoopingCtrlEntry 20 }	
+        
+     swIGMPSnpCtrlQuerierState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the IGMP snooping state of this VLAN."
+        ::= { swIGMPSnoopingCtrlEntry 25 }    
+           
+            
+     swIGMPSnpCtrlQuerierRole OBJECT-TYPE
+        SYNTAX  INTEGER {
+               querier(1),
+               non-querier(2)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Querier role of this VLAN." 
+        ::= { swIGMPSnoopingCtrlEntry 30 }  
+         
+    swIGMPSnpCtrlQuerierIP OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Querier's IP address of the IGMP snooping in this VLAN."
+        ::= { swIGMPSnoopingCtrlEntry 35 }	
+
+     swIGMPSnpCtrlQuerierExpiryTime OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Querier Expiry Time of this VLAN."
+        ::= { swIGMPSnoopingCtrlEntry 40 }	
+
+     swIGMPSnpCtrlState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the IGMP Snooping State of this VLAN."
+        ::= { swIGMPSnoopingCtrlEntry 45 }	
+                                                       
+     swIGMPSnpCtrlFastLeaveState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Fast Leave State of this VLAN."
+        ::= { swIGMPSnoopingCtrlEntry 50 }	
+
+--      swIGMPSnpCtrlReportSuppressionState OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                enabled(1),
+--                disabled(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Report Suppression State of this VLAN. 
+--             When set to enabled, intergrate into multiple IGMP reports or only integrate a single IGMP report for 
+--             a specific (S,G) 
+--             before sending to the router port."
+--         ::= { swIGMPSnoopingCtrlEntry 55 }	
+        
+     swIGMPSnpCtrlVersion OBJECT-TYPE
+        SYNTAX  INTEGER {
+               version-1(1),
+               version-2(2),
+               version-3(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Version of IGMP Snooping in this VLAN."
+        ::= { swIGMPSnoopingCtrlEntry 60 }	
+        
+--      swIGMPSnpCtrlDataDrivenLearningState OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                enabled(1),
+--                disabled(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Data Driven Learning State of this VLAN."
+--         ::= { swIGMPSnoopingCtrlEntry 65 }	
+       
+     swIGMPSnpCtrlDataDrivenLearningAgedOutState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the Data Driven Learning Aged Out State of this VLAN."
+        ::= { swIGMPSnoopingCtrlEntry 70 }	
+        
+--      swIGMPSnpCtrlDataDrivenGroupExpiryTime  OBJECT-TYPE
+--         SYNTAX  INTEGER (1..65535)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Data Driven Group Expiry Time of this VLAN."
+--         ::= { swIGMPSnoopingCtrlEntry 75 }	 
+
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingStaticGroupTable		OBJECT-TYPE ::= { swIGMPSnoopingMgmt 2 }
+-- -----------------------------------------------------------------------------
+
+--     swIGMPSnoopingStaticGroupTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwIGMPSnoopingStaticGroupEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the VLAN's IGMP Snooping static group function."
+--         ::= { swIGMPSnoopingMgmt 2 }
+--         
+--     swIGMPSnoopingStaticGroupEntry OBJECT-TYPE
+--         SYNTAX  SwIGMPSnoopingStaticGroupEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swIGMPSnoopingCtrlTable."
+--         INDEX  { swIGMPSnoopingVlanID, swIGMPSnpStaticGrpGrpAddr}
+--         ::= { swIGMPSnoopingStaticGroupTable 1 }
+
+--     SwIGMPSnoopingStaticGroupEntry ::=
+--         SEQUENCE {
+--             swIGMPSnpStaticGrpGrpAddr
+--                 IpAddress,
+--             swIGMPSnpStaticGrpMemberPorts
+--                 PortList,
+--             swIGMPSnpStaticGrpRowStatus
+--                 RowStatus                                                                                                                                                
+--         }
+--         
+--     swIGMPSnpStaticGrpGrpAddr OBJECT-TYPE
+--         SYNTAX  IpAddress
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the group address of the IGMP snooping static group table."
+--         ::= { swIGMPSnoopingStaticGroupEntry 1 }	      
+
+--     swIGMPSnpStaticGrpMemberPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-create
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the list of member ports in the IGMP snooping static group table."
+--         ::= { swIGMPSnoopingStaticGroupEntry 2 } 
+--          
+--     swIGMPSnpStaticGrpRowStatus OBJECT-TYPE
+--         SYNTAX  RowStatus
+--         MAX-ACCESS  read-create
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the status of this entry."
+--         ::= { swIGMPSnoopingStaticGroupEntry 100 }   
+        
+               
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingDataDrivenLearningGroupTable		OBJECT-TYPE ::= { swIGMPSnoopingMgmt 3 }
+-- -----------------------------------------------------------------------------
+
+    swIGMPSnoopingDataDrivenLearningGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwIGMPSnoopingDataDrivenLearningGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The table controls the VLAN's IGMP Snooping data driven learning group function."
+        ::= { swIGMPSnoopingMgmt 3 }
+        
+    swIGMPSnoopingDataDrivenLearningGroupEntry OBJECT-TYPE
+        SYNTAX  SwIGMPSnoopingDataDrivenLearningGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swIGMPSnoopingDataDrivenLearningGroupTable."
+        INDEX  { swIGMPSnoopingVlanID,
+        	 swIGMPSnpDataDrivenLearningGrpGrpAddr}
+        ::= { swIGMPSnoopingDataDrivenLearningGroupTable 1 }
+
+    SwIGMPSnoopingDataDrivenLearningGroupEntry ::= 
+        SEQUENCE {
+            swIGMPSnpDataDrivenLearningGrpGrpAddr
+                IpAddress,
+            swIGMPSnpDataDrivenLearningGrpRouterPorts
+            	PortList,
+            swIGMPSnpDataDrivenLearningGrpUpTime
+                INTEGER,
+            swIGMPSnpDataDrivenLearningGrpExpiryTime
+                INTEGER,            
+            swIGMPSnpDataDrivenLearningGrpClearGrp
+                INTEGER                                                                                                                                                
+        }
+
+    swIGMPSnpDataDrivenLearningGrpGrpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the group address of the IGMP snooping data driven learning group table."
+        ::= { swIGMPSnoopingDataDrivenLearningGroupEntry 1 }	
+        
+    swIGMPSnpDataDrivenLearningGrpRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the router port list of the IGMP snooping data driven learning group table."
+        ::= { swIGMPSnoopingDataDrivenLearningGroupEntry 2 } 
+        
+    swIGMPSnpDataDrivenLearningGrpUpTime OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the time passed since this group was created. "
+        ::= { swIGMPSnoopingDataDrivenLearningGroupEntry 3 }  
+
+    swIGMPSnpDataDrivenLearningGrpExpiryTime OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the time left before this group will be deleted. "
+        ::= { swIGMPSnoopingDataDrivenLearningGroupEntry 4 }            
+
+    swIGMPSnpDataDrivenLearningGrpClearGrp OBJECT-TYPE
+        SYNTAX  INTEGER
+        	{
+        		other(1),
+        		clear(2)
+        	}
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "When set to clear, this data driven learning group will be deleted."
+        ::= { swIGMPSnoopingDataDrivenLearningGroupEntry 100 }   
+        
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingRouterPortTable		OBJECT-TYPE ::= { swIGMPSnoopingMgmt 4 }
+-- -----------------------------------------------------------------------------
+
+    swIGMPSnoopingRouterPortTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwIGMPSnoopingRouterPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The table controls the VLAN's IGMP Snooping router port list function."
+        ::= { swIGMPSnoopingMgmt 4 }
+        
+    swIGMPSnoopingRouterPortEntry OBJECT-TYPE
+        SYNTAX  SwIGMPSnoopingRouterPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swIGMPSnoopingRouterPortTable."
+        INDEX  { swIGMPSnoopingVlanID}
+        ::= { swIGMPSnoopingRouterPortTable 1 }
+
+    SwIGMPSnoopingRouterPortEntry ::=
+        SEQUENCE {
+            swIGMPSnpStaticRouterPorts
+                PortList,
+            swIGMPSnpDynamicRouterPorts
+                PortList,
+            swIGMPSnpForbiddenRouterPorts
+            	PortList
+        }
+
+    swIGMPSnpStaticRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the static router port list of the IGMP snooping router ports table."
+        ::= { swIGMPSnoopingRouterPortEntry 5 }	      
+
+    swIGMPSnpDynamicRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the dynamic router port list of the IGMP snooping router ports table."
+        ::= { swIGMPSnoopingRouterPortEntry 10 }	
+        
+    swIGMPSnpForbiddenRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the forbidden router port list of the IGMP snooping router ports table."
+        ::= { swIGMPSnoopingRouterPortEntry 15 } 
+
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingDynamicRouterAddressTable		OBJECT-TYPE ::= { swIGMPSnoopingMgmt 5 }
+-- -----------------------------------------------------------------------------
+
+--     swIGMPSnoopingDynamicRouterAddressTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwIGMPSnoopingDynamicRouterAddressEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the IGMP Snooping dynamic router IP in this VLAN.
+--             This table is effective only when (swIGMPSnpDynamicRouterPorts) is set."
+--         ::= { swIGMPSnoopingMgmt 5 }
+--         
+--     swIGMPSnoopingDynamicRouterAddressEntry OBJECT-TYPE
+--         SYNTAX  SwIGMPSnoopingDynamicRouterAddressEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swIGMPSnoopingDynamicRouterAddressTable."
+--         INDEX  { swIGMPSnoopingVlanID, swIGMPSnpDynamicRouterIpAddr}
+--         ::= { swIGMPSnoopingDynamicRouterAddressTable 1 }
+
+--     SwIGMPSnoopingDynamicRouterAddressEntry ::=
+--         SEQUENCE {
+--             swIGMPSnpDynamicRouterIpAddr
+--                 IpAddress
+--         }
+--         
+--     swIGMPSnpDynamicRouterIpAddr OBJECT-TYPE 
+--         SYNTAX  IpAddress
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the IGMP snooping dynamic router IP in this VLAN."
+--         ::= { swIGMPSnoopingDynamicRouterAddressEntry 1 }	      
+
+ 
+
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingVlanRateLimitTable		OBJECT-TYPE ::= { swIGMPSnoopingMgmt 6 }
+-- -----------------------------------------------------------------------------
+
+--     swIGMPSnoopingVlanRateLimitTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwIGMPSnoopingVlanRateLimitEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the IGMP Snooping router IP on dynamic router VLAN's."
+--         ::= { swIGMPSnoopingMgmt 6 }
+--         
+--     swIGMPSnoopingVlanRateLimitEntry OBJECT-TYPE
+--         SYNTAX  SwIGMPSnoopingVlanRateLimitEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swIGMPSnoopingVlanRateLimitTable."
+--         INDEX  { swIGMPSnoopingVlanID}
+--         ::= { swIGMPSnoopingVlanRateLimitTable 1 }
+
+--     SwIGMPSnoopingVlanRateLimitEntry ::=
+--         SEQUENCE {
+--             swIGMPSnpVlanRateLimit
+--                 INTEGER
+--         }
+
+--     swIGMPSnpVlanRateLimit OBJECT-TYPE
+--         SYNTAX  INTEGER(0..1000)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the IGMP snooping rate limitation of this VLAN. 0 means no-limitation, 
+--             the default value is no-limitation."
+--         ::= { swIGMPSnoopingVlanRateLimitEntry 5 }             
+        
+-- -----------------------------------------------------------------------------
+-- swIGMPSnoopingPortRateLimitTable		OBJECT-TYPE ::= { swIGMPSnoopingMgmt 7 }
+-- -----------------------------------------------------------------------------
+
+--     swIGMPSnoopingPortRateLimitTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwIGMPSnoopingPortRateLimitEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the IGMP Snooping router IP on dynamic router Ports."
+--         ::= { swIGMPSnoopingMgmt 7 }
+--         
+--     swIGMPSnoopingPortRateLimitEntry OBJECT-TYPE
+--         SYNTAX  SwIGMPSnoopingPortRateLimitEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swIGMPSnoopingPortRateLimitTable."
+--         INDEX  { swIGMPSnoopingPortNumber}
+--         ::= { swIGMPSnoopingPortRateLimitTable 1 }
+
+--     SwIGMPSnoopingPortRateLimitEntry ::=
+--         SEQUENCE {
+--             swIGMPSnpPortRateLimit
+--                 INTEGER
+--         }
+
+--     swIGMPSnpPortRateLimit OBJECT-TYPE
+--         SYNTAX  INTEGER(0..1000)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the IGMP snooping rate limitation on this Port. 0 means no-limitation, 
+--             the default value is no-limitation."
+--         ::= { swIGMPSnoopingPortRateLimitEntry 5 }                          
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingMgmt					OBJECT IDENTIFIER ::= { swMcastSnoopingMgmt 2 }
+-- -----------------------------------------------------------------------------
+	
+--    swMLDSnoopingMgmt				OBJECT IDENTIFIER ::= { swMcastSnoopingMgmt 2 }
+		
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingCtrlTable				OBJECT-TYPE ::= { swMLDSnoopingMgmt 1 }
+-- -----------------------------------------------------------------------------
+
+--     swMLDSnoopingCtrlTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingCtrlEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the VLAN's MLD Snooping function."
+--         ::= { swMLDSnoopingMgmt 1 }
+--         
+--     swMLDSnoopingCtrlEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingCtrlEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingCtrlTable."
+--         INDEX  { swMLDSnoopingVlanID}
+--         ::= { swMLDSnoopingCtrlTable 1 }
+
+--     SwMLDSnoopingCtrlEntry ::=
+--         SEQUENCE {
+--             swMLDSnpCtrlQueryInterval
+--                 INTEGER,
+--             swMLDSnpCtrlMaxResponseTime
+--                 INTEGER,
+--             swMLDSnpCtrlRobustnessValue
+--                 INTEGER,
+--             swMLDSnpCtrlLastListenerQueryInterval
+--                 INTEGER,
+--             swMLDSnpCtrlQuerierState
+--                 INTEGER,
+--             swMLDSnpCtrlQuerierRole
+--                 INTEGER,
+--             swMLDSnpCtrlQuerierIP
+--                 Ipv6Address,
+--             swMLDSnpCtrlQuerierExpiryTime
+--                 INTEGER,  
+--             swMLDSnpCtrlState
+--                 INTEGER, 
+--             swMLDSnpCtrlFastDoneState
+--                 INTEGER, 
+--             swMLDSnpCtrlReportSuppressionState
+--                 INTEGER, 
+--             swMLDSnpCtrlVersion
+--                 INTEGER,  
+--             swMLDSnpCtrlDataDrivenLearningState
+--                 INTEGER,  
+--             swMLDSnpCtrlDataDrivenLearningAgedOutState
+--                 INTEGER,
+--             swMLDSnpCtrlDataDrivenGrpExpiryTime 
+--         	INTEGER			                                                                                                                                                    
+--         }
+
+--     swMLDSnpCtrlQueryInterval OBJECT-TYPE
+--         SYNTAX  INTEGER (1..65535)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Query Interval of the MLD snooping in this VLAN. 
+--             The default value is 125."
+--         ::= { swMLDSnoopingCtrlEntry 5 }		        
+
+--     swMLDSnpCtrlMaxResponseTime OBJECT-TYPE
+--         SYNTAX  INTEGER (1..25)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Max Response Time of the MLD snooping in this VLAN. 
+--             The default value is 10."
+--         ::= { swMLDSnoopingCtrlEntry 10 }	
+
+--     swMLDSnpCtrlRobustnessValue OBJECT-TYPE
+--         SYNTAX  INTEGER (1..255)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Robustness Value of the MLD snooping in this VLAN. 
+--             The default value is 2."
+--         ::= { swMLDSnoopingCtrlEntry 15 }	
+
+--     swMLDSnpCtrlLastListenerQueryInterval OBJECT-TYPE
+--         SYNTAX  INTEGER (1..25)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Last Listener Query Interval of the MLD snooping in this VLAN. 
+--             The default value is 1."
+--         ::= { swMLDSnoopingCtrlEntry 20 }	
+--         
+--      swMLDSnpCtrlQuerierState OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                enabled(1),
+--                disabled(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the MLD snooping state of this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 25 }    
+--            
+--             
+--      swMLDSnpCtrlQuerierRole OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                querier(1),
+--                non-querier(2)
+--                }
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Querier role of this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 30 }  
+--          
+--     swMLDSnpCtrlQuerierIP OBJECT-TYPE
+--         SYNTAX  Ipv6Address
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Querier's IP address of the MLD snooping in this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 35 }	
+
+--      swMLDSnpCtrlQuerierExpiryTime OBJECT-TYPE
+--         SYNTAX  INTEGER (0..65535)
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Querier Expiry Time of this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 40 }	
+
+--      swMLDSnpCtrlState OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                enabled(1),
+--                disabled(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the MLD Snooping State of this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 45 }	
+--                                                        
+--      swMLDSnpCtrlFastDoneState OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                enabled(1),
+--                disabled(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Fast Done State of this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 50 }	
+
+--      swMLDSnpCtrlReportSuppressionState OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                enabled(1),
+--                disabled(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Report Suppression State of this VLAN.
+--             When set to enabled, integrate into multiple MLD reports or only integrate a single MLD report for a 
+--             specific (S,G) before sending to the router port."
+--         ::= { swMLDSnoopingCtrlEntry 55 }	
+--         
+--      swMLDSnpCtrlVersion OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                version-1(1),
+--                version-2(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Version of MLD Snooping in this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 60 }	
+--         
+--      swMLDSnpCtrlDataDrivenLearningState OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                enabled(1),
+--                disabled(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Data Driven Learning State of this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 65 }	
+--        
+--      swMLDSnpCtrlDataDrivenLearningAgedOutState OBJECT-TYPE
+--         SYNTAX  INTEGER {
+--                enabled(1),
+--                disabled(2)
+--                }
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Data Driven Learning Aged Out State of this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 70 }	
+--         
+--      swMLDSnpCtrlDataDrivenGrpExpiryTime  OBJECT-TYPE
+--         SYNTAX  INTEGER (1..65535)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the Data Driven Group Expiry Time of this VLAN."
+--         ::= { swMLDSnoopingCtrlEntry 75 }	 
+
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingStaticGroupTable		OBJECT-TYPE ::= { swMLDSnoopingMgmt 2 }
+-- -----------------------------------------------------------------------------
+
+--     swMLDSnoopingStaticGroupTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingStaticGroupEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the VLAN's MLD Snooping static group function."
+--         ::= { swMLDSnoopingMgmt 2 }
+--         
+--     swMLDSnoopingStaticGroupEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingStaticGroupEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingCtrlTable."
+--         INDEX  { swMLDSnoopingVlanID, swMLDSnpStaticGrpGrpAddr}
+--         ::= { swMLDSnoopingStaticGroupTable 1 }
+
+--     SwMLDSnoopingStaticGroupEntry ::=
+--         SEQUENCE {
+--             swMLDSnpStaticGrpGrpAddr
+--                 Ipv6Address,
+--             swMLDSnpStaticGrpMemberPorts
+--                 PortList,
+--             swMLDSnpStaticGrpRowStatus
+--                 RowStatus                                                                                                                                                
+--         }
+
+--     swMLDSnpStaticGrpGrpAddr OBJECT-TYPE
+--         SYNTAX  Ipv6Address
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the group address of the MLD snooping static group table."
+--         ::= { swMLDSnoopingStaticGroupEntry 1 }	      
+
+--     swMLDSnpStaticGrpMemberPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-create
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the member port list of the MLD snooping static group table."
+--         ::= { swMLDSnoopingStaticGroupEntry 2 } 
+--          
+--     swMLDSnpStaticGrpRowStatus OBJECT-TYPE
+--         SYNTAX  RowStatus
+--         MAX-ACCESS  read-create
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the status of this entry."
+--         ::= { swMLDSnoopingStaticGroupEntry 100 }   
+        
+               
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingDataDrivenLearningGroupTable		OBJECT-TYPE ::= { swMLDSnoopingMgmt 3 }
+-- -----------------------------------------------------------------------------
+
+--     swMLDSnoopingDataDrivenLearningGroupTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingDataDrivenLearningGroupEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the VLAN's MLD Snooping data driven learning group function."
+--         ::= { swMLDSnoopingMgmt 3 }
+--         
+--     swMLDSnoopingDataDrivenLearningGroupEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingDataDrivenLearningGroupEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingDataDrivenLearningGroupTable."
+--         INDEX  { swMLDSnoopingVlanID,
+--         	swMLDSnpDataDrivenLearningGrpGrpAddr}
+--         ::= { swMLDSnoopingDataDrivenLearningGroupTable 1 }
+
+--     SwMLDSnoopingDataDrivenLearningGroupEntry ::=
+--         SEQUENCE {
+--             swMLDSnpDataDrivenLearningGrpGrpAddr
+--                 Ipv6Address,
+--             swMLDSnpDataDrivenLearningGrpRouterPorts
+--             	PortList,
+--             swMLDSnpDataDrivenLearningGrpUpTime
+--                 INTEGER,
+--             swMLDSnpDataDrivenLearningGrpExpiryTime
+--                 INTEGER,
+--             swMLDSnpDataDrivenLearningGrpClearGrp
+--                 INTEGER                                                                                                                                                
+--         }
+
+--   
+--     swMLDSnpDataDrivenLearningGrpGrpAddr OBJECT-TYPE
+--         SYNTAX  Ipv6Address
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the group address of the MLD snooping data driven learning group table."
+--         ::= { swMLDSnoopingDataDrivenLearningGroupEntry 1 }	
+--         
+--     swMLDSnpDataDrivenLearningGrpRouterPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the router port list of the MLD snooping data driven learning group table."
+--         ::= { swMLDSnoopingDataDrivenLearningGroupEntry 2 } 
+--         
+--     swMLDSnpDataDrivenLearningGrpUpTime OBJECT-TYPE
+--         SYNTAX  INTEGER
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the time passed since this group was created. "
+--         ::= { swMLDSnoopingDataDrivenLearningGroupEntry 3 }  
+
+--     swMLDSnpDataDrivenLearningGrpExpiryTime OBJECT-TYPE
+--         SYNTAX  INTEGER
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the time left until this group will be deleted. "
+--         ::= { swMLDSnoopingDataDrivenLearningGroupEntry 4 }    
+--         
+--         
+--     swMLDSnpDataDrivenLearningGrpClearGrp OBJECT-TYPE
+--         SYNTAX  INTEGER
+--         	{
+--         		other(1),
+--         		clear(2)
+--         	}
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "When set to Clear, this data driven learning group will be deleted."
+--         ::= { swMLDSnoopingDataDrivenLearningGroupEntry 100 }   
+        
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingRouterPortTable		OBJECT-TYPE ::= { swMLDSnoopingMgmt 4 }
+-- -----------------------------------------------------------------------------
+
+--     swMLDSnoopingRouterPortTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingRouterPortEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the VLAN's MLD Snooping router port list function."
+--         ::= { swMLDSnoopingMgmt 4 }
+--         
+--     swMLDSnoopingRouterPortEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingRouterPortEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingRouterPortTable."
+--         INDEX  { swMLDSnoopingVlanID}
+--         ::= { swMLDSnoopingRouterPortTable 1 }
+
+--     SwMLDSnoopingRouterPortEntry ::=
+--         SEQUENCE {
+--             swMLDSnpStaticRouterPorts
+--                 PortList,
+--             swMLDSnpDynamicRouterPorts
+--                 PortList,
+--             swMLDSnpForbiddenRouterPorts
+--             	PortList
+--         }
+
+--     swMLDSnpStaticRouterPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the static router port list of the MLD snooping router ports table."
+--         ::= { swMLDSnoopingRouterPortEntry 5 }	      
+
+--     swMLDSnpDynamicRouterPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the dynamic router port list of the MLD snooping router ports table."
+--         ::= { swMLDSnoopingRouterPortEntry 10 }	
+--         
+--     swMLDSnpForbiddenRouterPorts OBJECT-TYPE
+--         SYNTAX  PortList
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the forbidden router port list of the MLD snooping router ports table."
+--         ::= { swMLDSnoopingRouterPortEntry 15 } 
+
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingDynamicRouterPortIpv6AddressTable		OBJECT-TYPE ::= { swMLDSnoopingMgmt 5 }
+-- -----------------------------------------------------------------------------
+
+--     swMLDSnoopingDynamicRouterAddressTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingDynamicRouterAddressEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the MLD Snooping dynamic router address in this VLAN. 
+--             This table is effective only when (swMLDSnpDynamicRouterPorts) is set."
+--         ::= { swMLDSnoopingMgmt 5 }
+--         
+--     swMLDSnoopingDynamicRouterAddressEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingDynamicRouterAddressEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingDynamicRouterAddressTable."
+--         INDEX  { swMLDSnoopingVlanID, swMLDSnpDynamicRouterIpv6Addr}
+--         ::= { swMLDSnoopingDynamicRouterAddressTable 1 }
+
+--     SwMLDSnoopingDynamicRouterAddressEntry ::=
+--         SEQUENCE {
+--             swMLDSnpDynamicRouterIpv6Addr
+--                 Ipv6Address
+--         }
+--         
+-- 		
+--      swMLDSnpDynamicRouterIpv6Addr OBJECT-TYPE
+--         SYNTAX  Ipv6Address
+--         MAX-ACCESS  read-only
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the MLD snooping dynamic router IP in this VLAN."
+--         ::= { swMLDSnoopingDynamicRouterAddressEntry 1 }	      
+
+ 
+
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingVlanRateLimitTable		OBJECT-TYPE ::= { swMLDSnoopingMgmt 6 }
+-- -----------------------------------------------------------------------------
+
+--     swMLDSnoopingVlanRateLimitTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingVlanRateLimitEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the MLD Snooping router IP on dynamic router VLANs."
+--         ::= { swMLDSnoopingMgmt 6 }
+--         
+--     swMLDSnoopingVlanRateLimitEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingVlanRateLimitEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingVlanRateLimitTable."
+--         INDEX  { swMLDSnoopingVlanID}
+--         ::= { swMLDSnoopingVlanRateLimitTable 1 }
+
+--     SwMLDSnoopingVlanRateLimitEntry ::=
+--         SEQUENCE {
+--             swMLDSnpVlanRateLimit
+--                 INTEGER
+--         }
+
+--     swMLDSnpVlanRateLimit OBJECT-TYPE
+--         SYNTAX  INTEGER(0..1000)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the MLD snooping rate limitation of this VLAN. 0 means no-limitation, 
+--             the default value is no-limitation."
+--         ::= { swMLDSnoopingVlanRateLimitEntry 5 }             
+        
+-- -----------------------------------------------------------------------------
+-- swMLDSnoopingPortRateLimitTable		OBJECT-TYPE ::= { swMLDSnoopingMgmt 7 }
+-- -----------------------------------------------------------------------------
+
+--     swMLDSnoopingPortRateLimitTable OBJECT-TYPE
+--         SYNTAX  SEQUENCE OF SwMLDSnoopingPortRateLimitEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "The table controls the MLD Snooping router IP on dynamic router Ports."
+--         ::= { swMLDSnoopingMgmt 7 }
+--         
+--     swMLDSnoopingPortRateLimitEntry OBJECT-TYPE
+--         SYNTAX  SwMLDSnoopingPortRateLimitEntry
+--         MAX-ACCESS  not-accessible
+--         STATUS  current
+--         DESCRIPTION
+--             "This is an entry of the swMLDSnoopingPortRateLimitTable."
+--         INDEX  { swMLDSnoopingPortNumber}
+--         ::= { swMLDSnoopingPortRateLimitTable 1 }
+
+--     SwMLDSnoopingPortRateLimitEntry ::=
+--         SEQUENCE {
+--             swMLDSnpPortRateLimit
+--                 INTEGER
+--         }
+
+--     swMLDSnpPortRateLimit OBJECT-TYPE
+--         SYNTAX  INTEGER(0..1000)
+--         MAX-ACCESS  read-write
+--         STATUS  current
+--         DESCRIPTION
+--             "This indicates the MLD snooping rate limitation on this Port. 0 means no-limitation, 
+--             the default value is no-limitation."
+--         ::= { swMLDSnoopingPortRateLimitEntry 5 }   		
+ 		
+
+END

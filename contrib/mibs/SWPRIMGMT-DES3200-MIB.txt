@@ -1,0 +1,78 @@
+SWPRIMGMT-DES3200-MIB	DEFINITIONS ::= BEGIN
+	IMPORTS
+		MODULE-IDENTITY			FROM SNMPv2-SMI
+		dlink-products,dlink-mgmt	FROM DLINK-ID-REC-MIB;
+	
+	dlink-des3200SeriesProd OBJECT IDENTIFIER ::= {dlink-products 113}
+	dlink-des3200ProdModel			OBJECT IDENTIFIER ::= { dlink-des3200SeriesProd 1 }
+ 	des-3200-10		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 2}
+	des-3200-18		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 3}
+	des-3200-26		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 4}
+	des-3200-28		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 5}
+	des-3200-28f		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 6}
+	des-3200-28me		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 7}
+	des-3200-28p		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 8}
+	des-3200-52		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 9}
+	des-3200-52p		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 10}
+ 	des-3200-10-dc		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 11}
+	des-3200-26-dc		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 12}   
+	des-3200-18-dc		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 13}
+	des-3200-52-dc		OBJECT IDENTIFIER ::= {dlink-des3200SeriesProd 14}  
+	    
+	dlink-des3200-10Prod	OBJECT IDENTIFIER ::= {dlink-des3200ProdModel 1}
+	dlink-des3200-18Prod	OBJECT IDENTIFIER ::= {dlink-des3200ProdModel 2}
+	dlink-des3200-28Prod	OBJECT IDENTIFIER ::= {dlink-des3200ProdModel 3}
+	dlink-des3200-28fProd	OBJECT IDENTIFIER ::= {dlink-des3200ProdModel 4}
+	dlink-des3200-26Prod	OBJECT IDENTIFIER ::= {dlink-des3200ProdModel 5}
+	dlink-des3200me-28Prod	OBJECT IDENTIFIER ::= {dlink-des3200ProdModel 6}    
+	
+	des-3200-10-cx		OBJECT IDENTIFIER ::= {des-3200-10 1}
+	des-3200-18-cx		OBJECT IDENTIFIER ::= {des-3200-18 1}
+	des-3200-26-cx		OBJECT IDENTIFIER ::= {des-3200-26 1}
+	des-3200-28-cx		OBJECT IDENTIFIER ::= {des-3200-28 1}
+	des-3200-28f-cx		OBJECT IDENTIFIER ::= {des-3200-28f 1}
+	des-3200-28me-cx	OBJECT IDENTIFIER ::= {des-3200-28me 1}
+	des-3200-28p-cx		OBJECT IDENTIFIER ::= {des-3200-28p 1}
+	des-3200-52-cx		OBJECT IDENTIFIER ::= {des-3200-52 1}
+	des-3200-52p-cx		OBJECT IDENTIFIER ::= {des-3200-52p 1}	
+	des-3200-10-dc-cx	OBJECT IDENTIFIER ::= {des-3200-10-dc 1}
+	des-3200-26-dc-cx	OBJECT IDENTIFIER ::= {des-3200-26-dc 1}
+	des-3200-18-dc-cx	OBJECT IDENTIFIER ::= {des-3200-18-dc 1}
+	des-3200-52-dc-cx	OBJECT IDENTIFIER ::= {des-3200-52-dc 1}	
+		
+	des3200SeriesProd	OBJECT IDENTIFIER ::= {dlink-mgmt 113}
+	des3200ProdModel	OBJECT IDENTIFIER ::= {des3200SeriesProd 1}
+	des3200-10		OBJECT IDENTIFIER ::= {des3200SeriesProd 2}
+	des3200-18		OBJECT IDENTIFIER ::= {des3200SeriesProd 3}
+	des3200-26		OBJECT IDENTIFIER ::= {des3200SeriesProd 4}
+	des3200-28		OBJECT IDENTIFIER ::= {des3200SeriesProd 5}
+	des3200-28f		OBJECT IDENTIFIER ::= {des3200SeriesProd 6}
+	des3200-28me		OBJECT IDENTIFIER ::= {des3200SeriesProd 7}
+	des3200-28p		OBJECT IDENTIFIER ::= {des3200SeriesProd 8}
+	des3200-52		OBJECT IDENTIFIER ::= {des3200SeriesProd 9}
+	des3200-52p		OBJECT IDENTIFIER ::= {des3200SeriesProd 10}
+	des3200-10-dc		OBJECT IDENTIFIER ::= {des3200SeriesProd 11}
+	des3200-26-dc		OBJECT IDENTIFIER ::= {des3200SeriesProd 12}
+	des3200-18-dc		OBJECT IDENTIFIER ::= {des3200SeriesProd 13}
+	des3200-52-dc		OBJECT IDENTIFIER ::= {des3200SeriesProd 14}
+	
+--	des3200-10			OBJECT IDENTIFIER ::= {des3200ProdModel 1}
+--	des3200-18			OBJECT IDENTIFIER ::= {des3200ProdModel 2}	
+--	des3200-28			OBJECT IDENTIFIER ::= {des3200ProdModel 3}	
+--	des3200-28f			OBJECT IDENTIFIER ::= {des3200ProdModel 4}
+--	des3200-26			OBJECT IDENTIFIER ::= {des3200ProdModel 5}	
+
+	des3200-10-cx		OBJECT IDENTIFIER ::= {des3200-10 1}
+	des3200-18-cx		OBJECT IDENTIFIER ::= {des3200-18 1}
+	des3200-26-cx		OBJECT IDENTIFIER ::= {des3200-26 1}
+	des3200-28-cx		OBJECT IDENTIFIER ::= {des3200-28 1}
+	des3200-28f-cx		OBJECT IDENTIFIER ::= {des3200-28f 1}
+	des3200-28me-cx		OBJECT IDENTIFIER ::= {des3200-28me 1}
+	des3200-28p-cx		OBJECT IDENTIFIER ::= {des3200-28p 1}
+	des3200-52-cx		OBJECT IDENTIFIER ::= {des3200-52 1}
+	des3200-52p-cx		OBJECT IDENTIFIER ::= {des3200-52p 1}
+	des3200-10-dc-cx	OBJECT IDENTIFIER ::= {des3200-10-dc 1}
+	des3200-26-dc-cx	OBJECT IDENTIFIER ::= {des3200-26-dc 1}	
+	des3200-18-dc-cx	OBJECT IDENTIFIER ::= {des3200-18-dc 1}
+	des3200-52-dc-cx	OBJECT IDENTIFIER ::= {des3200-52-dc 1}
+END

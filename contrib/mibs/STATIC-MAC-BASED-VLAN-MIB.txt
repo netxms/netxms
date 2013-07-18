@@ -1,0 +1,187 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Static MAC Based VLAN Common mib
+-- FILE NAME: staticMacBasedVlan.mib
+-- DATE     : 2009/08/25
+-- VERSION  : 2.03
+-- PURPOSE  : To construct the MIB structure of static MAC-based VLAN management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.03, 2009/08/25, Kitty Zheng
+-- [New Object]
+-- Add "others(7)" in swStaticMacBasedVlanCtrlOptionType for support Voice VLAN 
+-- and future function.
+-- [Modification]
+-- Rename "multiple-authentication(6)" to "compound-authentication(6)" in 
+-- swStaticMacBasedVlanCtrlOptionType.
+-- Requested by Kitty Zheng for project DES35xx.
+--
+-- Version 2.02, 2009/01/16, wesley
+-- Add new type multiple-authentication in object swStaticMacBasedVlanCtrlOptionType.
+-- For display type of special MAC-based VLAN entry which is multiple-authentication.
+-- Requested by wesley for project DGS3400 R2.6.
+--
+-- Version 2.01, 2008/03/12, saxon
+-- Add swStaticMacBasedVlanCtrlOptionTable,obsolete swStaticMacBasedVlanCtrlTable.
+-- Requested by saxon for project DES35XX.
+--
+-- Version 2.00, 2007/11/06, Jenny
+-- This is the first formal version for universal MIB definition.
+-- Requested by Jenny for project DES3500.
+-- -----------------------------------------------------------------------------
+
+STATIC-MAC-BASED-VLAN-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	MODULE-IDENTITY,OBJECT-TYPE		FROM SNMPv2-SMI
+	MacAddress,RowStatus,DisplayString	FROM SNMPv2-TC
+	dlink-common-mgmt               	FROM DLINK-ID-REC-MIB;
+
+swSMBVMIB MODULE-IDENTITY
+	LAST-UPDATED "0908250000Z"
+	ORGANIZATION "D-Link Corp."
+	CONTACT-INFO
+		"http://support.dlink.com"
+	DESCRIPTION
+		"The structure of static MAC-based VLAN information for the
+		proprietary enterprise."
+	::= { dlink-common-mgmt 56 }
+
+swSmbvCtrl      OBJECT IDENTIFIER ::= { swSMBVMIB 1 }
+swSmbvInfo	OBJECT IDENTIFIER ::= { swSMBVMIB 2 }
+swSmbvMgmt	OBJECT IDENTIFIER ::= { swSMBVMIB 3 }
+
+swStaticMacBasedVlanCtrlTable  OBJECT-TYPE
+	SYNTAX  SEQUENCE OF SwStaticMacBasedVlanCtrlEntry
+	MAX-ACCESS  not-accessible
+	STATUS  obsolete
+	DESCRIPTION
+		"A table that contains static MAC-based VLAN information."
+	::= { swSmbvMgmt 1 }
+
+swStaticMacBasedVlanCtrlEntry OBJECT-TYPE
+	SYNTAX  SwStaticMacBasedVlanCtrlEntry
+	MAX-ACCESS  not-accessible
+	STATUS  obsolete
+	DESCRIPTION
+		"A list that contains static MAC-based VLAN entries."
+	INDEX   { swStaticMacBasedVlanCtrlMacAddr }
+	::= { swStaticMacBasedVlanCtrlTable 1 }
+
+SwStaticMacBasedVlanCtrlEntry ::=
+	SEQUENCE {
+		swStaticMacBasedVlanCtrlMacAddr
+                    MacAddress,
+                swStaticMacBasedVlanCtrlVlanName
+                    DisplayString,
+		swStaticMacBasedVlanCtrlStatus
+                    RowStatus
+	}
+
+swStaticMacBasedVlanCtrlMacAddr OBJECT-TYPE
+	SYNTAX  MacAddress
+	MAX-ACCESS  read-only
+	STATUS  obsolete
+	DESCRIPTION
+	      "This object indicates the MAC address."
+	::= { swStaticMacBasedVlanCtrlEntry 1 }
+
+swStaticMacBasedVlanCtrlVlanName OBJECT-TYPE
+	SYNTAX  DisplayString(SIZE(1..32))
+	MAX-ACCESS  read-create
+	STATUS  obsolete
+	DESCRIPTION
+	      "This object indicates the VLAN name 
+	      associated with the VLAN ID."
+	::= { swStaticMacBasedVlanCtrlEntry 2 }
+
+swStaticMacBasedVlanCtrlStatus OBJECT-TYPE
+	SYNTAX  RowStatus
+	MAX-ACCESS  read-create
+	STATUS  obsolete
+	DESCRIPTION
+	      "This object indicates the status of this entry."
+	::= { swStaticMacBasedVlanCtrlEntry 3 }
+	
+		
+swStaticMacBasedVlanCtrlOptionTable  OBJECT-TYPE
+	SYNTAX  SEQUENCE OF SwStaticMacBasedVlanCtrlOptionEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION
+		"This table is an upgrade of the swStaticMacBasedVlanCtrlTable
+because the index of a special MAC-based VLAN entry has changed
+		and  so has the compatibility.
+		A table that contains static MAC-based VLAN information."
+	::= { swSmbvMgmt 2 }
+
+swStaticMacBasedVlanCtrlOptionEntry OBJECT-TYPE
+	SYNTAX  SwStaticMacBasedVlanCtrlOptionEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION
+		"A list that contains static MAC-based VLAN entries."
+	INDEX   { swStaticMacBasedVlanCtrlOptionMacAddr,swStaticMacBasedOptionVlanID }
+	::= { swStaticMacBasedVlanCtrlOptionTable 1 }
+
+SwStaticMacBasedVlanCtrlOptionEntry ::=
+	SEQUENCE {
+		swStaticMacBasedVlanCtrlOptionMacAddr
+                    MacAddress,
+                swStaticMacBasedOptionVlanID
+                    INTEGER,
+                swStaticMacBasedVlanCtrlOptionType
+                    INTEGER,
+                swStaticMacBasedVlanCtrlOptionStatus
+                    RowStatus    
+	}
+
+swStaticMacBasedVlanCtrlOptionMacAddr OBJECT-TYPE
+	SYNTAX  MacAddress
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION
+	      "This object indicates the MAC address."
+	::= { swStaticMacBasedVlanCtrlOptionEntry 1 }
+
+swStaticMacBasedOptionVlanID OBJECT-TYPE
+	SYNTAX  INTEGER(1..4095)
+	MAX-ACCESS  read-create
+	STATUS  current
+	DESCRIPTION
+	      "This object indicates the VLAN ID 
+	      associated with the mac address."
+	::= { swStaticMacBasedVlanCtrlOptionEntry 2 }
+	
+swStaticMacBasedVlanCtrlOptionType OBJECT-TYPE
+	SYNTAX  INTEGER{            		
+			static(1),
+			mac-based-access-control(2),
+			ieee8021x(3),
+			wac(4),
+			jwac(5),
+			compound-authentication(6),
+			others(7)
+			}
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION
+	      "This object indicates the type of special MAC-based VLAN entry."
+	::= { swStaticMacBasedVlanCtrlOptionEntry 3 }
+	
+swStaticMacBasedVlanCtrlOptionStatus OBJECT-TYPE
+	SYNTAX  RowStatus
+	MAX-ACCESS  read-create
+	STATUS  current
+	DESCRIPTION
+	      "This object indicates the status of this entry."
+	::= { swStaticMacBasedVlanCtrlOptionEntry 4 }
+	
+END

@@ -1,0 +1,306 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Supervlan-MIB
+-- FILE NAME: Supervlan.mib  
+-- DATE     : 2010/02/02
+-- VERSION  : 1.00  
+-- PURPOSE  : To construct the MIB structure of the super VLAN function for
+--            proprietary enterprises			 
+-- -----------------------------------------------------------------------------
+-- MODIFICATION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+-- [New Object]
+-- [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2010/02/02, Rock Zhang
+-- This is the first formal version for universal MIB definition.
+-- Notes:Requested by Rock Zhang for project DGS3600	
+-- -----------------------------------------------------------------------------
+
+SUPERVLAN-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+		MODULE-IDENTITY,OBJECT-TYPE,IpAddress   FROM SNMPv2-SMI
+		DisplayString,RowStatus                 FROM SNMPv2-TC
+		VlanIndex								FROM Q-BRIDGE-MIB
+		dlink-common-mgmt						FROM DLINK-ID-REC-MIB;
+
+	swSuperVlanMIB MODULE-IDENTITY
+		LAST-UPDATED "1002020000Z"
+		ORGANIZATION "D-Link Corp."
+		CONTACT-INFO
+			"http://support.dlink.com"
+		DESCRIPTION			
+			"The structure of the super VLAN for the proprietary enterprises."
+			::= { dlink-common-mgmt 91}
+			
+	swSuperVlanMIBObjects	OBJECT IDENTIFIER ::={swSuperVlanMIB 1}
+-- ---------------------------------------------------------------------------------------------------------
+-- swSuperVlanTable
+-- ---------------------------------------------------------------------------------------------------------
+	swSuperVlanTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwSuperVlanEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+			"This table contain super VLAN information."
+		::= { swSuperVlanMIBObjects 1 }
+    
+	swSuperVlanEntry OBJECT-TYPE
+		SYNTAX  SwSuperVlanEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+			"A list of information about super VLAN."
+		INDEX  { swSuperVlanId }
+		::= { swSuperVlanTable 1 }
+
+	SwSuperVlanEntry ::=
+		SEQUENCE {
+			swSuperVlanId
+				VlanIndex,
+			swSuperVlanIPAddress
+				IpAddress,
+			swSuperVlanIPAddrMask
+				IpAddress,
+			swSubVlanList1to64
+	    			OCTET STRING,
+			swSubVlanList65to128
+	    			OCTET STRING,
+			swSubVlanList129to192
+	    			OCTET STRING,
+			swSubVlanList193to256
+	    			OCTET STRING,
+			swSubVlanList257to320
+	    			OCTET STRING,
+			swSubVlanList321to384
+	    			OCTET STRING,
+			swSubVlanList385to448
+	    			OCTET STRING,
+			swSubVlanList449to512
+	    			OCTET STRING,
+			swSuperVlanStatus
+				INTEGER,
+			swSuperVlanRowStatus
+				RowStatus
+			}     
+            
+	swSuperVlanId	OBJECT-TYPE
+		SYNTAX  VlanIndex
+		MAX-ACCESS  not-accessible	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the VLAN-ID of the super VLAN."
+		::= { swSuperVlanEntry 1 }
+
+	swSuperVlanIPAddress	OBJECT-TYPE
+		SYNTAX  IpAddress
+		MAX-ACCESS  read-only	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the super VLAN IP Address."
+		::= { swSuperVlanEntry 2 }
+
+	swSuperVlanIPAddrMask	OBJECT-TYPE
+		SYNTAX  IpAddress
+		MAX-ACCESS  read-only	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the super VLAN IP Mask."
+		::= { swSuperVlanEntry 3 }				
+     
+	swSubVlanList1to64 OBJECT-TYPE
+		SYNTAX     OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the sub-VLAN range (1-512)
+			 that belongs to the super VLAN."
+        ::= { swSuperVlanEntry 4 }
+
+	swSubVlanList65to128 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the sub-VLAN range (513-1024)
+			 that belongs to the super VLAN."
+        ::= { swSuperVlanEntry 5 }
+
+	swSubVlanList129to192 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the sub-VLAN range (1025-1536)
+			 that belongs to the super VLAN."
+        ::= { swSuperVlanEntry 6 }
+
+	swSubVlanList193to256 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the sub-VLAN range (1537-2048)
+			 that belongs to the super VLAN."
+        ::= { swSuperVlanEntry 7 }
+
+	swSubVlanList257to320 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the sub-VLAN range (2049-2560)
+			 that belongs to the super VLAN."
+        ::= { swSuperVlanEntry 8 }
+
+	swSubVlanList321to384 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the sub-VLAN range (2561-3072)
+			 that belongs to the super VLAN."
+        ::= { swSuperVlanEntry 9 }
+
+	swSubVlanList385to448 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the sub-VLAN range (3073-3584)
+			 that belongs to the super VLAN."
+        ::= { swSuperVlanEntry 10 }
+
+	swSubVlanList449to512 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the sub-VLAN range (3585-4096)
+			 that belongs to the super VLAN."
+        ::= { swSuperVlanEntry 11 }
+
+	swSuperVlanStatus OBJECT-TYPE
+		SYNTAX  INTEGER {
+		                active(1),
+		                inactive(2)
+                }
+		MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        	"This object indicates the super VLAN status."
+		::= { swSuperVlanEntry 12 }
+
+	swSuperVlanRowStatus	OBJECT-TYPE
+		SYNTAX  RowStatus
+		MAX-ACCESS  read-create	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the status of this entry."
+		::= { swSuperVlanEntry 100 }
+
+-- ---------------------------------------------------------------------------------------------------------
+-- swSubVlanTable
+-- ---------------------------------------------------------------------------------------------------------
+	swSubVlanTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwSubVlanEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+			"This table contains sub-VLAN information."
+		::= { swSuperVlanMIBObjects 2 }
+
+	swSubVlanEntry OBJECT-TYPE
+		SYNTAX  SwSubVlanEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+			"A list of information about the sub-VLAN."
+		INDEX  { swSubVlanId}
+		::= { swSubVlanTable 1 }
+
+	SwSubVlanEntry ::=
+		SEQUENCE {
+			swSubVlanId
+				VlanIndex,
+			swSubVlanOperStatus
+				INTEGER
+			}
+			
+	swSubVlanId	OBJECT-TYPE
+		SYNTAX  VlanIndex
+		MAX-ACCESS  not-accessible	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the sub-VLAN-ID."
+		::= { swSubVlanEntry 1 }
+
+	swSubVlanOperStatus OBJECT-TYPE
+		SYNTAX  INTEGER {
+		                active(1),
+		                inactive(2) 
+                        }
+		MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+              "This object indicates the sub-VLAN status."
+		::= { swSubVlanEntry 2 }
+-- ---------------------------------------------------------------------------------------------------------
+-- swSubVlanIPRangeTable
+-- ---------------------------------------------------------------------------------------------------------
+	swSubVlanIPRangeTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwSubVlanIPRangeEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+			"This table contains the IP range of the sub-VLAN."
+		::= { swSuperVlanMIBObjects 3 }
+    
+	swSubVlanIPRangeEntry OBJECT-TYPE
+		SYNTAX  SwSubVlanIPRangeEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+			"A list of information about the IP range of the sub-VLAN."
+		INDEX  { swSubVlanId,swSubVlanIPAddressRangeFrom,swSubVlanIPAddressRangeTo}
+		::= { swSubVlanIPRangeTable 1 }
+        
+	SwSubVlanIPRangeEntry ::=
+		SEQUENCE {
+			swSubVlanIPAddressRangeFrom
+				IpAddress,
+			swSubVlanIPAddressRangeTo
+				IpAddress,
+			swSubVlanRowStatus
+				RowStatus                        
+			}     
+
+	swSubVlanIPAddressRangeFrom	OBJECT-TYPE
+		SYNTAX  IpAddress
+		MAX-ACCESS  not-accessible	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the sub-VLAN IP address."
+		::= { swSubVlanIPRangeEntry 1 }
+
+	swSubVlanIPAddressRangeTo	OBJECT-TYPE
+		SYNTAX  IpAddress
+		MAX-ACCESS  not-accessible	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the sub-VLAN IP range from the previous
+			 node IP to this IP that belongs to the sub-VLAN."
+		::= { swSubVlanIPRangeEntry 2 }
+
+	swSubVlanRowStatus	OBJECT-TYPE
+		SYNTAX  RowStatus
+		MAX-ACCESS  read-create	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the status of this entry."
+		::= { swSubVlanIPRangeEntry 100 }
+        
+END

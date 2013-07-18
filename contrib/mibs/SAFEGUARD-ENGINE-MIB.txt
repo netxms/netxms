@@ -1,0 +1,162 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Safe Guard Engine Common mib
+-- FILE NAME: SafeGuard.mib
+-- DATE     : 2007/04/06
+-- VERSION  : 2.01
+-- PURPOSE  : To construct the MIB structure of safe guard engine management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.01, 2007/4/6, yedda
+-- Description:
+--  [Modification]
+--    to delete unused comma in the IMPORTS section to avoid compiling error.
+-- Notes: reported from Yan Zhang
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+SAFEGUARD-ENGINE-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+
+	          MODULE-IDENTITY, OBJECT-TYPE
+        			FROM SNMPv2-SMI
+	          TruthValue   FROM SNMPv2-TC
+	          MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+	                FROM SNMPv2-CONF
+
+	          dlink-common-mgmt
+	          		FROM DLINK-ID-REC-MIB;
+
+	swSafeGuardMIB MODULE-IDENTITY
+	    LAST-UPDATED "0703270000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        " "
+	    DESCRIPTION
+		    "The MIB module for managing safe guard engine."
+        ::= { dlink-common-mgmt 19 }
+
+
+
+    swSafeGuardGblMgmt			OBJECT IDENTIFIER ::= { swSafeGuardMIB 1 }
+	swSafeGuardctrl			    OBJECT IDENTIFIER ::= { swSafeGuardMIB 2 }
+--	swArpStormCtrl				OBJECT IDENTIFIER ::= { swSafeGuardMIB 3 }
+	swSafeGuardNotify			OBJECT IDENTIFIER ::= { swSafeGuardMIB 4 }
+
+-- -----------------------------------------------------------------------------
+-- swSafeGuardMgmt
+-- -----------------------------------------------------------------------------
+	swSafeGuardAdminState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Safe Guard state of the switch."
+        ::= { swSafeGuardGblMgmt 1 }
+
+-- -----------------------------------------------------------------------------
+--	swSafeGuardctrl
+-- -----------------------------------------------------------------------------
+	swSafeGuardRisingThreshold	OBJECT-TYPE
+		SYNTAX  INTEGER (20..100)
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"The object indicates safe guard engine rising threshold in percentage.
+			 the range is between 20%-100% , if the CPU utilization is over the
+			 rising threshold, the switch enters exhausted mode."
+		::= { swSafeGuardctrl 1 }
+
+	swSafeGuardFallingThreshold	OBJECT-TYPE
+		SYNTAX  INTEGER (20..100)
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"The object indicates safe guard engine falling threshold in percentage.
+			the range is between 20%-100% , if the CPU utilization is lower than
+			the falling threshold, the switch enters normal mode."
+		::= { swSafeGuardctrl 2 }
+
+	swSafeGuardmode OBJECT-TYPE
+        SYNTAX  INTEGER {
+
+               strict(1),
+               fuzzy(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "determine the controlling method of broadcast traffic.
+            Here are two modes (strict and fuzzy). In strict,
+            the Switch will stop receiving all 'ARP not to me' packets (the protocol
+            address of target in ARP packet is the Switch itself). That means no matter
+            what reasons cause the high CPU utilization (may not caused by ARP storm),
+            the Switch reluctantly processes any 'ARP not to me' packets in exhausted mode.
+            In fuzzy mode, the Switch will adjust the bandwidth dynamically depend on some
+            reasonable algorithm."
+        ::= { swSafeGuardctrl 3 }
+
+	swSafeGuardAlarmAdminState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates  the state of safe guard engine related trap/log
+            mechanism (enable or disable). If set to enable, trap and log will be
+            active while safe guard engine current mode changed.If set to disable,
+            current mode change will not trigger trap and log events."
+        ::= { swSafeGuardctrl 4 }
+
+	swSafeGuardCurrentStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+               normal(1),
+               exhausted(2)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates current operation mode of Safe Guard "
+        ::= { swSafeGuardctrl 5 }
+
+
+-- -----------------------------------------------------------------------------
+	swSafeGuardNotification     OBJECT IDENTIFIER ::= { swSafeGuardNotify 1 }
+	swSafeGuardNotifyPrefix     OBJECT IDENTIFIER ::= { swSafeGuardNotification 0 }
+
+    swSafeGuardChgToExhausted NOTIFICATION-TYPE
+        OBJECTS         {
+   						swSafeGuardCurrentStatus
+                        }
+        STATUS          current
+        DESCRIPTION     "This trap indicates System change operation mode from normal to exhausted."
+        ::= { swSafeGuardNotifyPrefix 1 }
+
+    swSafeGuardChgToNormal NOTIFICATION-TYPE
+        OBJECTS         {
+   						swSafeGuardCurrentStatus
+                        }
+        STATUS          current
+        DESCRIPTION     "This trap indicates System change operation mode from exhausted to normal."
+        ::= { swSafeGuardNotifyPrefix 2 }
+
+
+
+END

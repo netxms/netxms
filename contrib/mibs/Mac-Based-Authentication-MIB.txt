@@ -1,0 +1,664 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Mac Based Authentication Common mib
+-- FILE NAME: mba.mib
+-- DATE     : 2009/09/18
+-- VERSION  : 2.09
+-- PURPOSE  : To construct the MIB structure of Mac based authentication
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Revision 2.09 2009/09/18, Peter Hsieh
+-- [Modification]
+-- [1]Add swMacBasedAuthTrapState and swMacBasedAuthLogState in swMBACtrl.
+--
+-- Revision 2.08 2009/08/21, Shawn
+-- [Modification]
+-- [1]Rename "swMacBasedAuthInfoHoldTime" to "swMacBasedAuthInfoBlockTime".
+-- [2]Rename "swMacBasedAuthPortHoldTime" to "swMacBasedAuthPortBlockTime".
+-- [3]Change the value list "failure(5)" to "blocked(5)" in swMacBasedAuthInfoStatus.
+-- [4]Change the string length of swMacBasedAccessControlPWD from 32 to 16.
+-- [5]Modify the description of swMacBasedAuthRadiusAuthorization and swMacBasedAuthLocalAuthorization
+--    for modify term "authorization network" to "authorization attributes".
+--
+-- Revision 2.07 2009/05/07,Eli Lin
+-- [New Object]
+-- [1]Add object swMacBasedAuthInfoAssignVID in swMacBasedAuthPortInfoEntry.
+--
+-- Revision 2.06 2009/1/21,Shawn
+-- [New Object]
+-- [1]Add objects swMacBasedAuthInfoPriority
+--    for display the priority that the port/mac is assigned to after it passes authentication,
+-- [2]Add swMacBasedAuthInfoAgingTime
+--    for display remaining time until the authenticated client returns to unauthenticated state
+--    and swMacBasedAuthInfoHoldTime in swMacBasedAuthPortInfoTable
+--    for display remaining time until the authentication failure client is allowed to start a new authentication.
+--
+-- Revision 2.05 2008/12/02,Shawn
+-- [New Object]
+-- [1]Add object swMacBasedAuthDatabaseVID in swMacBasedAuthDatabaseTable.
+-- [2]Add objects swMacBasedAuthRadiusAuthorization and swMacBasedAuthLocalAuthorization in swMBACtrl.
+-- [Modification]
+-- [1]Obsolete object swMacBasedAuthDatabaseVlanName in swMacBasedAuthDatabaseTable.
+--
+-- Version 2.04,2008/10/21,Shawn
+-- [New Object]
+-- [1]add object swMacBasedAuthFailOver;
+--
+-- Version 2.03,2008/09/05,Shawn
+-- [New Object]
+-- [1]add object swMacBasedAuthMaxUser;
+-- [2]add swMacBasedAuthPortMaxUser in table swMacBasedAuthPortTable;
+--
+-- Version 2.02,2008/02/29,Bonnie
+-- [New Object]
+-- [1]add object swMacBasedAuthClearAllAction;
+-- [2]add swMacBasedAuthClearMacAction in table swMacBasedAuthPortInfoTable;
+-- [3]add swMacBasedAuthPortMode, swMacBasedAuthPortAgingTime,
+--    swMacBasedAuthPortHoldTime and swMacBasedAuthClearPortAction
+--    in table swMacBasedAuthPortTable;
+--
+-- Version 2.01,2007/12/29,Jeffers
+-- [New Object]
+-- for implement trap.
+-- add objects swMacBasedAuthLoggedSuccess,swMacBasedAuthLoggedFail,
+-- swMacBasedAuthAgesOut and swMacBasedAuthVID
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+Mac-Based-Authentication-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE     	    FROM SNMPv2-SMI
+        MacAddress,RowStatus,DisplayString      FROM SNMPv2-TC
+        dlink-common-mgmt               	    FROM DLINK-ID-REC-MIB;
+
+     swMBAMIB MODULE-IDENTITY
+          LAST-UPDATED "0909180000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+            "http://support.dlink.com"
+          DESCRIPTION
+            "."
+          ::= { dlink-common-mgmt 35 }
+
+    PortList                ::= OCTET STRING(SIZE (0..127))
+
+    swMBACtrl            OBJECT IDENTIFIER ::= { swMBAMIB 1 }
+    swMBAInfo            OBJECT IDENTIFIER ::= { swMBAMIB 2 }
+    swMBAPortMgmt        OBJECT IDENTIFIER ::= { swMBAMIB 3 }
+    swMBAMgmt            OBJECT IDENTIFIER ::= { swMBAMIB 4 }
+
+
+-- -----------------------------------------------------------------------------
+swMacBasedAuthState OBJECT-TYPE
+    SYNTAX  INTEGER {
+               disabled(1),
+               enabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+            "This object enables/disables the MAC-based authentication status
+             of the device."
+    ::= { swMBACtrl 1 }
+
+swMacBasedAuthMethod OBJECT-TYPE
+    SYNTAX  INTEGER  {
+               local(1),
+               radius(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "This object indicates the type of authentication method.
+             The RADIUS method is authenticated per authentication server."
+    ::= { swMBACtrl 2 }
+
+swMacBasedAuthPWD OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(1..16))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the password of RADIUS authentication method."
+    ::= { swMBACtrl 3 }
+
+
+swMacBasedAuthVlanName OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the VLAN name of the authentication method."
+    ::= { swMBACtrl 4 }
+
+
+swMacBasedAuthMemberPorts OBJECT-TYPE
+    SYNTAX      PortList
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the member ports of the authentication method."
+    ::= { swMBACtrl 5 }
+    
+--swMacBasedAuthRelativeVLAN OBJECT-TYPE
+--    SYNTAX      DisplayString(SIZE(0..32))
+--    MAX-ACCESS  read-write
+--    STATUS      current
+--    DESCRIPTION
+--        "This object indicates the associated VLAN name of the authentication method."
+--    ::= { swMBACtrl 6 }
+
+swMacBasedAuthVlanNameDelState OBJECT-TYPE
+    SYNTAX      INTEGER{
+    		none(1),
+    		start(2)
+    		}
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Used to delete the guest VLAN of MAC-based authentication."
+    ::= { swMBACtrl 7 }
+    
+swMacBasedAuthClearAllAction OBJECT-TYPE
+    SYNTAX      INTEGER{other(1), start(2)}
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+	"Used to clear the authentication state of all ports."
+    ::= { swMBACtrl 8 }        	
+
+swMacBasedAuthMaxUser OBJECT-TYPE
+	SYNTAX		INTEGER
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+			"This object indicates the maximum number of authorized client(s) on the whole device.
+			Note:
+			The maximum number of authorized client(s) range is (0..N), the value N means the maximum number. This is 
+			determined by the project itself.	
+			When 0 is set, the maximum number of authorized clients is unlimited."
+	DEFVAL	{128}
+		::= { swMBACtrl 9 }
+
+swMacBasedAuthFailOver OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+            "This object sets the RADIUS authentication failover state. 
+			
+			When the authentication failover is disabled,
+				if RADIUS servers are unreachable, the authentication will fail. 
+            When the authentication failover is enabled, 
+				if RADIUS servers authentication are unreachable, the local database will be used to do the authentication.
+				
+			By default, the state is disabled."
+		DEFVAL	{disabled}
+    ::= { swMBACtrl 10 }
+
+swMacBasedAuthRadiusAuthorization OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+            "This object sets the acceptance state of RADIUS authorization. 
+			
+			When the authorization is enabled for MAC-based access control's RADIUS method, 
+			the authorized attributes (for example VLAN, 802.1p default priority, and ACL)
+			assigned by the local database will be accepted if the global authorization state is enabled."
+	DEFVAL	{enabled}
+    ::= { swMBACtrl 11 }
+	
+swMacBasedAuthLocalAuthorization OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+            "This object sets the acceptance state of local authorization. 
+			
+			When the authorization is enabled for MAC-based access control's local method, 
+			the authorized attributes assigned by the local database 
+			will be accepted if the global authorization state is enabled."
+	DEFVAL	{enabled}
+    ::= { swMBACtrl 12 }
+
+swMacBasedAuthTrapState OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+            "This object is used to enable/disable the trap state of MAC-based
+            Access Control."
+	DEFVAL	{disabled}
+    ::= { swMBACtrl 13 }
+    
+swMacBasedAuthLogState OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+            "This object is used to enable/disable the log state of MAC-based
+            Access Control."
+	DEFVAL	{disabled}
+    ::= { swMBACtrl 14 }
+    
+-- -----------------------------------------------------------------------------
+-- swMBAInfo            OBJECT IDENTIFIER ::= { swMBAMIB 2}
+-- -----------------------------------------------------------------------------
+swMacBasedAuthPortInfoTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwMacBasedAuthPortInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that displays the authentication state of every port."
+    ::= { swMBAInfo 1 }
+
+swMacBasedAuthPortInfoEntry OBJECT-TYPE
+    SYNTAX      SwMacBasedAuthPortInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that displays the authentication state for each port."
+    INDEX { swMacBasedAuthInfoPortIndex , swMacBasedAuthInfoMacIndex }
+    ::= { swMacBasedAuthPortInfoTable 1 }
+
+SwMacBasedAuthPortInfoEntry ::=
+    SEQUENCE {
+        swMacBasedAuthInfoPortIndex
+            INTEGER,
+        swMacBasedAuthInfoMacIndex
+            MacAddress,
+        swMacBasedAuthInfoStatus
+            INTEGER,
+        swMacBasedAuthInfoAssignVLANName
+            DisplayString,
+        swMacBasedAuthClearMacAction
+            INTEGER,
+        swMacBasedAuthInfoPriority
+            INTEGER,
+        swMacBasedAuthInfoAgingTime
+            INTEGER,
+        swMacBasedAuthInfoBlockTime
+            INTEGER,
+        swMacBasedAuthInfoAssignVID            
+            INTEGER
+            }
+
+swMacBasedAuthInfoPortIndex OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the authenticated port number."
+    ::= { swMacBasedAuthPortInfoEntry 1 }
+
+swMacBasedAuthInfoMacIndex OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the authenticated MAC."
+    ::= { swMacBasedAuthPortInfoEntry 2 }
+
+swMacBasedAuthInfoStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+               unconnected(1),
+               connecting(2),
+               authenticating(3),
+               authenticated(4),
+               blocked(5)
+               }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the authenticated status."
+    ::= { swMacBasedAuthPortInfoEntry 3 }
+
+swMacBasedAuthInfoAssignVLANName OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(1..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the VLAN name that the port is assigned to once MAC authentication is successful."
+    ::= { swMacBasedAuthPortInfoEntry 4 }
+
+swMacBasedAuthClearMacAction OBJECT-TYPE
+    SYNTAX  INTEGER{
+		other(1),
+		start(2)
+		}
+    MAX-ACCESS	read-write
+    STATUS	current
+    DESCRIPTION
+	"When set to start (2),  the user will return to an un-authenticated
+         state. All the timers associated with the user will be reset.
+	 When the administrator performs a get operation, it always returns other (1).
+	"
+		::= { swMacBasedAuthPortInfoEntry 5 }
+
+swMacBasedAuthInfoPriority OBJECT-TYPE
+    SYNTAX  INTEGER
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+	"This object indicates the priority that the port/mac is assigned to after it passes authentication.
+	-1 will be displayed when port/mac has not been assigned any priority"
+		::= { swMacBasedAuthPortInfoEntry 6 }
+
+swMacBasedAuthInfoAgingTime OBJECT-TYPE
+    SYNTAX  INTEGER
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+	"This object indicates the remaining time until the authenticated client returns to unauthenticated state.
+	-1 will be displayed before port/mac passes authentication
+	0 will be displayed when aging time is seting to infinite on port"
+		::= { swMacBasedAuthPortInfoEntry 7 }
+
+swMacBasedAuthInfoBlockTime OBJECT-TYPE
+    SYNTAX  INTEGER
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+	"This object indicates the remaining time until the authentication failure client is allowed to start a new authentication.
+	-1 will be displayed after port/mac passes authentication"
+		::= { swMacBasedAuthPortInfoEntry 8 }
+
+swMacBasedAuthInfoAssignVID OBJECT-TYPE
+    SYNTAX	INTEGER(0..4094)
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+	"This object indicates the VID that the port is assigned to once 
+	 MAC authentication is successful."
+		::= { swMacBasedAuthPortInfoEntry 9 }		
+		
+-- -----------------------------------------------------------------------------
+-- swMBAPortMgmt         OBJECT IDENTIFIER ::= { swMBAMIB 3}
+-- -----------------------------------------------------------------------------
+swMacBasedAuthPortTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwMacBasedAuthPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains the method and state for every port."
+    ::= { swMBAPortMgmt 1 }
+
+swMacBasedAuthPortEntry OBJECT-TYPE
+    SYNTAX      SwMacBasedAuthPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of method types and states for each port."
+    INDEX { swMacBasedAuthPortIndex }
+    ::= { swMacBasedAuthPortTable 1 }
+
+SwMacBasedAuthPortEntry ::=
+    SEQUENCE {
+        swMacBasedAuthPortIndex
+            INTEGER,
+        swMacBasedAuthPortState
+            INTEGER,
+        swMacBasedAuthPortMode
+            INTEGER,
+        swMacBasedAuthPortAgingTime
+            INTEGER,
+        swMacBasedAuthPortBlockTime
+            INTEGER,
+        swMacBasedAuthClearPortAction
+            INTEGER,
+        swMacBasedAuthPortMaxUser
+            INTEGER
+        }
+
+swMacBasedAuthPortIndex OBJECT-TYPE
+    SYNTAX      INTEGER(1..65535)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the module's port number."
+    ::= { swMacBasedAuthPortEntry 1 }
+
+swMacBasedAuthPortState OBJECT-TYPE
+    SYNTAX      INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object enables/disables the authentication state of this port."
+    ::= { swMacBasedAuthPortEntry 2 }
+    
+swMacBasedAuthPortMode OBJECT-TYPE
+    SYNTAX    INTEGER{
+            		port_based(1),
+            		host_based(2)
+            	}
+   MAX-ACCESS  read-write
+   STATUS    current
+   DESCRIPTION
+       "The mode of this entry.
+       port_based: All users connected to a port share the first authentication result.
+       host_based: Each user can have its own authentication result.
+       "
+       DEFVAL {port_based}
+   ::= { swMacBasedAuthPortEntry 3 }
+
+swMacBasedAuthPortAgingTime   OBJECT-TYPE
+   SYNTAX      INTEGER(0..1440)
+   MAX-ACCESS  read-write
+   STATUS      current
+   DESCRIPTION
+		"Specifies the time period an authenticated host
+		will be kept in an authenticated state. When the aging time has
+		timed-out, the host will be moved back to an unauthenticated state.
+		Note:
+		When 0 is set on the specified port, it means that aging has been disabled meaning that the 
+		aging time is set to infinite.
+		"
+  	DEFVAL {1440}	
+   ::= { swMacBasedAuthPortEntry 4 }
+    
+swMacBasedAuthPortBlockTime   OBJECT-TYPE
+   SYNTAX      INTEGER(0..300)
+   MAX-ACCESS  read-write
+   STATUS      current
+   DESCRIPTION
+		"If a host fails to authenticate, the next authentication
+		will not start within the block time unless the user clears the entry state manually.
+		Note:
+		When 0 is set on the specified port, it means block authentication fail mac,
+		that is the block time is set to infinite.
+		"
+  	DEFVAL {300}	
+  ::= { swMacBasedAuthPortEntry 5 }
+  
+swMacBasedAuthClearPortAction OBJECT-TYPE
+   SYNTAX INTEGER{
+                  other(1),
+                  start(2)
+		}
+  MAX-ACCESS	read-write
+  STATUS	 current
+  DESCRIPTION
+		"When set to start (2), the specified port will return to an un-authenticated
+                 state. All the timers associated with the specified port will be reset.
+	         When the administrator performs a get operation, it always returns other (1).
+	         "
+        	::= { swMacBasedAuthPortEntry 6 }
+
+swMacBasedAuthPortMaxUser OBJECT-TYPE
+	SYNTAX		INTEGER
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+			"This object indicates the maximum number of authorized client(s) on the specified port.
+			Note:
+			The maximum number of authorized client(s) range is (0..N), the value N means the max number, it is 
+			determined by the project itself.	
+			When 0 is set on the specified port, the maximum number of authorized client(s) has no limit."
+	DEFVAL	{128}
+		::= { swMacBasedAuthPortEntry 7 }
+
+-- ----------------------------------------------------------------------------- 
+-- swMBAMgmt            OBJECT IDENTIFIER ::= { swMBAMIB 4}
+-- -----------------------------------------------------------------------------
+swMacBasedAuthDatabaseTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwMacBasedAuthDatabaseEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains the MAC-based authentication account info."
+    ::= { swMBAMgmt 1 }
+
+swMacBasedAuthDatabaseEntry OBJECT-TYPE
+    SYNTAX      SwMacBasedAuthDatabaseEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list that contains the MAC-based authentication account info."
+    INDEX {swMacBasedAuthDatabaseMacIndex }
+    ::= { swMacBasedAuthDatabaseTable 1 }
+
+SwMacBasedAuthDatabaseEntry ::=
+    SEQUENCE {
+        swMacBasedAuthDatabaseMacIndex
+            MacAddress,
+        swMacBasedAuthDatabaseVlanName
+            DisplayString,
+        swMacBasedAuthDatabaseStatus
+            RowStatus,
+		swMacBasedAuthDatabaseVID
+			INTEGER
+        }
+
+swMacBasedAuthDatabaseMacIndex OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the MAC address for this user account."
+    ::= { swMacBasedAuthDatabaseEntry 1 }
+
+swMacBasedAuthDatabaseVlanName OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(1..32))
+    MAX-ACCESS  read-create
+    STATUS      obsolete
+    DESCRIPTION
+        "This object indicates the VLAN name for this user account."
+    ::= { swMacBasedAuthDatabaseEntry 2 }
+
+swMacBasedAuthDatabaseStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The status of this entry."
+    ::= { swMacBasedAuthDatabaseEntry 3 }
+
+swMacBasedAuthDatabaseVID OBJECT-TYPE
+    SYNTAX	INTEGER(0..4094)
+    MAX-ACCESS	read-create
+    STATUS	current
+    DESCRIPTION
+	"This object indicates the VID for this user account.
+	0 indicates to delete configure VID in this user account."
+    ::= { swMacBasedAuthDatabaseEntry 5 }
+
+-- End of Table
+
+
+-- -----------------------------------------------------------------------------
+-- swMacBasedAuthTrap
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- Add common trap management
+-- -----------------------------------------------------------------------------
+        swMBATrap     OBJECT IDENTIFIER ::= { swMBAMIB 11 }
+
+        swMBANotify   OBJECT IDENTIFIER ::= { swMBATrap 1 }
+
+        swMBANotifyPrefix OBJECT IDENTIFIER ::= { swMBANotify 0 }
+
+-- -----------------------------------------------------------------------------
+-- swMBANotifyPrefix OBJECT IDENTIFIER ::= { swMBANotify 0 }
+
+-- -----------------------------------------------------------------------------
+-- agentNotifFirmware
+-- -----------------------------------------------------------------------------
+     swMacBasedAuthLoggedSuccess  NOTIFICATION-TYPE
+        OBJECTS   {
+		 swMacBasedAuthInfoMacIndex,
+		 swMacBasedAuthInfoPortIndex,
+		 swMacBasedAuthVID
+                  }
+          STATUS  current
+          DESCRIPTION
+           "The trap is sent when a MAC-based access control host is successfully logged in."
+ 
+        ::={swMBANotifyPrefix 1}
+
+   swMacBasedAuthLoggedFail  NOTIFICATION-TYPE
+        OBJECTS   {
+		 swMacBasedAuthInfoMacIndex,
+		 swMacBasedAuthInfoPortIndex,
+		 swMacBasedAuthVID
+                  }
+          STATUS  current
+          DESCRIPTION
+           "The trap is sent when a MAC-based access control host login fails."
+
+        ::={swMBANotifyPrefix 2}
+
+     swMacBasedAuthAgesOut  NOTIFICATION-TYPE
+        OBJECTS   {
+		 swMacBasedAuthInfoMacIndex,
+		 swMacBasedAuthInfoPortIndex,
+		 swMacBasedAuthVID
+                  }
+          STATUS  current
+          DESCRIPTION
+           "The trap is sent when a MAC-based access control host ages out."
+
+        ::={swMBANotifyPrefix 3}
+
+-- -----------------------------------------------------------------------------
+-- swMBANotifyBidings
+-- -----------------------------------------------------------------------------
+    swMBANotifyBidings OBJECT IDENTIFIER ::= { swMBANotify 1 }
+
+        swMacBasedAuthVID  OBJECT-TYPE
+        SYNTAX     INTEGER
+        MAX-ACCESS accessible-for-notify
+        STATUS     current
+        DESCRIPTION
+           "The VLAN ID for the host already exists."
+        ::= { swMBANotifyBidings 1}
+
+END

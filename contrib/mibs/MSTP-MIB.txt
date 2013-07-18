@@ -1,0 +1,874 @@
+-- MSTP mib 
+--  *****************************************************************************
+-- Version 2.02, 2008/1/25, Marco Visaya
+-- Description:
+--  [Modification]
+--    [1]Change swMSTPPortAdminEdgePort SYNTAX from TruthValue to INTEGER
+--    [2]Change swMSTPPortOperEdgePort SYNTAX from TruthValue to INTEGER
+--    [3]Add swMSTPPortRestrictedRole in swMSTPPortTable
+--    [4]Add swMSTPPortRestrictedTCN in swMSTPPortTable
+-- *****************************************************************************
+-- Ver 1.5 2006/2/24 
+-- For "per port BPDU filtering". A node "swMSTPPortBPDUFiltering" is added to 
+-- swMSTPPortEntry (request from China)
+-- *****************************************************************************
+-- Ver 1.4 2005/10/13 
+-- correct object name "swMSTPInstVlanRangeList192to256" to"swMSTPInstVlanRangeList193to256"
+-- *****************************************************************************
+-- *****************************************************************************
+-- Ver 1.3 2005/9/6 
+-- [1] object swMSTPMstPortRole add loopback(7),to port role .
+-- [2] object swMSTPMstPortStatus add err-disabled(8),to port status .
+-- [2] add object swMSTPStpLBDRecoverTime .
+-- *****************************************************************************
+-- Ver 1.2 2005/8/4 11:29
+-- [1] object swMSTPMstPortRole add master(5),to port role .
+-- [2] add object swMSTPStpLBD ,swMSTPPortLBD.
+-- *****************************************************************************
+-- Ver 1.1 2005/7/26 05:26
+-- Some error correction: 
+-- [1] Counter is FROM RFC1155-SMI not SNMPv2-SMI
+-- [2] ACCESS  read-write	change to MAX-ACCESS read-write
+-- [3] object swMSTPMstPortRole syntax desinated(4),  to designated(4),
+-- *****************************************************************************
+-- Ver 1.0 2004/3/23 
+-- by yedda Liao
+-- [1]Modify description
+-- [2]Remove SYNTAX VidList
+-- [3]Separate swMSTPInstVlanRange into 8 objects
+-- [4]Add object swMSTPInstRemainHops in swMSTPInstanceCtrlTable
+-- [5]Separate swMSTPPortHelloTime into 2 objects
+-- [6]Combine wMSTPPortExternalAdminPathCost & swMSTPPortExternalOperPathCost
+-- [7]Change swMSTPMstPortID name to swMSTPMstPortInsID
+-- [8]Add swMSTPMstPortDesignatedBridge in swMSTPMstPortTable
+-- [9]Change swMSTPStpForwardDelay  SYNTAX  from  INTEGER (4..30) to (400..3000)
+-- [10]Change swMSTPName SYNTAX to OCTET STRING  
+-- [11]Add swMSTPStpHelloTime in swMSTPGblMgmt
+-- *****************************************************************************
+-- Draft Ver 0.1 2004/1/16 
+-- *****************************************************************************
+
+
+MSTP-MIB DEFINITIONS ::= BEGIN
+	
+	
+	IMPORTS
+	          
+	          MODULE-IDENTITY, OBJECT-TYPE, 
+    		  Unsigned32, TimeTicks
+        			FROM SNMPv2-SMI
+			  Counter FROM RFC1155-SMI	        			
+	          RowStatus,DisplayString,TruthValue   FROM SNMPv2-TC
+	          MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+	                FROM SNMPv2-CONF
+		      	                  
+	          dlink-common-mgmt	
+	          		FROM DLINK-ID-REC-MIB;
+	
+	
+	
+	swMSTPMIB MODULE-IDENTITY
+	    LAST-UPDATED "0805120000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The MIB module for managing MSTP."
+        ::= { dlink-common-mgmt 15 }
+        
+    BridgeId ::= OCTET STRING (SIZE (8))
+     
+
+    swMSTPGblMgmt		OBJECT IDENTIFIER ::= { swMSTPMIB 1 }
+	swMSTPCtrl			OBJECT IDENTIFIER ::= { swMSTPMIB 2 }
+
+-- -----------------------------------------------------------------------------
+--	swMSTPGblCtrl
+-- -----------------------------------------------------------------------------
+	swMSTPStpAdminState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the spanning tree state of the bridge."
+        ::= { swMSTPGblMgmt 1 }	
+	
+	swMSTPStpVersion OBJECT-TYPE
+	    SYNTAX      INTEGER {
+	                    stp(0),
+	                    rstp(1),
+	                    mstp(2)
+	                }
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+	        "The version of Spanning Tree Protocol the bridge is
+	         currently running."
+	    ::= { swMSTPGblMgmt 2 }
+	
+	swMSTPStpMaxAge OBJECT-TYPE
+	    SYNTAX      INTEGER (600..4000)
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+    		"The value that all bridges use for MaxAge when
+             this bridge is acting as the root.  Note that
+             the range for this parameter is related to 
+             the value of StpForwardDelay and PortAdminHelloTime.
+             MaxAge <= 2(ForwardDelay - 1);MaxAge >= 2(HelloTime + 1) 
+             The granularity of this timer is specified by 
+             802.1D-1990 to be 1 second. An agent may return a 
+             badValue error if a set is attempted to a value 
+             that is not a whole number of seconds."
+	    ::= { swMSTPGblMgmt 3 }
+	    
+	swMSTPStpHelloTime OBJECT-TYPE
+        SYNTAX 		INTEGER (100..1000)
+        MAX-ACCESS  read-write
+        STATUS 		current
+        DESCRIPTION
+                "The value is used for HelloTime when
+                this bridge is acting in RSTP or STP mode.
+                You can only read/write this value in RSTP or STP mode."
+        ::= { swMSTPGblMgmt 4 }    
+        
+	swMSTPStpForwardDelay OBJECT-TYPE
+	    SYNTAX      INTEGER (400..3000)
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+			"This value controls how long a port changes its
+			 spanning state from blocking to learning state 
+			 and from learning to forwarding state.  
+			 Note that the range for this parameter is related 
+			 to MaxAge"
+	    ::= { swMSTPGblMgmt 5 }
+	
+	swMSTPStpMaxHops OBJECT-TYPE
+	    SYNTAX      INTEGER (6..40)
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+	    	"This value applies to all spanning trees within
+	         an MST Region for which the bridge is the Regional
+	        Root."
+	    ::= { swMSTPGblMgmt 6 }
+	    
+	swMSTPStpTxHoldCount OBJECT-TYPE
+	    SYNTAX      INTEGER (1..10)
+	    MAX-ACCESS  read-write
+	    STATUS      current 
+	    DESCRIPTION
+	        "The value used by the Port Transmit state machine to limit
+	         the maximum transmission rate."
+	    ::= { swMSTPGblMgmt 7 }    
+
+	swMSTPStpForwardBPDU OBJECT-TYPE
+	    SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The enabled/disabled status is used to forward BPDU to 
+             a non STP port."
+        ::= { swMSTPGblMgmt 8 }
+        
+    swMSTPStpLBD OBJECT-TYPE
+      	SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The enabled/disabled status is used in Loop-back prevention."
+        ::= { swMSTPGblMgmt 9 }        
+        
+      swMSTPStpLBDRecoverTime OBJECT-TYPE
+      	SYNTAX  INTEGER (0..1000000)
+          MAX-ACCESS  read-write
+          STATUS  current
+          DESCRIPTION
+            "The period of time (in seconds) in which the STP module keeps checking the BPDU loop status.
+             The valid range is 60 to 1000000. If this value is set from 1 to 59, you will get a 'bad value' return code.
+             The value of zero is a special value that means to disable the auto-recovery
+             mechanism for the LBD feature."
+        ::= { swMSTPGblMgmt 10 }                
+    
+-- -----------------------------------------------------------------------------
+--	swMSTPCtrl
+-- -----------------------------------------------------------------------------
+	swMSTPName	OBJECT-TYPE
+		SYNTAX  OCTET STRING  (SIZE (1..32))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION	
+			"The object indicates the name of the MST Configuration Identification."
+		::= { swMSTPCtrl 1 }
+		
+	swMSTPRevisionLevel OBJECT-TYPE
+	    SYNTAX      INTEGER (0..65535)
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+	        "The object indicates the revision level of the MST 
+	         Configuration Identification."
+	    ::= { swMSTPCtrl 2 }	
+	    
+	swMSTPInstanceCtrlTable OBJECT-TYPE
+		SYNTAX      SEQUENCE OF SwMSTPInstanceCtrlEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+	  	DESCRIPTION
+	    	"A table that contains MSTP instance information."
+		::= { swMSTPCtrl 3 }
+
+	swMSTPInstanceCtrlEntry OBJECT-TYPE
+		SYNTAX      SwMSTPInstanceCtrlEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+		DESCRIPTION
+			"A list of MSTP instance information."
+		INDEX    {swMSTPInstId}
+		::= { swMSTPInstanceCtrlTable 1 }
+
+	SwMSTPInstanceCtrlEntry ::= SEQUENCE {
+		swMSTPInstId
+	  		INTEGER,
+	  	swMSTPInstVlanRangeList1to64
+	    	OCTET STRING,
+	    swMSTPInstVlanRangeList65to128
+	    	OCTET STRING,
+	    swMSTPInstVlanRangeList129to192
+	    	OCTET STRING,
+	    swMSTPInstVlanRangeList193to256
+	    	OCTET STRING,
+	    swMSTPInstVlanRangeList257to320
+	    	OCTET STRING,
+	    swMSTPInstVlanRangeList321to384
+	    	OCTET STRING,
+	    swMSTPInstVlanRangeList385to448
+	    	OCTET STRING,	
+	    swMSTPInstVlanRangeList449to512
+	    	OCTET STRING,	  	  				
+	    swMSTPInstType
+	    	INTEGER,
+	    swMSTPInstStatus
+	    	INTEGER,		
+	    swMSTPInstPriority
+	    	INTEGER,
+	    swMSTPInstDesignatedRootBridge
+	    	BridgeId,
+	    swMSTPInstExternalRootCost
+	    	INTEGER,
+	    swMSTPInstRegionalRootBridge
+	    	BridgeId,
+	    swMSTPInstInternalRootCost
+	    	INTEGER,		
+	    swMSTPInstDesignatedBridge
+	    	BridgeId,
+	    swMSTPInstRootPort
+	    	INTEGER,
+	    swMSTPInstMaxAge
+	    	INTEGER,
+	    swMSTPInstForwardDelay
+	    	INTEGER,
+	    swMSTPInstLastTopologyChange
+	    	TimeTicks,
+	    swMSTPInstTopChangesCount
+	    	Counter,
+	    swMSTPInstRemainHops
+	        INTEGER,
+	    swMSTPInstRowStatus
+	    	RowStatus			    
+		}
+
+	swMSTPInstId OBJECT-TYPE
+		SYNTAX      INTEGER (0..15)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the specific instance.
+			 An MSTP Instance ID (MSTID) of zero is used to identify the CIST."
+        ::= { swMSTPInstanceCtrlEntry 1 }
+       
+    swMSTPInstVlanRangeList1to64 OBJECT-TYPE
+		SYNTAX     OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the VLAN range (1-512)
+			 that belongs to the instance."
+        ::= { swMSTPInstanceCtrlEntry 2 }  
+        
+    swMSTPInstVlanRangeList65to128 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the VLAN range (513-1024)
+			 that belongs to the instance."
+        ::= { swMSTPInstanceCtrlEntry 3 }  
+        
+    swMSTPInstVlanRangeList129to192 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the VLAN range (1025-1536)
+			 that belongs to the instance."
+        ::= { swMSTPInstanceCtrlEntry 4 }  
+        
+    swMSTPInstVlanRangeList193to256 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the VLAN range(1537-2048)
+			 that belongs to the instance."
+        ::= { swMSTPInstanceCtrlEntry 5 }     
+        
+    swMSTPInstVlanRangeList257to320 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the VLAN range (2049-2560)
+			 that belongs to the instance."
+        ::= { swMSTPInstanceCtrlEntry 6 }     
+        
+    swMSTPInstVlanRangeList321to384 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the VLAN range (2561-3072)
+			 that belongs to the instance."
+        ::= { swMSTPInstanceCtrlEntry 7 }  
+        
+    swMSTPInstVlanRangeList385to448 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the VLAN range (3073-3584)
+			 that belongs to the instance."
+        ::= { swMSTPInstanceCtrlEntry 8 } 
+        
+    swMSTPInstVlanRangeList449to512 OBJECT-TYPE
+		SYNTAX      OCTET STRING (SIZE (64))
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the VLAN range (3585-4096)
+			 that belongs to the instance."
+        ::= { swMSTPInstanceCtrlEntry 9 }                             
+    
+    swMSTPInstType OBJECT-TYPE
+	    SYNTAX  INTEGER {
+				cist(0),
+				msti(1)
+				}
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the type of instance."
+        ::= { swMSTPInstanceCtrlEntry 10 }
+    
+    swMSTPInstStatus OBJECT-TYPE
+	   	SYNTAX  INTEGER {
+				enabled(1),
+				disabled(2)
+                }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The instance state that could be enabled/disabled."
+        ::= { swMSTPInstanceCtrlEntry 11 }    
+     
+    swMSTPInstPriority OBJECT-TYPE
+	   	SYNTAX      INTEGER (0..61440)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "The priority of the instance. The priority must be divisible by 4096 "
+        ::= { swMSTPInstanceCtrlEntry 12 }    
+    
+    swMSTPInstDesignatedRootBridge	OBJECT-TYPE
+		SYNTAX  BridgeId
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		    "The bridge identifier of the CIST. For MST instance, 
+		    this object is unused."
+		::= { swMSTPInstanceCtrlEntry 13 }	
+			
+	swMSTPInstExternalRootCost OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+			"The path cost between MST Regions from the transmitting bridge to
+              the CIST Root. For MST instance this object is unused."
+		::= { swMSTPInstanceCtrlEntry 14 }
+	
+	swMSTPInstRegionalRootBridge	OBJECT-TYPE
+		SYNTAX  BridgeId
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "For CIST, Regional Root Identifier is the Bridge Identifier 
+		      of the single bridge in a Region whose CIST Root Port is a 
+		      Boundary Port, or the Bridge Identifier of the CIST Root 
+		      if that is within the Region;
+              For MSTI,MSTI Regional Root Identifier is the Bridge 
+              Identifier of the MSTI Regional Root for this particular
+              MSTI in this MST Region;
+		      The Regional Root Bridge of this instance."
+		::= { swMSTPInstanceCtrlEntry 15 }	
+			
+	swMSTPInstInternalRootCost OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+			"For CIST, the internal path cost is the path cost to 
+			the CIST Regional Root;
+            For MSTI, the internal path cost is the path cost to 
+            the MSTI Regional Root for this particular MSTI in
+            this MST Region"
+		::= { swMSTPInstanceCtrlEntry 16 }	
+	
+	swMSTPInstDesignatedBridge	OBJECT-TYPE
+		SYNTAX  BridgeId
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+			"The Bridge Identifier for the transmitting bridge for 
+			this CIST or MSTI"
+		::= { swMSTPInstanceCtrlEntry 17 }	
+		
+	swMSTPInstRootPort OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+			"The port number of the port which offers the
+             lowest cost path from this bridge to the CIST or MSTI root
+             bridge."
+		::= { swMSTPInstanceCtrlEntry 18 }	
+
+	swMSTPInstMaxAge OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+			"The maximum age of Spanning Tree Protocol
+            information learned from the network on any port
+            before it is discarded, in units of hundredths of
+            a second.  This is the actual value that this
+            bridge is currently using."
+		::= { swMSTPInstanceCtrlEntry 19 }	
+	
+	swMSTPInstForwardDelay OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This value, controls how fast a port changes its
+		      spanning state when moving towards the forwarding
+		      state.  The value determines how long the port
+		      stays in each of the listening and learning
+		      states, which precede the Forwarding state.  This
+		      value is also used, when a topology change has
+		      been detected and is underway, to age all dynamic
+		      entries in the Forwarding Database."
+		::= { swMSTPInstanceCtrlEntry 20 }	
+		
+		
+	swMSTPInstLastTopologyChange OBJECT-TYPE
+		SYNTAX  TimeTicks
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "The time (in hundredths of a second) since the
+               last time a topology change was detected by the
+               bridge entity."		
+		::= { swMSTPInstanceCtrlEntry 21 }
+		
+	swMSTPInstTopChangesCount OBJECT-TYPE
+		SYNTAX  Counter
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "The total number of topology changes detected by
+		      this bridge since the management entity was last
+		      reset or initialized."		
+		::= { swMSTPInstanceCtrlEntry 22}
+    
+    swMSTPInstRemainHops OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "The root bridge in the instance for MSTI always sends a BPDU
+		       with a maximum hop count. When a switch receives this BPDU,
+		       it decrements the received maximum hop count by one and
+		       propagates this value as the remaining hop count in the
+		       BPDUs it generates."
+		::= { swMSTPInstanceCtrlEntry 23}
+        
+    swMSTPInstRowStatus OBJECT-TYPE
+	    SYNTAX      RowStatus
+	    MAX-ACCESS  read-create
+	    STATUS      current
+	    DESCRIPTION
+	        "This object indicates the RowStatus of this entry."
+	    ::= { swMSTPInstanceCtrlEntry 24 }  
+		
+-- -----------------------------------------------------------------------------
+-- STP Port Table
+-- -----------------------------------------------------------------------------
+    swMSTPPortTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwMSTPPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains port-specific information
+		      for the Spanning Tree Protocol."
+		::= { swMSTPCtrl 4 }
+
+	swMSTPPortEntry OBJECT-TYPE
+		SYNTAX  SwMSTPPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information maintained by every port
+		      about the Spanning Tree Protocol state for that
+		      port."
+		INDEX   { swMSTPPort }
+		::= { swMSTPPortTable 1 }
+
+	SwMSTPPortEntry ::=	SEQUENCE {
+		swMSTPPort
+		  INTEGER,
+		swMSTPPortOperHelloTime
+		  INTEGER,
+		swMSTPPortAdminHelloTime
+		  INTEGER,  
+		swMSTPSTPPortEnable
+		  INTEGER,
+		swMSTPPortExternalPathCost
+		  INTEGER,
+		swMSTPPortMigration
+		  TruthValue,
+		swMSTPPortAdminEdgePort
+		  INTEGER,
+		swMSTPPortOperEdgePort  
+		  INTEGER,	
+		swMSTPPortAdminP2P
+		  INTEGER,
+		swMSTPPortOperP2P
+		  INTEGER,
+		swMSTPPortLBD
+		  INTEGER, 		    
+		swMSTPPortBPDUFiltering
+		  INTEGER, 		    
+		swMSTPPortRestrictedRole
+		  TruthValue,
+		swMSTPPortRestrictedTCN
+		  TruthValue		  
+		}
+
+	swMSTPPort OBJECT-TYPE
+		SYNTAX  INTEGER (1..65535)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "The port number of the port for this entry."
+		::= { swMSTPPortEntry 1 }		
+		
+	swMSTPPortOperHelloTime OBJECT-TYPE
+		SYNTAX  INTEGER (100..1000)--(1..10)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "Is the acture value of the hello time."
+		::= { swMSTPPortEntry 2 }
+	
+	swMSTPPortAdminHelloTime OBJECT-TYPE
+		SYNTAX  INTEGER (100..1000)--(1..10)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "The amount of time between the transmission of
+               BPDU by this node on any port when it is the 
+               root of the spanning tree or trying to become 
+               so, in units of hundredths of a second."
+		::= { swMSTPPortEntry 3 }		
+		
+	swMSTPSTPPortEnable OBJECT-TYPE
+		SYNTAX  INTEGER {
+			enabled(1),
+			disabled(2)
+			}
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+			"The enabled/disabled status of the port."
+		::= { swMSTPPortEntry 4 }
+              
+	swMSTPPortExternalPathCost OBJECT-TYPE
+		SYNTAX  INTEGER (0..200000000)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "The contribution of this port to the path cost of
+              paths towards the CIST root which include
+              this port."
+		::= { swMSTPPortEntry 5 }	
+     
+ 	swMSTPPortMigration OBJECT-TYPE
+	    SYNTAX	TruthValue
+	    MAX-ACCESS  read-write
+	    STATUS	current
+	    DESCRIPTION
+	        "When operating in MSTP mode or RSTP mode, writing TRUE(1)
+ 			 to this object forces this port to transmit MST BPDUs.
+ 			 Any other operation on this object has no effect and
+ 			 it always returns FALSE(2) when read."
+	    ::= { swMSTPPortEntry 6 }
+	    
+	swMSTPPortAdminEdgePort OBJECT-TYPE
+	    SYNTAX	INTEGER {
+        			true(1),
+        			false(2),
+        			auto(3)
+			}
+	    MAX-ACCESS  read-write
+	    STATUS	current
+	    DESCRIPTION
+	        "The value of the Edge Port parameter.  A
+ 			 value of TRUE indicates that this port should be
+ 			 assumed as an edge-port and a value of FALSE indicates
+ 			 that this port should be assumed as a non-edge-port"
+	    ::= { swMSTPPortEntry 7 }
+	
+	swMSTPPortOperEdgePort OBJECT-TYPE
+	    SYNTAX	INTEGER {
+        			true(1),
+        			false(2),
+        			auto(3)
+			}
+	    MAX-ACCESS  read-only
+	    STATUS	current
+	    DESCRIPTION
+	        "It is the acutual value of the edge port status."
+	    ::= { swMSTPPortEntry 8 }    
+	    
+	swMSTPPortAdminP2P OBJECT-TYPE
+	    SYNTAX	INTEGER {
+			true(0),
+			false(1),
+			auto(2)
+			}
+	    MAX-ACCESS  read-write
+	    STATUS	current
+	    DESCRIPTION
+	        "The point-to-point status of the LAN segment
+ 			 attached to this port."
+	    ::= { swMSTPPortEntry 9 }      
+	
+	swMSTPPortOperP2P OBJECT-TYPE
+	    SYNTAX	INTEGER {
+			true(0),
+			false(1),
+			auto(2)
+			}
+	    MAX-ACCESS  read-only
+	    STATUS	current
+	    DESCRIPTION
+	        "It is the actual value of the P2P status."
+	    ::= { swMSTPPortEntry 10 }              
+
+	swMSTPPortLBD OBJECT-TYPE
+      	SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The enabled/disabled status is used for Loop-back prevention attached
+            to this port."
+        ::= { swMSTPPortEntry 11 }
+        
+        swMSTPPortBPDUFiltering OBJECT-TYPE
+      	SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The enabled/disabled status is used to BPDU Filtering attached 
+            to this port."
+        ::= { swMSTPPortEntry 12 }      
+          
+	swMSTPPortRestrictedRole OBJECT-TYPE
+      	SYNTAX  TruthValue
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "If TRUE, causes the port not to be selected as Root Port
+             for the CIST or any MSTI, even it has the best spanning
+             tree priority vector."
+        ::= { swMSTPPortEntry 13 }
+
+	swMSTPPortRestrictedTCN OBJECT-TYPE
+      	SYNTAX  TruthValue
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "If TRUE, causes the port not to propagate received topology
+             change notifications and topology changes to other Ports."
+        ::= { swMSTPPortEntry 14 }
+	
+-- -----------------------------------------------------------------------------
+-- STP MST Port Table	
+-- -----------------------------------------------------------------------------
+	swMSTPMstPortTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwMSTPMstPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains port-specific information
+		      for the MST Protocol."
+		::= { swMSTPCtrl 5 }
+
+	swMSTPMstPortEntry OBJECT-TYPE
+		SYNTAX  SwMSTPMstPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information maintained by every port
+		      about the MST state for that port."
+		INDEX   { swMSTPMstPort,swMSTPMstPortInsID }
+		::= { swMSTPMstPortTable 1 }
+
+	SwMSTPMstPortEntry ::=	SEQUENCE {
+		swMSTPMstPort
+		  INTEGER,
+		swMSTPMstPortInsID
+		  INTEGER,
+		swMSTPMstPortDesignatedBridge
+		  BridgeId, 
+		swMSTPMstPortInternalPathCost
+		  INTEGER,
+		swMSTPMstPortPriority
+		  INTEGER,
+		swMSTPMstPortStatus  
+		  INTEGER,
+		swMSTPMstPortRole
+		  INTEGER	  	  
+		}
+
+	swMSTPMstPort OBJECT-TYPE
+		SYNTAX  INTEGER (1..65535)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "The port number of the port for this entry."
+		::= { swMSTPMstPortEntry 1 }
+		
+	swMSTPMstPortInsID OBJECT-TYPE
+		SYNTAX  INTEGER (0..15)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the MSTP Instance ID (MSTID)."
+		::= { swMSTPMstPortEntry 2 }	
+	
+	swMSTPMstPortDesignatedBridge OBJECT-TYPE
+		SYNTAX  BridgeId
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+			"The Bridge Identifier of the bridge which this  
+       		 port considers to be the Designated Bridge for
+        	 this port's segment on the corresponding Spanning
+			 Tree instance."
+		::= { swMSTPMstPortEntry 3 }	
+			
+	swMSTPMstPortInternalPathCost OBJECT-TYPE
+		SYNTAX  INTEGER (0..200000000)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This is the value of this port to the 
+		        path cost of paths towards the MSTI root."
+		::= { swMSTPMstPortEntry 4 }		
+
+	swMSTPMstPortPriority OBJECT-TYPE
+		SYNTAX  INTEGER (0..240)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "The value of the priority field which is
+               contained in the first (in network byte order)
+              octet of the (2 octet long) Port ID."
+		::= { swMSTPMstPortEntry 5 }
+		
+	swMSTPMstPortStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               discarding(3),
+               learning(4),
+               forwarding(5),
+               broken(6),
+               no-stp-enabled(7),
+               err-disabled(8)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "When the port Enable state is enabled, the port's current 
+            state as defined by application of the Spanning Tree Protocol.
+            If the PortEnable is disabled, the port status will be
+            no-stp-enabled (7). If the port is in error disabled status,
+            the port status will be err-disable(8)"
+        ::= { swMSTPMstPortEntry 6 }
+        
+    swMSTPMstPortRole OBJECT-TYPE
+        SYNTAX  INTEGER {
+               disable(0),
+               alternate(1),
+               backup(2),
+               root(3),
+               designated(4),
+               master(5),
+               nonstp(6),
+               loopback(7)
+               }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "When the port Enable state is enabled, the port's current 
+            port role as defined by application of the Spanning Tree Protocol.
+            If the Port Enable state is disabled, the port role will be
+            nonstp(5)"
+        ::= { swMSTPMstPortEntry 7 }    		
+     
+END
+

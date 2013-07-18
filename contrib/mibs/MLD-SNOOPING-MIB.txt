@@ -1,0 +1,655 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : MLD SNOOPING Common mib
+-- FILE NAME: MldSnp.mib
+-- DATE     : 2008/02/02
+-- VERSION  : 2.02
+-- PURPOSE  : To construct the MIB structure of MLD snooping
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Revision 2.02, 2008/02/02
+--  [New Object]
+-- 1.add swMldSnoopingGroupTable table,and obsolete swMldSnoopingGroupInfoTable table.
+-- 2.add swMldSnpForwardingTable table.
+-- Notes: Requested by Green Zhu for project DGS3200.
+--
+-- Revision 2.01, 2007/08/22
+--  [New Object]
+-- add object swMldSnoopingVersion.
+-- Notes: Requested by Yan for project DGS3200.
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+MLD-SNOOPING-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress, Unsigned32
+                                        FROM SNMPv2-SMI
+        MacAddress, RowStatus           FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+    	SnmpAdminString					FROM SNMP-FRAMEWORK-MIB
+
+        dlink-common-mgmt				FROM DLINK-ID-REC-MIB;
+
+
+
+    swMldSnpMIB MODULE-IDENTITY
+	    LAST-UPDATED "0802020000Z"
+	    ORGANIZATION "D-Link Crop."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The Structure of MLD snooping management for the
+		    proprietary enterprise."
+        ::= { dlink-common-mgmt 34 }
+
+-- -----------------------------------------------------------------------------
+-- Textual Conventions
+-- -----------------------------------------------------------------------------
+-- This definition may be excluded if IPv6 Supported
+    Ipv6Address ::= TEXTUAL-CONVENTION
+    	DISPLAY-HINT "2x:"
+    	STATUS       current
+    	DESCRIPTION
+    		"This data type is used to model IPv6 addresses.
+    		This is a binary string of 16 octets in network
+    		byte-order."
+    	SYNTAX       OCTET STRING (SIZE (16))
+
+    PortList                ::= OCTET STRING(SIZE (0..127))
+
+    swMldSnpCtrl            OBJECT IDENTIFIER ::= { swMldSnpMIB 1 }
+    swMldSnpInfo            OBJECT IDENTIFIER ::= { swMldSnpMIB 2 }
+    swMldSnpMgmt            OBJECT IDENTIFIER ::= { swMldSnpMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swMldSnpCtrl            OBJECT IDENTIFIER ::= { swMldSnpMIB 1 }
+-- -----------------------------------------------------------------------------
+	swMldSnoopingGlobalState OBJECT-TYPE
+        	SYNTAX  INTEGER {
+               		other(1),
+               		disabled(2),
+               		enabled(3)
+               	}
+        	MAX-ACCESS  read-write
+       		STATUS  current
+        	DESCRIPTION
+            		"This object indicates if the MLD snooping capture function
+            		 is enabled or disabled."
+        	::= { swMldSnpCtrl 1 }
+
+    	swMldSnoopingMcstRTOnly OBJECT-TYPE
+        	SYNTAX  INTEGER {
+               		other(1),
+               		disabled(2),
+               		enabled(3)
+               		}
+        	MAX-ACCESS  read-write
+        	STATUS  current
+        	DESCRIPTION
+            		"Specifies that the switch should forward all multicast traffic to a
+            		multicast-enabled IPv6 router only."
+        	::= { swMldSnpCtrl 2 }
+
+-- -----------------------------------------------------------------------------
+-- swMldSnpMgmt            OBJECT IDENTIFIER ::= { swMldSnpMIB 3 }
+-- -----------------------------------------------------------------------------
+    swMldSnoopingMaxSupportedVlans OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum number of VLANs in the MLD snooping table
+            (swMldSnoopingCtrlTable)."
+        ::= { swMldSnpMgmt 1 }
+
+-- -----------------------------------------------------------------------------
+-- swMldSnoopingCtrlTable            OBJECT IDENTIFIER ::= { swMldSnpMgmt 2 }
+-- -----------------------------------------------------------------------------
+    swMldSnoopingCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMldSnoopingCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The table controls the VLAN's MLD function. Its scale depends
+            on the current VLAN state (swL2VlanInfoStatus). If the VLAN is in 
+            disabled mode, there is only one entry in the table, with 
+            index 1. If the VLAN is in Port-Base or 802.1q mode, the number of 
+            entries can be up to 12, with an index range from 1 to 12."
+        ::= { swMldSnpMgmt 2 }
+
+    swMldSnoopingCtrlEntry OBJECT-TYPE
+        SYNTAX  SwMldSnoopingCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The entry in MLD control table (swMldSnoopingCtrlTable). The entry
+            is effective only when MLD capture switch
+            (swMldSnoopingGlobalState) is enabled."
+        INDEX  { swMldSnoopingCtrlVid }
+        ::= { swMldSnoopingCtrlTable 1 }
+
+    SwMldSnoopingCtrlEntry ::=
+        SEQUENCE {
+            swMldSnoopingCtrlVid
+                INTEGER,
+            swMldSnoopingQueryInterval
+                INTEGER,
+            swMldSnoopingMaxResponseTime
+                INTEGER,
+            swMldSnoopingRobustness
+                INTEGER,
+            swMldSnoopingLastMemberQueryInterval
+                INTEGER,
+            swMldSnoopingHostTimeout
+                INTEGER,
+            swMldSnoopingRouteTimeout
+                INTEGER,
+            swMldSnoopingDoneTimer
+                INTEGER,
+            swMldSnoopingQueryState
+                INTEGER,
+            swMldSnoopingCurrentState
+                INTEGER,
+            swMldSnoopingCtrlState
+                INTEGER,
+            swMldSnoopingFastDoneState
+                INTEGER,
+            swMldSnoopingVersion
+            	INTEGER  
+        }
+
+    swMldSnoopingCtrlVid OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the MLD control entry's VLAN ID. If the VLAN
+            is disabled, the VID is always 0 and cannot be changed by
+            management users. If VLAN is in Port-Base mode, the VID is
+            arranged from 1 to 12, fixed form. If VLAN is in 802.1q mode,
+            the VID setting can vary from 1 to 4094 by the management user, and
+            the VID in each entry must be unique in the MLD Control Table."
+        ::= { swMldSnoopingCtrlEntry 1 }
+
+    swMldSnoopingQueryInterval OBJECT-TYPE
+        SYNTAX INTEGER (1..65535)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "The frequency at which MLD Host-Query packets are
+             transmitted on this switch."
+        DEFVAL      { 125 }
+        ::= { swMldSnoopingCtrlEntry 2 }
+
+    swMldSnoopingMaxResponseTime OBJECT-TYPE
+        SYNTAX INTEGER (1..25)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "The maximum query response time on this switch."
+        DEFVAL      { 10 }
+        ::= { swMldSnoopingCtrlEntry 3 }
+
+    swMldSnoopingRobustness OBJECT-TYPE
+        SYNTAX INTEGER (1..255)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "The Robustness Variable allows tuning for the expected
+             packet loss on a subnet. If a subnet is expected to have
+             a high loss, the Robustness Variable may be increased. MLD is
+             robust to (Robustness Variable-1) packet losses."
+        DEFVAL      { 2 }
+        ::= { swMldSnoopingCtrlEntry 4 }
+
+    swMldSnoopingLastMemberQueryInterval OBJECT-TYPE
+        SYNTAX INTEGER (1..25)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "The Last Member Query Interval is the Max Response Time
+            inserted into Group-Specific Queries sent in response to
+            Leave Group messages and is also the amount of time between
+            Group-Specific Query messages."
+        ::= { swMldSnoopingCtrlEntry 5 }
+
+    swMldSnoopingHostTimeout OBJECT-TYPE
+        SYNTAX  INTEGER (1..16711450)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The timer value for sending a MLD query packet when none were
+            sent by the host in the LAN. The timer works on a per-VLAN basis.
+            Our device will be activated to send a query message if the
+            timer has expired."
+        DEFVAL  { 260 }
+        ::= { swMldSnoopingCtrlEntry 6 }
+
+    swMldSnoopingRouteTimeout OBJECT-TYPE
+        SYNTAX  INTEGER (1..16711450)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The Router Timeout is how long a host must wait after hearing
+            a Query before it sends any MLD messages."
+        DEFVAL  { 260 }
+        ::= { swMldSnoopingCtrlEntry 7 }
+
+    swMldSnoopingDoneTimer OBJECT-TYPE
+        SYNTAX  INTEGER (1..16711450)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "When a querier receives a Leave Group message for a group that
+            has group members on the reception interface, it sends
+            Group-Specific Queries swMldSnoopingDoneTimer to the group
+            that is left."
+        DEFVAL  { 2 }
+        ::= { swMldSnoopingCtrlEntry 8 }
+
+    swMldSnoopingQueryState OBJECT-TYPE
+        SYNTAX INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "This object decides if the MLD query is enabled or disabled."
+        ::= { swMldSnoopingCtrlEntry 9 }
+
+    swMldSnoopingCurrentState OBJECT-TYPE
+        SYNTAX INTEGER {
+               other(1),
+               querier(2),
+               non-querier(3)
+               }
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the current MLD query state."
+        ::= { swMldSnoopingCtrlEntry 10 }
+
+    swMldSnoopingCtrlState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               disable(2),
+               enable(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry.
+
+            other(1) - this entry is currently in use but the conditions under
+                which it will remain so are different for each of the following
+                values.
+            disable(2) - MLD function is disabled for this entry.
+            enable(3) -  MLD function is enabled for this entry."
+        ::= { swMldSnoopingCtrlEntry 11 }
+
+    swMldSnoopingFastDoneState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               disable(2),
+               enable(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the fast_leave status of this entry.
+
+            other(1) - this entry is currently in use but the conditions under
+                which it will remain so are different for each of the following
+                values.
+            disable(2) - MLD fast-done function is disabled for this entry.
+            enable(3) -  MLD fast-done function is enabled for this entry."
+        ::= { swMldSnoopingCtrlEntry 12 }
+
+    swMldSnoopingVersion OBJECT-TYPE
+        SYNTAX  INTEGER {
+               version-1(1),
+               version-2(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the MLD version of this entry.
+             If the MLD version is configured with a lower version, the higher 
+             version's MLD Report/Leave messages will be ignored.
+            "
+        ::= { swMldSnoopingCtrlEntry 13 }
+
+-- -----------------------------------------------------------------------------
+-- swMldSnoopingGroupInfoTable          OBJECT IDENTIFIER ::= { swMldSnpMgmt 3 }
+-- -----------------------------------------------------------------------------
+    swMldSnoopingGroupInfoTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMldSnoopingGroupInfoEntry
+        MAX-ACCESS  not-accessible
+        STATUS  obsolete
+        DESCRIPTION
+            "The table contains the current MLD snooping information captured by
+            this device, provided that swMldSnoopingGlobalState and
+            swMldSnoopingCtrlState of associated VLAN entries are all enabled. Note
+            that the priority of MLD table entries is lower than the Filtering
+            Table, i.e. if there is a table hash collision between the
+            entries of the MLD Table and the Filtering Table inside the switch H/W
+            address table, then the Filtering Table entry overwrites the
+            colliding entry of the MLD snooping Table. "
+        ::= { swMldSnpMgmt 3 }
+
+    swMldSnoopingGroupInfoEntry OBJECT-TYPE
+        SYNTAX  SwMldSnoopingGroupInfoEntry
+        MAX-ACCESS  not-accessible
+        STATUS  obsolete
+        DESCRIPTION
+            "Information about current MLD information which has been captured 
+	    by this device, provided that swMldSnoopingGlobalState and
+            swMldSnoopingCtrlState of the associated VLAN entries are all enabled."
+        INDEX  { swMldSnoopingGroupInfoVid , swMldSnoopingGroupInfoIpAddr }
+        ::= { swMldSnoopingGroupInfoTable 1 }
+
+    SwMldSnoopingGroupInfoEntry ::=
+        SEQUENCE {
+            swMldSnoopingGroupInfoVid
+                INTEGER,
+            swMldSnoopingGroupInfoIpAddr
+                Ipv6Address,
+            swMldSnoopingGroupInfoMacAddr
+                MacAddress,
+            swMldSnoopingGroupInfoPortMap
+                PortList,
+            swMldSnoopingGroupInfoReportCount
+                INTEGER
+        }
+
+    swMldSnoopingGroupInfoVid OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  obsolete
+        DESCRIPTION
+            "This object indicates the VID of an individual MLD table entry.
+            It shows the VID of MLD report information that has been captured 
+	    on the network."
+        ::= { swMldSnoopingGroupInfoEntry 1 }
+
+    swMldSnoopingGroupInfoIpAddr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-only
+        STATUS  obsolete
+        DESCRIPTION
+            "This object identifies the group IP address which is captured from
+            the MLD packet, on a per-VLAN basis."
+        ::= { swMldSnoopingGroupInfoEntry 2 }
+
+    swMldSnoopingGroupInfoMacAddr OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-only
+        STATUS  obsolete
+        DESCRIPTION
+            "This object identifies the MAC addresses that correspond
+            to swMldSnoopingGroupInfoIpAddr, on a per-VLAN basis."
+        ::= { swMldSnoopingGroupInfoEntry 3 }
+
+    swMldSnoopingGroupInfoPortMap OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  obsolete
+        DESCRIPTION
+            "This object indicates which ports belong to the same
+            multicast group, on a per-VLAN basis. Each multicast group has an
+            octet string to indicate the port map. The most significant
+            bit represents the lowest numbered port, and the least
+            significant bit represents the highest numbered port. Thus, each
+            port of the switch is represented by a single bit within the
+            value of this object. If that bit has a value of '1' then that
+            port is included in the set of ports; the port is not included
+            if its bit has a value of '0'(Note that the setting of the bit
+            corresponding to the port from which a frame is received is
+            irrelevant). The 4 octets represent one unit port according to
+            its logical port. If the unit has less than 32 ports, other 
+            ports will be set to 0."
+        ::= { swMldSnoopingGroupInfoEntry 4 }
+
+    swMldSnoopingGroupInfoReportCount OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  obsolete
+        DESCRIPTION
+            "This object indicates how many report packets were received by our
+            device corresponding with the entry when the MLD function is enabled,
+            on a per-VLAN basis."
+        ::= { swMldSnoopingGroupInfoEntry 5 }
+
+-- -----------------------------------------------------------------------------
+-- swMldSnpRouterPortsTable            OBJECT IDENTIFIER ::= { swMldSnpMgmt 4 }
+-- -----------------------------------------------------------------------------
+    swMldSnpRouterPortsTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMldSnpRouterPortsEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table controls the VLAN's MLD router ports function."
+        ::= { swMldSnpMgmt 4 }
+
+    swMldSnpRouterPortsEntry OBJECT-TYPE
+        SYNTAX  SwMldSnpRouterPortsEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This entry shows the MLD router ports table (swMldSnoopingCtrlTable). "
+        INDEX  { swMldSnpRouterPortsVid }
+        ::= { swMldSnpRouterPortsTable 1 }
+
+    SwMldSnpRouterPortsEntry ::=
+        SEQUENCE {
+            swMldSnpRouterPortsVid
+                INTEGER,
+            swMldSnpRouterStaticPortList
+                PortList,
+            swMldSnpRouterDynamicPortList
+                PortList,
+            swMldSnpRouterForbiddenPortList
+                PortList
+        }
+
+    swMldSnpRouterPortsVid OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the MLD router ports entry VLAN ID. If a VLAN
+            is disabled, the VID is always 0 and cannot be changed by
+            management users. If a VLAN is in Port-Base mode, the VID is
+            arranged from 1 to 12, fixed form. If a VLAN is in 802.1q mode,
+            the VID setting can vary from 1 to 4094 by a management user, and
+            the VID in each entry must be unique in the MLD ports Table."
+        ::= { swMldSnpRouterPortsEntry 1 }
+
+    swMldSnpRouterStaticPortList OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Displays router ports that have been statically configured."
+        ::= { swMldSnpRouterPortsEntry 2 }
+
+    swMldSnpRouterDynamicPortList OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Displays router ports that have been dynamically configured."
+        ::= { swMldSnpRouterPortsEntry 3 }
+
+    swMldSnpRouterForbiddenPortList OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Displays router ports that have been configured to be forbidden."
+        ::= { swMldSnpRouterPortsEntry 4 }
+        
+-- -----------------------------------------------------------------------------
+-- swMldSnoopingGroupInfoTable          OBJECT IDENTIFIER ::= { swMldSnpMgmt 5 }
+-- -----------------------------------------------------------------------------
+    swMldSnoopingGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMldSnoopingGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The table contains the current MLD snooping information captured by
+            the device, provided that the swMldSnoopingGlobalState and
+            swMldSnoopingCtrlState of the associated VLAN entries are all enabled. Note
+            that the priority of the MLD table entries is lower than the Filtering
+            Table, i.e. if there is a table hash collision between the
+            entries of the MLD Table and the Filtering Table inside the switch H/W
+            address table, then the Filtering Table entry overwrites the
+            colliding entry of the MLD snooping Table. "
+        ::= { swMldSnpMgmt 5 }
+
+    swMldSnoopingGroupEntry OBJECT-TYPE
+        SYNTAX  SwMldSnoopingGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Information about the current MLD information which has been captured by
+            the device, provided that swMldSnoopingGlobalState and
+            swMldSnoopingCtrlState of the associated VLAN entries are all enabled."
+        INDEX  { swMldSnoopingGroupVid , swMldSnoopingGroupGroupAddr , swMldSnoopingGroupSourceAddr}
+        ::= { swMldSnoopingGroupTable 1 }
+
+    SwMldSnoopingGroupEntry ::=
+        SEQUENCE {
+            swMldSnoopingGroupVid
+                INTEGER,
+            swMldSnoopingGroupGroupAddr
+                Ipv6Address,
+            swMldSnoopingGroupSourceAddr
+                Ipv6Address,
+            swMldSnoopingGroupIncludePortMap
+                PortList,
+            swMldSnoopingGroupExcludePortMap
+                PortList
+        }
+
+    swMldSnoopingGroupVid OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the VID of the individual MLD table entry.
+            It shows the VID of the MLD report information captured on the
+            network."
+        ::= { swMldSnoopingGroupEntry 1 }
+
+    swMldSnoopingGroupGroupAddr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object identifies the group IP address which has been captured from
+            the MLD packet, on a per-VLAN basis."
+        ::= { swMldSnoopingGroupEntry 2 }
+
+    swMldSnoopingGroupSourceAddr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object identifies the source addresses which correspond
+            to swMldSnoopingGroupInfoGroupAddr, on a per-VLAN basis."
+        ::= { swMldSnoopingGroupEntry 3 }
+
+    swMldSnoopingGroupIncludePortMap OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the port list under INCLUDE mode."
+        ::= { swMldSnoopingGroupEntry 4 }
+
+    swMldSnoopingGroupExcludePortMap OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the port list under EXCLUDE mode."
+        ::= { swMldSnoopingGroupEntry 5 }
+
+-- -----------------------------------------------------------------------------
+-- swMldSnpForwardingTable            OBJECT IDENTIFIER ::= { swMldSnpMgmt 6 }
+-- -----------------------------------------------------------------------------
+    swMldSnpForwardingTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMldSnpForwardingEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the MLD Snooping forwarding information."
+        ::= { swMldSnpMgmt 6 }
+
+    swMldSnpForwardingEntry OBJECT-TYPE
+        SYNTAX  SwMldSnpForwardingEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about MLD Snooping forwarding."
+        INDEX { swMldSnpVid,swMldSnpSourceIpAddr,swMldSnpMutiGroupIpAddr}
+        ::= { swMldSnpForwardingTable 1 }
+
+    SwMldSnpForwardingEntry ::=
+        SEQUENCE {
+            swMldSnpVid
+          	  INTEGER,
+            swMldSnpSourceIpAddr
+                Ipv6Address,
+	    swMldSnpMutiGroupIpAddr
+	    	Ipv6Address,
+            swMldSnpForwardingListenPort
+                PortList
+        }
+   swMldSnpVid OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the MLD Forwarding entry's VLAN ID."
+        ::= { swMldSnpForwardingEntry 1 }
+
+    swMldSnpSourceIpAddr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object identifies the forwarding IP address, which is captured from
+              the MLD packet."
+        ::= { swMldSnpForwardingEntry 2 }
+
+    swMldSnpMutiGroupIpAddr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object identifies the Multicast Group IP address, which is captured from
+	     MLD packet."
+        ::= { swMldSnpForwardingEntry 3 }
+
+    swMldSnpForwardingListenPort OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates the MLD Snooping forwarding listen port."
+        ::= { swMldSnpForwardingEntry 4 }
+END

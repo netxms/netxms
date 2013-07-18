@@ -1,0 +1,1502 @@
+-- D-Link Security Common MIB Ver 1.1                2002/02/18
+--
+-- Radius, Accounting, Authenticate
+-- Remove swRadiusAuthClient(swRadiusAuthInfo) mib because RFC2618 provid already 
+-- Remove swRadiusAcctServer(swRadiusAccountingInfo) mib because RFC2620 provid already
+-- added swMacAuthBaseStatsInfo
+-- modified authProtocol    2003/11/10
+-- modified swRadiusServerTable  2004/11/5 
+-- add swRadiusForceDownPortNumber, swRadiusForceDownMacAddr    2007/11/27
+
+AUTH-MIB DEFINITIONS ::= BEGIN
+    IMPORTS        
+        MODULE-IDENTITY, OBJECT-TYPE,	
+        Integer32, Unsigned32,Counter32,
+         Counter64, TimeTicks
+        										FROM SNMPv2-SMI
+        TruthValue,RowStatus,MacAddress			FROM SNMPv2-TC
+  	    SnmpAdminString
+     											FROM SNMP-FRAMEWORK-MIB        
+        IpAddress           					FROM RFC1155-SMI
+        InterfaceIndex
+        										FROM IF-MIB
+        PaeControlledPortStatus					FROM IEEE8021-PAE-MIB	
+        dlink-common-mgmt						FROM DLINK-ID-REC-MIB
+        InetAddressType, InetAddress        FROM INET-ADDRESS-MIB;
+
+	swAuthCtrl MODULE-IDENTITY
+	    LAST-UPDATED "0711270000Z"
+	    ORGANIZATION " "
+	    CONTACT-INFO
+	        "   "
+	    DESCRIPTION
+		    "The Structure of Common Management Information for 
+		    security functions for  devices."
+		    ::= { dlink-common-mgmt 3 }   
+		    
+    swAuthenCtrl      OBJECT IDENTIFIER ::= { swAuthCtrl 1 }
+    swRadiusCtrl	OBJECT IDENTIFIER ::= { swAuthCtrl 2 }
+    swRadiusAuthInfo OBJECT IDENTIFIER ::= { swAuthCtrl 3 }
+    swRadiusAccountingCtrl		OBJECT IDENTIFIER ::= { swAuthCtrl 4 }
+    swRadiusAccountingInfo OBJECT IDENTIFIER ::= { swAuthCtrl 5 }
+    swMacAuthBaseStatsInfo  OBJECT IDENTIFIER ::= { swAuthCtrl 6 }
+    swRadiusCommand   OBJECT IDENTIFIER ::= { swAuthCtrl 7 }
+    swAuthenticatedPortInfo	    OBJECT IDENTIFIER ::= { swAuthCtrl 8 }
+-- 
+--
+--
+
+authProtocol OBJECT-TYPE
+    SYNTAX INTEGER {    
+        authProtocolNone(1),    
+        authProtocolLocal(2),        
+        authProtocolRadius(3),
+        authProtocolRadiusEap(4),
+        authProtocolRadiusChap(5),                
+        authProtocolTacacs(6)     
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The authentication method used to authenticate user."
+    DEFVAL { authProtocolRadiusEap }
+ 	::= { swAuthenCtrl 1}       
+
+swAuthMode OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    portBase(1),        
+        			macBase(2),
+        			none(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the authentication mode of the device."
+        ::= { swAuthenCtrl 2} 
+
+swAuthorizationState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the authorization status."
+        ::= { swAuthenCtrl 3 }      
+
+-- 
+-- swRadiusConfig 
+--
+swRadiusDeadTime OBJECT-TYPE                            
+        SYNTAX     Unsigned32
+        MAX-ACCESS read-write 
+        STATUS current
+        DESCRIPTION
+            "Specifies the number of minutes a  RADIUS server, 
+             which is not responding to authentication requests, 
+             is considered unavailable and is passed over by 
+             further requests for RADIUS authentication."     
+        DEFVAL { 1 }            
+        ::= { swRadiusCtrl 1}
+               
+swRadiusTimeout  OBJECT-TYPE
+        SYNTAX     Unsigned32    
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Specifies the number of seconds NAS   
+             waits for a reply to a RADIUS request 
+             before retransmitting the request."                            
+        DEFVAL { 10 }
+        ::= { swRadiusCtrl 2 }        
+
+swRadiusRetransmitAttempts OBJECT-TYPE
+        SYNTAX     Unsigned32   
+        MAX-ACCESS read-write   
+        STATUS current
+        DESCRIPTION
+            "Specifies the number of times NAS     
+             transmits each RADIUS request to the  
+             server before giving up."
+        DEFVAL { 2 }      
+        ::= { swRadiusCtrl 3 }
+              
+               
+                
+swRadiusServerTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF RadiusServerEntry 
+		MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION 
+        	" The swRadius server table "
+        ::= { swRadiusCtrl 4 }	
+        
+swRadiusServerEntry OBJECT-TYPE
+		SYNTAX RadiusServerEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION 
+        	" The entiries of raidus Server table"        		
+        INDEX  { swRadiusServerIndex }         
+        ::= { swRadiusServerTable 1 }
+
+RadiusServerEntry ::= 		
+		SEQUENCE {
+			swRadiusServerIndex 		INTEGER,        	
+			swRadiusServerIpAddr		IpAddress,
+			swRadiusServerKey			OCTET STRING,
+			swRadiusAuthPortNumber 	Unsigned32,
+			swRadiusAcctPortNumber 	Unsigned32,
+			swRadiusServerStatus 		RowStatus
+--			swRadiusServerAddrType   InetAddressType,
+--			swRadiusServerAddr       InetAddress
+		}
+       
+swRadiusServerIndex  OBJECT-TYPE
+	SYNTAX INTEGER {                                 				
+	    swRadiusServerIndex-first(1),
+	    swRadiusServerIndex-second(2),                        
+	    swRadiusServerIndex-third(3)                                 
+	} 
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION 
+                "The index of the RADIUS server"
+	::= { swRadiusServerEntry 1 }
+	
+                                                                           
+swRadiusServerIpAddr    OBJECT-TYPE
+	SYNTAX IpAddress                
+        MAX-ACCESS read-only
+        STATUS obsolete
+	DESCRIPTION 
+                "The IP address of the RADIUS server"
+	::= { swRadiusServerEntry 2 }
+		
+
+swRadiusServerKey OBJECT-TYPE
+    SYNTAX OCTET STRING( SIZE(1..32))
+    MAX-ACCESS	not-accessible
+    STATUS current
+    DESCRIPTION 
+    	"The key of the RADIUS server"
+    ::= { swRadiusServerEntry 3 }
+    
+swRadiusAuthPortNumber OBJECT-TYPE
+        SYNTAX     Unsigned32
+        MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION
+            "The UDP destination port number to use
+	     for authentication requests to this   
+	     server."        
+	DEFVAL { 1812 }        
+	::= { swRadiusServerEntry 4 }
+
+swRadiusAcctPortNumber OBJECT-TYPE
+        SYNTAX     Unsigned32
+        MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION                        
+            "The UDP destination port number to use
+	     for accounting requests to this      
+	     server"
+	DEFVAL { 1813 }
+	::= { swRadiusServerEntry 5 }
+
+swRadiusServerStatus OBJECT-TYPE
+	SYNTAX RowStatus
+        MAX-ACCESS read-only
+	STATUS current
+    DESCRIPTION
+        "The status of the RADIUS server"
+    ::= { swRadiusServerEntry 6 }
+ 
+--  swRadiusServerAddrType OBJECT-TYPE
+--          SYNTAX        InetAddressType
+--          MAX-ACCESS    read-only
+--          STATUS        current
+--          DESCRIPTION
+--              "The type of RADIUS Server address as specified by
+--               object 'swRadiusServerAddr'."
+--          DEFVAL { ipv4 }
+--          ::= { swRadiusServerEntry 9 }
+
+--  swRadiusServerAddr OBJECT-TYPE
+--          SYNTAX        InetAddress
+--          MAX-ACCESS    read-only
+--          STATUS        current
+--          DESCRIPTION
+--              "The address of the RADIUS Server."
+--          ::= { swRadiusServerEntry 10 }
+            
+--                  
+-- swRadiusAuth
+--
+
+swRadiusAuthClientIdentifier OBJECT-TYPE
+        SYNTAX     OCTET STRING(SIZE (0..40))
+        MAX-ACCESS read-only       
+        STATUS obsolete
+        DESCRIPTION
+            "NAS Identifier"
+        ::= { swRadiusAuthInfo 1 }
+
+swRadiusAuthClientInvalidServerAddresses OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS read-only
+        STATUS obsolete
+        DESCRIPTION
+            "Statistics infomation - the number of RADIUS 
+             Access-Response packets received from unknown 
+             addresses."
+        ::= { swRadiusAuthInfo 2 }
+
+swRadiusAuthServerTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF RadiusAuthServerEntry
+		MAX-ACCESS not-accessible
+        STATUS obsolete
+        DESCRIPTION 
+        	"The authenticate table for swRadius server "
+        ::= { swRadiusAuthInfo 3 }
+ 
+swRadiusAuthServerEntry OBJECT-TYPE
+        SYNTAX RadiusAuthServerEntry
+        MAX-ACCESS not-accessible
+        STATUS obsolete
+        DESCRIPTION
+            "A list of Radius authentic servers."
+        INDEX  { swRadiusAuthServerIndex }
+        ::= { swRadiusAuthServerTable 1 }
+
+RadiusAuthServerEntry ::=   
+        SEQUENCE {
+            swRadiusAuthServerIndex                      Integer32, 
+            swRadiusAuthServerAddress                    IpAddress,
+            swRadiusAuthClientServerPortNumber           Unsigned32, 
+            swRadiusAuthClientRoundTripTime              Counter32,
+            swRadiusAuthClientAccessRequests             Counter32,
+            swRadiusAuthClientAccessRetransmissions      Counter32,
+
+            swRadiusAuthClientAccessAccepts              Counter32,             
+            swRadiusAuthClientAccessRejects              Counter32,            
+            swRadiusAuthClientAccessChallenges           Counter32,        
+            swRadiusAuthClientMalformedAccessResponses   Counter32,
+            swRadiusAuthClientBadAuthenticators          Counter32,        
+            swRadiusAuthClientPendingRequests            Counter32,        
+            swRadiusAuthClientTimeouts                   Counter32,                                    
+            swRadiusAuthClientUnknownTypes               Counter32,   
+            swRadiusAuthClientPacketsDropped             Counter32
+      }
+
+swRadiusAuthServerIndex OBJECT-TYPE
+        SYNTAX Integer32
+        MAX-ACCESS read-only
+        STATUS obsolete
+        DESCRIPTION
+            "Argument with RadiusServerIndex"
+        ::= { swRadiusAuthServerEntry 1 }
+        
+swRadiusAuthServerAddress OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-only
+        STATUS obsolete
+        DESCRIPTION
+            "RadiusAuth server address"
+        ::= { swRadiusAuthServerEntry 2 }
+
+swRadiusAuthClientServerPortNumber OBJECT-TYPE
+		SYNTAX Unsigned32
+		MAX-ACCESS read-only
+		STATUS obsolete                   
+		DESCRIPTION         
+			"The UDP socket port numbers"
+		DEFVAL { 1812 }
+		::= { swRadiusAuthServerEntry 3 }
+
+swRadiusAuthClientRoundTripTime OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete                   
+		DESCRIPTION         
+			"The counter of trip time from radius authentication"
+		::= { swRadiusAuthServerEntry 4 }		
+	
+swRadiusAuthClientAccessRequests OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of access requests from radius authentication"
+		::= { swRadiusAuthServerEntry 5 }
+		
+swRadiusAuthClientAccessRetransmissions OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of retransimissions from radius authentication"
+		::= { swRadiusAuthServerEntry 6 }
+
+swRadiusAuthClientAccessAccepts  OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter for accept times from radius authentication"		
+		::= { swRadiusAuthServerEntry 7 }
+		
+swRadiusAuthClientAccessRejects  OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION 
+			"The counter of reject from radius authentication"
+		::= { swRadiusAuthServerEntry 8 }
+		
+swRadiusAuthClientAccessChallenges OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of Access changellenges times from radius authentication"
+		::= { swRadiusAuthServerEntry 9 }
+
+swRadiusAuthClientMalformedAccessResponses OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of Malformed access response from radius authentication"
+		::= { swRadiusAuthServerEntry 10 }
+
+swRadiusAuthClientBadAuthenticators OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of bad authenticate from radius authentication"
+		::= { swRadiusAuthServerEntry 11 }
+
+swRadiusAuthClientPendingRequests OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of pending requests from radius authentication"
+		::= { swRadiusAuthServerEntry 12 }
+		
+swRadiusAuthClientTimeouts    OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of timeouts from radius authentication"
+		::= { swRadiusAuthServerEntry 13 }
+
+swRadiusAuthClientUnknownTypes OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of unknown types from radius authentication"
+		::= { swRadiusAuthServerEntry 14 }
+       
+swRadiusAuthClientPacketsDropped  OBJECT-TYPE
+		SYNTAX Counter32
+		MAX-ACCESS read-only
+		STATUS obsolete
+		DESCRIPTION
+			"The counter of dropped packets "
+		::= { swRadiusAuthServerEntry 15 }   
+
+--
+-- accountingConfig
+--
+
+swRadiusAcctUpdateInterval OBJECT-TYPE
+    SYNTAX     Unsigned32 (1..65535)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Time interval after which this Radius record   
+         should be updated and sent to an        
+         accounting server."       
+    ::= { swRadiusAccountingCtrl 1 }
+             
+swRadiusAcctSuppressNullUserName OBJECT-TYPE  
+    SYNTAX  TruthValue
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Whether or not generate accounting        
+         records for users with null name"        
+    ::= { swRadiusAccountingCtrl 2 }
+    
+swRadiusAcctServiceTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF AcctServiceEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+            "Radius accounting Table"
+        ::= { swRadiusAccountingCtrl 3 }    
+    
+    
+ 
+swRadiusAcctServiceEntry OBJECT-TYPE
+	SYNTAX AcctServiceEntry
+	MAX-ACCESS not-accessible
+	STATUS current
+	DESCRIPTION 
+		"The list of accounting services."		
+    INDEX { swRadiusAcctServiceIndex }         
+	::= { swRadiusAcctServiceTable 1 }       
+	
+AcctServiceEntry ::= 
+    SEQUENCE {
+        swRadiusAcctServiceIndex  
+        	INTEGER,
+        swRadiusAcctServiceMethod   
+        	INTEGER,
+        swRadiusAcctServiceMode 
+        	INTEGER
+	}
+    
+swRadiusAcctServiceIndex OBJECT-TYPE
+		SYNTAX INTEGER {
+                acctServiceIndex-network(1),
+                acctServiceIndex-exec(2),
+                acctServiceIndex-system(3)
+            }				
+         MAX-ACCESS read-only
+         STATUS current
+         DESCRIPTION
+         	"The index of Accounting table."
+         ::= { swRadiusAcctServiceEntry 1}
+
+swRadiusAcctServiceMethod OBJECT-TYPE
+        SYNTAX INTEGER {    
+                swRadiusAcctServiceMethodNone(1),
+                swRadiusAcctServiceMethodRadius(2)               
+            }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+        	"The method of accouting service"
+        DEFVAL { 2 } 
+        ::= { swRadiusAcctServiceEntry 2 }
+        
+swRadiusAcctServiceMode OBJECT-TYPE
+		SYNTAX INTEGER {    
+                radiusAcctServiceModeNone(1),    
+                radiusAcctServiceModeStartStop(2),
+                radiusAcctServiceModeStopOnly(3)
+            }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+        	"The service mode of accounting service"
+        DEFVAL { 2 } 
+        ::= { swRadiusAcctServiceEntry 3 }    
+
+--       
+-- swRadiusAccounting
+--
+
+swRadiusAcctClientIdentifier  OBJECT-TYPE
+    SYNTAX     OCTET STRING(SIZE (0..40))
+    MAX-ACCESS read-only      
+    STATUS obsolete
+    DESCRIPTION
+        "NAS Identifier"
+    ::= { swRadiusAccountingInfo 1}
+        
+swRadiusAcctClientInvalidServerAddresses OBJECT-TYPE   
+    SYNTAX     Counter32
+    MAX-ACCESS read-only  
+    STATUS obsolete
+    DESCRIPTION
+        "Statistics infomation - the number of RADIUS 
+         Accounting-Response packets received from unknown 
+         addresses."              
+    ::= { swRadiusAccountingInfo 2 }      
+         
+swRadiusAcctServerTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF RadiusAcctServerEntry
+    MAX-ACCESS not-accessible
+    STATUS obsolete
+    DESCRIPTION
+    	"The radius server accounting table"
+	::= { swRadiusAccountingInfo 3 }
+	
+swRadiusAcctServerEntry OBJECT-TYPE
+	SYNTAX RadiusAcctServerEntry
+	MAX-ACCESS not-accessible
+	STATUS obsolete
+	DESCRIPTION
+		"The list for radius accounting table" 
+	INDEX { swRadiusAcctServerIndex } 
+	::= { swRadiusAcctServerTable 1 }
+    
+        
+RadiusAcctServerEntry ::=
+    SEQUENCE {  
+        swRadiusAcctServerIndex					 Integer32,
+        swRadiusAcctServerAddress                IpAddress,         
+        swRadiusAcctClientServerPortNumber       Unsigned32,   
+        swRadiusAcctClientRoundTripTime          Counter32,
+        swRadiusAcctClientRequests               Counter32,
+        swRadiusAcctClientRetransmissions        Counter32,
+        swRadiusAcctClientResponses              Counter32,
+        swRadiusAcctClientMalformedResponses     Counter32,
+        swRadiusAcctClientBadAuthenticators      Counter32,
+        swRadiusAcctClientPendingRequests        Counter32,     
+        swRadiusAcctClientTimeouts               Counter32,
+        swRadiusAcctClientUnknownTypes           Counter32,
+        swRadiusAcctClientPacketsDropped         Counter32
+    }       
+   
+swRadiusAcctServerIndex OBJECT-TYPE
+	SYNTAX Integer32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The index of Radius accounting server, argument with RadiusServerIndex."
+	::= { swRadiusAcctServerEntry 1 }
+
+swRadiusAcctServerAddress OBJECT-TYPE
+	SYNTAX IpAddress
+	MAX-ACCESS	read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The server address of radius accounting"
+	::= { swRadiusAcctServerEntry 2 }
+	
+swRadiusAcctClientServerPortNumber OBJECT-TYPE
+	SYNTAX Unsigned32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The UDP socket port of radius accounting "
+	DEFVAL { 1813 }
+	::= { swRadiusAcctServerEntry 3}
+	
+swRadiusAcctClientRoundTripTime OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of trip time from radius accounting"
+	::= { swRadiusAcctServerEntry 4 }
+
+swRadiusAcctClientRequests OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of request from radius accounting"
+	::= { swRadiusAcctServerEntry 5 }
+
+swRadiusAcctClientRetransmissions OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of retransmissions from radius accounting"
+	::= { swRadiusAcctServerEntry 6 }
+
+swRadiusAcctClientResponses OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of responses from radius accounting"
+	::= { swRadiusAcctServerEntry 7 }
+	
+swRadiusAcctClientMalformedResponses OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of Malformed response from radius accounting"
+	::= { swRadiusAcctServerEntry 8 }
+	
+swRadiusAcctClientBadAuthenticators OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of bad authenticate for radius accounting"
+	::= { swRadiusAcctServerEntry 9 }
+	
+swRadiusAcctClientPendingRequests OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The pending counter of radius client requests"
+	::= { swRadiusAcctServerEntry 10 }
+	        
+swRadiusAcctClientTimeouts OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of the timeout connect to radius accounting"
+	::= { swRadiusAcctServerEntry 11 }
+
+swRadiusAcctClientUnknownTypes OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of unknown types from radius accounting"
+	::= { swRadiusAcctServerEntry 12 }
+	
+swRadiusAcctClientPacketsDropped OBJECT-TYPE
+	SYNTAX Counter32
+	MAX-ACCESS read-only
+	STATUS obsolete
+	DESCRIPTION
+		"The counter of dropped packets from radius accounting"
+	::= { swRadiusAcctServerEntry 13 }
+	
+--	
+--	
+--	
+--
+-- ---------------------------------------------------------- --
+-- The Mac-base Authenticator State Table
+-- ---------------------------------------------------------- --
+
+swMacAuthStateTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwMacAuthStateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains the status objects for the
+        Authenticator PAE associated with each virtual port(Mac).
+        An entry appears in this table for each  virtual port that may
+        authenticate access to itself."
+
+    ::= { swMacAuthBaseStatsInfo 1 }
+
+swMacAuthStateEntry OBJECT-TYPE
+    SYNTAX      SwMacAuthStateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The information for an Authenticator
+        PAE."
+    INDEX {swPaeMacAddr ,swPaePortNumber}
+    ::= { swMacAuthStateTable 1 }
+
+SwMacAuthStateEntry ::=
+    SEQUENCE {
+    	swPaeMacAddr
+    	    MacAddress,    
+        swPaePortNumber
+            InterfaceIndex,    	    
+        swAuthPaeState
+            INTEGER,
+        swAuthBackendAuthState
+            INTEGER,
+        swAuthAuthControlledPortStatus
+            PaeControlledPortStatus
+        }
+
+swPaeMacAddr OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The address associated with this Mac."
+
+    ::= { swMacAuthStateEntry 1 }
+    
+swPaePortNumber OBJECT-TYPE
+    SYNTAX      InterfaceIndex
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Port number associated with this Port."
+
+    ::= { swMacAuthStateEntry 2 }
+    
+swAuthPaeState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    initialize(1),
+                    disconnected(2),
+                    connecting(3),
+                    authenticating(4),
+                    authenticated(5),
+                    aborting(6),
+                    held(7),
+                    forceAuth(8),
+                    forceUnauth(9)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current value of the Authenticator PAE state
+        machine."
+
+    ::= { swMacAuthStateEntry  3 }
+
+swAuthBackendAuthState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    request(1),
+                    response(2),
+                    success(3),
+                    fail(4),
+                    timeout(5),
+                    idle(6),
+                    initialize(7)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current state of the Backend Authentication
+        state machine."
+
+    ::= { swMacAuthStateEntry  4 }    
+    
+swAuthAuthControlledPortStatus OBJECT-TYPE
+    SYNTAX      PaeControlledPortStatus
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current value of the controlled Port
+        status parameter for the Port."
+
+    ::= { swMacAuthStateEntry  5 }    
+
+
+-- -----------------------------------------------------------------------------
+-- The Authenticator Statistics Table
+-- -----------------------------------------------------------------------------
+swMacAuthStatsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwMacAuthStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains the statistics objects for the
+         Authenticator PAE associated with each MAC address.
+         An entry appears in this table for each MAC address that may
+         authenticate access to itself."
+
+    ::= { swMacAuthBaseStatsInfo 2 }
+
+swMacAuthStatsEntry OBJECT-TYPE
+    SYNTAX      SwMacAuthStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The statistics information for an Authenticator PAE."
+    INDEX { swPaeMacAddr  ,swPaePortNumber}
+    ::= { swMacAuthStatsTable 1 }
+
+SwMacAuthStatsEntry ::=
+    SEQUENCE {
+
+        swAuthEapolFramesRx
+            Counter32,
+        swAuthEapolFramesTx
+            Counter32,
+        swAuthEapolStartFramesRx
+            Counter32,
+        swAuthEapolLogoffFramesRx
+            Counter32,
+        swAuthEapolRespIdFramesRx
+            Counter32,
+        swAuthEapolRespFramesRx
+            Counter32,
+        swAuthEapolReqIdFramesTx
+            Counter32,
+        swAuthEapolReqFramesTx
+            Counter32,
+        swAuthInvalidEapolFramesRx
+            Counter32,
+        swAuthEapLengthErrorFramesRx
+            Counter32,
+        swAuthLastEapolFrameVersion
+            Unsigned32,
+        swAuthLastEapolFrameSource
+            MacAddress
+        }
+
+
+
+swAuthEapolFramesRx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of valid EAPOL frames of any type
+        that have been received by this Authenticator."
+    REFERENCE
+        "9.4.2, EAPOL frames received"
+    ::= { swMacAuthStatsEntry 1 }
+
+swAuthEapolFramesTx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of EAPOL frames of any type
+        that have been transmitted by this Authenticator."
+    REFERENCE
+        "9.4.2, EAPOL frames transmitted"
+    ::= { swMacAuthStatsEntry 2 }
+
+swAuthEapolStartFramesRx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of EAPOL Start frames that have
+        been received by this Authenticator."
+    REFERENCE
+        "9.4.2, EAPOL Start frames received"
+    ::= { swMacAuthStatsEntry 3 }
+
+swAuthEapolLogoffFramesRx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of EAPOL Logoff frames that have
+        been received by this Authenticator."
+    REFERENCE
+        "9.4.2, EAPOL Logoff frames received"
+    ::= { swMacAuthStatsEntry 4 }
+
+swAuthEapolRespIdFramesRx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of EAP Resp/Id frames that have
+        been received by this Authenticator."
+    REFERENCE
+        "9.4.2, EAPOL Resp/Id frames received"
+    ::= { swMacAuthStatsEntry 5 }
+
+swAuthEapolRespFramesRx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of valid EAP Response frames
+        (other than Resp/Id frames) that have been
+        received by this Authenticator."
+    REFERENCE
+        "9.4.2, EAPOL Response frames received"
+    ::= { swMacAuthStatsEntry 6 }
+
+swAuthEapolReqIdFramesTx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of EAP Req/Id frames that have been
+        transmitted by this Authenticator."
+    REFERENCE
+        "9.4.2, EAPOL Req/Id frames transmitted"
+    ::= { swMacAuthStatsEntry 7 }
+
+swAuthEapolReqFramesTx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of EAP Request frames
+        (other than Rq/Id frames) that have been
+        transmitted by this Authenticator."
+    REFERENCE
+        "9.4.2, EAPOL Request frames transmitted"
+    ::= { swMacAuthStatsEntry 8 }
+
+swAuthInvalidEapolFramesRx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of EAPOL frames that have been
+        received by this Authenticator for which the
+        frame type is not recognized."
+    REFERENCE
+        "9.4.2, Invalid EAPOL frames received"
+    ::= { swMacAuthStatsEntry 9 }
+
+swAuthEapLengthErrorFramesRx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of EAPOL frames that have been received
+        by this Authenticator for which the Packet Body
+        Length field is invalid."
+    REFERENCE
+        "9.4.2, EAP length error frames received"
+    ::= { swMacAuthStatsEntry 10 }
+
+swAuthLastEapolFrameVersion OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The protocol version number carried in the
+        most recently received EAPOL frame."
+    REFERENCE
+        "9.4.2, Last EAPOL frame version"
+    ::= { swMacAuthStatsEntry 11 }
+
+swAuthLastEapolFrameSource OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The source MAC address carried in the
+        most recently received EAPOL frame."
+    REFERENCE
+        "9.4.2, Last EAPOL frame source"
+    ::= { swMacAuthStatsEntry 12 }
+
+-- -----------------------------------------------------------------------------
+-- The Authenticator Diagnostics Table
+-- -----------------------------------------------------------------------------
+swMacAuthDiagTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwMacAuthDiagEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains the diagnostics objects for the
+         Authenticator PAE associated with each MAC address.
+         An entry appears in this table for each MAC address that may
+         authenticate access to itself."
+
+    ::= { swMacAuthBaseStatsInfo 3 }
+
+swMacAuthDiagEntry OBJECT-TYPE
+    SYNTAX      SwMacAuthDiagEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The diagnostics information for an Authenticator PAE."
+    INDEX { swPaeMacAddr ,swPaePortNumber }
+    ::= { swMacAuthDiagTable 1 }
+
+SwMacAuthDiagEntry ::=
+    SEQUENCE {
+        swAuthEntersConnecting
+            Counter32,
+        swAuthEapLogoffsWhileConnecting
+            Counter32,
+        swAuthEntersAuthenticating
+            Counter32,
+        swAuthAuthSuccessWhileAuthenticating
+            Counter32,
+        swAuthAuthTimeoutsWhileAuthenticating
+            Counter32,
+        swAuthAuthFailWhileAuthenticating
+            Counter32,
+        swAuthAuthReauthsWhileAuthenticating
+            Counter32,
+        swAuthAuthEapStartsWhileAuthenticating
+            Counter32,
+        swAuthAuthEapLogoffWhileAuthenticating
+            Counter32,
+        swAuthAuthReauthsWhileAuthenticated
+            Counter32,
+        swAuthAuthEapStartsWhileAuthenticated
+            Counter32,
+        swAuthAuthEapLogoffWhileAuthenticated
+            Counter32,
+        swAuthBackendResponses
+            Counter32,
+        swAuthBackendAccessChallenges
+            Counter32,
+        swAuthBackendOtherRequestsToSupplicant
+            Counter32,
+        swAuthBackendNonNakResponsesFromSupplicant
+            Counter32,
+        swAuthBackendAuthSuccesses
+            Counter32,
+        swAuthBackendAuthFails
+            Counter32
+        }
+
+swAuthEntersConnecting OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions to a CONNECTING state from any other
+        state."
+    REFERENCE
+        "9.4.2, 8.5.4.2.1"
+    ::= { swMacAuthDiagEntry 1 }
+
+swAuthEapLogoffsWhileConnecting OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from CONNECTING to DISCONNECTED as a result
+        of receiving an EAPOL-Logoff message."
+    REFERENCE
+        "9.4.2, 8.5.4.2.2"
+    ::= { swMacAuthDiagEntry 2 }
+
+swAuthEntersAuthenticating OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from CONNECTING to AUTHENTICATING, as a
+        result of an EAP-Response/Identity message being
+        received from the Supplicant."
+    REFERENCE
+        "9.4.2, 8.5.4.2.3"
+    ::= { swMacAuthDiagEntry 3 }
+
+swAuthAuthSuccessWhileAuthenticating OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATING to AUTHENTICATED, as a
+        result of the Backend Authentication state machine,
+        indicating successful authentication of the Supplicant
+        (authSuccess = TRUE)."
+    REFERENCE
+        "9.4.2, 8.5.4.2.4"
+    ::= { swMacAuthDiagEntry 4 }
+
+swAuthAuthTimeoutsWhileAuthenticating OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATING to ABORTING, as a result
+        of the Backend Authentication state machine indicating
+        authentication timeout (authTimeout = TRUE)."
+    REFERENCE
+        "9.4.2, 8.5.4.2.5"
+    ::= { swMacAuthDiagEntry 5 }
+
+swAuthAuthFailWhileAuthenticating OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATING to HELD, as a result
+        of the Backend Authentication state machine indicating
+        authentication failure (authFail = TRUE)."
+    REFERENCE
+        "9.4.2, 8.5.4.2.6"
+    ::= { swMacAuthDiagEntry 6 }
+
+swAuthAuthReauthsWhileAuthenticating OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATING to ABORTING, as a result
+        of a reauthentication request (reAuthenticate = TRUE)."
+    REFERENCE
+        "9.4.2, 8.5.4.2.7"
+    ::= { swMacAuthDiagEntry 7 }
+
+swAuthAuthEapStartsWhileAuthenticating OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATING to ABORTING, as a result
+        of an EAPOL-Start message being received
+        from the Supplicant."
+    REFERENCE
+        "9.4.2, 8.5.4.2.8"
+    ::= { swMacAuthDiagEntry 8 }
+
+swAuthAuthEapLogoffWhileAuthenticating OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATING to ABORTING, as a result
+        of an EAPOL-Logoff message being received
+        from the Supplicant."
+    REFERENCE
+        "9.4.2, 8.5.4.2.9"
+    ::= { swMacAuthDiagEntry 9 }
+
+swAuthAuthReauthsWhileAuthenticated OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATED to CONNECTING, as a
+        result of a reauthentication request
+        (reAuthenticate = TRUE)."
+    REFERENCE
+        "9.4.2, 8.5.4.2.10"
+    ::= { swMacAuthDiagEntry 10 }
+
+swAuthAuthEapStartsWhileAuthenticated OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATED to CONNECTING, as a
+        result of an EAPOL-Start message being received from the
+        Supplicant."
+    REFERENCE
+        "9.4.2, 8.5.4.2.11"
+    ::= { swMacAuthDiagEntry 11 }
+
+swAuthAuthEapLogoffWhileAuthenticated OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        transitions from AUTHENTICATED to DISCONNECTED, as a
+        result of an EAPOL-Logoff message being received from
+        the Supplicant."
+    REFERENCE
+        "9.4.2, 8.5.4.2.12"
+    ::= { swMacAuthDiagEntry 12 }
+
+swAuthBackendResponses OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine sends
+        an initial Access-Request packet to the Authentication
+        server (i.e., executes sendRespToServer on entry to the
+        RESPONSE state). Indicates that the Authenticator
+        attempted communication with the Authentication Server."
+    REFERENCE
+        "9.4.2, 8.5.6.2.1"
+    ::= { swMacAuthDiagEntry 13 }
+
+swAuthBackendAccessChallenges OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        receives an initial Access-Challenge packet from the
+        Authentication server (i.e., aReq becomes TRUE,
+        causing exit from the RESPONSE state). Indicates that
+        the Authentication Server has communication with
+        the Authenticator."
+    REFERENCE
+        "9.4.2, 8.5.6.2.2"
+    ::= { swMacAuthDiagEntry 14 }
+
+swAuthBackendOtherRequestsToSupplicant OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        sends an EAP-Request packet (other than an Identity,
+        Notification, Failure or Success message) to the
+        Supplicant (i.e., executes txReq on entry to the
+        REQUEST state). Indicates that the Authenticator chose
+        an EAP-method."
+    REFERENCE
+        "9.4.2, 8.5.6.2.3"
+    ::= { swMacAuthDiagEntry 15 }
+
+swAuthBackendNonNakResponsesFromSupplicant OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        receives a response from the Supplicant to an initial
+        EAP-Request, and the response is something other than
+        EAP-NAK (i.e., rxResp becomes TRUE, causing the state
+        machine to transition from REQUEST to RESPONSE,
+        and the response is not an EAP-NAK). Indicates that
+        the Supplicant can respond to the Authenticator's
+        chosen EAP-method."
+    REFERENCE
+        "9.4.2, 8.5.6.2.4"
+    ::= { swMacAuthDiagEntry 16 }
+
+swAuthBackendAuthSuccesses OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        receives an EAP-Success message from the Authentication
+        Server (i.e., aSuccess becomes TRUE, causing a
+        transition from RESPONSE to SUCCESS). Indicates that
+        the Supplicant has successfully authenticated to
+        the Authentication Server."
+    REFERENCE
+        "9.4.2, 8.5.6.2.5"
+    ::= { swMacAuthDiagEntry 17 }
+
+swAuthBackendAuthFails OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Counts the number of times that the state machine
+        receives an EAP-Failure message from the Authentication
+        Server (i.e., aFail becomes TRUE, causing a transition
+        from RESPONSE to FAIL). Indicates that the Supplicant
+        has not authenticated to the Authentication Server."
+    REFERENCE
+        "9.4.2, 8.5.6.2.6"
+    ::= { swMacAuthDiagEntry 18 }
+
+-- -----------------------------------------------------------------------------
+-- The Authenticator Session Statistics Table
+-- -----------------------------------------------------------------------------
+swMacAuthSessionStatsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwMacAuthSessionStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains the session statistics objects
+        for the Authenticator PAE associated with each MAC address.
+        An entry appears in this table for each MAC address that may
+        authenticate access to itself."
+
+    ::= { swMacAuthBaseStatsInfo 4 }
+
+swMacAuthSessionStatsEntry OBJECT-TYPE
+    SYNTAX      SwMacAuthSessionStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The session statistics information for an Authenticator
+        PAE.  This shows the current values being collected for
+        each session that is still in progress, or the final
+        values for the last valid session on each MAC address where
+        there is no session currently active."
+    INDEX { swPaeMacAddr ,swPaePortNumber }
+    ::= { swMacAuthSessionStatsTable 1 }
+
+SwMacAuthSessionStatsEntry ::=
+    SEQUENCE {
+        swAuthSessionOctetsRx
+            Counter64,
+        swAuthSessionOctetsTx
+            Counter64,
+        swAuthSessionFramesRx
+            Counter32,
+        swAuthSessionFramesTx
+            Counter32,
+        swAuthSessionId
+            SnmpAdminString,
+        swAuthSessionAuthenticMethod
+            INTEGER,
+        swAuthSessionTime
+            TimeTicks,
+        swAuthSessionTerminateCause
+            INTEGER,
+        swAuthSessionUserName
+            SnmpAdminString
+    }
+    
+swAuthSessionOctetsRx OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of octets received in user data
+        frames from this MAC address during the session."
+    REFERENCE
+        "9.4.4, Session Octets Received"
+    ::= { swMacAuthSessionStatsEntry 1 }
+
+swAuthSessionOctetsTx OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of octets transmitted in user data
+        frames to this MAC address during the session."
+
+    ::= { swMacAuthSessionStatsEntry 2 }
+
+swAuthSessionFramesRx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of user data frames received
+        from this MAC address during the session."
+
+    ::= { swMacAuthSessionStatsEntry 3 }
+
+swAuthSessionFramesTx OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of user data frames transmitted
+        to this MAC address during the session."
+    REFERENCE
+        "9.4.4, Session Frames Transmitted"
+    ::= { swMacAuthSessionStatsEntry 4 }
+
+swAuthSessionId OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A unique identifier for the session, in the
+        form of a printable ASCII string of at least
+        three characters."
+    REFERENCE
+        "9.4.4, Session Identifier"
+    ::= { swMacAuthSessionStatsEntry 5 }
+
+swAuthSessionAuthenticMethod OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    remoteAuthServer(1),
+                    localAuthServer(2)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The authentication method used to establish the
+        session."
+    REFERENCE
+        "9.4.4, Session Authentication Method"
+    ::= { swMacAuthSessionStatsEntry 6 }
+
+swAuthSessionTime OBJECT-TYPE
+    SYNTAX      TimeTicks
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The duration of the session in seconds."
+    REFERENCE
+        "9.4.4, Session Time"
+    ::= { swMacAuthSessionStatsEntry 7 }
+
+swAuthSessionTerminateCause OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    supplicantLogoff(1),
+                    portFailure(2),
+                    supplicantRestart(3),
+                    reauthFailed(4),
+                    authControlForceUnauth(5),
+                    portReInit(6),
+                    portAdminDisabled(7),
+                    notTerminatedYet(999)
+                    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The reason for the session termination."
+    REFERENCE
+        "9.4.4, Session Terminate Cause"
+    ::= { swMacAuthSessionStatsEntry 8 }
+
+swAuthSessionUserName OBJECT-TYPE
+    SYNTAX     SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The User-Name representing the identity of the
+        Supplicant PAE."
+    REFERENCE
+        "9.4.4, Session User Name"
+    ::= { swMacAuthSessionStatsEntry 9 }
+				
+-- ---------------------------------------------------------- --
+-- The swRadiusCommand
+-- ---------------------------------------------------------- --	
+
+swRadiusForceDownPortNumber OBJECT-TYPE
+     SYNTAX      Unsigned32
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION
+         "The port number on which RADIUS server forces to terminate network
+        service."
+     ::= { swRadiusCommand 1}
+
+swRadiusForceDownMacAddr    OBJECT-TYPE
+     SYNTAX      MacAddress
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION
+         "The user's mac address on which RADIUS server forces to terminate
+         network service."
+     ::= { swRadiusCommand 2 }
+
+-- -----------------------------------------------------------------------------
+-- The Authenticator Port Table
+-- -----------------------------------------------------------------------------
+swAuthenticatedPortCtrlTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwAuthenticatedPortCtrlEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table used to configure the port's 802.1x capability."
+    ::= { swAuthenticatedPortInfo 1 }
+
+swAuthenticatedPortCtrlEntry OBJECT-TYPE
+    SYNTAX      SwAuthenticatedPortCtrlEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Port number and authenticator control for a Port."
+    INDEX { swAuthenticatedPortNumber }
+    ::= { swAuthenticatedPortCtrlTable 1 }
+
+SwAuthenticatedPortCtrlEntry ::=
+    SEQUENCE {
+        swAuthenticatedPortNumber
+            INTEGER,
+        swAuthenticatedPortCapabilities
+            INTEGER
+        }
+
+swAuthenticatedPortNumber OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Authenticated Port number associated with this Port."
+    ::= { swAuthenticatedPortCtrlEntry 1 }
+
+swAuthenticatedPortCapabilities OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    none(1),
+                    authenticator(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Indicates the PAE functionality that this Port
+        supports and that it may be managed through this MIB."
+    ::= { swAuthenticatedPortCtrlEntry 2 }
+END				

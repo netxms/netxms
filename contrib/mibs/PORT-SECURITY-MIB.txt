@@ -1,0 +1,414 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : PORT-SECURITY-MIB
+-- FILE NAME: PortSecurity.mib
+-- DATE     : 2008/4/24
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of port security function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2008/4/24, Kelvin Tao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Unsigned32,Integer32
+                                        FROM SNMPv2-SMI
+        DisplayString,MacAddress        FROM SNMPv2-TC
+        dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
+
+		
+    	
+    swPortSecMIB MODULE-IDENTITY
+          LAST-UPDATED "200804240000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of port security for the proprietary enterprise."
+        ::= { dlink-common-mgmt 63 }
+
+
+    swPortSecCtrl             OBJECT IDENTIFIER ::= { swPortSecMIB 1 }
+    swPortSecInfo             OBJECT IDENTIFIER ::= { swPortSecMIB 2 }
+    swPortSecMgmt             OBJECT IDENTIFIER ::= { swPortSecMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swPortSecCtrl
+-- -----------------------------------------------------------------------------
+
+	swPortSecTrapLogState OBJECT-TYPE
+        	SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                }
+        	MAX-ACCESS  read-write
+        	STATUS  current
+        	DESCRIPTION
+                "When enabled(1), whenever there's a new MAC address that violates
+                 the pre-defined port security configuration, traps will be sent out
+                 and the relevant information will be logged into the system."
+            ::= { swPortSecCtrl 1 }
+            
+ 	swPortSecSysMaxLernAddr OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the maximum number of addresses to be authorized
+                      by port security on the system.
+                      The max entry range is (1..N). The value N means the max number and  is
+	              determined by the project itself."
+		::= { swPortSecCtrl 2 }
+
+-- -----------------------------------------------------------------------------
+-- swPortSecInfo
+-- -----------------------------------------------------------------------------
+    	     	
+-- -----------------------------------------------------------------------------
+-- swPortSecMgmt
+-- -----------------------------------------------------------------------------
+        swPortSecMgmtByPort             OBJECT IDENTIFIER ::= { swPortSecMgmt 1 }
+
+	swPortSecPortTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwPortSecPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A port security feature which controls the address learning capability and
+		       traffic forwarding decisions. Each port can be enabled or disabled for this function.
+		       When it is enabled and a number is given said N, which allows N addresses to be
+		       learned on this port, the first N learned addresses are locked at this port as
+		       static entries. When the learned addresses number reaches N, any incoming packet
+		       without learned source addresses are discarded (e.g. dropped) and no more new
+		       addresses can be learned on this port."
+		::= { swPortSecMgmtByPort 1 }
+	
+	swPortSecPortEntry OBJECT-TYPE
+		SYNTAX  SwPortSecPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swPortSecPortTable."
+		INDEX   { swPortSecPortIndex }
+		::= { swPortSecPortTable 1 }
+	
+	SwPortSecPortEntry ::=
+		SEQUENCE {
+		  swPortSecPortIndex
+		      INTEGER,
+		  swPortSecPortMaxLernAddr
+		      INTEGER,
+		  swPortSecPortLockAddrMode
+		      INTEGER,
+		  swPortSecPortAdmState
+		      INTEGER,
+		  swPortSecPortClearCtrl
+		      INTEGER
+		}
+	
+	swPortSecPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the secured port to lock address learning."
+		::= { swPortSecPortEntry 1 }
+	
+	swPortSecPortMaxLernAddr OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the allowable number of addresses to be learned on this port.
+                      The max entry range is (0..N). The value N means the max number and  is
+	              determined by the project itself."
+		::= { swPortSecPortEntry 2 }
+	
+	swPortSecPortLockAddrMode OBJECT-TYPE
+		SYNTAX  INTEGER {
+		           permanent(1),
+                           deleteOnTimeout(2),
+                           deleteOnReset(3)
+                        }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the mode of locking address.
+		       In deleteOnTimeout(2) mode, the locked addresses can be aged out after
+		       the aging timer expires. In this mode, when the locked address is aged
+		       out, the number of addresses that can be learned has to be increased by one.
+		       In deleteOnReset (3) mode, locked addresses never age out unless the system
+		       restarts which will prevent port movement or intrusion."
+		::= { swPortSecPortEntry 3 }
+	
+	swPortSecPortAdmState OBJECT-TYPE
+		SYNTAX  INTEGER {
+		          enabled(1),
+		          disabled(2)
+		      }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the administration state of the locking address."
+		::= { swPortSecPortEntry 4 }
+		
+	swPortSecPortClearCtrl  OBJECT-TYPE
+		SYNTAX INTEGER  {
+			other(1),
+			start(2)
+        		}
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Used to clear port security entries by port.
+			 Setting this value to 'start' will execute the clear action.
+			 Once cleared, the value returns to 'other'."
+        	::= { swPortSecPortEntry 5 }
+
+-- -----------------------------------------------------------------------------
+        swPortSecMgmtByVLAN             OBJECT IDENTIFIER ::= { swPortSecMgmt 2 }
+        
+	swPortSecVLANTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwPortSecVLANEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A port security feature which controls the address leaning capability.
+		       When number is given said N, which allows N addresses to be learned on this VLAN,
+                       the first N learned addresses are locked at this VLAN as static entries.
+                       When the learned addresses number reaches N, any incoming packet
+		       without learned source addresses are discarded (e.g. dropped) and no more new
+		       addresses can be learned on this VLAN."
+		::= { swPortSecMgmtByVLAN 1 }
+	
+	swPortSecVLANEntry OBJECT-TYPE
+		SYNTAX  SwPortSecVLANEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swPortSecVLANTable."
+		INDEX   { swPortSecVLANID }
+		::= { swPortSecVLANTable 1 }
+	
+	SwPortSecVLANEntry ::=
+		SEQUENCE {
+		  swPortSecVLANID
+		      INTEGER,
+		  swPortSecVLANMaxLernAddr
+		      INTEGER,
+		  swPortSecVLANClearCtrl
+		      INTEGER
+		}
+	
+	swPortSecVLANID OBJECT-TYPE
+		SYNTAX  INTEGER (1..4094)
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the secured VLAN to lock address learning."
+		::= { swPortSecVLANEntry 1 }
+	
+	swPortSecVLANMaxLernAddr OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates allowable number of addresses to be learned on this VLAN.
+                      A value of -1 means no-limit. The default value is no-limit.
+                      
+                      The max entry range is (0..N). The value N means the max number and is
+	              determined by the project itself."
+		::= { swPortSecVLANEntry 2 }
+	
+	swPortSecVLANClearCtrl  OBJECT-TYPE
+		SYNTAX INTEGER  {
+			other(1),	
+			start(2)
+        		}
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Used to clear port security entries by VLAN.
+			 Setting this value to 'start' will execute the clear action. 
+			 Once cleared, the value returns to 'other'.
+                        "
+        	::= { swPortSecVLANEntry 3 }
+
+-- -----------------------------------------------------------------------------
+        swPortSecMgmtByVLANOnPort             OBJECT IDENTIFIER ::= { swPortSecMgmt 3 }
+        
+	swPortSecVLANOnPortTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwPortSecVLANOnPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A port security feature which controls the address learning capability.
+		       When number is given said N, which allows N addresses to be learned
+                       on this VLAN from the special port, the first N learned addresses are locked
+                       at this VLAN from the special port as static entries.
+                       When the learned addresses number reaches N, any incoming packet
+		       without learned source addresses are discarded (e.g. dropped) and no more new
+		       addresses can be learned on this VLAN from the special port."
+		::= { swPortSecMgmtByVLANOnPort 1 }
+	
+	swPortSecVLANOnPortEntry OBJECT-TYPE
+		SYNTAX  SwPortSecVLANOnPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swPortSecVLANOnPortTable."
+		INDEX   { swPortSecPortIndex,swPortSecVLANID }
+		::= { swPortSecVLANOnPortTable 1 }
+	
+	SwPortSecVLANOnPortEntry ::=
+		SEQUENCE {
+		  swPortSecVLANOnPortMaxLernAddr
+		      INTEGER,
+		  swPortSecVLANOnPortAddCtrl
+		      INTEGER
+		}
+	
+	swPortSecVLANOnPortMaxLernAddr OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates allowable number of addresses to be learned on this VLAN
+                      from the special port.
+                      A value of -1 means no-limit. The default value is no-limit.
+                      Only VLANs with limitations will be displayed in this table.
+                      
+                      The max entry range is (0..N). The value N means the max number and is
+	              determined by the project itself."
+		::= { swPortSecVLANOnPortEntry 1 }
+	
+	swPortSecVLANOnPortAddCtrl  OBJECT-TYPE
+		SYNTAX INTEGER  {
+			other(1),
+		        add(2)
+        		}
+		MAX-ACCESS  read-create
+		STATUS      current
+		DESCRIPTION
+			"other (1):
+                            When user gets this object, it always returns other(1).
+                         add (2):
+			    Used to configure the VLAN limit from the special port.
+			    
+			    If 'add' is selected, swPortSecVLANOnPortMaxLernAddr must be set to a valid value except -1.
+                        "
+        	::= { swPortSecVLANOnPortEntry 2 }
+-- -----------------------------------------------------------------------------
+        swPortSecMgmtByVLANOnPortClearCtrl             OBJECT IDENTIFIER ::= { swPortSecMgmtByVLANOnPort 2 }
+         
+ 	swPortSecMgmtByVLANOnPortClearPort  OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Indicates the port."
+        	::= { swPortSecMgmtByVLANOnPortClearCtrl 1 }
+
+	swPortSecMgmtByVLANOnPortClearVID  OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Indicates the VID."
+        	::= { swPortSecMgmtByVLANOnPortClearCtrl 2 }
+
+	swPortSecMgmtByVLANOnPortClearAction  OBJECT-TYPE
+		SYNTAX INTEGER  {
+			other(1),
+		        start(2)
+        		}
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"other(1):
+                            When user gets this object, it always returns other(1).
+                         start(2):
+			    Used to clear port security entries by VLAN on the special port."
+        	::= { swPortSecMgmtByVLANOnPortClearCtrl 3 }       	
+-- -----------------------------------------------------------------------------
+
+	swPortSecEntriesTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwPortSecEntriesEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "This table is used to show port security entries."
+		::= { swPortSecMgmt 4 }
+	
+	swPortSecEntriesEntry OBJECT-TYPE
+		SYNTAX  SwPortSecEntriesEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swPortSecEntriesTable."
+		INDEX   { swPortSecMac,swPortSecVID }
+		::= { swPortSecEntriesTable 1 }
+	
+	SwPortSecEntriesEntry ::=
+		SEQUENCE {
+		  swPortSecMac
+		      MacAddress,
+		  swPortSecVID
+		      INTEGER,
+                  swPortSecPort
+                      INTEGER,
+                  swPortSecDelCtrl
+                      INTEGER
+		}	
+	
+        swPortSecMac OBJECT-TYPE
+                SYNTAX  MacAddress
+                MAX-ACCESS  read-only
+                STATUS  current
+                DESCRIPTION
+                     "Specifies a MAC address."
+                ::= { swPortSecEntriesEntry 1 }
+                
+	swPortSecVID OBJECT-TYPE
+		SYNTAX	INTEGER (1..4094)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the VLAN ID."
+		::= { swPortSecEntriesEntry 2 }	
+	
+         swPortSecPort OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the port."
+		::= { swPortSecEntriesEntry 3 }
+ 	
+
+         swPortSecDelCtrl  OBJECT-TYPE
+		SYNTAX INTEGER  {
+			other(1),
+			start(2)
+                       }
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Used to delete this port security entry.
+			 Setting this value to 'start' will execute the delete action.
+			 Once deleted, the value returns to 'other'."
+                ::= { swPortSecEntriesEntry 4 }    	
+        	
+
+END

@@ -1,0 +1,262 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : DoS Prevention Common mib
+-- FILE NAME: DOSprev.mib
+-- DATE     : 2008/09/18
+-- VERSION  : 2.04
+-- PURPOSE  : To construct the MIB structure for DoS Prevention feature
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICATION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+-- -----------------------------------------------------------------------------
+-- Version 2.04, 2008/09/18, Marco
+-- rename *DOS* to *DoS*
+-- modify description for swDOSCtrl* objects
+-- -----------------------------------------------------------------------------
+-- Version 2.03, 2008/09/05, Marco
+-- rename swDOSDOSAttackDetected to swDOSAttackDetected
+-- -----------------------------------------------------------------------------
+-- Version 2.02, 2008/08/13, Peter Hsieh
+-- Remove swDOSNotifyVarMacAddr object for DoS trap
+-- Notes: Requested by Customer
+-- -----------------------------------------------------------------------------
+-- Version 2.01, 2008/03/24, Peter Hsieh
+-- Add swDOSNotify swDOSNotifyPrefix swDOSDOSAttackDetected
+-- swDOSNotifyVarBindings swDOSNotifyVarIpAddr swDOSNotifyVarMacAddr
+-- swDOSNotifyVarPortNumber objects for DoS trap
+-- Notes: Requested by Suger for project DES30xxp
+-- -----------------------------------------------------------------------------
+-- Version 2.00, 2008/02/29, Marco
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+DOS-PREV-MIB DEFINITIONS ::= BEGIN
+  IMPORTS
+	TEXTUAL-CONVENTION			FROM SNMPv2-TC
+	MODULE-IDENTITY,OBJECT-TYPE,
+	Unsigned32,Integer32,
+	IpAddress			FROM SNMPv2-SMI
+	DisplayString,RowStatus,
+	TruthValue,MacAddress		FROM SNMPv2-TC
+	dlink-common-mgmt				FROM DLINK-ID-REC-MIB;
+		
+	swDoSMgmtMIB MODULE-IDENTITY
+		LAST-UPDATED "0809180000Z"
+	  	ORGANIZATION "D-Link Corp."
+	  	CONTACT-INFO
+	   		"http://support.dlink.com"
+	  	DESCRIPTION
+	    		"The MIB module for configuring the DoS prevention settings of the device."
+	  	::= { dlink-common-mgmt 59 }
+	  	
+   
+ 		
+--***************************************************************************
+--	swDoSCtrl
+--***************************************************************************	  	
+	swDoSCtrl       	OBJECT IDENTIFIER ::= { swDoSMgmtMIB 1 }
+	
+	swDoSTrapLog OBJECT-TYPE
+    	SYNTAX INTEGER {
+    		enable(1), 
+    		disable(2),
+    		other(3)
+    	}
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object indicates the status of the DoS prevention trap log."
+    ::= { swDoSCtrl 1 }
+	
+	swDoSClearCounters OBJECT-TYPE
+    	SYNTAX INTEGER {
+			land-attack(1),
+			blat-attack(2),
+			smurf-attack(3),
+			tcp-null-scan(4),
+			tcp-xmascan(5),
+			tcp-synfin(6),
+			tcp-syn-srcport-less-1024(7),
+			all(8),
+			other(9)
+    	}
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object clears the DoS prevention frame counters."
+    ::= { swDoSCtrl 2 }
+
+							
+    swDoSCtrlTable  OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwDoSCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table that holds the DoS prevention settings of the device."
+        ::= { swDoSCtrl 3 }
+
+    swDoSCtrlEntry OBJECT-TYPE
+        SYNTAX  SwDoSCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of DoS prevention settings of the device."
+        INDEX   { swDoSCtrlType }
+        ::= { swDoSCtrlTable 1 }
+
+    SwDoSCtrlEntry ::= 
+        SEQUENCE {
+			swDoSCtrlType
+				INTEGER,
+			swDoSCtrlState
+				INTEGER,
+			swDoSCtrlActionType
+				INTEGER,
+			swDoSCtrlMirrorPort
+				INTEGER,
+			swDoSCtrlMirrorPriority
+				INTEGER,
+			swDoSCtrlMirrorRxRate
+				INTEGER,
+			swDoSCtrlFrameCount
+				INTEGER
+        }
+        
+    swDoSCtrlType OBJECT-TYPE
+    	SYNTAX INTEGER {
+			land-attack(1),
+			blat-attack(2),
+			smurf-attack(3),
+			tcp-null-scan(4),
+			tcp-xmascan(5),
+			tcp-synfin(6),
+			tcp-syn-srcport-less-1024(7)
+   	    	}
+        MAX-ACCESS  read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the DoS prevention type."
+    ::= { swDoSCtrlEntry 1 }
+    
+	swDoSCtrlState OBJECT-TYPE
+        SYNTAX INTEGER {
+               enable(1),
+               disable(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of the DoS prevention type."
+    ::= { swDoSCtrlEntry 2 }
+       
+    swDoSCtrlActionType OBJECT-TYPE
+        SYNTAX  INTEGER {
+               drop(1),
+               mirror(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the action for the DoS prevention type. 
+            If this object is set to 'mirror' and swDoSCtrlState is set to 'enable', the configuration 
+            will not take effect until a valid mirror port is specified. If mirror port is not valid
+            the behavior will be the same as 'drop'"
+        ::= { swDoSCtrlEntry 3 }     
+        
+    swDoSCtrlMirrorPort OBJECT-TYPE
+    	SYNTAX INTEGER (0..65535)
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object indicates the port to which the attack packet will be forwarded.
+            A value of 0 means that the DoS prevention action type is either not set to 'mirror'.
+            or the 'mirror' DoS action is not active. When swDoSCtrlActionType is set to 'mirror'
+            with swDoSCtrlState set to 'enable', setting this value to a valid port number will 
+            activate the 'mirror' DoS action."
+    ::= { swDoSCtrlEntry 4 }
+    
+    swDoSCtrlMirrorPriority OBJECT-TYPE
+    	SYNTAX INTEGER (0..8)
+	    MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object configures the priority of the detected packet.
+            Valid priority values are from 0 to 7. The value 8 indicates that there will be
+            no change in the priority of the DoS attack packet as it is forwarded to the
+            mirror port. A valid mirror port must first be specified in order to set this value."
+    ::= { swDoSCtrlEntry 5 }
+
+    
+	swDoSCtrlMirrorRxRate	OBJECT-TYPE
+    	SYNTAX INTEGER (0..1024000)
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object indicates the rate of reception of DoS attack packets.
+            The valid values are 64 to 1024000.
+            A value of 0 indicates that the rate has no limit. The default value is 0.
+            A valid mirror port must first be specified in order to set this value."
+    ::= { swDoSCtrlEntry 6 }           
+
+    swDoSCtrlFrameCount OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the number of frames detected under the DoS prevention type.
+            A valid mirror port must first be specified in order to set this value."
+        ::= { swDoSCtrlEntry 7 } 
+        
+--***************************************************************************
+--	swDoSNotify
+--***************************************************************************
+	swDoSNotify       	OBJECT IDENTIFIER ::= { swDoSMgmtMIB 4 }
+
+	swDoSNotifyPrefix	OBJECT IDENTIFIER ::= { swDoSNotify 0 }
+
+	swDoSAttackDetected NOTIFICATION-TYPE
+		OBJECTS {
+					swDoSCtrlType,
+					swDoSNotifyVarIpAddr,
+					swDoSNotifyVarPortNumber
+				}
+		STATUS  current
+		DESCRIPTION
+				"This trap is sent when the specific DoS packet is received,
+				 swDoSTrapLog is enable(1) and swDoSCtrlActionType is
+				 drop(1) for specific swDoSCtrlType."
+		::= { swDoSNotifyPrefix 1 }
+
+	swDoSNotifyVarBindings	OBJECT IDENTIFIER ::= { swDoSNotify 1 }
+	
+	swDoSNotifyVarIpAddr OBJECT-TYPE
+		SYNTAX      IpAddress
+		MAX-ACCESS  accessible-for-notify
+		STATUS  current
+		DESCRIPTION
+				"If the DoS packet is from the end station, represent 
+				the IP address of attacker; otherwise represent the
+				router's IP"
+		::={swDoSNotifyVarBindings 1}
+	
+	
+	swDoSNotifyVarPortNumber   OBJECT-TYPE
+		SYNTAX   DisplayString
+		MAX-ACCESS accessible-for-notify
+		STATUS  current
+		DESCRIPTION
+				"This object indicates the attacked portNum with a string,
+				For example, if the device is in standalone mode, and the port
+				number is 23, the string should be 23.
+				If the device is in stack mode, and the unit ID is 2, and the
+				port number is 3, the string should be 2:3."
+		::={swDoSNotifyVarBindings 2}
+      
+
+END
+

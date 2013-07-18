@@ -1,0 +1,1181 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : JWAC mib
+-- FILE NAME: JWAC.mib
+-- DATE     : 2010/4/22
+-- VERSION  : 2.09
+-- PURPOSE  : To construct the JWAC MIB structure
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+-- 
+-- Revision 2.09 2010/04/22 by Jessy Ji
+-- [New Object]
+-- [1]Add swJWACAuthStateTable for supporting JWAC VLAN-based authentication feature.
+-- Request by Jessy Ji for DES3500 R2.60.
+--   
+-- Version 2.08, 2009/10/21 by Jessy Ji
+-- [Modification]
+-- Deleted the value range and modified the description of swJWACPortMaxAuthHost.
+-- Requested by Jessy Ji for project DES-3810.
+--
+-- Version 2.07, 2009/4/21 by Jessy Ji
+--  [New Object]
+-- Added object swJWACVirtualIpURL in swJWACCtrl.
+-- to config the URL of JWAC virtual IP.
+-- Added objects swJWACHostUserName and swJWACHostIP in swJWACHostTable
+-- for display JWAC authentication user information.
+-- Added objects swJWACPageElementNotificationLine1,swJWACPageElementNotificationLine2,
+--       swJWACPageElementNotificationLine3,swJWACPageElementNotificationLine4,
+--       and swJWACPageElementNotificationLine5 in swJWACPageElementTable
+-- to config JWAC notification information by line in web page after authentication.
+--
+-- Version 2.06, 2009/2/6 by Jesse Jiang
+-- Added object swJWACUpdateSVRState in swJWACUpdateSVRTable
+-- for display the update server ACL state.
+-- Added object swJWACHostPriority in swJWACHostTable
+-- for display the JWAC host priority.
+--
+-- Version 2.05, 2009/1/22 by Jesse Jiang
+--  [New Object]
+-- Added swJWACUpdateSVRTable in swJWACCtrl
+-- for display the JWAC Update Server information.
+--  [Modification]
+-- Obsolete swJWACUpdateServerTable.
+-- For display the JWAC Update Server information format change.
+--
+-- Version 2.04, 2008/12/2 by Jesse Jiang
+-- Added object swJWACRadiusAuthorizeState in swJWACCtrl
+-- Added object swJWACLocalAuthorizeState in swJWACCtrl
+--
+-- Version 2.03, 2008/11/4  by Jesse Jiang
+-- Added object swJWACAuthFailOverState in swJWACCtrl
+-- Added swJWACWebAuthUserTable in swJWACMgmt
+--
+-- Version 2.02, 2008/8/13  by Vic Li
+-- Added  object swJWACAuthenticatePage in swJWACCtrl
+-- Added  swJWACPageElementTable in swJWACMgmt       
+--	
+-- Version 2.01, 2008/6/24 by Jeffers
+-- Add object swJWACPortAuthMode in swJWACPortTable 
+--
+-- Version 2.00, 2007/8/1 16:35PM by Green zhu
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+JWAC-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress
+                                        		FROM SNMPv2-SMI
+        MacAddress, RowStatus          			FROM SNMPv2-TC
+        DisplayString                   		FROM RFC1213-MIB
+        dlink-common-mgmt				FROM DLINK-ID-REC-MIB;
+		VlanId					::= INTEGER (1..4094)
+
+    swJWACMIB MODULE-IDENTITY
+	    LAST-UPDATED "1004220000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The structure of JWAC management for the
+		    proprietary enterprise."
+        ::= { dlink-common-mgmt 39 }
+
+
+	swJWACCtrl           OBJECT IDENTIFIER ::= { swJWACMIB 1 }
+	swJWACInfo           OBJECT IDENTIFIER ::= { swJWACMIB 2 }
+    swJWACPortMgmt       OBJECT IDENTIFIER ::= { swJWACMIB 3 }
+	swJWACMgmt           OBJECT IDENTIFIER ::= { swJWACMIB 4 }
+
+	swJWACNotify 	     OBJECT IDENTIFIER ::= { swJWACMIB 5 }
+
+-- -----------------------------------------------------------------------------
+-- swswJWACCtrl              OBJECT IDENTIFIER ::= { swJWACMIB 1 }
+-- -----------------------------------------------------------------------------
+	swJWACState OBJECT-TYPE
+    		SYNTAX  INTEGER {
+		              	enabled(1),
+                	        disabled(2)
+            	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"This object enables/disables the JWAC function.
+            		
+            		 JWAC and WAC are mutually exclusive functions. That is, they
+            		 can not be enabled at the same time.
+			 Using the JWAC function, PC users need to pass two stages 
+			 of authentication. The first stage is to do the 
+			 authentication with the quarantine server and the second 
+			 stage is the authentication with the switch. For the 
+			 second stage, the authentication is similar to WAC, except 
+			 that there is no port VLAN membership change by JWAC after 
+			 a host passes authentication. The RADIUS server will share 
+			 the server configuration defined by the 1X command set.
+			"
+        	::= { swJWACCtrl 1 }
+
+   	swJWACRedirectState OBJECT-TYPE
+    		SYNTAX  INTEGER {
+		              	enabled(1),
+                	        disabled(2)
+            	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"This object enables/disables the JWAC redirect function.
+            		
+            		 When the redirect quarantine_server is enabled, the 
+            		 unauthenticated host will be redirected to the quarantine server 
+            		 when it tries to access a random URL. When the redirect 
+            		 jwac_login_page is enabled, the unauthenticated host will be 
+            		 redirected to the jwac_login_page in the Switch to finish 
+            		 authentication.
+			 When redirect is disabled, only access to the quarantine_server 
+			 and the jwac_login_page from the unauthenticated host are allowed, 
+			 all other web access will be denied.
+			 
+			 NOTE: When enabling redirect to the quarantine_server, a 
+			 quarantine_server must be configured first.
+			"
+        	::= { swJWACCtrl 2 }
+        	
+       swJWACForcibleLogoutState OBJECT-TYPE
+    		SYNTAX  INTEGER {
+		              	enabled(1),
+                	        disabled(2)
+            	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"This object enables/disables the JWAC forcible_logout function.
+            		
+            		 When forcible_logout is enabled, a PING packet from an 
+            		 authenticated host to the JWAC Switch with TTL=1 will be 
+            		 regarded as a logout request, and the host will move back 
+            		 to the unauthenticated state.
+            		"
+        	::= { swJWACCtrl 3 }
+        	
+	swJWACUDPFilteringState OBJECT-TYPE
+    		SYNTAX  INTEGER {
+		              	enabled(1),
+                	        disabled(2)
+            	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"This object enables/disables the JWAC udp_filtering function.
+            		
+            		 When udp_filtering is enabled, all UDP and ICMP packets except 
+            		 DHCP and DNS packets from unauthenticated hosts will be dropped.
+            		"
+        	::= { swJWACCtrl 4 }
+        	
+        swJWACQuarantineServerMonitorState OBJECT-TYPE
+    		SYNTAX  INTEGER {
+		              	enabled(1),
+                	        disabled(2)
+            	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"This object enables/disables the JWAC Quarantine Server 
+            		 monitor function.
+            		 
+            		 When enabled, the JWAC Switch will monitor the Quarantine 
+            		 Server to ensure the server is okay. If the Switch detects no 
+            		 Quarantine Server, it will redirect all unauthenticated HTTP 
+			 access attempts to the JWAC Login Page forcibly if the redirect 
+			 is enabled and the redirect destination is configured to be a 
+			 Quarantine Server.
+            		"
+        	::= { swJWACCtrl 5 }
+        	
+        swJWACQuarantineServerErrorTimeOut OBJECT-TYPE
+    		SYNTAX  INTEGER (5..300)
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"Used to set the Quarantine Server error timeout.
+            		
+            		 When the Quarantine Server monitor is enabled, the JWAC Switch will 
+            		 periodically check if the Quarantine works okay. If the Switch 
+            		 does not receive any response from the Quarantine Server during the 
+            		 configured error timeout, the Switch then regards it as not 
+            		 working properly.
+            		"
+        	::= { swJWACCtrl 6 }
+        	
+        swJWACRedirectDestination OBJECT-TYPE
+    		SYNTAX  INTEGER {
+                	quarantine_server(1),
+                	jwac_login_page(2)
+              	}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"Specifies the destination before an unauthenticated host is 
+            		 redirected to the Quarantine Server or JWAC login web page.
+            		"
+        	::= { swJWACCtrl 7 }
+        	
+         swJWACRedirectDelayTime OBJECT-TYPE
+    		SYNTAX  INTEGER (0..10)
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"Specifies the delay time before an unauthenticated host is 
+            		 redirected to the Quarantine Server or JWAC login web page.
+            		 
+            		 The unit of delay_time is seconds.
+            		 0 means no delay in the redirect.
+            		"
+        	::= { swJWACCtrl 8 }	
+        	
+         swJWACVirtualIpAddr OBJECT-TYPE
+    		SYNTAX  IpAddress
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"Specifies the JWAC virtual IP address which is used to accept 
+            		 authentication requests from an unauthenticated host.
+            		 
+            		 The virtual IP of JWAC is used to accept authentication requests 
+            		 from an unauthenticated host. Only requests sent to this IP will 
+            		 get a correct response.
+            		 
+			 NOTE: This IP does not respond to ARP requests or ICMP packets.
+            		"
+        	::= { swJWACCtrl 9 }
+        	
+         swJWACQuarantineServerURL OBJECT-TYPE
+    		SYNTAX  DisplayString(SIZE(0..128))
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"Specifies the JWAC Quarantine Server URL.
+            		
+            		 If the redirect is enabled and the redirect destination is the
+            		 Quarantine Server, when an unauthenticated host sends the HTTP
+            		 request packets to a random WEB server, the Switch will handle
+            		 this HTTP packet and send back a message to the host to allow it
+            		 access to the Quarantine Server with the configured URL.
+            		 When the PC is connected to the specified URL, the quarantine server
+            		 will request the PC user to input the user name and password to
+            		 complete the authentication process.
+			"
+        	::= { swJWACCtrl 10 }
+       	
+          swJWACSwitchHttpPortNumber OBJECT-TYPE
+    		SYNTAX  INTEGER(1..65535)
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"Specifies the TCP port which the JWAC Switch listens to and uses 
+            		 to finish the authenticating process."
+        	::= { swJWACCtrl 11 }
+        	
+          swJWACSwitchHttpProtocol OBJECT-TYPE
+    		SYNTAX  INTEGER{
+    				http(1),
+                		https(2)
+    		}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"Specifies the protocol JWAC will run on this TCP port."
+        	::= { swJWACCtrl 12 }
+        
+          swJWACRadiusProtocol OBJECT-TYPE
+    		SYNTAX  INTEGER{
+    				local(1),
+    				pap(2),
+    				chap(3),
+    				ms_chap(4),
+    				ms_chapv2(5),
+    				eap_md5(6)
+     		}
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"Specifies the RADIUS protocol used by JWAC to complete a RADIUS 
+            		 authentication."
+        	::= { swJWACCtrl 13 }
+        	
+        swJWACUpdateServerTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwJWACUpdateServerEntry
+		MAX-ACCESS  not-accessible
+		STATUS		obsolete
+		DESCRIPTION
+		      "A table that contains the JWAC Update Server information."
+		::= { swJWACCtrl 14 }
+
+	swJWACUpdateServerEntry OBJECT-TYPE
+		SYNTAX		SwJWACUpdateServerEntry
+		MAX-ACCESS  not-accessible
+		STATUS		obsolete
+		DESCRIPTION
+		      "A list of JWAC Update Server information."
+		INDEX { swJWACUpdateServerIpAddr,
+		        swJWACUpdateServerMask
+		  }
+		::= { swJWACUpdateServerTable 1 }
+
+	SwJWACUpdateServerEntry ::=
+        SEQUENCE {
+            	       swJWACUpdateServerIpAddr
+                	           IpAddress,
+ 			swJWACUpdateServerMask
+                                   IpAddress, 
+      		        swJWACUpdateServerStatus
+        			    RowStatus
+       }
+
+
+	swJWACUpdateServerIpAddr OBJECT-TYPE
+		SYNTAX		IpAddress
+		MAX-ACCESS	read-only
+		STATUS		obsolete
+		DESCRIPTION
+			"Specifies the IP address."
+		::= { swJWACUpdateServerEntry 1 }
+
+	swJWACUpdateServerMask OBJECT-TYPE
+		SYNTAX		IpAddress
+		MAX-ACCESS	read-only
+		STATUS		obsolete
+		DESCRIPTION
+			"Specifies the IP net mask."
+		::= { swJWACUpdateServerEntry 2 }
+			
+  	swJWACUpdateServerStatus OBJECT-TYPE
+    		SYNTAX    RowStatus
+    		MAX-ACCESS  read-create
+    		STATUS    obsolete
+    		DESCRIPTION
+      			"The status of this entry."
+    		::= { swJWACUpdateServerEntry 3 }		
+    		
+    swJWACAuthenticatePage OBJECT-TYPE
+    		SYNTAX  INTEGER{
+    				japanese (1),
+    				english(2)
+                 }
+    		MAX-ACCESS  read-write
+    		STATUS  current
+    		DESCRIPTION
+            		"This lets an administrator decide which authentication page
+                          to use.
+                          japanese:  Choose the Japanese page;
+                          english:   Choose the English page."
+        	::= { swJWACCtrl 15 }
+        	
+		swJWACAuthFailOverState OBJECT-TYPE
+    SYNTAX 	INTEGER {
+    						enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  	current
+    DESCRIPTION
+    		"This object enables/disables the web-based authentication auth_failover status
+             of the device. When the authentication failover is enabled, 
+             if the RADIUS server's authentication is unreachable, the local database will be used for
+             authentication."
+    ::= { swJWACCtrl 16 }
+    
+    swJWACRadiusAuthorizeState OBJECT-TYPE
+		SYNTAX 	INTEGER {
+    						enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  	current
+    DESCRIPTION
+				" Used to enable or disable the acceptance of an authorized configuration. When the authorization is
+				 enabled for the JWAC RADIUS, the authorized data assigned by the RADUIS server will be accepted 
+				 if the global authorization network is enabled."
+		::= { swJWACCtrl 17 }
+
+		swJWACLocalAuthorizeState OBJECT-TYPE
+		SYNTAX 	INTEGER {
+    						enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  	current
+    DESCRIPTION
+				" Used to enable or disable the acceptance of an authorized configuration. When the authorization is
+				 enabled for the JWAC local, the authorized data assigned by the local database will be accepted. "
+    ::= { swJWACCtrl 18 }
+    
+    swJWACUpdateSVRTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwJWACUpdateSVREntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A table that contains JWAC Update Server information."
+		::= { swJWACCtrl 19 }
+
+	swJWACUpdateSVREntry OBJECT-TYPE
+		SYNTAX		SwJWACUpdateSVREntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list of JWAC Update Server information."
+		INDEX { swJWACUpdateSVRIpAddr,
+		        swJWACUpdateSVRMask,
+		        swJWACUpdateSVRProtocol,
+		        swJWACUpdateSVRPort
+		  }
+		::= { swJWACUpdateSVRTable 1 }
+
+	SwJWACUpdateSVREntry ::=
+        SEQUENCE {
+            	       swJWACUpdateSVRIpAddr
+                	           IpAddress,
+ 			swJWACUpdateSVRMask
+                                   IpAddress, 
+      swJWACUpdateSVRProtocol
+                     					INTEGER,
+      swJWACUpdateSVRPort
+                     					INTEGER,
+      swJWACUpdateSVRStatus
+        			    					RowStatus,
+      swJWACUpdateSVRState
+      											INTEGER
+       }
+
+
+	swJWACUpdateSVRIpAddr OBJECT-TYPE
+		SYNTAX		IpAddress
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the IP address."
+		::= { swJWACUpdateSVREntry 1 }
+
+	swJWACUpdateSVRMask OBJECT-TYPE
+		SYNTAX		IpAddress
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the IP net mask."
+		::= { swJWACUpdateSVREntry 2 }
+		
+	swJWACUpdateSVRProtocol OBJECT-TYPE
+		SYNTAX		INTEGER{
+		              	all(1),
+                	        tcp(2),
+                	        udp(3)
+            	}
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the protocol."
+		::= { swJWACUpdateSVREntry 3 }
+		
+	swJWACUpdateSVRPort OBJECT-TYPE
+		SYNTAX		INTEGER(0..65535)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the port, 0 denotes all ports."
+		::= { swJWACUpdateSVREntry 4 }
+					
+  	swJWACUpdateSVRStatus OBJECT-TYPE
+    		SYNTAX    RowStatus
+    		MAX-ACCESS  read-create
+    		STATUS    current
+    		DESCRIPTION
+      			"The status of this entry."
+    		::= { swJWACUpdateSVREntry 5 }
+
+		swJWACUpdateSVRState OBJECT-TYPE
+		SYNTAX		INTEGER{
+											active(1),
+											inactive(2)
+											}
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the update server ACL state."
+		::= { swJWACUpdateSVREntry 6 }
+
+    swJWACVirtualIpURL OBJECT-TYPE
+		SYNTAX  DisplayString(SIZE(0..128))
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+        		"Used to set the URL for virtual IP"
+    	::= { swJWACCtrl 20 }
+
+		
+-- -----------------------------------------------------------------------------
+-- swJWACPortMgmt       OBJECT IDENTIFIER ::= { swJWACMIB 3 }
+-- -----------------------------------------------------------------------------
+
+	swJWACPortTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwJWACPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A table that contains JWAC port information."
+		::= { swJWACPortMgmt 1 }
+
+	swJWACPortEntry OBJECT-TYPE
+		SYNTAX		SwJWACPortEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list containing JWAC port information."
+		INDEX { swJWACPortIndex }
+		::= { swJWACPortTable 1 }
+
+	SwJWACPortEntry ::=
+        SEQUENCE {
+            		swJWACPortIndex
+                		INTEGER,
+			swJWACPortState
+				INTEGER,
+			swJWACPortMaxAuthHost
+				INTEGER,
+			swJWACPortAgeingTime
+			         INTEGER,
+			swJWACPortIdleTime
+			         INTEGER,
+			swJWACPortBlockTime
+			         INTEGER,
+            swJWACPortAuthMode
+                     INTEGER
+       }   
+
+	swJWACPortIndex      OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC port number."
+		::= { swJWACPortEntry 1 }
+
+	swJWACPortState      OBJECT-TYPE
+		SYNTAX		INTEGER{
+		              	enabled(1),
+                	        disabled(2)
+		
+	        }
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC port state."
+		::= { swJWACPortEntry 2 }
+		
+	swJWACPortMaxAuthHost      OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the maximum number of host process authentication 
+			 attempts allowed on each port at the same time. 
+			 The value range is (0..N), the value of N is project dependent."
+		::= { swJWACPortEntry 3 }	
+		
+	swJWACPortAgeingTime      OBJECT-TYPE
+		SYNTAX		INTEGER(0..1440)
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the time period during which an authenticated 
+			 host will remain in the authenticated state.
+			 
+			 0 indicates the authenticated host will never age out on 
+			 the port.
+			"
+		::= { swJWACPortEntry 4 }	
+		
+	swJWACPortIdleTime      OBJECT-TYPE
+		SYNTAX		INTEGER(0..1440)
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the idle_time.
+			
+			 If there is no traffic during idle_time, the host will be 
+			 moved back to the unauthenticated state.
+			 
+			 0 indicates the idle state of the 
+			 authenticated host on the port will never be checked.
+			"
+		::= { swJWACPortEntry 5 }
+		
+	
+	swJWACPortBlockTime      OBJECT-TYPE
+		SYNTAX		INTEGER(0..300)
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the block_time.
+			 If a host fails to pass authentication, it will be blocked 
+			 for a period specified by the block_time.
+			"
+		::= { swJWACPortEntry 6 }		
+	
+        swJWACPortAuthMode    OBJECT-TYPE
+       	        SYNTAX      INTEGER {
+                              hostbased(1),
+                              portbased(2)
+        	                     }
+               	MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+		     "Specifies the authentication mode on the special port. The default mode is host based. "
+      	DEFVAL {hostbased}
+                ::= { swJWACPortEntry 7 }
+-- -----------------------------------------------------------------------------
+-- swJWACMgmt          OBJECT IDENTIFIER ::= { swJWACMIB 4 }
+-- -----------------------------------------------------------------------------
+	
+      	swJWACHostTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwJWACHostEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A table that contains JWAC client host information."
+		::= { swJWACMgmt 1 }
+
+	swJWACHostEntry OBJECT-TYPE
+		SYNTAX		SwJWACHostEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list containing JWAC client host information."
+		INDEX { swJWACHostPort, swJWACHostAuthStatus, swJWACHostMACAddr }
+		::= { swJWACHostTable 1 }
+	
+	SwJWACHostEntry ::=
+        SEQUENCE {
+            	        swJWACHostPort
+                	            INTEGER,        
+                        swJWACHostAuthStatus
+				    INTEGER,
+            	       	swJWACHostMACAddr
+				    MacAddress,    
+		        swJWACHostVID
+		                    VlanId,
+		        swJWACHostRemainAgeTime
+		                    INTEGER,
+		        swJWACHostIdleTime
+		                    INTEGER,
+                        swJWACHostBlockTime
+		                    INTEGER,
+		        swJWACHostStatus
+		                    INTEGER,
+		        swJWACHostPriority
+		        	    INTEGER,
+		        swJWACHostUserName
+		        	    DisplayString,
+			swJWACHostIP
+			   	    IpAddress			        												
+       }
+
+      	swJWACHostPort OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC host port number."
+		::= { swJWACHostEntry 1 }
+		      
+	swJWACHostAuthStatus OBJECT-TYPE
+		SYNTAX		INTEGER{
+		                     authenticated(1),
+                	             authenticating(2),
+                	             blocked(3)
+		}
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC host authentication state."
+		::= { swJWACHostEntry 2 }
+						 
+	swJWACHostMACAddr OBJECT-TYPE
+		SYNTAX		MacAddress
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC host MAC address."
+		::= { swJWACHostEntry 3 }
+		
+	swJWACHostVID OBJECT-TYPE
+		SYNTAX		VlanId
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC host VID."
+		::= { swJWACHostEntry 4 }			
+	
+	swJWACHostRemainAgeTime OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the remaining JWAC host agetime.
+			
+			 0 indicates the authenticated host on 
+			 the port will never age out.
+			"
+		::= { swJWACHostEntry 5 }	
+	
+	swJWACHostIdleTime OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC host idle time.
+			
+			 0 indicates the idle state of the 
+			 authenticated host on the port will never be checked.
+			"
+		::= { swJWACHostEntry 6 }
+			
+         swJWACHostBlockTime OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC host block time."
+		::= { swJWACHostEntry 7 }
+		
+	swJWACHostStatus OBJECT-TYPE
+		SYNTAX		INTEGER{
+					active(1),
+					delete(2)		
+		}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the status of the JWAC host.
+			 Setting delete (2) will delete this JWAC host entry.
+			"
+		::= { swJWACHostEntry 8 } 
+		
+		swJWACHostPriority OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC host priority assigned when passing authentication.
+			 -1 indicates the host has no priority.
+			"
+		::= { swJWACHostEntry 9 }
+		
+		swJWACHostUserName OBJECT-TYPE
+		SYNTAX		DisplayString
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the user name who started the authentication process."
+		::= { swJWACHostEntry 10 }		
+			
+		swJWACHostIP OBJECT-TYPE
+		SYNTAX		IpAddress 
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the IP address of the JWAC host, which started the 
+			authentication process."
+		::= { swJWACHostEntry 11 }			
+		
+  					
+-- -----------------------------------------------------------------------------
+-- swJWACPageElementTable          OBJECT IDENTIFIER ::= { swJWACMgmt 2 }
+-- -----------------------------------------------------------------------------
+      	swJWACPageElementTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwJWACPageElementEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A table that contains JWAC authentication page information."
+		::= { swJWACMgmt 2 }
+
+	swJWACPageElementEntry OBJECT-TYPE
+		SYNTAX		SwJWACPageElementEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list containing JWAC authenticate page information.
+                      This allows an administrator to customize the authenticate page."
+		INDEX { swJWACPageElementPage }
+		::= { swJWACPageElementTable 1 }
+	
+	SwJWACPageElementEntry ::=
+        SEQUENCE {
+            	        swJWACPageElementPage
+                	            INTEGER,
+                        swJWACPageElementPageTitle
+				    DisplayString,
+            	       	swJWACPageElementLoginWindowTitle
+				    DisplayString,
+		        swJWACPageElementUserName
+		                    DisplayString,
+		        swJWACPageElementPassWord
+		                    DisplayString,
+		        swJWACPageElementLogoutWindowTitle
+		                    DisplayString,
+		        swJWACPageElementNotificationLine1
+		        	    DisplayString,
+		       swJWACPageElementNotificationLine2
+		       		    DisplayString,
+		       swJWACPageElementNotificationLine3
+		       		    DisplayString,
+		       swJWACPageElementNotificationLine4
+		       		    DisplayString,
+		       swJWACPageElementNotificationLine5
+		       		    DisplayString 						
+       }
+
+      	swJWACPageElementPage OBJECT-TYPE
+		SYNTAX		INTEGER{
+					japanese(1),
+					english(2)		
+		}
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC authenticate page."
+		::= { swJWACPageElementEntry 1 }
+		
+	swJWACPageElementPageTitle OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..128))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC page title of the authenticate page."
+		::= { swJWACPageElementEntry 2 }
+						
+	swJWACPageElementLoginWindowTitle OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..32))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC login window title mapping of the
+                        authenticate page."
+		::= { swJWACPageElementEntry 3 }
+		
+	swJWACPageElementUserName OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..16))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC user name mapping of the
+                        authenticate page."
+		::= { swJWACPageElementEntry 4 }			
+	
+	swJWACPageElementPassWord OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..16))
+		MAX-ACCESS	read-write
+		STATUS		current 
+		DESCRIPTION
+			"Specifies the remaining JWAC password mapping of the
+                        authenticate page."
+		::= { swJWACPageElementEntry 5 }	
+	
+	swJWACPageElementLogoutWindowTitle OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..32))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Specifies the JWAC logout window title mapping of the
+                         authenticate page."
+		::= { swJWACPageElementEntry 6 }
+		
+	swJWACPageElementNotificationLine1 OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..128))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Used to set the notification information of line 1 
+			 in web page after successful authentication."
+		::= { swJWACPageElementEntry 7 }	
+		
+	swJWACPageElementNotificationLine2 OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..128))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Used to set the notification information of line 2 
+			 in web page after successful authentication."
+		::= { swJWACPageElementEntry 8 }			
+
+	swJWACPageElementNotificationLine3 OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..128))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Used to set the notification information of line 3 
+			 in web page after successful authentication."
+		::= { swJWACPageElementEntry 9 }		
+
+	swJWACPageElementNotificationLine4 OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..128))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Used to set the notification information of line 4 
+			 in web page after successful authentication."
+		::= { swJWACPageElementEntry 10 }	
+
+	swJWACPageElementNotificationLine5 OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..128))
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Used to set the notification information of line 5 
+			 in web page after successful authentication."
+		::= { swJWACPageElementEntry 11 }						
+
+
+-- -----------------------------------------------------------------------------
+-- swJWACWebAuthUserTable          OBJECT IDENTIFIER ::= { swJWACMgmt 3 }
+-- -----------------------------------------------------------------------------
+		
+		swJWACWebAuthUserTable OBJECT-TYPE
+		    SYNTAX      SEQUENCE OF SwJWACWebAuthUserEntry
+		    MAX-ACCESS  not-accessible
+		    STATUS      current
+		    DESCRIPTION
+		        "A table that contains web-based authentication account info."
+		    ::= { swJWACMgmt 3 }
+		
+		swJWACWebAuthUserEntry OBJECT-TYPE
+		    SYNTAX      SwJWACWebAuthUserEntry
+		    MAX-ACCESS  not-accessible
+		    STATUS      current
+		    DESCRIPTION
+		        "A list that contains web-based authentication account info."
+		    INDEX { swJWACWebAuthUserNameIndex }
+		    ::= { swJWACWebAuthUserTable 1 }
+		
+		SwJWACWebAuthUserEntry ::=
+		    SEQUENCE {
+		        swJWACWebAuthUserNameIndex
+		            DisplayString,
+		        swJWACWebAuthUserPWD
+		            DisplayString,
+		        swJWACWebAuthUserVID
+		       	    VlanId,
+		        swJWACWebAuthUserStatus
+		            RowStatus
+		        }
+		
+		swJWACWebAuthUserNameIndex OBJECT-TYPE
+		    SYNTAX      DisplayString(SIZE(1..15))
+		    MAX-ACCESS  read-only
+		    STATUS      current
+		    DESCRIPTION
+		        "This object indicates the username (maximum number of
+		         characters is 15)."
+		    ::= { swJWACWebAuthUserEntry 1 }
+		
+		swJWACWebAuthUserPWD OBJECT-TYPE
+		    SYNTAX      DisplayString(SIZE(1..15))
+		    MAX-ACCESS  read-create
+		    STATUS      current
+		    DESCRIPTION
+		        "This object indicates the password (maximum number of
+		         characters is 15) for this user account. It is write-only."
+		    ::= { swJWACWebAuthUserEntry 2 }
+		    
+		swJWACWebAuthUserVID OBJECT-TYPE
+		    SYNTAX	VlanId
+		    MAX-ACCESS	read-create
+		    STATUS	current
+		    DESCRIPTION
+			"This object indicates the VID for this user account."
+		    ::= { swJWACWebAuthUserEntry 3 }
+		    
+		swJWACWebAuthUserStatus OBJECT-TYPE
+		    SYNTAX      RowStatus
+		    MAX-ACCESS  read-create
+		    STATUS      current
+		    DESCRIPTION
+		        "This object manages this entry."
+		    ::= { swJWACWebAuthUserEntry 4 }
+
+-- -----------------------------------------------------------------------------
+-- swJWACAuthStateTable          OBJECT IDENTIFIER ::= { swJWACMgmt 4 }
+-- -----------------------------------------------------------------------------
+
+		swJWACAuthStateTable OBJECT-TYPE
+		    SYNTAX	SEQUENCE OF SwJWACAuthStateEntry
+		    MAX-ACCESS  not-accessible
+		    STATUS	current
+		    DESCRIPTION
+		      "This table contains JWAC client host information."
+		    ::= { swJWACMgmt 4 }
+
+		swJWACAuthStateEntry OBJECT-TYPE
+		    SYNTAX	SwJWACAuthStateEntry
+		    MAX-ACCESS  not-accessible
+		    STATUS	current
+		    DESCRIPTION
+		      "This list contains JWAC client host information."
+		    INDEX { swJWACAuthStatePort, 
+				swJWACAuthStateOriginalVid,
+				swJWACAuthStateMACAddr
+			}
+		    ::= { swJWACAuthStateTable 1 }
+
+		SwJWACAuthStateEntry ::=
+			SEQUENCE {
+				swJWACAuthStatePort
+					INTEGER,
+				swJWACAuthStateOriginalVid
+					VlanId,
+				swJWACAuthStateMACAddr
+					MacAddress,
+				swJWACAuthStateAuthStatus
+					INTEGER,
+				swJWACAuthStateAssignVid
+					VlanId,
+				swJWACAuthStateAssignPriority
+					INTEGER,
+				swJWACAuthStateRemainTime
+					INTEGER,
+				swJWACAuthStateIdleTime
+					INTEGER,   
+		        swJWACAuthStateUserName
+		        	DisplayString,
+			    swJWACAuthStateIP
+			   	    IpAddress,					
+				swJWACAuthStateDelAction
+					INTEGER
+			}
+		
+		swJWACAuthStatePort OBJECT-TYPE
+		    SYNTAX	INTEGER
+		    MAX-ACCESS	not-accessible
+		    STATUS	current
+		    DESCRIPTION
+			"Specifies the JWAC host port number."
+		    ::= { swJWACAuthStateEntry 1 }
+
+		swJWACAuthStateOriginalVid OBJECT-TYPE
+		    SYNTAX	VlanId
+		    MAX-ACCESS	not-accessible
+		    STATUS	current
+		    DESCRIPTION
+			"Specifies the JWAC host original receive VLAN-ID."
+		    ::= { swJWACAuthStateEntry 2 }
+	
+		swJWACAuthStateMACAddr OBJECT-TYPE
+		    SYNTAX	MacAddress
+		    MAX-ACCESS	not-accessible
+		    STATUS	current
+		    DESCRIPTION
+			"Specifies the JWAC host MAC address."
+		    ::= { swJWACAuthStateEntry 3 }
+
+		swJWACAuthStateAuthStatus OBJECT-TYPE
+		    SYNTAX  INTEGER{
+				authenticated(1),
+				authenticating(2),
+				blocked(3)
+			}
+		    MAX-ACCESS	read-only
+		    STATUS	current
+		    DESCRIPTION
+			"Specifies the JWAC host authentication state."
+		    ::= { swJWACAuthStateEntry 5 }
+
+		swJWACAuthStateAssignVid OBJECT-TYPE
+		    SYNTAX	VlanId
+		    MAX-ACCESS	read-only
+		    STATUS	current
+		    DESCRIPTION
+			"Specifies the JWAC host assign VID."
+		    ::= { swJWACAuthStateEntry 7 }			
+
+		swJWACAuthStateAssignPriority OBJECT-TYPE
+		    SYNTAX	INTEGER
+		    MAX-ACCESS	read-only
+		    STATUS	current
+		    DESCRIPTION
+			"Specifies the JWAC host priority assigned when pass authentication.			
+			-1 indicates the host has no priority assigned."
+		    ::= { swJWACAuthStateEntry 8 } 
+	
+		swJWACAuthStateRemainTime OBJECT-TYPE
+		    SYNTAX	INTEGER
+			UNITS	"minutes/seconds"
+		    MAX-ACCESS	read-only
+		    STATUS	current
+		    DESCRIPTION
+				"Specifies the remaining JWAC host aging time/ block time.
+				
+		         When host's authentication state is 'authenticated' in swJWACAuthStateAuthStatus,
+		         this object indicates the host's aging time, the units is minutes.
+		         When host's authentication state is 'blocked' in swJWACAuthStateAuthStatus,
+		         this object indicates the host's block time, the units is seconds.				
+				
+				 0 indicates the authenticated host on the port will never age out.
+				"
+		    ::= { swJWACAuthStateEntry 12 }	
+	
+		swJWACAuthStateIdleTime OBJECT-TYPE
+		    SYNTAX	INTEGER
+			UNITS	"seconds"
+		    MAX-ACCESS	read-only
+		    STATUS	current
+		    DESCRIPTION
+				"Specifies the JWAC host idle time in seconds.
+								
+				 0 indicates the idle state of the
+				 authenticated host on the port will never be checked.
+				"
+		    ::= { swJWACAuthStateEntry 14 }
+
+		swJWACAuthStateUserName OBJECT-TYPE
+		SYNTAX		DisplayString
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the user name who starts the authentication process."
+		::= { swJWACAuthStateEntry 18 }		
+			
+		swJWACAuthStateIP OBJECT-TYPE
+		SYNTAX		IpAddress 
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Specifies the IP address of the JWAC host, which starts the 
+			authentication process."
+		::= { swJWACAuthStateEntry 20 }
+
+		swJWACAuthStateDelAction OBJECT-TYPE
+		    SYNTAX	INTEGER{
+					active(1),
+					delete(2)		
+		    		}
+		    MAX-ACCESS	read-write
+		    STATUS	current
+		    DESCRIPTION
+			"Used to delete the specified authentication entry.
+			Setting delete(2) will delete this JWAC host entry.
+			"
+		    ::= { swJWACAuthStateEntry 30 } 
+		    		
+-- -----------------------------------------------------------------------------
+-- swJWACNotify        OBJECT IDENTIFIER ::= { swJWACMIB 5 }
+-- -----------------------------------------------------------------------------
+
+
+END

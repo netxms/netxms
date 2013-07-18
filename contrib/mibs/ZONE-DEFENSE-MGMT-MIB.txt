@@ -1,0 +1,87 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : ZONE-DEFENSE-MGMT-MIB
+-- FILE NAME: ZoneDefense.mib
+-- DATE     : 2010/04/12
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of Zone Defense function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2010/04/12
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+ZONE-DEFENSE-MGMT-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,
+        OBJECT-TYPE,
+        IpAddress
+                                        FROM SNMPv2-SMI
+        RowStatus                       FROM SNMPv2-TC
+        dlink-common-mgmt               FROM DLINK-ID-REC-MIB;
+
+    swZoneDefenseMIB MODULE-IDENTITY
+          LAST-UPDATED "1004120000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+                    "The Structure of Zone Defense management for the proprietary enterprise."
+        ::= { dlink-common-mgmt 92 }
+
+	swZoneDefenseMIBObjects		OBJECT IDENTIFIER ::= { swZoneDefenseMIB 1 }
+-- -----------------------------------------------------------------------------
+-- swZoneDefenseTable
+-- -----------------------------------------------------------------------------
+    swZoneDefenseTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwZoneDefenseEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table is used to create or delete Zone Defense ACL rules.
+             The rules for Zone Defense should have the highest priority of all
+             ACL rules."
+        ::= { swZoneDefenseMIBObjects 1 }
+
+    swZoneDefenseEntry OBJECT-TYPE
+        SYNTAX  SwZoneDefenseEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Information about the Zone Defense ACL rule."
+        INDEX  { swZoneDefenseAddress }
+        ::= { swZoneDefenseTable 1 }
+
+    SwZoneDefenseEntry ::=
+        SEQUENCE {
+            swZoneDefenseAddress
+                IpAddress,
+            swZoneDefenseRowStatus
+                RowStatus
+        }
+
+    swZoneDefenseAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The IP address which will be blocked by the ACL."
+        ::= { swZoneDefenseEntry 1 }
+
+    swZoneDefenseRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swZoneDefenseEntry 2 }
+
+END

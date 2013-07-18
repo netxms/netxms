@@ -1,0 +1,454 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : DDM-MGMT-MIB
+-- FILE NAME: DDM.mib
+-- DATE     : 2009/04/30							
+-- VERSION  : 1.02								
+-- PURPOSE  : To construct the MIB structure of DDM function for
+--            proprietary enterprise			
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- ----------------------------------------------------------------------------- 
+-- Version, Date, Author
+-- Description:								
+--  [New Object]		
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.02, 2009/04/30, Strive Zhao
+-- Description:
+-- [New Object]
+-- [1]Add object swDdmThresholdExceedOrRecover in swDdmNotificationBinding.
+-- [Modification]
+-- [1]Modify the description of swDdmAlarmTrap and swDdmWarningTrap.
+-- [2]Modify the bind variables of the swDdmAlarmTrap and swDdmWarningTrap,add a bind object
+--    swDdmThresholdExceedOrRecover.
+--    To indicate the GBIC exceeding its ddm threshold or recover to normal status.
+-- Requested by Strive Zhao for project DGS3700.
+--
+-- Version 1.01, 2009/02/13, Strive Zhao
+-- [New Object]
+-- [1]Add swDdmTrapState in swDdmMgmt
+-- [2]Add swDdmLogState in swDdmMgmt
+-- [3]Add swDdmPortMgmtTable
+--    for separately config trap and log mode.
+-- [Modification]
+-- [1]obsolete the swDdmActionMgmtTable
+-- Request by Stive for DGS3700-12 and DGS3700-12G
+--
+-- Version 1.00, 2008/09/16, Strive Zhao
+-- This is the first formal version for universal DDM definition. 
+-- --------------------------------------------------------------------------
+
+DDM-MGMT-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+        DisplayString
+            FROM SNMPv2-TC
+        MODULE-IDENTITY,OBJECT-TYPE
+            FROM SNMPv2-SMI
+        SnmpAdminString					
+            FROM SNMP-FRAMEWORK-MIB
+        dlink-common-mgmt	
+            FROM DLINK-ID-REC-MIB;
+
+swDdmMIB	MODULE-IDENTITY
+          LAST-UPDATED "0904300000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                      "http://support.dlink.com"
+          DESCRIPTION
+		    	"The structure of DDM for the proprietary enterprise."
+        	::={dlink-common-mgmt 72 }
+        
+swDdmCtrl	OBJECT IDENTIFIER     ::={swDdmMIB 1}
+swDdmInfo	OBJECT IDENTIFIER     ::={swDdmMIB 2}
+swDdmMgmt	OBJECT IDENTIFIER     ::={swDdmMIB 3}
+swDdmNotify	OBJECT IDENTIFIER     ::={swDdmMIB 4}
+
+
+-- --------------------------------------------------------------------------
+-- swDdmCtrl
+-- --------------------------------------------------------------------------
+swDdmTrapState    OBJECT-TYPE
+		SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the trap action state."
+        ::= {swDdmCtrl 1}
+
+swDdmLogState    OBJECT-TYPE
+		SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the log action state."
+        ::= {swDdmCtrl 2}
+        
+-- --------------------------------------------------------------------------
+-- swDdmInfo
+-- --------------------------------------------------------------------------
+swDdmStatus  OBJECT IDENTIFIER ::= { swDdmInfo 1 }
+
+--swDdmStatus
+swDdmStatusTable	OBJECT-TYPE
+		SYNTAX	SEQUENCE OF SwDdmStatusEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+    DESCRIPTION
+            "This table contains the DDM status information."
+        ::= {swDdmStatus 1}
+        
+swDdmStatusEntry OBJECT-TYPE
+		SYNTAX	SwDdmStatusEntry
+		MAX-ACCESS  not-accessible
+		STATUS	current
+		DESCRIPTION
+				"This is an entry of the swDdmStatusTable."
+		INDEX  {swDdmPort}
+				::= {swDdmStatusTable 1}
+SwDdmStatusEntry ::=
+		SEQUENCE {
+				swDdmPort
+                INTEGER,
+				swDdmTemperature
+							DisplayString,
+				swDdmVoltage
+							DisplayString,
+				swDdmBiasCurrent
+							DisplayString,
+				swDdmTxPower
+							DisplayString,
+				swDdmRxPower
+							DisplayString
+							}
+
+swDdmPort	OBJECT-TYPE
+		SYNTAX  INTEGER (1..65535)
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the port."
+        ::= {swDdmStatusEntry 1}	
+        				 
+swDdmTemperature OBJECT-TYPE
+		SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the real time value of the temperature. As the value 
+         is a floating point data type, the DisplayString type is used to define this parameter."
+        ::= {swDdmStatusEntry 2}  
+        
+swDdmVoltage OBJECT-TYPE
+		SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the real time value of the supply voltage. As the value 
+         value is a floating point data type, the DisplayString type is used to define this parameter."
+        ::= {swDdmStatusEntry 3} 
+        
+swDdmBiasCurrent OBJECT-TYPE
+		SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the real time value of the tx bias."
+        ::= {swDdmStatusEntry 4} 
+        
+swDdmTxPower OBJECT-TYPE
+		SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the real time value of the tx power. As the value 
+         is a floating point data type, the DisplayString type is used to define this parameter."
+        ::= {swDdmStatusEntry 5} 
+        
+swDdmRxPower OBJECT-TYPE
+		SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the real time value of the rx power. As the value is 
+        a floating data type, the DisplayString type is used to define this parameter."
+        ::= {swDdmStatusEntry 6} 
+      
+-- --------------------------------------------------------------------------
+-- swDdmMgmt
+-- -------------------------------------------------------------------------- 		
+swDdmThresholdMgmt	OBJECT IDENTIFIER ::= { swDdmMgmt 1 }
+swDdmActionMgmt		OBJECT IDENTIFIER ::= { swDdmMgmt 2 }		
+
+--swDdmThresholdMgmt
+
+swDdmThresholdMgmtTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwDdmThresholdMgmtEntry
+		MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+            "This table contains DDM temperature configuration information."
+        ::= {swDdmThresholdMgmt 1}
+        
+swDdmThresholdMgmtEntry OBJECT-TYPE
+		SYNTAX  SwDdmThresholdMgmtEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+      "This is an entry of the swDdmConfigThresholdTable."
+    INDEX  {swDdmPort,swDdmThresholdType}
+      ::= {swDdmThresholdMgmtTable 1}
+
+SwDdmThresholdMgmtEntry	::=
+    SEQUENCE {
+          swDdmThresholdType
+                INTEGER,
+          swDdmHighAlarm
+  		DisplayString,
+			 		swDdmLowAlarm
+                DisplayString,
+          swDdmHighWarning
+  		DisplayString,
+          swDdmLowWarning
+                DisplayString
+        		}
+        		     
+
+        
+swDdmThresholdType	OBJECT-TYPE
+		SYNTAX	INTEGER{
+                 	temperature(1),
+                	voltage(2),
+                	bias(3),
+                	txPower(4),
+                	rxPower(5)
+              }  
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the threshold type."
+        ::= {swDdmThresholdMgmtEntry 1}  
+        
+swDdmHighAlarm	OBJECT-TYPE
+		SYNTAX  DisplayString
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the high alarm threshold value to be configured. As the 
+        value is a floating point data type, the DisplayString type is used to define this parameter."
+        ::= {swDdmThresholdMgmtEntry 2}  
+        
+swDdmLowAlarm 	OBJECT-TYPE
+		SYNTAX  DisplayString
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the low alarm threshold value to be configured. As the
+         value is a floating data type, the DisplayString type is used to define this parameter."
+        ::= {swDdmThresholdMgmtEntry 3}  
+                         
+swDdmHighWarning	OBJECT-TYPE
+		SYNTAX  DisplayString
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the high warning threshold value to be configured. As 
+        the value is a floating data type, the DisplayString type is used to define this parameter."
+        ::= {swDdmThresholdMgmtEntry 4} 
+        
+swDdmLowWarning  OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the low warning threshold value to be configured. As 
+        the value is a floating data type, the DisplayString type is used to define this parameter."
+        ::= {swDdmThresholdMgmtEntry 5}     
+
+        		
+--swDdmActionMgmt
+ 
+swDdmActionMgmtTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwDdmActionMgmtEntry
+		MAX-ACCESS  not-accessible
+    STATUS  obsolete
+    DESCRIPTION
+            "This table contains the configuration of the action taken 
+            when any parameter exceeds its threshold."
+        ::= {swDdmActionMgmt 1}
+      
+swDdmActionMgmtEntry	OBJECT-TYPE
+		SYNTAX	SwDdmActionMgmtEntry
+		MAX-ACCESS  not-accessible
+    STATUS  obsolete
+    DESCRIPTION
+      "This is an entry of the swDdmConfigActionTable."
+    INDEX  {swDdmPort,swDdmActionType}
+      ::= {swDdmActionMgmtTable 1}
+SwDdmActionMgmtEntry ::=
+    SEQUENCE {
+          swDdmActionType
+                INTEGER,
+          swDdmShutdown
+                INTEGER,
+          swDdmTrapAndLog
+                INTEGER
+             }  
+             
+swDdmActionType OBJECT-TYPE
+		SYNTAX  INTEGER {
+					alarm(1),
+					warning(2)
+					}
+    MAX-ACCESS  read-only
+    STATUS  obsolete
+    DESCRIPTION
+        "This object indicates the action type."
+        ::= {swDdmActionMgmtEntry 1} 
+  
+swDdmShutdown OBJECT-TYPE
+		SYNTAX  INTEGER {					
+                enabled(1),
+                disabled(2),
+               	other(3)
+                }
+    MAX-ACCESS  read-write
+    STATUS  obsolete
+    DESCRIPTION
+        "This object indicates the shutdown action. The 
+        value 'other' means that the port does not support DDM."
+        ::= {swDdmActionMgmtEntry 2}    
+       
+swDdmTrapAndLog OBJECT-TYPE
+		SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2),
+               	other(3)
+                }
+    MAX-ACCESS  read-write
+    STATUS  obsolete
+    DESCRIPTION
+        "This object indicates the trap and log action. The value
+        'other' means that the port does not support DDM."
+        ::= {swDdmActionMgmtEntry 3}            
+        
+swDdmPortMgmtTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwDdmPortMgmtEntry
+		MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+            "This table contains the configuration of the DDM state and shutdown mode
+            when any parameter exceeds its threshold."
+        ::= {swDdmActionMgmt 2}
+
+swDdmPortMgmtEntry	OBJECT-TYPE
+		SYNTAX	SwDdmPortMgmtEntry
+		MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+      "This is an entry of the swDdmPortMgmtTable."
+    INDEX  {swDdmPort}
+      ::= {swDdmPortMgmtTable 1}
+      
+SwDdmPortMgmtEntry ::=
+    SEQUENCE {
+          swDdmPortState
+                INTEGER,
+          swDdmPortShutdown
+                INTEGER
+             }
+
+swDdmPortState OBJECT-TYPE
+		SYNTAX  INTEGER {
+					enabled(1),
+					disabled(2)
+					}
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the DDM state information by port."
+        ::= {swDdmPortMgmtEntry 1}
+
+swDdmPortShutdown OBJECT-TYPE
+		SYNTAX  INTEGER {					
+                alarm(1),
+                warning(2),
+               	none(3),
+               	other(4)
+                }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "This object indicates whether or not to shutdown the port
+        on which the operating parameter exceeds the specified threshold.
+        "
+        ::= {swDdmPortMgmtEntry 2}
+
+-- --------------------------------------------------------------------------
+-- swDdmNotify
+-- --------------------------------------------------------------------------
+
+swDdmNotifyPrefix   OBJECT IDENTIFIER ::= { swDdmNotify 0 }
+swDdmNotificationBinding   OBJECT IDENTIFIER ::={ swDdmNotify 1 }
+
+swDdmAlarmTrap NOTIFICATION-TYPE
+    OBJECTS         { 
+    						swDdmPort,
+    						swDdmThresholdType, 
+    					    swDdmThresholdExceedType,
+    						swDdmThresholdExceedOrRecover      					
+                    }        
+    STATUS  current
+    DESCRIPTION
+        "The trap is sent when any parameter value exceeds the alarm threshold value
+         or recover to normal status depending on the configuration of the trap action."
+             
+      ::= { swDdmNotifyPrefix 1 }
+      
+swDdmWarningTrap NOTIFICATION-TYPE
+    OBJECTS         {
+    						swDdmPort,
+    						swDdmThresholdType, 
+       						swDdmThresholdExceedType,
+    						swDdmThresholdExceedOrRecover    						  					
+                    }        
+    STATUS  current
+    DESCRIPTION
+        "The trap is sent when any parameter value exceeds the warning threshold value
+        or recover to normal status depending on the configuration of the trap action."
+             
+      ::= { swDdmNotifyPrefix 2 }
+
+--swDdmNotificationBinding
+swDdmThresholdExceedType OBJECT-TYPE
+		SYNTAX 	INTEGER{
+					high(1),
+					low(2)
+			}
+		MAX-ACCESS  accessible-for-notify
+    STATUS  current
+    DESCRIPTION
+        "This object is used by swDdmAlarmTrap and swDdmWarningTrap to indicate if 
+        the threshold that was exceeded was a high threshold or a low threshold."
+        ::= {swDdmNotificationBinding 1}
+        
+swDdmThresholdExceedOrRecover OBJECT-TYPE
+		SYNTAX 	INTEGER{
+					exceed(1),
+					recover(2)
+			}
+		MAX-ACCESS  accessible-for-notify
+    STATUS  current
+    DESCRIPTION
+        "This object is used by swDdmAlarmTrap and swDdmWarningTrap,to indicate the GBIC
+        is exceeding its ddm threshold or recover to normal status."
+        ::= {swDdmNotificationBinding 2}	
+
+      
+END

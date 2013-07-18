@@ -1,0 +1,261 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Subnet(Policy-based) VLAN Common mib
+-- FILE NAME: SubnetVLAN.mib
+-- DATE     : 2008/12/2
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of Subnet VLAN management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2008/12/2, Rick Ou
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+SUBNETVLAN-MIB DEFINITIONS ::= BEGIN     
+
+	IMPORTS
+	    MODULE-IDENTITY, OBJECT-TYPE, Integer32, IpAddress
+	        FROM SNMPv2-SMI
+	    RowStatus
+	        FROM SNMPv2-TC
+	    dlink-common-mgmt	
+	        FROM DLINK-ID-REC-MIB;
+
+     swSubnetVlanMIB MODULE-IDENTITY
+          LAST-UPDATED "0812020000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The Subnet (Policy-based) VLAN module MIB for
+                    the proprietary enterprise."
+        ::= { dlink-common-mgmt 75 }
+ 
+-- -----------------------------------------------------------------------------
+-- TEXTUAL-CONVENTION
+-- -----------------------------------------------------------------------------
+	VlanId		::= INTEGER (1..4094)
+	
+	Ipv6Address ::= TEXTUAL-CONVENTION
+		DISPLAY-HINT "2x:"
+		STATUS       current
+		DESCRIPTION
+			"This data type is used to model IPv6 addresses.
+			This is a binary string of 16 octets in network
+			byte-order."
+		SYNTAX       OCTET STRING (SIZE (16))
+-- -----------------------------------------------------------------------------
+
+    swSubnetVlanCtrl             OBJECT IDENTIFIER ::= { swSubnetVlanMIB 1 }
+    swSubnetVlanInfo             OBJECT IDENTIFIER ::= { swSubnetVlanMIB 2 }
+    swSubnetVlanMgmt             OBJECT IDENTIFIER ::= { swSubnetVlanMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swSubnetVlanCtrl
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swMcastVlanInfo
+-- -----------------------------------------------------------------------------
+    	     	
+-- -----------------------------------------------------------------------------
+-- swMcastVlanMgmt
+-- -----------------------------------------------------------------------------
+
+    swVlanPrecedenceTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwVlanPrecedenceEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This table contains VLAN classification precedence information for each port."
+        ::= { swSubnetVlanMgmt 1 }
+
+    swVlanPrecedenceEntry OBJECT-TYPE
+        SYNTAX      SwVlanPrecedenceEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates VLAN classification precedence information for this entry."
+        INDEX   { swVlanPrecedencePortIndex }
+        ::= { swVlanPrecedenceTable 1 }
+
+    SwVlanPrecedenceEntry ::=
+        SEQUENCE {
+            swVlanPrecedencePortIndex
+                INTEGER,
+            swVlanPrecedenceClassification
+                INTEGER
+        }
+        	
+    swVlanPrecedencePortIndex OBJECT-TYPE
+	    SYNTAX  INTEGER (0..65535)
+	    MAX-ACCESS  read-only
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the port index."
+    	::= { swVlanPrecedenceEntry 1 }
+    	
+    swVlanPrecedenceClassification OBJECT-TYPE
+	    SYNTAX   INTEGER{
+	             macBased(1),
+	             subnetBased(2)
+	             }
+	    MAX-ACCESS  read-write
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the VLAN classification precedence."
+    	::= { swVlanPrecedenceEntry 2 }
+
+   swSubnetVLANTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwSubnetVLANEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This table contains subnet VLAN information."
+        ::= { swSubnetVlanMgmt 2 }
+
+    swSubnetVLANEntry OBJECT-TYPE
+        SYNTAX      SwSubnetVLANEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates subnet VLAN IPv4 entry information."
+        INDEX   { swSubnetVLANIPAddress,swSubnetVLANIPMask }
+        ::= { swSubnetVLANTable 1 }
+
+    SwSubnetVLANEntry ::=
+        SEQUENCE {
+            swSubnetVLANIPAddress
+                IpAddress,
+            swSubnetVLANIPMask
+                IpAddress,
+            swSubnetVLANID
+                VlanId,
+            swSubnetVLANPriority
+                INTEGER,
+            swSubnetVLANRowStatus
+                RowStatus
+        }
+        	
+    swSubnetVLANIPAddress OBJECT-TYPE
+	    SYNTAX  IpAddress
+	    MAX-ACCESS  read-only
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the IP address."
+    	::= { swSubnetVLANEntry 1 }
+    	
+    swSubnetVLANIPMask OBJECT-TYPE
+	    SYNTAX   IpAddress
+	    MAX-ACCESS  read-only
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the IP mask."
+    	::= { swSubnetVLANEntry 2 }
+
+    swSubnetVLANID OBJECT-TYPE
+	    SYNTAX  VlanId
+	    MAX-ACCESS  read-create
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the VLAN ID."
+    	::= { swSubnetVLANEntry 3 }
+    	
+    swSubnetVLANPriority OBJECT-TYPE
+	    SYNTAX   INTEGER (0..7)
+	    MAX-ACCESS  read-create
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the priority."
+    	::= { swSubnetVLANEntry 4 }
+
+    swSubnetVLANRowStatus OBJECT-TYPE
+	    SYNTAX  RowStatus
+	    MAX-ACCESS  read-create
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the status of this entry."
+    	::= { swSubnetVLANEntry 5 }
+
+                                        	
+     swSubnetVLANIPv6Table OBJECT-TYPE
+      SYNTAX      SEQUENCE OF SwSubnetVLANIPv6Entry
+      MAX-ACCESS  not-accessible
+      STATUS      current
+      DESCRIPTION
+          "This table contains subnet VLAN IPv6 entry information."
+      ::= { swSubnetVlanMgmt 3 }  
+ 
+    swSubnetVLANIPv6Entry OBJECT-TYPE
+        SYNTAX      SwSubnetVLANIPv6Entry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates subnet VLAN IPv6 entry information."
+        INDEX   { swSubnetVLANIPv6Address,swSubnetVLANIPv6PrefixLength}
+        ::= { swSubnetVLANIPv6Table 1 }
+ 
+    SwSubnetVLANIPv6Entry ::=
+      SEQUENCE {
+          swSubnetVLANIPv6Address
+              Ipv6Address,
+          swSubnetVLANIPv6PrefixLength
+              INTEGER,
+          swSubnetVLANIPv6VID
+              VlanId,
+          swSubnetVLANIPv6Priority
+              INTEGER,
+          swSubnetVLANIPv6RowStatus
+              RowStatus
+      }
+  
+   swSubnetVLANIPv6Address OBJECT-TYPE
+	    SYNTAX  Ipv6Address
+	    MAX-ACCESS  read-only
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the IPv6 address."
+    	::= { swSubnetVLANIPv6Entry 1 }
+    	
+    swSubnetVLANIPv6PrefixLength OBJECT-TYPE
+	    SYNTAX   INTEGER 
+	    MAX-ACCESS  read-only
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the IPv6 prefix length."
+    	::= { swSubnetVLANIPv6Entry 2 }
+ 
+     swSubnetVLANIPv6VID OBJECT-TYPE
+	    SYNTAX  VlanId
+	    MAX-ACCESS  read-create
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the VLAN ID."
+    	::= { swSubnetVLANIPv6Entry 3 }
+    	
+    swSubnetVLANIPv6Priority OBJECT-TYPE
+	    SYNTAX   INTEGER (0..7)
+	    MAX-ACCESS  read-create
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the priority."
+    	::= { swSubnetVLANIPv6Entry 4 }
+
+    swSubnetVLANIPv6RowStatus OBJECT-TYPE
+	    SYNTAX  RowStatus
+	    MAX-ACCESS  read-create
+	    STATUS  current
+	    DESCRIPTION
+	        "This object indicates the status of this entry."
+    	::= { swSubnetVLANIPv6Entry 5 }
+
+
+
+END

@@ -1,0 +1,154 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : BPDU-TUNNELING-MIB
+-- FILE NAME: BPDUTunnel.mib
+-- DATE     : 2008/2/18
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of BPDU tunneling function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2008/2/26, Kelvin Tao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+BPDU-TUNNELING-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress, Unsigned32,Integer32
+                                        FROM SNMPv2-SMI
+        MacAddress                      FROM SNMPv2-TC
+        dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
+
+		
+    	
+    swBPDUTunnelMIB MODULE-IDENTITY
+          LAST-UPDATED "200802260000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of BPDU tunneling for the proprietary enterprise."
+        ::= { dlink-common-mgmt 60 }
+
+    swBPDUTunnelCtrl                OBJECT IDENTIFIER ::= { swBPDUTunnelMIB 1 }
+    swBPDUTunnelInfo                OBJECT IDENTIFIER ::= { swBPDUTunnelMIB 2 }
+    swBPDUTunnelMgmt                OBJECT IDENTIFIER ::= { swBPDUTunnelMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swBPDUTunnelCtrl
+-- -----------------------------------------------------------------------------
+
+   swBPDUTunnelState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the state of the BPDU tunneling."
+    	::= { swBPDUTunnelCtrl 1 }
+
+-- -----------------------------------------------------------------------------
+-- swBPDUTunnelInfo
+-- -----------------------------------------------------------------------------
+
+    swBPDUTunnelSTPMcastAddress OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the MAC of the STP tunnel multicast address."
+        ::= { swBPDUTunnelInfo 1 }
+
+    swBPDUTunnelGVRPMcastAddress OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the MAC of the GVRP tunnel multicast address."
+        ::= { swBPDUTunnelInfo 2 }    	     	
+-- -----------------------------------------------------------------------------
+-- swBPDUTunnelMgmt
+-- -----------------------------------------------------------------------------
+
+    swBPDUTunnelTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwBPDUTunnelEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table that contains BPDU tunneling information about every port."
+        ::= { swBPDUTunnelMgmt 1 }
+
+    swBPDUTunnelEntry OBJECT-TYPE
+        SYNTAX  SwBPDUTunnelEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list with BPDU tunneling information for each port of the device."
+        INDEX   { swBPDUTunnelPortIndex }
+        ::= { swBPDUTunnelTable 1 }
+
+    SwBPDUTunnelEntry ::=
+        SEQUENCE {
+            swBPDUTunnelPortIndex
+                INTEGER,
+            swBPDUTunnelPortType
+                INTEGER,
+            swBPDUTunnelSTPState
+                INTEGER,
+            swBPDUTunnelGVRPState
+                INTEGER
+        }
+
+    swBPDUTunnelPortIndex OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+        "This object indicates the module's port number."
+    ::= { swBPDUTunnelEntry 1 }
+
+    swBPDUTunnelPortType OBJECT-TYPE
+        SYNTAX INTEGER {
+               none(1),
+               tunnel(2),
+               uplink(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object indicates the type of the port."
+    	::= { swBPDUTunnelEntry 2 }
+    	
+    swBPDUTunnelSTPState OBJECT-TYPE
+        SYNTAX INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object indicates the state of the STP tunnel."
+    	::= { swBPDUTunnelEntry 3 }
+    	
+    swBPDUTunnelGVRPState OBJECT-TYPE
+        SYNTAX INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object indicates the state of the GVRP tunnel."
+    	::= { swBPDUTunnelEntry 4 }
+
+END
