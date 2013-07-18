@@ -124,7 +124,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue);
 
 /**
- * Subagent information
+ * Parameters provided by subagent
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {

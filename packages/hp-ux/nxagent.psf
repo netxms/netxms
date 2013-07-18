@@ -25,17 +25,17 @@ product
 
    fileset
       tag               NXAGENT-RUN
-      directory         nxagent=/opt/netxms
-      directory         nxagent/bin=/opt/netxms/bin
+      directory         build=/opt/netxms
+      directory         build/bin=/opt/netxms/bin
       file              nxagentd
       file              nxappget
       file              nxapush
       file              nxdevcfg
-      directory         nxagent/etc=/opt/netxms/etc
+      directory         build/etc=/opt/netxms/etc
       file              nxagentd.conf
-      directory         nxagent/init.d=/sbin/init.d
+      directory         build/init.d=/sbin/init.d
       file              -m 0555 -o 2 -g 2 nxagentd
-      directory         nxagent/lib=/opt/netxms/lib
+      directory         build/lib=/opt/netxms/lib
       file              libappagent.so
       file              libappagent.so.1
       file              libappagent.so.1.0
@@ -66,7 +66,7 @@ product
       file              libnxtre.so
       file              libnxtre.so.5
       file              libnxtre.so.5.0
-      directory         nxagent/lib/netxms=/opt/netxms/lib/netxms
+      directory         build/lib/netxms=/opt/netxms/lib/netxms
       file              ecs.nsm
       file              hpux.nsm
       file              logwatch.nsm
@@ -75,7 +75,7 @@ product
       file              portcheck.nsm
       file              sms.nsm
       file              ups.nsm
-      directory         nxagent/lib/netxms/dbdrv=/opt/netxms/lib/netxms/dbdrv
+      directory         build/lib/netxms/dbdrv=/opt/netxms/lib/netxms/dbdrv
       file		oracle.ddr
    end
 end

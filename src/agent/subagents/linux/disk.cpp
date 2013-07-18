@@ -132,17 +132,17 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
    FILE *in = fopen("/etc/mtab", "r");
    if (in != NULL)
    {
-      table->addColumn(_T("MOUNTPOINT"), DCI_DT_STRING);
-      table->addColumn(_T("VOLUME"), DCI_DT_STRING);
-      table->addColumn(_T("LABEL"), DCI_DT_STRING);
-      table->addColumn(_T("FSTYPE"), DCI_DT_STRING);
-      table->addColumn(_T("SIZE.TOTAL"), DCI_DT_UINT64);
-      table->addColumn(_T("SIZE.FREE"), DCI_DT_UINT64);
-      table->addColumn(_T("SIZE.FREE.PCT"), DCI_DT_FLOAT);
-      table->addColumn(_T("SIZE.AVAIL"), DCI_DT_UINT64);
-      table->addColumn(_T("SIZE.AVAIL.PCT"), DCI_DT_FLOAT);
-      table->addColumn(_T("SIZE.USED"), DCI_DT_UINT64);
-      table->addColumn(_T("SIZE.USED.PCT"), DCI_DT_FLOAT);
+      table->addColumn(_T("MOUNTPOINT"), DCI_DT_STRING, _T("Mount Point"), true);
+      table->addColumn(_T("VOLUME"), DCI_DT_STRING, _T("Volume"));
+      table->addColumn(_T("LABEL"), DCI_DT_STRING, _T("Label"));
+      table->addColumn(_T("FSTYPE"), DCI_DT_STRING, _T("FS Type"));
+      table->addColumn(_T("SIZE.TOTAL"), DCI_DT_UINT64, _T("Total"));
+      table->addColumn(_T("SIZE.FREE"), DCI_DT_UINT64, _T("Free"));
+      table->addColumn(_T("SIZE.FREE.PCT"), DCI_DT_FLOAT, _T("Free %"));
+      table->addColumn(_T("SIZE.AVAIL"), DCI_DT_UINT64, _T("Available"));
+      table->addColumn(_T("SIZE.AVAIL.PCT"), DCI_DT_FLOAT, _T("Available %"));
+      table->addColumn(_T("SIZE.USED"), DCI_DT_UINT64, _T("Used"));
+      table->addColumn(_T("SIZE.USED.PCT"), DCI_DT_FLOAT, _T("Used %"));
 
       while(1)
       {

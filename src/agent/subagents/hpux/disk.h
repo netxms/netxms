@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for HP-UX
 ** Copyright (C) 2006 Alex Kirhenshtein
@@ -35,12 +33,7 @@ enum
 };
 
 LONG H_DiskInfo(const char *, const char *, char *);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 
 #endif // __DISK_H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

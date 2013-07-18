@@ -373,10 +373,9 @@ include/nxdbapi.h -text
 include/nxlpapi.h -text
 include/uthash.h -text
 packages/hp-ux/README -text
+packages/hp-ux/create_depot.sh -text
 packages/hp-ux/defaults -text
 packages/hp-ux/nxagent.psf -text
-packages/hp-ux/nxagent/etc/nxagentd.conf -text
-packages/hp-ux/nxagent/init.d/nxagentd -text
 packages/hp-ux/postinstall -text
 packages/hp-ux/preremove -text
 packages/linux/debian/netxms-agent.control -text

@@ -21,22 +21,29 @@
 
 #include "hpux.h"
 
-
-//
-// Detect support for source packages
-//
-
+/**
+ * Detect support for source packages
+ */
 static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_int(pValue, 1); // assume that we have sane build env
 	return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for shutdown/restart actions
+ */
+static LONG H_Shutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+{
+   chdir("/");
+   char cmd[128];
+   snprintf(cmd, 128, "/sbin/shutdown %s now", (*pData == _T('R')) ? "-r" : "-h");
+   return (system(cmd) >= 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+}
 
-//
-// Initialization callback
-//
-
+/**
+ * Initialization callback
+ */
 static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
@@ -44,22 +51,18 @@ static BOOL SubAgentInit(Config *config)
 	return TRUE;
 }
 
-
-//
-// Called by master agent at unload
-//
-
+/**
+ * Called by master agent at unload
+ */
 static void SubAgentShutdown()
 {
 	ShutdownCpuUsageCollector();
 	ShutdownIOStatCollector();
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Parameters provided by subagent
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ "Agent.SourcePackageSupport", H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
@@ -181,50 +184,75 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.Uname", H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
 	{ "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
-static NETXMS_SUBAGENT_LIST m_enums[] =
+
+/**
+ * Subagent's lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-	{ "Net.ArpCache",                 H_NetArpCache,     NULL },
-	{ "Net.IP.RoutingTable",          H_NetRoutingTable, NULL },
-	{ "Net.InterfaceList",            H_NetIfList,       NULL },
-	{ "System.ProcessList",           H_ProcessList,     NULL },
+   { _T("FileSystem.MountPoints"), H_MountPoints,     NULL },
+	{ _T("Net.ArpCache"),           H_NetArpCache,     NULL },
+	{ _T("Net.IP.RoutingTable"),    H_NetRoutingTable, NULL },
+	{ _T("Net.InterfaceList"),      H_NetIfList,       NULL },
+	{ _T("System.ProcessList"),     H_ProcessList,     NULL },
 };
 
+/**
+ * Subagent's tables
+ */
+static NETXMS_SUBAGENT_TABLE m_tables[] =
+{
+   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES }
+};
+
+/**
+ * Subagent's actions
+ */
+static NETXMS_SUBAGENT_ACTION m_actions[] =
+{
+   { _T("System.Restart"), H_Shutdown, _T("R"), _T("Restart system") },
+   { _T("System.Shutdown"), H_Shutdown, _T("S"), _T("Shutdown system") }
+};
+
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	"HP-UX",
-	NETXMS_VERSION_STRING,
+	_T("HP-UX"), NETXMS_VERSION_STRING,
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
-	0, NULL,	// tables
-   0, NULL,	// actions
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
+   sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+   m_tables,
+   sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+   m_actions,
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(HPUX)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// Entry points for server
-//
-
+/**
+ * Entry point for server - interface list
+ */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
 	return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Entry point for server - ARP cache
+ */
 extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
 	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
