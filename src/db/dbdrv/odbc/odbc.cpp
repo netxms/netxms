@@ -174,34 +174,28 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 	return out;
 }
 
-
-//
-// Initialize driver
-//
-
+/**
+ * Initialize driver
+ */
 extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
-	m_useUnicode = ExtractNamedOptionValueAsBool(cmdLine, "unicode", TRUE);
+   m_useUnicode = ExtractNamedOptionValueAsBoolA(cmdLine, "unicode", TRUE);
    return TRUE;
 }
 
-
-//
-// Unload handler
-//
-
+/**
+ * Unload handler
+ */
 extern "C" void EXPORT DrvUnload()
 {
 }
 
-
-//
-// Connect to database
-// pszHost should be set to ODBC source name, and pszDatabase is ignored
-//
-
+/**
+ * Connect to database
+ * pszHost should be set to ODBC source name, and pszDatabase is ignored
+ */
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *pszLogin, const char *pszPassword, 
-															 const char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
+                                              const char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
 {
    long iResult;
    ODBCDRV_CONN *pConn;
@@ -240,11 +234,11 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *p
 	if (strchr(pszHost, '=') != NULL)
 	{
 		SQLSMALLINT outLen;
-		iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR*)pszHost, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+		iResult = SQLDriverConnectA(pConn->sqlConn, NULL, (SQLCHAR*)pszHost, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 	}
 	else
 	{
-		iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS,
+		iResult = SQLConnectA(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS,
 									(SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
 	}
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
@@ -522,7 +516,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, N
 		else
 		{
 			char *temp = MBStringFromWideString(pwszQuery);
-		   iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
+		   iResult = SQLExecDirectA(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
 		   free(temp);
 		}
 	   if ((iResult == SQL_SUCCESS) || 
@@ -650,7 +644,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwsz
 		else
 		{
 			char *temp = MBStringFromWideString(pwszQuery);
-		   iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
+		   iResult = SQLExecDirectA(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
 		   free(temp);
 		}
 	   if ((iResult == SQL_SUCCESS) || 
@@ -815,7 +809,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
 		else
 		{
 			char *temp = MBStringFromWideString(pwszQuery);
-		   iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
+		   iResult = SQLExecDirectA(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
 		   free(temp);
 		}
 	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))

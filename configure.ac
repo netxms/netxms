@@ -566,7 +566,6 @@ fi
 check_substr "$COMPONENTS" "odbc"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS odbc"
-	SUBAGENT_DIRS="$SUBAGENT_DIRS odbcquery"
 fi
 
 check_substr "$COMPONENTS" "oracle"

@@ -70,9 +70,17 @@
 
 #endif
 
+#ifndef _WIN32
+#define DWORD __DWORD
+#endif
+
 #include <sql.h>
 #include <sqlext.h>
 #include <sqltypes.h>
+
+#ifndef _WIN32
+#undef DWORD
+#endif
 
 
 //
