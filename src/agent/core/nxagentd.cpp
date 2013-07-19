@@ -1319,6 +1319,10 @@ int main(int argc, char *argv[])
 		{
 			_tcscpy(g_szConfigFile, PREFIX _T("/etc/nxagentd.conf"));
 		}
+		else if (_taccess(_T("/Database/etc/nxagentd.conf"), 4) == 0)	// for ZeroShell
+		{
+			_tcscpy(g_szConfigFile, _T("/Database/etc/nxagentd.conf"));
+		}
 		else if (_taccess(_T("/usr/etc/nxagentd.conf"), 4) == 0)
 		{
 			_tcscpy(g_szConfigFile, _T("/usr/etc/nxagentd.conf"));
@@ -1334,6 +1338,10 @@ int main(int argc, char *argv[])
 		{
 			_tcscpy(g_szConfigIncludeDir, PREFIX _T("/etc/nxagentd.conf.d"));
 		}
+		else if (_taccess(_T("/Database/etc/nxagentd.conf.d"), 4) == 0)
+		{
+			_tcscpy(g_szConfigIncludeDir, _T("/Database/etc/nxagentd.conf.d"));
+		}
 		else if (_taccess(_T("/usr/etc/nxagentd.conf.d"), 4) == 0)
 		{
 			_tcscpy(g_szConfigIncludeDir, _T("/usr/etc/nxagentd.conf.d"));
@@ -1348,7 +1356,7 @@ int main(int argc, char *argv[])
    if (bRestart)
       DoRestartActions(dwOldPID);
 
-	InitConfig();
+   InitConfig();
 
    // Do requested action
    switch(iAction)
