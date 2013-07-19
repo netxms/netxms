@@ -236,11 +236,9 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
    return THREAD_OK;
 }
 
-
-//
-// Connect to server
-//
-
+/**
+ * Connect to server
+ */
 #ifdef __HP_aCC
 extern "C"
 #endif

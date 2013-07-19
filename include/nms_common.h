@@ -138,7 +138,7 @@ typedef int bool;
 /**
  * Oracle Pro*C compatibility
  */
-#ifdef ORACLE_PROC
+#ifdef ORA_PROC
 #undef BYTE
 #undef DWORD
 #endif
