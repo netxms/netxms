@@ -938,9 +938,23 @@ extern "C"
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
    void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbol, TCHAR *pszErrorText);
 
-	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const TCHAR *option, TCHAR *buffer, int bufSize);
-	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBool(const TCHAR *optString, const TCHAR *option, BOOL defVal);
-	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, const TCHAR *option, long defVal);
+	bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize);
+	bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal);
+	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, long defVal);
+
+	bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, int bufSize);
+	bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, const char *option, bool defVal);
+	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, long defVal);
+
+#ifdef UNICODE
+#define ExtractNamedOptionValue ExtractNamedOptionValueW
+#define ExtractNamedOptionValueAsBool ExtractNamedOptionValueAsBoolW
+#define ExtractNamedOptionValueAsInt ExtractNamedOptionValueAsIntW
+#else
+#define ExtractNamedOptionValue ExtractNamedOptionValueA
+#define ExtractNamedOptionValueAsBool ExtractNamedOptionValueAsBoolA
+#define ExtractNamedOptionValueAsInt ExtractNamedOptionValueAsIntA
+#endif
 
 #ifdef __cplusplus
 	const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));

@@ -30,6 +30,7 @@
 #include <psapi.h>
 #define read	_read
 #define close	_close
+#define wcsicmp _wcsicmp
 #endif
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
@@ -52,11 +53,9 @@
 # endif
 #endif
 
-
-//
-// Calculate number of bits in netmask (in host byte order)
-//
-
+/**
+ * Calculate number of bits in netmask (in host byte order)
+ */
 int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask)
 {
    int bits;
@@ -66,11 +65,9 @@ int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask)
    return bits;
 }
 
-
-//
-// Convert IP address from binary form (host bytes order) to string
-//
-
+/**
+ * Convert IP address from binary form (host bytes order) to string
+ */
 TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer)
 {
    static TCHAR szInternalBuffer[32];
@@ -1364,45 +1361,43 @@ const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslato
    return pszDefaultText;
 }
 
-
-//
-// Extract option value from string of form option=value;option=value;...
-//
-
-BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const TCHAR *option, TCHAR *buffer, int bufSize)
+/**
+ * Extract option value from string of form option=value;option=value;... (UNICODE version)
+ */
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize)
 {
 	int state, pos;
-	const TCHAR *curr, *start;
-	TCHAR temp[256];
+	const WCHAR *curr, *start;
+	WCHAR temp[256];
 
 	for(curr = start = optString, pos = 0, state = 0; *curr != 0; curr++)
 	{
 		switch(*curr)
 		{
-			case _T(';'):		// Next option
+			case L';':		// Next option
 				if (state == 1)
 				{
 					buffer[pos] = 0;
-					StrStrip(buffer);
-					return TRUE;
+					StrStripW(buffer);
+					return true;
 				}
 				state = 0;
 				start = curr + 1;
 				break;
-			case _T('='):
+			case L'=':
 				if (state == 0)
 				{
-					_tcsncpy(temp, start, curr - start);
+					wcsncpy(temp, start, curr - start);
 					temp[curr - start] = 0;
-					StrStrip(temp);
-					if (!_tcsicmp(option, temp))
+					StrStripW(temp);
+					if (!wcsicmp(option, temp))
 						state = 1;
 					else
 						state = 2;
 				}
 				else if ((state == 1) && (pos < bufSize - 1))
 				{
-					buffer[pos++] = _T('=');
+					buffer[pos++] = L'=';
 				}
 				break;
 			default:
@@ -1415,34 +1410,119 @@ BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const 
 	if (state == 1)
 	{
 		buffer[pos] = 0;
-		StrStrip(buffer);
-		return TRUE;
+		StrStripW(buffer);
+		return true;
 	}
 	
-	return FALSE;
+	return false;
 }
 
-BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBool(const TCHAR *optString, const TCHAR *option, BOOL defVal)
+/**
+ * Extract option value from string of form option=value;option=value;... (multibyte version)
+ */
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, int bufSize)
 {
-	TCHAR buffer[256];
-	
-	if (ExtractNamedOptionValue(optString, option, buffer, 256))
+	int state, pos;
+	const char *curr, *start;
+	char temp[256];
+
+	for(curr = start = optString, pos = 0, state = 0; *curr != 0; curr++)
 	{
-		if (!_tcsicmp(buffer, _T("yes")) || !_tcsicmp(buffer, _T("true")))
-			return TRUE;
-		return FALSE;
+		switch(*curr)
+		{
+			case ';':		// Next option
+				if (state == 1)
+				{
+					buffer[pos] = 0;
+					StrStripA(buffer);
+					return true;
+				}
+				state = 0;
+				start = curr + 1;
+				break;
+			case '=':
+				if (state == 0)
+				{
+					strncpy(temp, start, curr - start);
+					temp[curr - start] = 0;
+					StrStripA(temp);
+					if (!stricmp(option, temp))
+						state = 1;
+					else
+						state = 2;
+				}
+				else if ((state == 1) && (pos < bufSize - 1))
+				{
+					buffer[pos++] = '=';
+				}
+				break;
+			default:
+				if ((state == 1) && (pos < bufSize - 1))
+					buffer[pos++] = *curr;
+				break;
+		}
+	}
+	
+	if (state == 1)
+	{
+		buffer[pos] = 0;
+		StrStripA(buffer);
+		return true;
+	}
+	
+	return false;
+}
+
+/**
+ * Extract named option value as boolean (UNICODE version)
+ */
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal)
+{
+	WCHAR buffer[256];
+	if (ExtractNamedOptionValueW(optString, option, buffer, 256))
+		return !wcsicmp(buffer, L"yes") || !wcsicmp(buffer, L"true");
+	return defVal;
+}
+
+/**
+ * Extract named option value as boolean (multibyte version)
+ */
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, const char *option, bool defVal)
+{
+	char buffer[256];
+	if (ExtractNamedOptionValueA(optString, option, buffer, 256))
+		return !stricmp(buffer, "yes") || !stricmp(buffer, "true");
+	return defVal;
+}
+
+/**
+ * Extract named option value as integer (UNICODE version)
+ */
+long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, long defVal)
+{
+	WCHAR buffer[256], *eptr;
+	long val;
+
+	if (ExtractNamedOptionValueW(optString, option, buffer, 256))
+	{
+		val = wcstol(buffer, &eptr, 0);
+		if (*eptr == 0)
+			return val;
 	}
 	return defVal;
 }
 
-long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, const TCHAR *option, long defVal)
+/**
+ * Extract named option value as integer (multibyte version)
+ */
+long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, long defVal)
 {
-	TCHAR buffer[256], *eptr;
+	char buffer[256], *eptr;
 	long val;
 
-	if (ExtractNamedOptionValue(optString, option, buffer, 256))
+	if (ExtractNamedOptionValueA(optString, option, buffer, 256))
 	{
-		val = _tcstol(buffer, &eptr, 0);
+		val = strtol(buffer, &eptr, 0);
 		if (*eptr == 0)
 			return val;
 	}
