@@ -75,6 +75,8 @@ void CASReadSettings()
  * Main code
  */
 
+#ifdef _WITH_ENCRYPTION
+
 /**
  * Ticket identifiers to avoid needless validating passwords that
  * aren't tickets
@@ -391,3 +393,13 @@ bool CASAuthenticate(const char *ticket, TCHAR *loginName)
    MutexUnlock(m_lock);
    return success;
 }
+
+#else	/* _WITH_ENCRYPTION */
+
+bool CASAuthenticate(const char *ticket, TCHAR *loginName)
+{
+	DbgPrintf(4, _T("CAS ticket cannot be validated - server built without encryption support"));
+	return false;
+}
+
+#endif

@@ -26,7 +26,7 @@
 typedef int wint_t;
 #endif
 
-int wcscasecmp(const wchar_t *s1, const wchar_t *s2)
+int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2)
 {
    if (s1 == s2)
    {

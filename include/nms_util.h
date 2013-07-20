@@ -1116,6 +1116,10 @@ extern "C"
 	WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src);
 #endif
 
+#if !HAVE_WCSCASECMP && !defined(_WIN32)
+	int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
+#endif
+
 #ifdef _WIN32
 #ifdef UNICODE
     DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);

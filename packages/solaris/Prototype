@@ -10,14 +10,12 @@ f none /opt/netxms/bin/nxagentd 0755 root root
 f none /opt/netxms/bin/nxapush 0755 root root
 f none /opt/netxms/bin/nxdevcfg 0755 root root
 f none /opt/netxms/lib/libcrypto.so.0.9.8 0555 root root
-f none /opt/netxms/lib/libgcc_s.so.1 0644 root root
 f none /opt/netxms/lib/libnetxms.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxdb.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxexpat.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxlp.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxsqlite.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxtre.so.5.0.0 0755 root root
-f none /opt/netxms/lib/libstdc++.so.6 0755 root root
 f none /opt/netxms/lib/netxms/ecs.nsm 0755 root root
 f none /opt/netxms/lib/netxms/logwatch.nsm 0755 root root
 f none /opt/netxms/lib/netxms/ping.nsm 0755 root root
