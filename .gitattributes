@@ -397,9 +397,17 @@ packages/osx/dmg-background.png -text svneol=unset#unset
 packages/osx/dmg-background.psd -text svneol=unset#unset
 packages/osx/dmg-icon.icns -text svneol=unset#unset
 packages/osx/dmg-icon.psd -text svneol=unset#unset
-packages/solaris/Prototype -text
-packages/solaris/postinstall -text
-packages/solaris/preinstall -text
+packages/solaris/agent/Makefile -text
+packages/solaris/agent/Prototype -text
+packages/solaris/agent/pkginfo.in -text
+packages/solaris/agent/postinstall -text
+packages/solaris/agent/preinstall -text
+packages/solaris/server/Makefile -text
+packages/solaris/server/Prototype -text
+packages/solaris/server/pkginfo -text
+packages/solaris/server/pkginfo.in -text
+packages/solaris/server/postinstall -text
+packages/solaris/server/preinstall -text
 reports/IP[!!-~]Inventory.jrxml -text
 sdk/install/netxms-sdk.iss -text
 sdk/openssl/lib/x64/libeay32.lib -text

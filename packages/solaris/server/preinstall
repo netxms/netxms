@@ -1,0 +1,5 @@
+#!/bin/sh
+
+if test -x /etc/init.d/netxmsd; then
+	/etc/init.d/netxmsd stop
+fi
