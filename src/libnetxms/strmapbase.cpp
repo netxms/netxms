@@ -91,9 +91,10 @@ UINT32 StringMapBase::find(const TCHAR *key)
  */
 void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
 {
-	UINT32 index;
+   if (key == NULL)
+      return;
 
-	index = find(key);
+	UINT32 index = find(key);
 	if (index != INVALID_INDEX)
 	{
 		if (keyPreAllocated)
