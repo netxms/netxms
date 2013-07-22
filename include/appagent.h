@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -106,6 +106,10 @@ typedef struct __apagent_msg
 #pragma pack()
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Application agent metric definition
  */
@@ -145,5 +149,9 @@ bool APPAGENT_EXPORTABLE AppAgentConnect(const TCHAR *name, HPIPE *hPipe);
 void APPAGENT_EXPORTABLE AppAgentDisconnect(HPIPE hPipe);
 int APPAGENT_EXPORTABLE AppAgentGetMetric(HPIPE hPipe, const TCHAR *name, TCHAR *value, int bufferSize);
 int APPAGENT_EXPORTABLE AppAgentListMetrics(HPIPE hPipe, APPAGENT_METRIC **metrics, UINT32 *size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
