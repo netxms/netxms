@@ -44,6 +44,7 @@ chmod 755 netxms-agent/DEBIAN/*
 cp /usr/bin/nxagentd netxms-agent/usr/bin/
 cp /usr/lib/netxms/*.nsm netxms-agent/usr/lib/netxms/
 cp /usr/lib/netxms/dbdrv/sqlite.ddr netxms-agent/usr/lib/netxms/dbdrv/
+cp -P /usr/lib/libappagent.so* netxms-agent/usr/lib/
 cp -P /usr/lib/libnxdb.so* netxms-agent/usr/lib/
 cp -P /usr/lib/libnxlp.so* netxms-agent/usr/lib/
 cp -P /usr/lib/libnsm_* netxms-agent/usr/lib/
