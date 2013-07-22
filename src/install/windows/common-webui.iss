@@ -38,7 +38,7 @@ Function GenerateInstallParameters(Param: String): String;
 var
   strJvmArgument: String;
 begin
-  strJvmArgument := ExpandConstant('--DisplayName="NetXMS WebUI" --Description="NetXMS Web Interface (winstone)" --Install="{app}\WebUI\prunsrv.exe" --LogPath="{app}\WebUI\logs" --LogLevel=Debug --StdOutput=auto --StdError=auto --StartMode=jvm --StopMode=jvm --Jvm=auto --Classpath="{app}\WebUI\winstone-0.9.10.jar" --StartClass=winstone.Launcher ++StartParams=--controlPort=47777 ++StartParams=--warfile ++StartParams="{app}\WebUI\nxmc\nxmc.war" --StopClass=winstone.tools.WinstoneControl ++StopParams=shutdown ++StopParams=--port=47777')
+  strJvmArgument := ExpandConstant('--DisplayName="NetXMS WebUI" --Description="NetXMS Web Interface (winstone)" --Install="{app}\WebUI\prunsrv.exe" --LogPath="{app}\WebUI\logs" --LogLevel=Debug --StdOutput=auto --StdError=auto --StartMode=jvm --StopMode=jvm --Jvm=auto --Classpath="{app}\WebUI\winstone-0.9.10.jar" --StartClass=winstone.Launcher ++StartParams=--controlPort=47777 ++StartParams=--ajp13Port=-1 ++StartParams=--warfile ++StartParams="{app}\WebUI\nxmc\nxmc.war" --StopClass=winstone.tools.WinstoneControl ++StopParams=shutdown ++StopParams=--port=47777')
 
   if IsComponentSelected('jre') then
   begin
