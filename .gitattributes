@@ -334,6 +334,7 @@ contrib/startup/archlinux/nxagentd.service -text
 contrib/startup/debian/Makefile.am -text
 contrib/startup/debian/netxmsd.in -text
 contrib/startup/debian/nxagentd.in -text
+contrib/startup/solaris/netxmsd.in -text
 doc/RadenSolutions-C-Formatter.xml -text
 doc/RadenSolutions.xml -text
 doc/comparison_netxms_nnm.doc -text
@@ -404,7 +405,6 @@ packages/solaris/agent/postinstall -text
 packages/solaris/agent/preinstall -text
 packages/solaris/server/Makefile -text
 packages/solaris/server/Prototype -text
-packages/solaris/server/pkginfo -text
 packages/solaris/server/pkginfo.in -text
 packages/solaris/server/postinstall -text
 packages/solaris/server/preinstall -text

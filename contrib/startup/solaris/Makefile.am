@@ -13,10 +13,15 @@ EXTRA_DIST = nxagentd.in
 REPLACE_CMD = sed "s,~BINDIR~,$(bindir),g" < $@.in | \
 	sed "s,~LIBDIR~,$(libdir),g" > $@
 
-all: nxagentd
+all: nxagentd netxmsd
 
 nxagentd: nxagentd.in
 	$(REPLACE_CMD)
+	chmod 755 $@
+
+netxmsd: netxmsd.in
+	$(REPLACE_CMD)
+	chmod 755 $@
 
 clean:
-	rm -f nxagentd
+	rm -f nxagentd netxmsd

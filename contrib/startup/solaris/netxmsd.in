@@ -1,0 +1,34 @@
+#!/sbin/sh
+#
+# Copyright (c) 2012 Raden Solutions.  All rights reserved.
+# Use is subject to license terms.
+
+NETXMS_BINDIR="~BINDIR~"
+NETXMS_LIBDIR="~LIBDIR~"
+
+NETXMSD_PID_FILE="/var/run/netxmsd.pid"
+
+LD_LIBRARY_PATH="$NETXMS_LIBDIR:$LD_LIBRARY_PATH"
+
+case "$1" in
+'start')
+	if [ -f /etc/netxmsd.conf -a -f $NETXMS_BINDIR/netxmsd ]; then
+		echo 'NetXMS server starting.'
+		$NETXMS_BINDIR/netxmsd -d -p "$NETXMSD_PID_FILE"
+	fi
+	;;
+
+'stop')
+	kill `cat $NETXMSD_PID_FILE 2>/dev/null` 2> /dev/null
+	;;
+'restart')
+        $0 stop
+        $0 start
+        ;;
+*)
+	echo "Usage: $0 { start | stop | restart }"
+	exit 1
+	;;
+
+esac
+exit 0
