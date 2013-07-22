@@ -947,7 +947,12 @@ typedef volatile uint64_t VolatileCounter64;
  */
 inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 {
+#if HAVE_ATOMIC_H
    return atomic_inc_32(v) + 1;
+#else
+   _Asm_mf(_DFLT_FENCE);
+   return (uint32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
+#endif
 }
 
 /**
@@ -955,7 +960,12 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
  */
 inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 {
+#if HAVE_ATOMIC_H
    return atomic_dec_32(v) - 1;
+#else
+   _Asm_mf(_DFLT_FENCE);
+   return (uint32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
+#endif
 }
 
 /**
@@ -963,7 +973,12 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
  */
 inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
 {
+#if HAVE_ATOMIC_H
    return atomic_inc_64(v) + 1;
+#else
+   _Asm_mf(_DFLT_FENCE);
+   return (uint64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
+#endif
 }
 
 /**
@@ -971,7 +986,12 @@ inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
  */
 inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
 {
+#if HAVE_ATOMIC_H
    return atomic_dec_64(v) - 1;
+#else
+   _Asm_mf(_DFLT_FENCE);
+   return (uint64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
+#endif
 }
 
 #else /* not Solaris nor HP-UX */

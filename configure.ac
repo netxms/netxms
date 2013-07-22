@@ -1497,7 +1497,7 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xHP-UX"; then
-	AC_CHECK_HEADERS([sys/mib.h],,,[[ ]])
+	AC_CHECK_HEADERS([atomic.h sys/mib.h],,,[[ ]])
 	AC_CHECK_DECLS([SIOCGIFNAME, SIOCGIFINDEX],,,[
 #if HAVE_NET_IF_H
 #include <net/if.h>

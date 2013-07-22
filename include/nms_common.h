@@ -487,7 +487,7 @@ typedef int SOCKET;
 #include <sys/atomic.h>
 #endif
 
-#ifdef __HP_aCC
+#if defined(__HP_aCC) && HAVE_ATOMIC_H
 #include <atomic.h>
 #endif
 
