@@ -646,7 +646,7 @@ typedef struct hostent HOSTENT;
 /**
  * OpenSSL
  */
-#if defined(_WITH_ENCRYPTION) && !defined(ORACLE_PROC)
+#if defined(_WITH_ENCRYPTION) && !defined(ORA_PROC)
 
 #include <openssl/crypto.h>
 #include <openssl/rsa.h>
