@@ -97,7 +97,7 @@ reconnect:
 		{
          if (AppAgentConnect(agent->m_name, &agent->m_handle))
          {
-            AgentWriteDebugLog(3, _T("Application agent %s connected"), agent->m_name);
+            AgentWriteDebugLog(7, _T("Application agent %s connected"), agent->m_name);
          }
          else
          {

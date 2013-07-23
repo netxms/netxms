@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -137,13 +137,13 @@ static void ProcessRequest(HPIPE hPipe)
 {
 	AppAgentMessageBuffer *mb = new AppAgentMessageBuffer;
 
-	AppAgentWriteLog(5, _T("ProcessRequest: connection established"));
+	AppAgentWriteLog(7, _T("ProcessRequest: connection established"));
 	while(true)
 	{
-		APPAGENT_MSG *msg = ReadMessageFromPipe(hPipe, NULL, mb);
+		APPAGENT_MSG *msg = ReadMessageFromPipe(hPipe, mb);
 		if (msg == NULL)
 			break;
-		AppAgentWriteLog(6, _T("ProcessRequest: received message %04X"), (unsigned int)msg->command);
+		AppAgentWriteLog(7, _T("ProcessRequest: received message %04X"), (unsigned int)msg->command);
 		APPAGENT_MSG *response;
 		switch(msg->command)
 		{
@@ -161,7 +161,7 @@ static void ProcessRequest(HPIPE hPipe)
 		SendMessageToPipe(hPipe, response);
 		free(response);
 	}
-	AppAgentWriteLog(5, _T("ProcessRequest: connection closed"));
+	AppAgentWriteLog(7, _T("ProcessRequest: connection closed"));
 	delete mb;
 }
 

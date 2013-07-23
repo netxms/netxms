@@ -22,6 +22,11 @@
 #include "appagent-internal.h"
 
 /**
+ * Pipe read timeout
+ */
+#define PIPE_READ_TIMEOUT  2000
+
+/**
  * Message buffer - seek to message start
  * 
  * @return message length or -1 if message start not found
@@ -60,7 +65,7 @@ void AppAgentMessageBuffer::shrink(int pos)
 /**
  * Receive message from pipe
  */
-APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, AppAgentMessageBuffer *mb)
+APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, AppAgentMessageBuffer *mb)
 {
 	APPAGENT_MSG *msg = NULL;
 
@@ -69,29 +74,32 @@ APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, AppAgentMessageBuf
 	{
 #ifdef _WIN32
 		DWORD bytes;
-		if (hEvent != NULL)
-		{
-			OVERLAPPED ov;
+		OVERLAPPED ov;
 
-			memset(&ov, 0, sizeof(OVERLAPPED));
-			ov.hEvent = hEvent;
-			if (!ReadFile(hPipe, &mb->m_data[mb->m_pos], AppAgentMessageBuffer::DATA_SIZE - mb->m_pos, NULL, &ov))
-			{
-				if (GetLastError() != ERROR_IO_PENDING)
-					return NULL;
-			}
-			if (!GetOverlappedResult(hPipe, &ov, &bytes, TRUE))
-			{
-				return NULL;
-			}
-		}
-		else
+		memset(&ov, 0, sizeof(OVERLAPPED));
+      ov.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+		if (!ReadFile(hPipe, &mb->m_data[mb->m_pos], AppAgentMessageBuffer::DATA_SIZE - mb->m_pos, NULL, &ov))
 		{
-			if (!ReadFile(hPipe, &mb->m_data[mb->m_pos], AppAgentMessageBuffer::DATA_SIZE - mb->m_pos, &bytes, NULL))
+			if (GetLastError() != ERROR_IO_PENDING)
+         {
+            CloseHandle(ov.hEvent);
 				return NULL;
+         }
 		}
+      if (WaitForSingleObject(ov.hEvent, PIPE_READ_TIMEOUT) != WAIT_OBJECT_0)
+      {
+         CancelIo(hPipe);
+         CloseHandle(ov.hEvent);
+         return NULL;
+      }
+		if (!GetOverlappedResult(hPipe, &ov, &bytes, TRUE))
+		{
+         CloseHandle(ov.hEvent);
+			return NULL;
+		}
+      CloseHandle(ov.hEvent);
 #else
-		int bytes = RecvEx(hPipe, &mb->m_data[mb->m_pos], AppAgentMessageBuffer::DATA_SIZE - mb->m_pos, 0, INFINITE);
+		int bytes = RecvEx(hPipe, &mb->m_data[mb->m_pos], AppAgentMessageBuffer::DATA_SIZE - mb->m_pos, 0, PIPE_READ_TIMEOUT);
 		if (bytes <= 0)
 			return NULL;
 #endif

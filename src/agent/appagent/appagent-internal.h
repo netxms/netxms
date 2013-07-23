@@ -45,7 +45,7 @@ public:
 /**
  * Internal functions
  */
-APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, AppAgentMessageBuffer *mb);
+APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, AppAgentMessageBuffer *mb);
 bool SendMessageToPipe(HPIPE hPipe, APPAGENT_MSG *msg);
 APPAGENT_MSG *NewMessage(int command, int rcc, int length);
 
