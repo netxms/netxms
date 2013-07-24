@@ -76,8 +76,6 @@ static void H_GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 /**
  * Listener thread for master agent commands
  */
-#ifdef _WIN32
-
 THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 {
 	TCHAR pipeName[MAX_PATH], buffer[256];
@@ -85,11 +83,33 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 
    while(!(g_dwFlags & AF_SHUTDOWN))
 	{
+#ifdef _WIN32
 		HANDLE hPipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 		if (hPipe != INVALID_HANDLE_VALUE)
 		{
 			DWORD pipeMode = PIPE_READMODE_MESSAGE;
 			SetNamedPipeHandleState(hPipe, &pipeMode, NULL, NULL);
+#else
+      int hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
+      if (hPipe != -1)
+      {
+	      struct sockaddr_un remote;
+	      remote.sun_family = AF_UNIX;
+#ifdef UNICODE
+         WideCharToMultiByte(CP_UTF8, 0, pipeName, -1, remote.sun_path, MAX_PATH, NULL, NULL);
+#else
+	      strcpy(remote.sun_path, pipeName);
+#endif
+	      if (connect(hPipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
+         {
+            close(hPipe);
+            hPipe = -1;
+         }
+      }
+
+      if (hPipe != -1)
+      {
+#endif
 			AgentWriteDebugLog(1, _T("Connected to master agent"));
 
 			while(!(g_dwFlags & AF_SHUTDOWN))
@@ -133,22 +153,27 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 
 				// Send response to pipe
 				CSCP_MESSAGE *rawMsg = response.CreateMessage();
-				DWORD bytes;
-				if (!WriteFile(hPipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL))
-					break;
-				if (bytes != ntohl(rawMsg->dwSize))
-					break;
+            bool sendSuccess = SendMessageToPipe(hPipe, rawMsg);
+            free(rawMsg);
+            if (!sendSuccess)
+               break;
 			}
+#ifdef _WIN32
 			CloseHandle(hPipe);
+#else
+         close(hPipe);
+#endif
 			AgentWriteDebugLog(1, _T("Disconnected from master agent"));
 		}
 		else
 		{
+#ifdef _WIN32
 			if (GetLastError() == ERROR_PIPE_BUSY)
 			{
 				WaitNamedPipe(pipeName, 5000);
 			}
 			else
+#endif
 			{
 				AgentWriteDebugLog(1, _T("Cannot connect to master agent, will retry in 5 seconds"));
 				ThreadSleep(5);
@@ -158,12 +183,3 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 	AgentWriteDebugLog(1, _T("Master agent listener stopped"));
 	return THREAD_OK;
 }
-
-#else
-
-THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
-{
-	return THREAD_OK;
-}
-
-#endif

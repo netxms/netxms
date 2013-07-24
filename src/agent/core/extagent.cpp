@@ -63,20 +63,11 @@ ExternalSubagent::~ExternalSubagent()
 bool ExternalSubagent::sendMessage(CSCPMessage *msg)
 {
 	TCHAR buffer[256];
-	bool success = false;
-
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
 
 	CSCP_MESSAGE *rawMsg = msg->CreateMessage();
 	MutexLock(m_mutexPipeWrite);
-#ifdef _WIN32
-	DWORD bytes = 0;
-	if (WriteFile(m_pipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL))
-	{
-		success = (bytes == ntohl(rawMsg->dwSize));
-	}
-#else
-#endif
+   bool success = SendMessageToPipe(m_pipe, rawMsg);
 	MutexUnlock(m_mutexPipeWrite);
 	free(rawMsg);
 	return success;
@@ -610,9 +601,9 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 	struct sockaddr_un addrLocal;
 	addrLocal.sun_family = AF_UNIX;
 #ifdef UNICODE
-   sprintf(addrLocal.sun_path, "/tmp/.nxagentd.ext.%S", subagent->getName());
+   sprintf(addrLocal.sun_path, "/tmp/.nxagentd.subagent.%S", subagent->getName());
 #else
-	sprintf(addrLocal.sun_path, "/tmp/.nxagentd.ext.%s", subagent->getName());
+	sprintf(addrLocal.sun_path, "/tmp/.nxagentd.subagent.%s", subagent->getName());
 #endif
 	unlink(addrLocal.sun_path);
 	prevMask = umask(S_IWGRP | S_IWOTH);
@@ -659,6 +650,26 @@ cleanup:
 }
 
 #endif
+
+/*
+ * Send message to external subagent
+ */
+bool SendMessageToPipe(HPIPE hPipe, CSCP_MESSAGE *msg)
+{
+	bool success = false;
+
+#ifdef _WIN32
+	DWORD bytes = 0;
+   if (WriteFile(hPipe, msg, ntohl(msg->dwSize), &bytes, NULL))
+	{
+		success = (bytes == ntohl(msg->dwSize));
+	}
+#else
+	int bytes = SendEx(hPipe, msg, ntohl(msg->dwSize), 0, NULL); 
+	success = (bytes == ntohl(msg->dwSize));
+#endif
+	return success;
+}
 
 /**
  * Add external subagent from config.
