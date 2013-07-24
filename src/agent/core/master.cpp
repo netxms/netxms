@@ -78,12 +78,12 @@ static void H_GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
  */
 THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 {
-	TCHAR pipeName[MAX_PATH], buffer[256];
-	_sntprintf(pipeName, MAX_PATH, _T("\\\\.\\pipe\\nxagentd.subagent.%s"), g_masterAgent);
-
    while(!(g_dwFlags & AF_SHUTDOWN))
 	{
 #ifdef _WIN32
+      TCHAR pipeName[MAX_PATH];
+      _sntprintf(pipeName, MAX_PATH, _T("\\\\.\\pipe\\nxagentd.subagent.%s"), g_masterAgent);
+
 		HANDLE hPipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 		if (hPipe != INVALID_HANDLE_VALUE)
 		{
@@ -96,9 +96,9 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 	      struct sockaddr_un remote;
 	      remote.sun_family = AF_UNIX;
 #ifdef UNICODE
-         WideCharToMultiByte(CP_UTF8, 0, pipeName, -1, remote.sun_path, MAX_PATH, NULL, NULL);
+         sprintf(remote.sun_path, "/tmp/.nxagentd.subagent.%S", g_masterAgent);
 #else
-	      strcpy(remote.sun_path, pipeName);
+         sprintf(remote.sun_path, "/tmp/.nxagentd.subagent.%s", g_masterAgent);
 #endif
 	      if (connect(hPipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
          {
@@ -117,6 +117,8 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 				CSCPMessage *msg = ReadMessageFromPipe(hPipe, NULL);
 				if ((msg == NULL) || (g_dwFlags & AF_SHUTDOWN))
 					break;
+
+            TCHAR buffer[256];
 				AgentWriteDebugLog(6, _T("Received message %s from master agent"), NXCPMessageCodeName(msg->GetCode(), buffer));
 				
 				CSCPMessage response;
