@@ -597,6 +597,64 @@ cleanup:
 
 static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 {
+	ExternalSubagent *subagent = (ExternalSubagent *)arg;
+	mode_t prevMask = 0;
+
+	int s = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (s == -1)
+	{
+		AppAgentWriteLog(2, _T("ExternalSubagentConnector: socket failed (%s)"), _tcserror(errno));
+		goto cleanup;
+	}
+	
+	struct sockaddr_un addrLocal;
+	addrLocal.sun_family = AF_UNIX;
+#ifdef UNICODE
+   sprintf(addrLocal.sun_path, "/tmp/.nxagentd.ext.%S", s_config.name);
+#else
+	sprintf(addrLocal.sun_path, "/tmp/.nxagentd.ext.%s", s_config.name);
+#endif
+	unlink(addrLocal.sun_path);
+	prevMask = umask(S_IWGRP | S_IWOTH);
+	if (bind(s, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
+	{
+		AppAgentWriteLog(2, _T("ExternalSubagentConnector: bind failed (%s)"), _tcserror(errno));
+		umask(prevMask);
+		goto cleanup;
+	}
+	umask(prevMask);
+
+	if (listen(s, 5) == -1)
+	{
+		AppAgentWriteLog(2, _T("ExternalSubagentConnector: listen failed (%s)"), _tcserror(errno));
+		goto cleanup;
+	}
+	
+	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): UNIX socket created, waiting for connection"), subagent->getName());
+	while(!s_stop)
+	{
+		struct sockaddr_un addrRemote;
+		socklen_t size = sizeof(struct sockaddr_un);
+		SOCKET cs = accept(s, (struct sockaddr *)&addrRemote, &size);
+		if (cs > 0)
+		{
+			subagent->connect(cs);
+			shutdown(cs, 2);
+			close(cs);
+		}
+		else
+		{
+			AppAgentWriteLog(2, _T("ExternalSubagentConnector: accept failed (%s)"), _tcserror(errno));
+		}
+	}
+
+cleanup:
+	if (s != -1)
+	{
+		close(s);
+	}
+
+	AppAgentWriteLog(2, _T("ExternalSubagentConnector: listener thread stopped"));
 	return THREAD_OK;
 }
 
