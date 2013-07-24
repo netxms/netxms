@@ -146,22 +146,18 @@ static void SubagentShutdown()
 #endif
 }
 
-
-//
-// Callback for matched log records
-//
-
+/**
+ * Callback for matched log records
+ */
 static void LogParserMatch(DWORD eventCode, const TCHAR *eventName, const TCHAR *text, int paramCount,
                            TCHAR **paramList, DWORD objectId, void *userArg)
 {
 	AgentSendTrap2(eventCode, eventName, paramCount, paramList);
 }
 
-
-//
-// Trace callback
-//
-
+/**
+ * Trace callback
+ */
 static void LogParserTrace(const TCHAR *format, va_list args)
 {
 	AgentWriteDebugLog2(7, format, args);

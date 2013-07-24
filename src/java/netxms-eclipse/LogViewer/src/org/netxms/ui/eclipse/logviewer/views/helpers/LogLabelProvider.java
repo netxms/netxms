@@ -51,6 +51,9 @@ public class LogLabelProvider implements ITableLabelProvider
 	private Image[] alarmStateImages;
 	private WorkbenchLabelProvider wbLabelProvider;
 	
+	/**
+	 * @param logHandle
+	 */
 	public LogLabelProvider(Log logHandle)
 	{
 		Collection<LogColumn> c = logHandle.getColumns();
