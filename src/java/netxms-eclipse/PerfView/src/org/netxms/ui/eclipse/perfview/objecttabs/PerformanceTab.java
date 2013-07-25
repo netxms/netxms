@@ -128,7 +128,9 @@ public class PerformanceTab extends ObjectTab
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							if (!getClientArea().isDisposed() && (PerformanceTab.this.getObject().getObjectId() == object.getObjectId()))
+							if (!getClientArea().isDisposed() &&
+							    (PerformanceTab.this.getObject() != null) &&
+							    (PerformanceTab.this.getObject().getObjectId() == object.getObjectId()))
 							{
 								update(items);
 							}
