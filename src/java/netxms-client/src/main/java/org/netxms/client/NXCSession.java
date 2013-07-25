@@ -171,7 +171,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 36;
+	public static final int CLIENT_PROTOCOL_VERSION = 37;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -2842,6 +2842,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			rows = inputStream.readInt();
 			final int dataType = inputStream.readInt();
 			data.setDataType(dataType);
+			inputStream.skipBytes(4); // padding
 
 			for(int i = 0; i < rows; i++)
 			{
@@ -2858,9 +2859,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 						break;
 					case DataCollectionItem.DT_INT64:
 					case DataCollectionItem.DT_UINT64:
+						inputStream.skipBytes(4); // padding
 						data.addDataRow(new DciDataRow(new Date(timestamp), new Long(inputStream.readLong())));
 						break;
 					case DataCollectionItem.DT_FLOAT:
+						inputStream.skipBytes(4); // padding
 						data.addDataRow(new DciDataRow(new Date(timestamp), new Double(inputStream.readDouble())));
 						break;
 					case DataCollectionItem.DT_STRING:

@@ -392,16 +392,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId,
             NXC_DCI_ROW *pDst;
             UINT32 dwPrevRowCount, dwRecvRows;
 				int netRowSize;
-            static WORD s_wNetRowSize[] = { 8, 8, 12, 12, 516, 12 };
-            static WORD s_wClientRowSize[] = { 8, 8, 12, 12, sizeof(TCHAR) * 256 + 4, 12 };
+            static WORD s_wNetRowSize[] = { 8, 8, 16, 16, 516, 16 };
+            static WORD s_wClientRowSize[] = { 8, 8, 16, 16, sizeof(TCHAR) * 256 + 4, 16 };
 
             pHdr = (DCI_DATA_HEADER *)pRawMsg->df;
-            dwRecvRows = ntohl(pHdr->dwNumRows);
+            dwRecvRows = ntohl(pHdr->numRows);
 
             // Allocate memory for results
             dwPrevRowCount = (*ppData)->dwNumRows;
             (*ppData)->dwNumRows += dwRecvRows;
-            (*ppData)->wDataType = (WORD)ntohl(pHdr->dwDataType);
+            (*ppData)->wDataType = (WORD)ntohl(pHdr->dataType);
 				if ((*ppData)->wDataType > 5)
 					(*ppData)->wDataType = 0;
             (*ppData)->wRowSize = s_wClientRowSize[(*ppData)->wDataType];
@@ -414,30 +414,30 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId,
             pDst = (NXC_DCI_ROW *)(((char *)((*ppData)->pRows)) + dwPrevRowCount * (*ppData)->wRowSize);
             for(i = 0; i < dwRecvRows; i++)
             {
-               pDst->dwTimeStamp = ntohl(pSrc->dwTimeStamp);
+               pDst->dwTimeStamp = ntohl(pSrc->timeStamp);
                switch((*ppData)->wDataType)
                {
                   case DCI_DT_INT:
                   case DCI_DT_UINT:
-                     pDst->value.dwInt32 = ntohl(pSrc->value.dwInteger);
+                     pDst->value.dwInt32 = ntohl(pSrc->value.int32);
                      break;
                   case DCI_DT_INT64:
                   case DCI_DT_UINT64:
-                     pDst->value.qwInt64 = ntohq(pSrc->value.qwInt64);
+                     pDst->value.qwInt64 = ntohq(pSrc->value.int64);
                      break;
                   case DCI_DT_FLOAT:
-                     pDst->value.dFloat = ntohd(pSrc->value.dFloat);
+                     pDst->value.dFloat = ntohd(pSrc->value.real);
                      break;
                   case DCI_DT_STRING:
-                     SwapWideString(pSrc->value.szString);
+                     SwapWideString(pSrc->value.string);
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-                     ucs2_to_ucs4(pSrc->value.szString, -1, pDst->value.szString, MAX_STRING_VALUE);
+                     ucs2_to_ucs4(pSrc->value.string, -1, pDst->value.szString, MAX_STRING_VALUE);
 #else
-                     wcscpy(pDst->value.szString, pSrc->value.szString);
+                     wcscpy(pDst->value.szString, pSrc->value.string);
 #endif                     
 #else
-                     ucs2_to_mb(pSrc->value.szString, -1, pDst->value.szString, MAX_STRING_VALUE);
+                     ucs2_to_mb(pSrc->value.string, -1, pDst->value.szString, MAX_STRING_VALUE);
 #endif
                      break;
                }

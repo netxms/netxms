@@ -77,7 +77,7 @@
 
 typedef struct
 {
-   UINT32 dwVarId;       // Variable identifier
+   UINT32 dwVarId;      // Variable identifier
    BYTE  bType;         // Data type
    BYTE  bPadding;      // Padding
    WORD wInt16;
@@ -130,7 +130,7 @@ typedef struct
    WORD wCode;       // Should be CMD_ENCRYPTED_MESSAGE
    BYTE nPadding;    // Number of bytes added to the end of message
    BYTE nReserved;
-   UINT32 dwSize;     // Size of encrypted message (including encryption header and padding)
+   UINT32 dwSize;    // Size of encrypted message (including encryption header and padding)
    BYTE data[1];     // Encrypted payload
 } CSCP_ENCRYPTED_MESSAGE;
 
@@ -139,9 +139,10 @@ typedef struct
  */
 typedef struct
 {
-   UINT32 dwItemId;
-   UINT32 dwNumRows;
-   UINT32 dwDataType;
+   UINT32 dciId;
+   UINT32 numRows;
+   UINT32 dataType;
+   UINT32 padding;
 } DCI_DATA_HEADER;
 
 /**
@@ -149,13 +150,20 @@ typedef struct
  */
 typedef struct
 {
-   UINT32 dwTimeStamp;
+   UINT32 timeStamp;
    union
    {
-      UINT32 dwInteger;
-      QWORD qwInt64;
-      double dFloat;
-      UCS2CHAR szString[MAX_DCI_STRING_VALUE];
+      UINT32 int32;
+      UCS2CHAR string[MAX_DCI_STRING_VALUE];
+      struct
+      {
+         UINT32 padding;
+         union
+         {
+            UINT64 int64;
+            double real;
+         };
+      };
    } value;
 } DCI_DATA_ROW;
 

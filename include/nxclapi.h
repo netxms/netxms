@@ -1535,9 +1535,16 @@ typedef struct
    union
    {
       UINT32 dwInt32;
-      INT64 qwInt64;
-      double dFloat;
       TCHAR szString[MAX_STRING_VALUE];
+      struct
+      {
+         INT32 padding;
+         union
+         {
+            INT64 qwInt64;
+            double dFloat;
+         };
+      };
    } value;
 } NXC_DCI_ROW;
 

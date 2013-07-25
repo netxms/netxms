@@ -3581,7 +3581,7 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
-		   static UINT32 m_dwRowSize[] = { 8, 8, 12, 12, 516, 12 };
+		   static UINT32 m_dwRowSize[] = { 8, 8, 16, 16, 516, 16 };
 #if !defined(UNICODE) || defined(UNICODE_UCS4)
 			TCHAR szBuffer[MAX_DCI_STRING_VALUE];
 #endif
@@ -3610,46 +3610,46 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 
 			// Allocate memory for data and prepare data header
 			pData = (DCI_DATA_HEADER *)malloc(numRows * m_dwRowSize[dataType] + sizeof(DCI_DATA_HEADER));
-			pData->dwDataType = htonl((UINT32)dataType);
-			pData->dwItemId = htonl(dci->getId());
+			pData->dataType = htonl((UINT32)dataType);
+			pData->dciId = htonl(dci->getId());
 
 			// Fill memory block with records
 			pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
 			for(UINT32 i = 0; i < numRows; i++)
 			{
-				pCurr->dwTimeStamp = htonl(DBGetFieldULong(hResult, i, 0));
+				pCurr->timeStamp = htonl(DBGetFieldULong(hResult, i, 0));
 				switch(dataType)
 				{
 					case DCI_DT_INT:
 					case DCI_DT_UINT:
-						pCurr->value.dwInteger = htonl(DBGetFieldULong(hResult, i, 1));
+						pCurr->value.int32 = htonl(DBGetFieldULong(hResult, i, 1));
 						break;
 					case DCI_DT_INT64:
 					case DCI_DT_UINT64:
-						pCurr->value.qwInt64 = htonq(DBGetFieldUInt64(hResult, i, 1));
+						pCurr->value.int64 = htonq(DBGetFieldUInt64(hResult, i, 1));
 						break;
 					case DCI_DT_FLOAT:
-						pCurr->value.dFloat = htond(DBGetFieldDouble(hResult, i, 1));
+						pCurr->value.real = htond(DBGetFieldDouble(hResult, i, 1));
 						break;
 					case DCI_DT_STRING:
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
 						DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
-						ucs4_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+						ucs4_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #else
-						DBGetField(hResult, i, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+						DBGetField(hResult, i, 1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif                        
 #else
 						DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
-						mb_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+						mb_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif
-						SwapWideString(pCurr->value.szString);
+						SwapWideString(pCurr->value.string);
 						break;
 				}
 				pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[dataType]);
 			}
 			DBFreeResult(hResult);
-			pData->dwNumRows = htonl(numRows);
+			pData->numRows = htonl(numRows);
 
 			// Prepare and send raw message with fetched data
 			CSCP_MESSAGE *msg = 
