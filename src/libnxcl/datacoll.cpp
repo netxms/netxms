@@ -423,10 +423,10 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId,
                      break;
                   case DCI_DT_INT64:
                   case DCI_DT_UINT64:
-                     pDst->value.qwInt64 = ntohq(pSrc->value.int64);
+                     pDst->value.ext.v64.qwInt64 = ntohq(pSrc->value.ext.v64.int64);
                      break;
                   case DCI_DT_FLOAT:
-                     pDst->value.dFloat = ntohd(pSrc->value.real);
+                     pDst->value.ext.v64.dFloat = ntohd(pSrc->value.ext.v64.real);
                      break;
                   case DCI_DT_STRING:
                      SwapWideString(pSrc->value.string);

@@ -3626,10 +3626,10 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 						break;
 					case DCI_DT_INT64:
 					case DCI_DT_UINT64:
-						pCurr->value.int64 = htonq(DBGetFieldUInt64(hResult, i, 1));
+						pCurr->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, i, 1));
 						break;
 					case DCI_DT_FLOAT:
-						pCurr->value.real = htond(DBGetFieldDouble(hResult, i, 1));
+						pCurr->value.ext.v64.real = htond(DBGetFieldDouble(hResult, i, 1));
 						break;
 					case DCI_DT_STRING:
 #ifdef UNICODE

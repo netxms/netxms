@@ -160,8 +160,8 @@ inline double CGraph::ROW_DATA(NXC_DCI_ROW *row, int dt)
 	double value = ((dt == DCI_DT_STRING) ? _tcstod(row->value.szString, NULL) :
 	                ((dt == DCI_DT_INT) ? *((LONG *)(&row->value.dwInt32)) :
 	                 ((dt == DCI_DT_UINT) ? row->value.dwInt32 :
-	                  (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? (INT64)row->value.qwInt64 :
-	                   ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0)
+	                  (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? (INT64)row->value.ext.v64.qwInt64 :
+	                   ((dt == DCI_DT_FLOAT) ? row->value.ext.v64.dFloat : 0)
 	                  )
 	                 )
 	                )

@@ -2958,15 +2958,15 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
                   _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                case DCI_DT_INT64:
-                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%I64d", pRow->value.qwInt64);
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%I64d", pRow->value.ext.v64.qwInt64);
                   _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                case DCI_DT_UINT64:
-                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%I64u", pRow->value.qwInt64);
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%I64u", pRow->value.ext.v64.qwInt64);
                   _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                case DCI_DT_FLOAT:
-                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%f", pRow->value.dFloat);
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%f", pRow->value.ext.v64.dFloat);
                   _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                default:

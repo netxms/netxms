@@ -162,8 +162,8 @@ typedef struct
          {
             UINT64 int64;
             double real;
-         };
-      };
+         } v64;
+      } ext;
    } value;
 } DCI_DATA_ROW;
 

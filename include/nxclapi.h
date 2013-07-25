@@ -1543,8 +1543,8 @@ typedef struct
          {
             INT64 qwInt64;
             double dFloat;
-         };
-      };
+         } v64;
+      } ext;
    } value;
 } NXC_DCI_ROW;
 

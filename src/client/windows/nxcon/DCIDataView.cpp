@@ -187,13 +187,13 @@ void CDCIDataView::OnViewRefresh()
                      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%u"), pRow->value.dwInt32 / m_nScale);
                      break;
                   case DCI_DT_INT64:
-                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%I64d"), pRow->value.qwInt64 / m_nScale);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%I64d"), pRow->value.ext.v64.qwInt64 / m_nScale);
                      break;
                   case DCI_DT_UINT64:
-                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%I64u"), pRow->value.qwInt64 / m_nScale);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%I64u"), pRow->value.ext.v64.qwInt64 / m_nScale);
                      break;
                   case DCI_DT_FLOAT:
-                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%f"), pRow->value.dFloat / m_nScale);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%f"), pRow->value.ext.v64.dFloat / m_nScale);
                      break;
                   default:
                      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("Unknown data type (%d)"), pData->wDataType);
