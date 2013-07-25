@@ -1,0 +1,256 @@
+NTWS-INFO-RF-DETECT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    MODULE-IDENTITY, OBJECT-TYPE, Gauge32
+        FROM SNMPv2-SMI
+    DisplayString, MacAddress
+        FROM SNMPv2-TC
+    NtwsChannelNum, NtwsRssi
+        FROM NTWS-AP-TC
+    NtwsRFDetectNetworkingMode,
+    NtwsRFDetectClassification,
+    NtwsRFDetectClassificationReason
+        FROM NTWS-RF-DETECT-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsInfoRFDetectMib MODULE-IDENTITY
+    LAST-UPDATED "200709250012Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "RF Detect MIB.
+
+        Copyright 2007 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200709250012Z"
+    DESCRIPTION "v1.2.1, MRT v1.2: Made changes in order to make MIB
+                 comply with corporate MIB conventions."
+
+    REVISION "200706270011Z"
+    DESCRIPTION "v1.2.0: Added one scalar:
+        ntwsInfoRFDetectCurrentXmtrTableSize"
+
+    REVISION "200704180010Z"
+    DESCRIPTION "v1.1.0: Added three new columnar objects:
+        - ntwsInfoRFDetectXmtrNetworkingMode,
+        - ntwsInfoRFDetectXmtrClassification,
+        - ntwsInfoRFDetectXmtrClassificationReason"
+
+    REVISION "200610110003Z"
+    DESCRIPTION "v1.0.3: Initial version"
+
+    ::= { ntwsMibs 9 }
+
+
+--
+-- The RF Detect MIB Tree
+--
+
+ntwsInfoRFDetectObjects      OBJECT IDENTIFIER ::= { ntwsInfoRFDetectMib 1 }
+ntwsInfoRFDetectDataObjects  OBJECT IDENTIFIER ::= { ntwsInfoRFDetectObjects 1 }
+
+--
+-- Object definitions
+--
+
+-- Transmitter table
+
+ntwsInfoRFDetectXmtrTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsInfoRFDetectXmtrEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Transmitter table.
+        May contain tens of thousands of entries
+        (different Transmitter-Listener-Channel combinations)."
+    ::= { ntwsInfoRFDetectDataObjects 1 }
+
+ntwsInfoRFDetectXmtrEntry OBJECT-TYPE
+    SYNTAX      NtwsInfoRFDetectXmtrEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Transmitter-Listener-Channel combination."
+    INDEX { ntwsInfoRFDetectXmtrTransmitterMacAddress,
+            ntwsInfoRFDetectXmtrListenerMacAddress,
+            ntwsInfoRFDetectXmtrChannelNum }
+    ::= { ntwsInfoRFDetectXmtrTable 1 }
+
+NtwsInfoRFDetectXmtrEntry ::= SEQUENCE {
+    ntwsInfoRFDetectXmtrTransmitterMacAddress  MacAddress,
+    ntwsInfoRFDetectXmtrListenerMacAddress     MacAddress,
+    ntwsInfoRFDetectXmtrChannelNum             NtwsChannelNum,
+
+    ntwsInfoRFDetectXmtrRssi        NtwsRssi,
+    ntwsInfoRFDetectXmtrSsid        DisplayString,
+
+    ntwsInfoRFDetectXmtrNetworkingMode        NtwsRFDetectNetworkingMode,
+    ntwsInfoRFDetectXmtrClassification        NtwsRFDetectClassification,
+    ntwsInfoRFDetectXmtrClassificationReason  NtwsRFDetectClassificationReason
+    }
+
+ntwsInfoRFDetectXmtrTransmitterMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The MAC Address of this Transmitter."
+    ::= { ntwsInfoRFDetectXmtrEntry 1 }
+
+ntwsInfoRFDetectXmtrListenerMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The MAC Address of this Listener."
+    ::= { ntwsInfoRFDetectXmtrEntry 2 }
+
+ntwsInfoRFDetectXmtrChannelNum OBJECT-TYPE
+    SYNTAX      NtwsChannelNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Channel Number this transmitter was using
+        when this listener detected it."
+    ::= { ntwsInfoRFDetectXmtrEntry 3 }
+
+ntwsInfoRFDetectXmtrRssi OBJECT-TYPE
+    SYNTAX      NtwsRssi
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Received Signal Strength Indicator at this listener."
+    ::= { ntwsInfoRFDetectXmtrEntry 4 }
+
+ntwsInfoRFDetectXmtrSsid OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The service/SSID name this transmitter was using.
+        Zero-length string when unknown or not applicable."
+    ::= { ntwsInfoRFDetectXmtrEntry 5 }
+
+ntwsInfoRFDetectXmtrNetworkingMode OBJECT-TYPE
+    SYNTAX      NtwsRFDetectNetworkingMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The way this transmitter is doing wireless networking:
+        ad-hoc mode networking or
+        infrastructure mode networking."
+    ::= { ntwsInfoRFDetectXmtrEntry 6 }
+
+ntwsInfoRFDetectXmtrClassification OBJECT-TYPE
+    SYNTAX      NtwsRFDetectClassification
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The RF classification of this transmitter."
+    ::= { ntwsInfoRFDetectXmtrEntry 7 }
+
+ntwsInfoRFDetectXmtrClassificationReason OBJECT-TYPE
+    SYNTAX      NtwsRFDetectClassificationReason
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The reason why this transmitter was classified by
+        RF detection the way it is."
+    ::= { ntwsInfoRFDetectXmtrEntry 8 }
+
+
+-- ==================================
+--
+-- Scalars
+--
+
+ntwsInfoRFDetectCurrentXmtrTableSize OBJECT-TYPE
+    SYNTAX      Gauge32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Current number of Transmitter-Listener-Channel
+        combinations found and recorded by RF detection."
+    ::= { ntwsInfoRFDetectDataObjects 2 }
+
+
+-- =========================================================================
+--
+-- Conformance
+--
+
+ntwsInfoRFDetectConformance  OBJECT IDENTIFIER ::= { ntwsInfoRFDetectObjects 2 }
+ntwsInfoRFDetectCompliances  OBJECT IDENTIFIER ::= { ntwsInfoRFDetectConformance 1 }
+ntwsInfoRFDetectGroups       OBJECT IDENTIFIER ::= { ntwsInfoRFDetectConformance 2 }
+
+-- Compliance
+
+ntwsInfoRFDetectCompliance MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for devices that implement
+        the RF Detect MIB."
+    MODULE  -- ntwsInfoRFDetectMib
+
+    MANDATORY-GROUPS { ntwsInfoRFDetectXmtrGroup }
+
+    GROUP ntwsInfoRFDetectXmtrClassificationGroup
+    DESCRIPTION
+        "This group is implemented by systems running 6.2 release or later."
+
+    GROUP ntwsInfoRFDetectCurrentXmtrTableSizeGroup
+    DESCRIPTION
+        "This group is implemented by systems running 6.2 release or later."
+
+    ::= { ntwsInfoRFDetectCompliances 1 }
+
+-- Units of Conformance
+
+ntwsInfoRFDetectXmtrGroup OBJECT-GROUP
+    OBJECTS {
+             ntwsInfoRFDetectXmtrRssi,
+             ntwsInfoRFDetectXmtrSsid
+            }
+    STATUS      current
+    DESCRIPTION
+        "Mandatory group of objects implemented to provide
+         RF Detect Transmitter info."
+    ::= { ntwsInfoRFDetectGroups 1 }
+
+ntwsInfoRFDetectXmtrClassificationGroup OBJECT-GROUP
+    OBJECTS {
+             ntwsInfoRFDetectXmtrNetworkingMode,
+             ntwsInfoRFDetectXmtrClassification,
+             ntwsInfoRFDetectXmtrClassificationReason
+            }
+    STATUS      current
+    DESCRIPTION
+        "Group of objects implemented to provide
+         RF Detect Classification info.
+         Introduced in 6.2 release."
+    ::= { ntwsInfoRFDetectGroups 2 }
+
+ntwsInfoRFDetectCurrentXmtrTableSizeGroup OBJECT-GROUP
+    OBJECTS { ntwsInfoRFDetectCurrentXmtrTableSize }
+    STATUS      current
+    DESCRIPTION
+        "Group for one object that provides the current
+         number of Transmitter-Listener-Channel
+         combinations found and recorded by RF detection.
+         Introduced in 6.2 release."
+    ::= { ntwsInfoRFDetectGroups 3 }
+
+END

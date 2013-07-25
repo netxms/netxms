@@ -1,0 +1,83 @@
+NTWS-RF-DETECT-TC DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+ntwsRFDetectTc MODULE-IDENTITY
+    LAST-UPDATED "200805150003Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "Textual Conventions used by Nortel Networks wireless switches.
+
+        Copyright 2008 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200805150003Z"
+    DESCRIPTION "v1.1.1, MRT v1.1: Made changes in order to
+                comply with corporate MIB conventions."
+
+    REVISION "200704180002Z"
+    DESCRIPTION "v1.1.0: added two new TCs, for use in ntwsInfoRFDetectMib"
+
+    REVISION "200703280001Z"
+    DESCRIPTION "v1.0.0: initial version"
+
+    ::= { ntwsMibs 11 }
+
+
+NtwsRFDetectClassificationReason ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the reasons why a RF device is classified
+        the way it is."
+    SYNTAX      INTEGER {
+            other                      (1),
+            default-classification     (2),
+            rogue-list                 (3),
+            ap-in-modo                 (4),
+            neighbor-list              (5),
+            ssid-masquerade            (6),
+            seen-in-network            (7),
+            ad-hoc                     (8),
+            ssid-list                  (9),
+            pass-fingerprint           (10),
+            fail-fingerprint           (11)
+        }
+
+NtwsRFDetectClassification ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "The classification of an RF device."
+    SYNTAX      INTEGER {
+            other                      (1),
+            not-classified             (2),
+            member                     (3),
+            neighbor                   (4),
+            suspect                    (5),
+            rogue                      (6)
+        }
+
+NtwsRFDetectNetworkingMode ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "The way an RF device is doing wireless networking."
+    SYNTAX      INTEGER {
+            ad-hoc                     (1),
+            infrastructure             (2)
+        }
+
+END

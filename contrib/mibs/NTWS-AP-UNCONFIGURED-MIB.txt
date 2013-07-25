@@ -1,0 +1,231 @@
+NTWS-AP-UNCONFIGURED-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    MODULE-IDENTITY, OBJECT-TYPE,
+    IpAddress
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString
+        FROM SNMPv2-TC
+    NtwsApSerialNum
+        FROM NTWS-AP-TC
+    NtwsPhysPortNumber
+        FROM NTWS-BASIC-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsApUnconfiguredMib MODULE-IDENTITY
+    LAST-UPDATED "200811140004Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "Unconfigured/orphan APs info for Nortel Networks wireless switches.
+
+        AP = Access Point;
+        AC = Access Controller (wireless switch),
+             the device that runs a SNMP Agent implementing this MIB.
+
+        Orphan AP = an AP currently detected by this AC
+                    but not managed by any AC.
+
+        Copyright 2008 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200811140004Z"
+    DESCRIPTION "v1.0.4: Initial version"
+
+    ::= { ntwsMibs 15 }
+
+
+-- Textual conventions
+
+
+NtwsApUnconfiguredOrphanReason ::= TEXTUAL-CONVENTION
+    STATUS        current
+    DESCRIPTION
+        "Enumeration of the reasons why an AP could be unconfigured/orphan:
+          no-configuration:
+                the AC has no configuration corresponding to that AP;
+          ap-license-exceeded:
+                AP license capacity exceeded;
+          controller-behind-nat:
+                the AC is behind NAT, and cannot suggest
+                another AC for that AP to attach to
+                (the first AC does not know what the AP's view
+                of the public IP address of the other AC is);
+          ap-model-mismatch:
+                AP model does not match configuration;
+          no-macs:
+                the AC must allocate MAC address for that AP
+                but no MAC is available."
+    SYNTAX  INTEGER {
+            other                    (1),
+            no-configuration         (2),
+            ap-license-exceeded      (3),
+            controller-behind-nat    (4),
+            ap-model-mismatch        (5),
+            no-macs                  (6)
+        }
+
+
+--
+-- The AP Unconfigured MIB Tree
+--
+
+ntwsApUnconfMibObjects  OBJECT IDENTIFIER ::= { ntwsApUnconfiguredMib 1 }
+
+-- Reserved for future scalar objects (high-level or summary status info):
+-- ntwsApUnconfGlobalObjects  OBJECT IDENTIFIER ::= { ntwsApUnconfMibObjects 1 }
+
+
+-- Object definitions
+
+
+-- ================
+-- Orphan APs table
+
+ntwsApUnconfOrphanTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApUnconfOrphanEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing all the APs currently detected by this AC
+        but not managed by any AC.
+        Such APs are reported as ''unconfigured'' or ''orphan''
+        in other management interfaces of the AC (CLI, Web etc)."
+    ::= { ntwsApUnconfMibObjects 2 }
+
+ntwsApUnconfOrphanEntry OBJECT-TYPE
+    SYNTAX      NtwsApUnconfOrphanEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular orphan AP detected by this AC."
+    INDEX   { ntwsApUnconfOrphanApSerialNum }
+    ::= { ntwsApUnconfOrphanTable 1 }
+
+NtwsApUnconfOrphanEntry ::= SEQUENCE {
+        ntwsApUnconfOrphanApSerialNum     NtwsApSerialNum,
+
+        ntwsApUnconfOrphanApModelName     DisplayString,
+        ntwsApUnconfOrphanIpAddress       IpAddress,
+        ntwsApUnconfOrphanPhysPortNum     NtwsPhysPortNumber,
+        ntwsApUnconfOrphanVLANName        DisplayString,
+        ntwsApUnconfOrphanReason          NtwsApUnconfiguredOrphanReason
+    }
+
+ntwsApUnconfOrphanApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of this orphan AP."
+    ::= { ntwsApUnconfOrphanEntry 1 }
+
+ntwsApUnconfOrphanApModelName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..24))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Model name of this orphan AP."
+    ::= { ntwsApUnconfOrphanEntry 2 }
+
+-- reserving two positions (3 and 4) for future use
+-- strictly related to the AP model
+
+ntwsApUnconfOrphanIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The IPv4 Address of this orphan AP."
+    ::= { ntwsApUnconfOrphanEntry 5 }
+
+ntwsApUnconfOrphanPhysPortNum OBJECT-TYPE
+    SYNTAX      NtwsPhysPortNumber
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Number of the Physical Port on which this orphan AP
+        was detected by the AC (usually the uplink port going to
+        other switches/routers connecting this AP to the network)."
+    ::= { ntwsApUnconfOrphanEntry 6 }
+
+ntwsApUnconfOrphanVLANName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Identifies the VLAN containing this orphan AP.
+        This is the VLAN Name as configured on this AC
+        (another AC might have a different name corresponding
+        to same VLAN tag used in the network)."
+    ::= { ntwsApUnconfOrphanEntry 7 }
+
+ntwsApUnconfOrphanReason OBJECT-TYPE
+    SYNTAX      NtwsApUnconfiguredOrphanReason
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The reason why this AP is orphan."
+    ::= { ntwsApUnconfOrphanEntry 8 }
+
+
+-- ============================================================================
+--
+-- Conformance
+--
+
+ntwsApUnconfConformance  OBJECT IDENTIFIER ::= { ntwsApUnconfiguredMib 2 }
+
+ntwsApUnconfCompliances  OBJECT IDENTIFIER ::= { ntwsApUnconfConformance 1 }
+ntwsApUnconfGroups       OBJECT IDENTIFIER ::= { ntwsApUnconfConformance 2 }
+
+
+-- Compliance
+
+
+ntwsApUnconfCompliance MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for devices that implement
+        AP Unconfigured MIB."
+
+    MODULE  -- this module (ntwsApUnconfiguredMib)
+
+    MANDATORY-GROUPS {
+                  ntwsApUnconfOrphanBasicGroup
+                }
+
+    ::= { ntwsApUnconfCompliances 1 }
+
+
+-- Units of Conformance
+
+
+ntwsApUnconfOrphanBasicGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApUnconfOrphanApModelName,
+                  ntwsApUnconfOrphanIpAddress,
+                  ntwsApUnconfOrphanPhysPortNum,
+                  ntwsApUnconfOrphanVLANName,
+                  ntwsApUnconfOrphanReason
+                }
+        STATUS      current
+        DESCRIPTION
+            "Mandatory group of objects implemented to provide
+            info about Orphan APs."
+        ::= { ntwsApUnconfGroups 1 }
+
+
+END

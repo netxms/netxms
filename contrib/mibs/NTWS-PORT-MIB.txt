@@ -1,0 +1,198 @@
+NTWS-PORT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    MODULE-IDENTITY, OBJECT-TYPE
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    NtwsPhysPortNumber,
+    NtwsPhysPortNumberOrZero
+        FROM NTWS-BASIC-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsPortMib MODULE-IDENTITY
+    LAST-UPDATED "200810230010Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "Port information MIB.
+
+        Copyright 2008 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200810230010Z"
+    DESCRIPTION "v1.2.0: Factored out the 'NtwsPhysPortNumber'
+                textual convention (moved to the new module Basic TC).
+
+                Added in Basic TC MIB an extension of 'NtwsPhysPortNumber'
+                to permit a value of zero.  The new textual convention
+                is 'NtwsPhysPortNumberOrZero'.
+                Using it in this MIB because 'ntwsPortConfigTrunkMaster'
+                must be zero for a port that is not part of any port group."
+
+    REVISION "200805190004Z"
+    DESCRIPTION "v1.1.0: Clarified descriptions"
+
+    REVISION "200708160002Z"
+    DESCRIPTION "v1.0.2, MRT v2: Made changes in order to make MIB compile
+                 cleanly and comply with corporate MIB conventions."
+
+    REVISION "200611090001Z"
+    DESCRIPTION "v1.0.1: Fixed imports and compliance group"
+
+    REVISION "200604060000Z"
+    DESCRIPTION "v1.0: Initial version"
+
+    ::= { ntwsMibs 6 }
+
+
+-- Textual conventions
+
+
+NtwsPortMode ::= TEXTUAL-CONVENTION
+        STATUS          current
+        DESCRIPTION
+            "Enumeration for the port mode (administratively controlled)."
+        SYNTAX          INTEGER {
+                                directAttachAP  (1),
+                                networkPort     (2),
+                                wired           (3)
+                                }
+
+NtwsPortPoeMode ::= TEXTUAL-CONVENTION
+        STATUS          current
+        DESCRIPTION
+            "Enumeration for the port PoE supply configuration:
+            the availability of Power over Ethernet is
+            administratively controlled, can be enabled or disabled.
+            Some ports may not have the Power over Ethernet hardware:
+            they should always appear as disabled."
+        SYNTAX          INTEGER {
+                                poeEnable  (1),
+                                poeDisable (2)
+                                }
+
+
+--
+-- The Port MIB Tree
+--
+
+ntwsPortObjects      OBJECT IDENTIFIER ::= { ntwsPortMib 1 }
+ntwsPortDataObjects  OBJECT IDENTIFIER ::= { ntwsPortObjects 1 }
+
+
+-- Object definitions
+
+ntwsPortConfigTable OBJECT-TYPE
+        SYNTAX          SEQUENCE OF NtwsPortConfigEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     
+                "Port configuration table"
+        ::= { ntwsPortDataObjects 1 }
+
+ntwsPortConfigEntry OBJECT-TYPE
+        SYNTAX          NtwsPortConfigEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+                "Port configuration entry"
+        INDEX   { ntwsPortConfigPortNumber }
+        ::= { ntwsPortConfigTable 1 }        
+
+NtwsPortConfigEntry ::= SEQUENCE {
+        ntwsPortConfigPortNumber          NtwsPhysPortNumber,
+        ntwsPortConfigPortMode            NtwsPortMode,
+        ntwsPortConfigPoeMode             NtwsPortPoeMode,
+        ntwsPortConfigTrunkMaster         NtwsPhysPortNumberOrZero
+        }
+
+ntwsPortConfigPortNumber  OBJECT-TYPE
+        SYNTAX          NtwsPhysPortNumber
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+                "Physical Port Number"
+        ::= { ntwsPortConfigEntry 1 }
+
+ntwsPortConfigPortMode   OBJECT-TYPE
+        SYNTAX          NtwsPortMode
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "Indicates whether this port is configured
+                     for directly attached AP,
+                     as network port, or
+                     for wired auth."
+        ::= { ntwsPortConfigEntry 2 }
+
+ntwsPortConfigPoeMode     OBJECT-TYPE
+        SYNTAX          NtwsPortPoeMode
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "Indicates whether this port is configured to 
+                 supply PoE (Power over Ethernet)."
+        ::= { ntwsPortConfigEntry 3 }
+
+ntwsPortConfigTrunkMaster OBJECT-TYPE
+        SYNTAX          NtwsPhysPortNumberOrZero
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The master port of the group this port belongs to
+                 (identified by the physical port number).
+                 A zero value means information is not available
+                 (usually if this port is not part of any port group)."
+        ::= { ntwsPortConfigEntry 4 }
+
+
+-- ============================================================================
+--
+-- Conformance
+--
+
+ntwsPortConformance  OBJECT IDENTIFIER ::= { ntwsPortObjects 2 }
+ntwsPortCompliances  OBJECT IDENTIFIER ::= { ntwsPortConformance 1 }
+ntwsPortGroups       OBJECT IDENTIFIER ::= { ntwsPortConformance 2 }
+
+-- Compliance
+
+ntwsPortCompliance MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for devices that implement
+        the Port MIB."
+    MODULE  -- ntwsPortMib
+
+    MANDATORY-GROUPS { ntwsPortConfigGroup }
+
+    ::= { ntwsPortCompliances 1 }
+
+-- Units of Conformance
+
+ntwsPortConfigGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsPortConfigPortMode,
+                 ntwsPortConfigPoeMode,
+                 ntwsPortConfigTrunkMaster     
+                }
+        STATUS      current
+        DESCRIPTION
+        "Mandatory group of objects implemented to provide
+         Port configuration info."
+        ::= { ntwsPortGroups 1 }
+
+END

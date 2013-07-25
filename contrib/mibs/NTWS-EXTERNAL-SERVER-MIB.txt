@@ -1,0 +1,167 @@
+NTWS-EXTERNAL-SERVER-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    MODULE-IDENTITY, OBJECT-TYPE,
+    IpAddress, Unsigned32
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    NtwsIpPort
+        FROM NTWS-BASIC-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsExternalServerMib MODULE-IDENTITY
+    LAST-UPDATED "200810240010Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "External Server configuration MIB.
+
+        Copyright 2008 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200810240010Z"
+    DESCRIPTION "v1.1.0: Factored out 'NtwsIpPort' textual convention
+                (was moved to the new module Basic TC)."
+
+    REVISION "200708160005Z"
+    DESCRIPTION "v1.0.5, MRT v1: Made changes in order to make MIB compile
+                 cleanly and comply with corporate MIB conventions."
+
+    REVISION "200607310004Z"
+    DESCRIPTION "v1.0.4: Initial version"
+
+    ::= { ntwsMibs 7 }
+
+
+-- Textual conventions
+
+NtwsSyslogServerEnable ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Syslog Server mode (administratively enabled or disabled)."
+    SYNTAX      INTEGER {
+                    enabled  (1),
+                    disabled (2)
+                }
+
+
+--
+-- The External Server Configuration MIB Tree
+--
+
+ntwsExternalServerObjects      OBJECT IDENTIFIER ::= { ntwsExternalServerMib 1 }
+ntwsExternalServerDataObjects  OBJECT IDENTIFIER ::= { ntwsExternalServerObjects 1 }
+
+--
+-- Object definitions
+--
+
+-- Syslog Server table
+
+ntwsExtServerSyslogTable OBJECT-TYPE
+   SYNTAX      SEQUENCE OF NtwsExtServerSyslogEntry
+   MAX-ACCESS  not-accessible
+   STATUS      current
+   DESCRIPTION
+       "Configured Syslog server table."
+   ::= { ntwsExternalServerDataObjects 1 }
+
+ntwsExtServerSyslogEntry OBJECT-TYPE
+   SYNTAX      NtwsExtServerSyslogEntry
+   MAX-ACCESS  not-accessible
+   STATUS      current
+   DESCRIPTION
+       "Entry for Syslog server table."
+   INDEX { ntwsExtServerSyslogIndex }
+   ::= { ntwsExtServerSyslogTable 1 }
+
+NtwsExtServerSyslogEntry ::= SEQUENCE {
+    ntwsExtServerSyslogIndex    Unsigned32,
+    ntwsExtServerSyslogAddress  IpAddress,
+    ntwsExtServerSyslogPort     NtwsIpPort,
+    ntwsExtServerSyslogEnable   NtwsSyslogServerEnable
+    }
+
+ntwsExtServerSyslogIndex  OBJECT-TYPE
+   SYNTAX      Unsigned32
+   MAX-ACCESS  not-accessible
+   STATUS      current
+   DESCRIPTION
+       "Index of the Syslog sever"
+   ::= { ntwsExtServerSyslogEntry 1 }
+
+ntwsExtServerSyslogAddress OBJECT-TYPE
+   SYNTAX      IpAddress
+   MAX-ACCESS  read-only
+   STATUS      current
+   DESCRIPTION
+       "IP Address of the Syslog server."
+   ::= { ntwsExtServerSyslogEntry 2 }
+
+ntwsExtServerSyslogPort OBJECT-TYPE
+   SYNTAX      NtwsIpPort
+   MAX-ACCESS  read-only
+   STATUS      current
+   DESCRIPTION
+       "The Syslog server Port number."
+   ::= { ntwsExtServerSyslogEntry 3 }
+
+ntwsExtServerSyslogEnable OBJECT-TYPE
+   SYNTAX      NtwsSyslogServerEnable
+   MAX-ACCESS  read-only
+   STATUS      current
+   DESCRIPTION
+        "The administrative status of the Syslog server (enabled/disabled)"
+   ::= { ntwsExtServerSyslogEntry 4 }
+
+
+-- ============================================================================
+--
+-- Conformance
+--
+
+ntwsExternalServerConformance  OBJECT IDENTIFIER ::= { ntwsExternalServerObjects 2 }
+ntwsExternalServerCompliances  OBJECT IDENTIFIER ::= { ntwsExternalServerConformance 1 }
+ntwsExternalServerGroups       OBJECT IDENTIFIER ::= { ntwsExternalServerConformance 2 }
+
+-- Compliance
+
+ntwsExternalServerCompliance MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for devices that implement
+        the External Server MIB."
+    MODULE  -- ntwsExternalServerMib
+
+    MANDATORY-GROUPS { ntwsExternalServerConfigGroup }
+
+    ::= { ntwsExternalServerCompliances 1 }
+
+-- Units of Conformance
+
+ntwsExternalServerConfigGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsExtServerSyslogAddress,
+                 ntwsExtServerSyslogPort,
+                 ntwsExtServerSyslogEnable
+                }
+        STATUS      current
+        DESCRIPTION
+            "Mandatory group of objects implemented to provide
+             External Server configuration info."
+        ::= { ntwsExternalServerGroups 1 }
+
+END

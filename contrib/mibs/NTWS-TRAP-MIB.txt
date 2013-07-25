@@ -1,0 +1,3003 @@
+NTWS-TRAP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+    IpAddress, Unsigned32, TimeTicks, Counter32
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString, MacAddress
+        FROM SNMPv2-TC
+    NtwsApAttachType, NtwsRadioType, NtwsRadioMode,
+    NtwsApNum, NtwsApSerialNum, NtwsApFingerprint,
+    NtwsAccessType, NtwsRadioNum, NtwsPowerLevel,
+    NtwsRadioPowerChangeType, NtwsChannelChangeType,
+    NtwsApTransition, NtwsApFailDetail, NtwsApPortOrDapNum,
+    NtwsRadioConfigState, NtwsApConnectSecurityType,
+    NtwsApServiceAvailability, NtwsApWasOperational,
+    NtwsRadioChannelWidth, NtwsRadioMimoState,
+    NtwsCryptoType, NtwsRssi
+        FROM NTWS-AP-TC
+    NtwsClientSessionState, NtwsClientAuthenProtocolType,
+    NtwsClientDot1xState, NtwsUserAccessType,
+    NtwsClientAccessMode
+        FROM NTWS-CLIENT-SESSION-TC
+    NtwsRFDetectClassificationReason
+        FROM NTWS-RF-DETECT-TC
+    NtwsIpPort,
+    NtwsPhysPortNumberOrZero
+        FROM NTWS-BASIC-TC
+    ntwsTraps, ntwsTemporary, ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsTrapMib MODULE-IDENTITY
+    LAST-UPDATED "200812190227Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "Notifications emitted by Nortel Networks wireless switches.
+
+        AP = Access Point;
+        AC = Access Controller (wireless switch),
+             the device that runs a SNMP Agent implementing this MIB.
+
+        Copyright 2009 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200812190227Z"
+    DESCRIPTION "v3.9.7: Added new trap: ntwsMultimediaCallFailureTrap,
+                related TCs:
+                        NtwsMultimediaCallDirection,
+                        NtwsMultimediaSignalingProtocol,
+                        NtwsMultimediaCallFailureReason,
+                and related objects:
+                        ntwsMultimediaCommunicationServerID,
+                        ntwsMultimediaCallDirection,
+                        ntwsMultimediaLocalStationIp,
+                        ntwsMultimediaLocalStationPort,
+                        ntwsMultimediaLocalStationEndpointID,
+                        ntwsMultimediaRemoteStationIp,
+                        ntwsMultimediaRemoteStationPort,
+                        ntwsMultimediaRemoteStationEndpointID,
+                        ntwsMultimediaSignalingProtocol,
+                        ntwsMultimediaCallBandwidthAndCodec,
+                        ntwsMultimediaCallDataRate,
+                        ntwsMultimediaCallRssi,
+                        ntwsMultimediaCallFailureReason.
+                (for 7.1 release)"
+
+    REVISION "200810300225Z"
+    DESCRIPTION "v3.9.5: Using the new TC NtwsPhysPortNumberOrZero
+                instead of ''Unsigned32 (0..1024)''."
+
+    REVISION "200805150215Z"
+    DESCRIPTION "v3.8.5: Clarified description to reflect the actual use
+                and avoid future misuse of ntwsDeviceSerNum.
+                Updated description for ntwsApName.
+                Documented the meaning of NtwsClientIpAddrChangeReason
+                enumeration values."
+
+    REVISION "200805070212Z"
+    DESCRIPTION "v3.8.2: Added new trap: ntwsClusterFailureTrap,
+                related TC and objects:
+                        NtwsClusterFailureReason,
+                        ntwsClusterFailureReason,
+                        ntwsClusterFailureDescription."
+
+    REVISION "200804220202Z"
+    DESCRIPTION "v3.7.2: Added new traps:
+                    ntwsRFDetectRogueDeviceTrap2,
+                    ntwsRFDetectSuspectDeviceTrap2
+                and related objects:
+                    ntwsRFDetectXmtrRadioType,
+                    ntwsRFDetectXmtrCryptoType.
+                Obsoleted ntwsRFDetectRogueDeviceTrap,
+                          ntwsRFDetectSuspectDeviceTrap."
+
+    REVISION "200804100201Z"
+    DESCRIPTION "v3.7.1: Added new trap: ntwsClientAuthorizationSuccessTrap4,
+                and related object: ntwsClientRadioType.
+                Obsoletes ntwsClientAuthorizationSuccessTrap,
+                          ntwsClientAuthorizationSuccessTrap2,
+                          ntwsClientAuthorizationSuccessTrap3."
+
+    REVISION "200804080158Z"
+    DESCRIPTION "v3.6.8: Obsoleted two traps:
+                     ntwsRFDetectSpoofedMacAPTrap,
+                     ntwsRFDetectSpoofedSsidAPTrap."
+
+    REVISION "200802180157Z"
+    DESCRIPTION "v3.6.7: Redesigned the AP Operational - Radio Status trap
+                to support 11n-capable APs.
+                Added varbindings:
+                     ntwsRadioChannelWidth,
+                     ntwsRadioMimoState.
+                The new trap is ntwsApOperRadioStatusTrap3."
+
+    REVISION "200712030153Z"
+    DESCRIPTION "v3.6.3: Obsoleted one object: ntwsApPortOrDapNum
+                (previously deprecated)."
+
+    REVISION "200711150152Z"
+    DESCRIPTION "v3.6.2: Added three new traps:
+                     ntwsApManagerChangeTrap,
+                     ntwsClientClearedTrap2,
+                     ntwsMobilityDomainResiliencyStatusTrap,
+                related TCs and objects:
+                     NtwsApMgrChangeReason,
+                     ntwsApMgrChangeReason,
+                     ntwsApMgrOldIp,
+                     ntwsApMgrNewIp,
+                     ntwsClientSessionElapsedSeconds,
+                     NtwsClientClearedReason,
+                     ntwsClientClearedReason,
+                     NtwsMobilityDomainResiliencyStatus,
+                     ntwsMobilityDomainResiliencyStatus.
+                Obsoleted one trap:
+                     ntwsClientClearedTrap,
+                and related object:
+                     ntwsClientSessionElapsedTime."
+
+    REVISION "200711010145Z"
+    DESCRIPTION "v3.5.5: Added new trap: ntwsClientAuthorizationSuccessTrap3,
+                related TC and objects:
+                     NtwsClientAuthorizationReason
+                     ntwsClientAuthorizationReason,
+                     ntwsClientAccessMode,
+                     ntwsPhysPortNum.
+                Obsoletes ntwsClientAuthorizationSuccessTrap,
+                          ntwsClientAuthorizationSuccessTrap2."
+
+    REVISION "200710010141Z"
+    DESCRIPTION "v3.5.1: Cleaned up object (ntwsAPAccessType).
+                Marked it as obsolete, because instrumentation code
+                for traps using it was removed long time ago."
+
+    REVISION "200708310140Z"
+    DESCRIPTION "v3.5.0: Corrected ntwsClientMACAddress2 SYNTAX:
+                its value was always a MacAddress, not an arbitrary
+                'OCTET STRING (SIZE (6))'. There is no change on the wire,
+                just a more appropriate DISPLAY-HINT."
+
+    REVISION "200708310130Z"
+    DESCRIPTION "v3.4.0, MRT v5.2: Made changes in order to
+                comply with corporate MIB conventions."
+
+    REVISION "200708240122Z"
+    DESCRIPTION "v3.3.2: Added new trap: ntwsMichaelMICFailure,
+                related TC and object:
+                     NtwsMichaelMICFailureCause,
+                     ntwsMichaelMICFailureCause.
+                Obsoletes ntwsMpMichaelMICFailure,
+                          ntwsMpMichaelMICFailure2."
+
+    REVISION "200707060110Z"
+    DESCRIPTION "v3.2.0: Redesigned the AP Status traps.
+                  - Replaced ntwsApAttachType and ntwsApPortOrDapNum
+                    with a single varbinding, ntwsApNum.
+                  - Added varbinding ntwsRadioMode
+                    to the AP Operational - Radio Status trap.
+                The new traps are
+                    ntwsApNonOperStatusTrap2,
+                    ntwsApOperRadioStatusTrap2."
+
+    REVISION "200706050107Z"
+    DESCRIPTION "v3.1.2: Obsoleted one trap: ntwsRFDetectUnAuthorizedAPTrap"
+
+    REVISION "200705170106Z"
+    DESCRIPTION "v3.1.1: Added new trap: ntwsConfigurationSavedTrap
+                and related objects:
+                     ntwsConfigSaveFileName,
+                     ntwsConfigSaveInitiatorType,
+                     ntwsConfigSaveInitiatorIp,
+                     ntwsConfigSaveInitiatorDetails,
+                     ntwsConfigSaveGeneration."
+
+    REVISION "200705040103Z"
+    DESCRIPTION "v3.0.1: added one value (3)
+                to NtwsClientIpAddrChangeReason"
+
+    REVISION "200704190100Z"
+    DESCRIPTION "v3.0.0: Added six new traps:
+                     ntwsRFDetectRogueDeviceTrap,
+                     ntwsRFDetectRogueDeviceDisappearTrap,
+                     ntwsRFDetectSuspectDeviceTrap,
+                     ntwsRFDetectSuspectDeviceDisappearTrap,
+                     ntwsRFDetectClientViaRogueWiredAPTrap3,
+                     ntwsRFDetectClassificationChangeTrap
+                and related object:
+                     ntwsRFDetectClassificationReason.
+                Obsoleted seven traps:
+                     ntwsRFDetectRogueAPTrap,
+                     ntwsRFDetectRogueDisappearTrap,
+                     ntwsRFDetectInterferingRogueAPTrap,
+                     ntwsRFDetectInterferingRogueDisappearTrap,
+                     ntwsRFDetectUnAuthorizedSsidTrap,
+                     ntwsRFDetectUnAuthorizedOuiTrap,
+                     ntwsRFDetectClientViaRogueWiredAPTrap2."
+
+    REVISION "200703270054Z"
+    DESCRIPTION "v2.9.2: added three values (13, 14, 15)
+                to NtwsAuthorizationFailureType"
+
+    REVISION "200702150053Z"
+    DESCRIPTION "v2.9.1: Cleaned up trap (ntwsClientAuthorizationSuccessTrap)
+                and object (ntwsRadioRssi) deprecated long time ago.
+                Marked them as obsolete, because instrumentation code
+                was removed already."
+
+    REVISION "200701090052Z"
+    DESCRIPTION "v2.9.0: Added two textual conventions:
+                             NtwsUserAttributeList,
+                             NtwsSessionDisconnectType
+                three new traps:
+                             ntwsClientDynAuthorChangeSuccessTrap,
+                             ntwsClientDynAuthorChangeFailureTrap,
+                             ntwsClientDisconnectTrap
+                and related objects:
+                             ntwsClientDynAuthorClientIp,
+                             ntwsChangedUserParamOldValues,
+                             ntwsChangedUserParamNewValues,
+                             ntwsClientDisconnectSource,
+                             ntwsClientDisconnectDescription"
+
+    REVISION "200701090051Z"
+    DESCRIPTION "v2.8.5: added one value (24)
+                to NtwsRFDetectDoSType"
+
+    REVISION "200701090050Z"
+    DESCRIPTION "v2.6.4: Added two new traps:
+                             ntwsMobilityDomainFailOverTrap,
+                             ntwsMobilityDomainFailBackTrap
+                and related objects:
+                             ntwsMobilityDomainSecondarySeedIp,
+                             ntwsMobilityDomainPrimarySeedIp"
+
+    REVISION "200609280045Z"
+    DESCRIPTION "v2.6.2: Factored out four textual conventions
+                into a new module, Client Session TC:
+                    NtwsClientSessionState,
+                    NtwsClientAuthenProtocolType,
+                    NtwsClientDot1xState,
+                    NtwsUserAccessType
+                and imported them from there."
+
+    REVISION "200608080042Z"
+    DESCRIPTION "v2.5.2: Added new trap: ntwsApRejectLicenseExceededTrap
+                and related object: ntwsNumLicensedActiveAPs"
+
+    REVISION "200607310040Z"
+    DESCRIPTION "v2.5.0: Added new trap:
+                ntwsRFDetectAdhocUserDisappearTrap"
+
+    REVISION "200607280032Z"
+    DESCRIPTION "v2.4.7: Removed unused imports"
+
+    REVISION "200607230029Z"
+    DESCRIPTION "v2.4.1: Added new trap: ntwsRFDetectBlacklistedTrap,
+                related textual convention: NtwsBlacklistingCause
+                and objects: ntwsBlacklistingRemainingTime,
+                             ntwsBlacklistingCause"
+
+    REVISION "200607120028Z"
+    DESCRIPTION "v2.4.0: Added new trap: RFDetectClientViaRogueWiredAPTrap2
+                and related object: ntwsRFDetectRogueAPMacAddr.
+                This trap obsoletes the RFDetectClientViaRogueWiredAPTrap"
+
+    REVISION "200607070026Z"
+    DESCRIPTION "v2.3.1: Added 3 new traps:
+                ntwsClientAssociationSuccessTrap,
+                ntwsClientAuthenticationSuccessTrap,
+                ntwsClientDeAuthenticationTrap"
+
+    REVISION "200607070025Z"
+    DESCRIPTION "v2.3.0: Added new trap: ntwsClientIpAddrChangeTrap
+                and related object: NtwsClientIpAddrChangeReason"
+
+    REVISION "200607060023Z"
+    DESCRIPTION "v2.2.0: added two values (13, 14)
+                to NtwsAuthenticationFailureType"
+
+    REVISION "200604190022Z"
+    DESCRIPTION "v2.1.6: Updated client connection failure causes and descriptions"
+
+    REVISION "200604190021Z"
+    DESCRIPTION "v2.0.6: Revised for release"
+
+    REVISION "200501010000Z"
+    DESCRIPTION "v1: initial version"
+
+    ::= { ntwsMibs 1 }
+
+
+-- Branch for notifications
+ntwsTrapsV2 OBJECT IDENTIFIER ::= { ntwsTraps 0 }
+
+
+-- Textual Conventions
+NtwsAssociationFailureType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+    "Enumeration of the reasons for an AP to fail a
+    client's 802.11 association"
+    SYNTAX      INTEGER {
+            other               (1),
+            load-balance        (2),
+            quiet-period        (3),
+            dot1x               (4),
+            no-prev-assoc       (5),
+            glare               (6),
+            cipher-rejected     (7),
+            cipher-mismatch     (8),
+            wep-not-configured  (9),
+            bad-assoc-request   (10),
+            out-of-memory       (11),
+            tkip-cm-active      (12),
+            roam-in-progress    (13)
+        }
+
+NtwsAuthenticationFailureType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+    "Enumeration of the reasons for AAA authentication to fail
+     user-glob-mismatch - auth rule/user not found for console login
+     user-does-not-exist - login failed because user not found
+     invalid-password - login failed because of invalid password
+     server-timeout - unable to contact a AAA server
+     signature-failed - incorrect password for mschapv2
+     local-certificate-error - certificate error
+     all-servers-down - unable to contact any AAA server in the group
+     authentication-type-mismatch - client and switch are using different
+                                    authentication methods
+     server-rejected - received reject from AAA server
+     fallthru-auth-misconfig - problem with fallthru authentication
+     no-lastresort-auth - problem with last-resort authentication
+     exceeded-max-attempts - local user failed to login within allowed number
+                             of attempts resulting in account lockout
+     password-expired - user's password expired"
+
+    SYNTAX      INTEGER {
+            other               (1),
+            user-glob-mismatch  (2),
+            user-does-not-exist (3),
+            invalid-password    (4),
+            server-timeout      (5),
+            signature-failed    (6),
+            local-certificate-error (7),
+            all-servers-down    (8),
+            authentication-type-mismatch (9),
+            server-rejected     (10),
+            fallthru-auth-misconfig (11),
+            no-lastresort-auth  (12),
+            exceeded-max-attempts (13),
+            password-expired (14)
+        }
+
+NtwsAuthorizationFailureType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+    "Enumeration of the reasons for AAA authorization failure"
+    SYNTAX      INTEGER {
+            other               (1),
+            user-param          (2),
+            location-policy     (3),
+            vlan-tunnel-failure (4),
+            ssid-mismatch       (5),
+            acl-mismatch        (6),
+            timeofday-mismatch  (7),
+            crypto-type-mismatch(8),
+            mobility-profile-mismatch(9),
+            start-date-mismatch (10),
+            end-date-mismatch   (11),
+            svr-type-mismatch   (12),
+            ssid-defaults       (13),
+            qos-profile-mismatch (14),
+            simultaneous-logins (15)
+        }
+
+NtwsDot1xFailureType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+    "Enumeration of the dot1x failure reasons.
+    quiet-period occurs when client is denied access for a period of
+                 time after a failed connection attempt
+    administrative-kill means that the session was cleared using the
+                        'clear dot1x client' command
+    bad-rsnie means that client sent an invalid IE 
+    timeout is when there are excessive retransmissions
+    max-sessions-exceeded means the maximum allowed wired clients
+                          has been exceeded on the switch
+    fourway-hs-failure is for failures occuring the 4-way key handshake
+    user-glob-mismatch means the name received in the dot1x identity
+                       request does not match any configured userglobs
+                       in the system
+    reauth-disabled means that the client is trying to reauthenticate
+                    but reauthentication is disabled
+    gkhs-failure means that either there was no response from the client
+                 during the GKHS or the response did not have an IE
+    force-unauth-configured means that the client is trying to connect
+                            through a port which is configured as
+                            force-unauth
+    cert-not-installed means that there is no certificate installed on 
+                       the switch"                    
+    SYNTAX      INTEGER {
+            other               (1),
+            quiet-period        (2),
+            administrative-kill (3),
+            bad-rsnie           (4),
+            timeout             (5),
+            max-sessions-exceeded(6),
+            fourway-hs-failure  (7),
+            user-glob-mismatch  (8),
+            bonded-auth-failure (9),
+            reauth-disabled     (10),
+            gkhs-failure        (11),
+            force-unauth-configured (12),
+            cert-not-installed  (13)
+         }
+
+NtwsRFDetectDoSType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+    "The types of denial of service (DoS) attacks"
+    SYNTAX      INTEGER {
+            probe-flood(1),
+            auth-flood(2),
+            null-data-flood(3),
+            mgmt-6-flood(4),
+            mgmt-7-flood(5),
+            mgmt-d-flood(6),
+            mgmt-e-flood(7),
+            mgmt-f-flood(8),
+            fakeap-ssid(9),
+            fakeap-bssid(10),
+            bcast-deauth(11),
+            null-probe-resp(12),
+            disassoc-spoof(13),
+            deauth-spoof(14),
+            decrypt-err(15),
+            weak-wep-iv(16),
+            wireless-bridge(17),
+            netstumbler(18),
+            wellenreiter(19),
+            adhoc-client-frame(20),
+            associate-pkt-flood(21),
+            re-associate-pkt-flood(22),
+            de-associate-pkt-flood(23),
+            bssid-spoof(24)
+        }
+
+NtwsClientIpAddrChangeReason ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Describes the reasons for client IP address changes:
+            client-connected: IP address assigned on initial connection;
+            other: IP address changed after initial connection;
+            dhcp-to-static: erroneous condition where
+                client IP address is changed to a static address
+                while the dhcp-restrict option is enabled."
+    SYNTAX      INTEGER {
+            client-connected(1),
+            other(2),
+            dhcp-to-static(3)
+        }
+
+NtwsBlacklistingCause ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of reasons for blacklisting a transmitter:
+            bl-configured: administrative action
+                           (explicitly added to the Black List),
+            bl-associate-pkt-flood: Association request flood detected,
+            bl-re-associate-pkt-flood: Re-association request flood detected,
+            bl-de-associate-pkt-flood: De-association request flood detected.
+        (The leading 'bl-' stands for 'Black-Listed';
+         reading it as 'Blocked' would also make sense)."
+    SYNTAX      INTEGER {
+            bl-configured(1),
+            bl-associate-pkt-flood(2),
+            bl-re-associate-pkt-flood(3),
+            bl-de-associate-pkt-flood(4)
+        }
+
+NtwsUserAttributeList ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Display string listing AAA attributes and their values.
+        These strings can be used, for example,
+        in change of authorization notifications.
+        The syntax is:
+            attribute_name1=value1, attribute_name2=value2, ...
+        where attribute_name can be one of the following:
+            vlan-name,
+            in-acl,
+            out-acl,
+            mobility-prof,
+            time-of-day,
+            end-date,
+            sess-timeout,
+            acct-interval,
+            service-type.
+        Example:
+            vlan-name=red, in-acl=in_acl_1"
+    SYNTAX      DisplayString (SIZE (0..2048))
+
+NtwsSessionDisconnectType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the sources that can initiate
+        the termination of a session:
+        admin-disconnect:
+                session terminated by administrative action
+                (from console, telnet session, WebView, or WMS).
+        dyn-auth-disconnect:
+                session terminated by dynamic authorization client;
+                description will have the IP address of
+                the dynamic authorization client which sent the request."
+    SYNTAX      INTEGER {
+            other                      (1),
+            admin-disconnect           (2),
+            dyn-auth-disconnect        (3)
+        }
+
+NtwsConfigSaveInitiatorType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the sources that can initiate
+        a configuration save:
+        cli-console:
+                configuration save requested from
+                serial console administrative session.
+        cli-remote:
+                configuration save requested from
+                telnet or ssh administrative session.
+        https:
+                configuration save requested via
+                HTTPS API (WMS or WebView).
+        snmp-set:
+                configuration saved as a result of
+                performing a SNMP SET operation."
+    SYNTAX      INTEGER {
+            other               (1),
+            cli-console         (2),
+            cli-remote          (3),
+            https               (4),
+            snmp-set            (5)
+        }
+
+NtwsMichaelMICFailureCause ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Describes the cause/source of Michael MIC Failure detection."
+    SYNTAX      INTEGER {
+            detected-by-ap     (1),
+            detected-by-client (2)
+        }
+
+NtwsClientAuthorizationReason ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the reasons for AAA authorization."
+    SYNTAX      INTEGER {
+            other            (1),
+            new-client       (2),
+            re-auth          (3),
+            roam             (4)
+        }
+
+ NtwsApMgrChangeReason ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the reasons why AP is switching
+        to its secondary link:
+        failover:
+                AP's primary link failed.
+        load-balancing:
+                AP's primary link is overloaded."
+    SYNTAX      INTEGER {
+            other            (1),
+            failover         (2),
+            load-balancing   (3)
+        }
+
+NtwsClientClearedReason ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the reasons for clearing a session:
+        normal:
+                Session was cleared from the switch as the last
+                step in the normal session termination process.
+        backup-failure:
+                The backup switch could not activate a session
+                from a failed MX."
+    SYNTAX      INTEGER {
+            other            (1),
+            normal           (2),
+            backup-failure   (3)
+        }
+
+NtwsMobilityDomainResiliencyStatus ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the current resilient capacity status
+        for a mobility domain:
+        resilient:
+                Every AP in the mobility domain has a secondary backup
+                link. If the primary switch of an AP failed, the AP
+                and its sessions would fail over to its backup link.
+        degraded:
+                Some APs only have a primary link. If the primary
+                switch of an AP without a backup link failed, the AP
+                would reboot and its sessions would be lost."
+    SYNTAX      INTEGER {
+            other            (1),
+            resilient        (2),
+            degraded         (3)
+        }
+
+NtwsClusterFailureReason ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the reasons why the AC goes into
+        cluster failure state:
+        validation-error:
+                Cluster configuration rejected due to validation error."
+    SYNTAX      INTEGER {
+            other                (1),
+            validation-error     (2)
+        }
+
+NtwsMultimediaSignalingProtocol ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of Multimedia Signaling Protocols:
+        protocols for creating, modifying, terminating sessions.
+        The first signaling protocol supported is:
+          sip = Session Initiation Protocol."
+    SYNTAX      INTEGER {
+            other            (1),
+            sip              (2)
+        }
+
+NtwsMultimediaCallFailureReason ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the reasons why a multimedia call fails."
+    SYNTAX      INTEGER {
+            other                (1),
+            resource-unavailable (2)
+        }
+
+NtwsMultimediaCallDirection ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the multimedia call direction."
+    SYNTAX      INTEGER {
+            incoming         (1),
+            outgoing         (2)
+        }
+
+
+-- Object definitions
+
+ntwsDeviceId OBJECT-TYPE
+    SYNTAX      OBJECT IDENTIFIER
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Enumeration of devices as indicated in registration MIB.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 1 }
+
+ntwsMobilityDomainIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "IP address of the other switch which the send switch is
+    reporting on. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 2 }
+
+ntwsAPMACAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "MAC address of the AP of interest. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 3 }
+
+ntwsClientMACAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "MAC address of the client of interest. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 4 }
+
+ntwsRFDetectXmtrMacAddr OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Describes the transmitter's MAC address. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 5 }
+
+ntwsPortNum OBJECT-TYPE
+    SYNTAX      INTEGER (1..22)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Port number on the AC which reported this rogue during a detection
+     sweep. This object is used within notifications and
+     is not accessible."
+    ::= { ntwsTemporary 6 }
+
+ntwsAPRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Radio number of the AP which reported this rogue during a detection
+     sweep. This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 7 }
+
+ntwsRadioRssi OBJECT-TYPE
+    SYNTAX      INTEGER (0..1024)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      obsolete
+    DESCRIPTION
+    "The received signal strength as measured by the AP radio which reported
+    this rogue during a detection sweep. This object is used
+    within notifications and is not accessible.
+
+    Not used by any notification."
+    ::= { ntwsTemporary 8 }
+
+ntwsRadioBSSID OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE (6))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The basic service set identifier of the rogue from the beacon frame
+    reported by the AP during a detection sweep. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 9 }
+
+ntwsUserName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..32))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client user name as learned from the AAA process. This object
+    is used within notifications and is not accessible."
+    ::= { ntwsTemporary 10 }
+
+ntwsClientAuthServerIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client authentication server ip address. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 11 }
+
+ntwsClientSessionState OBJECT-TYPE
+    SYNTAX      NtwsClientSessionState
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The state for a client session. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 12 }
+
+ntwsDAPNum OBJECT-TYPE
+    SYNTAX      INTEGER (1..100)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The DAP number on the wireless switch. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 13 }
+
+ntwsClientIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client ip address. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 14 }
+
+ntwsClientSessionId OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..32))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The unique global id for a client session. This object is used
+    within notifications and is not accessible."
+    ::= { ntwsTemporary 15 }
+
+ntwsClientAuthenProtocolType OBJECT-TYPE
+    SYNTAX      NtwsClientAuthenProtocolType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The authentication protocol for a client.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 16 }
+
+ntwsClientVLANName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..32))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The vlan name a client is on. This object is used within
+    notifications and is not accessible."
+    ::= { ntwsTemporary 17 }
+
+ntwsClientSessionStartTime OBJECT-TYPE
+    SYNTAX      TimeTicks
+    MAX-ACCESS  accessible-for-notify
+    STATUS      obsolete
+    DESCRIPTION
+        "The start time of a client session, relative to the sysUptime.
+        This object is used within notifications and is not accessible.
+
+        Obsolete. Do not use it because it's not vital information and
+        often *cannot* be implemented to match the declared semantics:
+        a client session might have been created on another wireless switch,
+        *before* the current switch booted (the local zero of sysUptime)."
+    ::= { ntwsTemporary 18 }
+
+ntwsClientFailureCause OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Display string for possible failure cause for a client session.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 19 }
+
+ntwsClientRoamedFromPortNum OBJECT-TYPE
+    SYNTAX      INTEGER (1..20)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The port number on the AC a client has roamed from.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 20 }
+
+ntwsClientRoamedFromRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The radio number of the AP the client is roamed from. This object is
+    used within notifications and is not accessible."
+    ::= { ntwsTemporary 21 }
+
+ntwsClientRoamedFromDAPNum OBJECT-TYPE
+    SYNTAX      INTEGER (1..100)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The DAP number on the AC which reported this rogue during roam.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 22 }
+
+ntwsUserParams OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "A display string of User Parameters for client user authorization
+    attributes learned through AAA and/or used by the system. Note
+    that the syntax will be (name=value, name=value,..) for the
+    parsing purpose. This object is used within notifications and
+    is not accessible."
+    ::= { ntwsTemporary 23 }
+
+ntwsClientLocationPolicyIndex OBJECT-TYPE
+    SYNTAX      INTEGER (0..1024)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Index of the Location Policy rule applied to a user.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 24 }
+
+ntwsClientAssociationFailureCause OBJECT-TYPE
+    SYNTAX      NtwsAssociationFailureType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client association failure cause.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 25 }
+
+ntwsClientAuthenticationFailureCause OBJECT-TYPE
+    SYNTAX      NtwsAuthenticationFailureType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client authentication failure cause.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 26 }
+
+ntwsClientAuthorizationFailureCause OBJECT-TYPE
+    SYNTAX      NtwsAuthorizationFailureType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client authorization failure cause. Note that if it is
+    the user-param, we would additionally expect the failure cause
+    description to list the user attribute value that caused the
+    failure. This object is used within notifications and is
+    not accessible."
+    ::= { ntwsTemporary 27 }
+
+ntwsClientFailureCauseDescription OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Display string for describing the client failure cause.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 28 }
+
+ntwsClientRoamedFromWsIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The system IP address of the AC (wireless switch) a client roamed from.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 29 }
+
+ntwsClientRoamedFromAccessType OBJECT-TYPE
+    SYNTAX      NtwsAccessType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client access type (ap, dap, wired) that a client roamed from.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 30 }
+
+ntwsClientAccessType OBJECT-TYPE
+    SYNTAX      NtwsAccessType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client access type (ap, dap, wired).
+    This object is used within notifications and is not accessible.
+    For new traps, use ntwsClientAccessMode instead of this object."
+    ::= { ntwsTemporary 31 }
+
+ntwsRadioMACAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "AP Radio MAC address.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 32 }
+
+ntwsRadioPowerChangeReason OBJECT-TYPE
+    SYNTAX      NtwsRadioPowerChangeType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The type of event that caused an AP radio power change; occurs due
+    to auto-tune operation.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 33 }
+
+ntwsNewChannelNum OBJECT-TYPE
+    SYNTAX      INTEGER (1..1024)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "New channel number of the AP radio used after an auto tune event.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 34 }
+
+ntwsOldChannelNum OBJECT-TYPE
+    SYNTAX      INTEGER (1..1024)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Old channel number of the AP radio used before an auto tune event.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 35 }
+
+ntwsChannelChangeReason OBJECT-TYPE
+    SYNTAX      NtwsChannelChangeType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The type of event that caused an AP radio channel change; occurs due
+    to auto-tune operation.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 36 }
+
+ntwsRFDetectListenerListInfo OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE (0..571))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The RF Detection Listener list info including a list of
+    (listener mac, rssi, channel, ssid, time).
+    There will be a maximum of 6 entries in the list.
+    Formats:
+        MAC: 18 bytes:          %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X
+        RSSI: 10 bytes:         %10d
+        CHANNEL: 3 bytes:       %3d
+        SSID: 32 bytes:         %s
+        TIME: 26 bytes:         %s
+    Maximum size per entry is 89+4+2 = 95 bytes.
+    Maximum size of the string is 6*95= 571 bytes (include NULL).
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 37 }
+
+ntwsRadioSSID OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..32))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The radio SSID string
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 38 }
+
+ntwsNewPowerLevel OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "New power level of the AP radio used after an auto tune event.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 39 }
+
+ntwsOldPowerLevel OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Old power level of the AP radio used before an auto tune event.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 40 }
+
+ntwsRadioPowerChangeDescription OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The radio power change description. In the case of reason being
+    dup-pkts-threshold-exceed(1), and retransmit-threshold-exceed(2),
+    clientMacAddress will be included in the description.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 41 }
+
+ntwsCounterMeasurePerformerListInfo OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      obsolete
+    DESCRIPTION
+    "A list of information for APs performing Counter Measures including
+    a list of performer mac addresses. This object is used within
+    notifications and is not accessible.
+
+    Not used by any notification."
+    ::= { ntwsTemporary 42 }
+
+ntwsClientDot1xState OBJECT-TYPE
+    SYNTAX      NtwsClientDot1xState
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The state for a client 802.1X.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 43 }
+
+ntwsClientDot1xFailureCause OBJECT-TYPE
+    SYNTAX      NtwsDot1xFailureType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The client 802.1X failure cause.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 44 }
+
+ntwsAPAccessType OBJECT-TYPE
+    SYNTAX      NtwsAccessType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      obsolete
+    DESCRIPTION
+    "The access point access type (ap, dap,).
+    This object is used within notifications and is not accessible.
+
+    Not used by any notification."
+    ::= { ntwsTemporary 45 }
+
+ntwsUserAccessType OBJECT-TYPE
+    SYNTAX      NtwsUserAccessType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The user access type (MAC, WEB, DOT1X, LAST-RESORT).
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 46}
+
+ntwsClientSessionElapsedTime OBJECT-TYPE
+    SYNTAX      TimeTicks
+    MAX-ACCESS  accessible-for-notify
+    STATUS      obsolete
+    DESCRIPTION
+    "The elapsed time for a client session.
+    Obsoleted because session time is usually reported in seconds.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 47 }
+
+ntwsLocalId OBJECT-TYPE
+    SYNTAX      INTEGER (1..65000)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Local Id for the session.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 48 }
+
+ntwsRFDetectDoSType OBJECT-TYPE
+    SYNTAX      NtwsRFDetectDoSType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "The type of denial of service (DoS) attack.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 49 }
+
+ntwsSourceWsIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "IP address of another AC (wireless switch).
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 50 }
+
+ntwsClientVLANid OBJECT-TYPE
+    SYNTAX      INTEGER (0..4095)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "VLAN ID used by client traffic.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 51 }
+
+ntwsClientVLANtag OBJECT-TYPE
+    SYNTAX      INTEGER (0..4095)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "VLAN tag used by client traffic.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 52 }
+
+ntwsDeviceModel OBJECT-TYPE
+    SYNTAX       DisplayString
+    MAX-ACCESS   accessible-for-notify
+    STATUS       current
+    DESCRIPTION
+    "The model of a device in printable US-ASCII. If unknown
+    (or not available), then the value is a zero length string.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 53 }
+
+--
+-- Notes for MIB designers/maintainers:
+--
+-- Define a new object type for each kind of device (other than AP)
+-- if your new traps need to identify such devices by serial number.
+-- Use 'ntwsDeviceSerNum' only to identify APs!
+--
+ntwsDeviceSerNum OBJECT-TYPE
+    SYNTAX       NtwsApSerialNum
+    MAX-ACCESS   accessible-for-notify
+    STATUS       current
+    DESCRIPTION
+        "The serial number of an AP in printable US-ASCII.
+        If unknown (or not available), then the value is a zero length string.
+
+        Should NOT be used to identify other devices, for example an AC
+        (wireless switch).
+
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 54 }
+
+ntwsRsaPubKeyFingerPrint OBJECT-TYPE
+    SYNTAX       NtwsApFingerprint
+    MAX-ACCESS   accessible-for-notify
+    STATUS       current
+    DESCRIPTION
+    "The hash of the RSA public key (of a key pair) in binary form
+    that uniquely identifies the public key of an AP.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 55 }
+
+ntwsDAPconnectWarningType OBJECT-TYPE
+    SYNTAX       INTEGER {
+            not-configured-fingerprint-connect(1),
+            secure-handshake-failure(2),
+            not-configured-fingerprint-required(3),
+            fingerprint-mismatch(4)
+            }
+    MAX-ACCESS   accessible-for-notify
+    STATUS       current
+    DESCRIPTION
+    "The type of DAP connect warning. The values are:
+      not-configured-fingerprint-connect(1)...a DAP, which has an RSA keypair
+           but did not have its fingerprint configured on the AC, has connected
+           to the AC when 'dap security' set to 'OPTIONAL'
+      secure-handshake-failure(2).............a DAP tried to connect to the
+           AC with security, but the handshake failed
+      not-configured-fingerprint-required(3)..a DAP tried to connect to the
+           AC with security, but 'dap security' set to 'REQUIRED',
+           and no fingerprint was configured for the DAP
+      fingerprint-mismatch(4).................a DAP tried to connect to the
+           AC with security and its fingerprint was configured, but
+           the fingerprint did not match the computed one
+
+      This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 56 }
+
+ntwsClientMACAddress2 OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "MAC address of the second client of interest. This object
+    is used within notifications and is not accessible."
+    ::= { ntwsTemporary 57 }
+
+ntwsApAttachType OBJECT-TYPE
+    SYNTAX      NtwsApAttachType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "How the AP is attached to the AC
+        (directly or via L2/L3 network).
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 58 }
+
+ntwsApPortOrDapNum OBJECT-TYPE
+    SYNTAX      NtwsApPortOrDapNum
+    MAX-ACCESS  accessible-for-notify
+    STATUS      obsolete
+    DESCRIPTION
+        "The Port Number if the AP is directly attached,
+        or the CLI-assigned DAP Number if attached via L2/L3 network.
+        This object is used within notifications and is not accessible.
+        Obsoleted by ntwsApNum.
+        (In 6.0, direct- and network-attached APs were unified.)"
+    ::= { ntwsTemporary 59 }
+
+ntwsApName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The name of the AP, as assigned in AC's CLI;
+        defaults to AP<Number> (examples: 'AP01', 'AP22', 'AP333', 'AP4444');
+        could have been changed from CLI to a meaningful name,
+        for example the location of the AP (example: 'MeetingRoom73').
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 60 }
+
+ntwsApTransition OBJECT-TYPE
+    SYNTAX      NtwsApTransition
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "AP state Transition, as seen by the AC.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 61 }
+
+ntwsApFailDetail OBJECT-TYPE
+    SYNTAX      NtwsApFailDetail
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Detailed failure code for some of the transitions
+        specified in 'ntwsApTransition' object.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 62 }
+
+ntwsRadioType OBJECT-TYPE
+    SYNTAX      NtwsRadioType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the AP Radio Type, as seen by AC.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 63 }
+
+ntwsRadioConfigState OBJECT-TYPE
+    SYNTAX      NtwsRadioConfigState
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the Radio State, as seen by the AC.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 64 }
+
+ntwsApConnectSecurityType OBJECT-TYPE
+    SYNTAX      NtwsApConnectSecurityType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the security level of the connection between AP and AC.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 65 }
+
+ntwsApServiceAvailability OBJECT-TYPE
+    SYNTAX      NtwsApServiceAvailability
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the level of wireless service availability.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 66 }
+
+ntwsApWasOperational OBJECT-TYPE
+    SYNTAX      NtwsApWasOperational
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether the AP was operational
+        before a transition occurred.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 67 }
+
+ntwsClientTimeSinceLastRoam OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The time in seconds since the most recent roam of a given client.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 68 }
+
+ntwsClientIpAddrChangeReason OBJECT-TYPE
+    SYNTAX      NtwsClientIpAddrChangeReason
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the reason why client IP address changed.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 69 }
+
+ntwsRFDetectRogueAPMacAddr OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+    "Describes the MAC address of the Rogue AP the transmitter is connected to.
+    This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 70 }
+
+ntwsBlacklistingRemainingTime OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The time in seconds remaining until a given transmitter could be
+        removed from the Black List.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 71 }
+
+ntwsBlacklistingCause OBJECT-TYPE
+    SYNTAX      NtwsBlacklistingCause
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the reason why a given transmitter is blacklisted.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 72 }
+
+ntwsNumLicensedActiveAPs OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the maximum (licensed) number of active APs for this AC.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 73 }
+
+ntwsClientDynAuthorClientIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The dynamic authorization client IP address which caused
+        the change of authorization.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 74 }
+
+ntwsChangedUserParamOldValues OBJECT-TYPE
+    SYNTAX      NtwsUserAttributeList
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "A display string listing the changed AAA attributes and
+        their values, before the change of authorization was executed.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 75 }
+
+ntwsChangedUserParamNewValues OBJECT-TYPE
+    SYNTAX      NtwsUserAttributeList
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "A display string listing the changed AAA attributes and
+        their values, after the change of authorization was executed.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 76 }
+
+ntwsClientDisconnectSource OBJECT-TYPE
+    SYNTAX      NtwsSessionDisconnectType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The external source that initiated the termination of a session.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 77 }
+
+ntwsClientDisconnectDescription OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Display string for providing available information related to
+        the external source that initiated a session termination.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 78 }
+
+ntwsMobilityDomainSecondarySeedIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The secondary seed IP address to which the Mobility Domain
+        has failed over.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 79 }
+
+ntwsMobilityDomainPrimarySeedIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The primary seed IP address to which the Mobility Domain
+        has failed back.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 80 }
+
+ntwsRFDetectClassificationReason OBJECT-TYPE
+    SYNTAX      NtwsRFDetectClassificationReason
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the reason why a RF device is classified
+        the way it is.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 81 }
+
+ntwsConfigSaveFileName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Display string listing the name of the file
+        to which the running configuration was saved.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 82 }
+
+ntwsConfigSaveInitiatorType OBJECT-TYPE
+    SYNTAX      NtwsConfigSaveInitiatorType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the source that initiated a configuration save.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 83 }
+
+ntwsConfigSaveInitiatorIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The IP address of the source that initiated a configuration save.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 84 }
+
+ntwsConfigSaveInitiatorDetails OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Display string listing additional information regarding
+        the source that initiated a configuration save, when available.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 85 }
+
+ntwsConfigSaveGeneration OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the number of configuration changes
+        since the last system boot.
+        The generation count is used to track the number of times
+        the running configuration has been changed due to
+        administrative actions (set/clear), SNMP requests (SET),
+        XML requests (e.g. WMS).
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 86 }
+
+ntwsApNum OBJECT-TYPE
+    SYNTAX      NtwsApNum
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The administratively assigned AP Number,
+        unique on same AC (switch),
+        regardless of how APs are attached to the AC.
+        This object is used within notifications and is not accessible.
+        Obsoletes ntwsApPortOrDapNum.
+        For clarity, use this object to identify an AP
+        since in 6.0 directly attached APs and DAPs were unified."
+    ::= { ntwsTemporary 87 }
+
+ntwsRadioMode OBJECT-TYPE
+    SYNTAX      NtwsRadioMode
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the administratively controlled Radio Mode
+        (enabled/disabled/sentry).
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 88 }
+
+ntwsMichaelMICFailureCause OBJECT-TYPE
+    SYNTAX      NtwsMichaelMICFailureCause
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the Michael MIC Failure cause / who detected it.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 89 }
+
+ntwsClientAccessMode OBJECT-TYPE
+    SYNTAX      NtwsClientAccessMode
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The client access mode (ap, wired).
+        This object is used within notifications and is not accessible.
+        Intended to replace ntwsClientAccessType.
+        (In 6.0, direct- and network-attached APs were unified.)"
+    ::= { ntwsTemporary 90 }
+
+ntwsClientAuthorizationReason OBJECT-TYPE
+    SYNTAX      NtwsClientAuthorizationReason
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the reason why client performed AAA authorization.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 91 }
+
+ntwsPhysPortNum OBJECT-TYPE
+    SYNTAX      NtwsPhysPortNumberOrZero
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Physical Port Number on the AC.
+        Zero means the port is unknown or not applicable
+        (for example, when ntwsClientAccessMode = 'ap').
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 92 }
+
+ntwsApMgrOldIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The IP address of the AP's former primary manager switch.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 93 }
+
+ntwsApMgrNewIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The IP address of the AP's new primary manager switch.
+        This address was formerly the AP's secondary backup link.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 94 }
+
+ntwsApMgrChangeReason OBJECT-TYPE
+    SYNTAX      NtwsApMgrChangeReason
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the reason why the AP's primary manager changed.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 95 }
+
+ntwsClientClearedReason OBJECT-TYPE
+    SYNTAX      NtwsClientClearedReason
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the reason why client was cleared.
+        This object is used within notifications and is not accessible."
+     ::= { ntwsTemporary 96 }
+
+ntwsMobilityDomainResiliencyStatus OBJECT-TYPE
+    SYNTAX      NtwsMobilityDomainResiliencyStatus
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the current resilient capacity status
+        for a mobility domain.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 97 }
+
+ntwsClientSessionElapsedSeconds OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the time in seconds elapsed since the start
+        of the Client Session.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 98 }
+
+ntwsRadioChannelWidth OBJECT-TYPE
+    SYNTAX      NtwsRadioChannelWidth
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the administratively controlled Channel Width (20MHz/40MHz).
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 99 }
+
+ntwsRadioMimoState OBJECT-TYPE
+    SYNTAX      NtwsRadioMimoState
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the Radio MIMO State, as seen by the AC
+        (1x1/2x3/3x3).
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 100 }
+
+ntwsClientRadioType OBJECT-TYPE
+    SYNTAX      NtwsRadioType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the Client Radio Type, as detected by an attached AP
+        and reported to the AC.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 101 }
+
+ntwsRFDetectXmtrRadioType OBJECT-TYPE
+    SYNTAX      NtwsRadioType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the Radio Type of the Transmitter,
+        as detected by an attached AP and reported to the AC.
+        The Transmitter may be a wireless client or an AP.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 102 }
+
+ntwsRFDetectXmtrCryptoType OBJECT-TYPE
+    SYNTAX      NtwsCryptoType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the Crypto Type used by the Transmitter,
+        as detected by an attached AP and reported to the AC.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 103 }
+
+ntwsClusterFailureReason OBJECT-TYPE
+    SYNTAX      NtwsClusterFailureReason
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the reason why cluster configuration failed to apply.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 104 }
+
+ntwsClusterFailureDescription OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Display string for describing the cluster configuration failure cause.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 105 }
+
+ntwsMultimediaCommunicationServerID OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The multimedia communication server ID.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 106 }
+
+ntwsMultimediaLocalStationIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The local multimedia station IP address.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 107 }
+
+ntwsMultimediaLocalStationPort OBJECT-TYPE
+    SYNTAX      NtwsIpPort
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The local multimedia station UDP port.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 108 }
+
+ntwsMultimediaLocalStationEndpointID OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The local multimedia station endpoint ID.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 109 }
+
+ntwsMultimediaRemoteStationIp OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The remote multimedia station IP address.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 110 }
+
+ntwsMultimediaRemoteStationPort OBJECT-TYPE
+    SYNTAX      NtwsIpPort
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The remote multimedia station UDP port.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 111 }
+
+ntwsMultimediaRemoteStationEndpointID OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The remote multimedia station endpoint ID.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 112 }
+
+ntwsMultimediaSignalingProtocol OBJECT-TYPE
+    SYNTAX      NtwsMultimediaSignalingProtocol
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The multimedia signaling protocol that was used for
+        initiating this call (session).
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 113 }
+
+ntwsMultimediaCallBandwidthAndCodec OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Display string providing information about the multimedia call
+        codec and bandwidth.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 114 }
+
+ntwsMultimediaCallDataRate OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The data rate, in Kbps.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 115 }
+
+ntwsMultimediaCallRssi OBJECT-TYPE
+    SYNTAX      NtwsRssi
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The client RSSI (Received Signal Strength Indicator),
+        in decibels referred to 1 milliwatt (dBm).
+        A higher value indicates a stronger signal."
+    ::= { ntwsTemporary 116 }
+
+ntwsMultimediaCallFailureReason OBJECT-TYPE
+    SYNTAX      NtwsMultimediaCallFailureReason
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the reason why the multimedia call has failed.
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 117 }
+
+ntwsMultimediaCallDirection
+ OBJECT-TYPE
+    SYNTAX      NtwsMultimediaCallDirection
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Indicates the multimedia call direction (incoming/outgoing).
+        This object is used within notifications and is not accessible."
+    ::= { ntwsTemporary 118 }
+
+
+-- Notification definitions
+
+ntwsDeviceFailTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsDeviceId }
+    STATUS      current
+    DESCRIPTION
+    "The device has a failure indication"
+    ::= { ntwsTrapsV2 1 }
+
+ntwsDeviceOkayTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsDeviceId }
+    STATUS      current
+    DESCRIPTION
+    "The device has recovered"
+    ::= { ntwsTrapsV2 2 }
+
+ntwsPoEFailTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsPortNum }
+    STATUS      current
+    DESCRIPTION
+    "PoE has failed on the indicated port"
+    ::= { ntwsTrapsV2 3 }
+
+ntwsApTimeoutTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsPortNum, ntwsAPMACAddress, ntwsAPAccessType,
+          ntwsDAPNum }
+    STATUS      obsolete
+    DESCRIPTION
+    "The AP entering the AC at port ntwsPortNum with MAC
+    ntwsRadioMacAddress and of the access type (ap or dap)
+    has not responded.
+
+    Replaced by ntwsApNonOperStatusTrap2,
+    with ntwsApTransition = 'timeout'."
+    ::= { ntwsTrapsV2 4 }
+
+ntwsAPBootTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsPortNum, ntwsAPMACAddress, ntwsAPAccessType,
+          ntwsDAPNum }
+    STATUS      obsolete
+    DESCRIPTION
+    "The AP entering the AC at port ntwsPortNum with MAC
+    ntwsRadioMacAddress and of the access type (ap or dap) has booted.
+
+    Replaced by ntwsApNonOperStatusTrap2,
+    with ntwsApTransition = 'bootSuccess'."
+    ::= { ntwsTrapsV2 5 }
+
+ntwsMobilityDomainJoinTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsMobilityDomainIp }
+    STATUS      current
+    DESCRIPTION
+    "The mobility domain member has received an UP notice from the
+    remote address."
+    ::= { ntwsTrapsV2 6 }
+
+ntwsMobilityDomainTimeoutTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsMobilityDomainIp }
+    STATUS      current
+    DESCRIPTION
+    "The mobility domain member has declared the remote address
+    to be DOWN."
+    ::= { ntwsTrapsV2 7 }
+
+ntwsMpMichaelMICFailure NOTIFICATION-TYPE
+    OBJECTS     { ntwsPortNum,
+          ntwsRadioMACAddress,
+          ntwsRadioSSID,
+          ntwsAPRadioNum,
+          ntwsClientMACAddress,
+          ntwsClientMACAddress }
+    STATUS      obsolete
+    DESCRIPTION
+    "Two Michael MIC failures were seen within 60 seconds of each other.
+
+    Obsoleted by ntwsMichaelMICFailure."
+    ::= { ntwsTrapsV2 8 }
+
+ntwsRFDetectRogueAPTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when RF detection finds a rogue AP.
+    XmtrMacAddr is the radio MAC address from the beacon.
+    ListenerListInfo is a display string of a list of
+    listener information.
+    Obsoleted by ntwsRFDetectRogueDeviceTrap2."
+    ::= { ntwsTrapsV2 9 }
+
+ntwsRFDetectAdhocUserTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent when RF detection sweep finds a ad-hoc user.
+    ntwsRFDetectXmtrMacAddr is the MAC address of the ad-hoc user.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information."
+    ::= { ntwsTrapsV2 10 }
+
+ntwsRFDetectRogueDisappearTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when a rogue has disappeared.
+    Obsoleted by ntwsRFDetectRogueDeviceDisappearTrap."
+    ::= { ntwsTrapsV2 11 }
+
+ntwsClientAuthenticationFailureTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsClientAuthenticationFailureCause,
+          ntwsClientFailureCauseDescription }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent if a client authentication fails."
+    ::= { ntwsTrapsV2 12 }
+
+ntwsClientAuthorizationFailureTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsClientLocationPolicyIndex,
+          ntwsUserParams,
+          ntwsClientAuthorizationFailureCause,
+          ntwsClientFailureCauseDescription }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent if a client authorization fails."
+    ::= { ntwsTrapsV2 13 }
+
+ntwsClientAssociationFailureTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsClientMACAddress,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsClientAssociationFailureCause,
+          ntwsClientFailureCauseDescription }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent if a client association fails."
+    ::= { ntwsTrapsV2 14 }
+
+ntwsClientAuthorizationSuccessTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientVLANName,
+          ntwsClientSessionState,
+          ntwsClientSessionStartTime,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsRadioRssi }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when a client authorizes.
+    Obsoleted by ntwsClientAuthorizationSuccessTrap4."
+    ::= { ntwsTrapsV2 15 }
+
+ntwsClientDeAssociationTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientVLANName,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent if a client de-association occurred."
+    ::= { ntwsTrapsV2 16 }
+
+ntwsClientRoamingTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsClientRoamedFromAccessType,
+          ntwsClientRoamedFromPortNum,
+          ntwsClientRoamedFromRadioNum,
+          ntwsClientRoamedFromDAPNum,
+          ntwsClientRoamedFromWsIp,
+          ntwsClientTimeSinceLastRoam }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent if a client roams from one location to another."
+    ::= { ntwsTrapsV2 17 }
+
+ntwsAutoTuneRadioPowerChangeTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRadioMACAddress,
+          ntwsNewPowerLevel,
+          ntwsOldPowerLevel,
+          ntwsRadioPowerChangeReason,
+          ntwsRadioPowerChangeDescription }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent if a radio's power level has changed based
+    on auto-tune."
+    ::= { ntwsTrapsV2 18 }
+
+ntwsAutoTuneRadioChannelChangeTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRadioMACAddress,
+          ntwsNewChannelNum,
+          ntwsOldChannelNum,
+          ntwsChannelChangeReason }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent if a radio's channel has changed based on auto-tune."
+    ::= { ntwsTrapsV2 19 }
+
+ntwsCounterMeasureStartTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRadioMACAddress }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent when counter measures are started against a rogue.
+    ntwsRFDetectXmtrMacAddr is the mac address of the rogue we
+    are doing counter measures against.
+    ntwsRadioMACAddress identifies the radio performing the countermeasures."
+    ::= { ntwsTrapsV2 20 }
+
+ntwsCounterMeasureStopTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRadioMACAddress }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent when counter measures are stopped against a rogue.
+    ntwsRFDetectXmtrMacAddr is the mac address of the rogue we
+    were doing counter measures against.
+    ntwsRadioMACAddress identifies the radio performing the countermeasures."
+    ::= { ntwsTrapsV2 21 }
+
+ntwsClientDot1xFailureTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientMACAddress,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsDAPNum,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsRadioSSID,
+          ntwsClientDot1xState,
+          ntwsClientDot1xFailureCause,
+          ntwsClientFailureCauseDescription }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent if a client failed 802.1X."
+    ::= { ntwsTrapsV2 22 }
+
+ntwsClientClearedTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsClientSessionElapsedTime,
+          ntwsLocalId}
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when a client session is cleared.
+    Obsoleted by ntwsClientClearedTrap2."
+    ::= { ntwsTrapsV2 23 }
+
+ntwsClientAuthorizationSuccessTrap2 NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientVLANName,
+          ntwsClientSessionState,
+          ntwsClientSessionStartTime,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsUserAccessType,
+          ntwsLocalId }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when a client authorizes.
+    Obsoleted by ntwsClientAuthorizationSuccessTrap4."
+    ::= { ntwsTrapsV2 24 }
+
+ntwsRFDetectSpoofedMacAPTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when RF detection finds an AP using
+    the MAC of the listener.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information.
+    Obsoleted by ntwsRFDetectDoSTrap and ntwsRFDetectRogueDeviceTrap2.
+    One of the two traps will be sent depending on the type of
+    AP MAC spoofing detected."
+    ::= { ntwsTrapsV2 25 }
+
+ntwsRFDetectSpoofedSsidAPTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when RF detection finds an AP using
+    the SSID of the listener, and the AP is not in the
+    mobility domain.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information.
+    Obsoleted by ntwsRFDetectRogueDeviceTrap2
+             and ntwsRFDetectSuspectDeviceTrap2.
+    One of the two traps will be sent,
+    depending on RF detection classification rules."
+    ::= { ntwsTrapsV2 26 }
+
+ntwsRFDetectDoSTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectDoSType,
+          ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent when RF detection finds a denial
+    of service (DoS) occurring.
+    ntwsRFDetectDoSType specifies the type of DoS.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information."
+    ::= { ntwsTrapsV2 27 }
+
+ntwsRFDetectClientViaRogueWiredAPTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsSourceWsIp,
+          ntwsPortNum,
+          ntwsClientVLANid,
+          ntwsClientVLANtag,
+          ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when a client is detected that connected
+    via a rogue AP that is attached to a wired port.
+    ntwsSourceWsIp is the IP address of the AC (switch) with the wired port.
+    ntwsPortNum is the port on the AC.
+    ntwsClientVLANid is the VLAN ID of the client's traffic.
+    ntwsClientVLANtag is the VLAN tag of the client's traffic.
+    ntwsRFDetectXmtrMacAddr is the MAC address of the client.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information.
+    Obsoleted by ntwsRFDetectClientViaRogueWiredAPTrap3."
+    ::= { ntwsTrapsV2 28 }
+
+ntwsRFDetectInterferingRogueAPTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when RF detection finds an interfering
+    rogue AP.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information.
+    Obsoleted by ntwsRFDetectSuspectDeviceTrap2."
+    ::= { ntwsTrapsV2 29 }
+
+ntwsRFDetectInterferingRogueDisappearTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when an interfering rogue has disappeared.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    Obsoleted by ntwsRFDetectSuspectDeviceDisappearTrap."
+    ::= { ntwsTrapsV2 30 }
+
+ntwsRFDetectUnAuthorizedSsidTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when RF detection finds use of
+    an unauthorized SSID.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information.
+    Obsoleted by ntwsRFDetectRogueDeviceTrap2
+             and ntwsRFDetectSuspectDeviceTrap2.
+    One of the two traps will be sent if the device having an
+    unauthorized SSID is classified as rogue or suspect because of this."
+    ::= { ntwsTrapsV2 31 }
+
+ntwsRFDetectUnAuthorizedOuiTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when RF detection finds use of
+    an unauthorized OUI.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information.
+    Obsoleted by ntwsRFDetectRogueDeviceTrap2
+             and ntwsRFDetectSuspectDeviceTrap2.
+    One of the two traps will be sent if the device having an
+    unauthorized OUI is classified as rogue or suspect because of this."
+    ::= { ntwsTrapsV2 32 }
+
+ntwsRFDetectUnAuthorizedAPTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo }
+    STATUS      obsolete
+    DESCRIPTION
+    "This trap is sent when RF detection finds operation
+    of an unauthorized AP.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    ntwsRFDetectListenerListInfo is a display string of a list of
+    listener information.
+    Obsoleted by ntwsRFDetectRogueDeviceTrap2."
+    ::= { ntwsTrapsV2 33 }
+
+ntwsDAPConnectWarningTrap NOTIFICATION-TYPE
+    OBJECTS { ntwsDeviceModel,
+          ntwsDeviceSerNum,
+          ntwsRsaPubKeyFingerPrint,
+          ntwsDAPconnectWarningType }
+    STATUS      obsolete
+    DESCRIPTION
+    "A DAP, tried to connect to the AC.
+    ntwsDeviceModel provides the model of the DAP.
+    ntwsDeviceSerNum provides the serial number of the DAP.
+    ntwsRsaPubKeyFingerPrint provides the computed
+        fingerprint of the DAP.
+    ntwsDAPconnectWarningType provides the type
+        of connect warning.
+
+    Replaced by ntwsApNonOperStatusTrap2,
+    with ntwsApTransition = 'connectFail'."
+    ::= { ntwsTrapsV2 34 }
+
+ntwsRFDetectDoSPortTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectDoSType,
+          ntwsRFDetectXmtrMacAddr,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsDAPNum }
+    STATUS      current
+    DESCRIPTION
+    "This trap is sent when RF detection finds a denial
+    of service (DoS) occurring. This has port and
+    AP info instead of 'Listener info'.
+    ntwsRFDetectDoSType specifies the type of DoS.
+    ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+    ntwsClientAccessType specifies whether wired, AP, or DAP.
+    ntwsPortNum (for wired or AP), the port that is used.
+    ntwsDAPNum (for a DAP), the ID of the DAP."
+    ::= { ntwsTrapsV2 35 }
+
+ntwsMpMichaelMICFailure2 NOTIFICATION-TYPE
+    OBJECTS     { ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsClientMACAddress,
+          ntwsClientMACAddress2 }
+    STATUS      obsolete
+    DESCRIPTION
+    "Two Michael MIC failures were seen within 60 seconds of
+    each other. Object ntwsClientMACAddress is the source
+    of the first failure, and object ntwsClientMACAddress2
+    source of the second failure.
+
+    Obsoleted by ntwsMichaelMICFailure."
+    ::= { ntwsTrapsV2 36 }
+
+ntwsApNonOperStatusTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsDeviceSerNum,
+          ntwsAPMACAddress,
+          ntwsApAttachType,
+          ntwsApPortOrDapNum,
+          ntwsApName,
+          ntwsApTransition,
+          ntwsApFailDetail,
+          ntwsApWasOperational }
+    STATUS      obsolete
+    DESCRIPTION
+        "This trap is sent when the AP changes state
+        and the new one is a non-operational state.
+        Obsoleted by ntwsApNonOperStatusTrap2."
+    ::= { ntwsTrapsV2 37 }
+
+ntwsApOperRadioStatusTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsDeviceSerNum,
+          ntwsApAttachType,
+          ntwsApPortOrDapNum,
+          ntwsApName,
+          ntwsAPRadioNum,
+          ntwsRadioMACAddress,
+          ntwsRadioType,
+          ntwsRadioConfigState,
+          ntwsApConnectSecurityType,
+          ntwsApServiceAvailability }
+    STATUS      obsolete
+    DESCRIPTION
+        "This trap is sent when the Radio changes state.
+        It also contains aggregate information about the AP
+        in operational state - security level and service availability.
+        Obsoleted by ntwsApOperRadioStatusTrap3."
+    ::= { ntwsTrapsV2 38 }
+
+ntwsClientIpAddrChangeTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientVLANName,
+          ntwsClientSessionState,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsUserAccessType,
+          ntwsLocalId,
+          ntwsClientIpAddrChangeReason }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when a client's IP address
+        changes. The most likely case for this is when
+        the client first connects to the network."
+    ::= { ntwsTrapsV2 39 }
+
+ntwsClientAssociationSuccessTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsClientMACAddress,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent if a client association succeeds.
+        WARNING: DO NOT enable it in normal use.
+        It may impair switch performance!
+        Only recommended for debugging network issues."
+    ::= { ntwsTrapsV2 40 }
+
+ntwsClientAuthenticationSuccessTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsClientMACAddress,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent if a client authentication succeeds."
+    ::= { ntwsTrapsV2 41 }
+
+ntwsClientDeAuthenticationTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientVLANName,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent if a client de-authentication occurred."
+    ::= { ntwsTrapsV2 42 }
+
+ntwsRFDetectBlacklistedTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsDAPNum,
+          ntwsBlacklistingRemainingTime,
+          ntwsBlacklistingCause }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent if an association, re-association or de-association
+        request (packet) is detected from a blacklisted transmitter 
+        (identified by MAC: 'ntwsRFDetectXmtrMacAddr').
+        If 'ntwsBlacklistingCause' is 'configured',
+        then 'ntwsBlacklistingRemainingTime' will be zero, meaning indefinite
+        time (depending on administrative actions on the Black List).
+        Otherwise, 'ntwsBlacklistingRemainingTime' will indicate the time
+        in seconds until this transmitter's requests could be allowed."
+    ::= { ntwsTrapsV2 43 }
+
+ntwsRFDetectClientViaRogueWiredAPTrap2 NOTIFICATION-TYPE
+    OBJECTS     { ntwsSourceWsIp,
+          ntwsPortNum,
+          ntwsClientVLANid,
+          ntwsClientVLANtag,
+          ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo,
+          ntwsRFDetectRogueAPMacAddr }
+    STATUS      obsolete
+    DESCRIPTION
+        "This trap is sent when a client is detected that connected
+        via a rogue AP that is attached to a wired port.
+        ntwsSourceWsIp is the IP address of the AC (switch)
+        with the wired port.
+        ntwsPortNum is the port on the AC.
+        ntwsClientVLANid is the VLAN ID of the client's traffic.
+        ntwsClientVLANtag is the VLAN tag of the client's traffic.
+        ntwsRFDetectXmtrMacAddr is the MAC address of the client.
+        ntwsRFDetectListenerListInfo is a display string of a list of
+        listener information.
+        ntwsRFDetectRogueAPMacAddr is the MAC address of the Rogue AP (wired)
+        the client is connected to.
+        Obsoleted by ntwsRFDetectClientViaRogueWiredAPTrap3."
+    ::= { ntwsTrapsV2 44 }
+
+ntwsRFDetectAdhocUserDisappearTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when RF detection sweep finds that
+        an ad-hoc user disappeared.
+        ntwsRFDetectXmtrMacAddr is the MAC address of the ad-hoc user."
+    ::= { ntwsTrapsV2 45 }
+
+ntwsApRejectLicenseExceededTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsNumLicensedActiveAPs }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when an AC (wireless switch) receives a packet
+        from an inactive AP and attaching that AP would make the AC
+        exceed the maximum (licensed) number of active APs."
+    ::= { ntwsTrapsV2 46 }
+
+ntwsClientDynAuthorChangeSuccessTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientSessionState,
+          ntwsClientDynAuthorClientIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsUserAccessType,
+          ntwsLocalId,
+          ntwsChangedUserParamOldValues,
+          ntwsChangedUserParamNewValues }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when the authorization attributes for a user
+        are dynamically changed by an authorized dynamic authorization
+        client."
+    ::= { ntwsTrapsV2 47 }
+
+ntwsClientDynAuthorChangeFailureTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientDynAuthorClientIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsUserParams,
+          ntwsClientAuthorizationFailureCause,
+          ntwsClientFailureCauseDescription }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent if a change of authorization request sent by
+        an authorized dynamic authorization client is unsuccessful."
+    ::= { ntwsTrapsV2 48 }
+
+ntwsClientDisconnectTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientAccessType,
+          ntwsPortNum,
+          ntwsAPRadioNum,
+          ntwsDAPNum,
+          ntwsRadioSSID,
+          ntwsLocalId,
+          ntwsClientDisconnectSource,
+          ntwsClientDisconnectDescription }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when a client session is terminated administratively."
+    ::= { ntwsTrapsV2 49 }
+
+ntwsMobilityDomainFailOverTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsMobilityDomainSecondarySeedIp }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when the Mobility Domain fails over
+        to the secondary seed."
+    ::= { ntwsTrapsV2 50 }
+
+ntwsMobilityDomainFailBackTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsMobilityDomainPrimarySeedIp }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when the Mobility Domain fails back
+        to the primary seed."
+    ::= { ntwsTrapsV2 51 }
+
+ntwsRFDetectRogueDeviceTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo,
+          ntwsRFDetectClassificationReason }
+    STATUS      obsolete
+    DESCRIPTION
+        "This trap is sent when RF detection finds a rogue device.
+        XmtrMacAddr is the radio MAC address from the beacon.
+        ListenerListInfo is a display string of a list of
+        listener information.
+        ClassificationReason indicates the reason why the device
+        is classified as rogue.
+        Obsoleted by ntwsRFDetectRogueDeviceTrap2."
+    ::= { ntwsTrapsV2 52 }
+
+ntwsRFDetectRogueDeviceDisappearTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when a rogue device has disappeared.
+        This trap obsoletes the ntwsRFDetectRogueDisappearTrap."
+    ::= { ntwsTrapsV2 53 }
+
+ntwsRFDetectSuspectDeviceTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo,
+          ntwsRFDetectClassificationReason }
+    STATUS      obsolete
+    DESCRIPTION
+        "This trap is sent when RF detection finds a suspect device.
+        ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+        ntwsRFDetectListenerListInfo is a display string of a list of
+        listener information.
+        ClassificationReason indicates the reason why the device
+        is classified as suspect.
+        Obsoleted by ntwsRFDetectSuspectDeviceTrap2."
+    ::= { ntwsTrapsV2 54 }
+
+ntwsRFDetectSuspectDeviceDisappearTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when a suspect device has disappeared.
+        ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+        This trap obsoletes the ntwsRFDetectInterferingRogueDisappearTrap."
+    ::= { ntwsTrapsV2 55 }
+
+ntwsRFDetectClientViaRogueWiredAPTrap3 NOTIFICATION-TYPE
+    OBJECTS     { ntwsSourceWsIp,
+          ntwsPortNum,
+          ntwsClientVLANid,
+          ntwsClientVLANtag,
+          ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectListenerListInfo,
+          ntwsRFDetectRogueAPMacAddr,
+          ntwsRFDetectClassificationReason }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when a client is detected that connected
+        via a rogue AP that is attached to a wired port.
+        ntwsSourceWsIp is the IP address of the AC (switch)
+        with the wired port.
+        ntwsPortNum is the port on the AC.
+        ntwsClientVLANid is the VLAN ID of the client's traffic.
+        ntwsClientVLANtag is the VLAN tag of the client's traffic.
+        ntwsRFDetectXmtrMacAddr is the MAC address of the client.
+        ntwsRFDetectListenerListInfo is a display string of a list of
+        listener information.
+        ntwsRFDetectRogueAPMacAddr is the MAC address of the Rogue AP (wired)
+        the client is connected to.
+        ClassificationReason indicates the reason why the AP
+        is classified as rogue.
+        This trap obsoletes the ntwsRFDetectClientViaRogueWiredAPTrap and
+        ntwsRFDetectClientViaRogueWiredAPTrap2."
+    ::= { ntwsTrapsV2 56 }
+
+ntwsRFDetectClassificationChangeTrap NOTIFICATION-TYPE
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when RF detection classification rules change."
+    ::= { ntwsTrapsV2 57 }
+
+ntwsConfigurationSavedTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsConfigSaveFileName,
+          ntwsConfigSaveInitiatorType,
+          ntwsConfigSaveInitiatorIp,
+          ntwsConfigSaveInitiatorDetails,
+          ntwsConfigSaveGeneration }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when the running configuration of the switch
+        is written to a configuration file."
+    ::= { ntwsTrapsV2 58 }
+
+ntwsApNonOperStatusTrap2 NOTIFICATION-TYPE
+    OBJECTS     { ntwsDeviceSerNum,
+          ntwsAPMACAddress,
+          ntwsApNum,
+          ntwsApName,
+          ntwsApTransition,
+          ntwsApFailDetail,
+          ntwsApWasOperational }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when the AP changes state
+        and the new one is a non-operational state.
+        Obsoletes ntwsApNonOperStatusTrap."
+    ::= { ntwsTrapsV2 59 }
+
+ntwsApOperRadioStatusTrap2 NOTIFICATION-TYPE
+    OBJECTS     { ntwsDeviceSerNum,
+          ntwsApNum,
+          ntwsApName,
+          ntwsAPRadioNum,
+          ntwsRadioMACAddress,
+          ntwsRadioType,
+          ntwsRadioMode,
+          ntwsRadioConfigState,
+          ntwsApConnectSecurityType,
+          ntwsApServiceAvailability }
+    STATUS      obsolete
+    DESCRIPTION
+        "This trap is sent when the Radio changes state.
+        It also contains aggregate information about the AP
+        in operational state - security level and service availability.
+        Obsoleted by ntwsApOperRadioStatusTrap3."
+    ::= { ntwsTrapsV2 60 }
+
+ntwsMichaelMICFailure NOTIFICATION-TYPE
+    OBJECTS     { ntwsApNum,
+          ntwsAPRadioNum,
+          ntwsRadioMACAddress,
+          ntwsMichaelMICFailureCause,
+          ntwsClientMACAddress,
+          ntwsClientMACAddress2 }
+    STATUS      current
+    DESCRIPTION
+        "Two Michael MIC failures were seen within 60 seconds of each other.
+        Object ntwsClientMACAddress indicates
+        the source of the first failure,
+        and object ntwsClientMACAddress2 indicates
+        the source of the second failure.
+
+        Service is interrupted for 60 seconds on the radio
+        due to TKIP countermeasures having commenced.
+
+        The radio is identified by ntwsApNum and ntwsAPRadioNum.
+        An alternative way to identify the radio is ntwsRadioMACAddress.
+
+        Obsoletes ntwsMpMichaelMICFailure and ntwsMpMichaelMICFailure2."
+    ::= { ntwsTrapsV2 61 }
+
+ntwsClientAuthorizationSuccessTrap3 NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientVLANName,
+          ntwsClientSessionState,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessMode,
+          ntwsPhysPortNum,
+          ntwsApNum,
+          ntwsAPRadioNum,
+          ntwsRadioSSID,
+          ntwsUserAccessType,
+          ntwsLocalId,
+          ntwsClientAuthorizationReason }
+    STATUS      obsolete
+    DESCRIPTION
+        "This trap is sent when a client authorizes.
+
+        If ntwsClientAccessMode = 'ap':
+        ntwsApNum, ntwsAPRadioNum, ntwsRadioSSID
+        identify the AP/radio/BSS providing wireless service to this client
+        at the time this trap was sent.
+
+        If ntwsClientAccessMode = 'wired':
+        ntwsPhysPortNum identifies the physical port on the AC
+        used by this wired-auth client.
+
+        Obsoleted by ntwsClientAuthorizationSuccessTrap4."
+    ::= { ntwsTrapsV2 62 }
+
+ntwsApManagerChangeTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsDeviceSerNum,
+          ntwsAPMACAddress,
+          ntwsApNum,
+          ntwsApName,
+          ntwsApMgrOldIp,
+          ntwsApMgrNewIp,
+          ntwsApMgrChangeReason }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when the AP's secondary link becomes its
+        primary link."
+    ::= { ntwsTrapsV2 63 }
+
+ntwsClientClearedTrap2 NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientAccessMode,
+          ntwsPhysPortNum,
+          ntwsApNum,
+          ntwsAPRadioNum,
+          ntwsRadioSSID,
+          ntwsClientSessionElapsedSeconds,
+          ntwsLocalId,
+          ntwsClientClearedReason }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when a client session is cleared.
+        Obsoletes ntwsClientClearedTrap."
+    ::= { ntwsTrapsV2 64 }
+
+ntwsMobilityDomainResiliencyStatusTrap NOTIFICATION-TYPE
+    OBJECTS     { ntwsMobilityDomainResiliencyStatus }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent by a mobility domain seed to announce
+        changes in resilient capacity status."
+    ::= { ntwsTrapsV2 65 }
+
+ntwsApOperRadioStatusTrap3 NOTIFICATION-TYPE
+    OBJECTS     { ntwsDeviceSerNum,
+          ntwsApNum,
+          ntwsApName,
+          ntwsAPRadioNum,
+          ntwsRadioMACAddress,
+          ntwsRadioType,
+          ntwsRadioMode,
+          ntwsRadioConfigState,
+          ntwsRadioChannelWidth,
+          ntwsRadioMimoState,
+          ntwsApConnectSecurityType,
+          ntwsApServiceAvailability }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when the Radio changes state.
+        It also contains aggregate information about the AP
+        in operational state - security level and service availability.
+        Obsoletes ntwsApOperRadioStatusTrap
+        and ntwsApOperRadioStatusTrap2."
+    ::= { ntwsTrapsV2 66 }
+
+ntwsClientAuthorizationSuccessTrap4 NOTIFICATION-TYPE
+    OBJECTS     { ntwsUserName,
+          ntwsClientSessionId,
+          ntwsClientMACAddress,
+          ntwsClientIp,
+          ntwsClientVLANName,
+          ntwsClientSessionState,
+          ntwsClientAuthServerIp,
+          ntwsClientAuthenProtocolType,
+          ntwsClientAccessMode,
+          ntwsPhysPortNum,
+          ntwsApNum,
+          ntwsAPRadioNum,
+          ntwsRadioSSID,
+          ntwsClientRadioType,
+          ntwsUserAccessType,
+          ntwsLocalId,
+          ntwsClientAuthorizationReason }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when a client authorizes.
+
+        If ntwsClientAccessMode = 'ap':
+        ntwsApNum, ntwsAPRadioNum, ntwsRadioSSID
+        identify the AP/radio/BSS providing wireless service to this client
+        at the time this trap was sent;
+        ntwsClientRadioType gives the type of radio used by this client.
+
+        If ntwsClientAccessMode = 'wired':
+        ntwsPhysPortNum identifies the physical port on the AC
+        used by this wired-auth client.
+
+        Obsoletes ntwsClientAuthorizationSuccessTrap,
+                  ntwsClientAuthorizationSuccessTrap2,
+                  ntwsClientAuthorizationSuccessTrap3."
+    ::= { ntwsTrapsV2 67 }
+
+ntwsRFDetectRogueDeviceTrap2 NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectXmtrRadioType,
+          ntwsRFDetectXmtrCryptoType,
+          ntwsRFDetectListenerListInfo,
+          ntwsRFDetectClassificationReason }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when RF detection finds a rogue device.
+        ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+        ntwsRFDetectXmtrRadioType indicates the Type of Radio
+        used by the transmitter (rogue device).
+        ntwsRFDetectXmtrCryptoType indicates the Type of Crypto
+        used by the transmitter (rogue device).
+        ntwsRFDetectListenerListInfo is a display string of a list of
+        listener information.
+        ntwsRFDetectClassificationReason indicates the reason
+        why the device is classified as rogue.
+        Obsoletes ntwsRFDetectRogueAPTrap,
+                  ntwsRFDetectUnAuthorizedAPTrap,
+                  ntwsRFDetectRogueDeviceTrap."
+    ::= { ntwsTrapsV2 68 }
+
+ntwsRFDetectSuspectDeviceTrap2 NOTIFICATION-TYPE
+    OBJECTS     { ntwsRFDetectXmtrMacAddr,
+          ntwsRFDetectXmtrRadioType,
+          ntwsRFDetectXmtrCryptoType,
+          ntwsRFDetectListenerListInfo,
+          ntwsRFDetectClassificationReason }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when RF detection finds a suspect device.
+        ntwsRFDetectXmtrMacAddr is the radio MAC address from the beacon.
+        ntwsRFDetectXmtrRadioType indicates the Type of Radio
+        used by the transmitter (suspect device).
+        ntwsRFDetectXmtrCryptoType indicates the Type of Crypto
+        used by the transmitter (suspect device).
+        ntwsRFDetectListenerListInfo is a display string of a list of
+        listener information.
+        ntwsRFDetectClassificationReason indicates the reason
+        why the device is classified as suspect.
+        Obsoletes ntwsRFDetectInterferingRogueAPTrap,
+                  ntwsRFDetectSuspectDeviceTrap."
+    ::= { ntwsTrapsV2 69 }
+
+ntwsClusterFailureTrap NOTIFICATION-TYPE
+    OBJECTS     {
+          ntwsClusterFailureReason,
+          ntwsClusterFailureDescription
+        }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when the cluster configuration failed to apply.
+
+        If ntwsClusterFailureReason = 'validation-error':
+
+          The validation error is reported by the receiving end
+          of the configuration updates.
+          The receiving end can be any AC (switch) in the mobility domain:
+          member, secondary seed or primary seed.
+
+            - Primary seed will be the receiving end of configuration updates
+                when Primary seed is joining the cluster
+                and Secondary seed has preempt mode enabled.
+            - Both Secondary seed and member will be at the receiving end
+                when Primary seed is active."
+    ::= { ntwsTrapsV2 70 }
+
+ntwsMultimediaCallFailureTrap NOTIFICATION-TYPE
+    OBJECTS     {
+          ntwsClientMACAddress,
+          ntwsClientAccessMode,
+          ntwsPhysPortNum,
+          ntwsApNum,
+          ntwsAPRadioNum,
+          ntwsRadioSSID,
+          ntwsMultimediaCommunicationServerID,
+          ntwsMultimediaCallDirection,
+          ntwsMultimediaLocalStationIp,
+          ntwsMultimediaLocalStationPort,
+          ntwsMultimediaLocalStationEndpointID,
+          ntwsMultimediaRemoteStationIp,
+          ntwsMultimediaRemoteStationPort,
+          ntwsMultimediaRemoteStationEndpointID,
+          ntwsMultimediaSignalingProtocol,
+          ntwsMultimediaCallBandwidthAndCodec,
+          ntwsMultimediaCallDataRate,
+          ntwsMultimediaCallRssi,
+          ntwsMultimediaCallFailureReason
+        }
+    STATUS      current
+    DESCRIPTION
+        "This trap is sent when a multimedia call fails."
+    ::= { ntwsTrapsV2 71 }
+
+
+END

@@ -1,0 +1,56 @@
+NTWS-LICENSE-FEATURE-TC-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsLicenseFeatureTc MODULE-IDENTITY
+    LAST-UPDATED "200911160001Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "Textual Convention for the Licensable Features
+        of Nortel Networks wireless switches.
+
+        Copyright 2009 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200911160001Z"
+    DESCRIPTION "v0.1.1: initial version"
+
+    ::= { ntwsMibs 19 }
+
+
+NtwsLicenseFeature ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the licensable features."
+    SYNTAX      INTEGER {
+            none (1),
+            maxSupportedAPsOrDAPs (2),
+            --
+            -- Reserved values: 3 - 10
+            --
+            fips (11),
+            advancedVoice (12),
+            highAvailability (13),
+            maxSupportedHighSpeedMeshBridgingAPs (14),
+            maxSupportedWapiAPs (15),
+            maxSupportedAdvancedLocalSwitchingAPs (16)
+        }
+
+
+END

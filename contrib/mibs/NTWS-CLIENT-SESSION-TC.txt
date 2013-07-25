@@ -1,0 +1,119 @@
+NTWS-CLIENT-SESSION-TC DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+ntwsClientSessionTc MODULE-IDENTITY
+    LAST-UPDATED "200710080010Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "Textual Conventions used by Nortel Networks wireless switches.
+
+        Copyright 2007 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200710080010Z"
+    DESCRIPTION "v1.1.0: Introduced NtwsClientAccessMode
+                 to be used instead of NtwsAccessType from ntwsApTc module.
+                 (In 6.0, direct- and network-attached APs were unified.)"
+
+    REVISION "200708160002Z"
+    DESCRIPTION "v1.0.2, MRT v1: Made changes in order to make MIB
+                 comply with corporate MIB conventions."
+
+    REVISION "200609260001Z"
+    DESCRIPTION "v1.0.1: initial version"
+
+    ::= { ntwsMibs 10 }
+
+
+NtwsUserAccessType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Describes the access type by the user"
+    SYNTAX      INTEGER {
+            mac                 (1),
+            web                 (2),
+            dot1x               (3),
+            last-resort         (4)
+        }
+
+NtwsClientSessionState ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the client session states.
+        Value 'associated(1)' applies only to wireless sessions.
+        Value 'wired(8)' applies only to wired sessions."
+    SYNTAX      INTEGER {
+            associated          (1),
+            authorizing         (2),
+            authorized          (3),
+            active              (4),
+            de-associated       (5),
+            roaming-away        (6),
+            updated-to-roam     (7),
+            wired               (8),
+            clearing            (9),
+            invalid             (10),
+            web-authing         (11)
+            }
+
+NtwsClientDot1xState ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the dot1x states for a client."
+    SYNTAX      INTEGER {
+            initialize          (1),
+            disconnected        (2),
+            connecting          (3),
+            authenticating      (4),
+            authenticated       (5),
+            wired               (6),
+            aborting            (7),
+            held                (8)
+        }
+
+NtwsClientAuthenProtocolType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Enumeration of the dot1x client authentication protocol types."
+    SYNTAX      INTEGER {
+            none                (1),
+            eap-tls             (2),
+            eap-ttls            (3),
+            md5                 (4),
+            peap                (5),
+            leap                (6),
+            pass-through        (7)
+        }
+
+NtwsClientAccessMode ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Describes the access mode (type) used by client.
+        Value 'ap(2)' indicates a client that is attached
+        to the switch via an access point.
+        Value 'wired(3)' indicates a client that is
+        attached to the switch via the wired network
+        (no access point is involved)."
+    SYNTAX      INTEGER {
+            other               (1),
+            ap                  (2),
+            wired               (3)
+        }
+
+END

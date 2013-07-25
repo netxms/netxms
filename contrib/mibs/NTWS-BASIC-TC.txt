@@ -1,0 +1,65 @@
+NTWS-BASIC-TC DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, Unsigned32
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsBasicTc MODULE-IDENTITY
+    LAST-UPDATED "200810230004Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "Textual Conventions used by Nortel Networks wireless switches.
+
+        Copyright 2008 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200810230004Z"
+    DESCRIPTION "v1.0.4: initial version"
+
+    ::= { ntwsMibs 12 }
+
+
+NtwsIpPort ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT  "d"
+    STATUS      current
+    DESCRIPTION
+        "An UDP or TCP port number."
+    SYNTAX Unsigned32 (1..65535)
+
+NtwsPhysPortNumber ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT  "d"
+    STATUS      current
+    DESCRIPTION
+        "Physical port number."
+    SYNTAX  Unsigned32 (1..1024)
+
+NtwsPhysPortNumberOrZero ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT  "d"
+    STATUS      current
+    DESCRIPTION
+        "This textual convention is an extension of the
+        NtwsPhysPortNumber convention.
+        The latter defines a greater than zero value used to identify
+        a physical port.
+        This extension permits the additional value of zero.
+        A zero value means 'none', 'unknown' or 'not applicable'.
+        Each object using this textual convention should document
+        the meaning of physical port number zero."
+    SYNTAX  Unsigned32 (0 | 1..1024)
+
+
+END

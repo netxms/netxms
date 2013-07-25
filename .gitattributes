@@ -303,7 +303,6 @@ contrib/mibs/IPV6-TC.txt -text
 contrib/mibs/RAPID-CITY-BAY-STACK.txt -text
 contrib/mibs/RC-MLT-MIB.txt -text
 contrib/mibs/S5-AGENT-MIB.txt -text
-contrib/mibs/WS-CC-RF-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-CC-SMI.txt -text svneol=native#unset
 contrib/mibs/WS-CC-STATS-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-INFRA-AUTO-UPDATE-MIB.txt -text svneol=native#unset

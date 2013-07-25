@@ -1,0 +1,995 @@
+NTWS-CLIENT-SESSION-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    MODULE-IDENTITY, OBJECT-TYPE,
+    IpAddress, Unsigned32, Integer32, Counter64
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString, MacAddress, TimeStamp
+        FROM SNMPv2-TC
+    NtwsAccessType, NtwsRadioNum, NtwsApSerialNum, NtwsRadioRate, NtwsRssi,
+    NtwsApNum
+        FROM NTWS-AP-TC
+    NtwsClientSessionState, NtwsClientAuthenProtocolType,
+    NtwsUserAccessType, NtwsClientAccessMode
+        FROM NTWS-CLIENT-SESSION-TC
+    NtwsPhysPortNumberOrZero
+        FROM NTWS-BASIC-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsClientSessionMib MODULE-IDENTITY
+    LAST-UPDATED "200810230056Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "Client Session MIB.
+
+        AP = Access Point;
+        AC = Access Controller (wireless switch),
+             the device that runs a SNMP Agent implementing this MIB.
+
+        Copyright 2008 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200810230056Z"
+    DESCRIPTION "v2.4.1: Using the new TC NtwsPhysPortNumberOrZero
+                instead of ''Unsigned32 (0..1024)''."
+
+    REVISION "200805230055Z"
+    DESCRIPTION "v2.4.0: Updated conformance section
+                to reflect the history of changes to this MIB:
+                added more compliance statements and groups.
+                This will be published in 7.0 release."
+
+    REVISION "200711010054Z"
+    DESCRIPTION "v2.3.4: Added two new columnar objects:
+        - ntwsClSessClientSessPhysPortNum,
+        - ntwsClSessRoamHistPhysPortNum,
+        to indicate the port used by wired-auth clients."
+
+    REVISION "200710090051Z"
+    DESCRIPTION "v2.3.1: Added four new columnar objects:
+        - ntwsClSessClientSessAccessMode,
+                obsoleting ntwsClSessClientSessAccessType;
+        - ntwsClSessClientSessApNum,
+                obsoleting ntwsClSessClientSessPortOrNum;
+        - ntwsClSessRoamHistAccessMode,
+                obsoleting ntwsClSessRoamHistAccessType;
+        - ntwsClSessRoamHistApNum,
+                obsoleting ntwsClSessRoamHistApNumOrPort.
+        Reason: in 6.0, direct- and network-attached APs were unified."
+
+    REVISION "200708160044Z"
+    DESCRIPTION "v2.2.2, MRT v4: Made changes in order to make MIB compile
+                 cleanly and comply with corporate MIB conventions."
+
+    REVISION "200611160043Z"
+    DESCRIPTION "v2.2.1: added one value (21) to NtwsSessState"
+
+    REVISION "200610170042Z"
+    DESCRIPTION "v2.2.0: Described semantics of ntwsClSessRoamHistTimeStamp"
+
+    REVISION "200609260032Z"
+    DESCRIPTION "v2.1.1: Added three new columnar objects:
+        - ntwsClSessClientSessDot1xAuthMethod,
+                to be used instead of ntwsClSessClientSessAuthMethod;
+        - ntwsClSessClientSessSessionState,
+                to be used instead of ntwsClSessClientSessState;
+        - ntwsClSessClientSessLoginType,
+                to provide context for interpreting the values of
+                the above objects (Dot1xAuthMethod, SessionState).
+
+        Changed behaviour for ntwsClSessClientSessAuthServer:
+        provides system IP when auth is done via local DB
+        (it used to be 0.0.0.0 in such cases)."
+
+    REVISION "200607290021Z"
+    DESCRIPTION "v2.0.2: Fixed imports and compliance group"
+
+    REVISION "200606060010Z"
+    DESCRIPTION "v2.0.1: Adding scalar for total number of sessions."
+
+    REVISION "200603300008Z"
+    DESCRIPTION "v1.0: Initial version"
+
+    ::= { ntwsMibs 4 }
+
+
+-- Textual conventions
+
+NtwsEncryptionType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Encryption types."
+    SYNTAX INTEGER {
+        none            (1),
+        aesCcm          (2),
+        aesOcb          (3),
+        tkip            (4),
+        wep104          (5),
+        wep40           (6),
+        staticWep       (7)
+    }
+
+NtwsAuthMethod ::= TEXTUAL-CONVENTION
+    STATUS       deprecated
+    DESCRIPTION
+        "Authentication methods."
+    SYNTAX INTEGER {
+        none            (1),
+        identity        (2),
+        notification    (3),
+        nak             (4),
+        md5             (5),
+        otp             (6),
+        tokenCard       (7),
+        tls             (14),
+        leap            (18),
+        ttls            (22),
+        peap            (26),
+        msChapv2        (27),
+        eapExt          (34),
+        passThru        (255)
+    }
+
+NtwsSessState ::= TEXTUAL-CONVENTION
+    STATUS       deprecated
+    DESCRIPTION
+        "Session states."
+    SYNTAX INTEGER {
+        invalid             (1),
+        initializing        (2),
+        assocReqAndAuth     (3),
+        assocAndAuth        (4),
+        wired               (5),
+        webLoginPh1         (6),
+        webLoginPh1B        (7),
+        webLoginPh1F        (8),
+        webLoginPh2         (9),
+        webPortalLogin      (10),
+        authorizing         (11),
+        authorized          (12),
+        active              (13),
+        activePortal        (14),
+        deassociated        (15),
+        roamingAway         (16),
+        updatedToRoam       (17),
+        roamedAway          (18),
+        killing             (19),
+        free                (20),
+        enforceSoda         (21)
+    }
+
+
+-- Object definitions
+
+--
+-- The ClientSession MIB Tree
+--
+
+ntwsClientSessionObjects    OBJECT IDENTIFIER ::= { ntwsClientSessionMib 1 }
+ntwsClientSessionDataObjects  OBJECT IDENTIFIER ::= { ntwsClientSessionObjects 1 }
+
+
+-- Client Session Table
+-- ====================
+
+ntwsClSessClientSessionTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsClSessClientSessionEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Client Session Table."
+    ::= { ntwsClientSessionDataObjects 1 }
+
+ntwsClSessClientSessionEntry OBJECT-TYPE
+    SYNTAX      NtwsClSessClientSessionEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular client session."
+    INDEX   { ntwsClSessClientSessMacAddress }
+    ::= { ntwsClSessClientSessionTable 1 }
+
+NtwsClSessClientSessionEntry ::= SEQUENCE {
+        ntwsClSessClientSessMacAddress       MacAddress,
+        ntwsClSessClientSessSessionId        DisplayString,
+        ntwsClSessClientSessUsername         DisplayString,
+        ntwsClSessClientSessIpAddress        IpAddress,
+        ntwsClSessClientSessEncryptionType   NtwsEncryptionType,
+        ntwsClSessClientSessVlan             DisplayString,
+        ntwsClSessClientSessApSerialNum      NtwsApSerialNum,
+        ntwsClSessClientSessRadioNum         NtwsRadioNum,
+        ntwsClSessClientSessAccessType       NtwsAccessType,
+        ntwsClSessClientSessAuthMethod       NtwsAuthMethod,
+        ntwsClSessClientSessAuthServer       IpAddress,
+        ntwsClSessClientSessPortOrNum        Unsigned32,
+        ntwsClSessClientSessVlanTag          Unsigned32,
+        ntwsClSessClientSessTimeStamp        TimeStamp,
+        ntwsClSessClientSessSsid             DisplayString,
+        ntwsClSessClientSessState            NtwsSessState,
+        ntwsClSessClientSessLoginType        NtwsUserAccessType,
+        ntwsClSessClientSessDot1xAuthMethod  NtwsClientAuthenProtocolType,
+        ntwsClSessClientSessSessionState     NtwsClientSessionState,
+        ntwsClSessClientSessAccessMode       NtwsClientAccessMode,
+        ntwsClSessClientSessApNum            NtwsApNum,
+        ntwsClSessClientSessPhysPortNum      NtwsPhysPortNumberOrZero
+    }
+
+ntwsClSessClientSessMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Client MAC address."
+    ::= { ntwsClSessClientSessionEntry 1 }
+
+ntwsClSessClientSessSessionId OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..30))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Session ID is a string long enough to be sure
+        we can make it unique over a long time."
+    ::= { ntwsClSessClientSessionEntry 2 }
+
+ntwsClSessClientSessUsername OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..80))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Client user name."
+    ::= { ntwsClSessClientSessionEntry 3 }
+
+ntwsClSessClientSessIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Client IP address.
+        If the client has no IP address, the value will be 0.0.0.0."
+    ::= { ntwsClSessClientSessionEntry 4 }
+
+ntwsClSessClientSessEncryptionType OBJECT-TYPE
+    SYNTAX      NtwsEncryptionType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Encryption type."
+    ::= { ntwsClSessClientSessionEntry 5 }
+
+ntwsClSessClientSessVlan OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..80))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the client VLAN."
+    ::= { ntwsClSessClientSessionEntry 6 }
+
+ntwsClSessClientSessApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Serial Number of the AP this client is connected to.
+        It is a zero length string when wired access is used."
+    ::= { ntwsClSessClientSessionEntry 7 }
+
+ntwsClSessClientSessRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of the Radio that provides service to this client.
+        It is 'not-applicable' when wired access is used."
+    ::= { ntwsClSessClientSessionEntry 8 }
+
+ntwsClSessClientSessAccessType OBJECT-TYPE
+    SYNTAX      NtwsAccessType
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "Access type this client uses (via AP, DAP or wired).
+        Obsoleted by ntwsClSessClientSessAccessMode."
+    ::= { ntwsClSessClientSessionEntry 9 }
+
+ntwsClSessClientSessAuthMethod OBJECT-TYPE
+    SYNTAX      NtwsAuthMethod
+    MAX-ACCESS  read-only
+    STATUS      deprecated
+    DESCRIPTION
+        "Authentication Method. Deprecated, use
+        ntwsClSessClientSessDot1xAuthMethod instead."
+    ::= { ntwsClSessClientSessionEntry 10 }
+
+ntwsClSessClientSessAuthServer OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Authentication Server's IP Address.
+        If the client is authenticated via the local DB,
+        or not authenticated, its value will be the system IP."
+    ::= { ntwsClSessClientSessionEntry 11 }
+
+ntwsClSessClientSessPortOrNum OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "Port number.
+        Obsoleted by ntwsClSessClientSessApNum."
+    ::= { ntwsClSessClientSessionEntry 12 }
+    
+ntwsClSessClientSessVlanTag OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VLAN tag."
+    ::= { ntwsClSessClientSessionEntry 13 }
+
+ntwsClSessClientSessTimeStamp OBJECT-TYPE
+    SYNTAX      TimeStamp
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Session start time stamp."
+    ::= { ntwsClSessClientSessionEntry 14 }
+
+ntwsClSessClientSessSsid OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..33))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "SSID."
+    ::= { ntwsClSessClientSessionEntry 15 }
+
+ntwsClSessClientSessState OBJECT-TYPE
+    SYNTAX      NtwsSessState
+    MAX-ACCESS  read-only
+    STATUS      deprecated
+    DESCRIPTION
+        "Session state. Deprecated, use
+        ntwsClSessClientSessSessionState instead."
+    ::= { ntwsClSessClientSessionEntry 16 }
+
+ntwsClSessClientSessLoginType OBJECT-TYPE
+    SYNTAX      NtwsUserAccessType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Login type (mac, web, dot1x or last-resort)."
+    ::= { ntwsClSessClientSessionEntry 17 }
+
+ntwsClSessClientSessDot1xAuthMethod OBJECT-TYPE
+    SYNTAX      NtwsClientAuthenProtocolType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Dot1x Authentication Method."
+    ::= { ntwsClSessClientSessionEntry 18 }
+
+ntwsClSessClientSessSessionState OBJECT-TYPE
+    SYNTAX      NtwsClientSessionState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Session non-intermediate state."
+    ::= { ntwsClSessClientSessionEntry 19 }
+
+ntwsClSessClientSessAccessMode OBJECT-TYPE
+    SYNTAX      NtwsClientAccessMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Access mode (type) this client uses (via AP or wired).
+        Obsoletes ntwsClSessClientSessAccessType since in 6.0
+        directly attached APs and DAPs were unified."
+    ::= { ntwsClSessClientSessionEntry 20 }
+
+ntwsClSessClientSessApNum OBJECT-TYPE
+    SYNTAX      NtwsApNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The AP providing wireless service to this client
+        is identified by its administratively assigned AP Number,
+        unique on same AC (switch),
+        regardless of how APs are attached to the AC.
+
+        Meaningful when ntwsClSessClientSessAccessMode = 'ap'.
+
+        Obsoletes ntwsClSessClientSessPortOrNum since in 6.0
+        directly attached APs and DAPs were unified."
+    ::= { ntwsClSessClientSessionEntry 21 }
+
+ntwsClSessClientSessPhysPortNum OBJECT-TYPE
+    SYNTAX      NtwsPhysPortNumberOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The physical port used by this wired-auth client
+        is identified by its port number on the AC (switch).
+
+        Zero means the port is unknown or not applicable
+        (for example, when ntwsClSessClientSessAccessMode = 'ap').
+
+        Meaningful when ntwsClSessClientSessAccessMode = 'wired'."
+    ::= { ntwsClSessClientSessionEntry 22 }
+
+
+-- Roaming History Table
+-- =====================
+
+ntwsClSessRoamingHistoryTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsClSessRoamingHistoryEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Roaming History Table.
+        Expansion of Client Session Table."
+    ::= { ntwsClientSessionDataObjects 2 }
+
+ntwsClSessRoamingHistoryEntry OBJECT-TYPE
+    SYNTAX      NtwsClSessRoamingHistoryEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Roaming History Entry."
+    INDEX   { ntwsClSessRoamHistMacAddress, ntwsClSessRoamHistIndex }
+    ::= { ntwsClSessRoamingHistoryTable 1 }
+
+NtwsClSessRoamingHistoryEntry ::= SEQUENCE {
+        ntwsClSessRoamHistMacAddress      MacAddress,
+        ntwsClSessRoamHistIndex           Unsigned32,
+        ntwsClSessRoamHistApSerialNum     NtwsApSerialNum,
+        ntwsClSessRoamHistRadioNum        NtwsRadioNum,
+        ntwsClSessRoamHistAccessType      NtwsAccessType,
+        ntwsClSessRoamHistApNumOrPort     Unsigned32,
+        ntwsClSessRoamHistIpAddress       IpAddress,
+        ntwsClSessRoamHistTimeStamp       TimeStamp,
+        ntwsClSessRoamHistAccessMode      NtwsClientAccessMode,
+        ntwsClSessRoamHistApNum           NtwsApNum,
+        ntwsClSessRoamHistPhysPortNum     NtwsPhysPortNumberOrZero
+    }
+
+ntwsClSessRoamHistMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Client MAC address."
+    ::= { ntwsClSessRoamingHistoryEntry 1 }
+
+ntwsClSessRoamHistIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Entry index."
+    ::= { ntwsClSessRoamingHistoryEntry 2 }
+
+ntwsClSessRoamHistApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Serial Number of the AP this client was connected to."
+    ::= { ntwsClSessRoamingHistoryEntry 3 }
+
+ntwsClSessRoamHistRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of the Radio that provided service to this client."
+    ::= { ntwsClSessRoamingHistoryEntry 4 }
+
+ntwsClSessRoamHistAccessType OBJECT-TYPE
+    SYNTAX      NtwsAccessType
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "Access type used by this client (via AP, DAP or wired).
+        Obsoleted by ntwsClSessRoamHistAccessMode."
+    ::= { ntwsClSessRoamingHistoryEntry 5 }
+
+ntwsClSessRoamHistApNumOrPort OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "AP port number, DAP number, or Port number for wired access.
+        Obsoleted by ntwsClSessRoamHistApNum."
+    ::= { ntwsClSessRoamingHistoryEntry 6 }
+
+ntwsClSessRoamHistIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "IP address of the AC (wireless switch)
+         the client or AP was connected to."
+    ::= { ntwsClSessRoamingHistoryEntry 7 }
+
+ntwsClSessRoamHistTimeStamp OBJECT-TYPE
+    SYNTAX      TimeStamp
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The difference between the time the session was created
+         on the roamed-to switch and the time the last switch,
+         the one where the user is at currently, started.
+         The timestamp unit is in hundredths of seconds."
+    ::= { ntwsClSessRoamingHistoryEntry 8 }
+
+ntwsClSessRoamHistAccessMode OBJECT-TYPE
+    SYNTAX      NtwsClientAccessMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Access mode (type) used by this client (via AP or wired).
+        Obsoletes ntwsClSessRoamHistAccessType since in 6.0
+        directly attached APs and DAPs were unified."
+    ::= { ntwsClSessRoamingHistoryEntry 9 }
+
+ntwsClSessRoamHistApNum OBJECT-TYPE
+    SYNTAX      NtwsApNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The administratively assigned AP Number,
+        unique on same AC (switch),
+        regardless of how APs are attached to the AC.
+        Obsoletes ntwsClSessRoamHistApNumOrPort since in 6.0
+        directly attached APs and DAPs were unified."
+    ::= { ntwsClSessRoamingHistoryEntry 10 }
+
+ntwsClSessRoamHistPhysPortNum OBJECT-TYPE
+    SYNTAX      NtwsPhysPortNumberOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The physical port used by this wired-auth client
+        is identified by its port number on the AC (switch).
+
+        Zero means the port is unknown or not applicable
+        (for example, when ntwsClSessRoamHistAccessMode = 'ap').
+
+        Meaningful when ntwsClSessRoamHistAccessMode = 'wired'."
+    ::= { ntwsClSessRoamingHistoryEntry 11 }
+
+
+-- Client Session Statistics Table
+-- ===============================
+
+ntwsClSessClientSessionStatisticsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsClSessClientSessionStatisticsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Client Session Statistics Table."
+    ::= { ntwsClientSessionDataObjects 3 }
+
+ntwsClSessClientSessionStatisticsEntry OBJECT-TYPE
+    SYNTAX      NtwsClSessClientSessionStatisticsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Client Session Statistics Table Entry."
+
+
+    INDEX   { ntwsClSessClientSessStatsMacAddress }
+    ::= { ntwsClSessClientSessionStatisticsTable 1 }
+
+NtwsClSessClientSessionStatisticsEntry ::= SEQUENCE {
+        ntwsClSessClientSessStatsMacAddress     MacAddress,
+        ntwsClSessClientSessStatsUniPktIn       Counter64,
+        ntwsClSessClientSessStatsUniOctetIn     Counter64,
+        ntwsClSessClientSessStatsUniPktOut      Counter64,
+        ntwsClSessClientSessStatsUniOctetOut    Counter64,
+        ntwsClSessClientSessStatsMultiPktIn     Counter64,
+        ntwsClSessClientSessStatsMultiOctetIn   Counter64,
+        ntwsClSessClientSessStatsEncErrPkt      Counter64,
+        ntwsClSessClientSessStatsEncErrOctet    Counter64,
+        ntwsClSessClientSessStatsLastRate       NtwsRadioRate,
+        ntwsClSessClientSessStatsLastRssi       NtwsRssi,
+        ntwsClSessClientSessStatsLastSNR        Integer32
+    }
+
+ntwsClSessClientSessStatsMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Client MAC address."
+    ::= { ntwsClSessClientSessionStatisticsEntry 1 }
+    
+ntwsClSessClientSessStatsUniPktIn OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Unicast packets in."
+    ::= { ntwsClSessClientSessionStatisticsEntry 2 }
+
+ntwsClSessClientSessStatsUniOctetIn OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Unicast octets in."
+    ::= { ntwsClSessClientSessionStatisticsEntry 3 }
+
+ntwsClSessClientSessStatsUniPktOut OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Unicast packets out."
+    ::= { ntwsClSessClientSessionStatisticsEntry 4 }
+
+ntwsClSessClientSessStatsUniOctetOut OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Unicast octets out."
+    ::= { ntwsClSessClientSessionStatisticsEntry 5 }
+
+ntwsClSessClientSessStatsMultiPktIn OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Multicast packets in."
+    ::= { ntwsClSessClientSessionStatisticsEntry 6 }
+
+ntwsClSessClientSessStatsMultiOctetIn OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Multicast octets in."
+    ::= { ntwsClSessClientSessionStatisticsEntry 7 }
+
+ntwsClSessClientSessStatsEncErrPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of packets with encryption errors."
+    ::= { ntwsClSessClientSessionStatisticsEntry 8 }
+
+ntwsClSessClientSessStatsEncErrOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of octets with encryption errors."
+    ::= { ntwsClSessClientSessionStatisticsEntry 9 }
+
+ntwsClSessClientSessStatsLastRate OBJECT-TYPE
+    SYNTAX      NtwsRadioRate
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Last packet data rate."
+    ::= { ntwsClSessClientSessionStatisticsEntry 10 }
+
+ntwsClSessClientSessStatsLastRssi OBJECT-TYPE
+    SYNTAX      NtwsRssi
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "RSSI (Received Signal Strength Indicator) for last packet,
+        in decibels referred to 1 milliwatt (dBm).
+        A higher value indicates a stronger signal."
+    ::= { ntwsClSessClientSessionStatisticsEntry 11 }
+
+ntwsClSessClientSessStatsLastSNR OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Last packet data Signal to Noise Ratio."
+    ::= { ntwsClSessClientSessionStatisticsEntry 12 }
+
+-- ==================================
+--
+-- Scalars
+--
+
+ntwsClSessTotalSessions OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of sessions."
+    ::= { ntwsClientSessionDataObjects 4 }
+
+-- ============================================================================
+--
+-- Conformance
+--
+
+ntwsClientSessionConformance  OBJECT IDENTIFIER ::= { ntwsClientSessionObjects 2 }
+ntwsClientSessionCompliances  OBJECT IDENTIFIER ::= { ntwsClientSessionConformance 1 }
+ntwsClientSessionGroups       OBJECT IDENTIFIER ::= { ntwsClientSessionConformance 2 }
+
+
+-- Compliance
+
+
+ntwsClientSessionCompliance MODULE-COMPLIANCE
+    STATUS      obsolete
+    DESCRIPTION
+        "The compliance statement for devices that implement
+        the Client Session MIB.
+
+        This compliance statement was for releases 4.1 and 4.2
+        of AC (wireless switch) software.
+
+        This compliance statement is replaced by
+        ntwsClientSessionComplianceRev2."
+
+    MODULE  -- this module (ntwsClientSessionMib)
+
+    MANDATORY-GROUPS { ntwsClientSessionCommonGroup }
+
+    ::= { ntwsClientSessionCompliances 1 }
+
+
+ntwsClientSessionComplianceRev2 MODULE-COMPLIANCE
+    STATUS      obsolete
+    DESCRIPTION
+        "The compliance statement for devices that implement
+        the Client Session MIB.
+
+        This compliance statement was for releases 5.0 and 6.0
+        of AC (wireless switch) software.
+
+        This compliance statement is replaced by
+        ntwsClientSessionComplianceRev3."
+
+    MODULE  -- this module (ntwsClientSessionMib)
+
+    MANDATORY-GROUPS {
+                ntwsClientSessScalarsGroup,
+
+                ntwsClientSessClientSessionTableGroup,
+                ntwsClientSessRoamingHistoryTableGroup,
+
+                ntwsClientSessClientSessionStatisticsTableGroup
+            }
+
+    ::= { ntwsClientSessionCompliances 2 }
+
+
+ntwsClientSessionComplianceRev3 MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for devices that implement
+        the Client Session MIB.
+
+        This compliance statement is for releases 6.2 and greater
+        of AC (wireless switch) software."
+
+    MODULE  -- this module (ntwsClientSessionMib)
+
+    MANDATORY-GROUPS {
+                ntwsClientSessScalarsGroup,
+
+                ntwsClientSessClientSessionTableGroupRev2,
+                ntwsClientSessRoamingHistoryTableGroupRev2,
+
+                ntwsClientSessClientSessionStatisticsTableGroup
+            }
+
+    ::= { ntwsClientSessionCompliances 3 }
+
+
+-- Units of Conformance
+
+
+ntwsClientSessionCommonGroup OBJECT-GROUP
+        OBJECTS {
+                 -- ntwsClSessClientSessionTable:
+                 --
+                 ntwsClSessClientSessSessionId,
+                 ntwsClSessClientSessUsername,
+                 ntwsClSessClientSessIpAddress,
+                 ntwsClSessClientSessEncryptionType,
+                 ntwsClSessClientSessVlan,
+                 ntwsClSessClientSessApSerialNum,
+                 ntwsClSessClientSessRadioNum,
+                 ntwsClSessClientSessAccessType,
+                 ntwsClSessClientSessAuthMethod,
+                 ntwsClSessClientSessAuthServer,
+                 ntwsClSessClientSessPortOrNum,
+                 ntwsClSessClientSessVlanTag,
+                 ntwsClSessClientSessTimeStamp,
+                 ntwsClSessClientSessSsid,
+                 ntwsClSessClientSessState,
+
+                 -- ntwsClSessRoamingHistoryTable:
+                 --
+                 ntwsClSessRoamHistApSerialNum,
+                 ntwsClSessRoamHistRadioNum,
+                 ntwsClSessRoamHistAccessType,
+                 ntwsClSessRoamHistApNumOrPort,
+                 ntwsClSessRoamHistIpAddress,
+                 ntwsClSessRoamHistTimeStamp,
+
+                 -- ntwsClSessClientSessionStatisticsTable:
+                 --
+                 ntwsClSessClientSessStatsUniPktIn,
+                 ntwsClSessClientSessStatsUniOctetIn,
+                 ntwsClSessClientSessStatsUniPktOut,
+                 ntwsClSessClientSessStatsUniOctetOut,
+                 ntwsClSessClientSessStatsMultiPktIn,
+                 ntwsClSessClientSessStatsMultiOctetIn,
+                 ntwsClSessClientSessStatsEncErrPkt,
+                 ntwsClSessClientSessStatsEncErrOctet,
+                 ntwsClSessClientSessStatsLastRate,
+                 ntwsClSessClientSessStatsLastRssi,
+                 ntwsClSessClientSessStatsLastSNR
+                }
+        STATUS      obsolete
+        DESCRIPTION
+            "Mandatory group of objects implemented to provide Client Session info
+            in releases 4.1 and 4.2 of AC (wireless switch) software.
+
+            Replaced by ntwsClientSessClientSessionTableGroup,
+                        ntwsClientSessRoamingHistoryTableGroup,
+                        ntwsClientSessClientSessionStatisticsTableGroup."
+        ::= { ntwsClientSessionGroups 1 }
+
+
+ntwsClientSessScalarsGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsClSessTotalSessions
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of scalar objects implemented to provide general Client info
+            in releases 5.0 and greater."
+        ::= { ntwsClientSessionGroups 2 }
+
+
+ntwsClientSessClientSessionTableGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsClSessClientSessSessionId,
+                 ntwsClSessClientSessUsername,
+                 ntwsClSessClientSessIpAddress,
+                 ntwsClSessClientSessEncryptionType,
+                 ntwsClSessClientSessVlan,
+
+                 ntwsClSessClientSessApSerialNum,
+                 ntwsClSessClientSessRadioNum,
+
+                 ntwsClSessClientSessAccessType,
+                 ntwsClSessClientSessAuthServer,
+                 ntwsClSessClientSessPortOrNum,
+                 ntwsClSessClientSessVlanTag,
+                 ntwsClSessClientSessTimeStamp,
+                 ntwsClSessClientSessSsid,
+
+                 ntwsClSessClientSessLoginType,
+                 ntwsClSessClientSessDot1xAuthMethod,
+                 ntwsClSessClientSessSessionState
+                }
+        STATUS      obsolete
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Client Session info in releases 5.0 and 6.0.
+
+            Replaced by ntwsClientSessClientSessionTableGroupRev2."
+        ::= { ntwsClientSessionGroups 3 }
+
+
+ntwsClientSessRoamingHistoryTableGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsClSessRoamHistApSerialNum,
+                 ntwsClSessRoamHistRadioNum,
+
+                 ntwsClSessRoamHistAccessType,
+                 ntwsClSessRoamHistApNumOrPort,
+
+                 ntwsClSessRoamHistIpAddress,
+                 ntwsClSessRoamHistTimeStamp
+                }
+        STATUS      obsolete
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            roaming history per Client Session in releases 5.0 and 6.0.
+
+            Replaced by ntwsClientSessRoamingHistoryTableGroupRev2."
+        ::= { ntwsClientSessionGroups 4 }
+
+
+ntwsClientSessClientSessionStatisticsTableGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsClSessClientSessStatsUniPktIn,
+                 ntwsClSessClientSessStatsUniOctetIn,
+                 ntwsClSessClientSessStatsUniPktOut,
+                 ntwsClSessClientSessStatsUniOctetOut,
+                 ntwsClSessClientSessStatsMultiPktIn,
+                 ntwsClSessClientSessStatsMultiOctetIn,
+                 ntwsClSessClientSessStatsEncErrPkt,
+                 ntwsClSessClientSessStatsEncErrOctet,
+
+                 ntwsClSessClientSessStatsLastRate,
+                 ntwsClSessClientSessStatsLastRssi,
+                 ntwsClSessClientSessStatsLastSNR
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            statistics per Client Session in releases 5.0 and greater."
+        ::= { ntwsClientSessionGroups 5 }
+
+
+ntwsClientSessClientSessionTableGroupRev2 OBJECT-GROUP
+        OBJECTS {
+                 ntwsClSessClientSessSessionId,
+                 ntwsClSessClientSessUsername,
+                 ntwsClSessClientSessIpAddress,
+                 ntwsClSessClientSessEncryptionType,
+                 ntwsClSessClientSessVlan,
+
+                 ntwsClSessClientSessApSerialNum,
+                 ntwsClSessClientSessRadioNum,
+
+                 ntwsClSessClientSessAuthServer,    
+                 ntwsClSessClientSessVlanTag,
+                 ntwsClSessClientSessTimeStamp,
+                 ntwsClSessClientSessSsid,
+
+                 ntwsClSessClientSessLoginType,
+                 ntwsClSessClientSessDot1xAuthMethod,
+                 ntwsClSessClientSessSessionState,
+
+                 ntwsClSessClientSessAccessMode,
+                 ntwsClSessClientSessApNum,
+                 ntwsClSessClientSessPhysPortNum
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Client Session info in releases 6.2 and greater."
+        ::= { ntwsClientSessionGroups 6 }
+
+
+ntwsClientSessRoamingHistoryTableGroupRev2 OBJECT-GROUP
+        OBJECTS {
+                 ntwsClSessRoamHistApSerialNum,
+                 ntwsClSessRoamHistRadioNum,
+
+                 ntwsClSessRoamHistIpAddress,
+                 ntwsClSessRoamHistTimeStamp,
+
+                 ntwsClSessRoamHistAccessMode,
+                 ntwsClSessRoamHistApNum,
+                 ntwsClSessRoamHistPhysPortNum
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            roaming history per Client Session in releases 6.2 and greater."
+        ::= { ntwsClientSessionGroups 7 }
+
+
+END

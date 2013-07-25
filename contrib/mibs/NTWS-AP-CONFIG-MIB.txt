@@ -1,0 +1,2306 @@
+NTWS-AP-CONFIG-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    MODULE-IDENTITY, OBJECT-TYPE,
+    Unsigned32
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString, RowStatus, TruthValue
+        FROM SNMPv2-TC
+    NtwsApNum, NtwsApAttachType, NtwsApSerialNum,
+    NtwsApFingerprint, NtwsApBias,
+    NtwsApRadioIndex, NtwsRadioMode, NtwsRadioType,
+    NtwsPowerLevel, NtwsChannelNum,
+    NtwsRadioChannelWidth, NtwsApPowerMode,
+    NtwsRadioAntennaLocation, NtwsApLedMode
+        FROM NTWS-AP-TC
+    NtwsPhysPortNumberOrZero
+        FROM NTWS-BASIC-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsApConfigMib MODULE-IDENTITY
+    LAST-UPDATED "200911190108Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "AP Configuration objects for Nortel Networks wireless switches.
+
+        AP = Access Point;
+        AC = Access Controller (wireless switch),
+             the device that runs a SNMP Agent implementing this MIB.
+
+        Copyright 2009 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200911190108Z"
+    DESCRIPTION "v1.0.8: Initial version"
+
+    ::= { ntwsMibs 14 }
+
+
+-- Textual conventions
+
+
+NtwsApTemplateName ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "255a"
+    STATUS       current
+    DESCRIPTION
+        "AP Template Name, consists of printable ASCII characters
+        between 0x21 (!), and 0x7d (}) with no leading, embedded,
+        or trailing space.
+        Cannot be a zero length string."
+    SYNTAX       OCTET STRING (SIZE (1..32))
+
+NtwsRadioProfileName ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "255a"
+    STATUS       current
+    DESCRIPTION
+        "Radio Profile Name, consists of printable ASCII characters
+        between 0x21 (!), and 0x7d (}) with no leading, embedded,
+        or trailing space.
+        Cannot be a zero length string."
+    SYNTAX       OCTET STRING (SIZE (1..16))
+
+NtwsServiceProfileName ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "255a"
+    STATUS       current
+    DESCRIPTION
+        "Service Profile Name, consists of printable ASCII characters
+        between 0x21 (!), and 0x7d (}) with no leading, embedded,
+        or trailing space.
+        Cannot be a zero length string."
+    SYNTAX       OCTET STRING (SIZE (1..32))
+
+NtwsSnoopFilterName ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "255a"
+    STATUS       current
+    DESCRIPTION
+        "Snoop Filter Name, consists of printable ASCII characters
+        between 0x21 (!), and 0x7d (}) with no leading, embedded,
+        or trailing space.
+        Cannot be a zero length string."
+    SYNTAX       OCTET STRING (SIZE (1..15))
+
+NtwsServiceProfileSsidType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of Service Types provided on a service profile."
+    SYNTAX       INTEGER {
+                     clear   (1),
+                     crypto  (2)
+                 }
+
+NtwsServiceProfile11nMode ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of 802.11n modes for a service profile."
+    SYNTAX       INTEGER {
+                     enable   (1),
+                     disable  (2),
+                     required (3)
+                 }
+
+NtwsServiceProfile11nFrameAggregationType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of 802.11n frame aggregation types
+        for a service profile."
+    SYNTAX       INTEGER {
+                     msdu    (1),
+                     mpdu    (2),
+                     all     (3),
+                     disable (4)
+                 }
+
+NtwsServiceProfile11nMsduMaxLength ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of 802.11n A-MSDU maximum lengths
+        for a service profile."
+    SYNTAX       INTEGER {
+                     msdu-4k  (1),
+                     msdu-8k  (2)
+                 }
+
+NtwsServiceProfile11nMpduMaxLength ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of 802.11n A-MPDU maximum lengths
+        for a service profile."
+    SYNTAX       INTEGER {
+                     mpdu-8k   (1),
+                     mpdu-16k  (2),
+                     mpdu-32k  (3),
+                     mpdu-64k  (4)
+                 }
+
+NtwsServiceProfileAuthFallthruType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of Authentication Fallthrough types
+        for a service profile."
+    SYNTAX       INTEGER {
+                     none            (1),
+                     web-auth        (2),
+                     web-aaa-portal  (3),
+                     last-resort     (4)
+                 }
+
+NtwsServiceProfileCacMode ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of Call Admission Control types
+        for a service profile."
+    SYNTAX       INTEGER {
+                     none     (1),
+                     session  (2),
+                     vendor   (3)
+                 }
+
+NtwsRadioProfileCountermeasuresMode ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of the Countermeasure modes for a radio profile."
+    SYNTAX       INTEGER {
+                     none         (1),
+                     all          (2),
+                     rogue        (3),
+                     configured   (4)
+                 }
+
+NtwsRadioProfileRFScanChannelScope ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of RF scanning channel scopes
+        for a radio profile."
+    SYNTAX       INTEGER {
+                     operating     (1),
+                     regulatory    (2),
+                     all           (3)
+                 }
+
+NtwsRadioProfileAutoTuneChannelRange ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of Auto-Tune channel ranges
+        for a radio profile."
+    SYNTAX       INTEGER {
+                     all-bands    (1),
+                     lower-bands  (2)
+                 }
+
+NtwsRadioProfileRFScanMode ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "Enumeration of RF scanning modes for a radio profile."
+    SYNTAX       INTEGER {
+                     active   (1),
+                     passive  (2)
+                 }
+
+
+--
+-- The AP Config MIB Tree
+--
+
+ntwsApConfigMibObjects  OBJECT IDENTIFIER ::= { ntwsApConfigMib 1 }
+
+-- Reserved for future scalar objects (high-level configuration info):
+-- ntwsApConfigGlobalObjects  OBJECT IDENTIFIER ::= { ntwsApConfigMibObjects 1 }
+
+
+-- Object definitions
+
+
+-- ==================================
+-- AP Config table
+
+ntwsApConfApConfigTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfApConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing all the APs currently configured
+        on this AC."
+    ::= { ntwsApConfigMibObjects 2 }
+
+ntwsApConfApConfigEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfApConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Configuration for a particular AP that could be attached to the AC."
+
+    INDEX   { ntwsApConfApConfigApNum }
+
+    ::= { ntwsApConfApConfigTable 1 }
+
+NtwsApConfApConfigEntry ::= SEQUENCE {
+        ntwsApConfApConfigApNum           NtwsApNum,
+
+        ntwsApConfApConfigApAttachType    NtwsApAttachType,
+        ntwsApConfApConfigPhysPortNum     NtwsPhysPortNumberOrZero,
+        ntwsApConfApConfigApSerialNum     NtwsApSerialNum,
+        ntwsApConfApConfigApModelName     DisplayString,
+        ntwsApConfApConfigFingerprint     NtwsApFingerprint,
+        ntwsApConfApConfigBias            NtwsApBias,
+        ntwsApConfApConfigApTimeout       Unsigned32,
+
+        ntwsApConfApConfigApName          DisplayString,
+        ntwsApConfApConfigContact         DisplayString,
+        ntwsApConfApConfigLocation        DisplayString,
+
+        ntwsApConfApConfigBlinkEnabled               TruthValue,
+        ntwsApConfApConfigForceImageDownloadEnabled  TruthValue,
+        ntwsApConfApConfigFirmwareUpgradeEnabled     TruthValue,
+        ntwsApConfApConfigLocalSwitchingEnabled      TruthValue,
+
+        ntwsApConfApConfigPowerMode       NtwsApPowerMode,
+        ntwsApConfApConfigLedMode         NtwsApLedMode,
+
+        ntwsApConfApConfigDescription     DisplayString
+    }
+
+ntwsApConfApConfigApNum OBJECT-TYPE
+    SYNTAX      NtwsApNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Number of this AP (administratively assigned)."
+    ::= { ntwsApConfApConfigEntry 1 }
+
+ntwsApConfApConfigApAttachType OBJECT-TYPE
+    SYNTAX      NtwsApAttachType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "How this AP is attached to the AC
+        (directly or via L2/L3 network)."
+    ::= { ntwsApConfApConfigEntry 2 }
+
+ntwsApConfApConfigPhysPortNum OBJECT-TYPE
+    SYNTAX      NtwsPhysPortNumberOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Identifies the physical port used to attach this AP.
+        Only valid for directly attached APs, otherwise will be zero."
+    ::= { ntwsApConfApConfigEntry 3 }
+
+ntwsApConfApConfigApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number used to identify this AP.
+        Only valid for network attached APs,
+        otherwise will be a zero length string."
+    ::= { ntwsApConfApConfigEntry 4 }
+
+ntwsApConfApConfigApModelName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..24))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Model name of this AP."
+    ::= { ntwsApConfApConfigEntry 5 }
+
+ntwsApConfApConfigFingerprint OBJECT-TYPE
+    SYNTAX      NtwsApFingerprint
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The RSA key fingerprint configured on this AP (binary value:
+        it is the MD5 hash of the public key of the RSA key pair).
+        For directly attached APs the fingerprint is a zero length string."
+    ::= { ntwsApConfApConfigEntry 6 }
+
+ntwsApConfApConfigBias OBJECT-TYPE
+    SYNTAX      NtwsApBias
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Bias (high/low/sticky)."
+    ::= { ntwsApConfApConfigEntry 7 }
+
+ntwsApConfApConfigApTimeout OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The communication timeout for this AP, in seconds."
+    ::= { ntwsApConfApConfigEntry 8 }
+
+ntwsApConfApConfigApName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..16))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Name for this AP."
+    ::= { ntwsApConfApConfigEntry 9 }
+
+ntwsApConfApConfigContact OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Contact information for this AP."
+    ::= { ntwsApConfApConfigEntry 10 }
+
+ntwsApConfApConfigLocation OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Location information for this AP."
+    ::= { ntwsApConfApConfigEntry 11 }
+
+ntwsApConfApConfigBlinkEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether the LED blink mode is enabled on this AP."
+    ::= { ntwsApConfApConfigEntry 12 }
+
+ntwsApConfApConfigForceImageDownloadEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether this AP is forced to always download
+        an image from the AC upon boot."
+    ::= { ntwsApConfApConfigEntry 13 }
+
+ntwsApConfApConfigFirmwareUpgradeEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether automatic boot firmware upgrade
+        is enabled on this AP."
+    ::= { ntwsApConfApConfigEntry 14 }
+
+ntwsApConfApConfigLocalSwitchingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether local switching is enabled on this AP."
+    ::= { ntwsApConfApConfigEntry 15 }
+
+ntwsApConfApConfigPowerMode OBJECT-TYPE
+    SYNTAX      NtwsApPowerMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The mode in which this AP is supplying power to its radios."
+    ::= { ntwsApConfApConfigEntry 16 }
+
+ntwsApConfApConfigLedMode OBJECT-TYPE
+    SYNTAX      NtwsApLedMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "LED Mode (auto/static/off)."
+    ::= { ntwsApConfApConfigEntry 17 }
+
+ntwsApConfApConfigDescription OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..256))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Description for this AP."
+    ::= { ntwsApConfApConfigEntry 18 }
+
+
+-- ==================================
+-- Radio Config table
+
+ntwsApConfRadioConfigTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfRadioConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the radios on all the APs
+        currently configured on this AC."
+    ::= { ntwsApConfigMibObjects 3 }
+
+ntwsApConfRadioConfigEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfRadioConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Configuration for a particular Radio on a particular AP
+        that could be attached to the AC."
+
+    INDEX   { ntwsApConfRadioConfigApNum,
+              ntwsApConfRadioConfigRadioIndex }
+
+    ::= { ntwsApConfRadioConfigTable 1 }
+
+NtwsApConfRadioConfigEntry ::= SEQUENCE {
+        ntwsApConfRadioConfigApNum           NtwsApNum,
+        ntwsApConfRadioConfigRadioIndex      NtwsApRadioIndex,
+
+        ntwsApConfRadioConfigRadioType       NtwsRadioType,
+        ntwsApConfRadioConfigRadioMode       NtwsRadioMode,
+
+        ntwsApConfRadioConfigRadioProfileName    NtwsRadioProfileName,
+
+        ntwsApConfRadioConfigChannel             NtwsChannelNum,
+        ntwsApConfRadioConfigTxPower             NtwsPowerLevel,
+        ntwsApConfRadioConfigAutoTuneMaxTxPower  NtwsPowerLevel,
+        ntwsApConfRadioConfigAntennaType         DisplayString,
+        ntwsApConfRadioConfigAntennaLocation     NtwsRadioAntennaLocation,
+
+        ntwsApConfRadioConfigLoadBalancingEnabled    TruthValue,
+        ntwsApConfRadioConfigLoadBalancingGroup      DisplayString,
+        ntwsApConfRadioConfigLoadRebalancingEnabled  TruthValue
+    }
+
+ntwsApConfRadioConfigApNum OBJECT-TYPE
+    SYNTAX      NtwsApNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Number of the AP (administratively assigned)."
+    ::= { ntwsApConfRadioConfigEntry 1 }
+
+ntwsApConfRadioConfigRadioIndex OBJECT-TYPE
+    SYNTAX      NtwsApRadioIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The number of this Radio on the AP."
+    ::= { ntwsApConfRadioConfigEntry 2 }
+
+ntwsApConfRadioConfigRadioType OBJECT-TYPE
+    SYNTAX      NtwsRadioType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Type of this radio
+        (typeA, typeB, typeG, typeNA, typeNG)"
+    ::= { ntwsApConfRadioConfigEntry 3 }
+
+ntwsApConfRadioConfigRadioMode OBJECT-TYPE
+    SYNTAX      NtwsRadioMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Mode of this radio (enabled/disabled/sentry)"
+    ::= { ntwsApConfRadioConfigEntry 4 }
+
+ntwsApConfRadioConfigRadioProfileName OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileName
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Identifies the Radio Profile to be applied to this radio"
+    ::= { ntwsApConfRadioConfigEntry 5 }
+
+ntwsApConfRadioConfigChannel OBJECT-TYPE
+    SYNTAX      NtwsChannelNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Channel Number of this radio."
+    ::= { ntwsApConfRadioConfigEntry 6 }
+
+ntwsApConfRadioConfigTxPower OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Tx Power level of this radio."
+    ::= { ntwsApConfRadioConfigEntry 7 }
+
+ntwsApConfRadioConfigAutoTuneMaxTxPower OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Maximum Tx Power that Auto Tune is allowed
+         to set for this radio."
+    ::= { ntwsApConfRadioConfigEntry 8 }
+
+ntwsApConfRadioConfigAntennaType OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..16))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Antenna Type for this radio."
+    ::= { ntwsApConfRadioConfigEntry 9 }
+
+ntwsApConfRadioConfigAntennaLocation OBJECT-TYPE
+    SYNTAX      NtwsRadioAntennaLocation
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Antenna Location for this radio."
+    ::= { ntwsApConfRadioConfigEntry 10 }
+
+ntwsApConfRadioConfigLoadBalancingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether RF Load Balancing is enabled on this radio."
+    ::= { ntwsApConfRadioConfigEntry 11 }
+
+ntwsApConfRadioConfigLoadBalancingGroup OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the RF Load Balancing group that
+        this radio is assigned to."
+    ::= { ntwsApConfRadioConfigEntry 12 }
+
+ntwsApConfRadioConfigLoadRebalancingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether RF Load Rebalancing is enabled for this radio."
+    ::= { ntwsApConfRadioConfigEntry 13 }
+
+
+-- ==========================================================
+-- AP Template main Config table (similar to AP Config table)
+
+ntwsApConfApTemplateConfigTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfApTemplateConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing all the AP Templates currently configured
+        on this AC."
+    ::= { ntwsApConfigMibObjects 4 }
+
+ntwsApConfApTemplateConfigEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfApTemplateConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Template configuration for APs that could be attached to the AC."
+
+    INDEX   { ntwsApConfApTemplConfApTemplateName }
+
+    ::= { ntwsApConfApTemplateConfigTable 1 }
+
+NtwsApConfApTemplateConfigEntry ::= SEQUENCE {
+        ntwsApConfApTemplConfApTemplateName     NtwsApTemplateName,
+
+        ntwsApConfApTemplConfApTemplateEnabled  TruthValue,
+
+        ntwsApConfApTemplConfBias               NtwsApBias,
+        ntwsApConfApTemplConfApTimeout          Unsigned32,
+        
+        ntwsApConfApTemplConfBlinkEnabled               TruthValue,
+        ntwsApConfApTemplConfForceImageDownloadEnabled  TruthValue,
+        ntwsApConfApTemplConfFirmwareUpgradeEnabled     TruthValue,
+        ntwsApConfApTemplConfLocalSwitchingEnabled      TruthValue,
+
+        ntwsApConfApTemplConfPowerMode         NtwsApPowerMode,
+        ntwsApConfApTemplConfLedMode           NtwsApLedMode
+    }
+
+ntwsApConfApTemplConfApTemplateName OBJECT-TYPE
+    SYNTAX      NtwsApTemplateName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "AP Template Name."
+    ::= { ntwsApConfApTemplateConfigEntry 1 }
+
+ntwsApConfApTemplConfApTemplateEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether this AP Template is Enabled
+        (can be used for bringing up APs)."
+    ::= { ntwsApConfApTemplateConfigEntry 2 }
+
+ntwsApConfApTemplConfBias OBJECT-TYPE
+    SYNTAX      NtwsApBias
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Bias (high/low/sticky)."
+    ::= { ntwsApConfApTemplateConfigEntry 3 }
+
+ntwsApConfApTemplConfApTimeout OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The communication timeout for this AP Template, in seconds."
+    ::= { ntwsApConfApTemplateConfigEntry 4 }
+
+ntwsApConfApTemplConfBlinkEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether the LED blink mode is enabled
+        on this AP Template."
+    ::= { ntwsApConfApTemplateConfigEntry 5 }
+
+ntwsApConfApTemplConfForceImageDownloadEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether this AP is forced to always download
+        an image from the AC upon boot."
+    ::= { ntwsApConfApTemplateConfigEntry 6 }
+
+ntwsApConfApTemplConfFirmwareUpgradeEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether automatic boot firmware upgrade
+        is enabled on this AP Template."
+    ::= { ntwsApConfApTemplateConfigEntry 7 }
+
+ntwsApConfApTemplConfLocalSwitchingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether local switching is enabled
+        on this AP Template."
+    ::= { ntwsApConfApTemplateConfigEntry 8 }
+
+ntwsApConfApTemplConfPowerMode OBJECT-TYPE
+    SYNTAX      NtwsApPowerMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The mode in which an AP using this Template
+        will be supplying power to its radios."
+    ::= { ntwsApConfApTemplateConfigEntry 9 }
+
+ntwsApConfApTemplConfLedMode OBJECT-TYPE
+    SYNTAX      NtwsApLedMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The LED Mode (auto/static/off)
+        for an AP using this Template."
+    ::= { ntwsApConfApTemplateConfigEntry 10 }
+
+
+-- ==============================================================
+-- AP Template Radio Config table (similar to Radio Config table)
+
+ntwsApConfApTemplateRadioConfigTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfApTemplateRadioConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the radios for all the AP Templates
+        currently configured on this AC."
+    ::= { ntwsApConfigMibObjects 5 }
+
+ntwsApConfApTemplateRadioConfigEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfApTemplateRadioConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Template configuration for a particular Radio index
+        on an AP Template configured on this AC."
+
+    INDEX   { ntwsApConfApTemRadioConfApTemplateName,
+              ntwsApConfApTemRadioConfRadioIndex }
+
+    ::= { ntwsApConfApTemplateRadioConfigTable 1 }
+
+NtwsApConfApTemplateRadioConfigEntry ::= SEQUENCE {
+        ntwsApConfApTemRadioConfApTemplateName  NtwsApTemplateName,
+        ntwsApConfApTemRadioConfRadioIndex      NtwsApRadioIndex,
+
+        ntwsApConfApTemRadioConfRadioMode       NtwsRadioMode,
+
+        ntwsApConfApTemRadioConfRadioProfileName    NtwsRadioProfileName,
+
+        ntwsApConfApTemRadioConfAutoTuneMaxTxPower  NtwsPowerLevel,
+
+        ntwsApConfApTemRadioConfLoadBalancingEnabled    TruthValue,
+        ntwsApConfApTemRadioConfLoadBalancingGroup      DisplayString,
+        ntwsApConfApTemRadioConfLoadRebalancingEnabled  TruthValue
+    }
+
+ntwsApConfApTemRadioConfApTemplateName OBJECT-TYPE
+    SYNTAX      NtwsApTemplateName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "AP Template Name."
+    ::= { ntwsApConfApTemplateRadioConfigEntry 1 }
+
+ntwsApConfApTemRadioConfRadioIndex OBJECT-TYPE
+    SYNTAX      NtwsApRadioIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The number of this Radio on the AP Template."
+    ::= { ntwsApConfApTemplateRadioConfigEntry 2 }
+
+ntwsApConfApTemRadioConfRadioMode OBJECT-TYPE
+    SYNTAX      NtwsRadioMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured mode of a radio using this Template
+        (enabled/disabled/sentry)"
+    ::= { ntwsApConfApTemplateRadioConfigEntry 3 }
+
+ntwsApConfApTemRadioConfRadioProfileName OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileName
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Identifies the Radio Profile to be applied
+        to a radio using this Template"
+    ::= { ntwsApConfApTemplateRadioConfigEntry 4 }
+
+ntwsApConfApTemRadioConfAutoTuneMaxTxPower OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Maximum Tx Power that Auto Tune will be allowed
+         to set for a radio using this Template."
+    ::= { ntwsApConfApTemplateRadioConfigEntry 5 }
+
+ntwsApConfApTemRadioConfLoadBalancingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether RF Load Balancing will be enabled
+        on a radio using this Template."
+    ::= { ntwsApConfApTemplateRadioConfigEntry 6 }
+
+ntwsApConfApTemRadioConfLoadBalancingGroup OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the RF Load Balancing group that
+        a radio using this Template will be assigned to."
+    ::= { ntwsApConfApTemplateRadioConfigEntry 7 }
+
+ntwsApConfApTemRadioConfLoadRebalancingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether RF Load Rebalancing will be enabled
+        for a radio using this Template."
+    ::= { ntwsApConfApTemplateRadioConfigEntry 8 }
+
+
+-- ==========================
+-- Radio Profile table
+
+
+ntwsApConfRadioProfileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfRadioProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the Radio Profiles
+        currently configured on this AC."
+    ::= { ntwsApConfigMibObjects 6 }
+
+ntwsApConfRadioProfileEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfRadioProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Configuration for a particular Radio Profile."
+
+    INDEX   { ntwsApConfRadioProfRadioProfileName }
+
+    ::= { ntwsApConfRadioProfileTable 1 }
+
+NtwsApConfRadioProfileEntry ::= SEQUENCE {
+        ntwsApConfRadioProfRadioProfileName  NtwsRadioProfileName,
+
+        ntwsApConfRadioProfBeaconInterval    Unsigned32,
+        ntwsApConfRadioProfDtimInterval      Unsigned32,
+
+        ntwsApConfRadioProfChannelWidth11na  NtwsRadioChannelWidth,
+
+        ntwsApConfRadioProfMaxTxLifetime     Unsigned32,
+        ntwsApConfRadioProfMaxRxLifetime     Unsigned32,
+        ntwsApConfRadioProfRtsThreshold      Unsigned32,
+        ntwsApConfRadioProfFragThreshold     Unsigned32,
+
+        ntwsApConfRadioProfLongXmitPreambleEnabled  TruthValue,
+
+        ntwsApConfRadioProfCountermeasuresMode  NtwsRadioProfileCountermeasuresMode,
+
+        ntwsApConfRadioProfRFScanMode          NtwsRadioProfileRFScanMode,
+        ntwsApConfRadioProfRFScanChannelScope  NtwsRadioProfileRFScanChannelScope,
+        ntwsApConfRadioProfRFScanCTSEnabled    TruthValue,
+
+        ntwsApConfRadioProfAutoTune11aChannelRange          NtwsRadioProfileAutoTuneChannelRange,
+        ntwsApConfRadioProfAutoTuneIgnoreClientsEnabled     TruthValue,
+        ntwsApConfRadioProfAutoTuneChannelEnabled           TruthValue,
+        ntwsApConfRadioProfAutoTuneChannelHolddownInterval  Unsigned32,
+        ntwsApConfRadioProfAutoTuneChannelChangeInterval    Unsigned32,
+        ntwsApConfRadioProfAutoTunePowerEnabled             TruthValue,
+        ntwsApConfRadioProfAutoTunePowerRampInterval        Unsigned32,
+        ntwsApConfRadioProfAutoTunePowerChangeInterval      Unsigned32,
+
+        ntwsApConfRadioProfFairQueuingEnabled   TruthValue,
+
+        ntwsApConfRadioProfCacBackgroundACMandatory      TruthValue,
+        ntwsApConfRadioProfCacBackgroundMaxUtilization   Unsigned32,
+        ntwsApConfRadioProfCacBackgroundPolicingEnabled  TruthValue,
+        ntwsApConfRadioProfCacBestEffortACMandatory      TruthValue,
+        ntwsApConfRadioProfCacBestEffortMaxUtilization   Unsigned32,
+        ntwsApConfRadioProfCacBestEffortPolicingEnabled  TruthValue,
+        ntwsApConfRadioProfCacVideoACMandatory           TruthValue,
+        ntwsApConfRadioProfCacVideoMaxUtilization        Unsigned32,
+        ntwsApConfRadioProfCacVideoPolicingEnabled       TruthValue,
+        ntwsApConfRadioProfCacVoiceACMandatory           TruthValue,
+        ntwsApConfRadioProfCacVoiceMaxUtilization        Unsigned32,
+        ntwsApConfRadioProfCacVoicePolicingEnabled       TruthValue,
+
+        ntwsApConfRadioProfRfidTagEnabled          TruthValue,
+
+        ntwsApConfRadioProfWmmPowerSaveEnabled     TruthValue,
+
+        ntwsApConfRadioProfRateEnforcementEnabled  TruthValue,
+
+        ntwsApConfRadioProfDfsChannelsEnabled      TruthValue
+    }
+
+ntwsApConfRadioProfRadioProfileName OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Name of this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 1 }
+
+ntwsApConfRadioProfBeaconInterval OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Beacon Interval, time in thousandths of a second,
+        for this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 2 }
+
+ntwsApConfRadioProfDtimInterval OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of times after every beacon
+        that each AP radio in a radio profile sends a
+        delivery traffic indication map (DTIM),
+        for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 3 }
+
+ntwsApConfRadioProfChannelWidth11na OBJECT-TYPE
+    SYNTAX      NtwsRadioChannelWidth
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "802.11n Channel Width for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 4 }
+
+ntwsApConfRadioProfMaxTxLifetime OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The maximum transmit threshold for the
+        AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 5 }
+
+ntwsApConfRadioProfMaxRxLifetime OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The maximum receive threshold for the
+        AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 6 }
+
+ntwsApConfRadioProfRtsThreshold OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The RTS threshold for the AP radios using
+        this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 7 }
+
+ntwsApConfRadioProfFragThreshold OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The fragmentation threshold for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 8 }
+
+ntwsApConfRadioProfLongXmitPreambleEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether an 802.11b/g AP radio using
+        this radio profile transmits Long Preamble."
+    ::= { ntwsApConfRadioProfileEntry 9 }
+
+ntwsApConfRadioProfCountermeasuresMode OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileCountermeasuresMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Countermeasures Mode for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 10 }
+
+ntwsApConfRadioProfRFScanMode OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileRFScanMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "RF Scanning Mode for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 11 }
+
+ntwsApConfRadioProfRFScanChannelScope OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileRFScanChannelScope
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "RF scanning Channel Scope for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 12 }
+
+ntwsApConfRadioProfRFScanCTSEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether the AP radios using this radio profile
+        send CTS To Self packet before going off channel."
+    ::= { ntwsApConfRadioProfileEntry 13 }
+
+ntwsApConfRadioProfAutoTune11aChannelRange OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileAutoTuneChannelRange
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The allowable 802.11a Channel Range used by Auto-Tune
+        for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 14 }
+
+ntwsApConfRadioProfAutoTuneIgnoreClientsEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether the AP radios using this radio profile
+        Ignore Client connections in Auto-Tune channel selections."
+    ::= { ntwsApConfRadioProfileEntry 15 }
+
+ntwsApConfRadioProfAutoTuneChannelEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether Channel Auto-Tuning
+        is enabled for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 16 }
+
+ntwsApConfRadioProfAutoTuneChannelHolddownInterval OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Minimum Interval (in seconds) between Channel changes
+        due to Auto-Tuning, for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 17 }
+
+ntwsApConfRadioProfAutoTuneChannelChangeInterval OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The interval (in seconds) at which RF Auto-Tuning
+        decides whether to Change the Channel for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 18 }
+
+ntwsApConfRadioProfAutoTunePowerEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether Power Auto-Tuning is enabled
+         for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 19 }
+
+ntwsApConfRadioProfAutoTunePowerRampInterval OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Minimum Interval (in seconds) between Power changes
+        due to Auto-Tuning, for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 20 }
+
+ntwsApConfRadioProfAutoTunePowerChangeInterval OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The interval (in seconds) at which RF Auto-Tuning
+        decides whether to Change the Power for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 21 }
+
+ntwsApConfRadioProfFairQueuingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether weighted Fair Queuing is enabled
+        for this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 22 }
+
+ntwsApConfRadioProfCacBackgroundACMandatory OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether Admission Control for Background traffic
+        is Mandatory for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 23 }
+
+ntwsApConfRadioProfCacBackgroundMaxUtilization OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum admission control limit for Background traffic,
+        for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 24 }
+
+ntwsApConfRadioProfCacBackgroundPolicingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates that admission control Policing for
+        Background traffic is enabled, for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 25 }
+
+ntwsApConfRadioProfCacBestEffortACMandatory OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates that Admission Control for Best Effort traffic
+        is Mandatory for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 26 }
+
+ntwsApConfRadioProfCacBestEffortMaxUtilization OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum admission control limit for Best Effort traffic,
+        for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 27 }
+
+ntwsApConfRadioProfCacBestEffortPolicingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates that admission control Policing for
+        Best Effort traffic is enabled, for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 28 }
+
+ntwsApConfRadioProfCacVideoACMandatory OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates that Admission Control for Video traffic
+        is Mandatory for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 29 }
+
+ntwsApConfRadioProfCacVideoMaxUtilization OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum admission control limit for Video traffic,
+        for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 30 }
+
+ntwsApConfRadioProfCacVideoPolicingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates that admission control Policing for
+        Video traffic is enabled, for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 31 }
+
+ntwsApConfRadioProfCacVoiceACMandatory OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates that Admission Control for Voice traffic
+        is Mandatory for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 32 }
+
+ntwsApConfRadioProfCacVoiceMaxUtilization OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum admission control limit for Voice traffic,
+        for the AP radios using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 33 }
+
+ntwsApConfRadioProfCacVoicePolicingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates that admission control Policing for
+        Voice traffic is enabled, for the AP radios
+        using this radio profile."
+    ::= { ntwsApConfRadioProfileEntry 34 }
+
+ntwsApConfRadioProfRfidTagEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether an AP radio using this radio profile
+        is enabled to function as location receivers in an AeroScout
+        Visibility System."
+    ::= { ntwsApConfRadioProfileEntry 35 }
+
+ntwsApConfRadioProfWmmPowerSaveEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether the AP radios using this radio profile
+        enable power save mode on WMM clients."
+    ::= { ntwsApConfRadioProfileEntry 36 }
+
+ntwsApConfRadioProfRateEnforcementEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether data rates are enforced for the AP radios
+        using this radio profile, which means
+        that a connecting client must transmit at one of the
+        mandatory or standard rates in order to associate
+        with the AP."
+    ::= { ntwsApConfRadioProfileEntry 37 }
+
+ntwsApConfRadioProfDfsChannelsEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates that the AP radios using this radio profile
+        use DFS channels to meet regulatory requirements."
+    ::= { ntwsApConfRadioProfileEntry 38 }
+
+
+-- =====================================================
+-- Table for Service Profiles connected to Radio Profile
+
+ntwsApConfRadioProfServiceProfileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfRadioProfServiceProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the currently configured connections
+        between Radio Profiles and Service Profiles."
+    ::= { ntwsApConfigMibObjects 7 }
+
+ntwsApConfRadioProfServiceProfileEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfRadioProfServiceProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Connection between a Radio Profile and a Service Profile,
+        currently configured on the AC."
+
+    INDEX   { ntwsApConfRpServpRadioProfileName,
+              ntwsApConfRpServpServiceProfileName }
+
+    ::= { ntwsApConfRadioProfServiceProfileTable 1 }
+
+NtwsApConfRadioProfServiceProfileEntry ::= SEQUENCE {
+        ntwsApConfRpServpRadioProfileName    NtwsRadioProfileName,
+        ntwsApConfRpServpServiceProfileName  NtwsServiceProfileName,
+
+        ntwsApConfRpServpRowStatus           RowStatus
+    }
+
+ntwsApConfRpServpRadioProfileName OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Name of this Radio Profile."
+    ::= { ntwsApConfRadioProfServiceProfileEntry 1 }
+
+ntwsApConfRpServpServiceProfileName OBJECT-TYPE
+    SYNTAX      NtwsServiceProfileName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Name of a Service Profile connected to
+        this Radio Profile."
+    ::= { ntwsApConfRadioProfServiceProfileEntry 2 }
+
+ntwsApConfRpServpRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "This object is used to create a new row or
+        delete an existing row in this table.
+
+        To create a row, set this object to 'createAndGo'.
+
+        To delete a row, set this object to 'destroy'.
+
+        Only these two values 'createAndGo' and 'destroy'
+        will be accepted."
+    ::= { ntwsApConfRadioProfServiceProfileEntry 3 }
+
+
+-- ==================================================
+-- Table for Snoop Filters connected to Radio Profile
+
+ntwsApConfRadioProfSnoopFilterTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfRadioProfSnoopFilterEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the currently configured connections
+        between Radio Profiles and Snoop Filters."
+    ::= { ntwsApConfigMibObjects 8 }
+
+ntwsApConfRadioProfSnoopFilterEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfRadioProfSnoopFilterEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Connection between a Radio Profile and a Snoop Filter,
+        currently configured on the AC."
+
+    INDEX   { ntwsApConfRpSnoopfRadioProfileName,
+              ntwsApConfRpSnoopfSnoopFilterName }
+
+    ::= { ntwsApConfRadioProfSnoopFilterTable 1 }
+
+NtwsApConfRadioProfSnoopFilterEntry ::= SEQUENCE {
+        ntwsApConfRpSnoopfRadioProfileName  NtwsRadioProfileName,
+        ntwsApConfRpSnoopfSnoopFilterName   NtwsSnoopFilterName,
+
+        ntwsApConfRpSnoopfRowStatus       RowStatus
+    }
+
+ntwsApConfRpSnoopfRadioProfileName OBJECT-TYPE
+    SYNTAX      NtwsRadioProfileName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Name of this Radio Profile."
+    ::= { ntwsApConfRadioProfSnoopFilterEntry 1 }
+
+ntwsApConfRpSnoopfSnoopFilterName OBJECT-TYPE
+    SYNTAX      NtwsSnoopFilterName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Name of a Snoop Filter connected to
+        this Radio Profile."
+    ::= { ntwsApConfRadioProfSnoopFilterEntry 2 }
+
+ntwsApConfRpSnoopfRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "This object is used to create a new row or
+        delete an existing row in this table.
+
+        To create a row, set this object to 'createAndGo'.
+
+        To delete a row, set this object to 'destroy'.
+
+        Only these two values 'createAndGo' and 'destroy'
+        will be accepted."
+    ::= { ntwsApConfRadioProfSnoopFilterEntry 3 }
+
+
+-- ==========================
+-- Service Profile table
+
+ntwsApConfServiceProfileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfServiceProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the Service Profiles
+        currently configured on this AC."
+    ::= { ntwsApConfigMibObjects 9 }
+
+ntwsApConfServiceProfileEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfServiceProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Configuration for a particular Service Profile."
+
+    INDEX   { ntwsApConfServProfServiceProfileName }
+
+    ::= { ntwsApConfServiceProfileTable 1 }
+
+NtwsApConfServiceProfileEntry ::= SEQUENCE {
+        ntwsApConfServProfServiceProfileName  NtwsServiceProfileName,
+
+        ntwsApConfServProfSsidType            NtwsServiceProfileSsidType,
+
+        ntwsApConfServProfBeaconEnabled          TruthValue,
+
+        ntwsApConfServProf11naMode     NtwsServiceProfile11nMode,
+        ntwsApConfServProf11ngMode     NtwsServiceProfile11nMode,
+
+        ntwsApConfServProf11nShortGuardIntervalEnabled  TruthValue,
+
+        ntwsApConfServProf11nFrameAggregation    NtwsServiceProfile11nFrameAggregationType,
+        ntwsApConfServProf11nMsduMaxLength       NtwsServiceProfile11nMsduMaxLength,
+        ntwsApConfServProf11nMpduMaxLength       NtwsServiceProfile11nMpduMaxLength,
+
+        ntwsApConfServProfAuthFallthru             NtwsServiceProfileAuthFallthruType,
+        ntwsApConfServProfWebAAAForm               DisplayString,
+        ntwsApConfServProfSharedKeyAuthEnabled     TruthValue,
+
+        ntwsApConfServProfWpaIeEnabled              TruthValue,
+        ntwsApConfServProfWpaIeCipherTkipEnabled    TruthValue,
+        ntwsApConfServProfWpaIeCipherCcmpEnabled    TruthValue,
+        ntwsApConfServProfWpaIeCipherWep40Enabled   TruthValue,
+        ntwsApConfServProfWpaIeCipherWep104Enabled  TruthValue,
+        ntwsApConfServProfWpaIeAuthDot1xEnabled     TruthValue,
+        ntwsApConfServProfWpaIeAuthPskEnabled       TruthValue,
+
+        ntwsApConfServProfRsnIeEnabled              TruthValue,
+        ntwsApConfServProfRsnIeCipherTkipEnabled    TruthValue,
+        ntwsApConfServProfRsnIeCipherCcmpEnabled    TruthValue,
+        ntwsApConfServProfRsnIeCipherWep40Enabled   TruthValue,
+        ntwsApConfServProfRsnIeCipherWep104Enabled  TruthValue,
+        ntwsApConfServProfRsnIeAuthDot1xEnabled     TruthValue,
+        ntwsApConfServProfRsnIeAuthPskEnabled       TruthValue,
+
+        ntwsApConfServProfTkipMicCountermeasuresTime  Unsigned32,
+
+        ntwsApConfServProfMaxBandwidthKbps      Unsigned32,
+        ntwsApConfServProfCacMode               NtwsServiceProfileCacMode,
+        ntwsApConfServProfCacSessCount          Unsigned32,
+
+        ntwsApConfServProfUserIdleTimeout           Unsigned32,
+        ntwsApConfServProfIdleClientProbingEnabled  TruthValue,
+        ntwsApConfServProfShortRetryCount           Unsigned32,
+        ntwsApConfServProfLongRetryCount            Unsigned32,
+
+        ntwsApConfServProfProxyArpEnabled           TruthValue,
+        ntwsApConfServProfDhcpRestrictEnabled       TruthValue,
+        ntwsApConfServProfNoBroadcastEnabled        TruthValue,
+
+        ntwsApConfServProfSygateOnDemandEnabled  TruthValue,
+        ntwsApConfServProfEnforceChecksEnabled   TruthValue,
+        ntwsApConfServProfSodaRemediationAcl     DisplayString,
+        ntwsApConfServProfSodaSuccessPage        DisplayString,
+        ntwsApConfServProfSodaFailurePage        DisplayString,
+        ntwsApConfServProfSodaLogoutPage         DisplayString,
+        ntwsApConfServProfSodaAgentDirectory     DisplayString,
+
+        ntwsApConfServProfWebPortalSessionTimeout   Unsigned32,
+        ntwsApConfServProfWebPortalAcl              DisplayString,
+        ntwsApConfServProfWebPortalLogoutEnabled    TruthValue,
+        ntwsApConfServProfWebPortalLogoutUrl        DisplayString,
+
+        ntwsApConfServProfKeepInitialVlanEnabled    TruthValue,
+
+        ntwsApConfServProfMeshModeEnabled     TruthValue,
+        ntwsApConfServProfBridgingEnabled     TruthValue,
+
+        ntwsApConfServProfLoadBalanceExemptEnabled  TruthValue
+    }
+
+ntwsApConfServProfServiceProfileName OBJECT-TYPE
+    SYNTAX      NtwsServiceProfileName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Name of this service profile"
+    ::= { ntwsApConfServiceProfileEntry 1 }
+
+ntwsApConfServProfSsidType OBJECT-TYPE
+    SYNTAX      NtwsServiceProfileSsidType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of this service profile (clear/crypto)."
+    ::= { ntwsApConfServiceProfileEntry 2 }
+
+ntwsApConfServProfBeaconEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether beacons are enabled
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 3 }
+
+ntwsApConfServProf11naMode OBJECT-TYPE
+    SYNTAX      NtwsServiceProfile11nMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the 802.11n (na) mode for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 4 }
+
+ntwsApConfServProf11ngMode OBJECT-TYPE
+    SYNTAX      NtwsServiceProfile11nMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the 802.11n (ng) mode for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 5 }
+
+ntwsApConfServProf11nShortGuardIntervalEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether short guard interval is enabled
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 6 }
+
+ntwsApConfServProf11nFrameAggregation OBJECT-TYPE
+    SYNTAX      NtwsServiceProfile11nFrameAggregationType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the Frame Aggregation mode
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 7 }
+
+ntwsApConfServProf11nMsduMaxLength OBJECT-TYPE
+    SYNTAX      NtwsServiceProfile11nMsduMaxLength
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The maximum MSDU length for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 8 }
+
+ntwsApConfServProf11nMpduMaxLength OBJECT-TYPE
+    SYNTAX      NtwsServiceProfile11nMpduMaxLength
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The maximum MPDU length for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 9 }
+
+ntwsApConfServProfAuthFallthru OBJECT-TYPE
+    SYNTAX      NtwsServiceProfileAuthFallthruType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The authentication type to be attempted for users who
+        do not match a 802.1X or MAC authentication rule,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 10 }
+
+ntwsApConfServProfWebAAAForm OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..64))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The custom login page that loads for WebAAA users,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 11 }
+
+ntwsApConfServProfSharedKeyAuthEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether shared-key authentication is enabled
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 12 }
+
+ntwsApConfServProfWpaIeEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether WPA IE beaconing is enabled
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 13 }
+
+ntwsApConfServProfWpaIeCipherTkipEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether TKIP cipher is advertised in WPA IE,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 14 }
+
+ntwsApConfServProfWpaIeCipherCcmpEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether CCMP cipher is advertised in WPA IE,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 15 }
+
+ntwsApConfServProfWpaIeCipherWep40Enabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether WEP-40 cipher is advertised in WPA IE,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 16 }
+
+ntwsApConfServProfWpaIeCipherWep104Enabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether WEP-104 cipher is advertised in WPA IE,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 17 }
+
+ntwsApConfServProfWpaIeAuthDot1xEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether 802.1X authentication is advertised
+        in WPA IE, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 18 }
+
+ntwsApConfServProfWpaIeAuthPskEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether Pre-Shared Key authentication
+        is advertised in WPA IE, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 19 }
+
+ntwsApConfServProfRsnIeEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether RSN IE beaconing is enabled
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 20 }
+
+ntwsApConfServProfRsnIeCipherTkipEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether TKIP cipher is advertised in RSN IE,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 21 }
+
+ntwsApConfServProfRsnIeCipherCcmpEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether CCMP cipher is advertised in RSN IE,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 22 }
+
+ntwsApConfServProfRsnIeCipherWep40Enabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether WEP-40 cipher is advertised in RSN IE,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 23 }
+
+ntwsApConfServProfRsnIeCipherWep104Enabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether WEP-104 cipher is advertised in RSN IE,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 24 }
+
+ntwsApConfServProfRsnIeAuthDot1xEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether 802.1X authentication is advertised
+        in RSN IE, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 25 }
+
+ntwsApConfServProfRsnIeAuthPskEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether Pre-Shared Key authentication
+        is advertised in RSN IE, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 26 }
+
+ntwsApConfServProfTkipMicCountermeasuresTime OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the TKIP MIC countermeasures time in milliseconds
+        for this service profile.
+        This is the length of time that AP radios use
+        countermeasures if two Message Integrity Code (MIC)
+        failures occur within 60 seconds."
+    ::= { ntwsApConfServiceProfileEntry 27 }
+
+ntwsApConfServProfMaxBandwidthKbps OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The bandwidth limit for this service profile,
+        in Kbits/second. A value of zero means unlimited."
+    ::= { ntwsApConfServiceProfileEntry 28 }
+
+ntwsApConfServProfCacMode OBJECT-TYPE
+    SYNTAX      NtwsServiceProfileCacMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Call Admission Control (CAC) mode,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 29 }
+
+ntwsApConfServProfCacSessCount OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The maximum number of active sessions a radio can have
+        when session-based CAC is enabled, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 30 }
+
+ntwsApConfServProfUserIdleTimeout OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of seconds MSS has a session
+        available for a client not sending data and is not
+        responding to keepalives (idle-client probes). If
+        the timer expires, the client session is changed
+        to the Dissociated state, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 31 }
+
+ntwsApConfServProfIdleClientProbingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether the AC radio sends
+        a unicast null-data frame to each client every 10 seconds,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 32 }
+
+ntwsApConfServProfShortRetryCount OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of times a radio can send a short unicast frame
+        without receiving an acknowledgment,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 33 }
+
+ntwsApConfServProfLongRetryCount OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of times a radio can send a long unicast frame
+        without receiving an acknowledgment,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 34 }
+
+ntwsApConfServProfProxyArpEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether proxy ARP is enabled
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 35 }
+
+ntwsApConfServProfDhcpRestrictEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether only DHCP traffic is allowed until
+        a newly associated client has been authenticated
+        and authorized, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 36 }
+
+ntwsApConfServProfNoBroadcastEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether broadcast ARP and DHCP packets
+        are converted to unicast for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 37 }
+
+ntwsApConfServProfSygateOnDemandEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether Sygate On-Demand Manager
+        (SODA Manager) is enabled for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 38 }
+
+ntwsApConfServProfEnforceChecksEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether Enforcement of the SODA security checks
+        is enabled for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 39 }
+
+ntwsApConfServProfSodaRemediationAcl OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Remediation page ACL to apply to the client when the 
+        failure page is loaded, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 40 }
+
+ntwsApConfServProfSodaSuccessPage OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Success page that is displayed on the client when
+        a client successfully runs the checks
+        performed by the SODA agent, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 41 }
+
+ntwsApConfServProfSodaFailurePage OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Failure page that is displayed on the client when
+        the SODA agent checks fail, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 42 }
+
+ntwsApConfServProfSodaLogoutPage OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The page to load when a client closes the
+        SODA virtual desktop and logs out of the network,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 43 }
+
+ntwsApConfServProfSodaAgentDirectory OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Specifies a different directory for the
+        SODA agent files used for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 44 }
+
+ntwsApConfServProfWebPortalSessionTimeout OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Time interval, in seconds, for which a Web Portal
+        WebAAA session remains in the Deassociated state 
+        before being terminated automatically,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 45 }
+
+ntwsApConfServProfWebPortalAcl OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Name of ACL used for filtering traffic for Web Portal 
+        users during authentication, for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 46 }
+
+ntwsApConfServProfWebPortalLogoutEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether the Web Portal logout functionality
+        is enabled for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 47 }
+
+ntwsApConfServProfWebPortalLogoutUrl OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..64))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the Web Portal Logout URL for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 48 }
+
+ntwsApConfServProfKeepInitialVlanEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether, after roaming, the user keeps
+        the VLAN assigned from the first connection,
+        for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 49 }
+
+ntwsApConfServProfMeshModeEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether wireless mesh between APs
+        is enabled for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 50 }
+
+ntwsApConfServProfBridgingEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether wireless bridging of traffic
+        between APs is enabled for this service profile."
+    ::= { ntwsApConfServiceProfileEntry 51 }
+
+ntwsApConfServProfLoadBalanceExemptEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether this service profile is
+        exempted from load balancing."
+    ::= { ntwsApConfServiceProfileEntry 52 }
+
+
+-- ==========================
+-- Snoop Filter table
+
+ntwsApConfSnoopFilterTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApConfSnoopFilterEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the Snoop Filters
+        currently configured on this AC."
+    ::= { ntwsApConfigMibObjects 10 }
+
+ntwsApConfSnoopFilterEntry OBJECT-TYPE
+    SYNTAX      NtwsApConfSnoopFilterEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Configuration for a particular Snoop Filter."
+
+    INDEX   { ntwsApConfSnoopFilterName }
+
+    ::= { ntwsApConfSnoopFilterTable 1 }
+
+NtwsApConfSnoopFilterEntry ::= SEQUENCE {
+        ntwsApConfSnoopFilterName     NtwsSnoopFilterName,
+
+        ntwsApConfSnoopFilterEnabled  TruthValue
+    }
+
+ntwsApConfSnoopFilterName OBJECT-TYPE
+    SYNTAX      NtwsSnoopFilterName
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Name of this snoop filter."
+    ::= { ntwsApConfSnoopFilterEntry 1 }
+
+ntwsApConfSnoopFilterEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether this snoop filter is enabled."
+    ::= { ntwsApConfSnoopFilterEntry 2 }
+
+
+-- ============================================================================
+--
+-- Conformance
+--
+
+ntwsApConfigConformance  OBJECT IDENTIFIER ::= { ntwsApConfigMib 2 }
+
+ntwsApConfigCompliances  OBJECT IDENTIFIER ::= { ntwsApConfigConformance 1 }
+ntwsApConfigGroups       OBJECT IDENTIFIER ::= { ntwsApConfigConformance 2 }
+
+
+-- Compliance
+
+
+ntwsApConfigCompliance MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for devices that implement AP Config MIB."
+
+    MODULE  -- this module (ntwsApConfigMib)
+
+    MANDATORY-GROUPS {
+                  ntwsApConfApConfigTableGroup,
+                  ntwsApConfRadioConfigTableGroup,
+                  ntwsApConfApTemplateConfigTableGroup,
+                  ntwsApConfApTemplateRadioConfigTableGroup,
+                  ntwsApConfRadioProfileTableGroup,
+                  ntwsApConfRadioProfServiceProfileTableGroup,
+                  ntwsApConfRadioProfSnoopFilterTableGroup,
+                  ntwsApConfServiceProfileTableGroup,
+                  ntwsApConfSnoopFilterTableGroup
+                }
+
+        OBJECT ntwsApConfRpServpRowStatus
+        SYNTAX INTEGER {
+            active(1)
+        }
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Create/delete/modify access to the
+             ntwsApConfRadioProfServiceProfileTable
+             is not required.
+             Support of the values notInService(2), notReady(3),
+             createAndGo(4), createAndWait(5), and destroy(6)
+             is not required.
+
+             Even if create/delete access is supported, the states
+             notInService(2), notReady(3) and createAndWait(5)
+             need not be supported.
+
+             In release 7.1 only read access is implemented."
+
+        OBJECT ntwsApConfRpSnoopfRowStatus
+        SYNTAX INTEGER {
+            active(1)
+        }
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Create/delete/modify access to the
+             ntwsApConfRadioProfSnoopFilterTable
+             is not required.
+             Support of the values notInService(2), notReady(3),
+             createAndGo(4), createAndWait(5), and destroy(6)
+             is not required.
+
+             Even if create/delete access is supported, the states
+             notInService(2), notReady(3) and createAndWait(5)
+             need not be supported.
+
+             In release 7.1 only read access is implemented."
+
+    ::= { ntwsApConfigCompliances 1 }
+
+
+-- Units of Conformance
+
+
+ntwsApConfApConfigTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfApConfigApAttachType,
+                  ntwsApConfApConfigPhysPortNum,
+                  ntwsApConfApConfigApSerialNum,
+                  ntwsApConfApConfigApModelName,
+                  ntwsApConfApConfigFingerprint,
+                  ntwsApConfApConfigBias,
+                  ntwsApConfApConfigApTimeout,
+                  ntwsApConfApConfigApName,
+                  ntwsApConfApConfigContact,
+                  ntwsApConfApConfigLocation,
+                  ntwsApConfApConfigBlinkEnabled,
+                  ntwsApConfApConfigForceImageDownloadEnabled,
+                  ntwsApConfApConfigFirmwareUpgradeEnabled,
+                  ntwsApConfApConfigLocalSwitchingEnabled,
+                  ntwsApConfApConfigPowerMode,
+                  ntwsApConfApConfigLedMode,
+                  ntwsApConfApConfigDescription
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            AP Configuration info in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 1 }
+
+
+ntwsApConfRadioConfigTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfRadioConfigRadioType,
+                  ntwsApConfRadioConfigRadioMode,
+                  ntwsApConfRadioConfigRadioProfileName,
+                  ntwsApConfRadioConfigChannel,
+                  ntwsApConfRadioConfigTxPower,
+                  ntwsApConfRadioConfigAutoTuneMaxTxPower,
+                  ntwsApConfRadioConfigAntennaType,
+                  ntwsApConfRadioConfigAntennaLocation,
+                  ntwsApConfRadioConfigLoadBalancingEnabled,
+                  ntwsApConfRadioConfigLoadBalancingGroup,
+                  ntwsApConfRadioConfigLoadRebalancingEnabled
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Configuration info in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 2 }
+
+
+ntwsApConfApTemplateConfigTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfApTemplConfApTemplateEnabled,
+                  ntwsApConfApTemplConfBias,
+                  ntwsApConfApTemplConfApTimeout,
+                  ntwsApConfApTemplConfBlinkEnabled,
+                  ntwsApConfApTemplConfForceImageDownloadEnabled,
+                  ntwsApConfApTemplConfFirmwareUpgradeEnabled,
+                  ntwsApConfApTemplConfLocalSwitchingEnabled,
+                  ntwsApConfApTemplConfPowerMode,
+                  ntwsApConfApTemplConfLedMode
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            AP Configuration Template info in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 3 }
+
+
+ntwsApConfApTemplateRadioConfigTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfApTemRadioConfRadioMode,
+                  ntwsApConfApTemRadioConfRadioProfileName,
+                  ntwsApConfApTemRadioConfAutoTuneMaxTxPower,
+                  ntwsApConfApTemRadioConfLoadBalancingEnabled,
+                  ntwsApConfApTemRadioConfLoadBalancingGroup,
+                  ntwsApConfApTemRadioConfLoadRebalancingEnabled
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Configuration Template info in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 4 }
+
+
+ntwsApConfRadioProfileTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfRadioProfBeaconInterval,
+                  ntwsApConfRadioProfDtimInterval,
+                  ntwsApConfRadioProfChannelWidth11na,
+                  ntwsApConfRadioProfMaxTxLifetime,
+                  ntwsApConfRadioProfMaxRxLifetime,
+                  ntwsApConfRadioProfRtsThreshold,
+                  ntwsApConfRadioProfFragThreshold,
+                  ntwsApConfRadioProfLongXmitPreambleEnabled,
+                  ntwsApConfRadioProfCountermeasuresMode,
+                  ntwsApConfRadioProfRFScanMode,
+                  ntwsApConfRadioProfRFScanChannelScope,
+                  ntwsApConfRadioProfRFScanCTSEnabled,
+                  ntwsApConfRadioProfAutoTune11aChannelRange,
+                  ntwsApConfRadioProfAutoTuneIgnoreClientsEnabled,
+                  ntwsApConfRadioProfAutoTuneChannelEnabled,
+                  ntwsApConfRadioProfAutoTuneChannelHolddownInterval,
+                  ntwsApConfRadioProfAutoTuneChannelChangeInterval,
+                  ntwsApConfRadioProfAutoTunePowerEnabled,
+                  ntwsApConfRadioProfAutoTunePowerRampInterval,
+                  ntwsApConfRadioProfAutoTunePowerChangeInterval,
+                  ntwsApConfRadioProfFairQueuingEnabled,
+                  ntwsApConfRadioProfCacBackgroundACMandatory,
+                  ntwsApConfRadioProfCacBackgroundMaxUtilization,
+                  ntwsApConfRadioProfCacBackgroundPolicingEnabled,
+                  ntwsApConfRadioProfCacBestEffortACMandatory,
+                  ntwsApConfRadioProfCacBestEffortMaxUtilization,
+                  ntwsApConfRadioProfCacBestEffortPolicingEnabled,
+                  ntwsApConfRadioProfCacVideoACMandatory,
+                  ntwsApConfRadioProfCacVideoMaxUtilization,
+                  ntwsApConfRadioProfCacVideoPolicingEnabled,
+                  ntwsApConfRadioProfCacVoiceACMandatory,
+                  ntwsApConfRadioProfCacVoiceMaxUtilization,
+                  ntwsApConfRadioProfCacVoicePolicingEnabled,
+                  ntwsApConfRadioProfRfidTagEnabled,
+                  ntwsApConfRadioProfWmmPowerSaveEnabled,
+                  ntwsApConfRadioProfRateEnforcementEnabled,
+                  ntwsApConfRadioProfDfsChannelsEnabled
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Profile configuration info in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 5 }
+
+
+ntwsApConfRadioProfServiceProfileTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfRpServpRowStatus
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Service Profiles associated to each Radio Profile
+            in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 6 }
+
+
+ntwsApConfRadioProfSnoopFilterTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfRpSnoopfRowStatus
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Snoop Filters associated to each Radio Profile
+            in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 7 }
+
+
+ntwsApConfServiceProfileTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfServProfSsidType,
+                  ntwsApConfServProfBeaconEnabled,
+                  ntwsApConfServProf11naMode,
+                  ntwsApConfServProf11ngMode,
+                  ntwsApConfServProf11nShortGuardIntervalEnabled,
+                  ntwsApConfServProf11nFrameAggregation,
+                  ntwsApConfServProf11nMsduMaxLength,
+                  ntwsApConfServProf11nMpduMaxLength,
+                  ntwsApConfServProfAuthFallthru,
+                  ntwsApConfServProfWebAAAForm,
+                  ntwsApConfServProfSharedKeyAuthEnabled,
+                  ntwsApConfServProfWpaIeEnabled,
+                  ntwsApConfServProfWpaIeCipherTkipEnabled,
+                  ntwsApConfServProfWpaIeCipherCcmpEnabled,
+                  ntwsApConfServProfWpaIeCipherWep40Enabled,
+                  ntwsApConfServProfWpaIeCipherWep104Enabled,
+                  ntwsApConfServProfWpaIeAuthDot1xEnabled,
+                  ntwsApConfServProfWpaIeAuthPskEnabled,
+                  ntwsApConfServProfRsnIeEnabled,
+                  ntwsApConfServProfRsnIeCipherTkipEnabled,
+                  ntwsApConfServProfRsnIeCipherCcmpEnabled,
+                  ntwsApConfServProfRsnIeCipherWep40Enabled,
+                  ntwsApConfServProfRsnIeCipherWep104Enabled,
+                  ntwsApConfServProfRsnIeAuthDot1xEnabled,
+                  ntwsApConfServProfRsnIeAuthPskEnabled,
+                  ntwsApConfServProfTkipMicCountermeasuresTime,
+                  ntwsApConfServProfMaxBandwidthKbps,
+                  ntwsApConfServProfCacMode,
+                  ntwsApConfServProfCacSessCount,
+                  ntwsApConfServProfUserIdleTimeout,
+                  ntwsApConfServProfIdleClientProbingEnabled,
+                  ntwsApConfServProfShortRetryCount,
+                  ntwsApConfServProfLongRetryCount,
+                  ntwsApConfServProfProxyArpEnabled,
+                  ntwsApConfServProfDhcpRestrictEnabled,
+                  ntwsApConfServProfNoBroadcastEnabled,
+                  ntwsApConfServProfSygateOnDemandEnabled,
+                  ntwsApConfServProfEnforceChecksEnabled,
+                  ntwsApConfServProfSodaRemediationAcl,
+                  ntwsApConfServProfSodaSuccessPage,
+                  ntwsApConfServProfSodaFailurePage,
+                  ntwsApConfServProfSodaLogoutPage,
+                  ntwsApConfServProfSodaAgentDirectory,
+                  ntwsApConfServProfWebPortalSessionTimeout,
+                  ntwsApConfServProfWebPortalAcl,
+                  ntwsApConfServProfWebPortalLogoutEnabled,
+                  ntwsApConfServProfWebPortalLogoutUrl,
+                  ntwsApConfServProfKeepInitialVlanEnabled,
+                  ntwsApConfServProfMeshModeEnabled,
+                  ntwsApConfServProfBridgingEnabled,
+                  ntwsApConfServProfLoadBalanceExemptEnabled
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Service Profile configuration info in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 8 }
+
+
+ntwsApConfSnoopFilterTableGroup OBJECT-GROUP
+        OBJECTS {
+                  ntwsApConfSnoopFilterEnabled
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Snoop Filter configuration info in releases 7.1 and greater."
+        ::= { ntwsApConfigGroups 9 }
+
+
+END

@@ -1,0 +1,56 @@
+NTWS-REGISTRATION-DEVICES-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    ntwsRegistration
+        FROM NTWS-ROOT-MIB;
+
+ntwsRegistrationDevicesMib MODULE-IDENTITY
+    LAST-UPDATED "200808080001Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "The MIB module for Nortel Networks wireless device
+        OID registrations.
+
+        Copyright 2007 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200808080001Z"
+    DESCRIPTION "v1.1: added switch model 2800"
+
+    REVISION "200708220000Z"
+    DESCRIPTION "v1.0: initial version"
+
+    ::= { ntwsRegistration 6 }
+
+
+-- Wireless Switches:
+
+ntwsWirelessSwitch          OBJECT IDENTIFIER ::= { ntwsRegistration 1 }
+
+-- ntwsSwitch2370   OBJECT IDENTIFIER ::= { ntwsWirelessSwitch 1 }
+-- NOT SUPPORTED anymore (since 4.1 release)
+
+ntwsSwitch2360      OBJECT IDENTIFIER ::= { ntwsWirelessSwitch 2 }
+ntwsSwitch2380      OBJECT IDENTIFIER ::= { ntwsWirelessSwitch 3 }
+ntwsSwitch2350      OBJECT IDENTIFIER ::= { ntwsWirelessSwitch 4 }
+
+-- ntwsSwitch2361   OBJECT IDENTIFIER ::= ntwsSwitch2360
+--    2361 is a 2360 with a second power supply.
+--    You can think of this as if they are both 2360-class switches.
+
+ntwsSwitch2372      OBJECT IDENTIFIER ::= { ntwsWirelessSwitch 5 }
+ntwsSwitch2382      OBJECT IDENTIFIER ::= { ntwsWirelessSwitch 6 }
+ntwsSwitch2800      OBJECT IDENTIFIER ::= { ntwsWirelessSwitch 7 }
+
+END

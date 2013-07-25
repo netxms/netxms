@@ -1,0 +1,49 @@
+NTWS-REGISTRATION-CHASSIS-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    ntwsRegistration
+        FROM NTWS-ROOT-MIB;
+
+ntwsRegistrationChassisMib MODULE-IDENTITY
+    LAST-UPDATED "200708220000Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "The MIB module for Nortel Networks wireless switch
+        chassis component OID registrations.
+        These are generic OIDs: they apply to any switch model,
+        if the respective chassis component is present in the switch.
+
+        Copyright 2007 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200708220000Z"
+    DESCRIPTION "v1.0: initial version"
+
+    ::= { ntwsRegistration 5 }
+
+
+ntwsChassisComponents      OBJECT IDENTIFIER ::= { ntwsRegistration 4 }
+
+ntwsChasCompPowerSupplies  OBJECT IDENTIFIER ::= { ntwsChassisComponents 1 }
+
+ntwsChasCompFans           OBJECT IDENTIFIER ::= { ntwsChassisComponents 2 }
+
+ntwsChasCompPowerSupply1   OBJECT IDENTIFIER ::= { ntwsChasCompPowerSupplies 1 }
+ntwsChasCompPowerSupply2   OBJECT IDENTIFIER ::= { ntwsChasCompPowerSupplies 2 }
+
+ntwsChasCompFan1           OBJECT IDENTIFIER ::= { ntwsChasCompFans 1 }
+ntwsChasCompFan2           OBJECT IDENTIFIER ::= { ntwsChasCompFans 2 }
+ntwsChasCompFan3           OBJECT IDENTIFIER ::= { ntwsChasCompFans 3 }
+
+END

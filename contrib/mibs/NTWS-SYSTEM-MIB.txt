@@ -1,0 +1,326 @@
+NTWS-SYSTEM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE,
+    Unsigned32
+        FROM SNMPv2-SMI
+    DisplayString, TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB
+        ;
+
+ntwsSystemMib MODULE-IDENTITY
+    LAST-UPDATED "200708310013Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "System objects for Nortel Networks wireless switches.
+
+        Copyright 2007 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200708310013Z"
+    DESCRIPTION "v3.0.2, MRT v2.2: Made changes in order to make MIB
+                comply with corporate MIB conventions."
+
+    REVISION "200708140012Z"
+    DESCRIPTION "v3.0.1: Added new objects to support
+                Power Supply status."
+
+    REVISION "200705040010Z"
+    DESCRIPTION "v2.1.0: Obsoleted two previously deprecated objects"
+
+    REVISION "200703140007Z"
+    DESCRIPTION "v2.0.0: Added new objects to support CPU load
+                and memory (RAM) usage details:
+                for last few seconds (''instant''),
+                minute, 5 minutes, hour, day, 3 days."
+
+    REVISION "200611090004Z"
+    DESCRIPTION "v1.0.3: Removed unused imports"
+
+    REVISION "200606060003Z"
+    DESCRIPTION "v1.0.2: Initial version"
+
+    ::= { ntwsMibs 8 }
+
+
+-- Textual Conventions
+
+NtwsSysCpuLoad ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "CPU load in percents"
+    SYNTAX      Unsigned32 (0..100)
+
+NtwsSysMemoryAmount ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Memory amount in KBytes (1024 octets)"
+    SYNTAX      Unsigned32
+
+NtwsSysPowerSupplyStatus ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "The status of a Power Supply."
+    SYNTAX      INTEGER {
+                    other        (1),
+                    unknown      (2),
+                    ac-failed    (3),
+                    dc-failed    (4),
+                    ac-ok-dc-ok  (5)
+                }
+
+
+-- Object definitions
+
+--
+-- The System MIB Tree
+--
+
+ntwsSysObjects    OBJECT IDENTIFIER ::= { ntwsSystemMib 1 }
+ntwsSysDataObjects  OBJECT IDENTIFIER ::= { ntwsSysObjects 1 }
+
+ntwsSysCpuMemoryUsedBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "CPU memory used in bytes.
+        Obsoleted by ntwsSysCpuMemoryInstantUsage."
+    ::= { ntwsSysDataObjects 1 }
+
+ntwsSysCpuMemoryTotalBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "CPU total physical memory in bytes.
+        Obsoleted by ntwsSysCpuMemorySize."
+    ::= { ntwsSysDataObjects 2 }
+
+ntwsSysFlashMemoryUsedBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Flash memory used in bytes."
+    ::= { ntwsSysDataObjects 3 }
+
+ntwsSysFlashMemoryTotalBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Flash memory available in bytes."
+    ::= { ntwsSysDataObjects 4 }
+
+ntwsSysCpuAverageLoad OBJECT-TYPE
+    SYNTAX      NtwsSysCpuLoad
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "CPU load average since system startup."
+    ::= { ntwsSysDataObjects 5 }
+
+-- Totals
+
+ntwsSysCpuMemorySize OBJECT-TYPE
+    SYNTAX      NtwsSysMemoryAmount
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum available CPU Memory (RAM) in KBytes.
+        This is the memory available to the Wireless Switch software.
+        May be less than physical RAM size."
+    ::= { ntwsSysDataObjects 6 }
+
+-- Reserving ntwsSysDataObjects 7-10 for future scalars indicating totals
+
+
+ntwsSysCpuLoadDetail         OBJECT IDENTIFIER ::= { ntwsSysDataObjects 11 }
+ntwsSysCpuMemoryUsageDetail  OBJECT IDENTIFIER ::= { ntwsSysDataObjects 12 }
+ntwsSysChassisComponents     OBJECT IDENTIFIER ::= { ntwsSysDataObjects 13 }
+
+
+-- CPU load details:
+
+ntwsSysCpuInstantLoad OBJECT-TYPE
+    SYNTAX      NtwsSysCpuLoad
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "CPU instant load (for last few seconds)."
+    ::= { ntwsSysCpuLoadDetail 1 }
+
+ntwsSysCpuLastMinuteLoad OBJECT-TYPE
+    SYNTAX      NtwsSysCpuLoad
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "CPU load for last minute."
+    ::= { ntwsSysCpuLoadDetail 2 }
+
+ntwsSysCpuLast5MinutesLoad OBJECT-TYPE
+    SYNTAX      NtwsSysCpuLoad
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "CPU load for last 5 minutes."
+    ::= { ntwsSysCpuLoadDetail 3 }
+
+ntwsSysCpuLastHourLoad OBJECT-TYPE
+    SYNTAX      NtwsSysCpuLoad
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "CPU load for last hour."
+    ::= { ntwsSysCpuLoadDetail 4 }
+
+ntwsSysCpuLastDayLoad OBJECT-TYPE
+    SYNTAX      NtwsSysCpuLoad
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "CPU load for last day."
+    ::= { ntwsSysCpuLoadDetail 5 }
+
+ntwsSysCpuLast3DaysLoad OBJECT-TYPE
+    SYNTAX      NtwsSysCpuLoad
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "CPU load for last 3 days."
+    ::= { ntwsSysCpuLoadDetail 6 }
+
+
+-- Memory usage details
+
+ntwsSysCpuMemoryInstantUsage OBJECT-TYPE
+    SYNTAX      NtwsSysMemoryAmount
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Instant memory usage (RAM) in KBytes (for last few seconds).
+        Ranges between 0 and ntwsSysCpuMemorySize."
+    ::= { ntwsSysCpuMemoryUsageDetail 1 }
+
+ntwsSysCpuMemoryLastMinuteUsage OBJECT-TYPE
+    SYNTAX      NtwsSysMemoryAmount
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Memory usage (RAM) for last minute in KBytes.
+        Ranges between 0 and ntwsSysCpuMemorySize."
+    ::= { ntwsSysCpuMemoryUsageDetail 2 }
+
+ntwsSysCpuMemoryLast5MinutesUsage OBJECT-TYPE
+    SYNTAX      NtwsSysMemoryAmount
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Memory usage (RAM) for last 5 minutes in KBytes.
+        Ranges between 0 and ntwsSysCpuMemorySize."
+    ::= { ntwsSysCpuMemoryUsageDetail 3 }
+
+ntwsSysCpuMemoryLastHourUsage OBJECT-TYPE
+    SYNTAX      NtwsSysMemoryAmount
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Memory usage (RAM) for last hour in KBytes.
+        Ranges between 0 and ntwsSysCpuMemorySize."
+    ::= { ntwsSysCpuMemoryUsageDetail 4 }
+
+ntwsSysCpuMemoryLastDayUsage OBJECT-TYPE
+    SYNTAX      NtwsSysMemoryAmount
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Memory usage (RAM) for last day in KBytes.
+        Ranges between 0 and ntwsSysCpuMemorySize."
+    ::= { ntwsSysCpuMemoryUsageDetail 5 }
+
+ntwsSysCpuMemoryLast3DaysUsage OBJECT-TYPE
+    SYNTAX      NtwsSysMemoryAmount
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Memory usage (RAM) for last 3 days in KBytes.
+        Ranges between 0 and ntwsSysCpuMemorySize."
+    ::= { ntwsSysCpuMemoryUsageDetail 6 }
+
+
+-- Power Supplies Group
+
+ntwsSysChasCompPowerSupplies OBJECT IDENTIFIER ::= { ntwsSysChassisComponents 1 }
+
+ntwsSysNumPowerSuppliesSupported OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of power supplies supported by the Wireless Switch.
+        This is the upper limit of the number of entries
+        in the power supply table, ntwsSysPowerSupplyTable."
+    ::= { ntwsSysChasCompPowerSupplies 1 }
+
+ntwsSysPowerSupplyTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsSysPowerSupplyEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table of power supplies actually installed on the Wireless Switch."
+    ::= { ntwsSysChasCompPowerSupplies 2 }
+
+ntwsSysPowerSupplyEntry OBJECT-TYPE
+    SYNTAX      NtwsSysPowerSupplyEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry in the ntwsSysPowerSupplyTable table."
+    INDEX   { ntwsSysPowerSupplyDeviceOID }
+    ::= { ntwsSysPowerSupplyTable 1 }
+
+NtwsSysPowerSupplyEntry ::= SEQUENCE {
+    ntwsSysPowerSupplyDeviceOID     OBJECT IDENTIFIER,
+    ntwsSysPowerSupplyStatus        NtwsSysPowerSupplyStatus,
+    ntwsSysPowerSupplyDescr         DisplayString
+    }
+
+ntwsSysPowerSupplyDeviceOID OBJECT-TYPE
+    SYNTAX      OBJECT IDENTIFIER
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+    "OID value used to identify this chassis component
+    as indicated in Registration MIB."
+    ::= { ntwsSysPowerSupplyEntry 1 }
+
+ntwsSysPowerSupplyStatus OBJECT-TYPE
+    SYNTAX      NtwsSysPowerSupplyStatus
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Status of the power supply."
+    ::= { ntwsSysPowerSupplyEntry 2 }
+
+ntwsSysPowerSupplyDescr OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A human interpretable description of this power supply,
+        for example 'Left Power Supply'."
+    ::= { ntwsSysPowerSupplyEntry 3 }
+
+END

@@ -1,0 +1,3118 @@
+NTWS-AP-STATUS-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    MODULE-IDENTITY, OBJECT-TYPE,
+    IpAddress, Unsigned32, Gauge32, Integer32, Counter32, Counter64
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString, MacAddress
+        FROM SNMPv2-TC
+    NtwsApAttachType, NtwsApState, NtwsApSerialNum, NtwsApFingerprint,
+    NtwsRadioNum, NtwsPowerLevel, NtwsChannelNum,
+    NtwsRadioMode, NtwsRadioEnable,
+    NtwsRadioConfigState, NtwsRadioRate, NtwsRadioType,
+    NtwsApNum, NtwsApPortOrDapNum,
+    NtwsRadioChannelWidth, NtwsRadioMimoState, NtwsRadioRateEx
+        FROM NTWS-AP-TC
+    NtwsPhysPortNumberOrZero
+        FROM NTWS-BASIC-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsApStatusMib MODULE-IDENTITY
+    LAST-UPDATED "200909100150Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "AP Status objects for Nortel Networks wireless switches.
+
+        AP = Access Point;
+        AC = Access Controller (wireless switch),
+             the device that runs a SNMP Agent implementing this MIB.
+
+        Copyright 2009 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+    REVISION "200909100150Z"
+    DESCRIPTION "v3.8.0: Clarified description."
+
+    REVISION "200902130141Z"
+    DESCRIPTION "v3.7.1: Added:
+                    ntwsApStatApStatusIpNetmask,
+                    ntwsApStatApStatusMacIpNetmask,
+                    ntwsApStatApStatusWiredIfNumber,
+                    ntwsApStatApStatusMacWiredIfNumber,
+
+                    ntwsApStatRadioStatusMinPowerLevel,
+                    ntwsApStatRadioStatusMacMinPowerLevel,
+
+                    ntwsApStatRadioOpStatsClientAssociations,
+                    ntwsApStatRadioOpStatsMacClientAssociations,
+                    ntwsApStatRadioOpStatsClientFailedAssociations,
+                    ntwsApStatRadioOpStatsMacClientFailedAssociations,
+                    ntwsApStatRadioOpStatsClientReAssociations,
+                    ntwsApStatRadioOpStatsMacClientReAssociations;
+
+                    ntwsApStatRadioOpStatsSignalingPkt,
+                    ntwsApStatRadioOpStatsMacSignalingPkt,
+                    ntwsApStatRadioOpStatsReTransmitOctet,
+                    ntwsApStatRadioOpStatsMacReTransmitOctet,
+                    ntwsApStatRadioOpStatsRefusedConnectionCount,
+                    ntwsApStatRadioOpStatsMacRefusedConnectionCount."
+
+    REVISION "200812010115Z"
+    DESCRIPTION "v3.4.5: Added physical port number for directly attached AP:
+                    ntwsApStatApStatusPhysPortNum,
+                    ntwsApStatApStatusMacPhysPortNum."
+
+    REVISION "200811040111Z"
+    DESCRIPTION "v3.4.1: Added two tables for Operational Statistics
+                detailed per Extended Data Transmission Rate
+                (covering 802.11n MCS rates):
+                    ntwsApStatRadioRateExOpStatisticsTable,
+                    ntwsApStatRadioRateExOpStatisticsMacTable."
+
+    REVISION "200805220107Z"
+    DESCRIPTION "v3.3.1: Updated conformance section
+                to reflect the history of changes to this MIB:
+                added many compliance statements and groups."
+
+    REVISION "200805090104Z"
+    DESCRIPTION "v3.2.4: Updated description for AP Name objects:
+                    ntwsApStatApStatusApName,
+                    ntwsApStatApStatusMacApName."
+
+    REVISION "200802140103Z"
+    DESCRIPTION "v3.2.3: In order to support 802.11n, introduced
+                     ntwsApStatRadioStatusRadioChannelWidth,
+                     ntwsApStatRadioStatusMacRadioChannelWidth,
+                     ntwsApStatRadioStatusRadioMimoState,
+                     ntwsApStatRadioStatusMacRadioMimoState."
+
+    REVISION "200712070100Z"
+    DESCRIPTION "v3.2.0: Obsoleted four objects:
+                     ntwsApStatRadioStatusEnable,
+                     ntwsApStatRadioStatusMacEnable,
+                     ntwsApStatApStatusPortOrDapNum,
+                     ntwsApStatApStatusMacPortOrDapNum
+                (previously deprecated)."
+
+    REVISION "200709250052Z"
+    DESCRIPTION "v3.1.2, MRT v4.2: Made changes in order to make MIB
+                 comply with corporate MIB conventions."
+
+    REVISION "200707060051Z"
+    DESCRIPTION "v3.1.1: Introduced
+                     ntwsApStatRadioStatusRadioMode,
+                     ntwsApStatRadioStatusMacRadioMode
+                 in order to replace
+                     ntwsApStatRadioStatusEnable,
+                     ntwsApStatRadioStatusMacEnable.
+                 (In 6.2, a new administrative mode 'sentry' was added.)"
+
+    REVISION "200707050050Z"
+    DESCRIPTION "v3.1.0: Introduced
+                     ntwsApStatApStatusApNum,
+                     ntwsApStatApStatusMacApNum
+                 in order to replace
+                     ntwsApStatApStatusPortOrDapNum,
+                     ntwsApStatApStatusMacPortOrDapNum.
+                 (In 6.0, direct- and network-attached APs were unified.)"
+
+    REVISION "200609270043Z"
+    DESCRIPTION "v3.0.3: Added 6 tables:
+                2 for Operational Rate Set per Radio Service,
+                2 for Operational Statistics per Radio,
+                2 for the statistics detailed per Data Transmission Rate.
+                Names are:
+                ntwsApStatRadioServiceOpRateSet,
+                ntwsApStatRadioServiceOpRateSetMac,
+                ntwsApStatRadioOpStatistics,
+                ntwsApStatRadioOpStatisticsMac,
+                ntwsApStatRadioRateOpStatistics,
+                ntwsApStatRadioRateOpStatisticsMac."
+
+    REVISION "200607280035Z"
+    DESCRIPTION "v2.2.2: Removed unused imports"
+
+    REVISION "200607280034Z"
+    DESCRIPTION "v2.2.1: Fixed imports and compliance group"
+
+    REVISION "200606260020Z"
+    DESCRIPTION "v2.1.1: Adding Software Version and Boot Version per AP"
+
+    REVISION "200606210018Z"
+    DESCRIPTION "v2.1.0: Adding Max Power and Phy Type per radio"
+
+    REVISION "200605100017Z"
+    DESCRIPTION "v2.0: Adding number of client sessions per AP, radio"
+
+    REVISION "200603300016Z"
+    DESCRIPTION "v1.0: Initial version"
+
+    ::= { ntwsMibs 5 }
+
+
+-- Textual conventions
+
+NtwsRadioOpRateSetSingleValue ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "A data rate value at which the radio may transmit data.
+         The octet contains a value representing a rate.
+         The rate shall be within the range from 2 to 127,
+         corresponding to data transmission rates in increments of
+         500 kbit/s from 1 Mbit/s to 63.5 Mbit/s."
+    SYNTAX OCTET STRING (SIZE(1))
+
+NtwsRadioOpRateSetMandatory ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "A set of data rates at which the radio may transmit data.
+         Each octet contains a value representing a rate.
+         Each rate shall be within the range from 2 to 127,
+         corresponding to data rates in increments of
+         500 kbit/s from 1 Mbit/s to 63.5 Mbit/s.
+         The set must have at least one member at all times."
+    SYNTAX OCTET STRING (SIZE(1..126))
+
+NtwsRadioOpRateSetDisabled ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "A set of data rates the radio must NOT use to transmit data.
+         Each octet contains a value representing a rate.
+         Each rate shall be within the range from 2 to 127,
+         corresponding to data rates in increments of
+         500 kbit/s from 1 Mbit/s to 63.5 Mbit/s.
+         If no such constraint is present in the system configuration,
+         the zero-length OCTET STRING will be reported."
+    SYNTAX OCTET STRING (SIZE(0..126))
+
+
+-- Object definitions
+
+--
+-- The AP Status MIB Tree
+--
+
+ntwsApStatusObjects    OBJECT IDENTIFIER ::= { ntwsApStatusMib 1 }
+ntwsApStatDataObjects  OBJECT IDENTIFIER ::= { ntwsApStatusObjects 1 }
+
+
+-- ==================================
+--
+-- Scalars
+--
+
+ntwsApStatNumAps OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of APs present and seen by AC (AP in ''ALIVE'' state)."
+    ::= { ntwsApStatDataObjects 1 }
+
+
+-- ==================================
+-- AP Status table
+
+ntwsApStatApStatusTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatApStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing all the APs currently present
+        and managed by this AC (APs in ''ALIVE'' state).
+        Same data is available indexed by MAC in
+        'ntwsApStatApStatusMacTable'."
+    ::= { ntwsApStatDataObjects 2 }
+
+ntwsApStatApStatusEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatApStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular AP attached to the AC."
+    INDEX   { ntwsApStatApStatusSerialNum }
+    ::= { ntwsApStatApStatusTable 1 }
+
+NtwsApStatApStatusEntry ::= SEQUENCE {
+        ntwsApStatApStatusSerialNum      NtwsApSerialNum,
+
+        ntwsApStatApStatusBaseMac        MacAddress,
+
+        ntwsApStatApStatusAttachType     NtwsApAttachType,
+        ntwsApStatApStatusPortOrDapNum   NtwsApPortOrDapNum,
+
+        ntwsApStatApStatusApState        NtwsApState,
+        ntwsApStatApStatusModel          DisplayString,
+        ntwsApStatApStatusFingerprint    NtwsApFingerprint,
+        ntwsApStatApStatusApName         DisplayString,
+
+        ntwsApStatApStatusVlan           DisplayString,
+        ntwsApStatApStatusIpAddress      IpAddress,
+        ntwsApStatApStatusUptimeSecs     Unsigned32,
+
+        ntwsApStatApStatusCpuInfo        DisplayString,
+        ntwsApStatApStatusManufacturerId DisplayString,
+        ntwsApStatApStatusRamBytes       Unsigned32,
+        ntwsApStatApStatusHardwareRev    DisplayString,
+
+        ntwsApStatApStatusClientSessions Unsigned32,
+
+        ntwsApStatApStatusSoftwareVer    DisplayString,
+        ntwsApStatApStatusBootVer        DisplayString,
+
+        ntwsApStatApStatusApNum          NtwsApNum,
+
+        ntwsApStatApStatusPhysPortNum    NtwsPhysPortNumberOrZero,
+
+        ntwsApStatApStatusIpNetmask      IpAddress,
+
+        ntwsApStatApStatusWiredIfNumber  Unsigned32
+    }
+
+ntwsApStatApStatusSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of this AP."
+    ::= { ntwsApStatApStatusEntry 1 }
+
+ntwsApStatApStatusBaseMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Base MAC address of this AP."
+    ::= { ntwsApStatApStatusEntry 2 }
+
+ntwsApStatApStatusAttachType OBJECT-TYPE
+    SYNTAX      NtwsApAttachType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "How this AP is attached to the AC
+        (directly or via L2/L3 network)."
+    ::= { ntwsApStatApStatusEntry 3 }
+
+ntwsApStatApStatusPortOrDapNum OBJECT-TYPE
+    SYNTAX      NtwsApPortOrDapNum
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "The Port Number if this AP is directly attached,
+        or the CLI-assigned DAP Number if attached via L2/L3 network.
+        Obsoleted by ntwsApStatApStatusApNum."
+    ::= { ntwsApStatApStatusEntry 4 }
+
+ntwsApStatApStatusApState OBJECT-TYPE
+    SYNTAX      NtwsApState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The State of this AP."
+    ::= { ntwsApStatApStatusEntry 5 }
+
+ntwsApStatApStatusModel OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Model name of this AP."
+    ::= { ntwsApStatApStatusEntry 6 }
+
+ntwsApStatApStatusFingerprint OBJECT-TYPE
+    SYNTAX      NtwsApFingerprint
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The RSA key fingerprint configured on this AP (binary value:
+        it is the MD5 hash of the public key of the RSA key pair).
+        For directly attached APs the fingerprint is a zero length string."
+    ::= { ntwsApStatApStatusEntry 7 }
+
+ntwsApStatApStatusApName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of this AP, as assigned in AC's CLI;
+        defaults to AP<Number> (examples: 'AP01', 'AP22', 'AP333', 'AP4444');
+        could have been changed from CLI to a meaningful name,
+        for example the location of the AP (example: 'MeetingRoom73')."
+    ::= { ntwsApStatApStatusEntry 8 }
+
+ntwsApStatApStatusVlan OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the VLAN associated with this DAP.
+        Only valid for network attached APs, otherwise zero length string."
+    ::= { ntwsApStatApStatusEntry 9 }
+
+ntwsApStatApStatusIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The IP Address of this DAP.
+        Only valid for network attached APs, otherwise 0.0.0.0."
+    ::= { ntwsApStatApStatusEntry 10 }
+
+ntwsApStatApStatusUptimeSecs OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Time in seconds since this AP's last boot."
+    ::= { ntwsApStatApStatusEntry 11 }
+
+ntwsApStatApStatusCpuInfo OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Information about this AP's CPU."
+    ::= { ntwsApStatApStatusEntry 12 }
+
+ntwsApStatApStatusManufacturerId OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Information about this AP's manufacturer."
+    ::= { ntwsApStatApStatusEntry 13 }
+
+ntwsApStatApStatusRamBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The memory capacity of this AP (in bytes)."
+    ::= { ntwsApStatApStatusEntry 14 }
+
+ntwsApStatApStatusHardwareRev OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The hardware revision of this AP (e.g. 'A3')."
+    ::= { ntwsApStatApStatusEntry 15 }
+
+ntwsApStatApStatusClientSessions OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of client sessions on this AP."
+    ::= { ntwsApStatApStatusEntry 16 }
+
+ntwsApStatApStatusSoftwareVer OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The software version for this AP."
+    ::= { ntwsApStatApStatusEntry 17 }
+
+ntwsApStatApStatusBootVer OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The boot loader version for this AP."
+    ::= { ntwsApStatApStatusEntry 18 }
+
+ntwsApStatApStatusApNum OBJECT-TYPE
+    SYNTAX      NtwsApNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The administratively assigned AP Number.
+        Obsoletes ntwsApStatApStatusPortOrDapNum."
+    ::= { ntwsApStatApStatusEntry 19 }
+
+ntwsApStatApStatusPhysPortNum OBJECT-TYPE
+    SYNTAX      NtwsPhysPortNumberOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Identifies the physical port used to attach this AP.
+        Only valid for directly attached APs, otherwise will be zero."
+    ::= { ntwsApStatApStatusEntry 20 }
+
+ntwsApStatApStatusIpNetmask OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The IP Netmask of this AP.
+        Only valid for network attached APs, otherwise 0.0.0.0."
+    ::= { ntwsApStatApStatusEntry 21 }
+
+ntwsApStatApStatusWiredIfNumber OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of wired network interfaces (regardless of their
+        current state) present on this AP."
+    ::= { ntwsApStatApStatusEntry 22 }
+
+
+-- ===================================
+-- AP Status table indexed by Base MAC
+
+ntwsApStatApStatusMacTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatApStatusMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing all the APs currently present
+        and managed by this AC (APs in ''ALIVE'' state).
+        Same data is available indexed by Serial Number in
+        'ntwsApStatApStatusTable'."
+    ::= { ntwsApStatDataObjects 3 }
+
+ntwsApStatApStatusMacEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatApStatusMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular AP attached to the AC."
+    INDEX   { ntwsApStatApStatusMacBaseMac }
+    ::= { ntwsApStatApStatusMacTable 1 }
+
+NtwsApStatApStatusMacEntry ::= SEQUENCE {
+        ntwsApStatApStatusMacBaseMac        MacAddress,
+
+        ntwsApStatApStatusMacSerialNum      NtwsApSerialNum,
+
+        ntwsApStatApStatusMacAttachType     NtwsApAttachType,
+        ntwsApStatApStatusMacPortOrDapNum   NtwsApPortOrDapNum,
+
+        ntwsApStatApStatusMacApState        NtwsApState,
+        ntwsApStatApStatusMacModel          DisplayString,
+        ntwsApStatApStatusMacFingerprint    NtwsApFingerprint,
+        ntwsApStatApStatusMacApName         DisplayString,
+
+        ntwsApStatApStatusMacVlan           DisplayString,
+        ntwsApStatApStatusMacIpAddress      IpAddress,
+        ntwsApStatApStatusMacUptimeSecs     Unsigned32,
+
+        ntwsApStatApStatusMacCpuInfo        DisplayString,
+        ntwsApStatApStatusMacManufacturerId DisplayString,
+        ntwsApStatApStatusMacRamBytes       Unsigned32,
+        ntwsApStatApStatusMacHardwareRev    DisplayString,
+
+        ntwsApStatApStatusMacClientSessions Unsigned32,
+
+        ntwsApStatApStatusMacSoftwareVer    DisplayString,
+        ntwsApStatApStatusMacBootVer        DisplayString,
+
+        ntwsApStatApStatusMacApNum          NtwsApNum,
+
+        ntwsApStatApStatusMacPhysPortNum    NtwsPhysPortNumberOrZero,
+
+        ntwsApStatApStatusMacIpNetmask      IpAddress,
+
+        ntwsApStatApStatusMacWiredIfNumber  Unsigned32
+    }
+
+ntwsApStatApStatusMacBaseMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Base MAC address of this AP."
+    ::= { ntwsApStatApStatusMacEntry 1 }
+
+ntwsApStatApStatusMacSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of this AP."
+    ::= { ntwsApStatApStatusMacEntry 2 }
+
+ntwsApStatApStatusMacAttachType OBJECT-TYPE
+    SYNTAX      NtwsApAttachType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "How this AP is attached to the AC
+        (directly or via L2/L3 network)."
+    ::= { ntwsApStatApStatusMacEntry 3 }
+
+ntwsApStatApStatusMacPortOrDapNum OBJECT-TYPE
+    SYNTAX      NtwsApPortOrDapNum
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "The Port Number if this AP is directly attached,
+        or the CLI-assigned DAP Number if attached via L2/L3 network.
+        Obsoleted by ntwsApStatApStatusMacApNum."
+    ::= { ntwsApStatApStatusMacEntry 4 }
+
+ntwsApStatApStatusMacApState OBJECT-TYPE
+    SYNTAX      NtwsApState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The State of this AP."
+    ::= { ntwsApStatApStatusMacEntry 5 }
+
+ntwsApStatApStatusMacModel OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Model name of this AP."
+    ::= { ntwsApStatApStatusMacEntry 6 }
+
+ntwsApStatApStatusMacFingerprint OBJECT-TYPE
+    SYNTAX      NtwsApFingerprint
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The RSA key fingerprint configured on this AP (binary value:
+        it is the MD5 hash of the public key of the RSA key pair).
+        For directly attached APs the fingerprint is a zero length string."
+    ::= { ntwsApStatApStatusMacEntry 7 }
+
+ntwsApStatApStatusMacApName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of this AP, as assigned in AC's CLI;
+        defaults to AP<Number> (examples: 'AP01', 'AP22', 'AP333', 'AP4444');
+        could have been changed from CLI to a meaningful name,
+        for example the location of the AP (example: 'MeetingRoom73')."
+    ::= { ntwsApStatApStatusMacEntry 8 }
+
+ntwsApStatApStatusMacVlan OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the VLAN associated with this DAP.
+        Only valid for network attached APs, otherwise zero length string."
+    ::= { ntwsApStatApStatusMacEntry 9 }
+
+ntwsApStatApStatusMacIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The IP Address of this DAP.
+        Only valid for network attached APs, otherwise 0.0.0.0."
+    ::= { ntwsApStatApStatusMacEntry 10 }
+
+ntwsApStatApStatusMacUptimeSecs OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Time in seconds since this AP's last boot."
+    ::= { ntwsApStatApStatusMacEntry 11 }
+
+ntwsApStatApStatusMacCpuInfo OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Information about this AP's CPU."
+    ::= { ntwsApStatApStatusMacEntry 12 }
+
+ntwsApStatApStatusMacManufacturerId OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Information about this AP's manufacturer."
+    ::= { ntwsApStatApStatusMacEntry 13 }
+
+ntwsApStatApStatusMacRamBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The memory capacity of this AP (in bytes)."
+    ::= { ntwsApStatApStatusMacEntry 14 }
+
+ntwsApStatApStatusMacHardwareRev OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The hardware revision of this AP (e.g. 'A3')."
+    ::= { ntwsApStatApStatusMacEntry 15 }
+
+ntwsApStatApStatusMacClientSessions OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of client sessions on this AP."
+    ::= { ntwsApStatApStatusMacEntry 16 }
+
+ntwsApStatApStatusMacSoftwareVer OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The software version for this AP."
+    ::= { ntwsApStatApStatusMacEntry 17 }
+
+ntwsApStatApStatusMacBootVer OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The boot loader version for this AP."
+    ::= { ntwsApStatApStatusMacEntry 18 }
+
+ntwsApStatApStatusMacApNum OBJECT-TYPE
+    SYNTAX      NtwsApNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The administratively assigned AP Number.
+        Obsoletes ntwsApStatApStatusMacPortOrDapNum."
+    ::= { ntwsApStatApStatusMacEntry 19 }
+
+ntwsApStatApStatusMacPhysPortNum OBJECT-TYPE
+    SYNTAX      NtwsPhysPortNumberOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Identifies the physical port used to attach this AP.
+        Only valid for directly attached APs, otherwise will be zero."
+    ::= { ntwsApStatApStatusMacEntry 20 }
+
+ntwsApStatApStatusMacIpNetmask OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The IP Netmask of this AP.
+        Only valid for network attached APs, otherwise 0.0.0.0."
+    ::= { ntwsApStatApStatusMacEntry 21 }
+
+ntwsApStatApStatusMacWiredIfNumber OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of wired network interfaces (regardless of their
+        current state) present on this AP."
+    ::= { ntwsApStatApStatusMacEntry 22 }
+
+
+-- ==================================
+-- Radio Status table
+
+ntwsApStatRadioStatusTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the radios on all the APs currently present
+        and managed by this AC (APs in ''ALIVE'' state).
+        Same data is available indexed by Radio Base MAC in
+        'ntwsApStatRadioStatusMacTable'."
+    ::= { ntwsApStatDataObjects 4 }
+
+ntwsApStatRadioStatusEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular radio on an AP attached to the AC."
+    INDEX   { ntwsApStatRadioStatusApSerialNum,
+              ntwsApStatRadioStatusRadioNum }
+    ::= { ntwsApStatRadioStatusTable 1 }
+
+NtwsApStatRadioStatusEntry ::= SEQUENCE {
+        ntwsApStatRadioStatusApSerialNum    NtwsApSerialNum,
+        ntwsApStatRadioStatusRadioNum       NtwsRadioNum,
+
+        ntwsApStatRadioStatusBaseMac        MacAddress,
+
+        ntwsApStatRadioStatusEnable             NtwsRadioEnable,
+        ntwsApStatRadioStatusRadioConfigState   NtwsRadioConfigState,
+        ntwsApStatRadioStatusCurrentPowerLevel  NtwsPowerLevel,
+        ntwsApStatRadioStatusCurrentChannelNum  NtwsChannelNum,
+
+        ntwsApStatRadioStatusClientSessions     Unsigned32,
+
+        ntwsApStatRadioStatusMaxPowerLevel      NtwsPowerLevel,
+        ntwsApStatRadioStatusRadioPhyType       NtwsRadioType,
+
+        ntwsApStatRadioStatusRadioMode          NtwsRadioMode,
+
+        ntwsApStatRadioStatusRadioChannelWidth  NtwsRadioChannelWidth,
+        ntwsApStatRadioStatusRadioMimoState     NtwsRadioMimoState,
+
+        ntwsApStatRadioStatusMinPowerLevel      NtwsPowerLevel
+    }
+
+ntwsApStatRadioStatusApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of the AP containing this radio."
+    ::= { ntwsApStatRadioStatusEntry 1 }
+
+ntwsApStatRadioStatusRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Number of this Radio on the AP."
+    ::= { ntwsApStatRadioStatusEntry 2 }
+
+ntwsApStatRadioStatusBaseMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Base MAC address of this radio."
+    ::= { ntwsApStatRadioStatusEntry 3 }
+
+ntwsApStatRadioStatusEnable OBJECT-TYPE
+    SYNTAX      NtwsRadioEnable
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "The configured mode (enabled/disabled) of this radio.
+        Obsoleted by ntwsApStatRadioStatusRadioMode."
+    ::= { ntwsApStatRadioStatusEntry 4 }
+
+ntwsApStatRadioStatusRadioConfigState OBJECT-TYPE
+    SYNTAX      NtwsRadioConfigState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configuration state of this radio (INIT, FAIL, OK)."
+    ::= { ntwsApStatRadioStatusEntry 5 }
+
+ntwsApStatRadioStatusCurrentPowerLevel OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Current Power Level of this radio."
+    ::= { ntwsApStatRadioStatusEntry 6 }
+
+ntwsApStatRadioStatusCurrentChannelNum OBJECT-TYPE
+    SYNTAX      NtwsChannelNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Current Channel Number of this radio."
+    ::= { ntwsApStatRadioStatusEntry 7 }
+
+ntwsApStatRadioStatusClientSessions OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of client sessions on this radio."
+    ::= { ntwsApStatRadioStatusEntry 8 }
+
+ntwsApStatRadioStatusMaxPowerLevel OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Maximum Power Level for this radio, with the current antenna,
+         on the current channel (ntwsApStatRadioStatusCurrentChannelNum),
+         as constrained by the current regulatory domain."
+    ::= { ntwsApStatRadioStatusEntry 9 }
+
+ntwsApStatRadioStatusRadioPhyType OBJECT-TYPE
+    SYNTAX      NtwsRadioType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current Physical Type of this radio
+        (typeUnknown, typeA, typeB, typeG)."
+    ::= { ntwsApStatRadioStatusEntry 10 }
+
+ntwsApStatRadioStatusRadioMode OBJECT-TYPE
+    SYNTAX      NtwsRadioMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured mode of this radio (enabled/disabled/sentry).
+        Obsoletes ntwsApStatRadioStatusEnable."
+    ::= { ntwsApStatRadioStatusEntry 11 }
+
+ntwsApStatRadioStatusRadioChannelWidth OBJECT-TYPE
+    SYNTAX      NtwsRadioChannelWidth
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Channel Width for this radio (20MHz/40MHz)."
+    ::= { ntwsApStatRadioStatusEntry 12 }
+
+ntwsApStatRadioStatusRadioMimoState OBJECT-TYPE
+    SYNTAX      NtwsRadioMimoState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "MIMO state of this radio (1x1/2x3/3x3)."
+    ::= { ntwsApStatRadioStatusEntry 13 }
+
+ntwsApStatRadioStatusMinPowerLevel OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Minimum Power Level for this radio,
+        with the current antenna."
+    ::= { ntwsApStatRadioStatusEntry 14 }
+
+
+-- ============================================
+-- Radio Status table indexed by Radio Base MAC
+
+ntwsApStatRadioStatusMacTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioStatusMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the radios on all the APs currently present
+        and managed by this AC (APs in ''ALIVE'' state).
+        Same data is available indexed by AP Serial Number and Radio Number in
+        'ntwsApStatRadioStatusTable'."
+    ::= { ntwsApStatDataObjects 5 }
+
+ntwsApStatRadioStatusMacEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioStatusMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular radio on an AP attached to the AC."
+    INDEX   { ntwsApStatRadioStatusMacBaseMac }
+    ::= { ntwsApStatRadioStatusMacTable 1 }
+
+NtwsApStatRadioStatusMacEntry ::= SEQUENCE {
+        ntwsApStatRadioStatusMacBaseMac        MacAddress,
+
+        ntwsApStatRadioStatusMacApSerialNum    NtwsApSerialNum,
+        ntwsApStatRadioStatusMacRadioNum       NtwsRadioNum,
+
+        ntwsApStatRadioStatusMacEnable             NtwsRadioEnable,
+        ntwsApStatRadioStatusMacRadioConfigState   NtwsRadioConfigState,
+        ntwsApStatRadioStatusMacCurrentPowerLevel  NtwsPowerLevel,
+        ntwsApStatRadioStatusMacCurrentChannelNum  NtwsChannelNum,
+
+        ntwsApStatRadioStatusMacClientSessions     Unsigned32,
+
+        ntwsApStatRadioStatusMacMaxPowerLevel      NtwsPowerLevel,
+        ntwsApStatRadioStatusMacRadioPhyType       NtwsRadioType,
+
+        ntwsApStatRadioStatusMacRadioMode          NtwsRadioMode,
+
+        ntwsApStatRadioStatusMacRadioChannelWidth  NtwsRadioChannelWidth,
+        ntwsApStatRadioStatusMacRadioMimoState     NtwsRadioMimoState,
+
+        ntwsApStatRadioStatusMacMinPowerLevel      NtwsPowerLevel
+    }
+
+ntwsApStatRadioStatusMacBaseMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Base MAC address of this radio."
+    ::= { ntwsApStatRadioStatusMacEntry 1 }
+
+ntwsApStatRadioStatusMacApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of the AP containing this radio."
+    ::= { ntwsApStatRadioStatusMacEntry 2 }
+
+ntwsApStatRadioStatusMacRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Number of this Radio on the AP."
+    ::= { ntwsApStatRadioStatusMacEntry 3 }
+
+ntwsApStatRadioStatusMacEnable OBJECT-TYPE
+    SYNTAX      NtwsRadioEnable
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "The configured mode (enabled/disabled) of this radio.
+        Obsoleted by ntwsApStatRadioStatusMacRadioMode."
+    ::= { ntwsApStatRadioStatusMacEntry 4 }
+
+ntwsApStatRadioStatusMacRadioConfigState OBJECT-TYPE
+    SYNTAX      NtwsRadioConfigState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configuration state of this radio (INIT, FAIL, OK)."
+    ::= { ntwsApStatRadioStatusMacEntry 5 }
+
+ntwsApStatRadioStatusMacCurrentPowerLevel OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Current Power Level of this radio."
+    ::= { ntwsApStatRadioStatusMacEntry 6 }
+
+ntwsApStatRadioStatusMacCurrentChannelNum OBJECT-TYPE
+    SYNTAX      NtwsChannelNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Current Channel Number of this radio."
+    ::= { ntwsApStatRadioStatusMacEntry 7 }
+
+ntwsApStatRadioStatusMacClientSessions OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of client sessions on this radio."
+    ::= { ntwsApStatRadioStatusMacEntry 8 }
+
+ntwsApStatRadioStatusMacMaxPowerLevel OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Maximum Power Level for this radio, with the current antenna,
+         on the current channel (ntwsApStatRadioStatusMacCurrentChannelNum),
+         as constrained by the current regulatory domain."
+    ::= { ntwsApStatRadioStatusMacEntry 9 }
+
+ntwsApStatRadioStatusMacRadioPhyType OBJECT-TYPE
+    SYNTAX      NtwsRadioType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current Physical Type of this radio
+        (typeUnknown, typeA, typeB, typeG)."
+    ::= { ntwsApStatRadioStatusMacEntry 10 }
+
+ntwsApStatRadioStatusMacRadioMode OBJECT-TYPE
+    SYNTAX      NtwsRadioMode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured mode of this radio (enabled/disabled/sentry).
+        Obsoletes ntwsApStatRadioStatusMacEnable."
+    ::= { ntwsApStatRadioStatusMacEntry 11 }
+
+ntwsApStatRadioStatusMacRadioChannelWidth OBJECT-TYPE
+    SYNTAX      NtwsRadioChannelWidth
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Channel Width for this radio (20MHz/40MHz)."
+    ::= { ntwsApStatRadioStatusMacEntry 12 }
+
+ntwsApStatRadioStatusMacRadioMimoState OBJECT-TYPE
+    SYNTAX      NtwsRadioMimoState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "MIMO state of this radio (1x1/2x3/3x3)."
+    ::= { ntwsApStatRadioStatusMacEntry 13 }
+
+ntwsApStatRadioStatusMacMinPowerLevel OBJECT-TYPE
+    SYNTAX      NtwsPowerLevel
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Minimum Power Level for this radio,
+        with the current antenna."
+    ::= { ntwsApStatRadioStatusMacEntry 14 }
+
+
+-- ==================================
+-- Radio Service table
+
+ntwsApStatRadioServiceTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioServiceEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the radio services associated with
+        the APs currently present and managed by this AC.
+        Same data is available indexed by BSSID in
+        'ntwsApStatRadioServiceMacTable'."
+    ::= { ntwsApStatDataObjects 6 }
+
+ntwsApStatRadioServiceEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioServiceEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular service (SSID) on a radio."
+    INDEX   { ntwsApStatRadioServApSerialNum,
+              ntwsApStatRadioServRadioNum,
+              ntwsApStatRadioServSsid }
+    ::= { ntwsApStatRadioServiceTable 1 }
+
+NtwsApStatRadioServiceEntry ::= SEQUENCE {
+        ntwsApStatRadioServApSerialNum          NtwsApSerialNum,
+        ntwsApStatRadioServRadioNum             NtwsRadioNum,
+        ntwsApStatRadioServSsid                 DisplayString,
+
+        ntwsApStatRadioServBssid                MacAddress,
+        ntwsApStatRadioServServiceProfileName   DisplayString
+    }
+
+ntwsApStatRadioServApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of the AP containing this radio."
+    ::= { ntwsApStatRadioServiceEntry 1 }
+
+ntwsApStatRadioServRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Number of this Radio on the AP."
+    ::= { ntwsApStatRadioServiceEntry 2 }
+
+ntwsApStatRadioServSsid OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..32))
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The service/SSID name in use on this radio."
+    ::= { ntwsApStatRadioServiceEntry 3 }
+
+ntwsApStatRadioServBssid OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The MAC address (a.k.a. BSSID) of this service/SSID on this radio."
+    ::= { ntwsApStatRadioServiceEntry 4 }
+
+ntwsApStatRadioServServiceProfileName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Name of the Service Profile having this SSID
+        and associated to the (only) radio profile of this radio."
+    ::= { ntwsApStatRadioServiceEntry 5 }
+
+
+-- ==========================================
+-- Radio Service table indexed by MAC (BSSID)
+
+ntwsApStatRadioServiceMacTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioServiceMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the radio services associated with
+        the APs currently present and managed by this AC.
+        Same data is available indexed by AP Serial Number,
+        Radio Number and SSID in 'ntwsApStatRadioServiceTable'."
+    ::= { ntwsApStatDataObjects 7 }
+
+ntwsApStatRadioServiceMacEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioServiceMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular service (SSID) on a radio."
+    INDEX   { ntwsApStatRadioServMacBssid }
+    ::= { ntwsApStatRadioServiceMacTable 1 }
+
+NtwsApStatRadioServiceMacEntry ::= SEQUENCE {
+        ntwsApStatRadioServMacBssid                MacAddress,
+
+        ntwsApStatRadioServMacApSerialNum          NtwsApSerialNum,
+        ntwsApStatRadioServMacRadioNum             NtwsRadioNum,
+        ntwsApStatRadioServMacSsid                 DisplayString,
+        ntwsApStatRadioServMacServiceProfileName   DisplayString
+    }
+
+ntwsApStatRadioServMacBssid OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The MAC address (a.k.a. BSSID) of this service/SSID on this radio."
+    ::= { ntwsApStatRadioServiceMacEntry 1 }
+
+ntwsApStatRadioServMacApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of the AP containing this radio."
+    ::= { ntwsApStatRadioServiceMacEntry 2 }
+
+ntwsApStatRadioServMacRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Number of this Radio on the AP."
+    ::= { ntwsApStatRadioServiceMacEntry 3 }
+
+ntwsApStatRadioServMacSsid OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The service/SSID name in use on this radio."
+    ::= { ntwsApStatRadioServiceMacEntry 4 }
+
+ntwsApStatRadioServMacServiceProfileName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Name of the Service Profile that configures this BSSID."
+    ::= { ntwsApStatRadioServiceMacEntry 5 }
+
+
+-- ============================================
+-- Operational Rate Set per Radio Service table
+
+ntwsApStatRadioServiceOpRateSetTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioServiceOpRateSetEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the radio services associated with
+        the APs currently present and managed by this AC.
+        Same data is available indexed by BSSID in
+        'ntwsApStatRadioServiceOpRateSetMacTable'."
+    ::= { ntwsApStatDataObjects 8 }
+
+ntwsApStatRadioServiceOpRateSetEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioServiceOpRateSetEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular service (SSID) on a radio."
+    INDEX   { ntwsApStatRadioSORSetApSerialNum,
+              ntwsApStatRadioSORSetRadioNum,
+              ntwsApStatRadioSORSetSsid }
+    ::= { ntwsApStatRadioServiceOpRateSetTable 1 }
+
+NtwsApStatRadioServiceOpRateSetEntry ::= SEQUENCE {
+        ntwsApStatRadioSORSetApSerialNum  NtwsApSerialNum,
+        ntwsApStatRadioSORSetRadioNum     NtwsRadioNum,
+        ntwsApStatRadioSORSetSsid         DisplayString,
+
+        ntwsApStatRadioSORSetMandatory  NtwsRadioOpRateSetMandatory,
+        ntwsApStatRadioSORSetDisabled   NtwsRadioOpRateSetDisabled,
+        ntwsApStatRadioSORSetBeacon     NtwsRadioOpRateSetSingleValue,
+        ntwsApStatRadioSORSetMulticast  NtwsRadioOpRateSetSingleValue
+    }
+
+ntwsApStatRadioSORSetApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of the AP containing this radio."
+    ::= { ntwsApStatRadioServiceOpRateSetEntry 1 }
+
+ntwsApStatRadioSORSetRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Number of this Radio on the AP."
+    ::= { ntwsApStatRadioServiceOpRateSetEntry 2 }
+
+ntwsApStatRadioSORSetSsid OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(0..32))
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The service/SSID name in use on this radio."
+    ::= { ntwsApStatRadioServiceOpRateSetEntry 3 }
+
+ntwsApStatRadioSORSetMandatory OBJECT-TYPE
+    SYNTAX      NtwsRadioOpRateSetMandatory
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Mandatory Rate Set configured for this radio service."
+    ::= { ntwsApStatRadioServiceOpRateSetEntry 4 }
+
+ntwsApStatRadioSORSetDisabled OBJECT-TYPE
+    SYNTAX      NtwsRadioOpRateSetDisabled
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Disabled Rate Set configured for this radio service."
+    ::= { ntwsApStatRadioServiceOpRateSetEntry 5 }
+
+ntwsApStatRadioSORSetBeacon OBJECT-TYPE
+    SYNTAX      NtwsRadioOpRateSetSingleValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Beacon Rate for this radio service."
+    ::= { ntwsApStatRadioServiceOpRateSetEntry 6 }
+
+ntwsApStatRadioSORSetMulticast OBJECT-TYPE
+    SYNTAX      NtwsRadioOpRateSetSingleValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Multicast Rate for this radio service."
+    ::= { ntwsApStatRadioServiceOpRateSetEntry 7 }
+
+
+-- ============================================
+-- Operational Rate Set per Radio Service table
+-- indexed by MAC (BSSID)
+
+ntwsApStatRadioServiceOpRateSetMacTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioServiceOpRateSetMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the radio services associated with
+        the APs currently present and managed by this AC.
+        Same data is available indexed by AP Serial Number,
+        Radio Number and SSID in 'ntwsApStatRadioServiceOpRateSetTable'."
+    ::= { ntwsApStatDataObjects 9 }
+
+ntwsApStatRadioServiceOpRateSetMacEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioServiceOpRateSetMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular service (SSID) on a radio."
+    INDEX   { ntwsApStatRadioSORSetMacBssid }
+    ::= { ntwsApStatRadioServiceOpRateSetMacTable 1 }
+
+NtwsApStatRadioServiceOpRateSetMacEntry ::= SEQUENCE {
+        ntwsApStatRadioSORSetMacBssid      MacAddress,
+
+        ntwsApStatRadioSORSetMacMandatory  NtwsRadioOpRateSetMandatory,
+        ntwsApStatRadioSORSetMacDisabled   NtwsRadioOpRateSetDisabled,
+        ntwsApStatRadioSORSetMacBeacon     NtwsRadioOpRateSetSingleValue,
+        ntwsApStatRadioSORSetMacMulticast  NtwsRadioOpRateSetSingleValue
+    }
+
+ntwsApStatRadioSORSetMacBssid OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The MAC address (a.k.a. BSSID) of this service/SSID on this radio."
+    ::= { ntwsApStatRadioServiceOpRateSetMacEntry 1 }
+
+ntwsApStatRadioSORSetMacMandatory OBJECT-TYPE
+    SYNTAX      NtwsRadioOpRateSetMandatory
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Mandatory Rate Set configured for this radio service."
+    ::= { ntwsApStatRadioServiceOpRateSetMacEntry 2 }
+
+ntwsApStatRadioSORSetMacDisabled OBJECT-TYPE
+    SYNTAX      NtwsRadioOpRateSetDisabled
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The Disabled Rate Set configured for this radio service."
+    ::= { ntwsApStatRadioServiceOpRateSetMacEntry 3 }
+
+ntwsApStatRadioSORSetMacBeacon OBJECT-TYPE
+    SYNTAX      NtwsRadioOpRateSetSingleValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Beacon Rate for this radio service."
+    ::= { ntwsApStatRadioServiceOpRateSetMacEntry 4 }
+
+ntwsApStatRadioSORSetMacMulticast OBJECT-TYPE
+    SYNTAX      NtwsRadioOpRateSetSingleValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The configured Multicast Rate for this radio service."
+    ::= { ntwsApStatRadioServiceOpRateSetMacEntry 5 }
+
+
+-- ==================================
+-- Radio Operational Statistics table
+
+ntwsApStatRadioOpStatisticsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioOpStatisticsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table providing the Radio Operational Statistics
+        for all radios on all APs attached to this switch.
+        Same data is available indexed by Radio Base MAC
+        in 'ntwsApStatRadioOpStatisticsMacTable'."
+    ::= { ntwsApStatDataObjects 10 }
+
+ntwsApStatRadioOpStatisticsEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioOpStatisticsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Operational statistics (counters) for a particular radio."
+    INDEX   { ntwsApStatRadioOpStatsApSerialNum, 
+              ntwsApStatRadioOpStatsRadioNum }
+    ::= { ntwsApStatRadioOpStatisticsTable 1 }
+
+NtwsApStatRadioOpStatisticsEntry ::= SEQUENCE {
+        ntwsApStatRadioOpStatsApSerialNum    NtwsApSerialNum,
+        ntwsApStatRadioOpStatsRadioNum       NtwsRadioNum,
+
+        -- the following nine Tx/Rx counters are also
+        -- in 'NtwsApStatRadioRateOpStatisticsEntry'
+        -- => for each data rate separately
+
+        ntwsApStatRadioOpStatsTxUniPkt       Counter64,
+        ntwsApStatRadioOpStatsTxUniOctet     Counter64,
+        ntwsApStatRadioOpStatsTxMultiPkt     Counter64,
+        ntwsApStatRadioOpStatsTxMultiOctet   Counter64,
+        ntwsApStatRadioOpStatsRxPkt          Counter64,
+        ntwsApStatRadioOpStatsRxOctet        Counter64,
+        ntwsApStatRadioOpStatsUndcrptPkt     Counter64,
+        ntwsApStatRadioOpStatsUndcrptOctet   Counter64,
+        ntwsApStatRadioOpStatsPhyErr         Counter64,
+
+        -- the following fields are not detailed per data transmission rate
+
+        ntwsApStatRadioOpStatsResetCount                  Counter32,
+        ntwsApStatRadioOpStatsAutoTuneChannelChangeCount  Counter32,
+        ntwsApStatRadioOpStatsTxRetriesCount              Counter32,
+        ntwsApStatRadioOpStatsUserSessions                Gauge32,
+        ntwsApStatRadioOpStatsNoiseFloor                  Integer32,
+
+        ntwsApStatRadioOpStatsClientAssociations          Counter32,
+        ntwsApStatRadioOpStatsClientFailedAssociations    Counter32,
+        ntwsApStatRadioOpStatsClientReAssociations        Counter32,
+
+        ntwsApStatRadioOpStatsSignalingPkt                Counter64,
+        ntwsApStatRadioOpStatsReTransmitOctet             Counter64,
+        ntwsApStatRadioOpStatsRefusedConnectionCount      Counter32
+    }
+
+ntwsApStatRadioOpStatsApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of the AP containing this radio."
+    ::= { ntwsApStatRadioOpStatisticsEntry 1 }
+
+ntwsApStatRadioOpStatsRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Number of this Radio on the AP."
+    ::= { ntwsApStatRadioOpStatisticsEntry 2 }
+    
+ntwsApStatRadioOpStatsTxUniPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of unicast packets transmitted."
+    ::= { ntwsApStatRadioOpStatisticsEntry 3 }
+
+ntwsApStatRadioOpStatsTxUniOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in unicast packets."
+    ::= { ntwsApStatRadioOpStatisticsEntry 4 }
+
+ntwsApStatRadioOpStatsTxMultiPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of multicast packets transmitted."
+    ::= { ntwsApStatRadioOpStatisticsEntry 5 }
+
+ntwsApStatRadioOpStatsTxMultiOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in multicast packets."
+    ::= { ntwsApStatRadioOpStatisticsEntry 6 }
+
+ntwsApStatRadioOpStatsRxPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of packets received."
+    ::= { ntwsApStatRadioOpStatisticsEntry 7 }
+
+ntwsApStatRadioOpStatsRxOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets received."
+    ::= { ntwsApStatRadioOpStatisticsEntry 8 }
+
+ntwsApStatRadioOpStatsUndcrptPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of undecrypted packets."
+    ::= { ntwsApStatRadioOpStatisticsEntry 9 }
+
+ntwsApStatRadioOpStatsUndcrptOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets in undecrypted packets."
+    ::= { ntwsApStatRadioOpStatisticsEntry 10 }
+
+ntwsApStatRadioOpStatsPhyErr OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Physical Errors occurred."
+    ::= { ntwsApStatRadioOpStatisticsEntry 11 }
+
+ntwsApStatRadioOpStatsResetCount OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of reset operations for this radio."
+    ::= { ntwsApStatRadioOpStatisticsEntry 12 }
+
+ntwsApStatRadioOpStatsAutoTuneChannelChangeCount OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Channel Changes, in Auto-Tuning mode only,
+        since the AP containing this radio became operational.
+        Note that manual channel changes are not counted."
+    ::= { ntwsApStatRadioOpStatisticsEntry 13 }
+
+ntwsApStatRadioOpStatsTxRetriesCount OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Transmission Retries."
+    ::= { ntwsApStatRadioOpStatisticsEntry 14 }
+
+ntwsApStatRadioOpStatsUserSessions OBJECT-TYPE
+    SYNTAX      Gauge32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of client sessions using this radio at the current moment."
+    ::= { ntwsApStatRadioOpStatisticsEntry 15 }
+
+ntwsApStatRadioOpStatsNoiseFloor OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Noise Floor in dBm."
+    ::= { ntwsApStatRadioOpStatisticsEntry 16 }
+
+ntwsApStatRadioOpStatsClientAssociations OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of client association attempts
+        on this radio (including re-association attempts)."
+    ::= { ntwsApStatRadioOpStatisticsEntry 17 }
+
+ntwsApStatRadioOpStatsClientFailedAssociations OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of failed client association attempts
+        on this radio (including re-association attempts)."
+    ::= { ntwsApStatRadioOpStatisticsEntry 18 }
+
+ntwsApStatRadioOpStatsClientReAssociations OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of client re-association attempts."
+    ::= { ntwsApStatRadioOpStatisticsEntry 19 }
+
+ntwsApStatRadioOpStatsSignalingPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of 802.11 management frames
+        and 802.11 control frames transmitted and received
+        by this radio."
+    ::= { ntwsApStatRadioOpStatisticsEntry 20 }
+
+ntwsApStatRadioOpStatsReTransmitOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of re-transmit octets."
+    ::= { ntwsApStatRadioOpStatisticsEntry 21 }
+
+ntwsApStatRadioOpStatsRefusedConnectionCount OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of refused connections due to not enough resources."
+    ::= { ntwsApStatRadioOpStatisticsEntry 22 }
+
+
+-- ============================================================
+-- Radio Operational Statistics table indexed by Radio Base MAC
+
+ntwsApStatRadioOpStatisticsMacTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioOpStatisticsMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table providing the Radio Operational Statistics
+        for all radios on all APs attached to this switch.
+        Same data is available indexed by AP Serial Number
+        and Radio Number in 'ntwsApStatRadioOpStatisticsTable'."
+    ::= { ntwsApStatDataObjects 11 }
+
+ntwsApStatRadioOpStatisticsMacEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioOpStatisticsMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Operational statistics (counters) for a particular radio."
+    INDEX   { ntwsApStatRadioOpStatsMacBaseMac }
+    ::= { ntwsApStatRadioOpStatisticsMacTable 1 }
+
+NtwsApStatRadioOpStatisticsMacEntry ::= SEQUENCE {
+        ntwsApStatRadioOpStatsMacBaseMac        MacAddress,
+
+        -- the following nine Tx/Rx counters are also
+        -- in 'NtwsApStatRadioRateOpStatisticsMacEntry'
+        -- => for each data rate separately
+
+        ntwsApStatRadioOpStatsMacTxUniPkt       Counter64,
+        ntwsApStatRadioOpStatsMacTxUniOctet     Counter64,
+        ntwsApStatRadioOpStatsMacTxMultiPkt     Counter64,
+        ntwsApStatRadioOpStatsMacTxMultiOctet   Counter64,
+        ntwsApStatRadioOpStatsMacRxPkt          Counter64,
+        ntwsApStatRadioOpStatsMacRxOctet        Counter64,
+        ntwsApStatRadioOpStatsMacUndcrptPkt     Counter64,
+        ntwsApStatRadioOpStatsMacUndcrptOctet   Counter64,
+        ntwsApStatRadioOpStatsMacPhyErr         Counter64,
+
+        -- the following fields are not detailed per data transmission rate
+
+        ntwsApStatRadioOpStatsMacResetCount                  Counter32,
+        ntwsApStatRadioOpStatsMacAutoTuneChannelChangeCount  Counter32,
+        ntwsApStatRadioOpStatsMacTxRetriesCount              Counter32,
+        ntwsApStatRadioOpStatsMacUserSessions                Gauge32,
+        ntwsApStatRadioOpStatsMacNoiseFloor                  Integer32,
+
+        ntwsApStatRadioOpStatsMacClientAssociations          Counter32,
+        ntwsApStatRadioOpStatsMacClientFailedAssociations    Counter32,
+        ntwsApStatRadioOpStatsMacClientReAssociations        Counter32,
+
+        ntwsApStatRadioOpStatsMacSignalingPkt                Counter64,
+        ntwsApStatRadioOpStatsMacReTransmitOctet             Counter64,
+        ntwsApStatRadioOpStatsMacRefusedConnectionCount      Counter32
+    }
+
+ntwsApStatRadioOpStatsMacBaseMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Base MAC address of this radio."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 1 }
+
+ntwsApStatRadioOpStatsMacTxUniPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of unicast packets transmitted."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 2 }
+
+ntwsApStatRadioOpStatsMacTxUniOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in unicast packets."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 3 }
+
+ntwsApStatRadioOpStatsMacTxMultiPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of multicast packets transmitted."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 4 }
+
+ntwsApStatRadioOpStatsMacTxMultiOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in multicast packets."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 5 }
+
+ntwsApStatRadioOpStatsMacRxPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of packets received."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 6 }
+
+ntwsApStatRadioOpStatsMacRxOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets received."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 7 }
+
+ntwsApStatRadioOpStatsMacUndcrptPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of undecrypted packets."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 8 }
+
+ntwsApStatRadioOpStatsMacUndcrptOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets in undecrypted packets."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 9 }
+
+ntwsApStatRadioOpStatsMacPhyErr OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Physical Errors occurred."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 10 }
+
+ntwsApStatRadioOpStatsMacResetCount OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of reset operations for this radio."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 11 }
+
+ntwsApStatRadioOpStatsMacAutoTuneChannelChangeCount OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Channel Changes, in Auto-Tuning mode only,
+        since the AP containing this radio became operational.
+        Note that manual channel changes are not counted."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 12 }
+
+ntwsApStatRadioOpStatsMacTxRetriesCount OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Transmission Retries."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 13 }
+
+ntwsApStatRadioOpStatsMacUserSessions OBJECT-TYPE
+    SYNTAX      Gauge32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of client sessions using this radio at the current moment."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 14 }
+
+ntwsApStatRadioOpStatsMacNoiseFloor OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Noise Floor in dBm."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 15 }
+
+ntwsApStatRadioOpStatsMacClientAssociations OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of client association attempts
+        on this radio (including re-association attempts)."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 16 }
+
+ntwsApStatRadioOpStatsMacClientFailedAssociations OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of failed client association attempts
+        on this radio (including re-association attempts)."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 17 }
+
+ntwsApStatRadioOpStatsMacClientReAssociations OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of client re-association attempts."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 18 }
+
+ntwsApStatRadioOpStatsMacSignalingPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of 802.11 management frames
+        and 802.11 control frames transmitted and received
+        by this radio."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 19 }
+
+ntwsApStatRadioOpStatsMacReTransmitOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of re-transmit octets."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 20 }
+
+ntwsApStatRadioOpStatsMacRefusedConnectionCount OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of refused connections due to not enough resources."
+    ::= { ntwsApStatRadioOpStatisticsMacEntry 21 }
+
+
+-- =============================================================
+-- Radio Operational Statistics per data transmission Rate table
+
+ntwsApStatRadioRateOpStatisticsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioRateOpStatisticsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table providing the Radio Operational Statistics
+        per transmission Rate for all radios on all APs attached to this switch.
+        Same data is available indexed by Radio Base MAC and Data Transmission Rate
+        in 'ntwsApStatRadioRateOpStatisticsMacTable'."
+    ::= { ntwsApStatDataObjects 12 }
+
+ntwsApStatRadioRateOpStatisticsEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioRateOpStatisticsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Operational statistics (counters) for a particular data transmission rate
+             on a particular radio."
+    INDEX   { ntwsApStatRadioRateOpStatsApSerialNum,
+              ntwsApStatRadioRateOpStatsRadioNum,
+              ntwsApStatRadioRateOpStatsRate }
+    ::= { ntwsApStatRadioRateOpStatisticsTable 1 }
+
+NtwsApStatRadioRateOpStatisticsEntry ::= SEQUENCE {
+        ntwsApStatRadioRateOpStatsApSerialNum    NtwsApSerialNum,
+        ntwsApStatRadioRateOpStatsRadioNum       NtwsRadioNum,
+        ntwsApStatRadioRateOpStatsRate           NtwsRadioRate,
+
+        -- the following nine Tx/Rx counters are also
+        -- in 'NtwsApStatRadioOpStatisticsEntry' => totals for all data rates
+
+        ntwsApStatRadioRateOpStatsTxUniPkt       Counter64,
+        ntwsApStatRadioRateOpStatsTxUniOctet     Counter64,
+        ntwsApStatRadioRateOpStatsTxMultiPkt     Counter64,
+        ntwsApStatRadioRateOpStatsTxMultiOctet   Counter64,
+        ntwsApStatRadioRateOpStatsRxPkt          Counter64,
+        ntwsApStatRadioRateOpStatsRxOctet        Counter64,
+        ntwsApStatRadioRateOpStatsUndcrptPkt     Counter64,
+        ntwsApStatRadioRateOpStatsUndcrptOctet   Counter64,
+        ntwsApStatRadioRateOpStatsPhyErr         Counter64
+    }
+
+ntwsApStatRadioRateOpStatsApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 1 }
+
+ntwsApStatRadioRateOpStatsRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 2 }
+
+ntwsApStatRadioRateOpStatsRate OBJECT-TYPE
+    SYNTAX      NtwsRadioRate
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 3 }
+
+ntwsApStatRadioRateOpStatsTxUniPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of unicast packets transmitted."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 4 }
+
+ntwsApStatRadioRateOpStatsTxUniOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in unicast packets."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 5 }
+
+ntwsApStatRadioRateOpStatsTxMultiPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of multicast packets transmitted."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 6 }
+
+ntwsApStatRadioRateOpStatsTxMultiOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in multicast packets."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 7 }
+
+ntwsApStatRadioRateOpStatsRxPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of packets received."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 8 }
+
+ntwsApStatRadioRateOpStatsRxOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets received."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 9 }
+
+ntwsApStatRadioRateOpStatsUndcrptPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of undecrypted packets."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 10 }
+
+ntwsApStatRadioRateOpStatsUndcrptOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets in undecrypted packets."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 11 }
+
+ntwsApStatRadioRateOpStatsPhyErr OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Physical Errors occurred."
+    ::= { ntwsApStatRadioRateOpStatisticsEntry 12 }
+
+
+-- =============================================================
+-- Radio Operational Statistics per data transmission Rate table
+-- with radio identified by Radio Base MAC
+
+ntwsApStatRadioRateOpStatisticsMacTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioRateOpStatisticsMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table providing the Radio Operational Statistics
+        per transmission Rate for all radios on all APs attached to this switch.
+        Same data is available indexed by AP Serial Number, Radio Number
+        and Data Transmission Rate in 'ntwsApStatRadioRateOpStatisticsTable'."
+    ::= { ntwsApStatDataObjects 13 }
+
+ntwsApStatRadioRateOpStatisticsMacEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioRateOpStatisticsMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Operational statistics (counters) for a particular data transmission rate
+             on a particular radio."
+    INDEX   { ntwsApStatRadioRateOpStatsMacBaseMac,
+              ntwsApStatRadioRateOpStatsMacRate }
+    ::= { ntwsApStatRadioRateOpStatisticsMacTable 1 }
+
+NtwsApStatRadioRateOpStatisticsMacEntry ::= SEQUENCE {
+        ntwsApStatRadioRateOpStatsMacBaseMac        MacAddress,
+        ntwsApStatRadioRateOpStatsMacRate           NtwsRadioRate,
+
+        -- the following nine Tx/Rx counters are also
+        -- in 'NtwsApStatRadioOpStatisticsMacEntry' => totals for all data rates
+
+        ntwsApStatRadioRateOpStatsMacTxUniPkt       Counter64,
+        ntwsApStatRadioRateOpStatsMacTxUniOctet     Counter64,
+        ntwsApStatRadioRateOpStatsMacTxMultiPkt     Counter64,
+        ntwsApStatRadioRateOpStatsMacTxMultiOctet   Counter64,
+        ntwsApStatRadioRateOpStatsMacRxPkt          Counter64,
+        ntwsApStatRadioRateOpStatsMacRxOctet        Counter64,
+        ntwsApStatRadioRateOpStatsMacUndcrptPkt     Counter64,
+        ntwsApStatRadioRateOpStatsMacUndcrptOctet   Counter64,
+        ntwsApStatRadioRateOpStatsMacPhyErr         Counter64
+    }
+
+ntwsApStatRadioRateOpStatsMacBaseMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 1 }
+
+ntwsApStatRadioRateOpStatsMacRate OBJECT-TYPE
+    SYNTAX      NtwsRadioRate
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 2 }
+
+ntwsApStatRadioRateOpStatsMacTxUniPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of unicast packets transmitted."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 3 }
+
+ntwsApStatRadioRateOpStatsMacTxUniOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in unicast packets."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 4 }
+
+ntwsApStatRadioRateOpStatsMacTxMultiPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of multicast packets transmitted."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 5 }
+
+ntwsApStatRadioRateOpStatsMacTxMultiOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in multicast packets."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 6 }
+
+ntwsApStatRadioRateOpStatsMacRxPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of packets received."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 7 }
+
+ntwsApStatRadioRateOpStatsMacRxOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets received."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 8 }
+
+ntwsApStatRadioRateOpStatsMacUndcrptPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of undecrypted packets."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 9 }
+
+ntwsApStatRadioRateOpStatsMacUndcrptOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets in undecrypted packets."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 10 }
+
+ntwsApStatRadioRateOpStatsMacPhyErr OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Physical Errors occurred."
+    ::= { ntwsApStatRadioRateOpStatisticsMacEntry 11 }
+
+
+-- =============================================================
+-- Radio Operational Statistics per Extended Rate table
+-- (covering 802.11n MCS rates)
+
+ntwsApStatRadioRateExOpStatisticsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioRateExOpStatisticsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table providing the Radio Operational Statistics
+        per Extended Rate for all radios on all APs attached to this switch.
+        Same data is available indexed by Radio Base MAC and Extended Rate
+        in 'ntwsApStatRadioRateExOpStatisticsMacTable'."
+    ::= { ntwsApStatDataObjects 14 }
+
+ntwsApStatRadioRateExOpStatisticsEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioRateExOpStatisticsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Operational statistics (counters) for a particular data transmission rate
+             on a particular radio."
+    INDEX   { ntwsApStatRadioRateExOpStatsApSerialNum,
+              ntwsApStatRadioRateExOpStatsRadioNum,
+              ntwsApStatRadioRateExOpStatsRateEx }
+    ::= { ntwsApStatRadioRateExOpStatisticsTable 1 }
+
+NtwsApStatRadioRateExOpStatisticsEntry ::= SEQUENCE {
+        ntwsApStatRadioRateExOpStatsApSerialNum    NtwsApSerialNum,
+        ntwsApStatRadioRateExOpStatsRadioNum       NtwsRadioNum,
+        ntwsApStatRadioRateExOpStatsRateEx         NtwsRadioRateEx,
+
+        -- the following nine Tx/Rx counters are also
+        -- in 'NtwsApStatRadioOpStatisticsEntry' => totals for all data rates
+
+        ntwsApStatRadioRateExOpStatsTxUniPkt       Counter64,
+        ntwsApStatRadioRateExOpStatsTxUniOctet     Counter64,
+        ntwsApStatRadioRateExOpStatsTxMultiPkt     Counter64,
+        ntwsApStatRadioRateExOpStatsTxMultiOctet   Counter64,
+        ntwsApStatRadioRateExOpStatsRxPkt          Counter64,
+        ntwsApStatRadioRateExOpStatsRxOctet        Counter64,
+        ntwsApStatRadioRateExOpStatsUndcrptPkt     Counter64,
+        ntwsApStatRadioRateExOpStatsUndcrptOctet   Counter64,
+        ntwsApStatRadioRateExOpStatsPhyErr         Counter64
+    }
+
+ntwsApStatRadioRateExOpStatsApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 1 }
+
+ntwsApStatRadioRateExOpStatsRadioNum OBJECT-TYPE
+    SYNTAX      NtwsRadioNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 2 }
+
+ntwsApStatRadioRateExOpStatsRateEx OBJECT-TYPE
+    SYNTAX      NtwsRadioRateEx
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 3 }
+
+ntwsApStatRadioRateExOpStatsTxUniPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of unicast packets transmitted."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 4 }
+
+ntwsApStatRadioRateExOpStatsTxUniOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in unicast packets."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 5 }
+
+ntwsApStatRadioRateExOpStatsTxMultiPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of multicast packets transmitted."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 6 }
+
+ntwsApStatRadioRateExOpStatsTxMultiOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in multicast packets."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 7 }
+
+ntwsApStatRadioRateExOpStatsRxPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of packets received."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 8 }
+
+ntwsApStatRadioRateExOpStatsRxOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets received."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 9 }
+
+ntwsApStatRadioRateExOpStatsUndcrptPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of undecrypted packets."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 10 }
+
+ntwsApStatRadioRateExOpStatsUndcrptOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets in undecrypted packets."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 11 }
+
+ntwsApStatRadioRateExOpStatsPhyErr OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Physical Errors occurred."
+    ::= { ntwsApStatRadioRateExOpStatisticsEntry 12 }
+
+
+-- =============================================================
+-- Radio Operational Statistics per Extended Rate table
+-- with radio identified by Radio Base MAC
+-- (covering 802.11n MCS rates)
+
+ntwsApStatRadioRateExOpStatisticsMacTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApStatRadioRateExOpStatisticsMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table providing the Radio Operational Statistics
+        per Extended Rate for all radios on all APs attached to this switch.
+        Same data is available indexed by AP Serial Number, Radio Number
+        and Extended Rate in 'ntwsApStatRadioRateExOpStatisticsTable'."
+    ::= { ntwsApStatDataObjects 15 }
+
+ntwsApStatRadioRateExOpStatisticsMacEntry OBJECT-TYPE
+    SYNTAX      NtwsApStatRadioRateExOpStatisticsMacEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Operational statistics (counters) for a particular data transmission rate
+             on a particular radio."
+    INDEX   { ntwsApStatRadioRateExOpStatsMacBaseMac,
+              ntwsApStatRadioRateExOpStatsMacRateEx }
+    ::= { ntwsApStatRadioRateExOpStatisticsMacTable 1 }
+
+NtwsApStatRadioRateExOpStatisticsMacEntry ::= SEQUENCE {
+        ntwsApStatRadioRateExOpStatsMacBaseMac        MacAddress,
+        ntwsApStatRadioRateExOpStatsMacRateEx         NtwsRadioRateEx,
+
+        -- the following nine Tx/Rx counters are also
+        -- in 'NtwsApStatRadioOpStatisticsMacEntry' => totals for all data rates
+
+        ntwsApStatRadioRateExOpStatsMacTxUniPkt       Counter64,
+        ntwsApStatRadioRateExOpStatsMacTxUniOctet     Counter64,
+        ntwsApStatRadioRateExOpStatsMacTxMultiPkt     Counter64,
+        ntwsApStatRadioRateExOpStatsMacTxMultiOctet   Counter64,
+        ntwsApStatRadioRateExOpStatsMacRxPkt          Counter64,
+        ntwsApStatRadioRateExOpStatsMacRxOctet        Counter64,
+        ntwsApStatRadioRateExOpStatsMacUndcrptPkt     Counter64,
+        ntwsApStatRadioRateExOpStatsMacUndcrptOctet   Counter64,
+        ntwsApStatRadioRateExOpStatsMacPhyErr         Counter64
+    }
+
+ntwsApStatRadioRateExOpStatsMacBaseMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 1 }
+
+ntwsApStatRadioRateExOpStatsMacRateEx OBJECT-TYPE
+    SYNTAX      NtwsRadioRateEx
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table index."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 2 }
+
+ntwsApStatRadioRateExOpStatsMacTxUniPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of unicast packets transmitted."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 3 }
+
+ntwsApStatRadioRateExOpStatsMacTxUniOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in unicast packets."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 4 }
+
+ntwsApStatRadioRateExOpStatsMacTxMultiPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of multicast packets transmitted."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 5 }
+
+ntwsApStatRadioRateExOpStatsMacTxMultiOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets transmitted in multicast packets."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 6 }
+
+ntwsApStatRadioRateExOpStatsMacRxPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of packets received."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 7 }
+
+ntwsApStatRadioRateExOpStatsMacRxOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets received."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 8 }
+
+ntwsApStatRadioRateExOpStatsMacUndcrptPkt OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of undecrypted packets."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 9 }
+
+ntwsApStatRadioRateExOpStatsMacUndcrptOctet OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of octets in undecrypted packets."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 10 }
+
+ntwsApStatRadioRateExOpStatsMacPhyErr OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Number of Physical Errors occurred."
+    ::= { ntwsApStatRadioRateExOpStatisticsMacEntry 11 }
+
+
+-- ============================================================================
+--
+-- Conformance
+--
+
+ntwsApStatusConformance  OBJECT IDENTIFIER ::= { ntwsApStatusObjects 2 }
+ntwsApStatusCompliances  OBJECT IDENTIFIER ::= { ntwsApStatusConformance 1 }
+ntwsApStatusGroups       OBJECT IDENTIFIER ::= { ntwsApStatusConformance 2 }
+
+
+-- Compliance
+
+
+ntwsApStatusCompliance MODULE-COMPLIANCE
+    STATUS      obsolete
+    DESCRIPTION
+        "The compliance statement for devices that implement AP Status MIB.
+
+        This compliance statement was for releases 4.1 and 4.2
+        of AC (wireless switch) software.
+
+        This compliance statement is replaced by
+        ntwsApStatusComplianceRev2."
+
+    MODULE  -- this module (ntwsApStatusMib)
+
+    MANDATORY-GROUPS {
+            ntwsApStatusCommonGroup
+            }
+
+    ::= { ntwsApStatusCompliances 1 }
+
+
+ntwsApStatusComplianceRev2 MODULE-COMPLIANCE
+    STATUS      obsolete
+    DESCRIPTION
+        "The compliance statement for devices that implement AP Status MIB.
+
+        This compliance statement was for release 5.0
+        of AC (wireless switch) software.
+
+        This compliance statement is replaced by
+        ntwsApStatusComplianceRev3."
+
+    MODULE  -- this module (ntwsApStatusMib)
+
+    MANDATORY-GROUPS {
+              ntwsApStatusScalarsGroup,
+              ntwsApStatusApStatusTablesGroup,
+              ntwsApStatusRadioStatusTablesGroup,
+              ntwsApStatusRadioServiceTablesGroup
+            }
+
+    ::= { ntwsApStatusCompliances 2 }
+
+
+ntwsApStatusComplianceRev3 MODULE-COMPLIANCE
+    STATUS      obsolete
+    DESCRIPTION
+        "The compliance statement for devices that implement AP Status MIB.
+
+        This compliance statement was for release 6.0
+        of AC (wireless switch) software.
+
+        This compliance statement is replaced by
+        ntwsApStatusComplianceRev4."
+
+    MODULE  -- this module (ntwsApStatusMib)
+
+    MANDATORY-GROUPS {
+              ntwsApStatusScalarsGroup,
+
+              ntwsApStatusApStatusTablesGroup,
+              ntwsApStatusApStatusVersionsGroup,
+
+              ntwsApStatusRadioStatusTablesGroup,
+              ntwsApStatusRadioStatusMaxPowerPhyTypeGroup,
+
+              ntwsApStatusRadioServiceTablesGroup,
+
+              -- six new tables added in 6.0 release:
+              --
+              ntwsApStatusRadioServiceOpRateSetTablesGroup,
+              ntwsApStatusRadioOpStatisticsTablesGroup,
+              ntwsApStatusRadioOpStatisticsPerRateTablesGroup
+            }
+
+    ::= { ntwsApStatusCompliances 3 }
+
+
+ntwsApStatusComplianceRev4 MODULE-COMPLIANCE
+    STATUS      obsolete
+    DESCRIPTION
+        "The compliance statement for devices that implement AP Status MIB.
+
+        This compliance statement is for releases 6.2 and greater
+        of AC (wireless switch) software."
+
+    MODULE  -- this module (ntwsApStatusMib)
+
+    MANDATORY-GROUPS {
+              ntwsApStatusScalarsGroup,
+
+              ntwsApStatusApStatusTablesGroupRev2,
+              ntwsApStatusApStatusVersionsGroup,
+
+              ntwsApStatusRadioStatusTablesGroupRev2,
+              ntwsApStatusRadioStatusMaxPowerPhyTypeGroup,
+
+              ntwsApStatusRadioServiceTablesGroup,
+
+              -- the same six tables added in 6.0 release; no change here:
+              --
+              ntwsApStatusRadioServiceOpRateSetTablesGroup,
+              ntwsApStatusRadioOpStatisticsTablesGroup,
+              ntwsApStatusRadioOpStatisticsPerRateTablesGroup
+            }
+
+    GROUP   ntwsApStatusRadioStatusWideMimoGroup
+    DESCRIPTION
+            "Group of columnar objects implemented to provide
+            more Radio Status info in releases 7.0 and greater."
+
+    ::= { ntwsApStatusCompliances 4 }
+
+
+ntwsApStatusComplianceRev5 MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for devices that implement AP Status MIB.
+
+        This compliance statement is for releases 7.1 and greater
+        of AC (wireless switch) software."
+
+    MODULE  -- this module (ntwsApStatusMib)
+
+    MANDATORY-GROUPS {
+              ntwsApStatusScalarsGroup,
+
+              ntwsApStatusApStatusTablesGroupRev2,
+              ntwsApStatusApStatusVersionsGroup,
+              ntwsApStatusApStatusPhysPortNumGroup,
+              ntwsApStatusApStatusConnectivityGroup,
+
+              ntwsApStatusRadioStatusTablesGroupRev2,
+              ntwsApStatusRadioStatusMaxPowerPhyTypeGroup,
+              ntwsApStatusRadioStatusWideMimoGroup,
+              ntwsApStatusRadioStatusAntennaGroup,
+
+              ntwsApStatusRadioServiceTablesGroup,
+
+              ntwsApStatusRadioServiceOpRateSetTablesGroup,
+
+              ntwsApStatusRadioOpStatisticsTablesGroup,
+              ntwsApStatusRadioOpStatisticsClientAssocGroup,
+              ntwsApStatusRadioOpStatisticsSignErrGroup,
+
+              -- Not mandatory anymore:
+              -- ntwsApStatusRadioOpStatisticsPerRateTablesGroup;
+              -- replaced by:
+              ntwsApStatusRadioOpStatisticsPerRateExTablesGroup
+            }
+
+    ::= { ntwsApStatusCompliances 5 }
+
+
+-- Units of Conformance
+
+
+ntwsApStatusCommonGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsApStatNumAps,
+
+                 -- AP Status indexed by AP Serial number:
+                 --
+                 ntwsApStatApStatusBaseMac,
+                 ntwsApStatApStatusAttachType,
+                 ntwsApStatApStatusPortOrDapNum,
+                 ntwsApStatApStatusApState,
+                 ntwsApStatApStatusModel,
+                 ntwsApStatApStatusFingerprint,
+                 ntwsApStatApStatusApName,
+                 ntwsApStatApStatusVlan,
+                 ntwsApStatApStatusIpAddress,
+                 ntwsApStatApStatusUptimeSecs,
+                 ntwsApStatApStatusCpuInfo,
+                 ntwsApStatApStatusManufacturerId,
+                 ntwsApStatApStatusRamBytes,
+                 ntwsApStatApStatusHardwareRev,
+
+                 -- AP Status indexed by MAC address:
+                 --
+                 ntwsApStatApStatusMacSerialNum,
+                 ntwsApStatApStatusMacAttachType,
+                 ntwsApStatApStatusMacPortOrDapNum,
+                 ntwsApStatApStatusMacApState,
+                 ntwsApStatApStatusMacModel,
+                 ntwsApStatApStatusMacFingerprint,
+                 ntwsApStatApStatusMacApName,
+                 ntwsApStatApStatusMacVlan,
+                 ntwsApStatApStatusMacIpAddress,
+                 ntwsApStatApStatusMacUptimeSecs,
+                 ntwsApStatApStatusMacCpuInfo,
+                 ntwsApStatApStatusMacManufacturerId,
+                 ntwsApStatApStatusMacRamBytes,
+                 ntwsApStatApStatusMacHardwareRev,
+
+                 -- Radio Status indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioStatusBaseMac,
+                 ntwsApStatRadioStatusEnable,
+                 ntwsApStatRadioStatusRadioConfigState,
+                 ntwsApStatRadioStatusCurrentPowerLevel,
+                 ntwsApStatRadioStatusCurrentChannelNum,
+
+                 -- Radio Status indexed by MAC address:
+                 --
+                 ntwsApStatRadioStatusMacApSerialNum,
+                 ntwsApStatRadioStatusMacRadioNum,
+                 ntwsApStatRadioStatusMacEnable,
+                 ntwsApStatRadioStatusMacRadioConfigState,
+                 ntwsApStatRadioStatusMacCurrentPowerLevel,
+                 ntwsApStatRadioStatusMacCurrentChannelNum,
+
+                 -- Radio Service indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioServBssid,
+                 ntwsApStatRadioServServiceProfileName,
+
+                 -- Radio Service indexed by MAC address:
+                 --
+                 ntwsApStatRadioServMacApSerialNum,
+                 ntwsApStatRadioServMacRadioNum,
+                 ntwsApStatRadioServMacSsid,
+                 ntwsApStatRadioServMacServiceProfileName
+                }
+        STATUS      obsolete
+        DESCRIPTION
+            "Mandatory group of objects implemented to provide AP Status info
+            in releases 4.1 and 4.2 of AC (wireless switch) software.
+
+            Replaced by ntwsApStatusScalarsGroup,
+                        ntwsApStatusApStatusTablesGroup,
+                        ntwsApStatusRadioStatusTablesGroup,
+                        ntwsApStatusRadioServiceTablesGroup,
+                        ntwsApStatusRadioServiceOpRateSetTablesGroup,
+                        ntwsApStatusRadioOpStatisticsTablesGroup,
+                        ntwsApStatusRadioOpStatisticsPerRateTablesGroup."
+        ::= { ntwsApStatusGroups 1 }
+
+
+ntwsApStatusScalarsGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsApStatNumAps
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of scalar objects implemented to provide general AP info."
+        ::= { ntwsApStatusGroups 2 }
+
+
+ntwsApStatusApStatusTablesGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number:
+                 --
+                 ntwsApStatApStatusBaseMac,
+                 ntwsApStatApStatusAttachType,
+                 ntwsApStatApStatusPortOrDapNum,
+                 ntwsApStatApStatusApState,
+                 ntwsApStatApStatusModel,
+                 ntwsApStatApStatusFingerprint,
+                 ntwsApStatApStatusApName,
+                 ntwsApStatApStatusVlan,
+                 ntwsApStatApStatusIpAddress,
+                 ntwsApStatApStatusUptimeSecs,
+                 ntwsApStatApStatusCpuInfo,
+                 ntwsApStatApStatusManufacturerId,
+                 ntwsApStatApStatusRamBytes,
+                 ntwsApStatApStatusHardwareRev,
+                 ntwsApStatApStatusClientSessions,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatApStatusMacSerialNum,
+                 ntwsApStatApStatusMacAttachType,
+                 ntwsApStatApStatusMacPortOrDapNum,
+                 ntwsApStatApStatusMacApState,
+                 ntwsApStatApStatusMacModel,
+                 ntwsApStatApStatusMacFingerprint,
+                 ntwsApStatApStatusMacApName,
+                 ntwsApStatApStatusMacVlan,
+                 ntwsApStatApStatusMacIpAddress,
+                 ntwsApStatApStatusMacUptimeSecs,
+                 ntwsApStatApStatusMacCpuInfo,
+                 ntwsApStatApStatusMacManufacturerId,
+                 ntwsApStatApStatusMacRamBytes,
+                 ntwsApStatApStatusMacHardwareRev,
+                 ntwsApStatApStatusMacClientSessions
+                }
+        STATUS      obsolete
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            AP Status info in releases 5.0 and 6.0.
+
+            Replaced by ntwsApStatusApStatusTablesGroupRev2."
+        ::= { ntwsApStatusGroups 3 }
+
+
+ntwsApStatusRadioStatusTablesGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioStatusBaseMac,
+                 ntwsApStatRadioStatusEnable,
+                 ntwsApStatRadioStatusRadioConfigState,
+                 ntwsApStatRadioStatusCurrentPowerLevel,
+                 ntwsApStatRadioStatusCurrentChannelNum,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioStatusMacApSerialNum,
+                 ntwsApStatRadioStatusMacRadioNum,
+                 ntwsApStatRadioStatusMacEnable,
+                 ntwsApStatRadioStatusMacRadioConfigState,
+                 ntwsApStatRadioStatusMacCurrentPowerLevel,
+                 ntwsApStatRadioStatusMacCurrentChannelNum
+                }
+        STATUS      obsolete
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Status info in releases 5.0 and 6.0.
+
+            Replaced by ntwsApStatusRadioStatusTablesGroupRev2."
+        ::= { ntwsApStatusGroups 4 }
+
+
+ntwsApStatusRadioServiceTablesGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioServBssid,
+                 ntwsApStatRadioServServiceProfileName,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioServMacApSerialNum,
+                 ntwsApStatRadioServMacRadioNum,
+                 ntwsApStatRadioServMacSsid,
+                 ntwsApStatRadioServMacServiceProfileName
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Service info."
+        ::= { ntwsApStatusGroups 5 }
+
+
+ntwsApStatusRadioServiceOpRateSetTablesGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioSORSetMandatory,
+                 ntwsApStatRadioSORSetDisabled,
+                 ntwsApStatRadioSORSetBeacon,
+                 ntwsApStatRadioSORSetMulticast,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioSORSetMacMandatory,
+                 ntwsApStatRadioSORSetMacDisabled,
+                 ntwsApStatRadioSORSetMacBeacon,
+                 ntwsApStatRadioSORSetMacMulticast
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            the Operational Rate Set per Radio Service."
+        ::= { ntwsApStatusGroups 6 }
+
+
+ntwsApStatusRadioOpStatisticsTablesGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioOpStatsTxUniPkt,
+                 ntwsApStatRadioOpStatsTxUniOctet,
+                 ntwsApStatRadioOpStatsTxMultiPkt,
+                 ntwsApStatRadioOpStatsTxMultiOctet,
+                 ntwsApStatRadioOpStatsRxPkt,
+                 ntwsApStatRadioOpStatsRxOctet,
+                 ntwsApStatRadioOpStatsUndcrptPkt,
+                 ntwsApStatRadioOpStatsUndcrptOctet,
+                 ntwsApStatRadioOpStatsPhyErr,
+                 ntwsApStatRadioOpStatsResetCount,
+                 ntwsApStatRadioOpStatsAutoTuneChannelChangeCount,
+                 ntwsApStatRadioOpStatsTxRetriesCount,
+                 ntwsApStatRadioOpStatsUserSessions,
+                 ntwsApStatRadioOpStatsNoiseFloor,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioOpStatsMacTxUniPkt,
+                 ntwsApStatRadioOpStatsMacTxUniOctet,
+                 ntwsApStatRadioOpStatsMacTxMultiPkt,
+                 ntwsApStatRadioOpStatsMacTxMultiOctet,
+                 ntwsApStatRadioOpStatsMacRxPkt,
+                 ntwsApStatRadioOpStatsMacRxOctet,
+                 ntwsApStatRadioOpStatsMacUndcrptPkt,
+                 ntwsApStatRadioOpStatsMacUndcrptOctet,
+                 ntwsApStatRadioOpStatsMacPhyErr,
+                 ntwsApStatRadioOpStatsMacResetCount,
+                 ntwsApStatRadioOpStatsMacAutoTuneChannelChangeCount,
+                 ntwsApStatRadioOpStatsMacTxRetriesCount,
+                 ntwsApStatRadioOpStatsMacUserSessions,
+                 ntwsApStatRadioOpStatsMacNoiseFloor
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Operational Statistics."
+        ::= { ntwsApStatusGroups 7 }
+
+
+ntwsApStatusRadioOpStatisticsPerRateTablesGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioRateOpStatsTxUniPkt,
+                 ntwsApStatRadioRateOpStatsTxUniOctet,
+                 ntwsApStatRadioRateOpStatsTxMultiPkt,
+                 ntwsApStatRadioRateOpStatsTxMultiOctet,
+                 ntwsApStatRadioRateOpStatsRxPkt,
+                 ntwsApStatRadioRateOpStatsRxOctet,
+                 ntwsApStatRadioRateOpStatsUndcrptPkt,
+                 ntwsApStatRadioRateOpStatsUndcrptOctet,
+                 ntwsApStatRadioRateOpStatsPhyErr,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioRateOpStatsMacTxUniPkt,
+                 ntwsApStatRadioRateOpStatsMacTxUniOctet,
+                 ntwsApStatRadioRateOpStatsMacTxMultiPkt,
+                 ntwsApStatRadioRateOpStatsMacTxMultiOctet,
+                 ntwsApStatRadioRateOpStatsMacRxPkt,
+                 ntwsApStatRadioRateOpStatsMacRxOctet,
+                 ntwsApStatRadioRateOpStatsMacUndcrptPkt,
+                 ntwsApStatRadioRateOpStatsMacUndcrptOctet,
+                 ntwsApStatRadioRateOpStatsMacPhyErr
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Operational Statistics per data transmission Rate."
+        ::= { ntwsApStatusGroups 8 }
+
+
+ntwsApStatusApStatusVersionsGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number:
+                 --
+                 ntwsApStatApStatusSoftwareVer,
+                 ntwsApStatApStatusBootVer,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatApStatusMacSoftwareVer,
+                 ntwsApStatApStatusMacBootVer
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of objects implemented to provide AP version info."
+        ::= { ntwsApStatusGroups 9 }
+
+
+ntwsApStatusApStatusTablesGroupRev2 OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number:
+                 --
+                 ntwsApStatApStatusBaseMac,
+                 ntwsApStatApStatusAttachType,
+                 ntwsApStatApStatusApState,
+                 ntwsApStatApStatusModel,
+                 ntwsApStatApStatusFingerprint,
+                 ntwsApStatApStatusApName,
+                 ntwsApStatApStatusVlan,
+                 ntwsApStatApStatusIpAddress,
+                 ntwsApStatApStatusUptimeSecs,
+                 ntwsApStatApStatusCpuInfo,
+                 ntwsApStatApStatusManufacturerId,
+                 ntwsApStatApStatusRamBytes,
+                 ntwsApStatApStatusHardwareRev,
+                 ntwsApStatApStatusClientSessions,
+                 ntwsApStatApStatusApNum,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatApStatusMacSerialNum,
+                 ntwsApStatApStatusMacAttachType,
+                 ntwsApStatApStatusMacApState,
+                 ntwsApStatApStatusMacModel,
+                 ntwsApStatApStatusMacFingerprint,
+                 ntwsApStatApStatusMacApName,
+                 ntwsApStatApStatusMacVlan,
+                 ntwsApStatApStatusMacIpAddress,
+                 ntwsApStatApStatusMacUptimeSecs,
+                 ntwsApStatApStatusMacCpuInfo,
+                 ntwsApStatApStatusMacManufacturerId,
+                 ntwsApStatApStatusMacRamBytes,
+                 ntwsApStatApStatusMacHardwareRev,
+                 ntwsApStatApStatusMacClientSessions,
+                 ntwsApStatApStatusMacApNum
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            AP Status info in releases 6.2 and greater."
+        ::= { ntwsApStatusGroups 10 }
+
+
+ntwsApStatusRadioStatusMaxPowerPhyTypeGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioStatusMaxPowerLevel,
+                 ntwsApStatRadioStatusRadioPhyType,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioStatusMacMaxPowerLevel,
+                 ntwsApStatRadioStatusMacRadioPhyType
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            more Radio Status info in releases 6.0 and greater."
+        ::= { ntwsApStatusGroups 11 }
+
+
+ntwsApStatusRadioStatusTablesGroupRev2 OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioStatusBaseMac,
+                 ntwsApStatRadioStatusRadioConfigState,
+                 ntwsApStatRadioStatusCurrentPowerLevel,
+                 ntwsApStatRadioStatusCurrentChannelNum,
+                 ntwsApStatRadioStatusClientSessions,
+                 ntwsApStatRadioStatusRadioMode,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioStatusMacApSerialNum,
+                 ntwsApStatRadioStatusMacRadioNum,
+                 ntwsApStatRadioStatusMacRadioConfigState,
+                 ntwsApStatRadioStatusMacCurrentPowerLevel,
+                 ntwsApStatRadioStatusMacCurrentChannelNum,
+                 ntwsApStatRadioStatusMacClientSessions,
+                 ntwsApStatRadioStatusMacRadioMode
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Status info in releases 6.2 and greater."
+        ::= { ntwsApStatusGroups 12 }
+
+
+ntwsApStatusRadioStatusWideMimoGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioStatusRadioChannelWidth,
+                 ntwsApStatRadioStatusRadioMimoState,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioStatusMacRadioChannelWidth,
+                 ntwsApStatRadioStatusMacRadioMimoState
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            more Radio Status info in releases 7.0 and greater."
+        ::= { ntwsApStatusGroups 13 }
+
+
+ntwsApStatusRadioOpStatisticsPerRateExTablesGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioRateExOpStatsTxUniPkt,
+                 ntwsApStatRadioRateExOpStatsTxUniOctet,
+                 ntwsApStatRadioRateExOpStatsTxMultiPkt,
+                 ntwsApStatRadioRateExOpStatsTxMultiOctet,
+                 ntwsApStatRadioRateExOpStatsRxPkt,
+                 ntwsApStatRadioRateExOpStatsRxOctet,
+                 ntwsApStatRadioRateExOpStatsUndcrptPkt,
+                 ntwsApStatRadioRateExOpStatsUndcrptOctet,
+                 ntwsApStatRadioRateExOpStatsPhyErr,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioRateExOpStatsMacTxUniPkt,
+                 ntwsApStatRadioRateExOpStatsMacTxUniOctet,
+                 ntwsApStatRadioRateExOpStatsMacTxMultiPkt,
+                 ntwsApStatRadioRateExOpStatsMacTxMultiOctet,
+                 ntwsApStatRadioRateExOpStatsMacRxPkt,
+                 ntwsApStatRadioRateExOpStatsMacRxOctet,
+                 ntwsApStatRadioRateExOpStatsMacUndcrptPkt,
+                 ntwsApStatRadioRateExOpStatsMacUndcrptOctet,
+                 ntwsApStatRadioRateExOpStatsMacPhyErr
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Operational Statistics detailed per
+            Extended data transmission Rate (covering 802.11n MCS rates)
+            in releases 7.1 and greater."
+        ::= { ntwsApStatusGroups 14 }
+
+
+ntwsApStatusApStatusPhysPortNumGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number:
+                 --
+                 ntwsApStatApStatusPhysPortNum,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatApStatusMacPhysPortNum
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            the Physical Port Number for a directly attached AP."
+        ::= { ntwsApStatusGroups 15 }
+
+
+ntwsApStatusApStatusConnectivityGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number:
+                 --
+                 ntwsApStatApStatusIpNetmask,
+                 ntwsApStatApStatusWiredIfNumber,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatApStatusMacIpNetmask,
+                 ntwsApStatApStatusMacWiredIfNumber
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            AP connectivity info in releases 7.1 and greater."
+        ::= { ntwsApStatusGroups 16 }
+
+
+ntwsApStatusRadioStatusAntennaGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioStatusMinPowerLevel,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioStatusMacMinPowerLevel
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            Radio Status info depending on AP model and
+            antenna being used in releases 7.1 and greater."
+        ::= { ntwsApStatusGroups 17 }
+
+
+ntwsApStatusRadioOpStatisticsClientAssocGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioOpStatsClientAssociations,
+                 ntwsApStatRadioOpStatsClientFailedAssociations,
+                 ntwsApStatRadioOpStatsClientReAssociations,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioOpStatsMacClientAssociations,
+                 ntwsApStatRadioOpStatsMacClientFailedAssociations,
+                 ntwsApStatRadioOpStatsMacClientReAssociations
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide per-radio
+            client association info in releases 7.1 and greater."
+        ::= { ntwsApStatusGroups 18 }
+
+
+ntwsApStatusRadioOpStatisticsSignErrGroup OBJECT-GROUP
+        OBJECTS {
+                 -- indexed by AP Serial number etc:
+                 --
+                 ntwsApStatRadioOpStatsSignalingPkt,
+                 ntwsApStatRadioOpStatsReTransmitOctet,
+                 ntwsApStatRadioOpStatsRefusedConnectionCount,
+
+                 -- indexed by MAC address:
+                 --
+                 ntwsApStatRadioOpStatsMacSignalingPkt,
+                 ntwsApStatRadioOpStatsMacReTransmitOctet,
+                 ntwsApStatRadioOpStatsMacRefusedConnectionCount
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            more Radio Operational Statistics info
+            in releases 7.1 and greater."
+        ::= { ntwsApStatusGroups 19 }
+
+
+END

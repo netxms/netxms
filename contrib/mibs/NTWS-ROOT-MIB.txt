@@ -1,0 +1,48 @@
+NTWS-ROOT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, enterprises
+        FROM SNMPv2-SMI;
+
+ntwsRootMib MODULE-IDENTITY 
+       LAST-UPDATED    "200708150004Z" 
+       ORGANIZATION    "Nortel Networks" 
+       CONTACT-INFO    "Nortel Networks" 
+       DESCRIPTION 
+	   "Nortel Wireless Switch Root MIB 
+
+	    Copyright 2005-2007 Nortel Networks, Inc. 
+	    All rights reserved. 
+	    This Nortel Networks SNMP Management Information Base Specification 
+	    (Specification) embodies Nortel Networks' confidential and 
+	    proprietary intellectual property. Nortel Networks retains all 
+	    title and ownership in the Specification, including any 
+	    revisions. 
+
+	    This Specification is supplied 'AS IS,' and Nortel Networks makes 
+	    no warranty, either express or implied, as to the use, 
+	    operation, condition, or performance of the Specification."
+
+       REVISION "200708150004Z"
+       DESCRIPTION "v2.0.1, MRT v3: Removed unnecessary comment.
+                   Changed IMPORT of enterprises from RFC1155-SMI to SNMPv2-SMI.
+                   Made changes in order to make MIB compile cleanly
+                   and comply with corporate MIB conventions."
+
+       REVISION "200603310003Z" 
+       DESCRIPTION "v2.0: Revised for release." 
+
+       REVISION "200504210000Z"
+       DESCRIPTION "v1:  Initial version."
+
+       ::= { enterprises 45 6 1 } 
+
+-- Top level Branches
+
+ntwsProducts        OBJECT IDENTIFIER ::= { ntwsRootMib 1 }
+ntwsTemporary       OBJECT IDENTIFIER ::= { ntwsRootMib 2 }
+ntwsRegistration    OBJECT IDENTIFIER ::= { ntwsRootMib 3 }
+ntwsMibs            OBJECT IDENTIFIER ::= { ntwsRootMib 4 }
+ntwsTraps           OBJECT IDENTIFIER ::= { ntwsRootMib 5 }
+
+END

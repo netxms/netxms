@@ -1,0 +1,209 @@
+NTWS-AP-IF-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    MODULE-IDENTITY, OBJECT-TYPE,
+    Unsigned32, Gauge32
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString, MacAddress
+        FROM SNMPv2-TC
+    IANAifType
+        FROM IANAifType-MIB
+    NtwsApSerialNum
+        FROM NTWS-AP-TC
+    ntwsMibs
+        FROM NTWS-ROOT-MIB;
+
+
+ntwsApIfMib MODULE-IDENTITY
+    LAST-UPDATED "200811200001Z"
+    ORGANIZATION "Nortel Networks"
+    CONTACT-INFO
+        "www.nortelnetworks.com"
+    DESCRIPTION
+        "AP network Interface objects for
+        Nortel Networks wireless switches.
+
+        AP = Access Point;
+        AC = Access Controller (wireless switch),
+             the device that runs a SNMP Agent implementing this MIB.
+
+        Copyright 2009 Nortel Networks.
+        All rights reserved.
+        This Nortel Networks SNMP Management Information Base Specification
+        (Specification) embodies Nortel Networks' confidential and
+        proprietary intellectual property.
+
+        This Specification is supplied 'AS IS' and Nortel Networks
+        makes no warranty, either express or implied, as to the use,
+        operation, condition, or performance of the Specification."
+
+
+    REVISION "200811200001Z"
+    DESCRIPTION "v1.0: Initial version"
+
+    ::= { ntwsMibs 16 }
+
+
+-- Textual conventions
+
+NtwsApInterfaceIndex ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "d"
+    STATUS       current
+    DESCRIPTION
+        "A unique value, greater than zero, for each AP network interface."
+    SYNTAX      Unsigned32 (1..1024)
+
+
+-- Object definitions
+
+--
+-- The AP If MIB Tree
+--
+
+ntwsApIfMibObjects      OBJECT IDENTIFIER ::= { ntwsApIfMib 1 }
+
+
+-- ==================
+-- AP Interface table
+
+ntwsApIfTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF NtwsApIfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table describing the network interfaces on all the APs
+        currently present and managed by this AC (APs in ''ALIVE'' state)."
+    ::= { ntwsApIfMibObjects 1 }
+
+ntwsApIfEntry OBJECT-TYPE
+    SYNTAX      NtwsApIfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Information about a particular network interface
+        on an AP attached to the AC."
+    INDEX   { ntwsApIfApSerialNum,
+              ntwsApIfIndex }
+    ::= { ntwsApIfTable 1 }
+
+NtwsApIfEntry ::= SEQUENCE {
+        ntwsApIfApSerialNum    NtwsApSerialNum,
+        ntwsApIfIndex          NtwsApInterfaceIndex,
+
+        ntwsApIfName           DisplayString,
+        ntwsApIfType           IANAifType,
+        ntwsApIfMtu            Unsigned32,
+        ntwsApIfHighSpeed      Gauge32,
+        ntwsApIfMac            MacAddress
+    }
+
+ntwsApIfApSerialNum OBJECT-TYPE
+    SYNTAX      NtwsApSerialNum
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The Serial Number of the AP containing this network interface."
+    ::= { ntwsApIfEntry 1 }
+
+ntwsApIfIndex OBJECT-TYPE
+    SYNTAX      NtwsApInterfaceIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A unique value, greater than zero, for each AP network interface."
+    ::= { ntwsApIfEntry 2 }
+
+ntwsApIfName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The textual name of the interface."
+    ::= { ntwsApIfEntry 3 }
+
+ntwsApIfType OBJECT-TYPE
+    SYNTAX      IANAifType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of AP network interfaces."
+    ::= { ntwsApIfEntry 4 }
+
+ntwsApIfMtu OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The size of the largest packet which can be sent/received
+        on the interface, specified in octets."
+    ::= { ntwsApIfEntry 5 }
+
+ntwsApIfHighSpeed OBJECT-TYPE
+    SYNTAX      Gauge32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The nominal bandwidth of AP network interfaces
+         in units of 1,000,000 bits per second."
+    ::= { ntwsApIfEntry 6 }
+
+ntwsApIfMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The MAC address of this network interface."
+    ::= { ntwsApIfEntry 7 }
+
+
+-- ============================================================================
+--
+-- Conformance
+--
+
+ntwsApIfConformance  OBJECT IDENTIFIER ::= { ntwsApIfMib 2 }
+ntwsApIfCompliances  OBJECT IDENTIFIER ::= { ntwsApIfConformance 1 }
+ntwsApIfGroups       OBJECT IDENTIFIER ::= { ntwsApIfConformance 2 }
+
+
+-- Compliance
+
+
+ntwsApIfCompliance MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for devices that implement AP If MIB.
+
+        This compliance statement is for releases 7.1 and greater
+        of AC (wireless switch) software."
+
+    MODULE  -- this module (ntwsApIfMib)
+
+    MANDATORY-GROUPS {
+            ntwsApIfBasicGroup
+            }
+
+    ::= { ntwsApIfCompliances 1 }
+
+
+-- Units of Conformance
+
+
+ntwsApIfBasicGroup OBJECT-GROUP
+        OBJECTS {
+                 ntwsApIfName,
+                 ntwsApIfType,
+                 ntwsApIfMtu,
+                 ntwsApIfHighSpeed,
+                 ntwsApIfMac
+                }
+        STATUS      current
+        DESCRIPTION
+            "Group of columnar objects implemented to provide
+            basic Interface info in releases 7.1 and greater."
+        ::= { ntwsApIfGroups 1 }
+
+
+END
