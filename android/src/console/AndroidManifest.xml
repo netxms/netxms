@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.netxms.ui.android" android:versionName="1.2.7" android:versionCode="8">
-	<uses-sdk android:targetSdkVersion="17" android:minSdkVersion="8"></uses-sdk>
+	<uses-sdk android:targetSdkVersion="18" android:minSdkVersion="8"></uses-sdk>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.READ_LOGS"/>
+    
     <application android:name="NXApplication"
                  android:icon="@drawable/icon"
                  android:allowBackup="true"
@@ -17,6 +18,7 @@
     	<receiver android:name="org.netxms.ui.android.receivers.BootCompletedIntentReceiver">  
 			<intent-filter>  
 		 		<action android:name="android.intent.action.BOOT_COMPLETED" />
+		 		<action android:name="android.intent.action.QUICKBOOT_POWERON" />
 		 		<category android:name="android.intent.category.HOME" /> 		
 		 	</intent-filter>  
 		</receiver>

@@ -12,7 +12,7 @@
 	<string name="reconnect">Reconnect</string>
 	<string name="tools">Tools</string>
 	<string name="confirm_tool_execution">Confirm execution</string>
-	<string name="no_items">No items to show...</string>
+	<string name="no_items">No items to show&#8230;</string>
 					
 	<string name="progress_gathering_data">Gathering data&#8230;</string>
 	<string name="progress_processing_data">Processing data&#8230;</string>
@@ -28,17 +28,17 @@
 	<string name="home_screen_macaddress">MACaddress</string>
 			
     <string name="settings">Settings</string>
-	<string name="pref_encrypt_summary_disabled">Do not use encryption</string>
-    <string name="pref_encrypt_summary_enabled">Use encryption</string>
     <string name="pref_encrypt">Encrypt connection</string>
-    <string name="pref_password_summary">NetXMS password</string>
+    <string name="pref_encrypt_summary_disabled">Connection is in clear</string>
+    <string name="pref_encrypt_summary_enabled">Encryption is negotiated</string>
     <string name="pref_password">Password</string>
-    <string name="pref_login_summary">NetXMS login name</string>
+    <string name="pref_password_summary">NetXMS password</string>
     <string name="pref_login">User name</string>
-    <string name="pref_server_summary">Name or address of NetXMS server</string>
+    <string name="pref_login_summary">NetXMS login name</string>
     <string name="pref_server">Server</string>
-    <string name="pref_port_summary">Port of NetXMS server</string>
+    <string name="pref_server_summary">Name or address of NetXMS server</string>
     <string name="pref_port">Port</string>
+    <string name="pref_port_summary">Port of NetXMS server</string>
     <string name="pref_global">Global settings</string>
     <string name="pref_connection">Connection</string>
     <string name="pref_parameters">Parameters</string>
@@ -46,7 +46,7 @@
     <string name="pref_scheduler_enable">Enable scheduler</string>
     <string name="pref_scheduler_enabled">Scheduler is enabled</string>
     <string name="pref_scheduler_disabled">Scheduler is disabled</string>
-    <string name="pref_scheduler_daily_enable">Enable scheduler</string>
+    <string name="pref_scheduler_daily_enable">Daily scheduler</string>
     <string name="pref_scheduler_daily_enabled">Daily scheduler is enabled</string>
     <string name="pref_scheduler_daily_disabled">Daily scheduler is disabled</string>
     <string name="pref_scheduler_daily_on">Daily activation on</string>
@@ -56,8 +56,8 @@
 	<string name="pref_scheduler_activation_duration">Duration (min)</string>
 	<string name="pref_scheduler_activation_duration_summary">For how much it should be kept on</string>
 	<string name="pref_global_autostart">Auto start on boot</string>
-	<string name="pref_global_autostart_enabled">Auto start service on boot</string>
-	<string name="pref_global_autostart_disabled">Do not auto start service on boot</string>
+	<string name="pref_global_autostart_enabled">Allow automatic start of service</string>
+	<string name="pref_global_autostart_disabled">Block automatic start of service</string>
 	<string name="pref_notifications">Notifications</string>
 	<string name="pref_status">Connection status</string>
 	<string name="pref_alarms">Alarms</string>
@@ -68,15 +68,15 @@
 	<string name="pref_alarm_sound_major">Major alarm sound</string>
 	<string name="pref_alarm_sound_critical">Critical alarm sound</string>
 	<string name="pref_global_notification_toast">Toast notification</string>
-	<string name="pref_global_notification_toast_enabled">Toast notification enabled</string>
-	<string name="pref_global_notification_toast_disabled">Toast notification disabled</string>
+	<string name="pref_global_notification_toast_enabled">Toast is enabled</string>
+	<string name="pref_global_notification_toast_disabled">Toast is disabled</string>
 	<string name="pref_global_notification_icon">Icon notification</string>
-	<string name="pref_global_notification_icon_enabled">Icon notification in status bar enabled</string>
-	<string name="pref_global_notification_icon_disabled">Icon notification in status bar disabled</string>
+	<string name="pref_global_notification_icon_enabled">Icon in status bar is enabled</string>
+	<string name="pref_global_notification_icon_disabled">Icon in status bar is disabled</string>
 	<string name="pref_global_notification_status">Notification behaviour</string>
 	<string name="pref_global_notification_alarm">Alarm notification</string>
-	<string name="pref_global_notification_alarm_enabled">Alarm notification in status bar enabled</string>
-	<string name="pref_global_notification_alarm_disabled">Alarm notification in status bar disabled</string>
+	<string name="pref_global_notification_alarm_enabled">Alarm in status bar is enabled</string>
+	<string name="pref_global_notification_alarm_disabled">Alarm in status bar is disabled</string>
 	<string name="pref_interface">Interface</string>
 	<string name="pref_multipliers">Multipliers</string>
 	<string name="pref_multiplier_title">Choose multiplier</string>
@@ -234,14 +234,4 @@
 	<string name="menu_poll_configuration">Configuration</string>
 	<string name="menu_poll_topology">Topology</string>
 	<string name="menu_poll_interfaces">Interface names</string>
-	
-	
-    <string name="fragment_tabs">Fragment/Tabs</string>
-	<string name="new_fragment">Add new</string>
-    <string name="delete_fragment">Pop top</string>
-    <string name="hello_world"><b>Hello, <i>World!</i></b></string>
-    <string name="first">First</string>
-    <string name="last">Last</string>
-    	
-	
 </resources>

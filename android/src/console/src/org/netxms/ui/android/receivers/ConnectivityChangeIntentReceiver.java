@@ -20,6 +20,7 @@ import android.preference.PreferenceManager;
 
 public class ConnectivityChangeIntentReceiver extends BroadcastReceiver
 {
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onReceive(Context context, Intent intent)
 	{
