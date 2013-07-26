@@ -128,7 +128,7 @@ public class HomeScreen extends AbstractClientActivity
 		if (sp.getBoolean("global.activate", false))
 		{
 			String status = getString(R.string.pref_global_activate_enabled);
-			String minutes = sp.getString("scheduler.interval", "15");
+			String minutes = sp.getString("connection.interval", "15");
 			String range = "";
 			if (sp.getBoolean("scheduler.daily.enable", false))
 				range = getString(R.string.info_agent_range, sp.getString("scheduler.daily.on", "00:00"), sp.getString("scheduler.daily.off", "00:00"));

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.netxms.agent.android" android:versionName="1.2.6" android:versionCode="2">
-	<uses-sdk android:targetSdkVersion="17" android:minSdkVersion="8"></uses-sdk>
+	<uses-sdk android:targetSdkVersion="18" android:minSdkVersion="8"></uses-sdk>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -19,6 +19,7 @@
     	<receiver android:name="org.netxms.agent.android.receivers.BootCompletedIntentReceiver">  
 			<intent-filter>  
 		 		<action android:name="android.intent.action.BOOT_COMPLETED" />
+		 		<action android:name="android.intent.action.QUICKBOOT_POWERON" />
 		 		<category android:name="android.intent.category.HOME" /> 		
 		 	</intent-filter>  
 		</receiver>
