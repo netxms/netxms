@@ -433,12 +433,87 @@ struct TC_ID_MAP_ENTRY
 };
 
 /**
+ * Condition for table DCI threshold
+ */
+class NXCORE_EXPORTABLE DCTableCondition
+{
+private:
+   TCHAR *m_column;
+   int m_operation;
+   ItemValue m_value;
+
+public:
+   DCTableCondition(const TCHAR *column, int operation, const TCHAR *value);
+   DCTableCondition(DCTableCondition *src);
+   ~DCTableCondition();
+
+   bool check(Table *value, int row);
+
+   const TCHAR *getColumn() { return m_column; }
+   int getOperation() { return m_operation; }
+   const TCHAR *getValue() { return m_value.getString(); }
+};
+
+/**
+ * Condition group for table DCI threshold
+ */
+class NXCORE_EXPORTABLE DCTableConditionGroup
+{
+private:
+   ObjectArray<DCTableCondition> *m_conditions;
+
+public:
+   DCTableConditionGroup();
+   DCTableConditionGroup(CSCPMessage *msg, UINT32 *baseId);
+   DCTableConditionGroup(DCTableConditionGroup *src);
+   ~DCTableConditionGroup();
+
+   bool check(Table *value, int row);
+
+   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+
+   ObjectArray<DCTableCondition> *getConditions() { return m_conditions; }
+};
+
+/**
+ * Threshold definition for tabe DCI
+ */
+class NXCORE_EXPORTABLE DCTableThreshold
+{
+private:
+   UINT32 m_id;
+   ObjectArray<DCTableConditionGroup> *m_groups;
+   UINT32 m_activationEvent;
+   UINT32 m_deactivationEvent;
+   bool m_currentState;
+
+   void loadConditions();
+
+public:
+   DCTableThreshold();
+   DCTableThreshold(DB_RESULT hResult, int row);
+   DCTableThreshold(CSCPMessage *msg, UINT32 *baseId);
+   DCTableThreshold(DCTableThreshold *src);
+   ~DCTableThreshold();
+
+   bool check(Table *value, int row);
+
+   bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
+
+   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+
+   UINT32 getId() { return m_id; }
+   bool getCurrentState() { return m_currentState; }
+};
+
+/**
  * Tabular data collection object
  */
 class NXCORE_EXPORTABLE DCTable : public DCObject
 {
 protected:
 	ObjectArray<DCTableColumn> *m_columns;
+   ObjectArray<DCTableThreshold> *m_thresholds;
 	Table *m_lastValue;
 
 	static TC_ID_MAP_ENTRY *m_cache;
@@ -447,6 +522,9 @@ protected:
 	static MUTEX m_cacheMutex;
 
    void transform(Table *value);
+   
+   bool loadThresholds();
+   bool saveThresholds(DB_HANDLE hdb);
 
 public:
 	DCTable();

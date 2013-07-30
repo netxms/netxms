@@ -285,6 +285,14 @@ BOOL InitIdTable()
                                               DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM dct_thresholds"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_THRESHOLD] = max(m_dwFreeIdTable[IDG_THRESHOLD], 
+                                              DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
 
    // Get first available user id
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM users"));

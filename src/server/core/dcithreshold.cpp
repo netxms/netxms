@@ -162,11 +162,9 @@ void Threshold::createId()
    m_id = CreateUniqueId(IDG_THRESHOLD); 
 }
 
-
-//
-// Save threshold to database
-//
-
+/**
+ * Save threshold to database
+ */
 BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 {
    // Prepare and execute query
@@ -391,12 +389,12 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          case OP_LIKE:
             // This operation can be performed only on strings
             if (m_dataType == DCI_DT_STRING)
-               bMatch = MatchString(m_value.getString(), fvalue.getString(), TRUE);
+               bMatch = MatchString(m_value.getString(), fvalue.getString(), true);
             break;
          case OP_NOTLIKE:
             // This operation can be performed only on strings
             if (m_dataType == DCI_DT_STRING)
-               bMatch = !MatchString(m_value.getString(), fvalue.getString(), TRUE);
+               bMatch = !MatchString(m_value.getString(), fvalue.getString(), true);
             break;
          default:
             break;

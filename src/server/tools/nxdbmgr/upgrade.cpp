@@ -354,6 +354,35 @@ static BOOL RecreateTData(const TCHAR *className)
 }
 
 /**
+ * Upgrade from V285 to V286
+ */
+static BOOL H_UpgradeFromV285(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE dct_thresholds (")
+      _T("id integer not null,")
+      _T("table_id integer not null,")
+      _T("sequence_number integer not null,")
+      _T("current_state char(1) not null,")
+      _T("activation_event integer not null,")
+      _T("deactivation_event integer not null,")
+      _T("PRIMARY KEY(id))")));
+
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE dct_threshold_conditions (")
+      _T("threshold_id integer not null,")
+      _T("group_id integer not null,")
+      _T("sequence_number integer not null,")
+      _T("column_name varchar(63) null,")
+      _T("check_operation integer not null,")
+      _T("check_value varchar(255) null,")
+      _T("PRIMARY KEY(threshold_id,group_id,sequence_number))")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='286' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V284 to V285
  */
 static BOOL H_UpgradeFromV284(int currVersion, int newVersion)
@@ -7047,6 +7076,7 @@ static struct
    { 282, 283, H_UpgradeFromV282 },
    { 283, 284, H_UpgradeFromV283 },
    { 284, 285, H_UpgradeFromV284 },
+   { 285, 286, H_UpgradeFromV285 },
    { 0, 0, NULL }
 };
 

@@ -529,6 +529,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dctthreshold.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\debug.cpp"
 				>
 			</File>

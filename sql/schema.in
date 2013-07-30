@@ -550,20 +550,17 @@ CREATE TABLE acl
 	PRIMARY KEY(object_id,user_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Trusted nodes - used for cross-node data collection
 ** Source object is an object providing data (it can be node or condition),
 ** and target node is a node owning DCI
 */
-
 CREATE TABLE trusted_nodes
 (
 	source_object_id integer not null,
 	target_node_id integer not null,
 	PRIMARY KEY(source_object_id,target_node_id)
 ) TABLE_TYPE;
-
 
 /*
 ** Data collection items
@@ -575,7 +572,6 @@ CREATE TABLE trusted_nodes
 ** this item belongs to.
 ** If both node_id and template_id is 0, it's an error.
 */
-
 CREATE TABLE items
 (
 	item_id integer not null,
@@ -662,6 +658,34 @@ CREATE TABLE dct_column_names
 ) TABLE_TYPE;
 
 /*
+** Table thresholds
+*/
+CREATE TABLE dct_thresholds
+(
+	id integer not null,
+	table_id integer not null,
+	sequence_number integer not null,
+	current_state char(1) not null,
+	activation_event integer not null,
+	deactivation_event integer not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/*
+** Table threshold conditions
+*/
+CREATE TABLE dct_threshold_conditions
+(
+	threshold_id integer not null,
+	group_id integer not null,
+	sequence_number integer not null,
+	column_name varchar(63) null,
+	check_operation integer not null,
+	check_value varchar(255) null,
+	PRIMARY KEY(threshold_id,group_id,sequence_number)
+) TABLE_TYPE;
+
+/*
 ** Schedules for DCIs
 */
 CREATE TABLE dci_schedules
@@ -672,11 +696,9 @@ CREATE TABLE dci_schedules
 	PRIMARY KEY(item_id,schedule_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Latest raw values for all data collection items
 */
-
 CREATE TABLE raw_dci_values
 (
 	item_id integer not null,
@@ -748,7 +770,6 @@ CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
 /*
 ** Actions on events
 */
-
 CREATE TABLE actions
 (
 	action_id integer not null,
@@ -767,11 +788,9 @@ CREATE TABLE actions
 	PRIMARY KEY(action_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Event groups
 */
-
 CREATE TABLE event_groups
 (
 	id integer not null,
@@ -782,11 +801,9 @@ CREATE TABLE event_groups
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Event group members
 */
-
 CREATE TABLE event_group_members
 (
 	group_id integer not null,
@@ -867,11 +884,9 @@ CREATE TABLE time_ranges
 	PRIMARY KEY(time_range_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Threshold checking rules
 */
-
 CREATE TABLE thresholds
 (
 	threshold_id integer not null,

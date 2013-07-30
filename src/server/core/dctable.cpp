@@ -124,6 +124,7 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 DCTable::DCTable() : DCObject()
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+   m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
 	m_lastValue = NULL;
 }
 
@@ -135,6 +136,9 @@ DCTable::DCTable(const DCTable *src) : DCObject(src)
 	m_columns = new ObjectArray<DCTableColumn>(src->m_columns->size(), 8, true);
 	for(int i = 0; i < src->m_columns->size(); i++)
 		m_columns->add(new DCTableColumn(src->m_columns->get(i)));
+   m_thresholds = new ObjectArray<DCTableThreshold>(src->m_thresholds->size(), 4, true);
+	for(int i = 0; i < src->m_thresholds->size(); i++)
+		m_thresholds->add(new DCTableThreshold(src->m_thresholds->get(i)));
 	m_lastValue = NULL;
 }
 
@@ -146,6 +150,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
         : DCObject(id, name, source, pollingInterval, retentionTime, node, description, systemTag)
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+   m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
 	m_lastValue = NULL;
 }
 
@@ -198,6 +203,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	}
 
 	loadCustomSchedules();
+   loadThresholds();
 }
 
 /**
@@ -206,6 +212,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 DCTable::~DCTable()
 {
 	delete m_columns;
+   delete m_thresholds;
    if (m_lastValue != NULL)
       m_lastValue->decRefCount();
 }
@@ -475,8 +482,63 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 		}
 	}
 
+   saveThresholds(hdb);
+
    unlock();
 	return result ? DCObject::saveToDB(hdb) : FALSE;
+}
+
+/**
+ * Load thresholds from database
+ */
+bool DCTable::loadThresholds()
+{
+   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT id,current_state,activation_event,deactivation_event FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
+   if (hStmt == NULL)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         DCTableThreshold *t = new DCTableThreshold(hResult, i);
+         m_thresholds->add(t);
+      }
+      DBFreeResult(hResult);
+   }
+   DBFreeStatement(hStmt);
+   return true;
+}
+
+/**
+ * Save thresholds to database
+ */
+bool DCTable::saveThresholds(DB_HANDLE hdb)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id=?"));
+   if (hStmt == NULL)
+      return false;
+
+   for(int i = 0; i < m_thresholds->size(); i++)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_thresholds->get(i)->getId());
+      DBExecute(hStmt);
+   }
+   DBFreeStatement(hStmt);
+
+   hStmt = DBPrepare(hdb, _T("DELETE FROM dct_thresholds WHERE table_id=?"));
+   if (hStmt == NULL)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+   DBExecute(hStmt);
+   DBFreeStatement(hStmt);
+
+   for(int i = 0; i < m_thresholds->size(); i++)
+      m_thresholds->get(i)->saveToDatabase(hdb, m_dwId, i);
+   return true;
 }
 
 /**
@@ -493,6 +555,15 @@ void DCTable::deleteFromDB()
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_tables WHERE item_id=%d"), (int)m_dwId);
    QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_table_columns WHERE table_id=%d"), (int)m_dwId);
+   QueueSQLRequest(szQuery);
+
+   for(int i = 0; i < m_thresholds->size(); i++)
+   {
+      _sntprintf(szQuery, 256, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id=%d"), (int)m_thresholds->get(i)->getId());
+      QueueSQLRequest(szQuery);
+   }
+
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_thresholds WHERE table_id=%d"), (int)m_dwId);
    QueueSQLRequest(szQuery);
 }
 
@@ -519,6 +590,14 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 		pMsg->SetVariable(varId++, column->getDisplayName());
 		varId += 6;
 	}
+
+	pMsg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
+   varId = VID_DCI_THRESHOLD_BASE;
+   for(int i = 0; i < m_thresholds->size(); i++)
+   {
+      varId = m_thresholds->get(i)->fillMessage(pMsg, varId);
+   }
+
    unlock();
 }
 
@@ -538,6 +617,14 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 	{
 		m_columns->add(new DCTableColumn(pMsg, varId));
 		varId += 10;
+	}
+
+	m_thresholds->clear();
+	count = (int)pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+	varId = VID_DCI_THRESHOLD_BASE;
+	for(int i = 0; i < count; i++)
+	{
+		m_thresholds->add(new DCTableThreshold(pMsg, &varId));
 	}
 
 	unlock();
@@ -755,6 +842,10 @@ void DCTable::updateFromTemplate(DCObject *src)
    m_columns->clear();
 	for(int i = 0; i < table->m_columns->size(); i++)
 		m_columns->add(new DCTableColumn(table->m_columns->get(i)));
-   
+
+   m_thresholds->clear();
+	for(int i = 0; i < table->m_thresholds->size(); i++)
+		m_thresholds->add(new DCTableThreshold(table->m_thresholds->get(i)));
+
    unlock();
 }
