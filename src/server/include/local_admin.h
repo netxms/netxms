@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,19 +16,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: local_admin.h
+** File: local_admin.h
 **
 **/
 
 #ifndef _local_admin_h_
 #define _local_admin_h_
 
-
-//
-// Constants
-//
-
-#define LOCAL_ADMIN_PORT      58942
+#define LOCAL_ADMIN_PORT      21784
 
 #define LA_RESP_SUCCESS       0x7777
 #define LA_RESP_ERROR         0xFFFF
