@@ -306,9 +306,28 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
 /**
  * Write record to log file
  */
-static void WriteLogToFile(TCHAR *message)
+static void WriteLogToFile(TCHAR *message, const WORD wType)
 {
    TCHAR buffer[64];
+   TCHAR loglevel[64];
+
+   switch (wType) {
+   case EVENTLOG_ERROR_TYPE:
+	   _sntprintf(loglevel, 16, _T("[%s]"), _T("ERROR"));
+	   break;
+   case EVENTLOG_WARNING_TYPE:
+	   _sntprintf(loglevel, 16, _T("[%s]"), _T("WARN "));
+	   break;
+   case EVENTLOG_INFORMATION_TYPE:
+	   _sntprintf(loglevel, 16, _T("[%s]"), _T("INFO "));
+	   break;
+   case EVENTLOG_DEBUG_TYPE:
+	   _sntprintf(loglevel, 16, _T("[%s]"), _T("DEBUG"));
+	   break;
+   default:
+	   _sntprintf(loglevel, 16, _T("[%s]"), _T("INFO?"));
+	   break;
+   }
 
    // Prevent simultaneous write to log file
    MutexLock(m_mutexLogAccess);
@@ -323,11 +342,11 @@ static void WriteLogToFile(TCHAR *message)
 	FormatLogTimestamp(buffer);
    if (m_logFileHandle != NULL)
 	{
-      _ftprintf(m_logFileHandle, _T("%s %s"), buffer, message);
+      _ftprintf(m_logFileHandle, _T("%s %s %s"), buffer, loglevel, message);
 		fflush(m_logFileHandle);
 	}
    if (m_flags & NXLOG_PRINT_TO_STDOUT)
-      m_consoleWriter(_T("%s %s"), buffer, message);
+      m_consoleWriter(_T("%s %s %s"), buffer, loglevel, message);
 
 	// Check log size
 	if ((m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
@@ -535,7 +554,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 			}
 			else
 			{
-				WriteLogToFile((TCHAR *)lpMsgBuf);
+				WriteLogToFile((TCHAR *)lpMsgBuf, wType);
 			}
          LocalFree(lpMsgBuf);
       }
@@ -550,7 +569,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 			}
 			else
 			{
-	         WriteLogToFile(message);
+	         WriteLogToFile(message, wType);
 			}
       }
    }
@@ -598,7 +617,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
    }
    else
    {
-      WriteLogToFile(pMsg);
+      WriteLogToFile(pMsg, wType);
    }
    free(pMsg);
 #endif /* _WIN32 */
