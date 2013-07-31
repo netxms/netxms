@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,6 @@ public abstract class ConsoleJob extends Job
 	private String pluginId;
 	private Object jobFamily;
 	private boolean passException = false;
-	private boolean printException = true;
 	
 	/**
 	 * Constructor for console job object
@@ -85,8 +84,7 @@ public abstract class ConsoleJob extends Job
 		}
 		catch(Exception e)
 		{
-			if (printException)
-				e.printStackTrace();
+			Activator.logError("Exception in ConsoleJob", e);
 			jobFailureHandler();
 			status = createFailureStatus(e);
 		}
@@ -211,21 +209,5 @@ public abstract class ConsoleJob extends Job
 	protected Display getDisplay()
 	{
 		return PlatformUI.getWorkbench().getDisplay();
-	}
-
-	/**
-	 * @return the printException
-	 */
-	public boolean isPrintException()
-	{
-		return printException;
-	}
-
-	/**
-	 * @param printException the printException to set
-	 */
-	public void setPrintException(boolean printException)
-	{
-		this.printException = printException;
 	}
 }

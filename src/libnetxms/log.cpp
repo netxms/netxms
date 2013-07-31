@@ -311,22 +311,23 @@ static void WriteLogToFile(TCHAR *message, const WORD wType)
    TCHAR buffer[64];
    TCHAR loglevel[64];
 
-   switch (wType) {
-   case EVENTLOG_ERROR_TYPE:
-	   _sntprintf(loglevel, 16, _T("[%s]"), _T("ERROR"));
-	   break;
-   case EVENTLOG_WARNING_TYPE:
-	   _sntprintf(loglevel, 16, _T("[%s]"), _T("WARN "));
-	   break;
-   case EVENTLOG_INFORMATION_TYPE:
-	   _sntprintf(loglevel, 16, _T("[%s]"), _T("INFO "));
-	   break;
-   case EVENTLOG_DEBUG_TYPE:
-	   _sntprintf(loglevel, 16, _T("[%s]"), _T("DEBUG"));
-	   break;
-   default:
-	   _sntprintf(loglevel, 16, _T("[%s]"), _T("INFO?"));
-	   break;
+   switch(wType) 
+   {
+      case EVENTLOG_ERROR_TYPE:
+	      _sntprintf(loglevel, 16, _T("[%s]"), _T("ERROR"));
+	      break;
+      case EVENTLOG_WARNING_TYPE:
+	      _sntprintf(loglevel, 16, _T("[%s]"), _T("WARN "));
+	      break;
+      case EVENTLOG_INFORMATION_TYPE:
+	      _sntprintf(loglevel, 16, _T("[%s]"), _T("INFO "));
+	      break;
+      case EVENTLOG_DEBUG_TYPE:
+	      _sntprintf(loglevel, 16, _T("[%s]"), _T("DEBUG"));
+	      break;
+      default:
+	      _sntprintf(loglevel, 16, _T("[%s]"), _T("INFO?"));
+	      break;
    }
 
    // Prevent simultaneous write to log file

@@ -316,11 +316,14 @@ public class TabbedObjectView extends ViewPart
 				}
 			}
 			
-			if (tabFolder.getSelection() == null)
+			if ((objectId == 0) || (tabFolder.getSelection() == null))
 			{
 				try
 				{
-					tabFolder.setSelection(tabFolder.getItem(0));
+					tabFolder.setSelection(0);
+					ObjectTab tab = (ObjectTab)tabFolder.getItem(0).getData();
+					tab.selected();
+					selectionProvider.setSelectionProviderDelegate(tab.getSelectionProvider());
 				}
 				catch(IllegalArgumentException e)
 				{

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.console;
 
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -149,5 +150,36 @@ public class Activator extends AbstractUIPlugin
 		
 		ConsoleSharedData.setTrayIcon(null);
 		item.dispose();
+	}
+
+	/**
+	 * Log via platform logging facilities
+	 * 
+	 * @param msg
+	 */
+	public static void logInfo(String msg)
+	{
+		log(Status.INFO, msg, null);
+	}
+
+	/**
+	 * Log via platform logging facilities
+	 * 
+	 * @param msg
+	 */
+	public static void logError(String msg, Exception e)
+	{
+		log(Status.ERROR, msg, e);
+	}
+
+	/**
+	 * Log via platform logging facilities
+	 * 
+	 * @param msg
+	 * @param e
+	 */
+	public static void log(int status, String msg, Exception e)
+	{
+		getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, e));
 	}
 }

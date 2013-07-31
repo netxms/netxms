@@ -36,7 +36,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class InterfaceListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-	private static final long serialVersionUID = 1L;
 	private static final String[] ifaceExpectedState = { "UP", "DOWN", "IGNORE" };
 	
 	private Node node = null;
