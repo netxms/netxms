@@ -203,6 +203,8 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	}
 
 	loadCustomSchedules();
+
+   m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
    loadThresholds();
 }
 
