@@ -45,6 +45,7 @@
 
 static struct pst_status *m_processList = NULL;
 static time_t m_processListUpdated = 0;
+static int m_processCount = 0;
 
 //
 // Handler for System.ProcessCount parameter
@@ -79,7 +80,13 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
       now = time(NULL);
       if (now < m_processListUpdated + EXPIRATION)
       {
+         *pnNumProcs = m_processCount;
          return m_processList;
+      }
+      else
+      {
+         free(m_processList);
+         m_processList = NULL;
       }
    }
 	
@@ -101,6 +108,7 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 	}
 
    m_processList = pBuffer;
+   m_processCount = nCount;
    m_processListUpdated = now;
 
 	return pBuffer;
@@ -124,7 +132,6 @@ LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue)
 		{
 			nThreadCount += pList[i].pst_nlwps;
 		}
-		free(pList);
 		ret_uint(pValue, nThreadCount);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -159,7 +166,6 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 			if (!strcasecmp(pst[i].pst_ucomm, szArg))
 				nTotal++;
 		}
-		free(pst);
 		ret_int(pValue, nTotal);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -285,7 +291,6 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 				nCount++;
 			}
 		}
-		free(pList);
 		ret_uint64(pValue, qwValue);
 	}
 	else
@@ -316,7 +321,6 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 			snprintf(szBuff, sizeof(szBuff), "%d %s", (DWORD)pst[i].pst_pid, pst[i].pst_ucomm);
 			pValue->add(szBuff);
 		}
-		free(pst);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
