@@ -48,6 +48,7 @@ static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
 	StartIOStatCollector();
+   InitProc();
 	return TRUE;
 }
 
@@ -56,6 +57,7 @@ static BOOL SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
+   ShutdownProc();
 	ShutdownCpuUsageCollector();
 	ShutdownIOStatCollector();
 }

@@ -60,4 +60,7 @@ LONG H_OpenFiles(const char *, const char *, char *);
 void StartCpuUsageCollector(void);
 void ShutdownCpuUsageCollector(void);
 
+void InitProc(void);
+void ShutdownProc(void);
+
 #endif // __SYSTEM_H__

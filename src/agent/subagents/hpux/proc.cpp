@@ -46,6 +46,7 @@
 static struct pst_status *m_processList = NULL;
 static time_t m_processListUpdated = 0;
 static int m_processCount = 0;
+static MUTEX m_processListLock = INVALID_MUTEX_HANDLE;
 
 //
 // Handler for System.ProcessCount parameter
@@ -75,12 +76,15 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 	struct pst_status *pBuffer = NULL;
    time_t now;
 
+   MutexLock(m_processListLock);
+
    if (m_processList != NULL)
    {
       now = time(NULL);
       if (now < m_processListUpdated + EXPIRATION)
       {
          *pnNumProcs = m_processCount;
+         MutexUnlock(m_processListLock);
          return m_processList;
       }
       else
@@ -110,6 +114,8 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
    m_processList = pBuffer;
    m_processCount = nCount;
    m_processListUpdated = now;
+
+   MutexUnlock(m_processListLock);
 
 	return pBuffer;
 }
@@ -325,4 +331,27 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 	}
 
 	return nRet;
+}
+
+
+/**
+ * Init Process.* functions
+ */
+void InitProc(void)
+{
+   m_processListLock = MutexCreate();
+}
+
+
+/**
+ * Cleanup Process.* functions
+ */
+void ShutdownProc(void)
+{
+   if (m_processList != NULL)
+   {
+      free(m_processList);
+      m_processList = NULL;
+   }
+	MutexDestroy(m_processListLock);
 }
