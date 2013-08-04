@@ -65,7 +65,7 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 	
 	do
 	{
-		nSize += 100;
+		nSize += 1000;
 		pBuffer = (pst_status *)realloc(pBuffer, sizeof(struct pst_status) * nSize);
 		nCount = pstat_getproc(pBuffer, sizeof(struct pst_status), nSize, 0);
 	} while(nCount == nSize);
