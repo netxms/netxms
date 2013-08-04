@@ -22,6 +22,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <sys/pstat.h>
+#include <time.h>
 #include "system.h"
 #include "hpux.h"
 
@@ -35,6 +36,15 @@
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
 
+
+//
+// Process cache
+//
+
+#define EXPIRATION               3
+
+static struct pst_status *m_processList = NULL;
+static time_t m_processListUpdated = 0;
 
 //
 // Handler for System.ProcessCount parameter
@@ -62,6 +72,16 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 {
 	int nSize = 0, nCount;
 	struct pst_status *pBuffer = NULL;
+   time_t now;
+
+   if (m_processList != NULL)
+   {
+      now = time(NULL);
+      if (now < m_processListUpdated + EXPIRATION)
+      {
+         return m_processList;
+      }
+   }
 	
 	do
 	{
@@ -79,6 +99,9 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 	{
 		*pnNumProcs = nCount;
 	}
+
+   m_processList = pBuffer;
+   m_processListUpdated = now;
 
 	return pBuffer;
 }
