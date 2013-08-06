@@ -30,6 +30,7 @@ public class DataCollectionTable extends DataCollectionObject
 {
 	private String instanceColumn;
 	private List<ColumnDefinition> columns;
+	private List<TableThreshold> thresholds;
 	
 	/**
 	 * Create data collection object from NXCP message.
@@ -50,6 +51,16 @@ public class DataCollectionTable extends DataCollectionObject
 			columns.add(new ColumnDefinition(msg, varId));
 			varId += 10;
 		}
+
+		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_THRESHOLDS);
+		thresholds = new ArrayList<TableThreshold>(count);
+		varId = NXCPCodes.VID_THRESHOLD_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			final TableThreshold t = new TableThreshold(msg, varId);
+			thresholds.add(t);
+			varId = t.getNextVarId();
+		}
 	}
 
 	/**
@@ -63,6 +74,7 @@ public class DataCollectionTable extends DataCollectionObject
 		super(owner, id);
 		instanceColumn = null;
 		columns = new ArrayList<ColumnDefinition>(0);
+		thresholds = new ArrayList<TableThreshold>(0);
 	}
 
 	/**
@@ -82,6 +94,11 @@ public class DataCollectionTable extends DataCollectionObject
 		{
 			columns.get(i).fillMessage(msg, varId);
 			varId += 10;
+		}
+		varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+		for(int i = 0; i < thresholds.size(); i++)
+		{			
+			varId = thresholds.get(i).fillMessage(msg, varId);
 		}
 	}
 	
@@ -115,5 +132,21 @@ public class DataCollectionTable extends DataCollectionObject
 	public void setColumns(List<ColumnDefinition> columns)
 	{
 		this.columns = columns;
+	}
+
+	/**
+	 * @return the thresholds
+	 */
+	public List<TableThreshold> getThresholds()
+	{
+		return thresholds;
+	}
+
+	/**
+	 * @param thresholds the thresholds to set
+	 */
+	public void setThresholds(List<TableThreshold> thresholds)
+	{
+		this.thresholds = thresholds;
 	}
 }
