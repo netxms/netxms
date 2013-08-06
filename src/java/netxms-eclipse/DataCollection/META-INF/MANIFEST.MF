@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Data Collection Management Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.datacollection;singleton:=true
-Bundle-Version: 1.2.8
+Bundle-Version: 1.2.9
 Bundle-Activator: org.netxms.ui.eclipse.datacollection.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
@@ -12,7 +12,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.netxms.ui.eclipse.objectview;bundle-version="1.2.7",
  org.netxms.ui.eclipse.snmp;bundle-version="1.2.7",
  org.netxms.ui.eclipse.nxsl;bundle-version="1.2.7",
- org.netxms.ui.eclipse.console;bundle-version="1.2.8",
+ org.netxms.ui.eclipse.console;bundle-version="1.2.9",
  org.eclipse.core.expressions;bundle-version="3.4.300",
  org.netxms.ui.eclipse.charts;bundle-version="1.2.7"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

@@ -321,6 +321,8 @@ DCTableThreshold::DCTableThreshold(CSCPMessage *msg, UINT32 *baseId)
 {
    UINT32 varId = *baseId;
    m_id = msg->GetVariableLong(varId++);
+   if (m_id == 0)
+      m_id = CreateUniqueId(IDG_THRESHOLD);
    m_currentState = false;
    m_activationEvent = msg->GetVariableLong(varId++);
    m_deactivationEvent = msg->GetVariableLong(varId++);

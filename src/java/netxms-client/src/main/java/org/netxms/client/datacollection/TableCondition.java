@@ -30,6 +30,32 @@ public class TableCondition
 	private String value;
 	
 	/**
+	 * Create new condition object.
+	 * 
+	 * @param column
+	 * @param operation
+	 * @param value
+	 */
+	public TableCondition(String column, int operation, String value)
+	{
+		this.column = column;
+		this.operation = operation;
+		this.value = value;
+	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param src
+	 */
+	public TableCondition(TableCondition src)
+	{
+		column = src.column;
+		operation = src.operation;
+		value = src.value;
+	}
+	
+	/**
 	 * Create condition from NXCP message
 	 * 
 	 * @param msg

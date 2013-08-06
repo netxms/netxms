@@ -54,7 +54,7 @@ public class DataCollectionTable extends DataCollectionObject
 
 		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<TableThreshold>(count);
-		varId = NXCPCodes.VID_THRESHOLD_BASE;
+		varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < count; i++)
 		{
 			final TableThreshold t = new TableThreshold(msg, varId);
@@ -95,6 +95,7 @@ public class DataCollectionTable extends DataCollectionObject
 			columns.get(i).fillMessage(msg, varId);
 			varId += 10;
 		}
+		msg.setVariableInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < thresholds.size(); i++)
 		{			

@@ -35,6 +35,39 @@ public class TableThreshold
 	private long nextVarId;
 	
 	/**
+	 * Create new empty threshold
+	 */
+	public TableThreshold()
+	{
+		id = 0;
+		activationEvent = 0;
+		deactivationEvent = 0;
+		active = false;
+		conditions = new ArrayList<List<TableCondition>>(0);
+	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param src
+	 */
+	public TableThreshold(TableThreshold src)
+	{
+		id = src.id;
+		activationEvent = src.activationEvent;
+		deactivationEvent = src.deactivationEvent;
+		active = src.active;
+		conditions = new ArrayList<List<TableCondition>>(src.conditions.size());
+		for(List<TableCondition> sl : src.conditions)
+		{
+			List<TableCondition> dl = new ArrayList<TableCondition>(sl.size());
+			for(TableCondition c : sl)
+				dl.add(new TableCondition(c));
+			conditions.add(dl);
+		}
+	}
+	
+	/**
 	 * Create from NXCP message
 	 * 
 	 * @param msg
