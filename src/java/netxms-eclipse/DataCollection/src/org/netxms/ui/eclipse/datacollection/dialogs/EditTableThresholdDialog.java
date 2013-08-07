@@ -20,12 +20,16 @@ package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.TableThreshold;
+import org.netxms.ui.eclipse.datacollection.widgets.TableConditionsEditor;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Table threshold editing dialog
@@ -35,6 +39,7 @@ public class EditTableThresholdDialog extends Dialog
 	private TableThreshold threshold;
 	private EventSelector activationEvent;
 	private EventSelector deactivationEvent;
+	private TableConditionsEditor conditionsEditor;
 	
 	/**
 	 * @param parentShell
@@ -47,6 +52,16 @@ public class EditTableThresholdDialog extends Dialog
 	}
 
 	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
+	@Override
+	protected void configureShell(Shell newShell)
+	{
+		super.configureShell(newShell);
+		newShell.setText("Edit Table Threshold");
+	}
+
+	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -55,13 +70,27 @@ public class EditTableThresholdDialog extends Dialog
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 		
 		activationEvent = new EventSelector(dialogArea, SWT.NONE);
+		activationEvent.setLabel("Activation event");
 		activationEvent.setEventCode(threshold.getActivationEvent());
+		activationEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
 		deactivationEvent = new EventSelector(dialogArea, SWT.NONE);
+		deactivationEvent.setLabel("Deactivation event");
 		deactivationEvent.setEventCode(threshold.getDeactivationEvent());
+		deactivationEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		
+		new Label(dialogArea, SWT.NONE).setText("Conditions");
+		
+		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER);
+		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+		gd.widthHint = 700;
+		gd.heightHint = 400;
+		conditionsEditor.setLayoutData(gd);
+		conditionsEditor.setConditions(threshold.getConditions());
 		
 		return dialogArea;
 	}
@@ -74,6 +103,7 @@ public class EditTableThresholdDialog extends Dialog
 	{
 		threshold.setActivationEvent((int)activationEvent.getEventCode());
 		threshold.setDeactivationEvent((int)deactivationEvent.getEventCode());
+		threshold.setConditions(conditionsEditor.getConditions());
 		super.okPressed();
 	}	
 }

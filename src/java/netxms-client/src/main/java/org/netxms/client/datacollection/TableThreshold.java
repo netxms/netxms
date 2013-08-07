@@ -92,12 +92,13 @@ public class TableThreshold
 				list.add(new TableCondition(msg, varId));
 				varId += 3;
 			}
+			conditions.add(list);
 		}
 		nextVarId = varId;
 	}
 	
 	/**
-	 * Fill NXCP mesage with threshold data
+	 * Fill NXCP message with threshold data
 	 * 
 	 * @param msg
 	 * @param baseId

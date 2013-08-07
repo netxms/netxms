@@ -14,7 +14,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.netxms.ui.eclipse.nxsl;bundle-version="1.2.7",
  org.netxms.ui.eclipse.console;bundle-version="1.2.9",
  org.eclipse.core.expressions;bundle-version="3.4.300",
- org.netxms.ui.eclipse.charts;bundle-version="1.2.7"
+ org.netxms.ui.eclipse.charts;bundle-version="1.2.7",
+ org.eclipse.ui.forms;bundle-version="3.5.101"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.datacollection.actions,

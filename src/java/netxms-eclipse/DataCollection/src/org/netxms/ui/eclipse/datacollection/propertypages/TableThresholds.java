@@ -47,7 +47,6 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.TableThreshold;
 import org.netxms.ui.eclipse.datacollection.Activator;
-import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditTableThresholdDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableThresholdLabelProvider;
@@ -286,6 +285,7 @@ public class TableThresholds extends PropertyPage
 			if (dlg.open() == Window.OK)
 			{
 				thresholdList.update(t, null);
+				editor.modify();
 			}
 		}
 	}
@@ -302,6 +302,7 @@ public class TableThresholds extends PropertyPage
 			thresholds.add(t);
 	      thresholdList.setInput(thresholds.toArray());
 	      thresholdList.setSelection(new StructuredSelection(t));
+			editor.modify();
 		}
 	}
 	
