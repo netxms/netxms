@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -44,8 +45,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.AccessListElement;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.TableThreshold;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditTableThresholdDialog;
@@ -81,6 +84,9 @@ public class TableThresholds extends PropertyPage
 		thresholds = new ArrayList<TableThreshold>();
 		for(TableThreshold t : dci.getThresholds())
 			thresholds.add(new TableThreshold(t));
+
+		// Initiate loading of event manager plugin if it was not loaded before
+		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		

@@ -118,7 +118,7 @@ public class TableThreshold
 			for(TableCondition c : l)
 			{
 				msg.setVariable(varId++, c.getColumn());
-				msg.setVariableInt32(varId++, c.getOperation());
+				msg.setVariableInt16(varId++, c.getOperation());
 				msg.setVariable(varId++, c.getValue());
 			}
 		}
