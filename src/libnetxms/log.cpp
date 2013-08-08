@@ -314,19 +314,19 @@ static void WriteLogToFile(TCHAR *message, const WORD wType)
    switch(wType) 
    {
       case EVENTLOG_ERROR_TYPE:
-	      _sntprintf(loglevel, 16, _T("[%s]"), _T("ERROR"));
+	      _sntprintf(loglevel, 16, _T("[%s] "), _T("ERROR"));
 	      break;
       case EVENTLOG_WARNING_TYPE:
-	      _sntprintf(loglevel, 16, _T("[%s]"), _T("WARN "));
+	      _sntprintf(loglevel, 16, _T("[%s] "), _T("WARN "));
 	      break;
       case EVENTLOG_INFORMATION_TYPE:
-	      _sntprintf(loglevel, 16, _T("[%s]"), _T("INFO "));
+	      _sntprintf(loglevel, 16, _T("[%s] "), _T("INFO "));
 	      break;
       case EVENTLOG_DEBUG_TYPE:
-	      _sntprintf(loglevel, 16, _T("[%s]"), _T("DEBUG"));
+	      _sntprintf(loglevel, 16, _T("[%s] "), _T("DEBUG"));
 	      break;
       default:
-	      _sntprintf(loglevel, 16, _T("[%s]"), _T("INFO?"));
+    	  _tcsncpy(loglevel, _T(""), 1);
 	      break;
    }
 
@@ -343,11 +343,11 @@ static void WriteLogToFile(TCHAR *message, const WORD wType)
 	FormatLogTimestamp(buffer);
    if (m_logFileHandle != NULL)
 	{
-      _ftprintf(m_logFileHandle, _T("%s %s %s"), buffer, loglevel, message);
+      _ftprintf(m_logFileHandle, _T("%s %s%s"), buffer, loglevel, message);
 		fflush(m_logFileHandle);
 	}
    if (m_flags & NXLOG_PRINT_TO_STDOUT)
-      m_consoleWriter(_T("%s %s %s"), buffer, loglevel, message);
+      m_consoleWriter(_T("%s %s%s"), buffer, loglevel, message);
 
 	// Check log size
 	if ((m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
