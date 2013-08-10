@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] functions = { "last(", "average(", "deviation(", "diff()", "error(", "sum(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	private static final String[] operations = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
+	private static final String[] FUNCTIONS = { "last(", "average(", "deviation(", "diff()", "error(", "sum(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	private static final String[] OPERATIONS = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
 	
 	private WorkbenchLabelProvider eventLabelProvider = new WorkbenchLabelProvider();
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -69,7 +69,7 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 		{
 			case Thresholds.COLUMN_OPERATION:
 				int f = ((Threshold)element).getFunction();
-				StringBuilder text = new StringBuilder(functions[f]);
+				StringBuilder text = new StringBuilder(FUNCTIONS[f]);
 				if (f != Threshold.F_DIFF)
 				{
 					text.append(((Threshold)element).getArg1());
@@ -79,7 +79,7 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 				{
 					text.append(' ');
 				}
-				text.append(operations[((Threshold)element).getOperation()]);
+				text.append(OPERATIONS[((Threshold)element).getOperation()]);
 				text.append(' ');
 				text.append(((Threshold)element).getValue());
 				return text.toString();

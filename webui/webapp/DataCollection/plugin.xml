@@ -350,6 +350,16 @@
               </and>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.TableThresholds"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.TableThresholds#30"
+              name="Thresholds">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionTable">
+              </instanceof>
+           </enabledWhen>
+        </page>
    </extension>
 
   <extension
