@@ -72,7 +72,7 @@ public class TableThresholdLabelProvider extends LabelProvider implements ITable
 		switch(columnIndex)
 		{
 			case 0:
-				return "";
+				return ((TableThreshold)element).getConditionAsText();
 			case 1:
 			{
 				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getActivationEvent());

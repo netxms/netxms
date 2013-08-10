@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.Platform;
@@ -45,7 +46,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.AccessListElement;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.TableThreshold;
 import org.netxms.client.events.EventTemplate;
@@ -137,6 +137,44 @@ public class TableThresholds extends PropertyPage
       buttonsLayout.fill = true;
       buttonsLayout.pack = false;
       leftButtons.setLayout(buttonsLayout);
+      
+      upButton = new Button(leftButtons, SWT.PUSH);
+      upButton.setText("&Up");
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      upButton.setLayoutData(rd);
+      upButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+			
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveSelectionUp();
+			}
+		});
+
+      downButton = new Button(leftButtons, SWT.PUSH);
+      downButton.setText("Do&wn");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      downButton.setLayoutData(rd);
+      downButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+			
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveSelectionDown();
+			}
+		});
 
       Composite buttons = new Composite(thresholdListArea, SWT.NONE);
       gd = new GridData();
@@ -154,7 +192,7 @@ public class TableThresholds extends PropertyPage
       
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("&Add...");
-      RowData rd = new RowData();
+      rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
@@ -217,11 +255,22 @@ public class TableThresholds extends PropertyPage
 			public void selectionChanged(SelectionChangedEvent event)
 			{
 				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-				modifyButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
+				if (selection.size() == 1)
+				{
+					modifyButton.setEnabled(true);
+					upButton.setEnabled(thresholds.indexOf(selection.getFirstElement()) > 0);
+					downButton.setEnabled(thresholds.indexOf(selection.getFirstElement()) < thresholds.size() - 1);
+				}
+				else
+				{
+					modifyButton.setEnabled(false);
+					upButton.setEnabled(false);
+					downButton.setEnabled(false);
+				}
 			}
       });
-      
+
       thresholdList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -309,6 +358,44 @@ public class TableThresholds extends PropertyPage
 	      thresholdList.setInput(thresholds.toArray());
 	      thresholdList.setSelection(new StructuredSelection(t));
 			editor.modify();
+		}
+	}
+	
+	/**
+	 * Move selected element up 
+	 */
+	private void moveSelectionUp()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		final TableThreshold t = (TableThreshold)selection.getFirstElement();
+		int index = thresholds.indexOf(t);
+		if (index > 0)
+		{
+			Collections.swap(thresholds, index, index - 1);
+			thresholdList.setInput(thresholds.toArray());
+			thresholdList.setSelection(new StructuredSelection(t));
+		}
+	}
+	
+	/**
+	 * Move selected element down
+	 */
+	private void moveSelectionDown()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		final TableThreshold t = (TableThreshold)selection.getFirstElement();
+		int index = thresholds.indexOf(t);
+		if (index < thresholds.size() - 1)
+		{
+			Collections.swap(thresholds, index, index + 1);
+			thresholdList.setInput(thresholds.toArray());
+			thresholdList.setSelection(new StructuredSelection(t));
 		}
 	}
 	

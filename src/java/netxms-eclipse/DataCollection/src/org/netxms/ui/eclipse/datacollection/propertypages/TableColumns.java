@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -143,6 +144,44 @@ public class TableColumns extends PropertyPage
       buttonsLayout.pack = false;
       leftButtons.setLayout(buttonsLayout);
 
+      upButton = new Button(leftButtons, SWT.PUSH);
+      upButton.setText("&Up");
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      upButton.setLayoutData(rd);
+      upButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+			
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveSelectionUp();
+			}
+		});
+
+      downButton = new Button(leftButtons, SWT.PUSH);
+      downButton.setText("Do&wn");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      downButton.setLayoutData(rd);
+      downButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+			
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveSelectionDown();
+			}
+		});
+
       Composite buttons = new Composite(columnListArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
@@ -159,7 +198,7 @@ public class TableColumns extends PropertyPage
       
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(Messages.TableColumns_Add);
-      RowData rd = new RowData();
+      rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
@@ -216,14 +255,25 @@ public class TableColumns extends PropertyPage
 			}
       });
       
-      /*** Selection change listener for thresholds list ***/
+      /*** Selection change listener for column list ***/
       columnList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
 				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-				modifyButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
+				if (selection.size() == 1)
+				{
+					modifyButton.setEnabled(true);
+					upButton.setEnabled(columns.indexOf(selection.getFirstElement()) > 0);
+					downButton.setEnabled(columns.indexOf(selection.getFirstElement()) < columns.size() - 1);
+				}
+				else
+				{
+					modifyButton.setEnabled(false);
+					upButton.setEnabled(false);
+					downButton.setEnabled(false);
+				}
 			}
       });
       
@@ -358,6 +408,44 @@ public class TableColumns extends PropertyPage
 		      columnList.setInput(columns.toArray());
 		      columnList.setSelection(new StructuredSelection(column));
 			}
+		}
+	}
+	
+	/**
+	 * Move selected element up 
+	 */
+	private void moveSelectionUp()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)columnList.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		final ColumnDefinition column = (ColumnDefinition)selection.getFirstElement();
+		int index = columns.indexOf(column);
+		if (index > 0)
+		{
+			Collections.swap(columns, index, index - 1);
+			columnList.setInput(columns.toArray());
+			columnList.setSelection(new StructuredSelection(column));
+		}
+	}
+	
+	/**
+	 * Move selected element down
+	 */
+	private void moveSelectionDown()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)columnList.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		final ColumnDefinition column = (ColumnDefinition)selection.getFirstElement();
+		int index = columns.indexOf(column);
+		if (index < columns.size() - 1)
+		{
+			Collections.swap(columns, index, index + 1);
+			columnList.setInput(columns.toArray());
+			columnList.setSelection(new StructuredSelection(column));
 		}
 	}
 	

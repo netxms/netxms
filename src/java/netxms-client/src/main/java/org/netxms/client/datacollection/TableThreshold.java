@@ -27,6 +27,8 @@ import org.netxms.base.NXCPMessage;
  */
 public class TableThreshold
 {
+	private static final String[] OPERATIONS = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" };
+	
 	private long id;
 	private int activationEvent;
 	private int deactivationEvent;
@@ -124,6 +126,43 @@ public class TableThreshold
 		}
 		
 		return varId;
+	}
+	
+	/**
+	 * Get threshold condition as text
+	 * 
+	 * @return
+	 */
+	public String getConditionAsText()
+	{
+		StringBuilder sb = new StringBuilder();
+		for(List<TableCondition> group : conditions)
+		{
+			if (sb.length() > 0)
+				sb.append(" OR ");
+			if (conditions.size() > 1)
+				sb.append('(');
+			for(TableCondition cond : group)
+			{
+				if (cond != group.get(0))
+					sb.append(" AND ");
+				sb.append(cond.getColumn());
+				sb.append(' ');
+				try
+				{
+					sb.append(OPERATIONS[cond.getOperation()]);
+				}
+				catch(ArrayIndexOutOfBoundsException e)
+				{
+					sb.append('?');
+				}
+				sb.append(' ');
+				sb.append(cond.getValue());
+			}
+			if (conditions.size() > 1)
+				sb.append(')');
+		}
+		return sb.toString();
 	}
 
 	/**

@@ -358,6 +358,8 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
       DBRollback(hdb);
 
 	DBConnectionPoolReleaseConnection(hdb);
+
+   checkThresholds((Table *)value);
 }
 
 /**
@@ -385,6 +387,20 @@ void DCTable::transform(Table *value)
                    m_transformationScript->getErrorText(), m_dwId);
       }
    }
+}
+
+/**
+ * Check thresholds
+ */
+void DCTable::checkThresholds(Table *value)
+{
+   lock();
+   for(int i = 0; i < m_thresholds->size(); i++)
+   {
+		DCTableThreshold *t = m_thresholds->get(i);
+      t->check(value, row);
+   }
+   unlock();
 }
 
 /**

@@ -522,6 +522,7 @@ protected:
 	static MUTEX m_cacheMutex;
 
    void transform(Table *value);
+   void checkThresholds(Table *value);
    
    bool loadThresholds();
    bool saveThresholds(DB_HANDLE hdb);
