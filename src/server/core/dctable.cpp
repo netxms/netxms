@@ -398,7 +398,7 @@ void DCTable::checkThresholds(Table *value)
    for(int i = 0; i < m_thresholds->size(); i++)
    {
 		DCTableThreshold *t = m_thresholds->get(i);
-      t->check(value, row);
+      t->check(value, i);
    }
    unlock();
 }
