@@ -476,7 +476,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		new ConsoleJob(Messages.ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null, display) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
