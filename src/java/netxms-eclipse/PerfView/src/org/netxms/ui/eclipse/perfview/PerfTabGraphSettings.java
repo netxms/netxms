@@ -120,9 +120,16 @@ public class PerfTabGraphSettings
 	 */
 	public int getColorAsInt()
 	{
-		if (color.startsWith("0x"))
-			return Integer.parseInt(color.substring(2), 16);
-		return Integer.parseInt(color, 10);
+		try
+		{
+			if (color.startsWith("0x"))
+				return Integer.parseInt(color.substring(2), 16);
+			return Integer.parseInt(color, 10);
+		}
+		catch(NumberFormatException e)
+		{
+			return 0;	// black color in case of error
+		}
 	}
 
 	/**
