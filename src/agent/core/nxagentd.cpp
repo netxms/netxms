@@ -599,7 +599,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 			int bits = _tcstol(mask, &eptr, 10);
 			if ((*eptr == 0) && (bits >= 0) && (bits <= 32))
 			{
-				netMask = htonl(0xFFFFFFFF << (32 - bits));
+            netMask = (bits > 0) ? htonl(0xFFFFFFFF << (32 - bits)) : 0;
 			}
 			else
 			{

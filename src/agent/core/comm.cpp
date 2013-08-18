@@ -40,11 +40,9 @@ MUTEX g_hSessionListAccess;
 
 static MUTEX m_mutexWatchdogActive = INVALID_MUTEX_HANDLE;
 
-
-//
-// Initialize session list
-//
-
+/**
+ * Initialize session list
+ */
 void InitSessionList()
 {
 	// Create session list and it's access mutex
@@ -54,16 +52,12 @@ void InitSessionList()
 	g_hSessionListAccess = MutexCreate();
 }
 
-
-//
-// Validates server's address
-//
-
+/**
+ * Validates server's address
+ */
 static BOOL IsValidServerAddr(UINT32 dwAddr, BOOL *pbMasterServer, BOOL *pbControlServer)
 {
-   UINT32 i;
-
-   for(i=0; i < g_dwServerCount; i++)
+   for(UINT32 i = 0; i < g_dwServerCount; i++)
 	{
       if ((dwAddr & g_pServerList[i].dwNetMask) == g_pServerList[i].dwIpAddr)
       {
