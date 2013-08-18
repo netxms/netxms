@@ -27,7 +27,6 @@ import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.reporting.ReportDefinition;
-import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 
 /**
@@ -37,14 +36,15 @@ public class ReportView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.reporter.views.ReportView";
 
-	private NXCSession session;
 	private ReportExecutionForm executionForm;
 	private ISelectionListener selectionListener;
 	private ISelectionService selectionService;
-	private ReportDefinition definition;
 
 	private Composite parentComposite;
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -65,6 +65,9 @@ public class ReportView extends ViewPart
 		selectionService.addSelectionListener(selectionListener);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
 	@Override
 	public void dispose()
 	{
@@ -75,6 +78,9 @@ public class ReportView extends ViewPart
 		super.dispose();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 */
 	@Override
 	public void setFocus()
 	{
@@ -84,9 +90,11 @@ public class ReportView extends ViewPart
 		}
 	}
 
+	/**
+	 * @param definition
+	 */
 	protected void setObject(ReportDefinition definition)
 	{
-		this.definition = definition;
 		if (executionForm != null)
 		{
 			executionForm.dispose();

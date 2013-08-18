@@ -7,7 +7,6 @@ import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
 import org.netxms.ui.eclipse.reporter.widgets.FieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.StringFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.TimestampFieldEditor;
-import org.netxms.ui.eclipse.reporter.widgets.TimestampFieldEditor.Type;
 import org.netxms.ui.eclipse.reporter.widgets.UserFieldEditor;
 
 public class StandardTypesControlFactory implements CustomControlFactory

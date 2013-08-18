@@ -433,7 +433,7 @@ public class ReportExecutionForm extends Composite
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				final UUID jobId = session.executeReport(report.getId(), execParameters);
+				session.executeReport(report.getId(), execParameters);
 				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
