@@ -40,6 +40,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.window.Window;
@@ -54,6 +55,7 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -76,6 +78,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.objectbrowser.ObjectDecorator;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectActionValidator;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
@@ -266,6 +269,26 @@ public class ObjectBrowser extends ViewPart
 				return;	// path element is missing
 		}
 		objectTree.getTreeViewer().setSelection(new TreeSelection(new TreePath(elements)), true);
+	}
+	
+	/**
+	 * Set selection in the tree and in object details view.
+	 * 
+	 * @param objectId ID of object to be selected
+	 * @param tabId tab ID to be selected or null if tab selection not needed
+	 */
+	public void setSelection(long objectId, String tabId)
+	{
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final AbstractObject object = session.findObjectById(objectId);
+		if (object != null)
+		{
+			objectTree.getTreeViewer().setSelection(new StructuredSelection(object), true);
+			if (tabId != null)
+			{			
+//				Object view = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(ID);
+			}
+		}
 	}
 	
 	/**

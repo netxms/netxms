@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -40,6 +41,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.window.Window;
@@ -268,6 +270,26 @@ public class ObjectBrowser extends ViewPart
 				return;	// path element is missing
 		}
 		objectTree.getTreeViewer().setSelection(new TreeSelection(new TreePath(elements)), true);
+	}
+	
+	/**
+	 * Set selection in the tree and in object details view.
+	 * 
+	 * @param objectId ID of object to be selected
+	 * @param tabId tab ID to be selected or null if tab selection not needed
+	 */
+	public void setSelection(long objectId, String tabId)
+	{
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final AbstractObject object = session.findObjectById(objectId);
+		if (object != null)
+		{
+			objectTree.getTreeViewer().setSelection(new StructuredSelection(object), true);
+			if (tabId != null)
+			{			
+//				Object view = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(ID);
+			}
+		}
 	}
 	
 	/**

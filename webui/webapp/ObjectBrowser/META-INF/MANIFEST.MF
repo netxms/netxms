@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Object Browser Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.objectbrowser;singleton:=true
-Bundle-Version: 1.2.8
+Bundle-Version: 1.2.9
 Bundle-Activator: org.netxms.ui.eclipse.objectbrowser.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.netxms.webui.core;bundle-version="1.2.8",
- org.eclipse.rap.ui;bundle-version="2.0.0"
+Require-Bundle: org.netxms.webui.core;bundle-version="1.2.9",
+ org.eclipse.rap.ui;bundle-version="2.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectbrowser.api,
