@@ -339,6 +339,7 @@ doc/RadenSolutions.xml -text
 doc/comparison_netxms_nnm.doc -text
 doc/doxygen.md -text
 doc/integration/HPOM_Integration.docx -text
+doc/internal/ComponentDiscovery[!!-~]-[!!-~]Draft.odt -text
 doc/internal/NetworkDeviceDrivers.docx -text
 doc/internal/build.w64 -text
 doc/internal/db_driver_api.txt -text
