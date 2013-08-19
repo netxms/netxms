@@ -12,4 +12,5 @@ Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectbrowser.api,
  org.netxms.ui.eclipse.objectbrowser.dialogs,
  org.netxms.ui.eclipse.objectbrowser.shared,
+ org.netxms.ui.eclipse.objectbrowser.views,
  org.netxms.ui.eclipse.objectbrowser.widgets
