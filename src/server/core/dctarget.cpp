@@ -298,7 +298,10 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if ((object->getPerfTabSettings() != NULL) && object->hasValue())
+      if ((object->getPerfTabSettings() != NULL) && 
+          object->hasValue() && 
+          (object->getStatus() == ITEM_STATUS_ACTIVE) &&
+          object->matchClusterResource())
 		{
 			pMsg->SetVariable(dwId++, object->getId());
 			pMsg->SetVariable(dwId++, object->getDescription());
