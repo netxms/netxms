@@ -265,7 +265,10 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
    }
 
    // Transform input value
-   transform((Table *)value);
+   // Cluster can have only aggregated data, and transformation
+   // should not be used on aggregation
+   if (m_pNode->Type() != OBJECT_CLUSTER)
+      transform((Table *)value);
 
    m_dwErrorCount = 0;
    if (m_lastValue != NULL)

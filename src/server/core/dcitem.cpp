@@ -665,7 +665,12 @@ void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
-   transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp);
+
+   // Cluster can have only aggregated data, and transformation
+   // should not be used on aggregation
+   if (m_pNode->Type() != OBJECT_CLUSTER)
+      transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp);
+
    m_prevRawValue = rawValue;
    m_tPrevValueTimeStamp = tmTimeStamp;
 
