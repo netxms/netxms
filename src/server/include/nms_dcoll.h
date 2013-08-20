@@ -211,7 +211,6 @@ protected:
 
 	BOOL loadCustomSchedules();
 
-	bool matchClusterResource();
    bool matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
@@ -260,6 +259,7 @@ public:
    bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_FOR_CLUSTER) ? true : false; }
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
 
+	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }

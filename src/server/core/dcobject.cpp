@@ -259,7 +259,7 @@ bool DCObject::matchClusterResource()
 {
 	Cluster *pCluster;
 
-	if (m_dwResourceId == 0)
+   if ((m_dwResourceId == 0) || (m_pNode->Type() != OBJECT_NODE))
 		return true;
 
 	pCluster = ((Node *)m_pNode)->getMyCluster();

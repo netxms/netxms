@@ -668,7 +668,11 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 
       Node *node = (Node *)m_pChildList[i];
       DCObject *dco = node->getDCObjectByTemplateId(item->getId());
-      if ((dco != NULL) && (dco->getType() == DCO_TYPE_ITEM))
+      if ((dco != NULL) && 
+          (dco->getType() == DCO_TYPE_ITEM) && 
+          (dco->getStatus() == ITEM_STATUS_ACTIVE) && 
+          (dco->getErrorCount() == 0) &&
+          dco->matchClusterResource())
       {
          ItemValue *v = ((DCItem *)dco)->getInternalLastValue();
          if (v != NULL)
@@ -728,7 +732,11 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 
       Node *node = (Node *)m_pChildList[i];
       DCObject *dco = node->getDCObjectByTemplateId(table->getId());
-      if ((dco != NULL) && (dco->getType() == DCO_TYPE_TABLE))
+      if ((dco != NULL) && 
+          (dco->getType() == DCO_TYPE_TABLE) && 
+          (dco->getStatus() == ITEM_STATUS_ACTIVE) && 
+          (dco->getErrorCount() == 0) &&
+          dco->matchClusterResource())
       {
          Table *v = ((DCTable *)dco)->getLastValue();
          if (v != NULL)
