@@ -29,6 +29,7 @@ import org.netxms.client.datacollection.DciValue;
 public class LastValuesFilter extends ViewerFilter
 {
 	private String filterString = null;
+	private boolean showDisabled = false;
 	private boolean showUnsupported = false;
 
 	/* (non-Javadoc)
@@ -40,6 +41,9 @@ public class LastValuesFilter extends ViewerFilter
 		final DciValue value = (DciValue)element;
 		
 		if (!showUnsupported && (value.getStatus() == DataCollectionObject.NOT_SUPPORTED))
+			return false;
+		
+		if (!showDisabled && (value.getStatus() == DataCollectionObject.DISABLED))
 			return false;
 		
 		if ((filterString == null) || (filterString.isEmpty()))
@@ -62,6 +66,22 @@ public class LastValuesFilter extends ViewerFilter
 	public void setFilterString(String filterString)
 	{
 		this.filterString = filterString.toLowerCase();
+	}
+
+	/**
+	 * @return
+	 */
+	public boolean isShowDisabled() 
+	{
+		return showDisabled;
+	}
+
+	/**
+	 * @param showDisabled
+	 */
+	public void setShowDisabled(boolean showDisabled) 
+	{
+		this.showDisabled = showDisabled;
 	}
 
 	/**

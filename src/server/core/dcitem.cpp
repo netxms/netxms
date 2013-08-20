@@ -1077,7 +1077,7 @@ void DCItem::fillLastValueMessage(CSCPMessage *pMsg, UINT32 dwId)
       pMsg->SetVariable(dwId++, _T(""));
       pMsg->SetVariable(dwId++, (UINT32)0);
    }
-   pMsg->SetVariable(dwId++, (WORD)m_status);
+   pMsg->SetVariable(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
 	pMsg->SetVariable(dwId++, (WORD)getType());
 	pMsg->SetVariable(dwId++, m_dwErrorCount);
 	pMsg->SetVariable(dwId++, m_dwTemplateItemId);

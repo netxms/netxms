@@ -677,7 +677,7 @@ void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId)
    pMsg->SetVariable(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
    pMsg->SetVariable(dwId++, _T(""));             // compatibility: value
    pMsg->SetVariable(dwId++, (UINT32)m_tLastPoll);
-   pMsg->SetVariable(dwId++, (WORD)m_status);
+   pMsg->SetVariable(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
 	pMsg->SetVariable(dwId++, (WORD)getType());
 	pMsg->SetVariable(dwId++, m_dwErrorCount);
 	pMsg->SetVariable(dwId++, m_dwTemplateItemId);

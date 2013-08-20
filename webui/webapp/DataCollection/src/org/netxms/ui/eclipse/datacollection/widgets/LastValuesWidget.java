@@ -97,6 +97,7 @@ public class LastValuesWidget extends Composite
 	private Runnable refreshTimer;
 	private Action actionUseMultipliers;
 	private Action actionShowErrors;
+	private Action actionShowDisabled;
 	private Action actionShowUnsupported;
 	private Action actionExportToCsv;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
@@ -186,6 +187,7 @@ public class LastValuesWidget extends Composite
 				ds.put(configPrefix + ".autoRefreshInterval", autoRefreshEnabled); //$NON-NLS-1$
 				ds.put(configPrefix + ".useMultipliers", labelProvider.areMultipliersUsed()); //$NON-NLS-1$
 				ds.put(configPrefix + ".showErrors", isShowErrors()); //$NON-NLS-1$
+				ds.put(configPrefix + ".showDisabled", isShowDisabled()); //$NON-NLS-1$
 				ds.put(configPrefix + ".showUnsupported", isShowUnsupported()); //$NON-NLS-1$
 			}
 		});
@@ -220,6 +222,7 @@ public class LastValuesWidget extends Composite
 			labelProvider.setShowErrors(ds.getBoolean(configPrefix + ".showErrors")); //$NON-NLS-1$
 		else
 			labelProvider.setShowErrors(true);
+		filter.setShowDisabled(ds.getBoolean(configPrefix + ".showDisabled")); //$NON-NLS-1$
 		filter.setShowUnsupported(ds.getBoolean(configPrefix + ".showUnsupported")); //$NON-NLS-1$
 		
 		createActions();
@@ -266,6 +269,15 @@ public class LastValuesWidget extends Composite
 		};
 		actionShowUnsupported.setChecked(isShowUnsupported());
 		
+		actionShowDisabled = new Action("Show disabled", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				setShowDisabled(actionShowDisabled.isChecked());
+			}
+		};
+		actionShowDisabled.setChecked(isShowDisabled());
+		
 		actionExportToCsv = new ExportToCsvAction(viewPart, dataViewer, true);
 	}
 	
@@ -306,6 +318,7 @@ public class LastValuesWidget extends Composite
 		manager.add(new Separator());
 		manager.add(actionUseMultipliers);
 		manager.add(actionShowErrors);
+		manager.add(actionShowDisabled);
 		manager.add(actionShowUnsupported);
 	}
 	
@@ -502,6 +515,26 @@ public class LastValuesWidget extends Composite
 		}
 	}
 	
+	/**
+	 * @return
+	 */
+	public boolean isShowDisabled()
+	{
+		return (filter != null) ? filter.isShowDisabled() : false;
+	}
+
+	/**
+	 * @param show
+	 */
+	public void setShowDisabled(boolean show)
+	{
+		filter.setShowDisabled(show);
+		if (dataViewer != null)
+		{
+			dataViewer.refresh(true);
+		}
+	}
+
 	/**
 	 * @return
 	 */
