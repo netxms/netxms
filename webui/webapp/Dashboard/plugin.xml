@@ -186,12 +186,12 @@
          </enabledWhen>
       </page>
       <page
-            class="org.netxms.ui.eclipse.dashboard.propertypages.DialChart"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.DialChart#10"
-            name="Dial Chart">
+            class="org.netxms.ui.eclipse.dashboard.propertypages.Gauge"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.Gauge#10"
+            name="Gauge">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig">
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig">
             </instanceof>
          </enabledWhen>
       </page>

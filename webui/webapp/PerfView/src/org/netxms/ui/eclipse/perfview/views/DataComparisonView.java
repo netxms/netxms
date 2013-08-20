@@ -649,7 +649,7 @@ public class DataComparisonView extends ViewPart
 				}
 				
 				final Threshold[][] thresholds = new Threshold[items.size()][];
-				if (chartType == DataComparisonChart.DIAL_CHART)
+				if (chartType == DataComparisonChart.GAUGE_CHART)
 				{
 					for(int i = 0; i < items.size(); i++)
 					{
@@ -662,7 +662,7 @@ public class DataComparisonView extends ViewPart
 					@Override
 					public void run()
 					{
-						if (chartType == DataComparisonChart.DIAL_CHART)
+						if (chartType == DataComparisonChart.GAUGE_CHART)
 							for(int i = 0; i < thresholds.length; i++)
 								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);

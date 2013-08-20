@@ -200,7 +200,7 @@ public class DashboardControl extends Composite
 				w = new TableTubeChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.DIAL_CHART:
-				w = new DialChartElement(this, e, viewPart);
+				w = new GaugeElement(this, e, viewPart);
 				break;
 			case DashboardElement.STATUS_CHART:
 				w = new ObjectStatusChartElement(this, e, viewPart);

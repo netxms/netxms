@@ -2541,7 +2541,6 @@ webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/ChartFactory.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/ChartPluginSharedData.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/DataChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/DataComparisonChart.java -text
-webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/DialChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/HistoricalDataChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/messages.properties -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/messages_es.properties -text
@@ -2823,7 +2822,6 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/Availab
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/CustomWidget.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DashboardElements.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DataSources.java -text
-webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DialChart.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/EmbeddedDashboard.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/GeoMap.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/LabelProperties.java -text
@@ -2845,7 +2843,6 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/BarChartEleme
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/ComparisonChartElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/CustomWidgetElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/DashboardControl.java -text
-webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/DialChartElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/EditPaneWidget.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/ElementWidget.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/EmbeddedDashboardElement.java -text
@@ -2871,7 +2868,6 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/Cust
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DashboardElementConfig.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DashboardElementLayout.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DashboardModifyListener.java -text
-webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DialChartConfig.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/EmbeddedDashboardConfig.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/GeoMapConfig.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/LabelConfig.java -text

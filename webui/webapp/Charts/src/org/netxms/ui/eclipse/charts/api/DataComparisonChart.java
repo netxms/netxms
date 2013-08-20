@@ -31,7 +31,7 @@ public interface DataComparisonChart extends DataChart
 	public static final int PIE_CHART = 1;
 	public static final int RADAR_CHART = 2;
 	public static final int TUBE_CHART = 3;
-	public static final int DIAL_CHART = 4;
+	public static final int GAUGE_CHART = 4;
 
 	/**
 	 * Add parameter
