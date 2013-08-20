@@ -68,7 +68,7 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_GeoMap);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_AlarmViewer);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_AvailabilityChart);
-		elementTypeSelector.add(Messages.AddDashboardElementDlg_DialChart);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_GaugeChart);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_WebPage);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_BarChartForTable);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_PieChartForTable);

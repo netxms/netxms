@@ -102,7 +102,7 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 		super();
 		
 		this.chartType = chartType;
-		if ((chartType == PIE_CHART) || (chartType == DIAL_CHART))
+		if ((chartType == PIE_CHART) || (chartType == GAUGE_CHART))
 			labelsVisible = true;
 
 		this.colors = colors;

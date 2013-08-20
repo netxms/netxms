@@ -25,7 +25,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
@@ -90,7 +90,7 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 					case DashboardElement.DASHBOARD:
 						return EmbeddedDashboardConfig.createFromXml(element.getData());
 					case DashboardElement.DIAL_CHART:
-						return DialChartConfig.createFromXml(element.getData());
+						return GaugeConfig.createFromXml(element.getData());
 					case DashboardElement.GEO_MAP:
 						return GeoMapConfig.createFromXml(element.getData());
 					case DashboardElement.LABEL:

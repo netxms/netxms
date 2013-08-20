@@ -30,7 +30,7 @@ public class Messages extends NLS
 	public static String AddDashboardElementDlg_BarChartForTable;
 	public static String AddDashboardElementDlg_CustomWidget;
 	public static String AddDashboardElementDlg_Dashboard;
-	public static String AddDashboardElementDlg_DialChart;
+	public static String AddDashboardElementDlg_GaugeChart;
 	public static String AddDashboardElementDlg_GeoMap;
 	public static String AddDashboardElementDlg_Label;
 	public static String AddDashboardElementDlg_LineChart;
@@ -103,7 +103,7 @@ public class Messages extends NLS
 	public static String DashboardElementsLabelProvider_TypeBarChart;
 	public static String DashboardElementsLabelProvider_TypeCustom;
 	public static String DashboardElementsLabelProvider_TypeDashboard;
-	public static String DashboardElementsLabelProvider_TypeDialChart;
+	public static String DashboardElementsLabelProvider_TypeGaugeChart;
 	public static String DashboardElementsLabelProvider_TypeGeoMap;
 	public static String DashboardElementsLabelProvider_TypeLabel;
 	public static String DashboardElementsLabelProvider_TypeLineChart;

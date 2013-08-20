@@ -82,7 +82,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		super(parent, style);
 		this.chartType = chartType;
-		if ((chartType == PIE_CHART) || (chartType == DIAL_CHART))
+		if ((chartType == PIE_CHART) || (chartType == GAUGE_CHART))
 			labelsVisible = true;
 	}
 
