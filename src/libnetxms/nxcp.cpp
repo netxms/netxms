@@ -539,31 +539,18 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex)
 {
-#ifndef UNDER_CE
    int hFile, iBytes;
-#else
-   FILE *hFile;
-   int iBytes;
-#endif
 	INT64 bytesTransferred = 0;
    UINT32 dwPadding;
    BOOL bResult = FALSE;
    CSCP_MESSAGE *pMsg;
    CSCP_ENCRYPTED_MESSAGE *pEnMsg;
 
-#ifndef UNDER_CE
    hFile = _topen(pszFile, O_RDONLY | O_BINARY);
    if (hFile != -1)
    {
 		if (lseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) != -1)
 		{
-#else
-   hFile = _tfopen(pszFile, _T("rb"));
-   if (hFile != NULL)
-   {
-	   if (fseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) == 0)
-	   {
-#endif
 			// Allocate message and prepare it's header
 			pMsg = (CSCP_MESSAGE *)malloc(FILE_BUFFER_SIZE + CSCP_HEADER_SIZE + 8);
 			pMsg->dwId = htonl(dwId);
@@ -572,15 +559,9 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 
 			while(1)
 			{
-#ifndef UNDER_CE
 				iBytes = read(hFile, pMsg->df, FILE_BUFFER_SIZE);
 				if (iBytes < 0)
 					break;
-#else
-				iBytes = fread(pMsg->df, 1, FILE_BUFFER_SIZE, hFile);
-				if (ferror(hFile))
-					break;	// Read error
-#endif
 
 				// Message should be aligned to 8 bytes boundary
 				dwPadding = (8 - (((UINT32)iBytes + CSCP_HEADER_SIZE) % 8)) & 7;
@@ -620,11 +601,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 
 			free(pMsg);
 		}
-#ifndef UNDER_CE
 		close(hFile);
-#else
-		fclose(hFile);
-#endif
 	}
 
    // If file upload failed, send CMD_ABORT_FILE_TRANSFER
