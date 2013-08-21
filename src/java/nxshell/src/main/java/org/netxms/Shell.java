@@ -93,7 +93,7 @@ public class Shell {
     }
 
     private NXCSession connect() throws IOException, NetXMSClientException {
-        final NXCSession session = new NXCSession(server, login, password);
+        final NXCSession session = new NXCSession(server, NXCSession.DEFAULT_CONN_PORT, login, password, true);
         session.connect();
         session.syncObjects();
         session.syncUserDatabase();
