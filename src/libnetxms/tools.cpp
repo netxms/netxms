@@ -866,11 +866,11 @@ retry:
 #endif
 		if (nRet <= 0)
 		{
-			if (WSAGetLastError() == WSAEWOULDBLOCK
+			if ((WSAGetLastError() == WSAEWOULDBLOCK)
 #ifndef _WIN32
-			|| errno == EAGAIN
+			    || (errno == EAGAIN)
 #endif
-			)
+			   )
 			{
 				// Wait until socket becomes available for writing
 				struct timeval tv;

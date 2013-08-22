@@ -730,10 +730,10 @@ BOOL Threshold::compare(Threshold *pThr)
  */
 void Threshold::createNXMPRecord(String &str, int index)
 {
-   TCHAR szEvent1[MAX_EVENT_NAME], szEvent2[MAX_EVENT_NAME];
+   TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
 
-   EventNameFromCode(m_eventCode, szEvent1);
-   EventNameFromCode(m_rearmEventCode, szEvent2);
+   EventNameFromCode(m_eventCode, activationEvent);
+   EventNameFromCode(m_rearmEventCode, deactivationEvent);
    str.addFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<function>%d</function>\n")
                           _T("\t\t\t\t\t\t\t<condition>%d</condition>\n")
@@ -746,8 +746,8 @@ void Threshold::createNXMPRecord(String &str, int index)
                           _T("\t\t\t\t\t\t</threshold>\n"),
 								  index, m_function, m_operation,
 								  (const TCHAR *)EscapeStringForXML2(m_value.getString()),
-                          (const TCHAR *)EscapeStringForXML2(szEvent1),
-								  (const TCHAR *)EscapeStringForXML2(szEvent2),
+                          (const TCHAR *)EscapeStringForXML2(activationEvent),
+								  (const TCHAR *)EscapeStringForXML2(deactivationEvent),
 								  m_param1, m_param2, m_repeatInterval);
 }
 

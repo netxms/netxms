@@ -421,6 +421,8 @@ public:
    int getAggregationFunction() { return TCF_GET_AGGREGATION_FUNCTION(m_flags); }
 	SNMP_ObjectId *getSnmpOid() { return m_snmpOid; }
    bool isInstanceColumn() { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
+
+   void createNXMPRecord(String &str, int id);
 };
 
 /**
@@ -502,6 +504,8 @@ public:
 
    UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
 
+   void createNXMPRecord(String &str, int id);
+
    UINT32 getId() { return m_id; }
    bool getCurrentState() { return m_currentState; }
 };
@@ -550,6 +554,8 @@ public:
 
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
+
+   virtual void createNXMPRecord(String &str);
 
 	void fillLastValueMessage(CSCPMessage *msg);
    void fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId);

@@ -870,3 +870,76 @@ void DCTable::updateFromTemplate(DCObject *src)
 
    unlock();
 }
+
+/**
+ * Create management pack record
+ */
+void DCTable::createNXMPRecord(String &str)
+{
+	UINT32 i;
+
+   lock();
+   
+   str.addFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
+                          _T("\t\t\t\t\t<name>%s</name>\n")
+                          _T("\t\t\t\t\t<description>%s</description>\n")
+                          _T("\t\t\t\t\t<origin>%d</origin>\n")
+                          _T("\t\t\t\t\t<interval>%d</interval>\n")
+                          _T("\t\t\t\t\t<retention>%d</retention>\n")
+                          _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
+                          _T("\t\t\t\t\t<advancedSchedule>%d</advancedSchedule>\n")
+                          _T("\t\t\t\t\t<rawValueInOctetString>%d</rawValueInOctetString>\n")
+                          _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n"),
+								  (int)m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName),
+                          (const TCHAR *)EscapeStringForXML2(m_szDescription),
+                          (int)m_source, m_iPollingInterval, m_iRetentionTime,
+                          (const TCHAR *)EscapeStringForXML2(m_systemTag),
+								  (m_flags & DCF_ADVANCED_SCHEDULE) ? 1 : 0,
+								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0, 
+								  (int)m_snmpPort);
+
+	if (m_transformationScriptSource != NULL)
+	{
+		str += _T("\t\t\t\t\t<transformation>");
+		str.addDynamicString(EscapeStringForXML(m_transformationScriptSource, -1));
+		str += _T("</transformation>\n");
+	}
+
+	if (m_dwNumSchedules > 0)
+   {
+      str += _T("\t\t\t\t\t<schedules>\n");
+      for(i = 0; i < m_dwNumSchedules; i++)
+         str.addFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
+      str += _T("\t\t\t\t\t</schedules>\n");
+   }
+
+	if (m_columns != NULL)
+	{
+	   str += _T("\t\t\t\t\t<columns>\n");
+		for(i = 0; i < (UINT32)m_columns->size(); i++)
+		{
+			m_columns->get(i)->createNXMPRecord(str, i + 1);
+		}
+	   str += _T("\t\t\t\t\t</columns>\n");
+	}
+
+	if (m_thresholds != NULL)
+	{
+	   str += _T("\t\t\t\t\t<thresholds>\n");
+		for(i = 0; i < (UINT32)m_thresholds->size(); i++)
+		{
+			m_thresholds->get(i)->createNXMPRecord(str, i + 1);
+		}
+	   str += _T("\t\t\t\t\t</thresholds>\n");
+	}
+
+	if (m_pszPerfTabSettings != NULL)
+	{
+		str += _T("\t\t\t\t\t<perfTabSettings>");
+		str.addDynamicString(EscapeStringForXML(m_pszPerfTabSettings, -1));
+		str += _T("</perfTabSettings>\n");
+	}
+
+   unlock();
+   str += _T("\t\t\t\t</dctable>\n");
+}

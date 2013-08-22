@@ -103,3 +103,19 @@ DCTableColumn::~DCTableColumn()
 	delete m_snmpOid;
    safe_free(m_displayName);
 }
+
+/**
+ * Create NXMP record
+ */
+void DCTableColumn::createNXMPRecord(String &str, int id)
+{
+   str.addFormattedString(_T("\t\t\t\t\t\t<column id=\"%d\">\n")
+                          _T("\t\t\t\t\t\t\t<name>%s</name>\n")
+                          _T("\t\t\t\t\t\t\t<displayName>%s</displayName>\n")
+                          _T("\t\t\t\t\t\t\t<snmpOid>%s</snmpOid>\n")
+                          _T("\t\t\t\t\t\t\t<flags>%d</flags>\n")
+                          _T("\t\t\t\t\t\t</column>\n"),
+								  id, (const TCHAR *)EscapeStringForXML2(m_name),
+								  (const TCHAR *)EscapeStringForXML2(CHECK_NULL_EX(m_displayName)),
+                          (m_snmpOid != NULL) ? m_snmpOid->getValueAsText() : _T(""), (int)m_flags);
+}

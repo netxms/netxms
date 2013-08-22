@@ -447,3 +447,38 @@ bool DCTableThreshold::check(Table *value, int row)
          return true;
    return false;
 }
+
+/**
+ * Create NXMP record for threshold
+ */
+void DCTableThreshold::createNXMPRecord(String &str, int id)
+{
+   TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
+
+   EventNameFromCode(m_activationEvent, activationEvent);
+   EventNameFromCode(m_deactivationEvent, deactivationEvent);
+   str.addFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
+                          _T("\t\t\t\t\t\t\t<activationEvent>%s</activationEvent>\n")
+                          _T("\t\t\t\t\t\t\t<deactivationEvent>%s</deactivationEvent>\n")
+                          _T("\t\t\t\t\t\t\t<groups>\n"),
+								  id, (const TCHAR *)EscapeStringForXML2(activationEvent),
+								  (const TCHAR *)EscapeStringForXML2(deactivationEvent));
+   for(int i = 0; i < m_groups->size(); i++)
+   {
+      str.addFormattedString(_T("\t\t\t\t\t\t\t\t<group id=\"%d\">\n\t\t\t\t\t\t\t\t\t<conditions>\n"), i + 1);
+      ObjectArray<DCTableCondition> *conditions = m_groups->get(i)->getConditions();
+      for(int j = 0; j < conditions->size(); j++)
+      {
+         DCTableCondition *c = conditions->get(j);
+         str.addFormattedString(_T("\t\t\t\t\t\t\t\t\t\t<condition id=\"%d\">\n")
+                                _T("\t\t\t\t\t\t\t\t\t\t\t<column>%s</column>\n")
+                                _T("\t\t\t\t\t\t\t\t\t\t\t<operation>%d</operation>\n")
+                                _T("\t\t\t\t\t\t\t\t\t\t\t<value>%s</value>\n")
+                                _T("\t\t\t\t\t\t\t\t\t\t</condition>\n"),
+                                j + 1, EscapeStringForXML2(c->getColumn()),
+                                c->getOperation(), EscapeStringForXML2(c->getValue()));
+      }
+      str += _T("\t\t\t\t\t\t\t\t\t</conditions>\n\t\t\t\t\t\t\t\t</group>\n");
+   }
+   str += _T("\t\t\t\t\t\t\t</groups>\n\t\t\t\t\t\t</threshold>\n");
+}
