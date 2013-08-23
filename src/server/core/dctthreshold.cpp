@@ -239,6 +239,32 @@ DCTableConditionGroup::DCTableConditionGroup(CSCPMessage *msg, UINT32 *baseId)
 }
 
 /**
+ * Create condition group from NXMP record
+ */
+DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
+{
+	ConfigEntry *root = e->findEntry(_T("conditions"));
+	if (root != NULL)
+	{
+		ConfigEntryList *conditions = root->getSubEntries(_T("condition#*"));
+      m_conditions = new ObjectArray<DCTableCondition>(conditions->getSize(), 4, true);
+		for(int i = 0; i < conditions->getSize(); i++)
+		{
+         ConfigEntry *c = conditions->getEntry(i);
+         const TCHAR *column = c->getSubEntryValue(_T("column"), 0, _T(""));
+         const TCHAR *value = c->getSubEntryValue(_T("value"), 0, _T(""));
+         int op = c->getSubEntryValueInt(_T("operation"));
+			m_conditions->add(new DCTableCondition(column, op, value));
+		}
+		delete conditions;
+	}
+	else
+	{
+   	m_conditions = new ObjectArray<DCTableCondition>(8, 8, true);
+	}
+}
+
+/**
  * Condition group destructor
  */
 DCTableConditionGroup::~DCTableConditionGroup()
@@ -334,6 +360,31 @@ DCTableThreshold::DCTableThreshold(CSCPMessage *msg, UINT32 *baseId)
 }
 
 /**
+ * Create from NXMP record
+ */
+DCTableThreshold::DCTableThreshold(ConfigEntry *e)
+{
+   m_activationEvent = EventCodeFromName(e->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
+   m_deactivationEvent = EventCodeFromName(e->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
+
+	ConfigEntry *groupsRoot = e->findEntry(_T("groups"));
+	if (groupsRoot != NULL)
+	{
+		ConfigEntryList *groups = groupsRoot->getSubEntries(_T("group#*"));
+      m_groups = new ObjectArray<DCTableConditionGroup>(groups->getSize(), 4, true);
+		for(int i = 0; i < groups->getSize(); i++)
+		{
+			m_groups->add(new DCTableConditionGroup(groups->getEntry(i)));
+		}
+		delete groups;
+	}
+	else
+	{
+   	m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
+	}
+}
+
+/**
  * Load conditions from database
  */
 void DCTableThreshold::loadConditions()
@@ -355,6 +406,7 @@ void DCTableThreshold::loadConditions()
          {
             if (DBGetFieldLong(hResult, i, 0) != groupId)
             {
+               groupId = DBGetFieldLong(hResult, i, 0);
                group = new DCTableConditionGroup();
                m_groups->add(group);
             }
@@ -475,8 +527,8 @@ void DCTableThreshold::createNXMPRecord(String &str, int id)
                                 _T("\t\t\t\t\t\t\t\t\t\t\t<operation>%d</operation>\n")
                                 _T("\t\t\t\t\t\t\t\t\t\t\t<value>%s</value>\n")
                                 _T("\t\t\t\t\t\t\t\t\t\t</condition>\n"),
-                                j + 1, EscapeStringForXML2(c->getColumn()),
-                                c->getOperation(), EscapeStringForXML2(c->getValue()));
+                                j + 1, (const TCHAR *)EscapeStringForXML2(c->getColumn()),
+                                c->getOperation(), (const TCHAR *)EscapeStringForXML2(c->getValue()));
       }
       str += _T("\t\t\t\t\t\t\t\t\t</conditions>\n\t\t\t\t\t\t\t\t</group>\n");
    }

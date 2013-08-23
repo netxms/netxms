@@ -187,7 +187,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -206,6 +206,46 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
    loadThresholds();
+}
+
+/**
+ * Create DCTable from import file
+ */
+DCTable::DCTable(ConfigEntry *config, Template *owner) : DCObject(config, owner)
+{
+	ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
+	if (columnsRoot != NULL)
+	{
+		ConfigEntryList *columns = columnsRoot->getSubEntries(_T("column#*"));
+		m_columns = new ObjectArray<DCTableColumn>(columns->getSize(), 8, true);
+		for(int i = 0; i < columns->getSize(); i++)
+		{
+			m_columns->add(new DCTableColumn(columns->getEntry(i)));
+		}
+		delete columns;
+	}
+	else
+	{
+   	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+	}
+
+	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
+	if (thresholdsRoot != NULL)
+	{
+		ConfigEntryList *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+		m_thresholds = new ObjectArray<DCTableThreshold>(thresholds->getSize(), 8, true);
+		for(int i = 0; i < thresholds->getSize(); i++)
+		{
+			m_thresholds->add(new DCTableThreshold(thresholds->getEntry(i)));
+		}
+		delete thresholds;
+	}
+	else
+	{
+      m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
+	}
+
+   m_lastValue = NULL;
 }
 
 /**
@@ -477,18 +517,19 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 
 		if (result && (m_columns->size() > 0))
 		{
-			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,column_name,snmp_oid,flags,display_name) VALUES (?,?,?,?,?)"));
+			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,sequence_number,column_name,snmp_oid,flags,display_name) VALUES (?,?,?,?,?,?)"));
 			if (hStmt != NULL)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 				for(int i = 0; i < m_columns->size(); i++)
 				{
 					DCTableColumn *column = m_columns->get(i);
-					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, column->getName(), DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)(i + 1));
+					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, column->getName(), DB_BIND_STATIC);
 					SNMP_ObjectId *oid = column->getSnmpOid();
-					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (oid != NULL) ? oid->getValueAsText() : NULL, DB_BIND_STATIC);
-					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)column->getFlags());
-					DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, column->getDisplayName(), DB_BIND_STATIC);
+					DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (oid != NULL) ? oid->getValueAsText() : NULL, DB_BIND_STATIC);
+					DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)column->getFlags());
+					DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, column->getDisplayName(), DB_BIND_STATIC);
 
 					result = DBExecute(hStmt);
 					if (!result)

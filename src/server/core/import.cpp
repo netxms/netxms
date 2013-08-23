@@ -92,8 +92,9 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 		return true;
 
 	bool success = true;
-	ConfigEntryList *dcis = dcRoot->getSubEntries(_T("dci#*"));
 	const TCHAR *name = root->getSubEntryValue(_T("name"), 0, _T("<unnamed>"));
+
+	ConfigEntryList *dcis = dcRoot->getSubEntries(_T("dci#*"));
 	for(int i = 0; i < dcis->getSize(); i++)
 	{
 		if (!ValidateDci(config, dcis->getEntry(i), name, errorText, errorTextLen))
@@ -103,7 +104,22 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 		}
 	}
 	delete dcis;
-	return success;
+
+   if (success)
+   {
+	   ConfigEntryList *dctables = dcRoot->getSubEntries(_T("dctable#*"));
+	   for(int i = 0; i < dctables->getSize(); i++)
+	   {
+		   if (!ValidateDci(config, dctables->getEntry(i), name, errorText, errorTextLen))
+		   {
+			   success = false;
+			   break;
+		   }
+	   }
+	   delete dcis;
+   }
+   
+   return success;
 }
 
 /**

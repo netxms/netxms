@@ -412,6 +412,7 @@ public:
 	DCTableColumn(const DCTableColumn *src);
 	DCTableColumn(CSCPMessage *msg, UINT32 baseId);
 	DCTableColumn(DB_RESULT hResult, int row);
+   DCTableColumn(ConfigEntry *e);
 	~DCTableColumn();
 
 	const TCHAR *getName() { return m_name; }
@@ -468,6 +469,7 @@ public:
    DCTableConditionGroup();
    DCTableConditionGroup(CSCPMessage *msg, UINT32 *baseId);
    DCTableConditionGroup(DCTableConditionGroup *src);
+   DCTableConditionGroup(ConfigEntry *e);
    ~DCTableConditionGroup();
 
    bool check(Table *value, int row);
@@ -496,6 +498,7 @@ public:
    DCTableThreshold(DB_RESULT hResult, int row);
    DCTableThreshold(CSCPMessage *msg, UINT32 *baseId);
    DCTableThreshold(DCTableThreshold *src);
+   DCTableThreshold(ConfigEntry *e);
    ~DCTableThreshold();
 
    bool check(Table *value, int row);
@@ -537,6 +540,7 @@ public:
    DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
 	        Template *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
    DCTable(DB_RESULT hResult, int iRow, Template *pNode);
+   DCTable(ConfigEntry *config, Template *owner);
 	virtual ~DCTable();
 
 	virtual int getType() const { return DCO_TYPE_TABLE; }

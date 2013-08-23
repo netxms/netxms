@@ -102,7 +102,14 @@ Template::Template(ConfigEntry *config) : NetObj()
 			m_dcObjects->add(new DCItem(dcis->getEntry(i), this));
 		}
 		delete dcis;
-	}
+
+		ConfigEntryList *dctables = dcRoot->getSubEntries(_T("dctable#*"));
+		for(int i = 0; i < dctables->getSize(); i++)
+		{
+			m_dcObjects->add(new DCTable(dctables->getEntry(i), this));
+		}
+		delete dctables;
+   }
 }
 
 /**

@@ -119,11 +119,9 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 	m_numMatches = 0;
 }
 
-
-//
-// Create threshold from import file
-//
-
+/**
+ * Create threshold from import file
+ */
 Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
 {
    createId();

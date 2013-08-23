@@ -31,7 +31,8 @@
 ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line, int id)
 {
 	m_name = _tcsdup(CHECK_NULL(name));
-	m_childs = NULL;
+	m_first = NULL;
+   m_last = NULL;
 	m_next = NULL;
 	if (parent != NULL)
 		parent->addEntry(this);
@@ -49,7 +50,7 @@ ConfigEntry::~ConfigEntry()
 {
 	ConfigEntry *entry, *next;
 
-	for(entry = m_childs; entry != NULL; entry = next)
+	for(entry = m_first; entry != NULL; entry = next)
 	{
 		next = entry->getNext();
 		delete entry;
@@ -78,38 +79,48 @@ ConfigEntry *ConfigEntry::findEntry(const TCHAR *name)
 {
 	ConfigEntry *e;
 
-	for(e = m_childs; e != NULL; e = e->getNext())
+	for(e = m_first; e != NULL; e = e->getNext())
 		if (!_tcsicmp(e->getName(), name))
 			return e;
 	return NULL;
 }
 
-
-//
-// Create (or find existing) subentry
-//
-
+/**
+ * Create (or find existing) subentry
+ */
 ConfigEntry *ConfigEntry::createEntry(const TCHAR *name)
 {
 	ConfigEntry *e;
 
-	for(e = m_childs; e != NULL; e = e->getNext())
+	for(e = m_first; e != NULL; e = e->getNext())
 		if (!_tcsicmp(e->getName(), name))
 			return e;
 
 	return new ConfigEntry(name, this, _T("<memory>"), 0, 0);
 }
 
+/**
+ * Add sub-entry
+ */
+void ConfigEntry::addEntry(ConfigEntry *entry)
+{ 
+   entry->m_parent = this; 
+   entry->m_next = NULL;
+   if (m_last != NULL)
+      m_last->m_next = entry;
+   m_last = entry;
+   if (m_first == NULL)
+      m_first = entry;
+}
 
-//
-// Unlink subentry
-//
-
+/**
+ * Unlink subentry
+ */
 void ConfigEntry::unlinkEntry(ConfigEntry *entry)
 {
 	ConfigEntry *curr, *prev;
 
-	for(curr = m_childs, prev = NULL; curr != NULL; curr = curr->m_next)
+	for(curr = m_first, prev = NULL; curr != NULL; curr = curr->m_next)
 	{
 		if (curr == entry)
 		{
@@ -119,25 +130,26 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
 			}
 			else
 			{
-				m_childs = curr->m_next;
+				m_first = curr->m_next;
 			}
+         if (m_last == curr)
+            m_last = prev;
+         curr->m_next = NULL;
 			break;
 		}
 		prev = curr;
 	}
 }
 
-
-//
-// Get all subentries with names matched to mask
-//
-
+/**
+ * Get all subentries with names matched to mask
+ */
 ConfigEntryList *ConfigEntry::getSubEntries(const TCHAR *mask)
 {
 	ConfigEntry *e, **list = NULL;
 	int count = 0, allocated = 0;
 
-	for(e = m_childs; e != NULL; e = e->getNext())
+	for(e = m_first; e != NULL; e = e->getNext())
 		if ((mask == NULL) || MatchString(mask, e->getName(), FALSE))
 		{
 			if (count == allocated)
@@ -150,11 +162,9 @@ ConfigEntryList *ConfigEntry::getSubEntries(const TCHAR *mask)
 	return new ConfigEntryList(list, count);
 }
 
-
-//
-// Get all subentries with names matched to mask ordered by id
-//
-
+/**
+ * Get all subentries with names matched to mask ordered by id
+ */
 ConfigEntryList *ConfigEntry::getOrderedSubEntries(const TCHAR *mask)
 {
 	ConfigEntryList *list = getSubEntries(mask);
@@ -265,11 +275,14 @@ int ConfigEntry::getConcatenatedValuesLength()
 	return len + m_valueCount;
 }
 
-
-//
-// Get value for given subentry
-//
-
+/**
+ * Get value for given subentry
+ *
+ * @param name sub-entry name
+ * @param index sub-entry index (0 if omited)
+ * @param defaultValue value to be returned if requested sub-entry is missing (NULL if omited)
+ * @return sub-entry value or default value if requested sub-entry does not exist
+ */
 const TCHAR *ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const TCHAR *defaultValue)
 {
 	ConfigEntry *e = findEntry(name);
@@ -330,15 +343,13 @@ bool ConfigEntry::getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index
 	}
 }
 
-
-//
-// Print config entry
-//
-
+/**
+ * Print config entry
+ */
 void ConfigEntry::print(FILE *file, int level)
 {
 	_tprintf(_T("%*s%s\n"), level * 4, _T(""), m_name);
-	for(ConfigEntry *e = m_childs; e != NULL; e = e->getNext())
+	for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
 		e->print(file, level + 1);
 
 	for(int i = 0, len = 0; i < m_valueCount; i++)
@@ -360,10 +371,10 @@ void ConfigEntry::createXml(String &xml, int level)
 	else
 		xml.addFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
 
-	if (m_childs != NULL)
+	if (m_first != NULL)
 	{
 		xml += _T("\n");
-		for(ConfigEntry *e = m_childs; e != NULL; e = e->getNext())
+		for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
 			e->createXml(xml, level + 1);
 		xml.addFormattedString(_T("%*s"), level * 4, _T(""));
 	}

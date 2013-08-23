@@ -40,14 +40,15 @@ private:
 	TCHAR *m_name;
 	ConfigEntry *m_parent;
 	ConfigEntry *m_next;
-	ConfigEntry *m_childs;
+	ConfigEntry *m_first;
+   ConfigEntry *m_last;
 	int m_valueCount;
 	TCHAR **m_values;
 	TCHAR *m_file;
 	int m_line;
 	int m_id;
 
-	void addEntry(ConfigEntry *entry) { entry->m_parent = this; entry->m_next = m_childs; m_childs = entry; }
+	void addEntry(ConfigEntry *entry);
 	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
 
 public:
@@ -96,11 +97,9 @@ public:
 	void createXml(String &xml, int level = 0);
 };
 
-
-//
-// List of config entries
-//
-
+/**
+ * List of config entries
+ */
 class ConfigEntryList
 {
 private:
@@ -117,11 +116,9 @@ public:
 	void sortById();
 };
 
-
-//
-// Config class
-//
-
+/**
+ * Hierarchical config
+ */
 class LIBNETXMS_EXPORTABLE Config
 {
 private:

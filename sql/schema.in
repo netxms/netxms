@@ -640,6 +640,7 @@ CREATE INDEX idx_dc_tables_node_id ON dc_tables(node_id);
 CREATE TABLE dc_table_columns
 (
 	table_id integer not null,
+	sequence_number integer not null,
 	column_name varchar(63) not null,
 	snmp_oid varchar(1023) null,		// SNMP OID for this column, valid only for SNMP tables
 	flags integer not null,

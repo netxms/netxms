@@ -96,6 +96,35 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 }
 
 /**
+ * Create from NXMP record
+ */
+DCTableColumn::DCTableColumn(ConfigEntry *e)
+{
+   nx_strncpy(m_name, e->getSubEntryValue(_T("name"), 0, _T("")), MAX_COLUMN_NAME);
+   m_flags = (UINT16)e->getSubEntryValueUInt(_T("flags"));
+   m_displayName = _tcsdup(e->getSubEntryValue(_T("displayName"), 0, _T("")));
+
+   const TCHAR *oid = e->getSubEntryValue(_T("snmpOid"));
+   if ((oid != NULL) && (*oid != 0))
+   {
+		UINT32 oidBin[256];
+		UINT32 len = SNMPParseOID(oid, oidBin, 256);
+		if (len > 0)
+		{
+			m_snmpOid = new SNMP_ObjectId(len, oidBin);
+		}
+		else
+		{
+			m_snmpOid = NULL;
+		}
+   }
+	else
+	{
+		m_snmpOid = NULL;
+	}
+}
+
+/**
  * Destructor
  */
 DCTableColumn::~DCTableColumn()
