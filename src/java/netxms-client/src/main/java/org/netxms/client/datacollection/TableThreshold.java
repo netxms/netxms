@@ -32,7 +32,6 @@ public class TableThreshold
 	private long id;
 	private int activationEvent;
 	private int deactivationEvent;
-	private boolean active;
 	private List<List<TableCondition>> conditions;
 	private long nextVarId;
 	
@@ -44,7 +43,6 @@ public class TableThreshold
 		id = 0;
 		activationEvent = 0;
 		deactivationEvent = 0;
-		active = false;
 		conditions = new ArrayList<List<TableCondition>>(0);
 	}
 	
@@ -58,7 +56,6 @@ public class TableThreshold
 		id = src.id;
 		activationEvent = src.activationEvent;
 		deactivationEvent = src.deactivationEvent;
-		active = src.active;
 		conditions = new ArrayList<List<TableCondition>>(src.conditions.size());
 		for(List<TableCondition> sl : src.conditions)
 		{
@@ -79,7 +76,6 @@ public class TableThreshold
 	{
 		long varId = baseId;
 		id = msg.getVariableAsInt64(varId++);
-		active = msg.getVariableAsBoolean(varId++);
 		activationEvent = msg.getVariableAsInteger(varId++);
 		deactivationEvent = msg.getVariableAsInteger(varId++);
 		
@@ -227,13 +223,5 @@ public class TableThreshold
 	public long getId()
 	{
 		return id;
-	}
-
-	/**
-	 * @return the active
-	 */
-	public boolean isActive()
-	{
-		return active;
 	}
 }

@@ -474,6 +474,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\strset.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\strtoll.c"
 				>
 			</File>

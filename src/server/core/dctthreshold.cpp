@@ -309,7 +309,7 @@ DCTableThreshold::DCTableThreshold()
    m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
    m_activationEvent = EVENT_THRESHOLD_REACHED;
    m_deactivationEvent = EVENT_THRESHOLD_REARMED;
-   m_currentState = false;
+   m_activeKeys = new StringSet;
 }
 
 /**
@@ -323,21 +323,21 @@ DCTableThreshold::DCTableThreshold(DCTableThreshold *src)
       m_groups->add(new DCTableConditionGroup(src->m_groups->get(i)));
    m_activationEvent = src->m_activationEvent;
    m_deactivationEvent = src->m_deactivationEvent;
-   m_currentState = false;
+   m_activeKeys = new StringSet;
 }
 
 /**
  * Create table threshold from database
- * Expected column order: id,current_state,activation_event,deactivation_event
+ * Expected column order: id,activation_event,deactivation_event
  */
 DCTableThreshold::DCTableThreshold(DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldLong(hResult, row, 0);
-   m_currentState = DBGetFieldLong(hResult, row, 1) ? true : false;
-   m_activationEvent = DBGetFieldULong(hResult, row, 2);
-   m_deactivationEvent = DBGetFieldULong(hResult, row, 3);
+   m_activationEvent = DBGetFieldULong(hResult, row, 1);
+   m_deactivationEvent = DBGetFieldULong(hResult, row, 2);
    m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
    loadConditions();
+   m_activeKeys = new StringSet;
 }
 
 /**
@@ -349,7 +349,6 @@ DCTableThreshold::DCTableThreshold(CSCPMessage *msg, UINT32 *baseId)
    m_id = msg->GetVariableLong(varId++);
    if (m_id == 0)
       m_id = CreateUniqueId(IDG_THRESHOLD);
-   m_currentState = false;
    m_activationEvent = msg->GetVariableLong(varId++);
    m_deactivationEvent = msg->GetVariableLong(varId++);
    int count = (int)msg->GetVariableLong(varId++);
@@ -357,6 +356,7 @@ DCTableThreshold::DCTableThreshold(CSCPMessage *msg, UINT32 *baseId)
    *baseId = varId;
    for(int i = 0; i < count; i++)
       m_groups->add(new DCTableConditionGroup(msg, baseId));
+   m_activeKeys = new StringSet;
 }
 
 /**
@@ -382,6 +382,7 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e)
 	{
    	m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
 	}
+   m_activeKeys = new StringSet;
 }
 
 /**
@@ -429,6 +430,7 @@ void DCTableThreshold::loadConditions()
 DCTableThreshold::~DCTableThreshold()
 {
    delete m_groups;
+   delete m_activeKeys;
 }
 
 /**
@@ -436,16 +438,15 @@ DCTableThreshold::~DCTableThreshold()
  */
 bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_thresholds (id,table_id,sequence_number,current_state,activation_event,deactivation_event) VALUES (?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_thresholds (id,table_id,sequence_number,activation_event,deactivation_event) VALUES (?,?,?,?,?)"));
    if (hStmt == NULL)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, tableId);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)seq);
-   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_currentState ? _T("1") : _T("0"), DB_BIND_STATIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_activationEvent);
-   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_deactivationEvent);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_activationEvent);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_deactivationEvent);
    DBExecute(hStmt);
    DBFreeStatement(hStmt);
 
@@ -478,7 +479,6 @@ UINT32 DCTableThreshold::fillMessage(CSCPMessage *msg, UINT32 baseId)
 {
    UINT32 varId = baseId;
    msg->SetVariable(varId++, m_id);
-   msg->SetVariable(varId++, (UINT16)(m_currentState ? 1 : 0));
    msg->SetVariable(varId++, m_activationEvent);
    msg->SetVariable(varId++, m_deactivationEvent);
    msg->SetVariable(varId++, (UINT32)m_groups->size());
@@ -491,13 +491,36 @@ UINT32 DCTableThreshold::fillMessage(CSCPMessage *msg, UINT32 baseId)
 
 /**
  * Check threshold
+ * Method will return the following codes:
+ *    THRESHOLD_REACHED - when value match the threshold condition while previous check doesn't
+ *    THRESHOLD_REARMED - when value doesn't match the threshold condition while previous check do
+ *    NO_ACTION - when there are no changes in value match to threshold's condition
  */
-bool DCTableThreshold::check(Table *value, int row)
+int DCTableThreshold::check(Table *value, int row)
 {
+   TCHAR instance[MAX_RESULT_LENGTH];
+   value->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
+
    for(int i = 0; i < m_groups->size(); i++)
+   {
       if (m_groups->get(i)->check(value, row))
-         return true;
-   return false;
+      {
+         if (m_activeKeys->exist(instance))
+         {
+            return NO_ACTION;
+         }
+         m_activeKeys->add(instance);
+         return THRESHOLD_REACHED;
+      }
+   }
+
+   // no match
+   if (m_activeKeys->exist(instance))
+   {
+      m_activeKeys->remove(instance);
+      return THRESHOLD_REARMED;
+   }
+   return NO_ACTION;
 }
 
 /**

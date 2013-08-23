@@ -489,7 +489,7 @@ private:
    ObjectArray<DCTableConditionGroup> *m_groups;
    UINT32 m_activationEvent;
    UINT32 m_deactivationEvent;
-   bool m_currentState;
+   StringSet *m_activeKeys;
 
    void loadConditions();
 
@@ -501,7 +501,7 @@ public:
    DCTableThreshold(ConfigEntry *e);
    ~DCTableThreshold();
 
-   bool check(Table *value, int row);
+   int check(Table *value, int row);
 
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
 
@@ -510,7 +510,6 @@ public:
    void createNXMPRecord(String &str, int id);
 
    UINT32 getId() { return m_id; }
-   bool getCurrentState() { return m_currentState; }
 };
 
 /**

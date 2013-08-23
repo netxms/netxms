@@ -343,6 +343,33 @@ public:
 };
 
 /**
+ * Entry of string set
+ */
+struct StringSetEntry;
+
+/**
+ * String set class
+ */
+class LIBNETXMS_EXPORTABLE StringSet
+{
+private:
+   StringSetEntry *m_data;
+
+public:
+   StringSet();
+   ~StringSet();
+
+   void add(const TCHAR *str);
+   void remove(const TCHAR *str);
+   void clear();
+
+   int size();
+   bool exist(const TCHAR *str);
+
+   void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
+};
+
+/**
  * Dynamic array class
  */
 class LIBNETXMS_EXPORTABLE Array
