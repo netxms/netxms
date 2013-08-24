@@ -35,9 +35,13 @@
 /**
  * Threshold check results
  */
-#define THRESHOLD_REACHED  0
-#define THRESHOLD_REARMED  1
-#define NO_ACTION          2
+enum ThresholdCheckResult
+{
+   ACTIVATED = 0,
+   DEACTIVATED = 1,
+   ALREADY_ACTIVE = 2,
+   ALREADY_INACTIVE = 3
+};
 
 /**
  * DCI value
@@ -137,8 +141,8 @@ public:
 	void markLastEvent(int severity);
 
    BOOL saveToDB(DB_HANDLE hdb, UINT32 dwIndex);
-   int check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
-   int checkError(UINT32 dwErrorCount);
+   ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
+   ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
    void createMessage(CSCPMessage *msg, UINT32 baseId);
    void updateFromMessage(CSCPMessage *msg, UINT32 baseId);
@@ -501,7 +505,7 @@ public:
    DCTableThreshold(ConfigEntry *e);
    ~DCTableThreshold();
 
-   int check(Table *value, int row);
+   ThresholdCheckResult check(Table *value, int row, const TCHAR *instance);
 
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
 
@@ -510,6 +514,8 @@ public:
    void createNXMPRecord(String &str, int id);
 
    UINT32 getId() { return m_id; }
+   UINT32 getActivationEvent() { return m_activationEvent; }
+   UINT32 getDeactivationEvent() { return m_deactivationEvent; }
 };
 
 /**

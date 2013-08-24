@@ -768,7 +768,32 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Parameters:' CONCAT CRLF CONCAT
 		'   No event-specific parameters'
 	);
-
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_TABLE_THRESHOLD_ACTIVATED, 'SYS_TABLE_THRESHOLD_ACTIVATED',
+		EVENT_SEVERITY_MINOR, 1,
+		'Threshold activated on table "%2" row %4 (%5)',
+		'Generated when table threshold is activated.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Table DCI name' CONCAT CRLF CONCAT
+		'   2) Table DCI description' CONCAT CRLF CONCAT
+		'   3) Table DCI ID' CONCAT CRLF CONCAT
+		'   4) Table row' CONCAT CRLF CONCAT
+		'   5) Instance'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_TABLE_THRESHOLD_DEACTIVATED, 'SYS_TABLE_THRESHOLD_DEACTIVATED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Threshold deactivated on table "%2" row %4 (%5)',
+		'Generated when table threshold is deactivated.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Table DCI name' CONCAT CRLF CONCAT
+		'   2) Table DCI description' CONCAT CRLF CONCAT
+		'   3) Table DCI ID' CONCAT CRLF CONCAT
+		'   4) Table row' CONCAT CRLF CONCAT
+		'   5) Instance'
+	);
 
 /*
 ** SNMP traps

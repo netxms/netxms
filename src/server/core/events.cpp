@@ -730,12 +730,10 @@ void DeleteEventTemplateFromList(UINT32 dwEventCode)
    RWLockUnlock(m_rwlockTemplateAccess);
 }
 
-
-//
-// Perform binary search on event template by id
-// Returns INULL if key not found or pointer to appropriate template
-//
-
+/**
+ * Perform binary search on event template by id
+ * Returns INULL if key not found or pointer to appropriate template
+ */
 static EVENT_TEMPLATE *FindEventTemplate(UINT32 dwCode)
 {
    UINT32 dwFirst, dwLast, dwMid;
@@ -763,25 +761,23 @@ static EVENT_TEMPLATE *FindEventTemplate(UINT32 dwCode)
    return NULL;
 }
 
-
-//
-// Post event to the queue.
-// Arguments:
-// dwEventCode - Event code
-// dwSourceId  - Event source object ID
-// szFormat    - Parameter format string, each parameter represented by one character.
-//    The following format characters can be used:
-//        s - String
-//        d - Decimal integer
-//        D - 64-bit decimal integer
-//        x - Hex integer
-//        a - IP address
-//        i - Object ID
-// names - names for parameters
-// PostEventEx will put events to specified queue, and PostEvent to system
-// event queue. Both functions uses RealPostEvent to do real job.
-//
-
+/**
+ * Post event to the queue.
+ * Arguments:
+ * dwEventCode - Event code
+ * dwSourceId  - Event source object ID
+ * szFormat    - Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IP address
+ *        i - Object ID
+ * names - names for parameters
+ * PostEventEx will put events to specified queue, and PostEvent to system
+ * event queue. Both functions uses RealPostEvent to do real job.
+ */
 static BOOL RealPostEvent(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId,
                           const TCHAR *pszUserTag, const char *pszFormat, const TCHAR **names, va_list args)
 {

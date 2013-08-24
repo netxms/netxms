@@ -423,8 +423,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
  */
 void DCItem::checkThresholds(ItemValue &value)
 {
-	const TCHAR *paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent") };
-	const TCHAR *paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue") };
+	static const TCHAR *paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent") };
+	static const TCHAR *paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue") };
 
 	if (m_thresholds == NULL)
 		return;
@@ -436,48 +436,47 @@ void DCItem::checkThresholds(ItemValue &value)
 
    for(int i = 0; i < m_thresholds->size(); i++)
    {
-		Threshold *thr = m_thresholds->get(i);
-      int iResult = thr->check(value, m_ppValueCache, checkValue);
-      switch(iResult)
+		Threshold *t = m_thresholds->get(i);
+      ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue);
+      switch(result)
       {
-         case THRESHOLD_REACHED:
-            PostEventWithNames(thr->getEventCode(), m_pNode->Id(), "ssssisd",
-					paramNamesReach, m_szName, m_szDescription, thr->getStringValue(), 
+         case ACTIVATED:
+            PostEventWithNames(t->getEventCode(), m_pNode->Id(), "ssssisd",
+					paramNamesReach, m_szName, m_szDescription, t->getStringValue(), 
                (const TCHAR *)checkValue, m_dwId, m_instance, 0);
-				evt = FindEventTemplateByCode(thr->getEventCode());
+				evt = FindEventTemplateByCode(t->getEventCode());
 				if (evt != NULL)
-					thr->markLastEvent((int)evt->dwSeverity);
+					t->markLastEvent((int)evt->dwSeverity);
             if (!(m_flags & DCF_ALL_THRESHOLDS))
                i = m_thresholds->size();  // Stop processing
             break;
-         case THRESHOLD_REARMED:
-            PostEventWithNames(thr->getRearmEventCode(), m_pNode->Id(), "ssisss",
+         case DEACTIVATED:
+            PostEventWithNames(t->getRearmEventCode(), m_pNode->Id(), "ssisss",
 					paramNamesRearm, m_szName, m_szDescription, m_dwId, m_instance, 
-					thr->getStringValue(), (const TCHAR *)checkValue);
+					t->getStringValue(), (const TCHAR *)checkValue);
             break;
-         case NO_ACTION:
-            if (thr->isReached())
+         case ALREADY_ACTIVE:
+				// Check if we need to re-sent threshold violation event
+				if (t->getRepeatInterval() == -1)
+					dwInterval = g_dwThresholdRepeatInterval;
+				else
+					dwInterval = (UINT32)t->getRepeatInterval();
+				if ((dwInterval != 0) && (t->getLastEventTimestamp() + (time_t)dwInterval < now))
 				{
-					// Check if we need to re-sent threshold violation event
-					if (thr->getRepeatInterval() == -1)
-						dwInterval = g_dwThresholdRepeatInterval;
-					else
-						dwInterval = (UINT32)thr->getRepeatInterval();
-					if ((dwInterval != 0) && (thr->getLastEventTimestamp() + (time_t)dwInterval < now))
-					{
-						PostEventWithNames(thr->getEventCode(), m_pNode->Id(), "ssssisd", 
-							paramNamesReach, m_szName, m_szDescription, thr->getStringValue(), 
-							(const TCHAR *)checkValue, m_dwId, m_instance, 1);
-						evt = FindEventTemplateByCode(thr->getEventCode());
-						if (evt != NULL)
-							thr->markLastEvent((int)evt->dwSeverity);
-					}
-
-					if (!(m_flags & DCF_ALL_THRESHOLDS))
-					{
-						i = m_thresholds->size();  // Threshold condition still true, stop processing
-					}
+					PostEventWithNames(t->getEventCode(), m_pNode->Id(), "ssssisd", 
+						paramNamesReach, m_szName, m_szDescription, t->getStringValue(), 
+						(const TCHAR *)checkValue, m_dwId, m_instance, 1);
+					evt = FindEventTemplateByCode(t->getEventCode());
+					if (evt != NULL)
+						t->markLastEvent((int)evt->dwSeverity);
 				}
+
+				if (!(m_flags & DCF_ALL_THRESHOLDS))
+				{
+					i = m_thresholds->size();  // Threshold condition still true, stop processing
+				}
+            break;
+         default:
             break;
       }
    }
@@ -739,22 +738,24 @@ void DCItem::processNewError()
 	for(int i = 0; i < getThresholdCount(); i++)
    {
 		Threshold *thr = m_thresholds->get(i);
-      int iResult = thr->checkError(m_dwErrorCount);
-      switch(iResult)
+      ThresholdCheckResult result = thr->checkError(m_dwErrorCount);
+      switch(result)
       {
-         case THRESHOLD_REACHED:
+         case ACTIVATED:
             PostEvent(thr->getEventCode(), m_pNode->Id(), "ssssis", m_szName,
                       m_szDescription, _T(""), _T(""), m_dwId, m_instance);
             if (!(m_flags & DCF_ALL_THRESHOLDS))
                i = m_thresholds->size();  // Stop processing
             break;
-         case THRESHOLD_REARMED:
+         case DEACTIVATED:
             PostEvent(thr->getRearmEventCode(), m_pNode->Id(), "ssis", m_szName,
                       m_szDescription, m_dwId, m_instance);
             break;
-         case NO_ACTION:
-            if (thr->isReached() && !(m_flags & DCF_ALL_THRESHOLDS))
+         case ALREADY_ACTIVE:
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
                i = m_thresholds->size();  // Threshold condition still true, stop processing
+            break;
+         default:
             break;
       }
    }

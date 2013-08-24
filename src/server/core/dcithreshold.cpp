@@ -215,10 +215,10 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
  *    THRESHOLD_REARMED - when item's value doesn't match the threshold condition while previous check do
  *    NO_ACTION - when there are no changes in item's value match to threshold's condition
  */
-int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue)
+ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue)
 {
    BOOL bMatch = FALSE;
-   int iResult, iDataType = m_dataType;
+   int iDataType = m_dataType;
 
    // Execute function on value
    switch(m_function)
@@ -414,20 +414,16 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
 		}
 	}
 
-   iResult = (bMatch & !m_isReached) ? THRESHOLD_REACHED :
-                ((!bMatch & m_isReached) ? THRESHOLD_REARMED : NO_ACTION);
+   ThresholdCheckResult result = (bMatch & !m_isReached) ? ACTIVATED : ((!bMatch & m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
    m_isReached = bMatch;
-   if (iResult != NO_ACTION)
+   if (result == ACTIVATED || result == DEACTIVATED)
    {
-      TCHAR szQuery[256];
-
       // Update threshold status in database
-      _sntprintf(szQuery, 256,
-                 _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"),
-                 (int)m_isReached, (int)m_id);
+      TCHAR szQuery[256];
+      _sntprintf(szQuery, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"), (int)m_isReached, (int)m_id);
       QueueSQLRequest(szQuery);
    }
-   return iResult;
+   return result;
 }
 
 /**
@@ -450,36 +446,27 @@ void Threshold::markLastEvent(int severity)
  * Check for collection error thresholds
  * Return same values as Check()
  */
-int Threshold::checkError(UINT32 dwErrorCount)
+ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
 {
-   int nResult;
-   BOOL bMatch;
-
    if (m_function != F_ERROR)
-      return NO_ACTION;
+      return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
 
-   bMatch = ((UINT32)m_param1 <= dwErrorCount);
-   nResult = (bMatch & !m_isReached) ? THRESHOLD_REACHED :
-                ((!bMatch & m_isReached) ? THRESHOLD_REARMED : NO_ACTION);
+   BOOL bMatch = ((UINT32)m_param1 <= dwErrorCount);
+   ThresholdCheckResult result = (bMatch & !m_isReached) ? ACTIVATED : ((!bMatch & m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
    m_isReached = bMatch;
-   if (nResult != NO_ACTION)
+   if (result == ACTIVATED || result == DEACTIVATED)
    {
-      TCHAR szQuery[256];
-
       // Update threshold status in database
-      _sntprintf(szQuery, 256,
-                 _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"),
-                 m_isReached, m_id);
+      TCHAR szQuery[256];
+      _sntprintf(szQuery, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"), m_isReached, m_id);
       QueueSQLRequest(szQuery);
    }
-   return nResult;
+   return result;
 }
 
-
-//
-// Fill DCI_THRESHOLD with object's data ready to send over the network
-//
-
+/**
+ * Fill DCI_THRESHOLD with object's data ready to send over the network
+ */
 void Threshold::createMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	UINT32 varId = baseId;

@@ -354,6 +354,35 @@ static BOOL RecreateTData(const TCHAR *className)
 }
 
 /**
+ * Upgrade from V287 to V288
+ */
+static BOOL H_UpgradeFromV287(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_ACTIVATED, _T("SYS_TABLE_THRESHOLD_ACTIVATED"), EVENT_SEVERITY_MINOR, EF_LOG,
+      _T("Threshold activated on table \"%2\" row %4 (%5)"),
+      _T("Generated when table threshold is activated.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) Table DCI name\r\n")
+      _T("   2) Table DCI description\r\n")
+      _T("   3) Table DCI ID\r\n")
+      _T("   4) Table row\r\n")
+      _T("   5) Instance")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_DEACTIVATED, _T("SYS_TABLE_THRESHOLD_DEACTIVATED"), EVENT_SEVERITY_NORMAL, EF_LOG,
+      _T("Threshold deactivated on table \"%2\" row %4 (%5)"),
+      _T("Generated when table threshold is deactivated.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) Table DCI name\r\n")
+      _T("   2) Table DCI description\r\n")
+      _T("   3) Table DCI ID\r\n")
+      _T("   4) Table row\r\n")
+      _T("   5) Instance")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='288' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V286 to V287
  */
 static BOOL H_UpgradeFromV286(int currVersion, int newVersion)
@@ -7093,6 +7122,7 @@ static struct
    { 284, 285, H_UpgradeFromV284 },
    { 285, 286, H_UpgradeFromV285 },
    { 286, 287, H_UpgradeFromV286 },
+   { 287, 288, H_UpgradeFromV287 },
    { 0, 0, NULL }
 };
 

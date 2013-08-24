@@ -437,11 +437,34 @@ void DCTable::transform(Table *value)
  */
 void DCTable::checkThresholds(Table *value)
 {
+	static const TCHAR *paramNames[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("row"), _T("instance") };
+
    lock();
-   for(int i = 0; i < m_thresholds->size(); i++)
+   for(int row = 0; row < value->getNumRows(); row++)
    {
-		DCTableThreshold *t = m_thresholds->get(i);
-      t->check(value, i);
+      TCHAR instance[MAX_RESULT_LENGTH];
+      value->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+		   DCTableThreshold *t = m_thresholds->get(i);
+         ThresholdCheckResult result = t->check(value, row, instance);
+         switch(result)
+         {
+            case ACTIVATED:
+               PostEventWithNames(t->getActivationEvent(), m_pNode->Id(), "ssids", paramNames, m_szName, m_szDescription, m_dwId, row, instance);
+               if (!(m_flags & DCF_ALL_THRESHOLDS))
+                  i = m_thresholds->size();  // Stop processing (for current row)
+               break;
+            case DEACTIVATED:
+               PostEventWithNames(t->getDeactivationEvent(), m_pNode->Id(), "ssids", paramNames, m_szName, m_szDescription, m_dwId, row, instance);
+               break;
+            case ALREADY_ACTIVE:
+				   i = m_thresholds->size();  // Threshold condition still true, stop processing
+               break;
+            default:
+               break;
+         }
+      }
    }
    unlock();
 }

@@ -9,7 +9,7 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 		'%m',5,'NODE_DOWN_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (1,7944,'Acknowlege node down alarms when node is up',
+	VALUES (1,7944,'Terminate node down alarms when node is up',
 		'%m',6,'NODE_DOWN_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
@@ -17,7 +17,7 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 		'%m',5,'SERVICE_DOWN_%i_%2','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (3,7944,'Acknowlege network service down/unknown alarms when service is up',
+	VALUES (3,7944,'Terminate network service down/unknown alarms when service is up',
 		'%m',6,'SERVICE_DOWN_%i_%2','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
@@ -25,7 +25,7 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 		'%m',5,'IF_DOWN_%i_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (5,7944,'Acknowlege interface down alarms when interface is up',
+	VALUES (5,7944,'Terminate interface down alarms when interface is up',
 		'%m',6,'IF_DOWN_%i_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
@@ -33,7 +33,7 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 		'%m',5,'IF_UNEXP_UP_%i_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (7,7944,'Acknowlege interface unexpectedly up alarms when interface goes down',
+	VALUES (7,7944,'Terminate interface unexpectedly up alarms when interface goes down',
 		'%m',6,'IF_UNEXP_UP_%i_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
@@ -53,7 +53,7 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 		'%m',4,'DB_CONN','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (12,7944,'Acknowlege DB connection loss alarm when connection restored',
+	VALUES (12,7944,'Terminate DB connection loss alarm when connection restored',
 		'%m',6,'DB_CONN','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
@@ -61,7 +61,7 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 		'%m',5,'DCI_STATUS_%i_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (14,7944,'Acknowlege DCI status alarms when DCI status returns to ACTIVE',
+	VALUES (14,7944,'Terminate DCI status alarms when DCI status returns to ACTIVE',
 		'%m',6,'DCI_STATUS_%i_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
@@ -69,8 +69,16 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 		'%m',5,'DC_THRESHOLD_%i_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (16,7944,'Acknowlege threshold violation alarm',
+	VALUES (16,7944,'Terminate threshold violation alarms',
 		'%m',6,'DC_THRESHOLD_%i_%3','',0,EVENT_ALARM_TIMEOUT,0,'');
+
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (17,7944,'Generate alarm on table threshold violation',
+		'%m',5,'DCTTHR_%i_%3_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
+		
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (18,7944,'Terminate table threshold violation alarms',
+		'%m',6,'DCTTHR_%i_%3_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
@@ -91,3 +99,5 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (13,EVENT_DCI_UNSUPPOR
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (14,EVENT_DCI_ACTIVE);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (15,EVENT_THRESHOLD_REACHED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (16,EVENT_THRESHOLD_REARMED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (17,EVENT_TABLE_THRESHOLD_ACTIVATED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (18,EVENT_TABLE_THRESHOLD_DEACTIVATED);

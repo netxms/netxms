@@ -307,8 +307,8 @@ DCTableThreshold::DCTableThreshold()
 {
    m_id = CreateUniqueId(IDG_THRESHOLD);
    m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
-   m_activationEvent = EVENT_THRESHOLD_REACHED;
-   m_deactivationEvent = EVENT_THRESHOLD_REARMED;
+   m_activationEvent = EVENT_TABLE_THRESHOLD_ACTIVATED;
+   m_deactivationEvent = EVENT_TABLE_THRESHOLD_DEACTIVATED;
    m_activeKeys = new StringSet;
 }
 
@@ -364,8 +364,8 @@ DCTableThreshold::DCTableThreshold(CSCPMessage *msg, UINT32 *baseId)
  */
 DCTableThreshold::DCTableThreshold(ConfigEntry *e)
 {
-   m_activationEvent = EventCodeFromName(e->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
-   m_deactivationEvent = EventCodeFromName(e->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
+   m_activationEvent = EventCodeFromName(e->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_TABLE_THRESHOLD_ACTIVATED")));
+   m_deactivationEvent = EventCodeFromName(e->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_TABLE_THRESHOLD_DEACTIVATED")));
 
 	ConfigEntry *groupsRoot = e->findEntry(_T("groups"));
 	if (groupsRoot != NULL)
@@ -496,21 +496,18 @@ UINT32 DCTableThreshold::fillMessage(CSCPMessage *msg, UINT32 baseId)
  *    THRESHOLD_REARMED - when value doesn't match the threshold condition while previous check do
  *    NO_ACTION - when there are no changes in value match to threshold's condition
  */
-int DCTableThreshold::check(Table *value, int row)
+ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR *instance)
 {
-   TCHAR instance[MAX_RESULT_LENGTH];
-   value->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
-
    for(int i = 0; i < m_groups->size(); i++)
    {
       if (m_groups->get(i)->check(value, row))
       {
          if (m_activeKeys->exist(instance))
          {
-            return NO_ACTION;
+            return ALREADY_ACTIVE;
          }
          m_activeKeys->add(instance);
-         return THRESHOLD_REACHED;
+         return ACTIVATED;
       }
    }
 
@@ -518,9 +515,9 @@ int DCTableThreshold::check(Table *value, int row)
    if (m_activeKeys->exist(instance))
    {
       m_activeKeys->remove(instance);
-      return THRESHOLD_REARMED;
+      return DEACTIVATED;
    }
-   return NO_ACTION;
+   return ALREADY_INACTIVE;
 }
 
 /**
