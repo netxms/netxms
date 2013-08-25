@@ -75,7 +75,29 @@ public class DciComparator extends ViewerComparator
 			case DataCollectionEditor.COLUMN_TEMPLATE:
 				final String text1 = labelProvider.getColumnText(e1, column);
 				final String text2 = labelProvider.getColumnText(e2, column);
-				result = text1.compareToIgnoreCase(text2);
+
+				if (text1 != null && text2 != null)
+				{
+					result = text1.compareToIgnoreCase(text2);
+				}
+				else
+				{
+					if (text1 == null)
+					{
+						if (text2 == null)
+						{
+							result = 0;
+						}
+						else
+						{
+							result = -1;
+						}
+					}
+					else
+					{
+						result = 1;
+					}
+				}
 				break;
 			default:
 				result = 0;
