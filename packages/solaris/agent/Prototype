@@ -12,7 +12,6 @@ f none /opt/netxms/bin/nxappget 0755 root root
 f none /opt/netxms/bin/nxapush 0755 root root
 f none /opt/netxms/bin/nxdevcfg 0755 root root
 f none /opt/netxms/lib/libappagent.so.1.0.0 0755 root root
-f none /opt/netxms/lib/libcrypto.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnetxms.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxdb.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxexpat.so.1.0.0 0755 root root
