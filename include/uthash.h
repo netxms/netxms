@@ -40,7 +40,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DECLTYPE(x)
 #endif
 #else                   /* GNU, Sun and other compilers */
+#ifdef __HP_aCC
+#define NO_DECLTYPE
+#define DECLTYPE(x)
+#else
 #define DECLTYPE(x) (__typeof(x))
+#endif
 #endif
 
 #ifdef NO_DECLTYPE
