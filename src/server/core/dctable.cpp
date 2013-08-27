@@ -704,13 +704,25 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 		varId += 10;
 	}
 
-	m_thresholds->clear();
 	count = (int)pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+   ObjectArray<DCTableThreshold> *newThresholds = new ObjectArray<DCTableThreshold>(count, 8, true);
 	varId = VID_DCI_THRESHOLD_BASE;
 	for(int i = 0; i < count; i++)
 	{
-		m_thresholds->add(new DCTableThreshold(pMsg, &varId));
+      DCTableThreshold *t = new DCTableThreshold(pMsg, &varId);
+		newThresholds->add(t);
+      for(int j = 0; j < m_thresholds->size(); j++)
+      {
+         DCTableThreshold *old = m_thresholds->get(j);
+         if (old->getId() == t->getId())
+         {
+            t->copyState(old);
+            break;
+         }
+      }
 	}
+   delete m_thresholds;
+   m_thresholds = newThresholds;
 
 	unlock();
 }

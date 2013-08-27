@@ -554,3 +554,12 @@ void DCTableThreshold::createNXMPRecord(String &str, int id)
    }
    str += _T("\t\t\t\t\t\t\t</groups>\n\t\t\t\t\t\t</threshold>\n");
 }
+
+/**
+ * Copy threshold state
+ */
+void DCTableThreshold::copyState(DCTableThreshold *src)
+{
+   m_activeKeys->clear();
+   m_activeKeys->addAll(src->m_activeKeys);
+}

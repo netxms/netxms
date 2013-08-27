@@ -123,3 +123,15 @@ void StringSet::forEach(bool (*cb)(const TCHAR *, void *), void *userData)
       cb(entry->str, userData);
    }
 }
+
+/**
+ * Add all entries from source set
+ */
+void StringSet::addAll(StringSet *src)
+{
+   StringSetEntry *entry, *tmp;
+   HASH_ITER(hh, src->m_data, entry, tmp)
+   {
+      add(entry->str);
+   }
+}

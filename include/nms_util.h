@@ -366,6 +366,7 @@ public:
    int size();
    bool exist(const TCHAR *str);
 
+   void addAll(StringSet *src);
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 };
 

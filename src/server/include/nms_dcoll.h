@@ -505,12 +505,12 @@ public:
    DCTableThreshold(ConfigEntry *e);
    ~DCTableThreshold();
 
+   void copyState(DCTableThreshold *src);
+
    ThresholdCheckResult check(Table *value, int row, const TCHAR *instance);
 
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
-
    UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
-
    void createNXMPRecord(String &str, int id);
 
    UINT32 getId() { return m_id; }
