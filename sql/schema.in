@@ -666,7 +666,6 @@ CREATE TABLE dct_thresholds
 	id integer not null,
 	table_id integer not null,
 	sequence_number integer not null,
-	current_state char(1) not null,
 	activation_event integer not null,
 	deactivation_event integer not null,
 	PRIMARY KEY(id)
