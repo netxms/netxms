@@ -27,7 +27,7 @@
 #include <syslog.h>
 #endif
 
-#define MAX_LOG_HISTORY_SIZE	16
+#define MAX_LOG_HISTORY_SIZE	128
 
 /**
  * Static data
