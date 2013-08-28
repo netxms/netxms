@@ -32,6 +32,7 @@ check_substr()
 #--------------------------------------------------------------------
 
 PLATFORM=`uname -s`
+CPUTYPE=`uname -p`
 COMPONENTS=""
 DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
@@ -875,7 +876,7 @@ if test "x$CXX" = "xCC" ; then
 		AC_MSG_CHECKING(whether C compiler accepts -m32)
 		OLD_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$CPPFLAGS -m32"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 			[ 
 				LDFLAGS="-m32 $LDFLAGS"
 				AC_MSG_RESULT(yes) 
@@ -885,10 +886,11 @@ if test "x$CXX" = "xCC" ; then
 				AC_MSG_RESULT(no)
 			])
 	else
+		TEST_XARCH="no"
 		AC_MSG_CHECKING(whether C compiler accepts -m64)
 		OLD_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$CPPFLAGS -m64"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 			[ 
 				LDFLAGS="-m64 $LDFLAGS"
 				AC_MSG_RESULT(yes) 
@@ -896,7 +898,27 @@ if test "x$CXX" = "xCC" ; then
 			[ 
 				CPPFLAGS="$OLD_CPPFLAGS"
 				AC_MSG_RESULT(no)
+				TEST_XARCH="yes"
 			])
+		if test "x$TEST_XARCH" = "xyes"; then
+			if test "x$CPUTYPE" = "xsparc"; then
+				ARCH="-xarch=v9"
+			else
+				ARCH="-xarch=amd64"
+			fi
+			AC_MSG_CHECKING(whether C compiler accepts $ARCH)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS $ARCH"
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="$ARCH $LDFLAGS"
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		fi
 	fi
 fi
 
