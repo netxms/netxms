@@ -101,7 +101,7 @@ static BOOL GetInterfaceHWAddr(char *pszIfName, char *pszMacAddr)
 /**
  * Interface list
  */
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct lifnum ln;
@@ -124,7 +124,6 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 			{
 				for (i = 0; i < ln.lifn_count; i++)
 				{
-					char szOut[256];
 					char szIpAddr[32];
 					char szMacAddr[32];
 					int nMask;
@@ -134,7 +133,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 					strcpy(rq.lifr_name, lc.lifc_req[i].lifr_name);
 					if (ioctl(nFd, SIOCGLIFADDR, &rq) == 0)
 					{
-						nx_strncpy(szIpAddr, inet_ntoa(((struct sockaddr_in *)&rq.lifr_addr)->sin_addr), sizeof(szIpAddr));
+						strncpy(szIpAddr, inet_ntoa(((struct sockaddr_in *)&rq.lifr_addr)->sin_addr), sizeof(szIpAddr));
 					}
 					else
 					{
@@ -160,7 +159,8 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 
 					if (ioctl(nFd, SIOCGLIFINDEX, &rq) == 0)
 					{
-						snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
+						TCHAR szOut[256];
+						_sntprintf(szOut, 256, _T("%d %hs/%d %d %hs %hs"),
 								rq.lifr_index, szIpAddr, nMask,
 								InterfaceTypeFromName(lc.lifc_req[i].lifr_name),
 								szMacAddr, lc.lifc_req[i].lifr_name);
@@ -185,14 +185,14 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 /**
  * Get interface description
  */
-LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIfDescription(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
 	int nIndex, nFd;
 	struct lifreq rq;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	AgentGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	AgentGetParameterArgA(pszParam, 1, szIfName, IF_NAMESIZE);
 	if (szIfName[0] != 0)
 	{
 		// Determine if parameter is index or name
@@ -209,7 +209,7 @@ LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue)
 
 	if (szIfName[0] != 0)
 	{
-		ret_string(pValue, szIfName);
+		ret_mbstring(pValue, szIfName);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
@@ -219,14 +219,14 @@ LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Get interface administrative status
  */
-LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
 	int nIndex, nFd;
 	struct lifreq rq;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	AgentGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	AgentGetParameterArgA(pszParam, 1, szIfName, IF_NAMESIZE);
 	if (szIfName[0] != 0)
 	{
 		// Determine if parameter is index or name
@@ -262,7 +262,7 @@ LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Get interface statistics
  */
-LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -271,7 +271,7 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 	int nInstance, nIndex;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	AgentGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	AgentGetParameterArgA(pszParam, 1, szIfName, IF_NAMESIZE);
 	if (szIfName[0] != 0)
 	{
 		// Determine if parameter is index or name
@@ -312,7 +312,7 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 						switch(kn->data_type)
 						{
 							case KSTAT_DATA_CHAR:
-								ret_string(pValue, kn->value.c);
+								ret_mbstring(pValue, kn->value.c);
 								break;
 							case KSTAT_DATA_INT32:
 								ret_int(pValue, kn->value.i32);
@@ -351,7 +351,7 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Get Link status
  */
-LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
 	int nIndex, nFd;
@@ -359,13 +359,13 @@ LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
 	LONG nRet = SYSINFO_RC_ERROR;
 
 	// try to get status using kstat()
-	nRet = H_NetInterfaceStats(pszParam, "link_up", pValue);
+	nRet = H_NetInterfaceStats(pszParam, (const TCHAR *)"link_up", pValue);
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
 		return SYSINFO_RC_SUCCESS;
 	}
 
-	AgentGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	AgentGetParameterArgA(pszParam, 1, szIfName, IF_NAMESIZE);
 	if (szIfName[0] != 0)
 	{
 		// Determine if parameter is index or name

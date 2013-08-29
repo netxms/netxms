@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2011 Victor Kirhenshtein
+ ** Copyright (C) 2004-2013 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
 			}
 			else 
 			{
-				AgentWriteDebugLog(6, "SunOS: kstat_read failed in ReadCPUTimes");
+				AgentWriteDebugLog(6, _T("SunOS: kstat_read failed in ReadCPUTimes"));
 			}
 		}
 	}
@@ -94,8 +94,8 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 	{
 		kstat_unlock();
 		AgentWriteLog(EVENTLOG_ERROR_TYPE,
-				"SunOS: Unable to open kstat() context (%s), CPU statistics will not be collected", 
-				strerror(errno));
+				_T("SunOS: Unable to open kstat() context (%s), CPU statistics will not be collected"), 
+				_tcserror(errno));
 		return THREAD_OK;
 	}
 
@@ -133,7 +133,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 	pnLastTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
 	pnCurrTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
 	dwHistoryPos = 0;
-	AgentWriteDebugLog(1, "CPU stat collector thread started");
+	AgentWriteDebugLog(1, _T("CPU stat collector thread started"));
 
 	// Do first read
 	ReadCPUTimes(kc, pnLastTimes);
@@ -220,16 +220,14 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 	kstat_lock();
 	kstat_close(kc);
 	kstat_unlock();
-	AgentWriteDebugLog(1, "CPU stat collector thread stopped");
+	AgentWriteDebugLog(1, _T("CPU stat collector thread stopped"));
 	return THREAD_OK;
 }
 
-
-//
-// Handlers for System.CPU.Usage parameters
-//
-
-LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handlers for System.CPU.Usage parameters
+ */
+LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
@@ -238,17 +236,17 @@ LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue)
 		switch(pArg[1])
 		{
 			case '0':
-				sprintf(pValue, "%d.%d00000",
+				_sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
 						m_dwUsage[MAX_CPU_COUNT] / 10,
 						m_dwUsage[MAX_CPU_COUNT] % 10);
 				break;
 			case '1':
-				sprintf(pValue, "%d.%d00000",
+				_sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
 						m_dwUsage5[MAX_CPU_COUNT] / 10,
 						m_dwUsage5[MAX_CPU_COUNT] % 10);
 				break;
 			case '2':
-				sprintf(pValue, "%d.%d00000",
+				_sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
 						m_dwUsage15[MAX_CPU_COUNT] / 10,
 						m_dwUsage15[MAX_CPU_COUNT] % 10);
 				break;
@@ -260,11 +258,11 @@ LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue)
 	else
 	{
 		LONG nCPU = -1, nInstance;
-		char *eptr, szBuffer[32] = "error";
+		TCHAR *eptr, szBuffer[32] = _T("error");
 
 		// Get CPU number
 		AgentGetParameterArg(pszParam, 1, szBuffer, 32);
-		nInstance = strtol(szBuffer, &eptr, 0);
+		nInstance = _tcstol(szBuffer, &eptr, 0);
 		if (nInstance != -1)
 		{
 			for(nCPU = 0; nCPU < MAX_CPU_COUNT; nCPU++)
@@ -276,17 +274,17 @@ LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue)
 			switch(pArg[1])
 			{
 				case '0':
-					sprintf(pValue, "%d.%d00000",
+					_sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
 							m_dwUsage[nCPU] / 10,
 							m_dwUsage[nCPU] % 10);
 					break;
 				case '1':
-					sprintf(pValue, "%d.%d00000",
+					_sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
 							m_dwUsage5[nCPU] / 10,
 							m_dwUsage5[nCPU] % 10);
 					break;
 				case '2':
-					sprintf(pValue, "%d.%d00000",
+					_sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
 							m_dwUsage15[nCPU] / 10,
 							m_dwUsage15[nCPU] % 10);
 					break;

@@ -171,7 +171,7 @@ static BOOL SubAgentInit(Config *config)
 #ifdef _WIN32
 	g_driverHandle = DBLoadDriver(_T("oracle.ddr"), NULL, TRUE, NULL, NULL);
 #else
-	g_driverHandle = DBLoadDriver(LIBDIR "/libnxddr_oracle.so", NULL, TRUE, NULL, NULL);
+	g_driverHandle = DBLoadDriver(LIBDIR _T("/netxms/dbdrv/oracle.ddr"), NULL, TRUE, NULL, NULL);
 #endif
 	if (g_driverHandle == NULL)
 	{

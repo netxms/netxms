@@ -82,7 +82,7 @@ static void ProcessDeviceStats(const char *dev, kstat_io_t *kio)
 	if (s_data[i].dev[0] == 0)
 	{
 		// new device
-		AgentWriteDebugLog(5, "SunOS: device %s added to I/O stat collection", dev);
+		AgentWriteDebugLog(5, _T("SunOS: device %hs added to I/O stat collection"), dev);
 		strcpy(s_data[i].dev, dev);
 	}
 	else
@@ -145,12 +145,12 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 	kstat_unlock();
 	if (kc == NULL)
 	{
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, "SunOS::IOStatCollector: call to kstat_open failed (%s), I/O statistic will not be collected", strerror(errno));
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("SunOS::IOStatCollector: call to kstat_open failed (%s), I/O statistic will not be collected"), _tcserror(errno));
 		return THREAD_OK;
 	}
 
 	memset(s_data, 0, sizeof(IO_STATS) * (MAX_DEVICES + 1));
-	AgentWriteDebugLog(1, "SunOS: I/O stat collector thread started");
+	AgentWriteDebugLog(1, _T("SunOS: I/O stat collector thread started"));
 
 	while(!g_bShutdown)
 	{
@@ -172,7 +172,7 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 		ThreadSleepMs(1000);
 	}
 
-	AgentWriteDebugLog(1, "SunOS: I/O stat collector thread stopped");
+	AgentWriteDebugLog(1, _T("SunOS: I/O stat collector thread stopped"));
 	kstat_lock();
 	kstat_close(kc);
 	kstat_unlock();
@@ -266,7 +266,7 @@ static QWORD CalculateMax64(QWORD *series)
 // Get total I/O stat value
 //
 
-LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
+LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -324,18 +324,16 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
 	return rc;
 }
 
-
-//
-// Get I/O stat for specific device
-//
-
-LONG H_IOStats(const char *cmd, const char *arg, char *value)
+/**
+ * Get I/O stat for specific device
+ */
+LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	char device[KSTAT_STRLEN];
 	LONG rc = SYSINFO_RC_SUCCESS;
 	int i;
 
-	if (!AgentGetParameterArg(cmd, 1, device, KSTAT_STRLEN))
+	if (!AgentGetParameterArgA(cmd, 1, device, KSTAT_STRLEN))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	// find device

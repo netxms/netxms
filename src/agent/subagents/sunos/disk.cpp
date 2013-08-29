@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+ ** Copyright (C) 2004-2013 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -30,13 +28,13 @@
 // Disk used/free space information
 //
 
-LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs sv;
 	char szPath[512] = "";
 
-	AgentGetParameterArg(pszParam, 1, szPath, sizeof(szPath));
+	AgentGetParameterArgA(pszParam, 1, szPath, sizeof(szPath));
 
 	if ((szPath[0] != 0) && (statvfs(szPath, &sv) == 0))
 	{

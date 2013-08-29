@@ -1644,7 +1644,7 @@ AC_CHECK_SIZEOF(wchar_t,,[
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper wcserror wcserror_r])
 AC_CHECK_FUNCS([wfopen fputws putws wopen wstat waccess wgetenv wrename wunlink wremove])
 AC_CHECK_FUNCS([wchdir wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod])
-AC_CHECK_FUNCS([vwscanf vswscanf vfwscanf wcscasecmp])
+AC_CHECK_FUNCS([vwscanf vswscanf vfwscanf wcscasecmp wcsncasecmp])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,

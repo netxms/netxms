@@ -26,7 +26,7 @@
 /**
  * Handler for System.Uname parameter
  */
-LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	char szSysStr[7][64];
 	int i;
@@ -51,7 +51,7 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
-		snprintf(pValue, MAX_RESULT_LENGTH, "%s %s %s %s %s %s %s",
+		_sntprintf(pValue, MAX_RESULT_LENGTH, _T("%hs %hs %hs %hs %hs %hs %hs"),
 				szSysStr[0], szSysStr[1], szSysStr[2], szSysStr[3],
 				szSysStr[4], szSysStr[5], szSysStr[6]);
 	}
@@ -59,12 +59,10 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for System.Uptime parameter
-//
-
-LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for System.Uptime parameter
+ */
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -101,22 +99,27 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-//
-// Handler for System.Hostname parameter
-//
-
-LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for System.Hostname parameter
+ */
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
+#ifdef UNICODE
+	char buffer[MAX_RESULT_LENGTH];
+	if (sysinfo(SI_HOSTNAME, buffer, MAX_RESULT_LENGTH) == -1)
+		return SYSINFO_RC_ERROR;
+	ret_mbstring(pValue, buffer);
+	return SYSINFO_RC_SUCCESS;
+#else
 	return (sysinfo(SI_HOSTNAME, pValue, MAX_RESULT_LENGTH) == -1) ?
 		SYSINFO_RC_ERROR : SYSINFO_RC_SUCCESS;
+#endif
 }
 
-
-//
-// Handler for System.CPU.LoadAvg
-//
-
-LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for System.CPU.LoadAvg
+ */
+LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -136,7 +139,7 @@ LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue)
 				kn = (kstat_named_t *)kstat_data_lookup(kp, szParam[CAST_FROM_POINTER(pArg, int)]);
 				if (kn != NULL)
 				{
-					sprintf(pValue, "%.2f0000", (double)kn->value.ul / 256.0);
+					_sntprintf(pValue, MAX_RESULT_LENGTH, _T("%0.02f"), (double)kn->value.ui32 / 256.0);
 					nRet = SYSINFO_RC_SUCCESS;
 				}
 			}
@@ -148,21 +151,19 @@ LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for System.KStat(*)
-//
-
-LONG H_KStat(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for System.KStat(*)
+ */
+LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	char *eptr, szModule[128], szName[128], szInstance[16], szStat[128];
 	LONG nInstance;
 
 	// Read parameters
-	if ((!AgentGetParameterArg(pszParam, 1, szModule, 128)) ||
-			(!AgentGetParameterArg(pszParam, 2, szInstance, 16)) ||
-			(!AgentGetParameterArg(pszParam, 3, szName, 128)) ||
-			(!AgentGetParameterArg(pszParam, 4, szStat, 128)))
+	if ((!AgentGetParameterArgA(pszParam, 1, szModule, 128)) ||
+			(!AgentGetParameterArgA(pszParam, 2, szInstance, 16)) ||
+			(!AgentGetParameterArgA(pszParam, 3, szName, 128)) ||
+			(!AgentGetParameterArgA(pszParam, 4, szStat, 128)))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (szInstance[0] != 0)
@@ -179,23 +180,19 @@ LONG H_KStat(const char *pszParam, const char *pArg, char *pValue)
 	return ReadKStatValue(szModule, nInstance, szName, szStat, pValue, NULL);
 }
 
-
-//
-// Handler for System.CPU.Count
-//
-
-LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for System.CPU.Count
+ */
+LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	return ReadKStatValue("unix", 0, "system_misc", "ncpus", pValue, NULL);
 }
 
-
-//
-// Handler for generic kstat parameter
-//
-
+/**
+ * Handler for generic kstat parameter
+ */
 LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
-		const char *pszStat, char *pValue, kstat_named_t *pRawValue)
+		const char *pszStat, TCHAR *pValue, kstat_named_t *pRawValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -219,7 +216,7 @@ LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
 						switch(kn->data_type)
 						{
 							case KSTAT_DATA_CHAR:
-								ret_string(pValue, kn->value.c);
+								ret_mbstring(pValue, kn->value.c);
 								break;
 							case KSTAT_DATA_INT32:
 								ret_int(pValue, kn->value.i32);
@@ -254,17 +251,17 @@ LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
 				}
 				else
 				{
-					AgentWriteDebugLog(6, "SunOS::ReadKStatValue(%s,%d,%s,%s): kstat_data_lookup failed (%s)", pszModule, nInstance, pszName, pszStat, strerror(errno));
+					AgentWriteDebugLog(6, _T("SunOS::ReadKStatValue(%hs,%d,%hs,%hs): kstat_data_lookup failed (%hs)"), pszModule, nInstance, pszName, pszStat, strerror(errno));
 				}
 			}
 			else
 			{
-				AgentWriteDebugLog(6, "SunOS::ReadKStatValue(%s,%d,%s,%s): kstat_read failed (%s)", pszModule, nInstance, pszName, pszStat, strerror(errno));
+				AgentWriteDebugLog(6, _T("SunOS::ReadKStatValue(%hs,%d,%hs,%hs): kstat_read failed (%hs)"), pszModule, nInstance, pszName, pszStat, strerror(errno));
 			}
 		}
 		else
 		{
-			AgentWriteDebugLog(6, "SunOS::ReadKStatValue(%s,%d,%s,%s): kstat_lookup failed (%s)", pszModule, nInstance, pszName, pszStat, strerror(errno));
+			AgentWriteDebugLog(6, _T("SunOS::ReadKStatValue(%hs,%d,%hs,%hs): kstat_lookup failed (%hs)"), pszModule, nInstance, pszName, pszStat, strerror(errno));
 		}
 		kstat_close(kc);
 	}
@@ -274,9 +271,9 @@ LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
 }
 
 /**
- * Handler for System.CPU.Count
+ * Handler for System.Memory.* parameters
  */
-LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	kstat_named_t kn;

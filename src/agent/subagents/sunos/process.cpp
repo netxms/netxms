@@ -130,12 +130,12 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
 						if (pszCmdLine == NULL)		// Match like in Process.Count()
 							nameMatch = !strcmp(psi.pr_fname, pszProcName);
 						else
-							nameMatch = RegexpMatch(psi.pr_fname, pszProcName, FALSE);
+							nameMatch = RegexpMatchA(psi.pr_fname, pszProcName, FALSE);
 					}
 
 					if ((pszCmdLine != NULL) && (*pszCmdLine != 0))
 					{
-						cmdLineMatch = RegexpMatch(psi.pr_psargs, pszCmdLine, TRUE);
+						cmdLineMatch = RegexpMatchA(psi.pr_psargs, pszCmdLine, TRUE);
 					}
 
 					if (nameMatch && cmdLineMatch)
@@ -143,8 +143,9 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
 						if (pEnt != NULL)
 						{
 							(*pEnt)[nFound].nPid = strtoul(pNameList[nCount]->d_name, NULL, 10);
-							nx_strncpy((*pEnt)[nFound].szProcName, psi.pr_fname,
-									sizeof((*pEnt)[nFound].szProcName));
+							strncpy((*pEnt)[nFound].szProcName, psi.pr_fname,
+								sizeof((*pEnt)[nFound].szProcName));
+							(*pEnt)[nFound].szProcName[sizeof((*pEnt)[nFound].szProcName) - 1] = 0;
 						}
 						nFound++;
 					}
@@ -164,25 +165,22 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
 	return nFound;
 }
 
-
-//
-// Process list
-//
-
-LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
+/**
+ * Process list
+ */
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	PROC_ENT *pList;
 	int i, nProc;
-	char szBuffer[256];
+	TCHAR szBuffer[256];
 
 	nProc = ProcRead(&pList, NULL, NULL);
 	if (nProc != -1)
 	{
 		for(i = 0; i < nProc; i++)
 		{
-			snprintf(szBuffer, sizeof(szBuffer), "%d %s", pList[i].nPid,
-					pList[i].szProcName);
+			_sntprintf(szBuffer, 256, _T("%d %hs"), pList[i].nPid, pList[i].szProcName);
 			pValue->add(szBuffer);
 		}
 	}
@@ -195,22 +193,20 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for Process.Count(*) and Process.CountEx(*) parameters
-//
-
-LONG H_ProcessCount(const char *param, const char *arg, char *value)
+/**
+ * Handler for Process.Count(*) and Process.CountEx(*) parameters
+ */
+LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char procName[256] = "", cmdLine[256] = "";
 	int nCount;
 
-	AgentGetParameterArg(param, 1, procName, sizeof(procName));
-	if (*arg == 'E')	// Process.CountEx
-		AgentGetParameterArg(param, 2, cmdLine, sizeof(cmdLine));
+	AgentGetParameterArgA(param, 1, procName, sizeof(procName));
+	if (*arg == _T('E'))	// Process.CountEx
+		AgentGetParameterArgA(param, 2, cmdLine, sizeof(cmdLine));
 
-	nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, (*arg == 'E') ? cmdLine : NULL);
+	nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, (*arg == _T('E')) ? cmdLine : NULL);
 	if (nCount >= 0)
 	{
 		ret_int(value, nCount);
@@ -220,21 +216,17 @@ LONG H_ProcessCount(const char *param, const char *arg, char *value)
 	return nRet;
 }
 
-
-//
-// Handler for System.ProcessCount parameter
-//
-
-LONG H_SysProcCount(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for System.ProcessCount parameter
+ */
+LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	return ReadKStatValue("unix", 0, "system_misc", "nproc", pValue, NULL);
 }
 
-
-//
-// Read process information file from /proc file system
-//
-
+/**
+ * Read process information file from /proc file system
+ */
 static BOOL ReadProcFile(pid_t nPid, const char *pszFile, void *pData, size_t nDataLen)
 {
 	char szFileName[256];
@@ -256,13 +248,10 @@ static BOOL ReadProcFile(pid_t nPid, const char *pszFile, void *pData, size_t nD
 	return bResult;
 }
 
-
-//
-// Get specific process attribute
-//
-
-static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType,
-                                int nCount, QWORD *pqwValue)
+/**
+ * Get specific process attribute
+ */
+static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QWORD *pqwValue)
 {
 	QWORD qwValue;  
 	char szFileName[MAX_PATH];
@@ -400,12 +389,10 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 	return bResult;
 }
 
-
-//
-// Handler for Process.XXX parameters
-//
-
-LONG H_ProcessInfo(const char *param, const char *arg, char *value)
+/**
+ * Handler for Process.XXX parameters
+ */
+LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuffer[256] = "", procName[256] = "", cmdLine[256] = "";
@@ -415,7 +402,7 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 	static const char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
 	// Get parameter type arguments
-	AgentGetParameterArg(param, 2, szBuffer, sizeof(szBuffer));
+	AgentGetParameterArgA(param, 2, szBuffer, sizeof(szBuffer));
 	if (szBuffer[0] == 0)     // Omited type
 	{
 		nType = INFOTYPE_SUM;
@@ -430,9 +417,9 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 	}
 
 	// Get process name
-	AgentGetParameterArg(param, 1, procName, MAX_PATH);
-	AgentGetParameterArg(param, 3, cmdLine, MAX_PATH);
-	StrStrip(cmdLine);
+	AgentGetParameterArgA(param, 1, procName, MAX_PATH);
+	AgentGetParameterArgA(param, 3, cmdLine, MAX_PATH);
+	StrStripA(cmdLine);
 
 	nCount = ProcRead(&pList, (procName[0] != 0) ? procName : NULL, (cmdLine[0] != 0) ? cmdLine : NULL);
 	if (nCount > 0)

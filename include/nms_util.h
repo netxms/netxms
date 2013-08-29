@@ -127,6 +127,19 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
 #endif
 
 /**
+ * Custom wcsdup
+ */
+#if !HAVE_WCSDUP && !defined(_WIN32)
+#ifdef __cplusplus
+extern "C" {
+#endif
+	WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src);
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+/**
  * Class for serial communications
  */
 #ifdef __cplusplus
@@ -1139,12 +1152,12 @@ extern "C"
 	UINT64 LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
 
-#if !HAVE_WCSDUP && !defined(_WIN32)
-	WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src);
-#endif
-
 #if !HAVE_WCSCASECMP && !defined(_WIN32)
 	int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
+#endif
+
+#if !HAVE_WCSNCASECMP && !defined(_WIN32)
+	int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 #endif
 
 #ifdef _WIN32

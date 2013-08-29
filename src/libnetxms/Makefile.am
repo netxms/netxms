@@ -4,7 +4,8 @@ SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp dirw_unix.c \
 	  nxcp.cpp qsort.c queue.cpp rwlock.cpp scandir.c serial.cpp \
 	  sha1.cpp string.cpp stringlist.cpp strmap.cpp strmapbase.cpp \
 	  strset.cpp strtoll.c strtoull.c table.cpp threads.cpp tools.cpp \
-	  unicode.cpp uuid.c wcstoll.c wcstoull.c xml.cpp wcscasecmp.cpp
+	  unicode.cpp uuid.c wcstoll.c wcstoull.c xml.cpp \
+	  wcscasecmp.cpp wcsncasecmp.cpp
 
 lib_LTLIBRARIES = libnetxms.la
 
