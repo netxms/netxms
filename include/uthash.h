@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DECLTYPE(x)
 #endif
 #else                   /* GNU, Sun and other compilers */
-#ifdef __HP_aCC
+#if defined(__HP_aCC) || (defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x590))
 #define NO_DECLTYPE
 #define DECLTYPE(x)
 #else
