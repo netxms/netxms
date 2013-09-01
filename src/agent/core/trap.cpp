@@ -82,21 +82,17 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Shutdown trap sender
-//
-
+/**
+ * Shutdown trap sender
+ */
 void ShutdownTrapSender()
 {
 	s_trapQueue->SetShutdownMode();
 }
 
-
-//
-// Send trap to server
-//
-
+/**
+ * Send trap to server
+ */
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList)
 {
    int i;

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,11 +50,9 @@ static BOOL (* imp_NxSubAgentGetIfList)(StringList *) = NULL;
 static BOOL (* imp_NxSubAgentGetArpCache)(StringList *) = NULL;
 #endif
 
-
-//
-// Initialize
-//
-
+/**
+ * Initialize
+ */
 void InitLocalNetInfo()
 {
 #ifdef _WIN32
@@ -391,11 +389,9 @@ static InterfaceList *SysGetLocalIfList()
    return pIfList;
 }
 
-
-//
-// Get local ARP cache
-//
-
+/**
+ * Get local ARP cache
+ */
 ARP_CACHE *GetLocalArpCache()
 {
    ARP_CACHE *pArpCache = NULL;
@@ -418,11 +414,9 @@ ARP_CACHE *GetLocalArpCache()
    return pArpCache;
 }
 
-
-//
-// Get local interface list
-//
-
+/**
+ * Get local interface list
+ */
 InterfaceList *GetLocalInterfaceList()
 {
    InterfaceList *pIfList = NULL;

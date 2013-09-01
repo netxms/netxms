@@ -712,11 +712,9 @@ CREATE TABLE raw_dci_values
 CREATE INDEX idx_raw_dci_values_item_id ON raw_dci_values(item_id);
 #endif
 
-
 /*
 ** Events configuration
 */
-
 CREATE TABLE event_cfg
 (
 	event_code integer not null,
@@ -728,11 +726,9 @@ CREATE TABLE event_cfg
 	PRIMARY KEY(event_code)
 ) TABLE_TYPE;
 
-
 /*
 ** Event log
 */
-
 CREATE TABLE event_log
 (
 	event_id SQL_INT64 not null,
@@ -811,11 +807,9 @@ CREATE TABLE event_group_members
 	PRIMARY KEY(group_id,event_code)
 ) TABLE_TYPE;
 
-
 /*
 ** Event processing policy
 */
-
 CREATE TABLE event_policy
 (
 	rule_id integer not null,   // Rule number
@@ -910,11 +904,9 @@ CREATE TABLE thresholds
 CREATE INDEX idx_thresholds_item_id ON thresholds(item_id);
 CREATE INDEX idx_thresholds_sequence ON thresholds(sequence_number);
 
-
 /*
 ** Alarms
 */
-
 CREATE TABLE alarms
 (
 	alarm_id integer not null,	// Unique alarm identifier
@@ -939,11 +931,9 @@ CREATE TABLE alarms
 	PRIMARY KEY(alarm_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Alarm notes
 */
-
 CREATE TABLE alarm_notes
 (
 	note_id integer not null,
@@ -956,11 +946,9 @@ CREATE TABLE alarm_notes
 
 CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id);
 
-
 /*
 ** Source events for alarms
 */
-
 CREATE TABLE alarm_events
 (
 	alarm_id integer not null,
@@ -1068,11 +1056,9 @@ CREATE TABLE object_tools_table_columns
 	PRIMARY KEY(tool_id,col_number)
 ) TABLE_TYPE;
 
-
 /*
 ** Stored syslog messages
 */
-
 CREATE TABLE syslog
 (
 	msg_id SQL_INT64 not null,
@@ -1193,12 +1179,9 @@ CREATE TABLE certificates
 	PRIMARY KEY(cert_id)
 ) TABLE_TYPE;
 
-
-
 /*
 ** Audit log
 */
-
 CREATE TABLE audit_log
 (
 	record_id integer not null,
@@ -1212,11 +1195,9 @@ CREATE TABLE audit_log
 	PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Situations
 */
-
 CREATE TABLE situations
 (
 	id integer not null,
@@ -1505,11 +1486,9 @@ CREATE TABLE persons
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Job history
 */
-
 CREATE TABLE job_history
 (
 	id integer not null,
@@ -1526,11 +1505,9 @@ CREATE TABLE job_history
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Reports
 */
-
 CREATE TABLE reports
 (
 	id integer not null,
@@ -1538,11 +1515,9 @@ CREATE TABLE reports
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Report Results
 */
-
 CREATE TABLE report_results
 (
 	report_id integer not null,

@@ -47,11 +47,9 @@ Interface::Interface() : NetObj()
 	m_zoneId = 0;
 }
 
-
-//
-// Constructor for "fake" interface object
-//
-
+/**
+ * Constructor for "fake" interface object
+ */
 Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSyntheticMask) : NetObj()
 {
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -80,11 +78,9 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
    m_bIsHidden = TRUE;
 }
 
-
-//
-// Constructor for normal interface object
-//
-
+/**
+ * Constructor for normal interface object
+ */
 Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32 ipAddr, UINT32 ipNetMask, UINT32 ifType, UINT32 zoneId)
           : NetObj()
 {

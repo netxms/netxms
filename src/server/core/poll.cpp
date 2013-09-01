@@ -139,7 +139,11 @@ void CheckForMgmtNode()
    if (pIfList != NULL)
    {
       for(i = 0; i < pIfList->getSize(); i++)
-         if ((pNode = FindNodeByIP(0, pIfList->get(i)->dwIpAddr)) != NULL)
+      {
+         NX_INTERFACE_INFO *iface = pIfList->get(i);
+         if ((iface->dwType == IFTYPE_SOFTWARE_LOOPBACK) || ((iface->dwIpAddr & 0xFF000000) == 0x7F000000) || (iface->dwIpAddr == 0))
+            continue;
+         if ((pNode = FindNodeByIP(0, iface->dwIpAddr)) != NULL)
          {
             // Check management node flag
             if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
@@ -150,15 +154,19 @@ void CheckForMgmtNode()
             g_dwMgmtNode = pNode->Id();   // Set local management node ID
             break;
          }
+      }
       if (i == pIfList->getSize())   // No such node
       {
          // Find interface with IP address
          for(i = 0; i < pIfList->getSize(); i++)
-            if (pIfList->get(i)->dwIpAddr != 0)
+         {
+            NX_INTERFACE_INFO *iface = pIfList->get(i);
+            if ((iface->dwType != IFTYPE_SOFTWARE_LOOPBACK) && ((iface->dwIpAddr & 0xFF000000) != 0x7F000000) && (iface->dwIpAddr != 0))
             {
-					CreateManagementNode(pIfList->get(i)->dwIpAddr, pIfList->get(i)->dwIpNetMask);
+   				CreateManagementNode(iface->dwIpAddr, iface->dwIpNetMask);
                break;
             }
+         }
       }
       delete pIfList;
    }
