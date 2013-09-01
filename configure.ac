@@ -874,32 +874,26 @@ if test "x$CXX" = "xCC" ; then
 
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
 		AC_MSG_CHECKING(whether C compiler accepts -m32)
-		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS -m32"
-		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-			[ 
-				LDFLAGS="-m32 $LDFLAGS"
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
-				CPPFLAGS="$OLD_CPPFLAGS"
-				AC_MSG_RESULT(no)
-			])
+		count=`$CC -flags | grep '^\-m32 ' | wc -l`
+		if test $count -eq 1; then
+			AC_MSG_RESULT(yes)
+			CPPFLAGS="$CPPFLAGS -m32"
+			LDFLAGS="-m32 $LDFLAGS"
+		else
+			AC_MSG_RESULT(no)
+		fi
 	else
 		TEST_XARCH="no"
 		AC_MSG_CHECKING(whether C compiler accepts -m64)
-		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS -m64"
-		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-			[ 
-				LDFLAGS="-m64 $LDFLAGS"
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
-				CPPFLAGS="$OLD_CPPFLAGS"
-				AC_MSG_RESULT(no)
-				TEST_XARCH="yes"
-			])
+		count=`$CC -flags | grep '^\-m64 ' | wc -l`
+		if test $count -eq 1; then
+			AC_MSG_RESULT(yes)
+			CPPFLAGS="$CPPFLAGS -m64"
+			LDFLAGS="-m64 $LDFLAGS"
+		else
+			AC_MSG_RESULT(no)
+			TEST_XARCH="yes"
+		fi
 		if test "x$TEST_XARCH" = "xyes"; then
 			if test "x$CPUTYPE" = "xsparc"; then
 				ARCH="-xarch=v9"
