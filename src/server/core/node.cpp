@@ -4938,6 +4938,23 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				}
 			}
 		}
+
+      // Clear self-linked interfaces caused by bug in previous release
+      LockChildList(FALSE);
+      for(DWORD i = 0; i < m_dwChildCount; i++)
+      {
+         if (m_pChildList[i]->Type() != OBJECT_INTERFACE)
+            continue;
+
+         Interface *iface = (Interface *)m_pChildList[i];
+         if ((iface->getPeerNodeId() == m_dwId) && (iface->getPeerInterfaceId() == iface->Id()))
+         {
+            iface->setPeer(0, 0);
+            DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Self-linked interface %s [%d] fixed"), m_szName, m_dwId, iface->Name(), iface->Id());
+         }
+      }
+      UnlockChildList();
+
 	   sendPollerMsg(dwRqId, _T("Link layer topology processed\r\n"));
 		DbgPrintf(4, _T("Link layer topology processed for node %s [%d]"), m_szName, m_dwId);
 	}
