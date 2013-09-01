@@ -395,11 +395,9 @@ public:
 	bool isConstant() { return m_isConstant; }
 };
 
-
-//
-// Varable system
-//
-
+/**
+ * Varable system
+ */
 class LIBNXSL_EXPORTABLE NXSL_VariableSystem
 {
 protected:
@@ -418,11 +416,9 @@ public:
 	bool isConstant() { return m_isConstant; }
 };
 
-
-//
-// Single execution instruction
-//
-
+/**
+ * Single execution instruction
+ */
 class LIBNXSL_EXPORTABLE NXSL_Instruction
 {
    friend class NXSL_Program;
@@ -516,7 +512,7 @@ public:
    NXSL_Program();
    ~NXSL_Program();
 
-   BOOL addFunction(const char *pszName, UINT32 dwAddr, char *pszError);
+   bool addFunction(const char *pszName, UINT32 dwAddr, char *pszError);
    void resolveFunctions();
    void addInstruction(NXSL_Instruction *pInstruction);
    void resolveLastJump(int nOpCode);
@@ -525,6 +521,7 @@ public:
    void useModule(NXSL_Program *pModule, const TCHAR *pszName);
 	void optimize();
 	void removeInstructions(UINT32 start, int count);
+   bool addConstant(const char *name, NXSL_Value *value);
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_pGlobals->find(pszName); }

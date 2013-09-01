@@ -2,8 +2,9 @@
 * 1.2.9
 *
 
+- User-defined constants in NXSL
 - Added MIBs for Nortel/Trapeze Wireless security switches
-- Fixed issues: #305, #325
+- Fixed issues: #202, #305, #325
 
 
 *

@@ -94,11 +94,9 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *pSrc)
 	m_isConstant = pSrc->m_isConstant;
 }
 
-
-//
-// Variable system destructor
-//
-
+/**
+ * Variable system destructor
+ */
 NXSL_VariableSystem::~NXSL_VariableSystem()
 {
    UINT32 i;
@@ -108,11 +106,9 @@ NXSL_VariableSystem::~NXSL_VariableSystem()
    safe_free(m_ppVariableList);
 }
 
-
-//
-// Merge with another variable system
-//
-
+/**
+ * Merge with another variable system
+ */
 void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 {
 	UINT32 i;
@@ -127,11 +123,9 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 	}
 }
 
-
-//
-// Find variable by name
-//
-
+/**
+ * Find variable by name
+ */
 NXSL_Variable *NXSL_VariableSystem::find(const TCHAR *pszName)
 {
    UINT32 i;
@@ -142,11 +136,9 @@ NXSL_Variable *NXSL_VariableSystem::find(const TCHAR *pszName)
    return NULL;
 }
 
-
-//
-// Create variable
-//
-
+/**
+ * Create variable
+ */
 NXSL_Variable *NXSL_VariableSystem::create(const TCHAR *pszName, NXSL_Value *pValue)
 {
    NXSL_Variable *pVar;

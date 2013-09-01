@@ -27,7 +27,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         30
+#define MAX_ERROR_NUMBER         31
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -48,7 +48,7 @@ static const char *m_szCommandMnemonic[] =
    "IMATCH", "CASE", "ARRAY", "EGET",
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
-	"AGETS", "CALL"
+	"AGETS", "CALL", "CASE"
 };
 
 /**
@@ -85,7 +85,8 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Function or operation argument is not an iterator"),
 	_T("Statistical data for given instance is not collected yet"),
 	_T("Requested statistical parameter does not exist"),
-	_T("Unknown object's method")
+	_T("Unknown object's method"),
+   _T("Constant not defined")
 };
 
 /**
@@ -202,6 +203,29 @@ void NXSL_Program::addInstruction(NXSL_Instruction *pInstruction)
 }
 
 /**
+ * Add new constant. Name expected to be dynamically allocated and
+ * will be destroyed by NXSL_Program when no longer needed.
+ */
+bool NXSL_Program::addConstant(const char *name, NXSL_Value *value)
+{
+   bool success = false;
+#ifdef UNICODE
+   WCHAR *tname = WideStringFromUTF8String(name);
+#else
+   const char *tname = name;
+#endif
+   if (m_pConstants->find(tname) == NULL)
+   {
+      m_pConstants->create(tname, value);
+      success = true;
+   }
+#ifdef UNICODE
+   free(tname);
+#endif
+   return success;
+}
+
+/**
  * Resolve last jump with INVALID_ADDRESS to current address
  */
 void NXSL_Program::resolveLastJump(int nOpCode)
@@ -240,7 +264,7 @@ void NXSL_Program::createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr)
  * Will use first free address if dwAddr == INVALID_ADDRESS
  * Name must be in UTF-8
  */
-BOOL NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszError)
+bool NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszError)
 {
    UINT32 i;
 
@@ -259,7 +283,7 @@ BOOL NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszErro
 #ifdef UNICODE
 			free(pwszName);
 #endif
-         return FALSE;
+         return false;
       }
    m_dwNumFunctions++;
    m_pFunctionList = (NXSL_Function *)realloc(m_pFunctionList, sizeof(NXSL_Function) * m_dwNumFunctions);
@@ -270,7 +294,7 @@ BOOL NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszErro
    nx_strncpy(m_pFunctionList[i].m_szName, pszName, MAX_FUNCTION_NAME);
 #endif
    m_pFunctionList[i].m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_dwCodeSize : dwAddr;
-   return TRUE;
+   return true;
 }
 
 /**
@@ -360,6 +384,7 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_GET_ATTRIBUTE:
          case OPCODE_SET_ATTRIBUTE:
 			case OPCODE_NAME:
+         case OPCODE_CASE_CONST:
             _ftprintf(pFile, _T("%s\n"), m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
@@ -1097,6 +1122,7 @@ void NXSL_Program::execute()
       case OPCODE_LSHIFT:
       case OPCODE_RSHIFT:
 		case OPCODE_CASE:
+      case OPCODE_CASE_CONST:
          doBinaryOperation(cp->m_nOpCode);
          break;
       case OPCODE_NEG:
@@ -1280,26 +1306,41 @@ void NXSL_Program::execute()
 void NXSL_Program::doBinaryOperation(int nOpCode)
 {
    NXSL_Value *pVal1, *pVal2, *pRes = NULL;
+   NXSL_Variable *var;
    const TCHAR *pszText1, *pszText2;
    UINT32 dwLen1, dwLen2;
    int nType;
    LONG nResult;
 
-	if (nOpCode == OPCODE_CASE)
-	{
-		pVal1 = m_ppInstructionSet[m_dwCurrPos]->m_operand.m_pConstant;
-		pVal2 = (NXSL_Value *)m_pDataStack->peek();
-	}
-	else
-	{
-		pVal2 = (NXSL_Value *)m_pDataStack->pop();
-		pVal1 = (NXSL_Value *)m_pDataStack->pop();
-	}
+   switch(nOpCode)
+   {
+      case OPCODE_CASE:
+		   pVal1 = m_ppInstructionSet[m_dwCurrPos]->m_operand.m_pConstant;
+		   pVal2 = (NXSL_Value *)m_pDataStack->peek();
+         break;
+      case OPCODE_CASE_CONST:
+         var = m_pConstants->find(m_ppInstructionSet[m_dwCurrPos]->m_operand.m_pszString);
+         if (var != NULL)
+         {
+            pVal1 = var->getValue();
+         }
+         else
+         {
+            error(NXSL_ERR_NO_SUCH_CONSTANT);
+            return;
+         }
+		   pVal2 = (NXSL_Value *)m_pDataStack->peek();
+         break;
+      default:
+		   pVal2 = (NXSL_Value *)m_pDataStack->pop();
+		   pVal1 = (NXSL_Value *)m_pDataStack->pop();
+         break;
+   }
 
    if ((pVal1 != NULL) && (pVal2 != NULL))
    {
       if ((!pVal1->isNull() && !pVal2->isNull()) ||
-          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE))
+          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) || (nOpCode == OPCODE_CASE_CONST))
       {
          if (pVal1->isNumeric() && pVal2->isNumeric() &&
              (nOpCode != OPCODE_CONCAT) && (nOpCode != OPCODE_LIKE))
@@ -1405,6 +1446,7 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                         pRes = new NXSL_Value(nResult);
                         break;
                      case OPCODE_CASE:
+                     case OPCODE_CASE_CONST:
                         pRes = new NXSL_Value((LONG)pVal1->EQ(pVal2));
                         break;
                      default:
@@ -1429,6 +1471,7 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                case OPCODE_EQ:
                case OPCODE_NE:
 					case OPCODE_CASE:
+					case OPCODE_CASE_CONST:
                   if (pVal1->isNull() && pVal2->isNull())
                   {
                      nResult = 1;
@@ -1446,7 +1489,7 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                      else
                         nResult = 0;
                   }
-						if (nOpCode != OPCODE_CASE)
+						if ((nOpCode != OPCODE_CASE) && (nOpCode != OPCODE_CASE_CONST))
 						{
 							delete pVal1;
 							delete pVal2;
@@ -1640,6 +1683,9 @@ void NXSL_Program::useModule(NXSL_Program *pModule, const TCHAR *pszName)
    for(i = m_dwNumFunctions, j = 0; j < pModule->m_dwNumFunctions; i++, j++)
       m_pFunctionList[i].m_dwAddr += dwStart;
    m_dwNumFunctions += pModule->m_dwNumFunctions;
+
+   // Add constants from module
+   m_pConstants->merge(pModule->m_pConstants);
 
    // Register module as loaded
    m_pModuleList = (NXSL_Module *)malloc(sizeof(NXSL_Module) * (m_dwNumModules + 1));

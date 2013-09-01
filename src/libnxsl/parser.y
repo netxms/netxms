@@ -39,6 +39,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_ARRAY
 %token T_BREAK
 %token T_CASE
+%token T_CONST
 %token T_CONTINUE
 %token T_DEFAULT
 %token T_DO
@@ -155,9 +156,32 @@ Module:
 ;
 
 ModuleComponent:
-	Function
+	ConstStatement
+|	Function
 |	StatementOrBlock
 |	UseStatement
+;
+
+ConstStatement:
+	T_CONST ConstList ';'
+;
+
+ConstList:
+	ConstDefinition ',' ConstList
+|	ConstDefinition
+;
+
+ConstDefinition:
+	T_IDENTIFIER '=' Constant
+{
+	if (!pScript->addConstant($1, $3))
+	{
+		pCompiler->error("Constant already defined");
+		delete $3;
+		pLexer->setErrorState();
+	}
+	free($1);
+}
 ;
 
 UseStatement:
@@ -747,6 +771,12 @@ Case:
 	T_CASE Constant
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CASE, $2));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+} 
+	':' StatementList
+|	T_CASE T_IDENTIFIER
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CASE_CONST, $2));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
 } 
 	':' StatementList

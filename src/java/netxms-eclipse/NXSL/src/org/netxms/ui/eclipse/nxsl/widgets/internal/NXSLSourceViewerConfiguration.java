@@ -55,9 +55,11 @@ public class NXSLSourceViewerConfiguration extends SourceViewerConfiguration
 	};
 	
 	private static final String[] nxslKeywords = { 
-		"break", "classof", "continue", "do", "else", "exit", "for", "foreach", "if", "ilike",
-      "imatch", "int32", "int64", "like", "match", "print", "println", "real",
-      "return", "string", "sub", "typeof", "uint32", "uint64", "use", "while" };
+		"array", "break", "case", "const", "classof", "continue", "default", "do", 
+		"else", "exit", "FALSE", "false", "for", "foreach", "global", "if", "ilike",
+      "imatch", "int32", "int64", "like", "match", "NULL", "null", "print", "println",
+      "real", "return", "string", "sub", "switch", "TRUE", "true", "typeof", "uint32",
+      "uint64", "use", "while" };
 	
 	private static final IRule[] codeRules = { 
 		new KeywordRule(nxslWordDetector, NXSLTextAttributeProvider.getTextAttributeToken(NXSLTextAttributeProvider.KEYWORD),
