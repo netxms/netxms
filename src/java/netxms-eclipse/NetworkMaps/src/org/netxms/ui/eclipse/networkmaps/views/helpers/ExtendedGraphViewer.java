@@ -605,6 +605,23 @@ public class ExtendedGraphViewer extends GraphViewer
 				gridFigure = new GridFigure();
 				backgroundLayer.add(gridFigure, null, 1);
 				gridFigure.setSize(graph.getRootLayer().getSize());
+				gridFigure.addMouseListener(new MouseListener() {
+					@Override
+					public void mousePressed(MouseEvent me)
+					{
+						setSelection(null);
+					}
+
+					@Override
+					public void mouseReleased(MouseEvent me)
+					{
+					}
+
+					@Override
+					public void mouseDoubleClicked(MouseEvent me)
+					{
+					}
+				});
 			}
 		}
 		else
