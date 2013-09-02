@@ -1,0 +1,3285 @@
+SUN-PLATFORM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY,
+    OBJECT-TYPE,
+    NOTIFICATION-TYPE,
+    OBJECT-IDENTITY,
+    Integer32,
+    Unsigned32,
+    enterprises         FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION,
+    RowStatus,
+    TestAndIncr,
+    RowPointer,
+    VariablePointer,
+    TruthValue,
+    TDomain,
+    TAddress,
+    DateAndTime         FROM SNMPv2-TC
+    MODULE-COMPLIANCE,
+    OBJECT-GROUP,
+    NOTIFICATION-GROUP  FROM SNMPv2-CONF
+    SnmpAdminString     FROM SNMP-FRAMEWORK-MIB
+    entPhysicalEntry,
+    entLogicalEntry,
+    entLogicalIndex,
+    entPhysicalIndex    FROM ENTITY-MIB;
+
+    sun                 OBJECT IDENTIFIER ::= { enterprises 42 }
+    products            OBJECT IDENTIFIER ::= { sun 2 }
+    sunFire             OBJECT IDENTIFIER ::= { products 70 }
+
+sunPlatMIB MODULE-IDENTITY
+    LAST-UPDATED    "200211140000Z"
+    ORGANIZATION    "Sun Microsystems, Inc."
+    CONTACT-INFO    "Sun Microsystems, Inc
+                     4150 Network Circle
+                     Santa Clara, CA 95054
+                     
+                     1-800-555-9SUN or
+                     1-650-960-1300
+                     
+                     http://www.sun.com"
+    DESCRIPTION
+        "SUN-PLATFORM-MIB.mib Version 1.19 
+         Copyright 2003, by Sun Microsystems, Inc.
+         All rights reserved. Use is subject to license terms.
+        
+         The SUN-PLATFORM-MIB provides extensions to the ENTITY-MIB (RFC2737)
+         where each entity modelled in the system is represented by
+         means of extensions to the entPhysicalTable. Certain of the
+         attributes in the entPhysicalTable are applicable to the model
+         presented by the SUN-PLATFORM-MIB and are explained below:
+         
+         The entries in the entPhysicalTable have the following significance
+         with respect to the SUN-PLATFORM-MIB model:
+
+         entPhysicalIndex           containment, M.3100, fig. 2,
+	                                index for table extensions.
+         entPhysicalContainedIn     containment, M.3100, fig. 2
+         entPhysicalClass           Used to select applicable table extensions,
+                                    Managed Object Class, M.3100, Table 1
+         entPhysicalHardwareRev     version, M.3100, sec. 5.71
+         entPhysicalFirmwareRev     version, M.3100, sec. 5.71
+         entPhysicalSoftwareRev     version, M.3100, sec. 5.71
+         entPhysicalMfgName         vendorName, M.3100, sec. 5.70
+         entPhysicalAlias           userLabel, M.3100, sec. 5.69
+
+         
+         Part of this MIB module is an SNMP version of the Generic Network
+         Information Model (NIM) presented in ITU-T M.3100. This information
+         is further extended by attributes derived from the CIM v2.5 Schema.
+
+         The containment hierarchy is modelled using the ENTITY-MIB (RFC2737)
+         where each entity modelled in the system is represented by
+         means of extensions to the entPhysicalTable.
+         
+         Where an entity is an instance of a managed object class which is
+         sub-classed from another, the attributes of each class are modelled 
+         in a separate table extension. For example for an entity with an 
+         entPhysicalClass of module(9), which corresponds to a Circuit Pack, 
+         sub-classed from Equipment, an entry will exist in the 
+         sunPlatEquipmentTable, with additional attributes in the 
+         sunPlatCircuitPackTable.
+
+         References are made to the following recommendations/revisions:
+
+             ITU-T M.3100 (07/95)
+             CCITT X.721 (1992 E)
+             CCITT X.731 (1992 E) (01/92)
+             CCITT X.733 (1992 E)
+             CCITT X.734 (1992 E)
+             CCITT X.735 (1992 E) (09/92)
+	     CIM Schema: Version 2.5"
+    REVISION        "200211140000Z"
+    DESCRIPTION
+        "Version: 1.18
+         Initial Release"
+
+    ::= { sunFire 101 }
+
+    sunPlatMIBObjects    OBJECT IDENTIFIER ::= { sunPlatMIB 1 }
+    sunPlatMIBTraps      OBJECT IDENTIFIER ::= { sunPlatMIB 2 }
+    sunPlatMIBPhysicalObjects   OBJECT IDENTIFIER ::= { sunPlatMIBObjects 1 }
+    sunPlatMIBLogicalObjects    OBJECT IDENTIFIER ::= { sunPlatMIBObjects 2 }
+    sunPlatMIBLogs       OBJECT IDENTIFIER ::= { sunPlatMIBObjects 3 }
+    sunPlatMIBTrapPrefix OBJECT IDENTIFIER ::= { sunPlatMIBTraps 0 }
+    sunPlatMIBTrapData   OBJECT IDENTIFIER ::= { sunPlatMIBTraps 1 }
+    sunPlatMIBConformances      OBJECT IDENTIFIER ::= { sunPlatMIB 3 }
+    sunPlatMIBCompliances       OBJECT IDENTIFIER ::= { sunPlatMIBConformances 1 }
+    sunPlatMIBGroups     OBJECT IDENTIFIER ::= { sunPlatMIBConformances 2 }
+    sunPlatMIBObjectGroups      OBJECT IDENTIFIER ::= { sunPlatMIBGroups 1 }
+    sunPlatMIBNotifGroups       OBJECT IDENTIFIER ::= { sunPlatMIBGroups 2 }
+
+-- This MIB module consists of the following object groups:
+-- (1) sunPlatMIBPhysicalObjects
+--        (1)   NE High-Level Objects
+-- The following groups are extensions to the entPhysicalTable in the
+-- ENTITY-MIB
+--        (2)   Equipment Table extension
+--        (3)   Equipment-Holder Table extension
+--        (4)   Circuit-Pack Table extension
+--        (5)   Physical Class Table extension
+--        (6)   Sensor Table extension
+--        (7)   Binary Sensor Table extension
+--        (8)   Numeric Sensor Table extension
+--        (9)   Discrete Sensor Table extension
+--        (10)  Discrete Sensor States Table extension
+--        (11)   Fan Table extension
+--        (12)  Alarm Table extension
+--        (13)  Watchdog Table extension
+--        (14)  Power Supply Table extension
+--        (15)  Battery Table extension
+-- (2) sunPlatMIBLogicalObjects
+-- The following groups are extensions to the entLogicalTable in the
+-- ENTITY-MIB
+--        (1)  Logical Class Table extension 
+--        (2)  Unitary Computer System Table extension
+--        (3)  Unitary Computer System Initial Load Info Table extension
+-- (3) sunPlatMIBLogs
+-- The following controls the logging of notifications.
+--        (1)  Log Table
+--        (2)  Log Record Table
+-- The following extends the trap log entry table with additional 
+-- information application to alarms and object creation/deletion.
+--        (3)  Additional Log Record Entry Table extension
+-- The following extends the trap log entry table with alarm specific
+-- information.
+--        (4)  Alarm Log Record Entry Table extension
+--        (5)  Attribute/State change Log Record Entry Table extension
+-- (4) sunPlatMIBTraps
+-- The following defines the notifications.
+--        (1)  Notification specific data
+--        (2)  Notifications (traps)
+
+
+-- ***************************************************************************
+-- *                      Textual Conventions                                *
+-- ***************************************************************************
+
+-- State Textual Conventions
+
+SunPlatLogAdministrativeState ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumerated value which describes the Administrative
+         State of the log as defined in X.735, sec. 8.1.1.1.3."
+    REFERENCE
+        "X.735, sec. 8.1.1.1.3"
+    SYNTAX INTEGER {
+        locked(1),
+        unlocked(2)
+    }
+
+SunPlatAdministrativeState ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumerated value which describes the Administrative
+         State of the managed object as defined in X.731, sec. 8.1.1.3."
+    REFERENCE
+        "X.731, sec. 8.1.1.3"
+    SYNTAX INTEGER {
+        locked(1),
+        unlocked(2),
+        shuttingDown(3)
+    }
+
+SunPlatOperationalState ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumerated value which describes the Operational
+         State of the managed object as defined in X.731, sec. 8.1.1.1."
+    REFERENCE
+        "X.731, sec. 8.1.1.1."
+    SYNTAX INTEGER {
+        disabled(1),
+        enabled(2)
+    }
+
+-- Alarm Severity Identifier Textual Convention
+
+SunPlatAlarmPerceivedSeverity ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "The value of this object identifies the Perceived Severity of
+         an alarm in the log, including 'cleared' as defined in X.733,
+         sec. 8.1.2.3."
+    REFERENCE
+        "X.733, sec. 8.1.2.3."
+    SYNTAX INTEGER {
+        indeterminate(1),
+        critical(2),
+        major(3),
+        minor(4),
+        warning(5),
+        cleared(6)
+    }
+
+-- Alarm Status Textual Convention
+
+SunPlatAlarmStatus ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "The value of this object identifies the Alarm Status of the
+         managed object as defined in M.3100, sec. 5.8."
+    REFERENCE
+        "M.3100, sec. 5.8."
+    SYNTAX INTEGER {
+        critical(1),
+        major(2),
+        minor(3),
+        indeterminate(4),
+        warning(5),
+        pending(6),
+        cleared(7)
+    }
+
+-- Equipment Holder Types/Status Textual Conventions
+
+SunPlatEquipmentHolderType ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "The Equipment Holder Type as defined in M.3100, sec. 5.26."
+    REFERENCE
+        "M.3100, sec. 5.26."
+    SYNTAX INTEGER {
+        bay(1),
+        shelf(2),
+        drawer(3),
+        slot(4),
+        rack(5)
+    }
+
+SunPlatEquipmentHolderStatus ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "This attribute identifies whether or not a Circuit Pack is
+         present in the slot and if so, is it recognised/acceptable as
+         defined as Holder Status in M.3100, sec. 5.32."
+    REFERENCE
+        "M.3100, sec. 5.32."
+    SYNTAX INTEGER {
+        holderEmpty(1),
+        inTheAcceptableList(2),
+        notInTheAcceptableList(3),
+        unknownType(4)
+    }
+
+SunPlatEquipmentHolderPower ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible power management states."
+    SYNTAX INTEGER {
+        other(1),
+        unknown(2),
+        powerOff(3),
+        powerOn(4)
+    }
+	
+-- Circuit Pack Textual Convention
+
+SunPlatCircuitPackAvailabilityStatus ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible AvailabilityStatus flags as defined in
+        X.731, sec. 8.1.2.3."
+    REFERENCE
+        "X.731, sec. 8.1.2.3."
+    SYNTAX BITS {
+        inTest(0),
+        failed(1),
+        powerOff(2),
+        offLine(3),
+        offDuty(4),
+        dependency(5),
+        degraded(6),
+        notInstalled(7)
+    }
+
+-- Alarm Probable Cause Textual Convention
+
+SunPlatProbableCause ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "A Probable Cause which provides additional information
+         associated with and alarm notification as per ITU-T M.3100 sec. 10.2,
+         X.733, sec. 8.1.2.1., and X.736."
+    REFERENCE
+        "M.3100, sec. 10.2; X.733, sec. 8.1.2.1; X.736, sec. 8.1.2.1"
+	 SYNTAX INTEGER {
+        -- The following are used with communications alarm.
+            aIS(1),
+            callSetUpFailure(2),
+            degradedSignal(3),
+            farEndReceiverFailure(4),
+            framingError(5),
+            lossOfFrame(6),
+            lossOfPointer(7),
+            lossOfSignal(8),
+            payloadTypeMismatch(9),
+            transmissionError(10),
+            remoteAlarmInterface(11),
+            excessiveBER(12),
+            pathTraceMismatch(13),
+            unavailable(14),
+            signalLabelMismatch(15),
+            lossOfMultiFrame(16),
+            receiveFailure(17),
+            transmitFailure(18),
+            modulationFailure(19),
+            demodulationFailure(20),
+            broadcastChannelFailure(21),
+            connectionEstablishmentError(22),
+            invalidMessageReceived(23),
+            localNodeTransmissionError(24),
+            remoteNodeTransmissionError(25),
+            routingFailure(26),
+        -- Values 27-50 are reserved for communications alarm related
+        -- probable causes
+
+        -- The following are used with equipment alarm.
+            backplaneFailure(51),
+            dataSetProblem(52),
+            equipmentIdentifierDuplication(53),
+            externalIFDeviceProblem(54),
+            lineCardProblem(55),
+            multiplexerProblem(56),
+            nEIdentifierDuplication(57),
+            powerProblem(58),
+            processorProblem(59),
+            protectionPathFailure(60),
+            receiverFailure(61),
+            replaceableUnitMissing(62),
+            replaceableUnitTypeMismatch(63),
+            synchronizationSourceMismatch(64),
+            terminalProblem(65),
+            timingProblem(66),
+            transmitterFailure(67),
+            trunkCardProblem(68),
+            replaceableUnitProblem(69),
+            realTimeClockFailure(70),
+        -- An equipment alarm is to be issued if the system detects that the
+        -- real time clock has failed
+            antennaFailure(71),
+            batteryChargingFailure(72),
+            diskFailure(73),
+            frequencyHoppingFailure(74),
+            iODeviceError(75),
+            lossOfSynchronisation(76),
+            lossOfRedundancy(77),
+            powerSupplyFailure(78),
+            signalQualityEvaluationFailure(79),
+            tranceiverFailure(80),
+            protectionMechanismFailure(81),
+            protectingResourceFailure(82),
+        -- Values 83-100 are reserved for equipment alarm related probable
+        -- causes
+
+        -- The following are used with environmental alarm.
+            airCompressorFailure(101),
+            airConditioningFailure(102),
+            airDryerFailure(103),
+            batteryDischarging(104),
+            batteryFailure(105),
+            commercialPowerFailure(106),
+            coolingFanFailure(107),
+            engineFailure(108),
+            fireDetectorFailure(109),
+            fuseFailure(110),
+            generatorFailure(111),
+            lowBatteryThreshold(112),
+            pumpFailure(113),
+            rectifierFailure(114),
+            rectifierHighVoltage(115),
+            rectifierLowFVoltage(116),
+            ventilationsSystemFailure(117),
+            enclosureDoorOpen(118),
+            explosiveGas(119),
+            fire(120),
+            flood(121),
+            highHumidity(122),
+            highTemperature(123),
+            highWind(124),
+            iceBuildUp(125),
+            intrusionDetection(126),
+            lowFuel(127),
+            lowHumidity(128),
+            lowCablePressure(129),
+            lowTemperature(130),
+            lowWater(131),
+            smoke(132),
+            toxicGas(133),
+            coolingSystemFailure (134),
+            externalEquipmentFailure (135),
+            externalPointFailure (136),
+        -- Values 137-150 are reserved for environmental alarm related
+        -- probable causes
+
+        -- The following are used with Processing error alarm.
+            storageCapacityProblem(151),
+            memoryMismatch(152),
+            corruptData(153),
+            outOfCPUCycles(154),
+            sfwrEnvironmentProblem(155),
+            sfwrDownloadFailure(156),
+            lossOfRealTime(157), 
+        -- A processing error alarm to be issued if the system detects that
+        -- it has lost the time in the real time clock but the clock itself
+        -- is working. This could happen e.g. during a power cut in a small
+        -- NE which does not have battery backup for the real time clock.
+            reinitialized(158),
+        -- A processing error alarm to be issued after the system has
+        -- reinitialised. This will indicate
+        -- to the management systems that the view they have of the managed
+        -- system may no longer
+        -- be valid. Usage example: The managed
+        -- system issues this alarm after a reinitialization with severity
+        -- warning to inform the
+        -- management system about the event. No clearing notification will
+        -- be sent.
+            applicationSubsystemFailure(159),
+            configurationOrCustomisationError(160),
+            databaseInconsistency(161),
+            fileError(162),
+            outOfMemory(163),
+            softwareError(164),
+            timeoutExpired(165),
+            underlayingResourceUnavailable(166),
+            versionMismatch(167),
+        -- Values 168-200 are reserved for processing error alarm related
+        -- probable causes.
+            bandwidthReduced(201),
+            congestion(202),
+            excessiveErrorRate(203),
+            excessiveResponseTime(204),
+            excessiveRetransmissionRate(205),
+            reducedLoggingCapability(206),
+            systemResourcesOverload(207 ),
+
+            other(255),
+            adapterError(256),
+            callEstablishmentError(257),
+            communicationsProtocolError(258),
+            communicationsSubsystemFailure(259),
+            configurationOrCustomizationError(260),
+            cpuCyclesLimitExceeded(261),
+            dataSetOrModemError(262),
+            dteDceInterfaceError(263),
+            equipmentMalfunction(264),
+            excessiveVibration(265),
+            fireDetected(266),
+            floodDetected(267),
+            heatingVentCoolingSystemProblem(268),
+            humidityUnacceptable(269),
+            inputOutputDeviceError(270),
+            inputDeviceError(271),
+            lanError(272),
+            leakDetected(273),
+            materialSupplyExhausted(274),
+            ouputDeviceError(275),
+            performanceDegraded(276),
+            pressureUnacceptable(277),
+            queueSizeExceeded(278),
+            resourceAtOrNearingCapacity(279),
+            responseTimeExecessive(280),
+            retransmissionRateExcessive(281),
+            softwareProgramAbnormallyTerminated(282),
+            softwareProgramError(283),
+            temperatureUnacceptable(284),
+            thresholdCrossed(285),
+            toxicLeakDetected(286),
+            underlyingResourceUnavailable(287),
+            authenticationFailure(288),
+            breachOfConfidentiality(289),
+            cableTamper(290),
+            delayedInformation(291),
+            denialOfService(292),
+            duplicateInformation(293),
+            informationMissing(294),
+            informationModificationDetected(295),
+            informationOutOfSequence(296),
+            keyExpired(297),
+            nonRepudiationFailure(298),
+            outOfHoursActivity(299),
+            outOfService(300),
+            proceduralError(301),
+            unauthorizedAccessAttempt(302),
+            unexpectedInformation(303)
+     }
+
+-- Physical Table Class Textual Convention
+
+SunPlatPhysicalClass ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible physical classes where entPhysicalClass
+         is specified as other(1)."
+    SYNTAX INTEGER {
+        other(1),
+        alarm(2),
+        watchdog(3)
+    }
+
+-- Sensor Table Textual Conventions
+
+SunPlatSensorClass ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible sensor classes where entPhysicalClass
+         is specified as sensor(8)."
+    SYNTAX INTEGER {
+        binary(1),
+        numeric(2),
+        discrete(3)
+    }
+
+SunPlatSensorType ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible sensor types where entPhysicalClass
+         is specified as sensor(8)."
+    SYNTAX INTEGER {
+        other(1),
+        unknown(2),
+        temperature(3),
+        voltage(4),
+        current(5),
+        tachometer(6),
+        counter(7),
+        switch(8),
+        lock(9),
+        humidity(10),
+        smokeDetection(11),
+        presence(12),
+        airFlow(13)
+    }
+
+-- Numeric Sensor Textual Conventions
+
+SunPlatBaseUnits ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "Physical values are represented in the units obtained by 
+         (sunPlatBaseUnits * 10 raised to the power of sunPlatExponent). For 
+         example, if sunPlatBaseUnits is volts(6) and sunPlatExponent is -6, 
+         then the units of the values returned are microVolts."
+    SYNTAX INTEGER {
+        other(1),
+        unknown(2),
+        degC(3),
+        degF(4),
+        degK(5),
+        volts(6),
+        amps(7),
+        watts(8),
+        joules(9),
+        coulombs(10),
+        va(11),
+        nits(12),
+        lumens(13),
+        lux(14),
+        candelas(15),
+        kPa(16),
+        psi(17),
+        newtons(18),
+        cfm(19),
+        rpm(20),
+        hertz(21),
+        seconds(22),
+        minutes(23),
+        hours(24),
+        days(25),
+        weeks(26),
+        mils(27),
+        inches(28),
+        feet(29),
+        cubicInches(30),
+        cubicFeet(31),
+        meters(32),
+        cubicCentimeters(33),
+        cubicMeters(34),
+        liters(35),
+        fluidOunces(36),
+        radians(37),
+        steradians(38),
+        revolutions(39),
+        cycles(40),
+        gravities(41),
+        ounces(42),
+        pounds(43),
+        footPounds(44),
+        ounceInches(45),
+        gauss(46),
+        gilberts(47),
+        henries(48),
+        farads(49),
+        ohms(50),
+        siemens(51),
+        moles(52),
+        becquerels(53),
+        ppm(54),
+        decibels(55),
+        dBA(56),
+        dbC(57),
+        grays(58),
+        sieverts(59),
+        colorTemperatureDegK(60),
+        bits(61),
+        bytes(62),
+        words(63),
+        doubleWords(64),
+        quadWords(65),
+        percentage(66)
+    }
+
+SunPlatRateUnits ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "If sunPlatRateUnits is set to a value other than none(1), 
+         then the units specified by sunPlatBaseUnits are further 
+         qualified as rate units. For example, if sunPlatBaseUnits
+         is set to degC(3), and sunPlatRateUnits is set to perSecond(4), 
+         then the value represented has the units degC/Second."
+    SYNTAX INTEGER {
+        none(1),
+        perMicroSecond(2),
+        perMilliSecond(3),
+        perSecond(4),
+        perMinute(5),
+        perHour(6),
+        perDay(7),
+        perWeek(8),
+        perMonth(9),
+        perYear(10)
+    }
+
+SunPlatNumericSensorEnabledThresholds ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "The possible thresholds that may be enabled by a sensor."
+    SYNTAX BITS {
+        lowerThresholdNonCritical(0),
+        upperThresholdNonCritical(1),
+        lowerThresholdCritical(2),
+        upperThresholdCritical(3),
+        lowerThresholdFatal(4),
+        upperThresholdFatal(5)
+    }
+
+SunPlatNumericSensorThresholdResetAction ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "The possible reset actions that may be performed on a
+        sensor."
+    SYNTAX INTEGER {
+        reset(1)
+    }
+
+-- Alarm Table Textual Conventions
+
+SunPlatAlarmType ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "This indicates the type of alarm - i.e. the means by which the
+         alarm condition is communicated."
+    SYNTAX INTEGER {
+        other(1),
+        audible(2),
+        visible(3),
+        motion(4),
+        switch(5)
+    }
+
+SunPlatAlarmState ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "This indicates the state of the alarm."
+    SYNTAX INTEGER {
+        unknown(1),
+        off(2),
+        steady(3),
+        alternating(4)
+    }
+
+SunPlatAlarmUrgency ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible alarm urgencies, as defined for
+        CIM_AlarmDevice.Urgency."
+    REFERENCE
+        "CIM Schema v2.5, CIM_AlarmDevice.Urgency"
+    SYNTAX INTEGER {
+        unknown(1),
+        other(2),
+        notSupported(3),
+        informational(4),
+        nonCritical(5),
+        critical(6),
+        unrecoverable(7)
+    }
+
+-- Watchdog Table Textual Convention
+
+SunPlatWatchdogAction ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "This indicates the action taken by the watchdog if it is not reset
+         within the period specified by sunPlatWatchdogTimeout."
+    SYNTAX INTEGER {
+        statusOnly(1),
+        systemInterrupt(2),
+        systemReset(3),
+        systemPowerOff(4),
+        systemPowerCycle(5)
+    }
+
+SunPlatWatchdogMonitoredEntity ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible entities that may be monitored by a
+        watchdog as defined for CIM_Watchdog"
+    REFERENCE 
+        "CIM Schema v2.5, CIM_Watchdog.MonitoredEntity"
+    SYNTAX INTEGER {
+        unknown(1),
+        other(2),
+        operatingSystem(3),
+        operatingSystemBootProcess(4),
+        operatingSystemShutdownProcess(5),
+        firmwareBootProcess(6),
+        biosBootProcess(7),
+        application(8),
+        serviceProcessor(9)
+    }
+
+-- Power Supply Table Textual Convention
+
+SunPlatPowerSupplyClass ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible classes of power supply."
+    SYNTAX INTEGER {
+        other(1),
+        powerSupply(2),
+        battery(3)
+    }
+
+-- Fan Table Textual Conventions
+
+SunPlatFanClass ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible classes of cooling device that may be
+        represented with an entPhysicalClass of fan(7)"
+    SYNTAX INTEGER {
+        other(1),
+        fan(2),
+        refrigeration(3),
+        heatPipe(4)
+    }
+
+-- Battery Table Textual Convention
+
+SunPlatBatteryStatus ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible battery statuses as defined for
+        CIM_Battery.BatteryStatus."
+    REFERENCE
+        "CIM Schema v2.5, CIM_Battery.BatteryStatus"
+    SYNTAX INTEGER {
+        other(1),
+        unknown(2),
+        fullyCharged(3),
+        low(4),
+        critical(5),
+        charging(6),
+        chargingAndHigh(7),
+        chargingAndLow(8),
+        chargingAndCritical(9),
+        undefined(10),
+        partiallyCharged(11)
+    }
+
+-- Unitary Computer System Table Textual Conventions
+
+SunPlatUnitaryComputerSystemPowerState ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible power states defined for
+        CIM_UnitaryComputerSystem."
+    REFERENCE
+        "CIM Schema v2.5, CIM_UnitaryComputerSystem"
+    SYNTAX INTEGER {
+        unknown (1),
+        fullPower(2),
+        psLowPower(3),
+        psStandby(4),
+        psOther(5),
+        powerCycle(6),
+        powerOff(7),
+        psWarning(8),
+        hibernate(9),
+        softOff(10),
+        reset(11)
+    }
+       
+SunPlatUnitaryComputerSystemApplicableSetting ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "This specifies a setting which may be applied to an instance of
+        CIM_UnitaryComputerSystem."
+    REFERENCE
+        "CIM Schema v2.5, CIM_UnitaryComputerSystem"
+    SYNTAX INTEGER {
+        defaultSetting(1),
+        specifiedSetting(2)
+    }
+
+-- Logical Table Textual Conventions
+
+SunPlatLogicalClass ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of the possible logical classes."
+    SYNTAX INTEGER {
+        other(1),
+        computerSystem(2),
+        adminDomain(3)
+    }
+
+SunPlatLogicalStatus ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible status values."
+    SYNTAX INTEGER {
+        ok (1),
+        error (2),
+        degraded (3),
+        unknown (4),
+        predFail (5),
+        starting (6),
+        stopping (7),
+        service (8),
+        stressed (9),
+        nonRecover (10),
+        noContact (11),
+        lostComm (12),
+        stopped (13)
+    }
+        
+        
+-- General Textual Conventions
+
+SunPlatIndex ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "An arbitrary value which uniquely identifies the row."
+    SYNTAX INTEGER (1..2147483647)
+
+SunPlatPercentage ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "Used to express a value, in 100ths of a  %."
+    SYNTAX INTEGER (0..2147483647)
+
+-- ***************************************************************************
+-- *                      sunPlatMIBPhysicalObjects                          *
+-- ***************************************************************************
+
+-- High-level objects
+
+sunPlatStartTime OBJECT-TYPE
+    SYNTAX DateAndTime
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The time at which the agent was last started; in other
+         words, the time at which sysUpTime was zero."
+    ::= { sunPlatMIBPhysicalObjects 1 }
+
+-- NIM Equipment Table
+
+sunPlatEquipmentTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatEquipmentEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The NIM Equipment table.  This table augments the
+         entPhysicalTable to provide the attributes defined for
+         equipment under M.3100, sec. 3.2.2.
+
+         Additional packages may be supported using further table
+         extensions.
+
+         The sunPlatEquipmentTable is valid for entPhysicalClass values of
+         chassis(3), backplane(4), container(5), powerSupply(6), fan(7),
+         sensor(8), module(9), and other(1)."
+    REFERENCE
+        "M.3100 sec. 3.2.2"
+    ::= { sunPlatMIBPhysicalObjects 2 }
+
+sunPlatEquipmentEntry OBJECT-TYPE
+    SYNTAX SunPlatEquipmentEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the NIM Equipment table.  Each entry
+         of this table represents a piece of equipment within the 
+         network element of the type specified by entPhysicalClass."
+    AUGMENTS { entPhysicalEntry }
+    ::= { sunPlatEquipmentTable 1 }
+
+SunPlatEquipmentEntry ::= SEQUENCE {
+        sunPlatEquipmentAdministrativeState      SunPlatAdministrativeState,
+        sunPlatEquipmentOperationalState         SunPlatOperationalState,
+        sunPlatEquipmentAlarmStatus              SunPlatAlarmStatus,
+        sunPlatEquipmentUnknownStatus            TruthValue,
+        sunPlatEquipmentLocationName             SnmpAdminString
+    }
+
+sunPlatEquipmentAdministrativeState OBJECT-TYPE
+    SYNTAX SunPlatAdministrativeState
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "An enumerated value which describes the Administrative
+         State of the managed object as defined in X.731, sec. 8.1.1.3."
+    REFERENCE
+        "X.731, sec. 8.1.1.3"
+    ::= { sunPlatEquipmentEntry 1 }
+
+sunPlatEquipmentOperationalState OBJECT-TYPE
+    SYNTAX SunPlatOperationalState
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "An enumerated value which describes the Operational
+         State of the managed object as defined in X.731, sec. 8.1.1.1."
+    REFERENCE
+        "X.731, sec. 8.1.1.1"
+    ::= { sunPlatEquipmentEntry 2 }
+
+sunPlatEquipmentAlarmStatus OBJECT-TYPE
+    SYNTAX SunPlatAlarmStatus
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The value of this object identifies the Alarm Status of the
+         managed object as defined in M.3100, sec. 5.8."
+    REFERENCE
+        "M.3100, sec. 5.8"
+    ::= { sunPlatEquipmentEntry 3 }
+
+sunPlatEquipmentUnknownStatus OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute identifies whether or not the state
+         of the entity is known as defined as Unknown Status in X.731,
+         sec. 8.1.2.6."
+    REFERENCE
+        "X.731, sec. 8.1.2.6"
+    DEFVAL { true }
+    ::= { sunPlatEquipmentEntry 4 }
+
+sunPlatEquipmentLocationName OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The specific or general location of the component as defined
+         as Location Name in M.3100, sec. 5.37."
+    REFERENCE "M.3100, sec. 5.37"
+    ::= { sunPlatEquipmentEntry 5 }
+
+-- NIM Equipment-Holder Table
+
+sunPlatEquipmentHolderTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatEquipmentHolderEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The NIM Equipment-Holder table.  This table augments the
+         entPhysicalTable to provide the attributes defined for
+         equipmentHolder under M.3100, sec. 3.2.3.
+
+         It is valid for an entPhysicalClass of container(5)."
+    REFERENCE
+        "M.3100, sec. 3.2.3"
+    ::= { sunPlatMIBPhysicalObjects 3 }
+
+sunPlatEquipmentHolderEntry OBJECT-TYPE
+    SYNTAX SunPlatEquipmentHolderEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the NIM Equipment-Holder table.  Each
+         entry of this table represents a component within the 
+         network element that accepts a replaceable Circuit Pack."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatEquipmentHolderTable 1 }
+
+SunPlatEquipmentHolderEntry ::= SEQUENCE {
+        sunPlatEquipmentHolderType            SunPlatEquipmentHolderType,
+        sunPlatEquipmentHolderAcceptableTypes SnmpAdminString,
+        sunPlatEquipmentHolderStatus          SunPlatEquipmentHolderStatus,
+        sunPlatEquipmentHolderPowered         SunPlatEquipmentHolderPower
+    }
+
+sunPlatEquipmentHolderType OBJECT-TYPE
+    SYNTAX SunPlatEquipmentHolderType
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The type of the component as defined in M.3100, sec. 5.26."
+    REFERENCE
+        "M.3100, sec.5.26"
+    ::= { sunPlatEquipmentHolderEntry 1 }
+
+sunPlatEquipmentHolderAcceptableTypes OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The types of Circuit Pack that can be supported by the
+         slot, separated by newline characters as defined in M.3100, sec. 5.2."
+    REFERENCE
+        "M.3100, sec. 5.2"
+    ::= { sunPlatEquipmentHolderEntry 2 }
+
+sunPlatEquipmentHolderStatus OBJECT-TYPE
+    SYNTAX SunPlatEquipmentHolderStatus
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attributes identifies whether or not a Circuit Pack is
+         present in the slot as defined in M.3100, sec. 5.32."
+    REFERENCE
+        "M.3100, sec. 5.32"
+    ::= { sunPlatEquipmentHolderEntry 3 }
+
+sunPlatEquipmentHolderPowered OBJECT-TYPE
+    SYNTAX SunPlatEquipmentHolderPower
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The current power management state of the equipment holder."
+    ::= { sunPlatEquipmentHolderEntry 4 }
+
+-- NIM Circuit-Pack Table
+
+sunPlatCircuitPackTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatCircuitPackEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The NIM Circuit-Pack table.  This table augments
+         the entPhysicalTable to provide the attributes defined for
+         circuitPack under M.3100, sec. 3.2.1.
+         
+         It is valid for an entPhysicalClass of module(9)."
+    REFERENCE
+        "M.3100 sec. 3.2.1"
+    ::= { sunPlatMIBPhysicalObjects 4 }
+
+sunPlatCircuitPackEntry OBJECT-TYPE
+    SYNTAX SunPlatCircuitPackEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the NIM Circuit-Pack table.  Each
+         entry of this table represents a piece of equipment within
+         the network element that is inserted into and removed from 
+         an Equipment-Holder."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatCircuitPackTable 1 }
+
+SunPlatCircuitPackEntry ::= SEQUENCE {
+        sunPlatCircuitPackType                           SnmpAdminString,
+        sunPlatCircuitPackAvailabilityStatus
+                SunPlatCircuitPackAvailabilityStatus,
+        sunPlatCircuitPackReplaceable                    TruthValue,
+        sunPlatCircuitPackHotSwappable                   TruthValue
+    }
+
+sunPlatCircuitPackType OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of this circuit pack as defined in M.3100, sec. 5.13."
+    REFERENCE
+        "M.3100, sec. 5.13."
+    ::= { sunPlatCircuitPackEntry 1 }
+
+sunPlatCircuitPackAvailabilityStatus OBJECT-TYPE
+    SYNTAX      SunPlatCircuitPackAvailabilityStatus
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The availability status attribute as defined in X.731, sec. 8.1.2.3."
+    REFERENCE
+        "X.731, sec. 8.1.2.3"
+    ::= { sunPlatCircuitPackEntry 2 }
+        
+sunPlatCircuitPackReplaceable OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The CIM_PhysicalPackage.Replaceable property as defined by the
+        CIM_Physical Schema."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_PhysicalPackage.Replaceable"
+    ::= { sunPlatCircuitPackEntry 3 }
+
+sunPlatCircuitPackHotSwappable OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The CIM_PhysicalPackage.HotSwappable property as defined by the
+        CIM_Physical Schema."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_PhysicalPackage.HotSwappable"
+    ::= { sunPlatCircuitPackEntry 4 }
+
+-- Physical Class Extension Table
+
+sunPlatPhysicalTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatPhysicalEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Sun Platform Physical Class Table extension. This table is used to
+        define the physical class of the entity if it is classified as
+        other(1).
+
+        The sunPlatPhysicalTable is valid for the entPhysicalClass value of
+        other(1)."
+    ::= { sunPlatMIBPhysicalObjects 5 }
+
+sunPlatPhysicalEntry OBJECT-TYPE
+    SYNTAX SunPlatPhysicalEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform Physical Class Table extension.  Each
+        entry of this table represents a piece of equipment with an
+        entPhysicalClass of other(1)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatPhysicalTable 1 }
+
+SunPlatPhysicalEntry ::= SEQUENCE {
+        sunPlatPhysicalClass     SunPlatPhysicalClass
+    }
+
+sunPlatPhysicalClass OBJECT-TYPE
+    SYNTAX SunPlatPhysicalClass
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible physical classes where entPhysicalClass
+         is specified as other(1)."
+    ::= { sunPlatPhysicalEntry 1 }
+
+-- Sun Platform Sensor Table
+
+sunPlatSensorTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatSensorEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Sun Platform Sensor Table extension. This table augments the 
+         entPhysicalTable to provide the attributes common to all sensors.
+
+         The sunPlatSensorTable is valid for the entPhysicalClass value of
+         sensor(8)."
+    ::= { sunPlatMIBPhysicalObjects 6 }
+
+sunPlatSensorEntry OBJECT-TYPE
+    SYNTAX SunPlatSensorEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform Sensor Table extension.  Each entry
+         of this table represents a piece of equipment with an
+         entPhysicalClass of sensor(8)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatSensorTable 1 }
+
+SunPlatSensorEntry ::= SEQUENCE {
+        sunPlatSensorClass       SunPlatSensorClass,
+        sunPlatSensorType        SunPlatSensorType,
+        sunPlatSensorLatency     Unsigned32
+    }
+
+sunPlatSensorClass OBJECT-TYPE
+    SYNTAX SunPlatSensorClass
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible sensor classes where entPhysicalClass
+         is specified as sensor(8)."
+    ::= { sunPlatSensorEntry 1 }
+
+sunPlatSensorType OBJECT-TYPE
+    SYNTAX SunPlatSensorType
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "An enumeration of possible sensor types where entPhysicalClass
+         is specified as sensor(8)."
+    ::= { sunPlatSensorEntry 2 }
+
+sunPlatSensorLatency OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS
+        "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Where the sensor is polled this value represents the update interval
+         for this sensor measured in mS. Where the sensor is event driven
+         rather than polled, this value should represent the maximum expected
+         latency in processing that event."
+    ::= { sunPlatSensorEntry 3 }
+
+-- Sun Platform Binary Sensor Table
+
+sunPlatBinarySensorTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatBinarySensorEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Sun Platform BinarySensor Table extension. This table augments the
+        sunPlatSensorTable to provide the attributes specific to binary
+        sensors.
+
+        The sunPlatBinarySensorTable is valid for the sunPlatSensorClass value
+        of binary(1)."
+    ::= { sunPlatMIBPhysicalObjects 7 }
+
+sunPlatBinarySensorEntry OBJECT-TYPE
+    SYNTAX SunPlatBinarySensorEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform BinarySensor Table extension.  Each entry
+         of this table represents a sensor with a sunPlatSensorClass value of
+         binary(1)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatBinarySensorTable 1 }
+
+SunPlatBinarySensorEntry ::= SEQUENCE {
+        sunPlatBinarySensorCurrent           TruthValue,
+        sunPlatBinarySensorExpected          TruthValue,
+        sunPlatBinarySensorInterpretTrue     SnmpAdminString,
+        sunPlatBinarySensorInterpretFalse    SnmpAdminString
+    }
+
+sunPlatBinarySensorCurrent OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The current state of the sensor."
+    ::= { sunPlatBinarySensorEntry 1 }
+
+sunPlatBinarySensorExpected OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The expected state of the sensor. If there is no expected value then
+         no value is returned for this attribute."
+    ::= { sunPlatBinarySensorEntry 2 }
+
+sunPlatBinarySensorInterpretTrue OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The interpretation to be applied to a sensor reading of true."
+    ::= { sunPlatBinarySensorEntry 3 }
+
+sunPlatBinarySensorInterpretFalse OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The interpretation to be applied to a sensor reading of false."
+    ::= { sunPlatBinarySensorEntry 4 }
+
+-- Sun Platform Numeric Sensor Table
+
+sunPlatNumericSensorTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatNumericSensorEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Sun Platform NumericSensor Table extension. This table augments
+        the sunPlatSensorTable to provide the attributes specific to numeric
+        sensors.
+
+        The sunPlatNumericSensorTable is valid for the sunPlatSensorClass
+        value of numeric(2)."
+    ::= { sunPlatMIBPhysicalObjects 8 }
+
+sunPlatNumericSensorEntry OBJECT-TYPE
+    SYNTAX SunPlatNumericSensorEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform NumericSensor Table extension.  Each entry
+         of this table represents a sensor with a sunPlatSensorClass value of
+         numeric(2)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatNumericSensorTable 1 }
+
+SunPlatNumericSensorEntry ::= SEQUENCE {
+        sunPlatNumericSensorBaseUnits    SunPlatBaseUnits,
+        sunPlatNumericSensorExponent     Integer32,
+        sunPlatNumericSensorRateUnits    SunPlatRateUnits,
+        sunPlatNumericSensorCurrent      Integer32,
+        sunPlatNumericSensorNormalMin    Integer32,
+        sunPlatNumericSensorNormalMax    Integer32,
+        sunPlatNumericSensorAccuracy     SunPlatPercentage,
+        sunPlatNumericSensorLowerThresholdNonCritical   Integer32,
+        sunPlatNumericSensorUpperThresholdNonCritical   Integer32,
+        sunPlatNumericSensorLowerThresholdCritical      Integer32,
+        sunPlatNumericSensorUpperThresholdCritical      Integer32,
+        sunPlatNumericSensorLowerThresholdFatal         Integer32,
+        sunPlatNumericSensorUpperThresholdFatal         Integer32,
+        sunPlatNumericSensorHysteresis   Unsigned32,
+        sunPlatNumericSensorEnabledThresholds
+            SunPlatNumericSensorEnabledThresholds,
+        sunPlatNumericSensorRestoreDefaultThresholds
+            SunPlatNumericSensorThresholdResetAction
+    }
+
+sunPlatNumericSensorBaseUnits OBJECT-TYPE
+    SYNTAX SunPlatBaseUnits
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The base unit of the values returned by this Sensor, as per
+         CIM_NumericSensor.BaseUnits.
+
+         Physical values are represented in the units obtained by 
+         (sunPlatBaseUnits * 10 raised to the power of sunPlatExponent). For 
+         example, if sunPlatBaseUnits is volts(6) and sunPlatExponent is -6, 
+         then the units of the values returned are microVolts."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.BaseUnits"
+    ::= { sunPlatNumericSensorEntry 1 }
+
+sunPlatNumericSensorExponent OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The exponent to be applied to the units returned by this sensor as for
+         CIM_NumericSensor.UnitModifier."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.UnitModifier"
+    ::= { sunPlatNumericSensorEntry 2 }
+
+sunPlatNumericSensorRateUnits OBJECT-TYPE
+    SYNTAX SunPlatRateUnits
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "If sunPlatRateUnits is set to a value other than none(1), 
+         then the units specified by sunPlatBaseUnits are further 
+         qualified as rate units. For example, if sunPlatBaseUnits
+         is set to degC(3), and sunPlatRateUnits is set to perSecond(4), 
+         then the value represented has the units degC/Second. This is as
+         defined for CIM_NumericSensor.RateUnits"
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.RateUnits"
+    ::= { sunPlatNumericSensorEntry 3 }
+
+sunPlatNumericSensorCurrent OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The current state of the sensor as per
+         CIM_NumericSensor.CurrentReading."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.CurrentReading"
+    ::= { sunPlatNumericSensorEntry 4 }
+
+sunPlatNumericSensorNormalMin OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The lowest expected value from this sensor as defined for
+        CIM_NumericSensor.NormalMin. If there is no minimum
+         value then no value is returned for this attribute."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.NormalMin"
+    ::= { sunPlatNumericSensorEntry 5 }
+
+sunPlatNumericSensorNormalMax OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The highest expected value from this sensor as defined for
+         CIM_NumericSensor.NormalMax. If there is no maximum
+         value then no value is returned for this attribute."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.NormalMax"
+    ::= { sunPlatNumericSensorEntry 6 }
+
+sunPlatNumericSensorAccuracy OBJECT-TYPE
+    SYNTAX SunPlatPercentage
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The accuracy as defined for CIM_NumericSensor.Accuracy of this sensor
+        expressed as a +/-% value in units of 100ths of a percent."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.Accuracy"
+    ::= { sunPlatNumericSensorEntry 7 }
+
+sunPlatNumericSensorLowerThresholdNonCritical OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the lower threshold at which a NonCritical
+        condition occurs as defined for
+        CIM_NumericSensor.LowerThresholdNonCritical."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.LowerThresholdNonCritical"
+    ::= { sunPlatNumericSensorEntry 8 }
+
+sunPlatNumericSensorUpperThresholdNonCritical OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the upper threshold at which a NonCritical
+        condition occurs as defined for
+        CIM_NumericSensor.UpperThresholdNonCritical."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.UpperThresholdNonCritical"
+    ::= { sunPlatNumericSensorEntry 9 }
+
+sunPlatNumericSensorLowerThresholdCritical OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the lower threshold at which a Critical
+        condition occurs as defined for
+        CIM_NumericSensor.LowerThresholdCritical."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.LowerThresholdCritical"
+    ::= { sunPlatNumericSensorEntry 10 }
+
+sunPlatNumericSensorUpperThresholdCritical OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the upper threshold at which a Critical
+        condition occurs as defined for
+        CIM_NumericSensor.UpperThresholdCritical."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.UpperThresholdCritical"
+    ::= { sunPlatNumericSensorEntry 11 }
+
+sunPlatNumericSensorLowerThresholdFatal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the lower threshold at which a Fatal
+        condition occurs as defined for
+        CIM_NumericSensor.LowerThresholdFatal."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.LowerThresholdFatal"
+    ::= { sunPlatNumericSensorEntry 12 }
+
+sunPlatNumericSensorUpperThresholdFatal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the upper threshold at which a Fatal
+        condition occurs as defined for
+        CIM_NumericSensor.UpperThresholdFatal."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.UpperThresholdFatal"
+    ::= { sunPlatNumericSensorEntry 13 }
+
+sunPlatNumericSensorHysteresis OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the hysteresis around the thresholds as
+        defined by CIM_NumericSensor.Hysteresis."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_NumericSensor.Hysteresis"
+    ::= { sunPlatNumericSensorEntry 14 }
+
+sunPlatNumericSensorEnabledThresholds OBJECT-TYPE
+    SYNTAX SunPlatNumericSensorEnabledThresholds
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the enabled thresholds of this sensor as
+        defined for CIM_NumericSensor.EnabledThresholds."
+    REFERENCE
+        "CIM v.2.5 Schema, CIM_NumericSensor.EnabledThresholds"
+    ::= { sunPlatNumericSensorEntry 15 }
+
+sunPlatNumericSensorRestoreDefaultThresholds OBJECT-TYPE
+    SYNTAX SunPlatNumericSensorThresholdResetAction
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Writing to this attribute resets the sensors thresholds to the
+        default settings."
+    ::= { sunPlatNumericSensorEntry 16 }
+    
+-- Discrete sensor table
+
+sunPlatDiscreteSensorTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SunPlatDiscreteSensorEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Discrete Sensor Table. This table is valid for rows with an
+        entPhysicalClass of sensor(8) and a sunPlatSensorClass of
+        discrete(3)."
+    ::= { sunPlatMIBPhysicalObjects 9 }
+    
+sunPlatDiscreteSensorEntry OBJECT-TYPE
+    SYNTAX SunPlatDiscreteSensorEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Discrete Sensor Table. Each entry in this table
+        represents a discrete sensor with entPhysicalClass of sensor(8) and
+        discrete(3)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatDiscreteSensorTable 1 }
+
+SunPlatDiscreteSensorEntry ::= SEQUENCE {
+        sunPlatDiscreteSensorCurrent            SunPlatIndex
+    }
+    
+sunPlatDiscreteSensorCurrent OBJECT-TYPE
+    SYNTAX SunPlatIndex
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The sunPlatDiscreteSensorStatesIndex of a row in the
+        sunPlatDiscreteSensorStatesTable which corresponds to the current
+        reading of the sensor."
+    ::= { sunPlatDiscreteSensorEntry 1 }
+
+-- Discrete sensor states table
+
+sunPlatDiscreteSensorStatesTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SunPlatDiscreteSensorStatesEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Discrete Sensor States Table. This table describes the available
+        states for a discrete sensor in the Discrete Sensor Table.
+
+        This table is valid for an entPhysicalClass value of sensor(8) with a
+        sunPlatSensorClass of discrete(3)."
+    ::= { sunPlatMIBPhysicalObjects 10 }
+
+sunPlatDiscreteSensorStatesEntry OBJECT-TYPE
+    SYNTAX SunPlatDiscreteSensorStatesEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Discrete Sensor States Table. Each entry in this
+        table represents a possible sensor state for the corresponding sensor
+        in the Discrete Sensor Table. The current state of the sensor is
+        indicated by the value of sunPlatDiscreteSensorCurrent for the
+        corresponding sunPlatDiscreteSensorTable entry."
+    INDEX { entPhysicalIndex, sunPlatDiscreteSensorStatesIndex }
+    ::= { sunPlatDiscreteSensorStatesTable 1 }
+
+SunPlatDiscreteSensorStatesEntry ::= SEQUENCE {
+    sunPlatDiscreteSensorStatesIndex            SunPlatIndex,
+    sunPlatDiscreteSensorStatesInterpretation   SnmpAdminString,
+    sunPlatDiscreteSensorStatesAcceptable       TruthValue
+}
+
+sunPlatDiscreteSensorStatesIndex OBJECT-TYPE
+    SYNTAX SunPlatIndex
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A number identifying this sensor state."
+    ::= { sunPlatDiscreteSensorStatesEntry 1 }
+
+sunPlatDiscreteSensorStatesInterpretation OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the state represented by the corresponding
+        row of this table."
+    ::= { sunPlatDiscreteSensorStatesEntry 2 }
+
+sunPlatDiscreteSensorStatesAcceptable OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute describes whether this value is acceptable as defined
+        for CIM_DiscreteSensor.AcceptableValues."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_DiscreteSensor.AcceptableValues"
+    ::= { sunPlatDiscreteSensorStatesEntry 3 }
+
+-- Sun Platform Fan Table
+
+sunPlatFanTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatFanEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Sun Platform Fan Table extension. This table augments the 
+         entPhysicalTable to provide the attributes common to all fans and
+         cooling devices.
+
+         The sunPlatFanTable is valid for the entPhysicalClass value of
+         fan(7)."
+    ::= { sunPlatMIBPhysicalObjects 11 }
+
+sunPlatFanEntry OBJECT-TYPE
+    SYNTAX SunPlatFanEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform Fan Table extension.  Each entry
+         of this table represents a piece of equipment with an
+         entPhysicalClass of fan(7)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatFanTable 1 }
+
+SunPlatFanEntry ::= SEQUENCE {
+        sunPlatFanClass         SunPlatFanClass
+    }
+
+sunPlatFanClass OBJECT-TYPE
+    SYNTAX SunPlatFanClass
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the class of the cooling device."
+    ::= { sunPlatFanEntry 1 }
+
+-- Sun Platform Alarm Table
+
+sunPlatAlarmTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatAlarmEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Sun Platform Alarm Table extension. This table augments the 
+         entPhysicalTable to provide indications of alarm states.
+
+         The sunPlatAlarmTable is valid for the sunPlatPhysicalClass value of
+         alarm(2)."
+    ::= { sunPlatMIBPhysicalObjects 12 }
+
+sunPlatAlarmEntry OBJECT-TYPE
+    SYNTAX SunPlatAlarmEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform Alarm Table extension.  Each entry
+         of this table represents a piece of equipment with an
+         sunPlatPhysicalClass of alarm(2)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatAlarmTable 1 }
+
+SunPlatAlarmEntry ::= SEQUENCE {
+        sunPlatAlarmType     SunPlatAlarmType,
+        sunPlatAlarmState    SunPlatAlarmState,
+        sunPlatAlarmUrgency  SunPlatAlarmUrgency
+    }
+
+sunPlatAlarmType OBJECT-TYPE
+    SYNTAX SunPlatAlarmType
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This indicates the type of alarm - i.e. the means by which the
+         alarm condition is communicated."
+    ::= { sunPlatAlarmEntry 1 }
+
+sunPlatAlarmState OBJECT-TYPE
+    SYNTAX SunPlatAlarmState
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This indicates the state of the alarm as defined for
+        CIM_AlarmDevice.AlarmState."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_AlarmDevice.AlarmState"
+    ::= { sunPlatAlarmEntry 2 }
+
+sunPlatAlarmUrgency OBJECT-TYPE
+    SYNTAX SunPlatAlarmUrgency
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the urgency of the alarm as defined for
+        CIM_AlarmDevice.Urgency."
+    REFERENCE
+        "CIM Schema v2.5, CIM_AlarmDevice.Urgency"
+    ::= { sunPlatAlarmEntry 3 }
+
+-- Sun Platform Watchdog Table
+
+sunPlatWatchdogTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatWatchdogEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Sun Platform Watchdog Table extension. This table augments the 
+         entPhysicalTable to provide information about a watchdog timer.
+
+         The sunPlatWatchdogTable is valid for the sunPlatPhysicalClass value of
+         watchdog(3)."
+    ::= { sunPlatMIBPhysicalObjects 13 }
+
+sunPlatWatchdogEntry OBJECT-TYPE
+    SYNTAX SunPlatWatchdogEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform Watchdog Table extension.  Each entry
+         of this table represents a piece of equipment with an
+         sunPlatPhysicalClass of watchdog(3)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatWatchdogTable 1 }
+
+SunPlatWatchdogEntry ::= SEQUENCE {
+        sunPlatWatchdogTimeout      Unsigned32,
+        sunPlatWatchdogAction       SunPlatWatchdogAction,
+        sunPlatWatchdogLastExpired  DateAndTime,
+        sunPlatWatchdogMonitoredEntity      SunPlatWatchdogMonitoredEntity
+    }
+
+sunPlatWatchdogTimeout OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS
+        "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This indicates the interval in mS after which the watchdog will
+         timeout if not reset."
+    ::= { sunPlatWatchdogEntry 1 }
+
+sunPlatWatchdogAction OBJECT-TYPE
+    SYNTAX SunPlatWatchdogAction
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This indicates the action taken by the watchdog if it is not reset
+         within the period specified by sunPlatWatchdogTimeout."
+    ::= { sunPlatWatchdogEntry 2 }
+
+sunPlatWatchdogLastExpired OBJECT-TYPE
+    SYNTAX DateAndTime
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The time at which the watchdog last expired, as defined by
+        CIM_Watchdog.TimeOfLastExpiration."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_Watchdog.TimeOfLastExpiration"
+    ::= { sunPlatWatchdogEntry 3 }
+
+sunPlatWatchdogMonitoredEntity OBJECT-TYPE
+    SYNTAX SunPlatWatchdogMonitoredEntity
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The entity monitored by the watchdog, as defined by
+        CIM_Watchdog.MonitoredEntity"
+    REFERENCE
+        "CIM v2.5 Schema, CIM_Watchdog.MonitoredEntity"
+    ::= { sunPlatWatchdogEntry 4 }
+
+-- Sun Platform Power Supply Table
+
+sunPlatPowerSupplyTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SunPlatPowerSupplyEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Power Supply Table extension. This table is valid for an
+        entPhysicalClass of powerSupply(6)."
+    ::= { sunPlatMIBPhysicalObjects 14 }
+
+sunPlatPowerSupplyEntry OBJECT-TYPE
+    SYNTAX SunPlatPowerSupplyEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Power Supply Table extension. Each entry in this
+        table represents a piece of equipment with an entPhysicalClass of
+        powerSupply(6)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatPowerSupplyTable 1 }
+
+SunPlatPowerSupplyEntry ::= SEQUENCE {
+        sunPlatPowerSupplyClass     SunPlatPowerSupplyClass
+    }
+
+sunPlatPowerSupplyClass OBJECT-TYPE
+    SYNTAX SunPlatPowerSupplyClass
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the class of the power supply."
+    ::= { sunPlatPowerSupplyEntry 1 }
+
+-- Sun Platform Battery Table
+
+sunPlatBatteryTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SunPlatBatteryEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Battery Table extension. This table is valid for a
+        sunPlatPowerSupplyClass of battery(3)."
+    ::= { sunPlatMIBPhysicalObjects 15 }
+
+sunPlatBatteryEntry OBJECT-TYPE
+    SYNTAX SunPlatBatteryEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Battery Table extension. Each entry in this table
+        represents a piece of equipment with a
+        sunPlatPowerSupplyClass of battery(3)."
+    INDEX { entPhysicalIndex }
+    ::= { sunPlatBatteryTable 1 }
+
+SunPlatBatteryEntry ::= SEQUENCE {
+        sunPlatBatteryStatus        SunPlatBatteryStatus
+    }
+
+sunPlatBatteryStatus OBJECT-TYPE
+    SYNTAX SunPlatBatteryStatus
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The current status of the battery as defined for
+        CIM_Battery.BatteryStatus."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_Battery.BatteryStatus"
+    ::= { sunPlatBatteryEntry 1 }
+
+-- ***************************************************************************
+-- *                          sunPlatMIBLogicalObjects                       *
+-- ***************************************************************************
+
+-- Logical Class Extension Table
+
+sunPlatLogicalTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SunPlatLogicalEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An extension to the entLogicalTable. This table is used to define the
+        logical class of the entity. The sunPlatLogicalTable is valid for all
+        entries in the entLogicalTable."
+    ::= { sunPlatMIBLogicalObjects 1 }
+
+sunPlatLogicalEntry OBJECT-TYPE
+    SYNTAX SunPlatLogicalEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the sunPlatLogicalTable extension."
+    AUGMENTS { entLogicalEntry }
+    ::= { sunPlatLogicalTable 1 }
+
+SunPlatLogicalEntry ::= SEQUENCE {
+        sunPlatLogicalClass         SunPlatLogicalClass,
+        sunPlatLogicalStatus        SunPlatLogicalStatus
+    }
+
+sunPlatLogicalClass OBJECT-TYPE
+    SYNTAX SunPlatLogicalClass
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute defines the logical class of the entry in the
+        entLogicalTable."
+    ::= { sunPlatLogicalEntry 1 }
+
+sunPlatLogicalStatus OBJECT-TYPE
+    SYNTAX SunPlatLogicalStatus
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This attribute describes the current status of the entry in the
+        entLogicalTable as defined by CIM_ManagedSystemElement.Status"
+    REFERENCE
+        "CIM v2.5 Schema, CIM_ManagedSystemElement.Status"
+    ::= { sunPlatLogicalEntry 2 }
+
+-- Unitary Computer System Table
+
+sunPlatUnitaryComputerSystemTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SunPlatUnitaryComputerSystemEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Platform Unitary Computer System Table Extension. This table
+        extends the entLogicalTable to provide attributes common to instances
+        of CIM_UnitaryComputerSystem.
+
+        The sunPlatUnitaryComputerSystemTable is valid for those rows of the
+        entLogicalTable with a SunPlatLogicalClass of computerSystem(2)."
+    ::= { sunPlatMIBLogicalObjects 2 }
+
+sunPlatUnitaryComputerSystemEntry OBJECT-TYPE
+    SYNTAX SunPlatUnitaryComputerSystemEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform Unitary Computer System Table
+        extension."
+    INDEX { entLogicalIndex }
+    ::= { sunPlatUnitaryComputerSystemTable 1 }
+
+SunPlatUnitaryComputerSystemEntry ::= SEQUENCE {
+        sunPlatUnitaryComputerSystemPowerState
+            SunPlatUnitaryComputerSystemPowerState,
+        sunPlatUnitaryComputerSystemApplySettings
+            SunPlatUnitaryComputerSystemApplicableSetting
+    }
+
+sunPlatUnitaryComputerSystemPowerState OBJECT-TYPE
+    SYNTAX SunPlatUnitaryComputerSystemPowerState
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This attribute displays the computer systems current power state as
+        defined by CIM_UnitaryComputerSystem.PowerState. When this attribute
+        is written to the corresponding power state will be requested from the
+        computer system as provided by the
+        CIM_UnitaryComputerSystem.SetPowerState() method."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_UnitaryComputerSystem.PowerState"
+    ::= { sunPlatUnitaryComputerSystemEntry 1 }
+
+sunPlatUnitaryComputerSystemApplySettings OBJECT-TYPE
+    SYNTAX SunPlatUnitaryComputerSystemApplicableSetting
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Setting this will cause the settings corresponding to the value to be
+        applied to the instance of CIM_UnitaryComputerSystem represented by
+        this row."
+    ::= { sunPlatUnitaryComputerSystemEntry 2 }
+
+-- Unitary Computer System Initial Load Info Table Extension
+
+sunPlatInitialLoadInfoTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SunPlatInitialLoadInfoEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The Platform Unitary Computer System Initial Load Info Table
+        extension. This table instruments the
+        CIM_UnitaryComputerSystem.InitialLoadInfo[] property.
+
+        The sunPlatInitialLoadInfoTable is valid for those rows of the
+        entLogicalTable with a sunPlatLogicalClass of computerSystem(2)."
+    ::= { sunPlatMIBLogicalObjects 3 }
+
+sunPlatInitialLoadInfoEntry OBJECT-TYPE
+    SYNTAX SunPlatInitialLoadInfoEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the Sun Platform Unitary Computer System Table
+        extension."
+    INDEX { entLogicalIndex, sunPlatInitialLoadInfoIndex }
+    ::= { sunPlatInitialLoadInfoTable 1 }
+
+SunPlatInitialLoadInfoEntry ::= SEQUENCE {
+    sunPlatInitialLoadInfoIndex     SunPlatIndex,
+    sunPlatInitialLoadInfoDescr     SnmpAdminString,
+    sunPlatInitialLoadInfoCurrentValue      SnmpAdminString,
+    sunPlatInitialLoadInfoDesiredValue      SnmpAdminString
+}
+
+sunPlatInitialLoadInfoIndex OBJECT-TYPE
+    SYNTAX SunPlatIndex
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A number identifying an entry in the sunPlatInitialLoadInfoTable."
+    ::= { sunPlatInitialLoadInfoEntry 1 }
+
+sunPlatInitialLoadInfoDescr OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The name for the information presented in the
+        sunPlatInitialLoadInfoValue for this row."
+    ::= { sunPlatInitialLoadInfoEntry 2 }
+
+sunPlatInitialLoadInfoCurrentValue OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The current contents of an entry in the
+        CIM_UnitaryComputerSystem.InitialLoadInfo[] array."
+    REFERENCE
+        "CIM v2.5 Schema, CIM_UnitaryComputerSystem.InitialLoadInfo"
+    ::= { sunPlatInitialLoadInfoEntry 3 }
+
+sunPlatInitialLoadInfoDesiredValue OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The desired contents of an entry in the
+        CIM_UnitaryComputerSystem.InitialLoadInfo[] array. Setting
+        sunPlatUnitaryComputerSystemApplySettings to a value of
+        specifiedSettings(2) will cause these values to be applied."
+    ::= { sunPlatInitialLoadInfoEntry 4 }
+        
+-- ***************************************************************************
+-- *                           sunPlatMIBLogs                                *
+-- ***************************************************************************
+
+-- NIM Log Table
+
+sunPlatLogTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatLogEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The NIM log table.
+
+         It is used to maintain a currentProblemList for each managed
+         object as per M.3100, sec. 5.22.
+         
+         The management system creates entries in this table to
+         specify which types of traps, from which managed object, 
+         should be logged.
+
+         Deleting an entry in this table deletes all entries in
+         the corresponding log.
+         
+         There are separate logs for each notification type/managed object."
+    ::= { sunPlatMIBLogs 1 }
+
+sunPlatLogEntry OBJECT-TYPE
+    SYNTAX SunPlatLogEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information about a single trap log as defined in X.735 8.1.1."
+    INDEX { sunPlatLogType }
+    ::= { sunPlatLogTable 1 }
+
+SunPlatLogEntry ::= SEQUENCE {
+        sunPlatLogType                OBJECT IDENTIFIER,
+        sunPlatLogAdministrativeState SunPlatLogAdministrativeState,
+        sunPlatLogOperationalState    SunPlatOperationalState,
+        sunPlatLogFullStatus          TruthValue,
+        sunPlatLogCapacityThreshold   SunPlatPercentage,
+        sunPlatLogRowStatus           RowStatus
+    }
+
+sunPlatLogType OBJECT-TYPE
+    SYNTAX OBJECT IDENTIFIER
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The type of notifications stored in this log.
+
+         For currentProblemList alarm entries, the sunPlatLogType is set to 
+         the sunPlatLogRecordManagedObjectInstance OID value."
+    ::= { sunPlatLogEntry 1 }
+
+sunPlatLogAdministrativeState OBJECT-TYPE
+    SYNTAX SunPlatLogAdministrativeState
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The management system uses this object to stop and
+         start the operations of this object as per X.735, sec. 8.1.1.1.3."
+    REFERENCE
+        "X.735, sec. 8.1.1.1.3"
+    DEFVAL { unlocked }
+    ::= { sunPlatLogEntry 2 }
+
+sunPlatLogOperationalState OBJECT-TYPE
+    SYNTAX SunPlatOperationalState
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Indicates whether or not the log is capable of
+         performing its normal operations as per X.735, sec. 8.1.1.1.4."
+    REFERENCE
+        "X.735, sec. 8.1.1.1.4"
+    ::= { sunPlatLogEntry 3 }
+
+sunPlatLogFullStatus OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "If the log is full, this attribute is true."
+    ::= { sunPlatLogEntry 4 }
+
+sunPlatLogCapacityThreshold OBJECT-TYPE
+    SYNTAX SunPlatPercentage
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "Indicates the threshold, expressed in 100ths of a %, at which the log
+        will generate a capacity alarm as per X.735, sec. 8.1.1.3."
+    REFERENCE
+        "X.735, sec. 8.1.1.3"
+    ::= { sunPlatLogEntry 5 }
+
+sunPlatLogRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "This object is used to create a new row or to delete
+         an existing row in the table."
+    ::= { sunPlatLogEntry 6 }
+
+-- NIM Log Record Table
+
+sunPlatLogRecordTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatLogRecordEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The NIM log record table.
+
+         It is used to maintain a currentProblemList for each managed
+         object as per M.3100, sec. 5.22."
+    ::= { sunPlatMIBLogs 2 }
+
+sunPlatLogRecordEntry OBJECT-TYPE
+    SYNTAX SunPlatLogRecordEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information about a single notification associated with
+         a specific managed object.
+
+         Entries in this table are created automatically but
+         can be deleted by the management system.
+
+         currentProblemList entries are augmented by the 
+         sunPlatLogRecordAdditionalEntry and sunPlatLogRecordAlarmEntry tables.
+         They are automatically deleted when the associated alarm condition 
+         is cleared.
+
+         Entries that represent object creation/deletion alarm log types
+         are augmented by the sunPlatLogRecordAdditionalEntry table.
+
+         Entries that represent alarm log types are also augmented
+         by the sunPlatLogRecordAlarmEntry table.
+
+         Entries that represent attribute/state change log types are augmented
+         by the sunPlatLogRecordChangeEntry table."
+    INDEX { sunPlatLogType,
+            sunPlatLogRecordId }
+    ::= { sunPlatLogRecordTable 1 }
+
+SunPlatLogRecordEntry ::= SEQUENCE {
+        sunPlatLogRecordId                    Unsigned32,
+        sunPlatLogRecordLoggingTime           DateAndTime,
+        sunPlatLogRecordManagedObjectInstance RowPointer,
+        sunPlatLogRecordRowStatus             RowStatus,
+        sunPlatLogRecordCorrelatedNotifications     SnmpAdminString
+    }
+
+sunPlatLogRecordId OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A unique number identifying this event as per X.735, sec. 8.1.2.2.1."
+    REFERENCE
+        "X.735, sec. 8.1.2.2.1"
+    ::= { sunPlatLogRecordEntry 1 }
+
+sunPlatLogRecordLoggingTime OBJECT-TYPE
+    SYNTAX DateAndTime
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The time at which this trap was logged as per X.735, sec. 8.1.2.2.2."
+    REFERENCE
+        "X.735, sec. 8.1.2.2.2"
+    ::= { sunPlatLogRecordEntry 2 }
+
+sunPlatLogRecordManagedObjectInstance OBJECT-TYPE
+    SYNTAX RowPointer
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The object in the entPhysicalTable or entLogicalTable to which this
+         entry applies as defined in X.721, sec. 10.7.4.13.
+
+         By convention, this is the name of the first object in
+         the row in the table referenced."
+    REFERENCE
+        "X.721, sec. 10.7.4.13"
+    ::= { sunPlatLogRecordEntry 3 }
+
+sunPlatLogRecordRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This object is used to delete an existing row in the
+         table. Note that the only value to which a management
+         system can set this object is destroy(6)."
+    ::= { sunPlatLogRecordEntry 4 }
+
+sunPlatLogRecordCorrelatedNotifications OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "A comma-separated list of sunPlatLogRecordId values which identify
+        the other events to which this event is correlated, as defined in
+        X.721, sec 10.7.1.11"
+    REFERENCE
+        "X.721, sec. 10.7.1.11"
+    ::= { sunPlatLogRecordEntry 5 }
+
+-- NIM Trap Agent MIB Additional Information Table
+
+sunPlatLogRecordAdditionalTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatLogRecordAdditionalEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The NIM Trap Agent additional information table.
+
+         This table is used to maintain a currentProblemList for each managed
+         object as per M.3100, sec. 5.22."
+    ::= { sunPlatMIBLogs 3 }
+
+sunPlatLogRecordAdditionalEntry OBJECT-TYPE
+    SYNTAX SunPlatLogRecordAdditionalEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information text/OID providing further information relating to
+         alarm and object creation/deletion log records."
+    INDEX { sunPlatLogType,
+            sunPlatLogRecordId }
+    ::= { sunPlatLogRecordAdditionalTable 1 }
+
+SunPlatLogRecordAdditionalEntry ::= SEQUENCE {
+        sunPlatLogRecordAdditionalInfo     OBJECT IDENTIFIER,
+        sunPlatLogRecordAdditionalText     SnmpAdminString
+    }
+
+sunPlatLogRecordAdditionalInfo OBJECT-TYPE
+    SYNTAX OBJECT IDENTIFIER
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "An optional OID of an object which provides additional
+         information relevant to this notification as per X.733,
+         sec. 8.1.2.14.
+
+         This object is only present if it was included in the
+         notification corresponding to this log entry."
+    REFERENCE
+        "X.733, sec. 8.1.2.14"
+    ::= { sunPlatLogRecordAdditionalEntry 1 }
+
+sunPlatLogRecordAdditionalText OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "An optional textual description which provides additional
+         information relevant to this notification as per X.733,
+         sec. 8.1.2.13.
+
+         This object is only present if it was included in the
+         notification corresponding to this log entry."
+    REFERENCE
+        "X.733, 8.1.2.13"
+    ::= { sunPlatLogRecordAdditionalEntry 2 }
+
+-- NIM Trap Agent MIB Logged Alarm Table
+
+sunPlatLogRecordAlarmTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatLogRecordAlarmEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The NIM Trap Agent logged alarm trap table.
+
+         This table is used to maintain a currentProblemList for each managed
+         object as per M.3100, sec. 5.22."
+    ::= { sunPlatMIBLogs 4 }
+
+sunPlatLogRecordAlarmEntry OBJECT-TYPE
+    SYNTAX SunPlatLogRecordAlarmEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information about the alarm-specific attributes of
+         a single trap in the log."
+    INDEX { sunPlatLogType,
+            sunPlatLogRecordId }
+    ::= { sunPlatLogRecordAlarmTable 1 }
+
+SunPlatLogRecordAlarmEntry ::= SEQUENCE {
+        sunPlatLogRecordAlarmPerceivedSeverity  SunPlatAlarmPerceivedSeverity,
+        sunPlatLogRecordAlarmProbableCause      SunPlatProbableCause,
+        sunPlatLogRecordAlarmSpecificProblem    SnmpAdminString,
+        sunPlatLogRecordAlarmRepairAction       SnmpAdminString
+    }
+
+sunPlatLogRecordAlarmPerceivedSeverity OBJECT-TYPE
+    SYNTAX SunPlatAlarmPerceivedSeverity
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The perceived severity of the alarm, as specified by
+         the agent that generated it in accordance with X.733,
+         sec. 8.1.2.3."
+    REFERENCE
+        "X.733, sec. 8.1.2.3"
+    ::= { sunPlatLogRecordAlarmEntry 1 }
+
+sunPlatLogRecordAlarmProbableCause OBJECT-TYPE
+    SYNTAX SunPlatProbableCause
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "An optional probable cause which provides additional information
+         relevant to this notification as per ITU-T M.3100 sec. 10.2."
+    REFERENCE
+        "M.3100 sec. 10.2"
+    ::= { sunPlatLogRecordAlarmEntry 2 }
+
+sunPlatLogRecordAlarmSpecificProblem OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "An optional textual description which provides additional
+         information concerning the cause of this notification.         
+
+         If more than one specific problem is described in this object, the
+         problem descriptions are separated by CR LF characters.
+
+         This object is only present if it was included in the alarm trap
+         corresponding to this log entry."
+    ::= { sunPlatLogRecordAlarmEntry 3 }
+
+sunPlatLogRecordAlarmRepairAction OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "A list of recommended repair actions separated by CR LF sequences."
+    ::= { sunPlatLogRecordAlarmEntry 4 }
+
+-- NIM Trap Agent MIB Logged Attribute/Status Change Table
+
+sunPlatLogRecordChangeTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF    SunPlatLogRecordChangeEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The NIM Trap Agent logged change trap table.
+         This table is used to maintain extra information for
+         log records that represent attribute or state changes as per X.721,
+         sec. 6.2."
+    REFERENCE
+        "X.721, sec. 6.2"
+    ::= { sunPlatMIBLogs 5 }
+
+sunPlatLogRecordChangeEntry OBJECT-TYPE
+    SYNTAX SunPlatLogRecordChangeEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information about the attribute/state change specific
+         attributes of a single trap in the log.
+         
+         Each of the fields will be present according to the type
+         of the attribute changed. State changes will be indicated
+         using the sunPlatLogRecordChangeNewInteger and
+         sunPlatLogRecordChangeOldInteger objects."
+    INDEX { sunPlatLogType,
+            sunPlatLogRecordId }
+    ::= { sunPlatLogRecordChangeTable 1 }
+
+SunPlatLogRecordChangeEntry ::= SEQUENCE {
+        sunPlatLogRecordChangeChangedOID VariablePointer,
+        sunPlatLogRecordChangeNewInteger INTEGER,
+        sunPlatLogRecordChangeOldInteger INTEGER,
+        sunPlatLogRecordChangeNewString  OCTET STRING,
+        sunPlatLogRecordChangeOldString  OCTET STRING,
+        sunPlatLogRecordChangeNewOID     OBJECT IDENTIFIER,
+        sunPlatLogRecordChangeOldOID     OBJECT IDENTIFIER
+    }
+
+sunPlatLogRecordChangeChangedOID OBJECT-TYPE
+    SYNTAX VariablePointer
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The changed object's OBJECT IDENTIFIER value in an
+         attribute/state change notification."
+    ::= { sunPlatLogRecordChangeEntry 1 }
+
+sunPlatLogRecordChangeNewInteger OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The new INTEGER value in an attribute/state change notification."
+    ::= { sunPlatLogRecordChangeEntry 2 }
+
+sunPlatLogRecordChangeOldInteger OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The old INTEGER value in an attribute/state change notification."
+    ::= { sunPlatLogRecordChangeEntry 3 }
+
+sunPlatLogRecordChangeNewString OBJECT-TYPE
+    SYNTAX OCTET STRING
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The new OCTET-STRING value in an attribute change
+         notification."
+    ::= { sunPlatLogRecordChangeEntry 4 }
+
+sunPlatLogRecordChangeOldString OBJECT-TYPE
+    SYNTAX OCTET STRING
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The old OCTET-STRING value in an attribute change
+         notification."
+    ::= { sunPlatLogRecordChangeEntry 5 }
+
+sunPlatLogRecordChangeNewOID OBJECT-TYPE
+    SYNTAX OBJECT IDENTIFIER
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The new OBJECT IDENTIFIER value in an attribute change
+         notification."
+    ::= { sunPlatLogRecordChangeEntry 6 }
+
+sunPlatLogRecordChangeOldOID OBJECT-TYPE
+    SYNTAX OBJECT IDENTIFIER
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The old OBJECT IDENTIFIER value in an attribute change
+         notification."
+    ::= { sunPlatLogRecordChangeEntry 7 }
+
+-- ***************************************************************************
+-- *                            sunPlatMIBTraps                              *
+-- ***************************************************************************
+
+-- MIB Notification specific data
+
+sunPlatNotificationEventId OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "A unique ID for this notification."
+    ::= { sunPlatMIBTrapData 1 }
+
+sunPlatNotificationTime OBJECT-TYPE
+    SYNTAX DateAndTime
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The time that this notification was generated."
+    ::= { sunPlatMIBTrapData 2 }
+
+sunPlatNotificationObject OBJECT-TYPE
+    SYNTAX RowPointer
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The object in the entPhysicalTable or the entLogicalTable to which
+         this notification applies.
+
+         By convention, this is the name of the first object in
+         the row in the table referenced."
+    ::= { sunPlatMIBTrapData 3 }
+
+sunPlatNotificationPerceivedSeverity OBJECT-TYPE
+    SYNTAX SunPlatAlarmPerceivedSeverity
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The perceived severity of the alarm, as specified by
+         the agent that generated it in accordance with X.733,
+         sec. 8.1.2.3."
+    REFERENCE
+        "X.733, sec. 8.1.2.3"
+    ::= { sunPlatMIBTrapData 4 }
+
+sunPlatNotificationProbableCause OBJECT-TYPE
+    SYNTAX SunPlatProbableCause
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "An optional probable cause which provides additional information
+         relevant to this notification as per ITU-T M.3100 sec. 10.2."
+    REFERENCE
+        "M.3100, sec. 10.2"
+    ::= { sunPlatMIBTrapData 5 }
+
+sunPlatNotificationSpecificProblem OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "An optional textual description which provides additional
+         information concerning the cause of this notification."
+    ::= { sunPlatMIBTrapData 6 }
+
+sunPlatNotificationRepairAction OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "A list of recommended repair actions separated by CR LF sequences."
+    ::= { sunPlatMIBTrapData 7 }
+
+sunPlatNotificationAdditionalInfo OBJECT-TYPE
+    SYNTAX OBJECT IDENTIFIER
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "An optional OID of an object which provides additional
+         information relevant to this notification."
+    ::= { sunPlatMIBTrapData 8 }
+
+sunPlatNotificationAdditionalText OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "An optional textual description which provides additional
+         information relevant to this notification."
+    ::= { sunPlatMIBTrapData 9 }
+
+sunPlatNotificationChangedOID OBJECT-TYPE
+    SYNTAX VariablePointer
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The changed object's OBJECT IDENTIFIER value in an
+         attribute/state change notification."
+    ::= { sunPlatMIBTrapData 10 }
+
+sunPlatNotificationNewInteger OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The new INTEGER value in an attribute/state change notification."
+    ::= { sunPlatMIBTrapData 11 }
+
+sunPlatNotificationOldInteger OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The old INTEGER value in an attribute/state change notification."
+    ::= { sunPlatMIBTrapData 12 }
+
+sunPlatNotificationNewString OBJECT-TYPE
+    SYNTAX OCTET STRING
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The new OCTET-STRING value in an attribute change
+         notification."
+    ::= { sunPlatMIBTrapData 13 }
+
+sunPlatNotificationOldString OBJECT-TYPE
+    SYNTAX OCTET STRING
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The old OCTET-STRING value in an attribute change
+         notification."
+    ::= { sunPlatMIBTrapData 14 }
+
+sunPlatNotificationNewOID OBJECT-TYPE
+    SYNTAX OBJECT IDENTIFIER
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The new OBJECT IDENTIFIER value in an attribute change
+         notification."
+    ::= { sunPlatMIBTrapData 15 }
+
+sunPlatNotificationOldOID OBJECT-TYPE
+    SYNTAX OBJECT IDENTIFIER
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "The old OBJECT IDENTIFIER value in an attribute change
+         notification."
+    ::= { sunPlatMIBTrapData 16 }
+
+sunPlatNotificationCorrelatedNotifications OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+        "A list of sunPlatNotificationEventIDs which are correlated to this
+        notification, separated by commas."
+    ::= { sunPlatMIBTrapData 17 }
+    
+
+-- MIB Notifications
+
+sunPlatObjectCreation NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationAdditionalInfo,
+              sunPlatNotificationAdditionalText
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that an object, indicated by sunPlatNotificationObject,
+         has been created as defined in X.721, sec. 13.6."
+    REFERENCE
+        "X.721, sec. 13.6"
+::= { sunPlatMIBTrapPrefix 1 }
+
+sunPlatObjectDeletion NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationAdditionalInfo,
+              sunPlatNotificationAdditionalText
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that an object, indicated by sunPlatNotificationObject,
+         has been deleted as defined in X.721, sec. 13.7."
+    REFERENCE
+        "X.721, sec. 13.7"
+::= { sunPlatMIBTrapPrefix 2 }
+
+sunPlatCommunicationsAlarm NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationAdditionalInfo,
+              sunPlatNotificationAdditionalText,
+              sunPlatNotificationPerceivedSeverity,
+              sunPlatNotificationProbableCause,
+              sunPlatNotificationSpecificProblem,
+              sunPlatNotificationRepairAction
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that a communication alarm has occurred as defined
+         in X.721, sec. 13.2."
+    REFERENCE
+        "X.721, sec. 13.2"
+::= { sunPlatMIBTrapPrefix 3 }
+
+sunPlatEnvironmentalAlarm NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationAdditionalInfo,
+              sunPlatNotificationAdditionalText,
+              sunPlatNotificationPerceivedSeverity,
+              sunPlatNotificationProbableCause,
+              sunPlatNotificationSpecificProblem,
+              sunPlatNotificationRepairAction
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that an environment alarm has occurred as defined
+         in X.721, sec. 13.3."
+    REFERENCE
+        "X.721, sec. 13.3"
+::= { sunPlatMIBTrapPrefix 4 }
+
+sunPlatEquipmentAlarm NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationAdditionalInfo,
+              sunPlatNotificationAdditionalText,
+              sunPlatNotificationPerceivedSeverity,
+              sunPlatNotificationProbableCause,
+              sunPlatNotificationSpecificProblem,
+              sunPlatNotificationRepairAction
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that an equipment alarm has occurred as defined
+         in X.721, sec. 13.4."
+    REFERENCE
+        "X.721, sec.13.4"
+::= { sunPlatMIBTrapPrefix 5 }
+
+sunPlatProcessingErrorAlarm NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationAdditionalInfo,
+              sunPlatNotificationAdditionalText,
+              sunPlatNotificationPerceivedSeverity,
+              sunPlatNotificationProbableCause,
+              sunPlatNotificationSpecificProblem,
+              sunPlatNotificationRepairAction
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that a processing error alarm has occurred as defined
+         in X.721, sec. 13.10."
+    REFERENCE
+        "X.721, sec. 13.10"
+::= { sunPlatMIBTrapPrefix 6 }
+
+sunPlatStateChange NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationChangedOID,
+              sunPlatNotificationOldInteger,
+              sunPlatNotificationNewInteger
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that a state change has occurred on the state attribute
+         identified by sunPlatNotificationChangedOID. As states are
+         enumerations of type INTEGER, the old and new states are passed in
+         sunPlatNotificationOldInteger and sunPlatNotificationNewInteger
+         respectively.
+         
+         This is as defined in X.721, sec. 13.14."
+    REFERENCE
+        "X.721, sec. 13.14"
+::= { sunPlatMIBTrapPrefix 7 }
+
+sunPlatAttributeChangeInteger NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationChangedOID,
+              sunPlatNotificationOldInteger,
+              sunPlatNotificationNewInteger
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that attribute identified by sunPlatNotificationChangedOID
+         has changed from the value in sunPlatNotificationOldInteger to the
+         value in sunPlatNotificationNewInteger.
+         
+         This is as defined in X.721, sec. 13.1."
+    REFERENCE
+        "X.721, sec. 13.1"
+::= { sunPlatMIBTrapPrefix 8 }
+
+sunPlatAttributeChangeString NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationChangedOID,
+              sunPlatNotificationOldString,
+              sunPlatNotificationNewString
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that attribute identified by sunPlatNotificationChangedOID
+         has changed from the value in sunPlatNotificationOldString to the
+         value in sunPlatNotificationNewString.
+         
+         This is as defined in X.721, sec. 13.1."
+    REFERENCE
+        "X.721, sec.13.1"
+::= { sunPlatMIBTrapPrefix 9 }
+
+sunPlatAttributeChangeOID NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationChangedOID,
+              sunPlatNotificationOldOID,
+              sunPlatNotificationNewOID
+    }
+    STATUS    current
+    DESCRIPTION
+        "Indicates that attribute identified by sunPlatNotificationChangedOID
+         has changed from the value in sunPlatNotificationOldOID to the
+         value in sunPlatNotificationNewOID.
+         
+         This is as defined in X.721, sec. 13.1."
+    REFERENCE
+        "X.721, sec. 13.1"
+::= { sunPlatMIBTrapPrefix 10 }
+
+sunPlatQualityOfServiceAlarm NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationAdditionalInfo,
+              sunPlatNotificationAdditionalText,
+              sunPlatNotificationPerceivedSeverity,
+              sunPlatNotificationProbableCause,
+              sunPlatNotificationSpecificProblem,
+              sunPlatNotificationRepairAction
+    }
+    STATUS     current
+    DESCRIPTION
+        "Indicates that a quality of service alarm has occurred as defined in
+        X.721, sec 13.11."
+    REFERENCE
+        "X.721, sec.13.11"
+::= { sunPlatMIBTrapPrefix 11 }
+              
+sunPlatIndeterminateAlarm NOTIFICATION-TYPE
+    OBJECTS { sunPlatNotificationEventId,
+              sunPlatNotificationTime,
+              sunPlatNotificationObject,
+              sunPlatNotificationCorrelatedNotifications,
+              sunPlatNotificationAdditionalInfo,
+              sunPlatNotificationAdditionalText,
+              sunPlatNotificationPerceivedSeverity,
+              sunPlatNotificationProbableCause,
+              sunPlatNotificationSpecificProblem,
+              sunPlatNotificationRepairAction
+    }
+    STATUS     current
+    DESCRIPTION
+        "Indicates that an alarm of an indeterminate type has occurred."
+::= { sunPlatMIBTrapPrefix 12 }
+
+-- ***************************************************************************
+-- *                        sunPlatMIBCompliances                            *
+-- ***************************************************************************
+
+sunPlatCompliance MODULE-COMPLIANCE
+    STATUS current
+    DESCRIPTION
+        "The compliance statement for SNMP entities which implement this MIB."
+    MODULE -- this MODULE
+        MANDATORY-GROUPS {
+            sunPlatGeneralGroup,
+            sunPlatEquipmentGroup,
+            sunPlatEquipmentHolderGroup,
+            sunPlatCircuitPackGroup,
+            sunPlatPhysicalGroup,
+            sunPlatSensorGroup,
+            sunPlatBinarySensorGroup,
+            sunPlatNumericSensorGroup,
+            sunPlatDiscreteSensorGroup,
+            sunPlatFanGroup,
+            sunPlatAlarmGroup,
+            sunPlatWatchdogGroup,
+            sunPlatPowerSupplyGroup,
+            sunPlatBatteryGroup,
+            sunPlatLogicalGroup,
+            sunPlatUnitaryComputerSystemGroup,
+            sunPlatLogGroup,
+            sunPlatLogRecordGroup,
+            sunPlatLogRecordAdditionalGroup,
+            sunPlatLogRecordAlarmGroup,
+            sunPlatNotificationsGroup
+        }
+        GROUP sunPlatLogRecordChangeGroup
+        DESCRIPTION
+            "The sunPlatLogRecordChangeGroup may be implemented if logging of
+            attribute change notifications is supported."
+        ::= { sunPlatMIBCompliances 1 }
+
+-- ***************************************************************************
+-- *                        sunPlatMIBObjectGroups                           *
+-- ***************************************************************************
+
+sunPlatGeneralGroup OBJECT-GROUP 
+    OBJECTS {
+        sunPlatStartTime
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects which are independent of the platform(s)
+        being monitored."
+    ::= { sunPlatMIBObjectGroups 1 }
+
+sunPlatEquipmentGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatEquipmentOperationalState,
+        sunPlatEquipmentAdministrativeState,
+        sunPlatEquipmentAlarmStatus,
+        sunPlatEquipmentUnknownStatus,
+        sunPlatEquipmentLocationName
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects which are used to represent attributes of
+        the NIM class of Equipment defined in M.3100, sec. 3.2.2."
+    REFERENCE
+        "M.3100, sec. 3.2.2"
+    ::= { sunPlatMIBObjectGroups 2 }
+
+sunPlatEquipmentHolderGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatEquipmentHolderType,
+        sunPlatEquipmentHolderAcceptableTypes,
+        sunPlatEquipmentHolderStatus,
+        sunPlatEquipmentHolderPowered
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects which are used to represent attributes of
+        platform components with an entPhysicalClass of container(5)."
+    ::= { sunPlatMIBObjectGroups 3 }
+  
+sunPlatCircuitPackGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatCircuitPackType,
+        sunPlatCircuitPackAvailabilityStatus,
+        sunPlatCircuitPackReplaceable,
+        sunPlatCircuitPackHotSwappable
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects which are used to represent attributes of
+        platform components with an entPhysicalClass of module(9)."
+    ::= { sunPlatMIBObjectGroups 4 }
+
+sunPlatPhysicalGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatPhysicalClass
+    } 
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of platform
+        components with an entPhysicalClass value of other(1)."
+    ::= { sunPlatMIBObjectGroups 5 }
+
+sunPlatSensorGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatSensorClass,
+        sunPlatSensorType,
+        sunPlatSensorLatency
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of platform
+        components with an entPhysicalClass value of sensor(8)."
+    ::= { sunPlatMIBObjectGroups 6 }
+
+sunPlatBinarySensorGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatBinarySensorCurrent,
+        sunPlatBinarySensorExpected,
+        sunPlatBinarySensorInterpretTrue,
+        sunPlatBinarySensorInterpretFalse
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of sensors with a
+        sunPlatSensorClass of binary(1)."
+    ::= { sunPlatMIBObjectGroups 7 }
+
+sunPlatNumericSensorGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatNumericSensorBaseUnits,
+        sunPlatNumericSensorExponent,
+        sunPlatNumericSensorRateUnits,
+        sunPlatNumericSensorCurrent,
+        sunPlatNumericSensorNormalMin,
+        sunPlatNumericSensorNormalMax,
+        sunPlatNumericSensorAccuracy,
+        sunPlatNumericSensorLowerThresholdNonCritical,
+        sunPlatNumericSensorUpperThresholdNonCritical,
+        sunPlatNumericSensorLowerThresholdCritical,
+        sunPlatNumericSensorUpperThresholdCritical,
+        sunPlatNumericSensorLowerThresholdFatal,
+        sunPlatNumericSensorUpperThresholdFatal,
+        sunPlatNumericSensorHysteresis,
+        sunPlatNumericSensorEnabledThresholds,
+        sunPlatNumericSensorRestoreDefaultThresholds
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of sensors with a
+        sunPlatSensorClass of numeric(2)."
+    ::= { sunPlatMIBObjectGroups 8 }
+
+sunPlatDiscreteSensorGroup OBJECT-GROUP 
+    OBJECTS {
+        sunPlatDiscreteSensorCurrent,
+        sunPlatDiscreteSensorStatesInterpretation,
+        sunPlatDiscreteSensorStatesAcceptable
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of sensors with a
+        sunPlatSensorClass of discrete(3)."
+    ::= { sunPlatMIBObjectGroups 9 }
+
+sunPlatFanGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatFanClass
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of platform
+        components with an entPhysicalClass of fan(7)."
+    ::= { sunPlatMIBObjectGroups 10 }
+
+sunPlatAlarmGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatAlarmType,
+        sunPlatAlarmState,
+        sunPlatAlarmUrgency
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of platform
+        components with a sunPlatPhysicalClass of alarm(2)."
+    ::= { sunPlatMIBObjectGroups 11 }
+
+sunPlatWatchdogGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatWatchdogTimeout,
+        sunPlatWatchdogAction,
+        sunPlatWatchdogLastExpired,
+        sunPlatWatchdogMonitoredEntity
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of platform
+        components with a sunPlatPhysicalClass of watchdog(3)."
+    ::= { sunPlatMIBObjectGroups 12 }
+
+sunPlatPowerSupplyGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatPowerSupplyClass
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of platform
+        components with an entPhysicalClass of powerSupply(6)."
+    ::= { sunPlatMIBObjectGroups 13 }
+
+sunPlatBatteryGroup OBJECT-GROUP
+    OBJECTS {   
+        sunPlatBatteryStatus
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of power supplies
+        with a sunPlatPowerSupplyClass of battery(3)."
+    ::= { sunPlatMIBObjectGroups 14 }
+
+sunPlatLogicalGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatLogicalClass,
+        sunPlatLogicalStatus
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of logical entities
+        present in the entLogicalTable."
+    ::= { sunPlatMIBObjectGroups 15 }
+
+sunPlatUnitaryComputerSystemGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatUnitaryComputerSystemPowerState,
+        sunPlatUnitaryComputerSystemApplySettings,
+        sunPlatInitialLoadInfoDescr,
+        sunPlatInitialLoadInfoCurrentValue,
+        sunPlatInitialLoadInfoDesiredValue
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of logical entities
+        with a sunPlatLogicalClass of computerSystem(2)."
+    ::= { sunPlatMIBObjectGroups 16 }
+
+sunPlatLogGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatLogAdministrativeState,
+        sunPlatLogOperationalState,
+        sunPlatLogFullStatus,
+        sunPlatLogCapacityThreshold,
+        sunPlatLogRowStatus
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing attributes of logs and/or
+        current problem lists."
+    ::= { sunPlatMIBObjectGroups 17 }
+
+sunPlatLogRecordGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatLogRecordLoggingTime,
+        sunPlatLogRecordManagedObjectInstance,
+        sunPlatLogRecordRowStatus,
+        sunPlatLogRecordCorrelatedNotifications
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects representing a log record or current
+        problem."
+    ::= { sunPlatMIBObjectGroups 18 }
+
+sunPlatLogRecordAdditionalGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatLogRecordAdditionalInfo,
+        sunPlatLogRecordAdditionalText
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects providing additional information relating
+        to a log record or current problem."
+    ::= { sunPlatMIBObjectGroups 19 }
+
+sunPlatLogRecordAlarmGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatLogRecordAlarmPerceivedSeverity,
+        sunPlatLogRecordAlarmProbableCause,
+        sunPlatLogRecordAlarmSpecificProblem,
+        sunPlatLogRecordAlarmRepairAction
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects providing information related to an alarm log
+        record or current problem."
+    ::= { sunPlatMIBObjectGroups 20 }
+
+sunPlatLogRecordChangeGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatLogRecordChangeChangedOID,
+        sunPlatLogRecordChangeNewInteger,
+        sunPlatLogRecordChangeOldInteger,
+        sunPlatLogRecordChangeNewString,
+        sunPlatLogRecordChangeOldString,
+        sunPlatLogRecordChangeNewOID,
+        sunPlatLogRecordChangeOldOID
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects providing information related to an
+        attribute change log record."
+    ::= { sunPlatMIBObjectGroups 21 }
+
+sunPlatNotificationObjectGroup OBJECT-GROUP
+    OBJECTS {
+        sunPlatNotificationEventId,
+        sunPlatNotificationTime,
+        sunPlatNotificationObject,
+        sunPlatNotificationPerceivedSeverity,
+        sunPlatNotificationProbableCause,
+        sunPlatNotificationSpecificProblem,
+        sunPlatNotificationRepairAction,
+        sunPlatNotificationAdditionalInfo,
+        sunPlatNotificationAdditionalText,
+        sunPlatNotificationChangedOID,
+        sunPlatNotificationNewInteger,
+        sunPlatNotificationOldInteger,
+        sunPlatNotificationNewString,
+        sunPlatNotificationOldString,
+        sunPlatNotificationNewOID,
+        sunPlatNotificationOldOID,
+        sunPlatNotificationCorrelatedNotifications
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of objects used in notifications."
+    ::= { sunPlatMIBObjectGroups 22 }
+
+-- ***************************************************************************
+-- *                        sunPlatMIBNotifGroups                            *
+-- ***************************************************************************
+
+sunPlatNotificationsGroup NOTIFICATION-GROUP
+    NOTIFICATIONS {
+        sunPlatObjectCreation,
+        sunPlatObjectDeletion,
+        sunPlatCommunicationsAlarm,
+        sunPlatEnvironmentalAlarm,
+        sunPlatEquipmentAlarm,
+        sunPlatProcessingErrorAlarm,
+        sunPlatStateChange,
+        sunPlatAttributeChangeInteger,
+        sunPlatAttributeChangeString,
+        sunPlatAttributeChangeOID,
+        sunPlatQualityOfServiceAlarm,
+        sunPlatIndeterminateAlarm
+    }
+    STATUS current
+    DESCRIPTION
+        "The collection of notifications used to indicate the addition or
+        deletion of managed objects from the model, changes of managed object
+        state, attribute changes and the raising of alarms."
+    ::= { sunPlatMIBNotifGroups 1 }
+
+END
+

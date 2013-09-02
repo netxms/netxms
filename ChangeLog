@@ -4,6 +4,7 @@
 
 - User-defined constants in NXSL
 - Added MIBs for Nortel/Trapeze Wireless security switches
+- New MIBs: SUN-PLATFORM-MIB
 - Fixed issues: #202, #300, #305, #325
 
 
