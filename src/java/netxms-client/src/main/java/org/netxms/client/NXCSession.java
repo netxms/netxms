@@ -1410,6 +1410,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	@Override
 	public void connect() throws IOException, UnknownHostException, NetXMSClientException
 	{
+		encryptionContext = null;
 		Logger.info("NXCSession.connect", "Connecting to " + connAddress + ":" + connPort);
 		try
 		{
