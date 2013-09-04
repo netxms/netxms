@@ -28,6 +28,7 @@
  */
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -45,6 +46,7 @@ int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
 int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -74,6 +76,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 	{ _T("_exit"), F_exit, -1 },
    { _T("abs"), F_abs, 1 },
    { _T("ceil"), F_ceil, 1 },
+   { _T("chr"), F_chr, 1 },
    { _T("classof"), F_classof, 1 },
 	{ _T("d2x"), F_d2x, -1 },
    { _T("exp"), F_exp, 1 },
@@ -90,6 +93,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 	{ _T("ltrim"), F_ltrim, 1 },
    { _T("max"), F_max, -1 },
    { _T("min"), F_min, -1 },
+   { _T("ord"), F_ord, 1 },
    { _T("pow"), F_pow, 2 },
    { _T("random"), F_random, 2 },
    { _T("right"), F_right, -1 },

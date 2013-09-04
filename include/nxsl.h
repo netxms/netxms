@@ -41,6 +41,7 @@
 /**
  * Script execution errors
  */
+#define NXSL_ERR_SUCCESS                  0
 #define NXSL_ERR_DATA_STACK_UNDERFLOW     1
 #define NXSL_ERR_CONTROL_STACK_UNDERFLOW  2
 #define NXSL_ERR_BAD_CONDITION            3

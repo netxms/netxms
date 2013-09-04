@@ -647,16 +647,14 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
 		*ppResult = new NXSL_Value(_T(""));
 	}
 
-	return 0;
+	return NXSL_ERR_SUCCESS;
 }
 
-
-//
-// Convert decimal value to hexadecimal string
-//   d2x(value)          -> hex value
-//   d2x(value, padding) -> hex value padded vith zeros
-//
-
+/**
+ * Convert decimal value to hexadecimal string
+ *   d2x(value)          -> hex value
+ *   d2x(value, padding) -> hex value padded vith zeros
+ */
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	TCHAR buffer[128], format[32];
@@ -680,15 +678,40 @@ int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 	}
 	_sntprintf(buffer, 128, format, argv[0]->getValueAsUInt32());
 	*ppResult = new NXSL_Value(buffer);
-	return 0;
+	return NXSL_ERR_SUCCESS;
 }
 
+/**
+ * chr() - character from it's UNICODE value
+ */
+int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
 
-//
-// left() - take leftmost part of a string and pad or truncate it as necessary
-// Format: left(string, len, [pad])
-//
+   TCHAR buffer[2];
+   buffer[0] = (TCHAR)argv[0]->getValueAsInt32();
+   buffer[1] = 0;
+   *result = new NXSL_Value(buffer);
+   return NXSL_ERR_SUCCESS;
+}
 
+/**
+ * ord() -  convert characters into their ASCII or Unicode values
+ */
+int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = new NXSL_Value((INT32)(argv[0]->getValueAsCString()[0]));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * left() - take leftmost part of a string and pad or truncate it as necessary
+ * Format: left(string, len, [pad])
+ */
 int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	const TCHAR *str;
@@ -730,7 +753,7 @@ int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pro
       newStr[i] = pad;
    *ppResult = new NXSL_Value(newStr, newLen);
 	free(newStr);
-	return 0;
+	return NXSL_ERR_SUCCESS;
 }
 
 
