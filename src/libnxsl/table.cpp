@@ -54,6 +54,32 @@ NXSL_METHOD_DEFINITION(addColumn)
 }
 
 /**
+ * deleteRow(index) method
+ */
+NXSL_METHOD_DEFINITION(deleteRow)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   ((Table *)object->getData())->deleteRow(argv[0]->getValueAsInt32());
+   *result = new NXSL_Value;
+   return 0;
+}
+
+/**
+ * deleteColumn(index) method
+ */
+NXSL_METHOD_DEFINITION(deleteColumn)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   ((Table *)object->getData())->deleteColumn(argv[0]->getValueAsInt32());
+   *result = new NXSL_Value;
+   return 0;
+}
+
+/**
  * get(row, column) method
  */
 NXSL_METHOD_DEFINITION(get)
@@ -115,6 +141,8 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
 
    NXSL_REGISTER_METHOD(addColumn, 1);
    NXSL_REGISTER_METHOD(addRow, 0);
+   NXSL_REGISTER_METHOD(deleteColumn, 1);
+   NXSL_REGISTER_METHOD(deleteRow, 1);
    NXSL_REGISTER_METHOD(get, 2);
    NXSL_REGISTER_METHOD(getColumnIndex, 1);
    NXSL_REGISTER_METHOD(getColumnName, 1);

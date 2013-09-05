@@ -3,6 +3,7 @@
 *
 
 - User-defined constants in NXSL
+- New methods deleteColumn and deleteRow in NXSL class Table
 - New NXSL functions: chr, ord
 - Added MIBs for Nortel/Trapeze Wireless security switches
 - New MIBs: SUN-PLATFORM-MIB

@@ -575,6 +575,9 @@ public:
    void setColumnDataType(int col, INT32 dataType) { if ((col >= 0) && (col < m_columns->size())) m_columns->get(col)->setDataType(dataType); }
    int addRow();
 
+   void deleteRow(int row);
+   void deleteColumn(int col);
+
    void setAt(int nRow, int nCol, INT32 nData);
    void setAt(int nRow, int nCol, UINT32 dwData);
    void setAt(int nRow, int nCol, double dData);

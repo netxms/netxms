@@ -223,6 +223,49 @@ int Table::addRow()
 }
 
 /**
+ * Delete row
+ */
+void Table::deleteRow(int row)
+{
+   if ((row < 0) || (row >= m_nNumRows))
+      return;
+
+   for(int i = 0; i < m_nNumCols; i++)
+      safe_free(m_ppData[row * m_nNumCols + i]);
+   m_nNumRows--;
+   memmove(&m_ppData[row * m_nNumCols], &m_ppData[(row + 1) * m_nNumCols], sizeof(TCHAR *) * (m_nNumRows - row) * m_nNumCols);
+}
+
+/**
+ * Delete column
+ */
+void Table::deleteColumn(int col)
+{
+   if ((col < 0) || (col >= m_nNumCols))
+      return;
+
+   TCHAR **data = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * (m_nNumCols - 1));
+   int spos = 0, dpos = 0;
+   for(int i = 0; i < m_nNumRows; i++)
+   {
+      for(int j = 0; j < m_nNumCols; j++)
+      {
+         if (j == col)
+         {
+            safe_free(m_ppData[spos]);
+         }
+         else
+         {
+            data[dpos++] = m_ppData[spos];
+         }
+         spos++;
+      }
+   }
+   m_columns->remove(col);
+   m_nNumCols--;
+}
+
+/**
  * Set data at position
  */
 void Table::setAt(int nRow, int nCol, const TCHAR *pszData)
