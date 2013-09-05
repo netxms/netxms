@@ -61,6 +61,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.tools.Command;
+import org.netxms.ui.eclipse.console.tools.CommandBridge;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.objectview.services.SourceProvider;
@@ -222,6 +224,16 @@ public class TabbedObjectView extends ViewPart
 			}
 		};
 		session.addListener(sessionListener);
+		
+		CommandBridge.getInstance().registerCommand("TabbedObjectView/selectTab", new Command() {
+			@Override
+			public Object execute(String name, Object arg)
+			{
+				if (arg instanceof String)
+					selectTab((String)arg);
+				return null;
+			}
+		});
 	}
 	
 	/**
@@ -413,6 +425,27 @@ public class TabbedObjectView extends ViewPart
 			tab.create(tabFolder);
 		}
 	}
+	
+	/**
+	 * Select tab with given ID
+	 * 
+	 * @param tabId
+	 */
+	public void selectTab(String tabId)
+	{
+		for(int i = 0; i < tabFolder.getItemCount(); i++)
+		{
+			CTabItem item = tabFolder.getItem(i);
+			ObjectTab tab = (ObjectTab)item.getData();
+			if (tab.getLocalId().equals(tabId))
+			{
+				tabFolder.setSelection(i);
+				tab.selected();
+				selectionProvider.setSelectionProviderDelegate(tab.getSelectionProvider());
+				break;
+			}
+		}
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
@@ -420,6 +453,7 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
+		CommandBridge.getInstance().unregisterCommand("TabbedObjectView/selectTab");
 		ConsoleSharedData.getSession().removeListener(sessionListener);
 		if (sourceProvider != null)
 			sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, null);

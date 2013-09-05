@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -75,6 +74,7 @@ import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.tools.CommandBridge;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
@@ -286,8 +286,8 @@ public class ObjectBrowser extends ViewPart
 		{
 			objectTree.getTreeViewer().setSelection(new StructuredSelection(object), true);
 			if (tabId != null)
-			{			
-//				Object view = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(ID);
+			{		
+				CommandBridge.getInstance().execute("TabbedObjectView/selectTab", tabId);
 			}
 		}
 	}
