@@ -195,13 +195,16 @@ public final class EncryptionContext
 		outputStream.writeByte(0);		// reserved
 		outputStream.writeInt(0);		// length
 		
-		encryptor.init(Cipher.ENCRYPT_MODE, key, iv);
-		byte[] ph = encryptPayloadHeader(msgBytes);
-		if (ph != null)
-			outputStream.write(ph);
-		
-		outputStream.write(encryptor.update(msgBytes));
-		outputStream.write(encryptor.doFinal());
+		synchronized(encryptor)
+		{
+			encryptor.init(Cipher.ENCRYPT_MODE, key, iv);
+			byte[] ph = encryptPayloadHeader(msgBytes);
+			if (ph != null)
+				outputStream.write(ph);
+			
+			outputStream.write(encryptor.update(msgBytes));
+			outputStream.write(encryptor.doFinal());
+		}
 
 		int padding = (8 - (byteStream.size() % 8)) & 7;
 		for (int i = 0; i < padding; i++)
@@ -228,17 +231,20 @@ public final class EncryptionContext
 	 */
 	public byte[] decryptMessage(NXCPDataInputStream inputStream, int length) throws GeneralSecurityException, IOException
 	{
-		decryptor.init(Cipher.DECRYPT_MODE, key, iv);
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 		byte[] buffer = new byte[4096];
 		int bytes = length;
-		while(bytes > 0)
+		synchronized(decryptor)
 		{
-			int bytesRead = inputStream.read(buffer, 0, Math.min(buffer.length, bytes));
-			byteStream.write(decryptor.update(buffer, 0, bytesRead));
-			bytes -= bytesRead;
+			decryptor.init(Cipher.DECRYPT_MODE, key, iv);
+			while(bytes > 0)
+			{
+				int bytesRead = inputStream.read(buffer, 0, Math.min(buffer.length, bytes));
+				byteStream.write(decryptor.update(buffer, 0, bytesRead));
+				bytes -= bytesRead;
+			}
+			byteStream.write(decryptor.doFinal());
 		}
-		byteStream.write(decryptor.doFinal());
 		return byteStream.toByteArray();
 	}
 	
