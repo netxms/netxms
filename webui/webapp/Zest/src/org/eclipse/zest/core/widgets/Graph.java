@@ -19,6 +19,7 @@ import org.eclipse.draw2d.Animation;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.ConnectionRouter;
 import org.eclipse.draw2d.CoordinateListener;
+import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FigureCanvas;
 import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.FreeformLayout;
@@ -154,24 +155,37 @@ public class Graph extends FigureCanvas implements IContainer {
 		this.getLightweightSystem().setEventDispatcher(
 				new SWTEventDispatcher() {
 					public void dispatchMouseMoved(
-							org.eclipse.swt.events.MouseEvent me) {
+							org.eclipse.swt.events.MouseEvent me) 
+					{
 						super.dispatchMouseMoved(me);
 
 						// If the current event is null, return
-						if (getCurrentEvent() == null) {
+						if (getCurrentEvent() == null) 
+						{
 							return;
 						}
 
-						if (getMouseTarget() == null) {
+						if (getMouseTarget() == null) 
+						{
 							setMouseTarget(getRoot());
 						}
-						if ((me.stateMask & SWT.BUTTON_MASK) != 0) {
-							// Sometimes getCurrentEvent() returns null
-							getMouseTarget().handleMouseDragged(
-									getCurrentEvent());
-						} else {
-							getMouseTarget()
-									.handleMouseMoved(getCurrentEvent());
+						if ((me.stateMask & SWT.BUTTON_MASK) != 0)
+						{
+							// this hack allows object move when grid is shown (issue #337)
+							// opaque attribute used to detect grid figure as it is
+							// currently only figure with opaque set to false
+							if ((getMouseTarget() instanceof Figure) && !((Figure)getMouseTarget()).isOpaque())
+							{
+								getRoot().handleMouseDragged(getCurrentEvent());
+							}
+							else
+							{
+								getMouseTarget().handleMouseDragged(getCurrentEvent());
+							}
+						} 
+						else 
+						{
+							getMouseTarget().handleMouseMoved(getCurrentEvent());
 						}
 					}
 				});

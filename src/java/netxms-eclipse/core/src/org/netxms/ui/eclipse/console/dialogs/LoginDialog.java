@@ -132,15 +132,13 @@ public class LoginDialog extends Dialog
       
       label = new Label(dialogArea, SWT.NONE);
       label.setImage(loginImage.createImage());
-      label.addDisposeListener(
-      		new DisposeListener()
-      		{
-      			public void widgetDisposed(DisposeEvent event)
-      			{
-      				((Label)event.widget).getImage().dispose();
-      			}
-      		}
-      		);
+      label.addDisposeListener(new DisposeListener() {
+      	@Override
+			public void widgetDisposed(DisposeEvent event)
+			{
+				((Label)event.widget).getImage().dispose();
+			}
+		});
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       label.setLayoutData(gd);
@@ -186,6 +184,7 @@ public class LoginDialog extends Dialog
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
+      gridData.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 16;
       textLogin.setLayoutData(gridData);
       
       label = new Label(groupConn, SWT.NONE);

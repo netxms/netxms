@@ -189,7 +189,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
    if (_tcslen(szVar) > 127)
       return FALSE;
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_HANDLE hdb = (g_dwFlags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
@@ -207,7 +207,8 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
 		}
 		DBFreeStatement(hStmt);
 	}
-   DBConnectionPoolReleaseConnection(hdb);
+   if (g_dwFlags & AF_DB_CONNECTION_POOL_READY)
+      DBConnectionPoolReleaseConnection(hdb);
    return bSuccess;
 }
 

@@ -615,6 +615,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
 	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
 	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, g_hCoreDB);
+   g_dwFlags |= AF_DB_CONNECTION_POOL_READY;
 
 	// Read database syntax
 	g_nDBSyntax = DBGetSyntax(g_hCoreDB);
