@@ -497,6 +497,7 @@ QWORD CreateUniqueEventId()
 void SaveCurrentFreeId()
 {
    MutexLock(m_mutexTableAccess);
-	ConfigWriteULong(_T("FirstFreeObjectId"), m_dwFreeIdTable[IDG_NETWORK_OBJECT], TRUE, FALSE, TRUE);
+   UINT32 id = m_dwFreeIdTable[IDG_NETWORK_OBJECT];
    MutexUnlock(m_mutexTableAccess);
+	ConfigWriteULong(_T("FirstFreeObjectId"), id, TRUE, FALSE, TRUE);
 }

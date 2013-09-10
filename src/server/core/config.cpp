@@ -189,7 +189,8 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
    if (_tcslen(szVar) > 127)
       return FALSE;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name=?"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, szVar, DB_BIND_STATIC);
@@ -206,6 +207,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
 		}
 		DBFreeStatement(hStmt);
 	}
+   DBConnectionPoolReleaseConnection(hdb);
    return bSuccess;
 }
 
@@ -296,10 +298,15 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *varName, const TCHAR *value, 
    if (_tcslen(varName) > 63)
       return FALSE;
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    // Check for variable existence
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
 		return FALSE;
+   }
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
    BOOL bVarExist = FALSE;
@@ -313,12 +320,15 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *varName, const TCHAR *value, 
 
    // Don't create non-existing variable if creation flag not set
    if (!bCreate && !bVarExist)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
       return FALSE;
+   }
 
    // Create or update variable value
    if (bVarExist)
 	{
-		hStmt = DBPrepare(g_hCoreDB, _T("UPDATE config SET var_value=? WHERE var_name=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE config SET var_value=? WHERE var_name=?"));
 		if (hStmt == NULL)
 			return FALSE;
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
@@ -326,7 +336,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *varName, const TCHAR *value, 
 	}
    else
 	{
-		hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)"));
 		if (hStmt == NULL)
 			return FALSE;
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
@@ -336,6 +346,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *varName, const TCHAR *value, 
 	}
    BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
 	if (success)
 		OnConfigVariableChange(FALSE, varName, value);
 	return success;
