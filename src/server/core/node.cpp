@@ -5149,7 +5149,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
 	   }
 	   else
 	   {
-		   DbgPrintf(1, _T("Inconsistent configuration - zone %d does not exist"), (int)m_zoneId);
+		   DbgPrintf(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneId);
 	   }
    }
    else
@@ -5157,7 +5157,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
 	   g_pEntireNet->AddSubnet(s);
    }
    s->AddNode(this);
-   DbgPrintf(4, _T("Node::CheckSubnetBinding(): Creating new subnet %s [%d] for node %s [%d]"),
+   DbgPrintf(4, _T("Node::createSubnet(): Creating new subnet %s [%d] for node %s [%d]"),
              s->Name(), s->Id(), m_szName, m_dwId);
    return s;
 }
@@ -5172,7 +5172,6 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 	Cluster *pCluster;
 	NetObj **ppUnlinkList;
 	int i, j, count;
-	BOOL isSync;
 
 	pCluster = getMyCluster();
 
@@ -5193,7 +5192,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 				continue;
 
 			// Is cluster interconnect interface?
-			isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : FALSE;
+			bool isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : false;
 
 			pSubnet = FindSubnetForNode(m_zoneId, iface->dwIpAddr);
 			if (pSubnet != NULL)

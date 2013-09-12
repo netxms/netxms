@@ -791,11 +791,30 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr)
 }
 
 /**
- * Subnet address comparator
+ * Subnet matching data
  */
-static bool SubnetAddrComparator(NetObj *object, void *nodeAddr)
+struct SUBNET_MATCHING_DATA
 {
-   return (CAST_FROM_POINTER(nodeAddr, UINT32) & ((Subnet *)object)->getIpNetMask()) == ((Subnet *)object)->IpAddr();
+   DWORD ipAddr;     // IP address to find subnet for
+   int maskLen;      // Current match mask length
+   Subnet *subnet;   // search result
+};
+
+/**
+ * Subnet matching callback
+ */
+static void SubnetMatchCallback(NetObj *object, void *arg)
+{
+   SUBNET_MATCHING_DATA *data = (SUBNET_MATCHING_DATA *)arg;
+   if ((data->ipAddr & ((Subnet *)object)->getIpNetMask()) == ((Subnet *)object)->IpAddr())
+   {
+      int maskLen = BitsInMask(((Subnet *)object)->getIpNetMask());
+      if (maskLen > data->maskLen)
+      {
+         data->maskLen = maskLen;
+         data->subnet = (Subnet *)object;
+      }
+   }
 }
 
 /**
@@ -806,20 +825,23 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, UINT32 dwNodeAddr)
    if (dwNodeAddr == 0)
       return NULL;
 
-	Subnet *subnet = NULL;
+   SUBNET_MATCHING_DATA matchData;
+   matchData.ipAddr = dwNodeAddr;
+   matchData.maskLen = -1;
+   matchData.subnet = NULL;
 	if (IsZoningEnabled())
 	{
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
 		if (zone != NULL)
 		{
-			subnet = zone->findSubnet(SubnetAddrComparator, CAST_TO_POINTER(dwNodeAddr, void *));
+			zone->forEachSubnet(SubnetMatchCallback, &matchData);
 		}
 	}
 	else
 	{
-		subnet = (Subnet *)g_idxSubnetByAddr.find(SubnetAddrComparator, CAST_TO_POINTER(dwNodeAddr, void *));
+      g_idxSubnetByAddr.forEach(SubnetMatchCallback, &matchData);
 	}
-	return subnet;
+	return matchData.subnet;
 }
 
 /**

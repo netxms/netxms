@@ -1519,12 +1519,13 @@ public:
 	void removeFromIndex(Interface *iface) { m_idxInterfaceByAddr->remove(iface->IpAddr()); }
 	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->IpAddr()); }
 	void updateInterfaceIndex(UINT32 oldIp, UINT32 newIp, Interface *iface);
-	Subnet *getSubnetByAddr(UINT32 ipAddr) { return(Subnet *) m_idxSubnetByAddr->get(ipAddr); }
+	Subnet *getSubnetByAddr(UINT32 ipAddr) { return (Subnet *)m_idxSubnetByAddr->get(ipAddr); }
 	Interface *getInterfaceByAddr(UINT32 ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
 	Node *getNodeByAddr(UINT32 ipAddr) { return (Node *)m_idxNodeByAddr->get(ipAddr); }
 	Subnet *findSubnet(bool (*comparator)(NetObj *, void *), void *data) { return (Subnet *)m_idxSubnetByAddr->find(comparator, data); }
 	Interface *findInterface(bool (*comparator)(NetObj *, void *), void *data) { return (Interface *)m_idxInterfaceByAddr->find(comparator, data); }
 	Node *findNode(bool (*comparator)(NetObj *, void *), void *data) { return (Node *)m_idxNodeByAddr->find(comparator, data); }
+   void forEachSubnet(void (*callback)(NetObj *, void *), void *data) { m_idxSubnetByAddr->forEach(callback, data); }
 };
 
 /**
