@@ -97,27 +97,27 @@ UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 		return rc;
 
 	oid[11] = 7;	// entPhysicalDescr
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &buffer, 256, 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 	m_description = _tcsdup(buffer);
 
 	oid[11] = 13;	// entPhysicalModelName
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &buffer, 256, 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 	m_model = _tcsdup(buffer);
 
 	oid[11] = 11;	// entPhysicalSerialNum
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &buffer, 256, 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 	m_serial = _tcsdup(buffer);
 
 	oid[11] = 12;	// entPhysicalMfgName
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &buffer, 256, 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 	m_vendor = _tcsdup(buffer);
 
 	oid[11] = 9;	// entPhysicalFirmwareRev
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &buffer, 256, 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 	m_firmware = _tcsdup(buffer);
 

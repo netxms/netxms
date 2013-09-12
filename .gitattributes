@@ -2411,6 +2411,7 @@ src/server/smsdrv/portech/main.cpp -text
 src/server/smsdrv/portech/pdumode.cpp -text
 src/server/smsdrv/portech/portech.h -text
 src/server/smsdrv/portech/portech.vcproj -text
+src/server/tools/driverloader/driverloader.vcproj -text
 src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/nxadm.vcproj -text
 src/server/tools/nxap/Makefile.am -text

@@ -50,7 +50,7 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
    memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
    oidName[dwNameLen - 2] = 2;
    TCHAR buffer[256];
-	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, buffer, 256, SG_STRING_RESULT);
+	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, buffer, sizeof(buffer), SG_STRING_RESULT);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		delete vlan;
@@ -71,7 +71,7 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
    oidName[dwNameLen - 2] = 12;
 	BYTE portMask[256];
 	memset(portMask, 0, sizeof(portMask));
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, portMask, 256, SG_RAW_RESULT);
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, portMask, sizeof(portMask), SG_RAW_RESULT);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		delete vlan;

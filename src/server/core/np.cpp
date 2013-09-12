@@ -562,7 +562,7 @@ static BOOL AcceptNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 zoneId, BYTE
 
       // Check if node is a bridge
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 256, 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          data.dwFlags |= NNF_IS_BRIDGE;
       }
@@ -585,7 +585,7 @@ static BOOL AcceptNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 zoneId, BYTE
 
       // Check for LLDP (Link Layer Discovery Protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 256, 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          data.dwFlags |= NNF_IS_LLDP;
       }

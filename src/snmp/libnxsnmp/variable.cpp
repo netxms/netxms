@@ -222,6 +222,7 @@ LONG SNMP_Variable::GetValueAsInt()
 
 /**
  * Get value as string
+ * Note: buffer size is in characters
  */
 TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, UINT32 dwBufferSize)
 {
@@ -275,6 +276,7 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, UINT32 dwBufferSize)
 
 /**
  * Get value as printable string, doing bin to hex conversion if necessary
+ * Note: buffer size is in characters
  */
 TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, UINT32 bufferSize, bool *convertToHex)
 {

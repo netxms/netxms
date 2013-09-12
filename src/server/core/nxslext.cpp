@@ -937,8 +937,7 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
 
-	if (SnmpGet(SNMP_VERSION_2C, trans, argv[1]->getValueAsString(&len), NULL, 0, 
-		buffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+	if (SnmpGet(SNMP_VERSION_2C, trans, argv[1]->getValueAsString(&len), NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
 	{
 		*ppResult = new NXSL_Value(buffer);
 	}

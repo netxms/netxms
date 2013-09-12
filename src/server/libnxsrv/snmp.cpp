@@ -39,6 +39,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId()
  * Get value for SNMP variable
  * If szOidStr is not NULL, string representation of OID is used, otherwise -
  * binary representation from oidBinary and dwOidLen
+ * Note: buffer size is in bytes
  */
 UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
                                   const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
@@ -89,7 +90,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
                }
                else if (dwFlags & SG_HSTRING_RESULT)
                {
-						int rawLen = (dwBufferSize - 1) / 2;
+						int rawLen = (dwBufferSize - 1) / 2 / sizeof(TCHAR);
 						BYTE *raw = (BYTE *)malloc(rawLen);
 						rawLen = (int)pVar->getRawValue(raw, rawLen);
 						BinToStr(raw, rawLen, (TCHAR *)pValue);
@@ -97,12 +98,12 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
                }
                else if (dwFlags & SG_STRING_RESULT)
                {
-                  pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
+                  pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
                }
                else if (dwFlags & SG_PSTRING_RESULT)
                {
 						bool convert = true;
-                  pVar->getValueAsPrintableString((TCHAR *)pValue, dwBufferSize, &convert);
+                  pVar->getValueAsPrintableString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR), &convert);
                }
                else
                {
@@ -119,10 +120,10 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
                         *((UINT32 *)pValue) = ntohl(pVar->GetValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:
-                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
+                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
                         break;
                      case ASN_OBJECT_ID:
-                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
+                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
                         break;
                      default:
                         nxlog_write(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "x", pVar->GetType());

@@ -204,10 +204,10 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 		DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %hs/%d:%d"), originalContext->getUser(),
 		          originalContext->getAuthMethod(), originalContext->getPrivMethod());
 		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
-		if ((SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
-          (SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
+		if ((SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
+          (SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
           ((customTestOid != NULL) &&
-           (SnmpGet(SNMP_VERSION_3, pTransport, customTestOid, NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS)))
+           (SnmpGet(SNMP_VERSION_3, pTransport, customTestOid, NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)))
 		{
 			DbgPrintf(5, _T("SnmpCheckV3CommSettings: success"));
 			return new SNMP_SecurityContext(originalContext);
@@ -231,10 +231,10 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 			                               DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
 			pTransport->setSecurityContext(ctx);
 			DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %hs/%d:%d"), ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
-			if ((SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
-             (SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
+			if ((SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
+             (SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
              ((customTestOid != NULL) &&
-              (SnmpGet(SNMP_VERSION_3, pTransport, customTestOid, NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS)))
+              (SnmpGet(SNMP_VERSION_3, pTransport, customTestOid, NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)))
 			{
 				DbgPrintf(5, _T("SnmpCheckV3CommSettings: success"));
 				break;
@@ -284,10 +284,10 @@ restart_check:
 		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
 
 		// some devives does not support sysObjectId, so we check sysDescr as well
-		if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
-		    (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
+		if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
+		    (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
           ((customTestOid != NULL) &&
-           (SnmpGet(snmpVer, pTransport, customTestOid, NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS)))
+           (SnmpGet(snmpVer, pTransport, customTestOid, NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)))
 		{
 			*version = snmpVer;
 			return new SNMP_SecurityContext(originalContext);
@@ -297,10 +297,10 @@ restart_check:
 	// Check default community
 	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
 	pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
-	if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
-		 (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
+	if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
+		 (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
        ((customTestOid != NULL) &&
-        (SnmpGet(snmpVer, pTransport, customTestOid, NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS)))
+        (SnmpGet(snmpVer, pTransport, customTestOid, NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)))
 	{
 		*version = snmpVer;
 		return new SNMP_SecurityContext(defCommunity);
@@ -318,10 +318,10 @@ restart_check:
 			DBGetFieldA(hResult, i, 0, temp, 256);
 			DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
 			pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
-			if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
-			    (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
+			if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
+			    (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
              ((customTestOid != NULL) &&
-              (SnmpGet(snmpVer, pTransport, customTestOid, NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS)))
+              (SnmpGet(snmpVer, pTransport, customTestOid, NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)))
 			{
 				*version = snmpVer;
 				break;

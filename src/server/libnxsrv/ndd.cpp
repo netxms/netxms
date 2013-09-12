@@ -236,7 +236,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 
 			// Get interface description
 	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->dwIndex);
-	      if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->szDescription, MAX_DB_STRING, 0) != SNMP_ERR_SUCCESS)
+	      if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->szDescription, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
 	         break;
 
          // Get interface alias if needed
@@ -244,7 +244,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          {
 		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), iface->dwIndex);
 				if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0,
-		                  iface->szName, MAX_DB_STRING, 0) != SNMP_ERR_SUCCESS)
+		                  iface->szName, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
 				{
 					iface->szName[0] = 0;		// It's not an error if we cannot get interface alias
 				}
@@ -257,7 +257,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifDescr from ifTable
          _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->dwIndex);
          if (!useIfXTable ||
-				 (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, szBuffer, 256, 0) != SNMP_ERR_SUCCESS))
+				 (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, szBuffer, sizeof(szBuffer), 0) != SNMP_ERR_SUCCESS))
          {
 		      nx_strncpy(szBuffer, iface->szDescription, 256);
 		   }

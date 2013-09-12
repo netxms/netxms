@@ -614,14 +614,14 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 dwRqId, SNMP_Trans
    sendPollerMsg(dwRqId, _T("      Checking port 802.1x status...\r\n"));
 
 	TCHAR oid[256];
-	LONG paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
+	INT32 paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
 	bool modified = false;
 
 	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.1.%d"), m_dwIfIndex);
-	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &paeState, sizeof(LONG), 0);
+	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &paeState, sizeof(INT32), 0);
 
 	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.2.%d"), m_dwIfIndex);
-	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &backendState, sizeof(LONG), 0);
+	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &backendState, sizeof(INT32), 0);
 
 	if (m_dot1xPaeAuthState != (WORD)paeState)
 	{

@@ -61,7 +61,7 @@ int NtwsDriver::isPotentialDevice(const TCHAR *oid)
 bool NtwsDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
    TCHAR buffer[1024];
-   return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.6.1.4.2.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS;
+   return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.6.1.4.2.1.1.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -149,7 +149,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    // get AP model
    TCHAR model[256];
    oid[15] = 6;   // ntwsApStatApStatusModel
-   ret = SnmpGet(version, transport, NULL, oid, nameLen, model, 256, SG_STRING_RESULT);
+   ret = SnmpGet(version, transport, NULL, oid, nameLen, model, sizeof(model), SG_STRING_RESULT);
 
    AccessPointInfo *info;
    if (ret == SNMP_ERR_SUCCESS)
@@ -247,7 +247,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
       UINT32 wlanOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 14, 1, 1, 4, 0 };
       wlanOid[(sizeof(wlanOid) / sizeof(wlanOid[0])) - 1] = wlanInfex;
 
-      ret = SnmpGet(version, transport, NULL, wlanOid, sizeof(wlanOid) / sizeof(wlanOid[0]), ssid, MAX_OBJECT_NAME, 0);
+      ret = SnmpGet(version, transport, NULL, wlanOid, sizeof(wlanOid) / sizeof(wlanOid[0]), ssid, sizeof(ssid), 0);
    }
 
    if (ret == SNMP_ERR_SUCCESS)

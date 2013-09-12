@@ -64,7 +64,7 @@ static UINT32 HandlerVlanIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
    memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
    oidName[dwNameLen - 2] = 2;
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, 
-                      pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME, 0);
+                      pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME * sizeof(TCHAR), 0);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
@@ -121,8 +121,7 @@ static UINT32 HandlerRapidCityIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP
       {
          // Get netmask
          oidName[dwNameLen - 6] = 3;
-         dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
-                            &iface.dwIpNetMask, sizeof(UINT32), 0);
+         dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &iface.dwIpNetMask, sizeof(UINT32), 0);
       }
 
 		pIfList->add(&iface);

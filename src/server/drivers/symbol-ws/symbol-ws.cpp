@@ -63,7 +63,7 @@ int SymbolDriver::isPotentialDevice(const TCHAR *oid)
 bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
    TCHAR buffer[1024];
-   return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.1.6.1.10.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS;
+   return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.1.6.1.10.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -210,8 +210,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 4; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.4.x, wsCcRfApSerialNumber
-      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]),
-            &serial, sizeof(serial) / sizeof(serial[0]), SG_STRING_RESULT);
+      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &serial, sizeof(serial), SG_STRING_RESULT);
    }
    if (ret == SNMP_ERR_SUCCESS)
    {
@@ -294,14 +293,14 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
       if (ret == SNMP_ERR_SUCCESS)
       {
          ret = SnmpGet(version, transport, NULL, macOid, sizeof(macOid) / sizeof(macOid[0]),
-               &radioInfo->macAddr, MAC_ADDR_LENGTH, 0);
+               &radioInfo->macAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
       }
 
       // Name
       if (ret == SNMP_ERR_SUCCESS)
       {
          ret = SnmpGet(version, transport, NULL, descOid, sizeof(descOid) / sizeof(descOid[0]),
-               &radioInfo->name, sizeof(radioInfo->name) / sizeof(radioInfo->name[0]), SG_STRING_RESULT);
+               &radioInfo->name, sizeof(radioInfo->name), SG_STRING_RESULT);
       }
 
       // Channel
@@ -414,7 +413,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
       UINT32 wlanOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 14, 1, 1, 4, 0 };
       wlanOid[(sizeof(wlanOid) / sizeof(wlanOid[0])) - 1] = wlanInfex;
 
-      ret = SnmpGet(version, transport, NULL, wlanOid, sizeof(wlanOid) / sizeof(wlanOid[0]), ssid, MAX_OBJECT_NAME, 0);
+      ret = SnmpGet(version, transport, NULL, wlanOid, sizeof(wlanOid) / sizeof(wlanOid[0]), ssid, sizeof(ssid), 0);
    }
 
    if (ret == SNMP_ERR_SUCCESS)

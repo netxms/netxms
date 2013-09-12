@@ -96,7 +96,7 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 	iface.dwIndex = varbind->GetValueAsUInt();
 
 	oidName[10] = 2;	// nsIfName
-	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.szName, MAX_DB_STRING, SG_STRING_RESULT);
+	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.szName, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT);
 	if (rc != SNMP_ERR_SUCCESS)
 		return rc;
 	nx_strncpy(iface.szDescription, iface.szName, MAX_DB_STRING);
