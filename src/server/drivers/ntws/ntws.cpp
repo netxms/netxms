@@ -19,6 +19,7 @@
 **/
 
 #include "ntws.h"
+#include <math.h>
 
 /**
  * Static data
@@ -115,16 +116,6 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
 }
 
 /**
- * Handler for radios enumeration
- */
-static UINT32 HandlerRadioList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
-{
-   AccessPointInfo *info = (AccessPointInfo *)arg;
-
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Handler for access point enumeration - adopted
  */
 static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
@@ -158,17 +149,49 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
       apList->add(info);
    }
 
-   // Read radios by walking .1.3.6.1.4.1.45.6.1.4.5.1.1.4.1.3.<ap serial> (ntwsApStatRadioStatusBaseMac)
-   if (ret == SNMP_ERR_SUCCESS)
-   {
-      oid[13] = 4;
-      oid[15] = 3;
-      TCHAR rootOid[1024];
-      SNMPConvertOIDToText(oid[16] + 17, oid, rootOid, 1024);
-      ret = SnmpWalk(version, transport, rootOid, HandlerRadioList, info, FALSE);
-   }
-
    return ret;
+}
+
+/**
+ * Handler for radios enumeration
+ */
+static UINT32 HandlerRadioList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   AccessPointInfo *ap = (AccessPointInfo *)arg;
+
+   SNMP_ObjectId *name = var->GetName();
+   UINT32 nameLen = name->getLength();
+
+   UINT32 oid[128];
+   memcpy(oid, name->getValue(), nameLen * sizeof(UINT32));
+
+   RadioInterfaceInfo rif;
+   memcpy(rif.macAddr, var->GetValue(), MAC_ADDR_LENGTH);
+   rif.index = (int)oid[nameLen - 1];
+   _sntprintf(rif.name, sizeof(rif.name) / sizeof(TCHAR), _T("Radio%d"), rif.index);
+   
+   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), version);
+   
+   oid[15] = 6;  // ntwsApStatRadioStatusCurrentPowerLevel
+   request->bindVariable(new SNMP_Variable(oid, nameLen));
+
+   oid[15] = 7;  // ntwsApStatRadioStatusCurrentChannelNum
+   request->bindVariable(new SNMP_Variable(oid, nameLen));
+
+   SNMP_PDU *response;
+   if (transport->doRequest(request, &response, g_dwSNMPTimeout, 3) == SNMP_ERR_SUCCESS)
+   {
+      if (response->getNumVariables() >= 2)
+      {
+         rif.powerDBm = response->getVariable(0)->GetValueAsInt();
+         rif.powerMW = (int)pow(10.0, (double)rif.powerDBm / 10.0);
+         rif.channel = response->getVariable(1)->GetValueAsUInt();
+         ap->addRadioInterface(&rif);
+      }
+      delete response;
+   }
+   delete request;
+   return SNMP_ERR_SUCCESS;
 }
 
 /*
@@ -184,7 +207,24 @@ ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, 
 
    // Adopted
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.6.1.4.5.1.1.2.1.2"),
-            HandlerAccessPointListAdopted, apList, FALSE) != SNMP_ERR_SUCCESS)
+            HandlerAccessPointListAdopted, apList, FALSE) == SNMP_ERR_SUCCESS)
+   {
+      // Read radios by walking .1.3.6.1.4.1.45.6.1.4.5.1.1.4.1.3.<ap serial> (ntwsApStatRadioStatusBaseMac)
+      for(int i = 0; i < apList->size(); i++)
+      {
+         AccessPointInfo *ap = apList->get(i);
+
+         UINT32 oid[256] = { 1, 3, 6, 1, 4, 1, 45, 6, 1, 4, 5, 1, 1, 4, 1, 3 };
+         const TCHAR *serial = ap->getSerial();
+         oid[16] = (UINT32)_tcslen(serial);
+         for(UINT32 i = 0; i < oid[16]; i++)
+            oid[i + 17] = (UINT32)serial[i];
+         TCHAR rootOid[1024];
+         SNMPConvertOIDToText(oid[16] + 17, oid, rootOid, 1024);
+         SnmpWalk(snmp->getSnmpVersion(), snmp, rootOid, HandlerRadioList, ap, FALSE);
+      }
+   }
+   else
    {
       delete apList;
       return NULL;

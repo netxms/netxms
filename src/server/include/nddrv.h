@@ -120,8 +120,8 @@ struct RadioInterfaceInfo
 	TCHAR name[64];
 	BYTE macAddr[MAC_ADDR_LENGTH];
    UINT32 channel;
-   LONG powerDBm;
-   LONG powerMW;
+   INT32 powerDBm;
+   INT32 powerMW;
 };
 
 /**
