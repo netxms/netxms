@@ -109,7 +109,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
    TCHAR model[128];
-   AccessPointInfo *info = new AccessPointInfo((BYTE *)"\x00\x00\x00\x00\x00\x00", AP_UNADOPTED, var->GetValueAsString(model, 128), NULL);
+   AccessPointInfo *info = new AccessPointInfo((BYTE *)"\x00\x00\x00\x00\x00\x00", AP_UNADOPTED, NULL, var->GetValueAsString(model, 128), NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -137,17 +137,27 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
       serial[i] = oid[i + 17];
    serial[slen] = 0;
 
-   // get AP model
-   TCHAR model[256];
-   oid[15] = 6;   // ntwsApStatApStatusModel
-   ret = SnmpGet(version, transport, NULL, oid, nameLen, model, sizeof(model), SG_STRING_RESULT);
+   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), version);
+   
+   oid[15] = 6;  // ntwsApStatApStatusModel
+   request->bindVariable(new SNMP_Variable(oid, nameLen));
 
-   AccessPointInfo *info;
-   if (ret == SNMP_ERR_SUCCESS)
+   oid[15] = 8;  // ntwsApStatApStatusApName
+   request->bindVariable(new SNMP_Variable(oid, nameLen));
+
+   SNMP_PDU *response;
+   if (transport->doRequest(request, &response, g_dwSNMPTimeout, 3) == SNMP_ERR_SUCCESS)
    {
-      info = new AccessPointInfo((BYTE *)var->GetValue(), AP_ADOPTED, model, serial);
-      apList->add(info);
+      if (response->getNumVariables() >= 2)
+      {
+         TCHAR model[256], name[256];
+         AccessPointInfo *ap = new AccessPointInfo((BYTE *)var->GetValue(), AP_ADOPTED, 
+            response->getVariable(1)->GetValueAsString(name, 256), response->getVariable(0)->GetValueAsString(model, 256), serial);
+         apList->add(ap);
+      }
+      delete response;
    }
+   delete request;
 
    return ret;
 }

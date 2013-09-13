@@ -2215,12 +2215,19 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 					{
 						String name;
 						
-						for(int j = 0; j < info->getRadioInterfaces()->size(); j++)
-						{
-							if (j > 0)
-								name += _T("/");
-							name += info->getRadioInterfaces()->get(j)->name;
-						}
+                  if (info->getName() != NULL)
+                  {
+                     name = info->getName();
+                  }
+                  else
+                  {
+						   for(int j = 0; j < info->getRadioInterfaces()->size(); j++)
+						   {
+							   if (j > 0)
+								   name += _T("/");
+							   name += info->getRadioInterfaces()->get(j)->name;
+						   }
+                  }
 						ap = new AccessPoint((const TCHAR *)name, info->getMacAddr());
 						NetObjInsert(ap, TRUE);
 						DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_szName, ap->Name(), ap->Id());
