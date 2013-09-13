@@ -38,11 +38,9 @@ static unsigned __int64 ConvertProcessTime(FILETIME *lpft)
    return i;
 }
 
-
-//
-// Get specific process attribute
-//
-
+/**
+ * Get specific process attribute
+ */
 static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type, int count,
                                             unsigned __int64 lastValue)
 {
@@ -131,12 +129,10 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
    }
 }
 
-
-//
-// Get command line of the process, specified by process ID
-//
-
-static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
+/**
+ * Get command line of the process, specified by process ID
+ */
+static BOOL GetProcessCommandLine(DWORD pid, TCHAR *pszCmdLine, DWORD dwLen)
 {
 	SIZE_T dummy;
 	BOOL bRet = FALSE;
@@ -147,7 +143,7 @@ static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
 	                            PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION;
 #endif
 
-	HANDLE hProcess = OpenProcess(desiredAccess, FALSE, dwPId);
+	HANDLE hProcess = OpenProcess(desiredAccess, FALSE, pid);
 	if(hProcess == INVALID_HANDLE_VALUE)
 		return FALSE;
 
@@ -209,14 +205,12 @@ static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
 	return bRet;
 }
 
-
-//
-// Callback function for GetProcessWindows
-//
-
+/**
+ * Callback function for GetProcessWindows
+ */
 static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 {
-   DWORD dwPID;
+   DWORD pid;
 	TCHAR szBuffer[MAX_PATH];
 
    if (GetWindowLong(hWnd,GWL_STYLE) & WS_VISIBLE) 
@@ -225,8 +219,8 @@ static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 		if (pList == NULL)
 			return FALSE;
 
-		GetWindowThreadProcessId(hWnd, &dwPID);
-		if (dwPID == pList->dwPID)
+		GetWindowThreadProcessId(hWnd, &pid);
+		if (pid == pList->pid)
 		{
 			GetWindowText(hWnd, szBuffer, MAX_PATH - 1);
 			szBuffer[MAX_PATH - 1] = 0;
@@ -237,28 +231,24 @@ static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
    return TRUE;
 }
 
-
-//
-// Get list of windows belonging to given process
-//
-
-static StringList *GetProcessWindows(DWORD dwPID)
+/**
+ * Get list of windows belonging to given process
+ */
+static StringList *GetProcessWindows(DWORD pid)
 {
 	WINDOW_LIST list;
 	
-	list.dwPID = dwPID;
+	list.pid = pid;
 	list.pWndList = new StringList;
 
 	EnumWindows(EnumWindowsProc, (LPARAM)&list);
 	return list.pWndList;
 }
 
-
-//
-// Match process to search criteria
-//
-
-static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bExtMatch,
+/**
+ * Match process to search criteria
+ */
+static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtMatch,
 								 TCHAR *pszModName, TCHAR *pszCmdLine, TCHAR *pszWindowName)
 {
    TCHAR szBaseName[MAX_PATH];
@@ -276,7 +266,7 @@ static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bEx
 		if (pszCmdLine[0] != 0)		// not empty, check if match
 		{
 			memset(commandLine, 0, MAX_PATH);	
-			GetProcessCommandLine(dwPID, commandLine, MAX_PATH);
+			GetProcessCommandLine(pid, commandLine, MAX_PATH);
 			bCmdMatch = RegexpMatch(commandLine, pszCmdLine, FALSE);
 		}
 
@@ -289,7 +279,7 @@ static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bEx
 		{
 			StringList *pWndList;
 
-			pWndList = GetProcessWindows(dwPID);
+			pWndList = GetProcessWindows(pid);
 			for(i = 0, bWindowMatch = FALSE; i < pWndList->getSize(); i++)
 			{
 				if (RegexpMatch(pWndList->getValue(i), pszWindowName, FALSE))
@@ -425,11 +415,9 @@ LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for Process.Count(*) and Process.CountEx(*)
-//
-
+/**
+ * Handler for Process.Count(*) and Process.CountEx(*)
+ */
 LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    DWORD dwSize = 0, *pdwProcList;
@@ -474,11 +462,9 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for System.ProcessList enum
-//
-
+/**
+ * Handler for System.ProcessList list
+ */
 LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
@@ -559,8 +545,9 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
    HMODULE phModList[MAX_MODULES];
    HANDLE hProcess;
 
-	value->addColumn(_T("PID"));
-	value->addColumn(_T("NAME"));
+   value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
+	value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+	value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
    pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
    if (EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize))
@@ -569,7 +556,9 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
       for(i = 0; i < dwNumProc; i++)
       {
 			value->addRow();
-			value->set(0, (UINT32)pdwProcList[i]);
+			value->set(0, (UINT32)pdwProcList[i]);    // PID
+
+         // Get process name (executable name)
          hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
          if (hProcess != NULL)
          {
@@ -610,6 +599,13 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
             {
 					value->set(1, _T("<unaccessible>"));
             }
+         }
+
+         // Get command line
+         TCHAR cmdLine[1024];
+         if (GetProcessCommandLine(pdwProcList[i], cmdLine, 1024))
+         {
+            value->set(2, cmdLine);
          }
       }
    }

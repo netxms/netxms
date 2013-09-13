@@ -89,7 +89,7 @@
  */
 struct WINDOW_LIST
 {
-	DWORD dwPID;
+	DWORD pid;
 	StringList *pWndList;
 };
 

@@ -385,7 +385,17 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 			   {
                DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
 				   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, colId);
-				   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, data->getAsString(row, col), DB_BIND_STATIC);
+               const TCHAR *s = data->getAsString(row, col);
+               if (_tcslen(s) < MAX_DB_STRING)
+               {
+				      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, s, DB_BIND_STATIC);
+               }
+               else
+               {
+                  TCHAR *sp = (TCHAR *)nx_memdup(s, MAX_DB_STRING * sizeof(TCHAR));
+                  sp[MAX_DB_STRING - 1] = 0;
+				      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, sp, DB_BIND_DYNAMIC);
+               }
 				   success = DBExecute(hStmt);
                if (!success)
                   break;
