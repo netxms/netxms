@@ -878,7 +878,7 @@ void DCTable::mergeValues(Table *dest, Table *src, int count)
 
                dest->setAt(dRow, column, dval);
             }
-            if ((cd->getDataType() == DCI_DT_UINT) || (cd->getDataType() == DCI_DT_UINT64))
+            else if ((cd->getDataType() == DCI_DT_UINT) || (cd->getDataType() == DCI_DT_UINT64))
             {
                UINT64 sval = src->getAsUInt64(sRow, column);
                UINT64 dval = dest->getAsUInt64(dRow, column);
