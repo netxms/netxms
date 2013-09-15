@@ -763,6 +763,8 @@ public class DataCollectionEditor extends ViewPart
 					dciConfig.copyObjects(o.getObjectId(), dciList);
 				for(AbstractObject o : dlg.getSelectedObjects(Template.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
+				for(AbstractObject o : dlg.getSelectedObjects(Cluster.class))
+					dciConfig.copyObjects(o.getObjectId(), dciList);
 				for(AbstractObject o : dlg.getSelectedObjects(MobileDevice.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
 				if (doMove)
