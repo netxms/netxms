@@ -31,6 +31,7 @@
 #define DCE_SUCCESS        0
 #define DCE_COMM_ERROR     1
 #define DCE_NOT_SUPPORTED  2
+#define DCE_IGNORE         3
 
 /**
  * Threshold check results

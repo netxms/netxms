@@ -58,7 +58,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
       }
       else
       {
-         *error = DCE_NOT_SUPPORTED;
+         *error = DCE_IGNORE;
       }
    }
    else
@@ -131,7 +131,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
       }
       else
       {
-         *error = DCE_NOT_SUPPORTED;
+         *error = DCE_IGNORE;
       }
    }
    else
