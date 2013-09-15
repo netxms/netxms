@@ -1,0 +1,32 @@
+#!/bin/sh
+
+CONFIG=/etc/netxmsd.conf
+
+if [ -f $CONFIG ]; then
+	echo "Configuration file $CONFIG already exist, exiting"
+	exit 1
+fi
+
+set -e
+
+trap '
+	if [ $? != 0 ]; then
+		echo "No changes done to the system"
+	fi
+' EXIT
+
+logfile=$(whiptail --inputbox "Log file location" 7 40 /var/log/netxmsd 3>&1 1>&2 2>&3)
+dbdriver=$(whiptail --menu "Select database driver" 20 40 4 \
+	pgsql.ddr PostgreSQL \
+	mysql.ddr MySQL \
+	oracle.ddl Oracle \
+	3>&1 1>&2 2>&3)
+dbname=$(whiptail --inputbox "Database name" 7 40 netxms 3>&1 1>&2 2>&3)
+dblogin=$(whiptail --inputbox "Database login" 7 40 netxms 3>&1 1>&2 2>&3)
+dbpass=$(whiptail --passwordbox "Database password" 7 40 3>&1 1>&2 2>&3)
+
+echo "DBDriver=$dbdriver
+DBName=$dbname
+DBLogin=$dblogin
+DBPassword=$dbpass
+LogFile=$logfile" > $CONFIG
