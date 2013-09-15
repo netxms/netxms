@@ -229,6 +229,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private String connClientInfo = "nxjclient/" + NXCommon.VERSION;
 	private int clientType = DESKTOP_CLIENT;
 	private int authType = AUTH_TYPE_PASSWORD;
+	private boolean ignoreProtocolVersion = false;
 
 	// Information about logged in user
 	private int sessionId;
@@ -1425,7 +1426,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			sendMessage(request);
 			NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 
-			if (response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
+			if ((response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION) && !ignoreProtocolVersion)
 			{
 				Logger.warning("NXCSession.connect",
 						"connection failed, server protocol version is " + response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION));
@@ -1576,6 +1577,24 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		}
 
 		isConnected = false;
+	}
+
+	/**
+	 * @return
+	 */
+	public boolean isIgnoreProtocolVersion()
+	{
+		return ignoreProtocolVersion;
+	}
+
+	/**
+	 * If set to true, protocol version is not checked at connect.
+	 * 
+	 * @param ignoreProtocolVersion
+	 */
+	public void setIgnoreProtocolVersion(boolean ignoreProtocolVersion)
+	{
+		this.ignoreProtocolVersion = ignoreProtocolVersion;
 	}
 
 	/*
