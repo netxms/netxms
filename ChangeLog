@@ -6,7 +6,7 @@
 - New methods deleteColumn and deleteRow in NXSL class Table
 - New NXSL functions: chr, ord
 - Added MIBs for Nortel/Trapeze Wireless security switches
-- New MIBs: SUN-PLATFORM-MIB
+- New MIBs: SUN-HW-CTRL-MIB, SUN-HW-TRAP-MIB, SUN-PLATFORM-MIB
 - Fixed issues: #202, #300, #305, #325, #337, #338
 
 

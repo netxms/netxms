@@ -341,6 +341,8 @@ mibs_DATA = \
 	STATICFDB-MIB.txt \
 	STATISTICS-MIB.txt \
 	SUBNETVLAN-MIB.txt \
+	SUN-HW-CTRL-MIB.txt \
+	SUN-HW-TRAP-MIB.txt \
 	SUN-PLATFORM-MIB.txt \
 	SUPERVLAN-MIB.txt \
 	SW-MIB.txt \

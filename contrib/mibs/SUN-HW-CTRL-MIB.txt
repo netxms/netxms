@@ -1,0 +1,584 @@
+--
+-- Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
+-- Use is subject to license terms.
+--
+
+SUN-HW-CTRL-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY,
+    OBJECT-TYPE,
+    Integer32,
+    enterprises         FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION,
+    DateAndTime,
+    TruthValue          FROM SNMPv2-TC
+    OBJECT-GROUP        FROM SNMPv2-CONF
+    SnmpAdminString     FROM SNMP-FRAMEWORK-MIB;
+
+    sun                 OBJECT IDENTIFIER ::= { enterprises 42 }
+    products            OBJECT IDENTIFIER ::= { sun 2 }
+    ilom                OBJECT IDENTIFIER ::= { products 175 }
+
+sunHwCtrlMIB MODULE-IDENTITY
+    LAST-UPDATED    "201001040000Z" -- January 04, 2010
+    ORGANIZATION    "Sun Microsystems, Inc."
+    CONTACT-INFO    "Sun Microsystems, Inc
+                     4150 Network Circle
+                     Santa Clara, CA 95054
+                     
+                     1-800-555-9SUN or
+                     1-650-960-1300
+                     
+                     http://www.sun.com"
+    DESCRIPTION
+        "SUN-HW-CTRL-MIB.mib Version 1.1
+         Copyright 2010, by Sun Microsystems, Inc.
+         All rights reserved. Use is subject to license terms.
+
+         This MIB allows controls for all Sun platform devices using
+         Integrated Lights Out Management."
+        
+    REVISION  
+        "201001040000Z" -- January 04, 2010
+    DESCRIPTION
+        "Modified handling of TPM parameters."
+    REVISION  
+        "200908200000Z" -- August 20, 2009
+    DESCRIPTION
+        "Add TPM parameters."
+    REVISION
+        "200907280000Z" -- July 28, 2009
+    DESCRIPTION
+        "Version: 1.0
+         Release versioning only"
+    REVISION
+        "200903010000Z" -- March 01, 2009
+    DESCRIPTION
+        "Version: 0.2
+         Added:
+            sunHwCtrlPowerMgmtBudgetSettings
+            sunHwCtrlPowerMgmtConsumptionThresholds
+            sunHwCtrlPowerMgmtSampling"
+    REVISION
+        "200809010000Z" -- September 01, 2008
+    DESCRIPTION
+        "Version: 0.1
+         Initial Release"
+
+    ::= { ilom 104 }
+
+    sunHwCtrlMIBObjects         OBJECT IDENTIFIER ::= { sunHwCtrlMIB 1 }
+    sunHwCtrlMIBConformances    OBJECT IDENTIFIER ::= { sunHwCtrlMIB 2 }
+
+    sunHwCtrlPowerMgmt          OBJECT IDENTIFIER ::= { sunHwCtrlMIBObjects 6 }
+    sunHwCtrlTPM                OBJECT IDENTIFIER ::= { sunHwCtrlMIBObjects 7 }
+
+    sunHwCtrlCompliances        OBJECT IDENTIFIER ::= { sunHwCtrlMIBConformances 1 }
+    sunHwCtrlGroups             OBJECT IDENTIFIER ::= { sunHwCtrlMIBConformances 2 }
+
+-- ***************************************************************************
+-- *                      Textual Conventions                                *
+-- ***************************************************************************
+
+SunHwCtrlPowerMgmtID ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "d"
+    STATUS            current
+    DESCRIPTION
+        "An arbitrary value which uniquely identifies the power
+         management table index.
+         The value should be a small positive integer; index
+         values for different policy entities are not necessarily
+         contiguous."
+    SYNTAX Integer32 (1..2147483647)
+
+SunHwCtrlPowerMgmtPolicy ::= TEXTUAL-CONVENTION
+    STATUS            current
+    DESCRIPTION
+        "An enumerated value which describes the defined power
+         management policies available.
+         A value of notsupported(1) indicates that the control
+         is not available on the managed platform.
+         A value of unknown(2) indicates that the control is available,
+         but the current state can not be determined."
+    SYNTAX INTEGER {
+        notsupported(1),
+        unknown(2),
+        performance(3),
+        elastic(4)
+    }
+
+SunHwCtrlPowerMgmtBudgetTimelimitActions ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "The list of actions that will occur if the power limit is exceeded
+         and cannot be controlled within the time limits
+         SunHwCtrlPowerMgmtBudgetTimelimit"
+    REFERENCE
+        "Data Center Management Interface (DCMI) version 1.0, 5/2008."
+    SYNTAX BITS {
+        none(0),
+        hardPowerOff(1)
+    }
+
+-- ***************************************************************************
+-- *                    sunHwCtrlPowerMgmt                                   *
+-- ***************************************************************************
+
+-- This section provides the power management features.
+
+sunHwCtrlReservedPSU OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The number of Reserved PSU's."
+    ::= { sunHwCtrlPowerMgmt 1 }
+
+sunHwCtrlTotalPSU OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of PSU's."
+    ::= { sunHwCtrlPowerMgmt 2 }
+
+
+sunHwCtrlPowerMgmtTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SunHwCtrlPowerMgmtEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A table listing additional power management properties."
+    ::= { sunHwCtrlPowerMgmt 3 }
+
+sunHwCtrlPowerMgmtEntry OBJECT-TYPE
+    SYNTAX SunHwCtrlPowerMgmtEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry for a power management property."
+    INDEX { sunHwCtrlPowerMgmtID }
+    ::= { sunHwCtrlPowerMgmtTable 1 }
+
+SunHwCtrlPowerMgmtEntry ::= SEQUENCE {
+        sunHwCtrlPowerMgmtID                    SunHwCtrlPowerMgmtID,
+        sunHwCtrlPowerMgmtName                  SnmpAdminString,
+        sunHwCtrlPowerMgmtUnits                 SnmpAdminString,
+        sunHwCtrlPowerMgmtValue                 SnmpAdminString
+    }
+
+sunHwCtrlPowerMgmtID OBJECT-TYPE
+    SYNTAX SunHwCtrlPowerMgmtID
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "This is an index for the sunHwCtrlPowerMgmtTable."
+    ::= { sunHwCtrlPowerMgmtEntry 1 }
+
+sunHwCtrlPowerMgmtName OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This is the name of the power management property."
+    ::= { sunHwCtrlPowerMgmtEntry 2 }
+
+sunHwCtrlPowerMgmtUnits OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This is the units for the value of the power management property."
+    ::= { sunHwCtrlPowerMgmtEntry 3 }
+
+sunHwCtrlPowerMgmtValue OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This is the value of the power management property."
+    ::= { sunHwCtrlPowerMgmtEntry 4 }
+
+sunHwCtrlPowerMgmtActualPower OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total input power consumed in watts.
+         On a rackmount server, total power consumption is the
+         input power consumed by the server.
+         On a blade, this is the input power consumed just by the
+         blade (not including any power consumed by shared components).
+         On a CMM this is the input power consumed by the entire chassis
+         or shelf, all blades, NEMs, fans, etc."
+    ::= { sunHwCtrlPowerMgmt 4 }
+
+sunHwCtrlPowerMgmtPermittedPower OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum input power consumption in watts.
+         On a rackmount server, the maximum power consumption is the maximum
+         input power the server guarantees it will consume at any instant.
+         On a blade, this is the maximum input power a blade guarantees it will
+         consume, not including its power load on shared components.
+         On a CMM this is the maximum input power the entire chassis
+         (all blades, NEMs, fans, etc.) will consume at any instant.
+         This value can't be changed directly, but may change based on the power
+         policy and budget, and chassis power capacity."
+    ::= { sunHwCtrlPowerMgmt 5 }
+
+sunHwCtrlPowerMgmtAvailablePower OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum input power capacity in watts.
+         Power capacity is the maximum input power the power supplies
+         are capable of consuming.
+         On a blade, this is the amount of power guaranteed available
+         to the blade by the chassis."
+    ::= { sunHwCtrlPowerMgmt 6 }
+
+sunHwCtrlPowerMgmtPolicy OBJECT-TYPE
+    SYNTAX      SunHwCtrlPowerMgmtPolicy
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Indicates the desired power managment policy."
+    ::= { sunHwCtrlPowerMgmt 7 }
+
+sunHwCtrlPowerMgmtBudgetSettings OBJECT IDENTIFIER
+    ::= { sunHwCtrlPowerMgmt 9 }
+
+sunHwCtrlPowerMgmtBudget OBJECT-TYPE
+    SYNTAX INTEGER {
+        unknown(1),
+        disabled(2),
+        enabled(3),
+        enabledPostPoweron(4)
+    }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "When reading, the current state of the following budget settings:
+            sunHwCtrlPowerMgmtBudgetMinPowerlimit
+            sunHwCtrlPowerMgmtBudgetPowerlimit
+            sunHwCtrlPowerMgmtBudgetTimelimit
+            sunHwCtrlPowerMgmtBudgetTimelimitActions
+
+         If unknown(1), the agent could not determine the current state.
+
+         If disabled(2), the settings are not currently in effect.
+
+         If enabled(3), the settings are currently in effect.
+
+         If enabledPostPoweron(4), the settings will take effect
+         after the processor is powered on.
+
+         When writing, only disabled(2) and enabled(3) are valid values.
+
+         If set to enabled(3) while the system if powered off, the budget
+         will not be enforced until the system powers on and this will
+         transition to enabledPostPoweron(4).
+
+         If set to enabled(3) when the current budget settings are not
+         supported, this will transition to disabled(2)."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 1 }
+
+sunHwCtrlPowerMgmtBudgetMinPowerlimit OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    UNITS       "watts"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Minimum value sunHwCtrlPowerMgmtBudgetPowerlimit can be set to.
+         The power capper can control power consumption to fit within
+         as little as this amount of power when the system is powered on."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 2 }
+
+sunHwCtrlPowerMgmtBudgetPowerlimit OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    UNITS       "watts"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum power consumption in watts."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 3 }
+
+sunHwCtrlPowerMgmtBudgetTimelimit OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    UNITS       "milliseconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Grace period for exceeding the powerlimit once the powerlimit
+         has been achieved, in milliseconds."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 5 }
+
+sunHwCtrlPowerMgmtBudgetTimelimitActions OBJECT-TYPE
+    SYNTAX      SunHwCtrlPowerMgmtBudgetTimelimitActions
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "List of actions that will occur if the power limit is exceeded and
+         cannot be controlled within the timelimit.
+
+         hardpoweroff(1) causes a hard power off if the timelimit is exceeded."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 6 }
+
+sunHwCtrlPowerMgmtBudgetOK OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "'true' if sunHwCtrlPowerMgmtBudget is 'disabled(2)'.
+
+         If sunHwCtrlPowerMgmtBudget is 'enabled(3)',
+         sunHwCtrlPowerMgmtBudgetOK will be 'false' if the power consumption
+         has been over the power limit (sunHwCtrlPowerMgmtBudgetPowerlimit)
+         for more than the time limit (sunHwCtrlPowerMgmtBudgetTimelimit),
+         otherwise 'true'.
+
+         Returns to 'true' when power consumption drops to or below the
+         powerlimit after a violation.
+
+         This value will also be 'false' if the budget is enabled but the
+         budget settings are not supported.  (This could happen if saved
+         budget settings are no longer valid after a reboot.)"
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 7 }
+
+sunHwCtrlPowerMgmtBudgetCommitPending OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Commits the following pending values:
+            sunHwCtrlPowerMgmtBudgetPendingPowerlimit
+            sunHwCtrlPowerMgmtBudgetPendingTimelimit
+            sunHwCtrlPowerMgmtBudgetPendingTimelimitActions
+
+          May only be set to true."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 100 }
+
+sunHwCtrlPowerMgmtBudgetPendingPowerlimit OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    UNITS       "watts"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "When committed, the value is applied to
+         sunHwCtrlPowerMgmtBudgetPowerlimit."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 103 }
+
+sunHwCtrlPowerMgmtBudgetPendingTimelimit OBJECT-TYPE
+    SYNTAX      Integer32 (-1..2147483647)
+    UNITS       "milliseconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "When committed, the value is applied to
+         sunHwCtrlPowerMgmtBudgetTimelimit.
+         A value of -1 instructs the system to use its' default value."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 105 }
+
+sunHwCtrlPowerMgmtBudgetPendingTimelimitActions OBJECT-TYPE
+    SYNTAX      SunHwCtrlPowerMgmtBudgetTimelimitActions
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "When committed, the value is applied to
+         sunHwCtrlPowerMgmtBudgetTimelimitActions."
+    ::= { sunHwCtrlPowerMgmtBudgetSettings 106 }
+
+sunHwCtrlPowerMgmtConsumptionThresholds OBJECT IDENTIFIER
+    ::= { sunHwCtrlPowerMgmt 10 }
+
+sunHwCtrlPowerMgmtConsumptionThreshold1 OBJECT-TYPE
+    SYNTAX      Integer32 (0..1000000)
+    UNITS       "watts"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "A threshold that determines if ILOM threshold events get
+         generated based on the value of the system power consumption sensor
+         (typically /SYS/VPS).
+         Valid values are 0 (zero) when disabled; greater than 0 generates
+         threshold crossing event."
+    ::= { sunHwCtrlPowerMgmtConsumptionThresholds 1 }
+
+sunHwCtrlPowerMgmtConsumptionThreshold2 OBJECT-TYPE
+    SYNTAX      Integer32 (0..1000000)
+    UNITS       "watts"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "A threshold that determines if ILOM threshold events get
+         generated based on the value of the system power consumption sensor
+         (typically /SYS/VPS).
+         Valid values are 0 (zero) when disabled; greater than 0 generates
+         threshold crossing event."
+    ::= { sunHwCtrlPowerMgmtConsumptionThresholds 2 }
+
+sunHwCtrlPowerMgmtSampling OBJECT IDENTIFIER
+    ::= { sunHwCtrlPowerMgmt 11 }
+
+sunHwCtrlPowerMgmtSamplingPeriod OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Sampling period over which sunHwCtrlPowerMgmtSamplingMinimumPower,
+         sunHwCtrlPowerMgmtSamplingMaximumPower and
+         sunHwCtrlPowerMgmtSamplingAveragePower are calculated and reported,
+         in seconds.
+         Supported range and granularity are platform specific."
+    ::= { sunHwCtrlPowerMgmtSampling 1 }
+
+sunHwCtrlPowerMgmtSamplingTimestamp OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Date and time at which the power consumption values were calculated."
+    ::= { sunHwCtrlPowerMgmtSampling 2 }
+
+sunHwCtrlPowerMgmtSamplingMinimumPower OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    UNITS       "watts"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Minimum measured power consumption during most recent sampling period,
+         in watts"
+    ::= { sunHwCtrlPowerMgmtSampling 3 }
+
+sunHwCtrlPowerMgmtSamplingMaximumPower OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    UNITS       "watts"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum measured power consumption during most recent sampling period,
+         in watts"
+    ::= { sunHwCtrlPowerMgmtSampling 4 }
+
+sunHwCtrlPowerMgmtSamplingAveragePower OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    UNITS       "watts"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Average measured power consumption during most recent sampling period,
+         in watts"
+    ::= { sunHwCtrlPowerMgmtSampling 5 }
+
+
+-- ***************************************************************************
+-- *                       sunHwCtrlTPM
+-- ***************************************************************************
+
+-- This section defines properties for controlling the access modes of
+-- the Trusted Platform Module (TPM) device.
+
+sunHwCtrlTpmEnable OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "sunHwCtrlTpmEnable is the principal control for any action being
+         taken to change the access mode(s) of the TPM device.
+        Any attempt to change sunHwCtrlTpmEnable when the host power is on
+         will generate an inconsistentValue (or badValue for SNMPv1) error.
+        When sunHwCtrlTpmEnable is set to false(2), no changes to
+         sunHwCtrlTpmActivate will succeed,
+         and the TPM device will be disabled during the next host power on
+         event.
+        If sunHwCtrlTpmEnable is set to true(1), the TPM device will be
+         enabled during the next host power on.
+        The default state of sunHwCtrlTpmEnable is false(2)."
+    ::= { sunHwCtrlTPM 1 }
+
+sunHwCtrlTpmActivate OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "If sunHwCtrlTpmActivate and sunHwCtrlTpmEnable are both currently
+         true(1) during a host power on event, the TPM device will be
+         enabled and activated.
+        If sunHwCtrlTpmActivate is currently false(2) and sunHwCtrlTpmEnable
+         is currently true(1) during a host power on event, the TPM device
+         will be enabled and deactivated.
+        When sunHwCtrlTpmEnable is set to false(2), no changes to
+         sunHwCtrlTpmActivate will succeed.
+        The default state of sunHwCtrlTpmActivate is false(2)."
+    ::= { sunHwCtrlTPM 2 }
+
+sunHwCtrlTpmForceClear OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "If sunHwCtrlTpmForceClear and sunHwCtrlTpmEnable are both currently
+         true(1) during a host power on event, the TPM device state will be
+         purged and the state of sunHwCtrlTpmForceClear will return to
+         false(2).
+        If sunHwCtrlTpmForceClear is currently true(1) and sunHwCtrlTpmEnable
+         is currently false(2) during a host power on event, the TPM device
+         will not be enabled, no action is taken with regard to the state of
+         the TPM device, and sunHwCtrlTpmForceClear remains true(1).
+        If sunHwCtrlTpmForceClear is currently false(2) and sunHwCtrlTpmEnable
+         is currently true(1) during a host power on event, the TPM device
+         will be enabled, no action is taken with regard to the state of the
+         TPM device, and sunHwCtrlTpmForceClear remains false(2).
+        When sunHwCtrlTpmEnable is set to false(2), no changes to
+         sunHwCtrlTpmForceClear will succeed."
+    ::= { sunHwCtrlTPM 3 }
+
+
+--
+-- Object Groups
+--
+
+sunHwCtrlObjectsGroup OBJECT-GROUP
+    OBJECTS {
+        sunHwCtrlReservedPSU,
+        sunHwCtrlTotalPSU,
+        sunHwCtrlPowerMgmtName,
+        sunHwCtrlPowerMgmtUnits,
+        sunHwCtrlPowerMgmtValue,
+        sunHwCtrlPowerMgmtActualPower,
+        sunHwCtrlPowerMgmtPermittedPower,
+        sunHwCtrlPowerMgmtAvailablePower,
+        sunHwCtrlPowerMgmtPolicy,
+        sunHwCtrlPowerMgmtBudget,
+        sunHwCtrlPowerMgmtBudgetMinPowerlimit,
+        sunHwCtrlPowerMgmtBudgetPowerlimit,
+        sunHwCtrlPowerMgmtBudgetTimelimit,
+        sunHwCtrlPowerMgmtBudgetTimelimitActions,
+        sunHwCtrlPowerMgmtBudgetOK,
+        sunHwCtrlPowerMgmtBudgetCommitPending,
+        sunHwCtrlPowerMgmtBudgetPendingPowerlimit,
+        sunHwCtrlPowerMgmtBudgetPendingTimelimit,
+        sunHwCtrlPowerMgmtBudgetPendingTimelimitActions,
+        sunHwCtrlPowerMgmtConsumptionThreshold1,
+        sunHwCtrlPowerMgmtConsumptionThreshold2,
+        sunHwCtrlPowerMgmtSamplingPeriod,
+        sunHwCtrlPowerMgmtSamplingTimestamp,
+        sunHwCtrlPowerMgmtSamplingMinimumPower,
+        sunHwCtrlPowerMgmtSamplingMaximumPower,
+        sunHwCtrlPowerMgmtSamplingAveragePower,
+        sunHwCtrlTpmEnable,
+        sunHwCtrlTpmActivate,
+        sunHwCtrlTpmForceClear
+    }
+    STATUS current
+    DESCRIPTION
+        "The group of current objects."
+    ::= { sunHwCtrlGroups 1 }
+
+END
