@@ -306,11 +306,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, UINT32 dwItemId)
    return INVALID_INDEX;
 }
 
-
-//
-// Retrieve collected data from server
-//
-
+/**
+ * Retrieve collected data from server
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId, 
                                        UINT32 dwMaxRows, UINT32 dwTimeFrom, UINT32 dwTimeTo, 
                                        NXC_DCI_DATA **ppData)
@@ -318,6 +316,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, UINT32 dwNodeId, U
 	return NXCGetDCIDataEx(hSession, dwNodeId, dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo, ppData, NULL, NULL);
 }
 
+/**
+ * Retrieve collected data from server
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId, 
                                          UINT32 dwMaxRows, UINT32 dwTimeFrom, UINT32 dwTimeTo, 
                                          NXC_DCI_DATA **ppData, NXC_DCI_THRESHOLD **thresholds, UINT32 *numThresholds)
@@ -469,6 +470,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId,
             dwResult = RCC_TIMEOUT;
          }
       }
+      delete response;
    } while((dwResult == RCC_SUCCESS) && bRun);
 
    // Destroy already allocated buffer if request was unsuccessful
@@ -483,11 +485,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId,
    return dwResult;
 }
 
-
-//
-// Destroy DCI result set
-//
-
+/**
+ * Destroy DCI result set
+ */
 void LIBNXCL_EXPORTABLE NXCDestroyDCIData(NXC_DCI_DATA *pData)
 {
    if (pData != NULL)
@@ -497,11 +497,9 @@ void LIBNXCL_EXPORTABLE NXCDestroyDCIData(NXC_DCI_DATA *pData)
    }
 }
 
-
-//
-// Get pointer to specific row in result set
-//
-
+/**
+ * Get pointer to specific row in result set
+ */
 NXC_DCI_ROW LIBNXCL_EXPORTABLE *NXCGetRowPtr(NXC_DCI_DATA *pData, UINT32 dwRow)
 {
    if (dwRow >= pData->dwNumRows)
@@ -510,11 +508,9 @@ NXC_DCI_ROW LIBNXCL_EXPORTABLE *NXCGetRowPtr(NXC_DCI_DATA *pData, UINT32 dwRow)
    return (NXC_DCI_ROW *)(((char *)(pData->pRows)) + dwRow * pData->wRowSize);
 }
 
-
-//
-// Add threshold to item
-//
-
+/**
+ * Add threshold to item
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCAddThresholdToItem(NXC_DCI *pItem, NXC_DCI_THRESHOLD *pThreshold)
 {
    UINT32 dwIndex;
@@ -526,11 +522,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCAddThresholdToItem(NXC_DCI *pItem, NXC_DCI_THRESHOL
    return dwIndex;
 }
 
-
-//
-// Delete threshold from item
-//
-
+/**
+ * Delete threshold from item
+ */
 BOOL LIBNXCL_EXPORTABLE NXCDeleteThresholdFromItem(NXC_DCI *pItem, UINT32 dwIndex)
 {
    BOOL bResult = FALSE;
@@ -568,11 +562,9 @@ BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, UINT32 dwIndex1, UINT3
    return bResult;
 }
 
-
-//
-// Copy data collection items from one node to another
-//
-
+/**
+ * Copy data collection items from one node to another
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, UINT32 dwSrcNodeId, UINT32 dwDstNodeId, 
                                     UINT32 dwNumItems, UINT32 *pdwItemList, BOOL bMove)
 {
@@ -595,11 +587,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, UINT32 dwSrcNodeId, U
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Query value of specific parameter from node
-//
-
+/**
+ * Query value of specific parameter from node
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, UINT32 dwNodeId, int iOrigin, 
                                            TCHAR *pszParameter, TCHAR *pszBuffer, 
                                            UINT32 dwBufferSize)
@@ -633,11 +623,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, UINT32 dwNodeI
    return dwResult;
 }
 
-
-//
-// Get threshold list for given DCI
-//
-
+/**
+ * Get threshold list for given DCI
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCGetDCIThresholds(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId,
 															NXC_DCI_THRESHOLD **ppList, UINT32 *pdwSize)
 {
