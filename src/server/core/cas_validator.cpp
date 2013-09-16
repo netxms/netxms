@@ -267,7 +267,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
     * without enough space, fail entirely, since a partial NetID could
     * be dangerous
     */
-   if (outbuflen < strlen(netid) + 1) 
+   if (outbuflen < (int)strlen(netid) + 1) 
    {
       DbgPrintf(4, _T("CAS: output buffer too short"));
       SET_RET_AND_GOTO_END(CAS_PROTOCOL_FAILURE);

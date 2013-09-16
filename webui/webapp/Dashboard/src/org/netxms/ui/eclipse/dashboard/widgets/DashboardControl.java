@@ -63,6 +63,7 @@ public class DashboardControl extends Composite
 	public static final String DEFAULT_NETWORK_MAP_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<title></title>\n</element>";  //$NON-NLS-1$
 	public static final String DEFAULT_GEO_MAP_CONFIG = "<element>\n\t<latitude>0</latitude>\n\t<longitude>0</longitude>\n\t<zoom>8</zoom>\t<title></title>\n</element>";  //$NON-NLS-1$
 	public static final String DEFAULT_WEB_PAGE_CONFIG = "<element>\n\t<url>http://</url>\n\t<title></title>\n</element>";  //$NON-NLS-1$
+	public static final String DEFAULT_TABLE_VALUE_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<dciId>0</dciId>\n\t<title></title>\n</element>";  //$NON-NLS-1$
 			
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
@@ -234,6 +235,9 @@ public class DashboardControl extends Composite
 				break;
 			case DashboardElement.SEPARATOR:
 				w = new SeparatorElement(this, e, viewPart);
+				break;
+			case DashboardElement.TABLE_VALUE:
+				w = new TableValueElement(this, e, viewPart);
 				break;
 			default:
 				w = new ElementWidget(this, e, viewPart);

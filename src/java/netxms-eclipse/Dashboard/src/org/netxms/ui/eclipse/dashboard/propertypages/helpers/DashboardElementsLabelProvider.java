@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 	private static final String[] ELEMENT_TYPES = { Messages.DashboardElementsLabelProvider_TypeLabel, Messages.DashboardElementsLabelProvider_TypeLineChart, Messages.DashboardElementsLabelProvider_TypeBarChart, Messages.DashboardElementsLabelProvider_TypePieChart, 
 		Messages.DashboardElementsLabelProvider_TypeTubeChart, Messages.DashboardElementsLabelProvider_TypeStatusChart, Messages.DashboardElementsLabelProvider_TypeStatusIndicator, Messages.DashboardElementsLabelProvider_TypeDashboard, Messages.DashboardElementsLabelProvider_TypeNetworkMap, Messages.DashboardElementsLabelProvider_TypeCustom, 
 		Messages.DashboardElementsLabelProvider_TypeGeoMap, Messages.DashboardElementsLabelProvider_TypeAlarmViewer, Messages.DashboardElementsLabelProvider_TypeAvailChart, Messages.DashboardElementsLabelProvider_TypeGaugeChart, Messages.DashboardElementsLabelProvider_TypeWebPage, Messages.DashboardElementsLabelProvider_TypeTableBarChart,
-		Messages.DashboardElementsLabelProvider_TypeTablePieChart, Messages.DashboardElementsLabelProvider_TypeTableTubeChart, Messages.DashboardElementsLabelProvider_TypeSeparator };
+		Messages.DashboardElementsLabelProvider_TypeTablePieChart, Messages.DashboardElementsLabelProvider_TypeTableTubeChart, Messages.DashboardElementsLabelProvider_TypeSeparator, "Table Value" };
 	private static final String[] H_ALIGH = { Messages.DashboardElementsLabelProvider_Fill, Messages.DashboardElementsLabelProvider_Center, Messages.DashboardElementsLabelProvider_Left, Messages.DashboardElementsLabelProvider_Right };
 	private static final String[] V_ALIGH = { Messages.DashboardElementsLabelProvider_Fill, Messages.DashboardElementsLabelProvider_Center, Messages.DashboardElementsLabelProvider_Top, Messages.DashboardElementsLabelProvider_Bottom };
 	

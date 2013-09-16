@@ -31,7 +31,7 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.TableDciValue;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
-import org.netxms.ui.eclipse.perfview.views.TableLastValues;
+import org.netxms.ui.eclipse.perfview.views.TableLastValuesView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -65,7 +65,7 @@ public class ShowTableLastValues implements IObjectActionDelegate, DciOpenHandle
 							Long.toString(((TableDciValue)currentSelection).getNodeId()) + "&" + Long.toString(((TableDciValue)currentSelection).getId());
 			try
 			{
-				window.getActivePage().showView(TableLastValues.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(TableLastValuesView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(Exception e)
 			{

@@ -7,7 +7,7 @@
 - New NXSL functions: chr, ord
 - Added MIBs for Nortel/Trapeze Wireless security switches
 - New MIBs: SUN-HW-CTRL-MIB, SUN-HW-TRAP-MIB, SUN-PLATFORM-MIB
-- Fixed issues: #202, #300, #305, #325, #337, #338
+- Fixed issues: #202, #300, #305, #311, #325, #337, #338
 
 
 *

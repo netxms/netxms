@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -427,6 +427,9 @@ public class DashboardElements extends PropertyPage
 					break;
 				case DashboardElement.WEB_PAGE:
 					config = DashboardControl.DEFAULT_WEB_PAGE_CONFIG;
+					break;
+				case DashboardElement.TABLE_VALUE:
+					config = DashboardControl.DEFAULT_TABLE_VALUE_CONFIG;
 					break;
 				default:
 					config = "<element>\n</element>"; //$NON-NLS-1$

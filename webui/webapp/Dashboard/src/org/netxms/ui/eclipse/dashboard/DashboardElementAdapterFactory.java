@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableTubeChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TableValueConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
 
@@ -113,6 +114,8 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 						return TablePieChartConfig.createFromXml(element.getData());
 					case DashboardElement.TABLE_TUBE_CHART:
 						return TableTubeChartConfig.createFromXml(element.getData());
+					case DashboardElement.TABLE_VALUE:
+						return TableValueConfig.createFromXml(element.getData());
 					case DashboardElement.TUBE_CHART:
 						return TubeChartConfig.createFromXml(element.getData());
 					case DashboardElement.WEB_PAGE:

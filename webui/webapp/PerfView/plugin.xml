@@ -29,7 +29,7 @@
       </view>
       <view
             allowMultiple="true"
-            class="org.netxms.ui.eclipse.perfview.views.TableLastValues"
+            class="org.netxms.ui.eclipse.perfview.views.TableLastValuesView"
             icon="icons/table.gif"
             id="org.netxms.ui.eclipse.perfview.views.TableLastValues"
             name="Table Last Values"
