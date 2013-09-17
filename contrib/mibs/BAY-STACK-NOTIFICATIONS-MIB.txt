@@ -1,0 +1,441 @@
+
+BAY-STACK-NOTIFICATIONS-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY,
+    NOTIFICATION-TYPE,
+    OBJECT-TYPE,
+    Integer32
+        FROM SNMPv2-SMI
+    MacAddress
+        FROM SNMPv2-TC
+    bayStackMibs
+        FROM SYNOPTICS-ROOT-MIB
+    dot1xAuthPaeState,
+    dot1xAuthBackendAuthState
+        FROM IEEE8021-PAE-MIB
+    ifIndex, ifAdminStatus
+        FROM IF-MIB
+    InetAddressType, InetAddress
+        FROM INET-ADDRESS-MIB
+    SnmpAdminString
+        FROM SNMP-FRAMEWORK-MIB
+    bayStackConfigExpectedStackSize
+        FROM BAY-STACK-MIB
+    s5ChasComType
+        FROM S5-CHASSIS-MIB
+    InterfaceIndex
+        FROM IF-MIB;
+
+bayStackNotificationsMib    MODULE-IDENTITY
+   LAST-UPDATED "200909280000Z"
+   ORGANIZATION "Nortel Networks"
+   CONTACT-INFO "Nortel Networks"
+   DESCRIPTION
+       "Miscellaneous NOTIFICATION definitions for BayStack products."
+
+   REVISION "200909280000Z" -- 28 September 2009
+   DESCRIPTION
+       "Version 16:  Added bsnRateLimitExceeded."
+
+   REVISION "200807090000Z" -- 09 July 2008
+   DESCRIPTION
+       "Version 15:  Added bsnTemperatureExceeded."
+
+   REVISION "200803310000Z" -- 31 March 2008
+   DESCRIPTION
+       "Version 14:  Added bsnEnteredForcedStackModeMAC,
+                           bsnEnteredForcedStackMode."
+
+   REVISION "200703050000Z" -- 05 March 2007
+   DESCRIPTION
+       "Version 13:  Added bsnTrialLicenseExpirationTime,
+                           bsnTrialLicenseExpirationNumber,
+                           bsnTrialLicenseExpiration."
+
+   REVISION "200604060000Z" -- 06 April 2006
+   DESCRIPTION
+       "Version 12:  Fix typo."
+
+   REVISION "200604040000Z" -- 04 April 2006
+   DESCRIPTION
+       "Version 11:  Added bsnEapUbpFailure trap."
+
+   REVISION "200508220000Z" -- 22 August 2005
+   DESCRIPTION
+       "Version 10:  Added bsnStackConfigurationError trap."
+
+   REVISION "200506300000Z" -- 30 June 2005
+   DESCRIPTION
+       "Version 9:  Added additional MLT/LACP-related traps."
+
+   REVISION "200503260000Z" -- 26 March 2005
+   DESCRIPTION
+       "Version 8:  Added bsnMLTHealthFailure."
+
+   REVISION "200408060000Z" -- 06 August 2004
+   DESCRIPTION
+       "Version 7:  Added serialConsole(4) enumeration."
+
+   REVISION "200408020000Z" -- 02 August 2004
+   DESCRIPTION
+       "Version 6:  Added bsnLoginFailure and associated objects."
+
+   REVISION "200407200000Z" -- 20 July 2004
+   DESCRIPTION
+       "v005:  Added version info"
+
+   REVISION "200303160000Z" -- 16 March 2003
+   DESCRIPTION
+       "v000:  The Initial Revision"
+
+   ::= { bayStackMibs 2 }
+
+bsnObjects        OBJECT IDENTIFIER ::= { bayStackNotificationsMib 1 }
+bsnNotifications  OBJECT IDENTIFIER ::= { bayStackNotificationsMib 2 }
+bsnNotifications0 OBJECT IDENTIFIER ::= { bsnNotifications 0 }
+
+--
+-- Notification objects
+--
+
+bsnEapAccessViolationMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The MAC address which caused an EAP access violation."
+    ::= { bsnObjects 1 }
+
+bsnLoginFailureType OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    telnet(1),
+                    ssh(2),
+                    web(3),
+                    serialConsole(4)
+                }
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The type of login being attempted when the failure occurred."
+    ::= { bsnObjects 2 }
+
+bsnLoginFailureAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The address type contained in the associated value of
+         bnsLoginFailureAddress."
+    ::= { bsnObjects 3 }
+
+bsnLoginFailureAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The IP address from which the login was attempted when the
+         failure occurred."
+    ::= { bsnObjects 4 }
+
+bsnLoginFailureUsername OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The username for which the login failure occurred."
+    ::= { bsnObjects 5 }
+
+bsnActualStackSize OBJECT-TYPE
+    SYNTAX      Integer32 (1..8)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The actual stack size when a bsnStackConfigurationError
+         notification is generated."
+    ::= { bsnObjects 6 }
+
+bsnEapUbpFailureIfIndex OBJECT-TYPE
+    SYNTAX      InterfaceIndex
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The ifIndex of the port for which UBP policies could
+         not be installed."
+    ::= { bsnObjects 7 }
+
+bsnEapUbpFailureMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The MAC address for which UBP policies could not be
+         installed."
+    ::= { bsnObjects 8 }
+
+bsnEapUbpFailureRoleString OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(0..64))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The role string of the UBP policies which could not
+         be installed."
+    ::= { bsnObjects 9 }
+
+bsnTrialLicenseExpirationTime OBJECT-TYPE
+    SYNTAX      Integer32 (0..30)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The number of days until a feature trial license will expire.
+         A value of 0 means the license has expired."
+    ::= { bsnObjects 10 }
+
+bsnTrialLicenseExpirationNumber OBJECT-TYPE
+    SYNTAX      Integer32 (1..10)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The number of the license that will expire or that has expired."
+    ::= { bsnObjects 11 }
+
+bsnEnteredForcedStackModeMAC OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The MAC address of a switch which has entered forced stack mode."
+    ::= { bsnObjects 12 }
+
+bsnEapRAVErrorMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The MAC address that was authorized on a port which could not be
+         moved to the Radius-Assigned VLAN."
+    ::= { bsnObjects 13 }
+
+bsnEapRAVErrorPort OBJECT-TYPE
+    SYNTAX      InterfaceIndex
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The ifIndex of the port that could not be moved to the Radius-Assigned
+         VLAN."
+    ::= { bsnObjects 14 }
+
+--
+-- Notification types
+--
+
+bsnConfigurationSavedToNvram NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+        "This notification is generated whenever the device saves
+         its configuration to non-volatile storage.  The system should
+         limit the frequency with which this notification is generated,
+         as frequent configuration changes could potentially generate
+         too many of these notifications.  How the frequency is limitted
+         is an implementation details, but it is suggested that no more
+         than one notification be generated per minute."
+    ::= { bsnNotifications0 1 }
+
+bsnEapAccessViolation NOTIFICATION-TYPE
+    OBJECTS {
+        dot1xAuthPaeState,
+        dot1xAuthBackendAuthState,
+        bsnEapAccessViolationMacAddress
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated whenever an EAP access violation
+         occurs."
+    ::= { bsnNotifications0 2 }
+
+bsnPortSpeedDuplexMismatch NOTIFICATION-TYPE
+    OBJECTS {
+        ifIndex
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when a speed or duplex mismatch
+         is detected. Once notification has been sent, further notifications
+         may be sent, but it is suggested these be at least 5 minutes apart."
+    ::= { bsnNotifications0 3 }
+
+bsnStackManagerReconfiguration NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+        "This notification is generated by a stackable system when the stack
+         manager detects a problem with a link between stack members."
+    ::= { bsnNotifications0 4 }
+
+bsnLacTrunkUnavailable NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when an attempt is made to form an
+         802.3ad LAG trunk, but there are no available resources to create
+         a new trunk.  The condition usually occurs because a system has
+         some hardware or software limit on the number of trunks that can
+         be created."
+    ::= { bsnNotifications0 5 }
+
+bsnLoginFailure NOTIFICATION-TYPE
+    OBJECTS {
+        bsnLoginFailureType,
+        bsnLoginFailureAddressType,
+        bsnLoginFailureAddress,
+        bsnLoginFailureUsername
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when an attempt to login to the
+         system fails as a result of an incorrect password."
+    ::= { bsnNotifications0 6 }
+
+bsnMLTHealthFailure NOTIFICATION-TYPE
+    OBJECTS {
+        ifAdminStatus
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when a receiving switch does not
+         receive an expected number of autotopology frames on an MLT in a
+         given time interval from the sending switch(es) on the other end
+         of the MLT. Once notification has been sent, further notifications
+         may be sent, but it is suggested these be at least 5 minutes apart.
+         The ifAdminStatus object reflects the state of the port. The port
+         may be partitioned by the switch or still be active depending on
+         the detection algorithm's control parameters."
+    ::= { bsnNotifications0 7 }
+
+bsnTrunkPortDisabledToPreventBroadcastStorm NOTIFICATION-TYPE
+    OBJECTS {
+        ifIndex
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when an MLT port is disabled as
+         a result of an MLT trunk being disabled."
+    ::= { bsnNotifications0 8 }
+
+bsnLacPortDisabledToPreventBroadcastStorm NOTIFICATION-TYPE
+    OBJECTS {
+        ifIndex
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when a LAG port that was port of
+         a trunk is disabled as a result of the LAC setting on the port
+         being turned off."
+    ::= { bsnNotifications0 9 }
+
+bsnTrunkPortEnabledToPreventBroadcastStorm NOTIFICATION-TYPE
+    OBJECTS {
+        ifIndex
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when an MLT port is enabled as
+         a result of an MLT trunk being disabled."
+    ::= { bsnNotifications0 10 }
+
+bsnLacPortDisabledDueToLossOfVLACPDU NOTIFICATION-TYPE
+    OBJECTS {
+        ifIndex
+    }
+    STATUS current
+    DESCRIPTION
+        "Generated when a port is disabled due to the loss of a VLACP PDU."
+    ::= { bsnNotifications0 11 }
+
+bsnLacPortEnabledDueToReceiptOfVLACPDU NOTIFICATION-TYPE
+    OBJECTS {
+        ifIndex
+    }
+    STATUS current
+    DESCRIPTION
+        "Generated when a port is enabled due to receipt of a VLACP PDU."
+    ::= { bsnNotifications0 12 }
+
+bsnStackConfigurationError NOTIFICATION-TYPE
+    OBJECTS {
+        bayStackConfigExpectedStackSize,
+        bsnActualStackSize
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when the expected size of
+         a stack is not equal to the actual size of the stack."
+    ::= { bsnNotifications0 13 }
+
+bsnEapUbpFailure NOTIFICATION-TYPE
+    OBJECTS {
+        bsnEapUbpFailureIfIndex,
+        bsnEapUbpFailureMacAddress,
+        bsnEapUbpFailureRoleString
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when installation of a UBP
+         policy fails following EAP authentication."
+    ::= { bsnNotifications0 14 }
+
+bsnTrialLicenseExpiration NOTIFICATION-TYPE
+    OBJECTS {
+        bsnTrialLicenseExpirationTime,
+        bsnTrialLicenseExpirationNumber
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated to indicate that a trial license is
+         going to expire soon, or has already expired."
+    ::= { bsnNotifications0 15 }
+
+bsnEnteredForcedStackMode NOTIFICATION-TYPE
+    OBJECTS {
+        bsnEnteredForcedStackModeMAC
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated to indicate that a switch has
+         entered forced stack mode."
+    ::= { bsnNotifications0 16 }
+
+bsnTemperatureExceeded NOTIFICATION-TYPE
+    OBJECTS {
+        s5ChasComType
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification is generated when the temperature of a chassis
+         component has exceeded some threshold.  The instance of s5ChasComType
+         included in the notification identifies the component."
+    ::= { bsnNotifications0 17 }
+
+bsnEapRAVError NOTIFICATION-TYPE
+    OBJECTS {
+        dot1xAuthPaeState,
+        dot1xAuthBackendAuthState,
+        bsnEapRAVErrorMacAddress,
+        bsnEapRAVErrorPort
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification indicates that an Eap client MAC address was
+         authorized on a port, but the port could not be moved to the
+         Radius-Assigned VLAN."
+    ::= { bsnNotifications0 18 }
+
+bsnEapRateLimitExceeded NOTIFICATION-TYPE
+    OBJECTS {
+        ifIndex
+    }
+    STATUS current
+    DESCRIPTION
+        "This notification indicates that incoming traffic on a port
+         exceeded the rate limit settings on that port."
+    ::= { bsnNotifications0 19 }
+
+END
