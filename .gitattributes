@@ -293,6 +293,7 @@ android/src/console/src/org/netxms/ui/android/tools/BarcodeScannerIntentResult.j
 contrib/backgrounds/.keep -text
 contrib/integration/HP_EVA/hp_eva_collect_data.pl -text
 contrib/logo.jpg -text
+contrib/mgmtpacks/baystack_notifications.xml -text
 contrib/mibs/ATM-TC-MIB.txt -text
 contrib/mibs/BAY-STACK-MIB.txt -text
 contrib/mibs/CISCO-ENTITY-VENDORTYPE-OID-MIB.txt -text
@@ -3018,6 +3019,8 @@ webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EventSe
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/helpers/EventListFilter.java -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/messages.properties -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/messages_es.properties -text
+webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/messages_ru.properties -text
+webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/messages_zh_CN.properties -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventConfigurator.java -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventMonitor.java -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/SyslogMonitor.java -text

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ public class EditEventTemplateDialog extends Dialog
       gd.widthHint = 450;
       message.setLayoutData(gd);
 		
-      description = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
+      description = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP);
       description.setLabel(Messages.EditEventTemplateDialog_Description);
       description.setText(object.getDescription());
       gd = new GridData();
@@ -127,6 +127,7 @@ public class EditEventTemplateDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.heightHint = 200;
+      gd.widthHint = 450;
       gd.verticalAlignment = SWT.FILL;
       description.setLayoutData(gd);
 		

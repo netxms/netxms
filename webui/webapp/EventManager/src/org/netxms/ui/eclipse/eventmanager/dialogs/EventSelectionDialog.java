@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,8 +54,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class EventSelectionDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private boolean multiSelection;
 	private Text filterText;
 	private TableViewer eventList;
@@ -139,8 +137,6 @@ public class EventSelectionDialog extends Dialog
 		eventList.getTable().setLayoutData(gd);
 		
 		filterText.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{

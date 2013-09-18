@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,8 +39,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class SyslogLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color[] FOREGROUND_COLORS =

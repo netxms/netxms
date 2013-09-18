@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,8 +97,6 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 		super.createActions();
 		
 		actionShowColor = new Action(Messages.EventMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -109,8 +107,6 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 		actionShowColor.setChecked(labelProvider.isShowColor());
 		
 		actionShowIcons = new Action(Messages.EventMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
