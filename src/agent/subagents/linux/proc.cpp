@@ -20,11 +20,9 @@
 
 #include "linux_subagent.h"
 
-
-//
-// Filter for reading only pid directories from /proc
-//
-
+/**
+ * Filter for reading only pid directories from /proc
+ */
 static int ProcFilter(const struct dirent *pEnt)
 {
 	char *pTmp;
@@ -47,22 +45,20 @@ static int ProcFilter(const struct dirent *pEnt)
 	return 1;
 }
 
-
-//
-// Read process information from /proc system
-// Parameters:
-//    pEnt - If not NULL, ProcRead() will return pointer to dynamically
-//           allocated array of process information structures for
-//           matched processes. Caller should free it with free().
-//    szProcName - If not NULL, only processes with matched name will
-//                 be counted and read. If szCmdLine is NULL, then exact
-//                 match required to pass filter; otherwise szProcName can
-//                 be a regular expression.
-//    szCmdLine - If not NULL, only processes with command line matched to
-//                regular expression will be counted and read.
-// Return value: number of matched processes or -1 in case of error.
-//
-
+/**
+ * Read process information from /proc system
+ * Parameters:
+ *    pEnt - If not NULL, ProcRead() will return pointer to dynamically
+ *           allocated array of process information structures for
+ *           matched processes. Caller should free it with free().
+ *    szProcName - If not NULL, only processes with matched name will
+ *                 be counted and read. If szCmdLine is NULL, then exact
+ *                 match required to pass filter; otherwise szProcName can
+ *                 be a regular expression.
+ *    szCmdLine - If not NULL, only processes with command line matched to
+ *                regular expression will be counted and read.
+ * Return value: number of matched processes or -1 in case of error.
+ */
 int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 {
 	struct dirent **pNameList;
@@ -243,11 +239,9 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 	return nFound;
 }
 
-
-//
-// Handler for System.ProcessCount, Process.Count() and Process.CountEx() parameters
-//
-
+/**
+ * Handler for System.ProcessCount, Process.Count() and Process.CountEx() parameters
+ */
 LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -274,11 +268,9 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for System.ThreadCount parameter
-//
-
+/**
+ * Handler for System.ThreadCount parameter
+ */
 LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
@@ -297,27 +289,24 @@ LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 	return ret;
 }
 
-
-//
-// Handler for Process.xxx() parameters
-// Parameter has the following syntax:
-//    Process.XXX(<process>,<type>,<cmdline>)
-// where
-//    XXX        - requested process attribute (see documentation for list of valid attributes)
-//    <process>  - process name (same as in Process.Count() parameter)
-//    <type>     - representation type (meaningful when more than one process with the same
-//                 name exists). Valid values are:
-//         min - minimal value among all processes named <process>
-//         max - maximal value among all processes named <process>
-//         avg - average value for all processes named <process>
-//         sum - sum of values for all processes named <process>
-//    <cmdline>  - command line
-//
-
+/**
+ * Handler for Process.xxx() parameters
+ * Parameter has the following syntax:
+ *    Process.XXX(<process>,<type>,<cmdline>)
+ * where
+ *    XXX        - requested process attribute (see documentation for list of valid attributes)
+ *    <process>  - process name (same as in Process.Count() parameter)
+ *    <type>     - representation type (meaningful when more than one process with the same
+ *                 name exists). Valid values are:
+ *         min - minimal value among all processes named <process>
+ *         max - maximal value among all processes named <process>
+ *         avg - average value for all processes named <process>
+ *         sum - sum of values for all processes named <process>
+ *    <cmdline>  - command line
+ */
 LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	int i, count, type;
-	long pageSize, ticksPerSecond;
 	INT64 currVal, finalVal;
 	PROC_ENT *procList;
 	char procName[MAX_PATH], cmdLine[MAX_PATH], buffer[256];
@@ -348,8 +337,8 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 	if (count == -1)
 		return SYSINFO_RC_ERROR;
 
-	pageSize = getpagesize();
-	ticksPerSecond = sysconf(_SC_CLK_TCK);
+	long pageSize = getpagesize();
+	long ticksPerSecond = sysconf(_SC_CLK_TCK);
 	for(i = 0, finalVal = 0; i < count; i++)
 	{
 		switch(CAST_FROM_POINTER(arg, int))
@@ -403,3 +392,72 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 	return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for System.ProcessList list
+ */
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+{
+   int nRet = SYSINFO_RC_ERROR;
+
+   PROC_ENT *plist;
+   int nCount = ProcRead(&plist, NULL, NULL);
+   if (nCount >= 0)
+   {    
+      nRet = SYSINFO_RC_SUCCESS;
+
+      for(int i = 0; i < nCount; i++)
+      {         
+         TCHAR szBuff[128];
+         _sntprintf(szBuff, sizeof(szBuff), _T("%d %hs"), plist[i].nPid, plist[i].szProcName);
+         pValue->add(szBuff);
+      }         
+   }    
+	safe_free(plist);
+   return nRet;
+}
+
+/**
+ * Handler for System.Processes table
+ */
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
+{
+   value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("THREADS"), DCI_DT_UINT, _T("Threads"));
+   value->addColumn(_T("KTIME"), DCI_DT_UINT64, _T("Kernel Time"));
+   value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
+   value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
+   value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
+   value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
+
+   int rc = SYSINFO_RC_ERROR;
+
+   PROC_ENT *plist;
+   int nCount = ProcRead(&plist, NULL, NULL);
+   if (nCount >= 0)
+   {    
+      rc = SYSINFO_RC_SUCCESS;
+
+	   UINT64 pageSize = getpagesize();
+	   long ticksPerSecond = sysconf(_SC_CLK_TCK);
+      for(int i = 0; i < nCount; i++)
+      {         
+         value->addRow();
+         value->set(0, plist[i].nPid);
+#ifdef UNICODE
+         value->setPreallocated(1, WideStringFromMBString(plist[i].szProcName));
+#else
+         value->set(1, plist[i].szProcName);
+#endif
+         value->set(2, plist[i].threads);
+         value->set(3, plist[i].ktime * 1000 / ticksPerSecond);
+         value->set(4, plist[i].utime * 1000 / ticksPerSecond);
+         value->set(5, plist[i].vmsize);
+         value->set(6, (UINT64)plist[i].rss * pageSize);
+         value->set(7, plist[i].minflt + plist[i].majflt);
+      }         
+   }    
+   safe_free(plist);
+   return rc;
+}

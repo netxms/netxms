@@ -310,34 +310,6 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 }
 
 /**
- * Handler for System.ProcessList list
- */
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	PROC_ENT *pEnt;
-	int nCount;
-
-	nCount = ProcRead(&pEnt, NULL, NULL);
-
-	if (nCount >= 0)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
-
-		for (int i = 0; i < nCount; i++)
-		{
-			TCHAR szBuff[128];
-
-			_sntprintf(szBuff, sizeof(szBuff), _T("%d %hs"),
-					pEnt[i].nPid, pEnt[i].szProcName);
-			pValue->add(szBuff);
-		}
-	}
-
-	return nRet;
-}
-
-/**
  * Handler for Agent.SourcePackageSupport parameter
  */
 LONG H_SourcePkgSupport(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)

@@ -61,10 +61,10 @@ enum
  */
 typedef struct t_ProcEnt
 {
-	unsigned int nPid;
+	UINT32 nPid;
 	char szProcName[128];
-	int parent;					// PID of parent process
-	int group;					// Group ID
+	UINT32 parent;					// PID of parent process
+	UINT32 group;					// Group ID
 	char state;					// Process state
 	long threads;				// Number of threads
 	unsigned long ktime;		// Number of ticks spent in kernel mode
@@ -197,6 +197,7 @@ LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *);
 
 LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *);
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
