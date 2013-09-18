@@ -337,6 +337,7 @@ contrib/startup/debian/nxagentd.in -text
 contrib/startup/solaris/netxmsd.in -text
 doc/RadenSolutions-C-Formatter.xml -text
 doc/RadenSolutions.xml -text
+doc/asn1.npp.styling.xml -text
 doc/comparison_netxms_nnm.doc -text
 doc/doxygen.md -text
 doc/integration/HPOM_Integration.docx -text
