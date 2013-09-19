@@ -17,6 +17,7 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: mm.cpp
+** Purpose: Map Migration
 **
 **/
 
