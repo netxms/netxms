@@ -416,6 +416,7 @@ public class DashboardElements extends PropertyPage
 					break;
 				case DashboardElement.ALARM_VIEWER:
 				case DashboardElement.STATUS_INDICATOR:
+				case DashboardElement.STATUS_MAP:
 				case DashboardElement.DASHBOARD:
 					config = DashboardControl.DEFAULT_OBJECT_REFERENCE_CONFIG;
 					break;

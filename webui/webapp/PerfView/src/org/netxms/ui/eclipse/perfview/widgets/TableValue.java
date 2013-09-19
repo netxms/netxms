@@ -194,6 +194,8 @@ public class TableValue extends Composite
 					@Override
 					public void run()
 					{
+						if (viewer.getControl().isDisposed())
+							return;
 						updateViewer(table);
 						if (postRefreshHook != null)
 						{

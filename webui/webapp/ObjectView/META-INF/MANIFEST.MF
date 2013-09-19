@@ -5,13 +5,14 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.objectview;singleton:=true
 Bundle-Version: 1.2.9
 Bundle-Activator: org.netxms.ui.eclipse.objectview.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.netxms.ui.eclipse.charts;bundle-version="1.2.6",
- org.netxms.webui.core;bundle-version="1.2.7",
- org.eclipse.rap.ui;bundle-version="2.0.0",
- org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.6"
+Require-Bundle: org.netxms.ui.eclipse.charts;bundle-version="1.2.9",
+ org.netxms.webui.core;bundle-version="1.2.9",
+ org.eclipse.rap.ui;bundle-version="2.1.0",
+ org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.9"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectview.api,
  org.netxms.ui.eclipse.objectview.objecttabs,
  org.netxms.ui.eclipse.objectview.services,
- org.netxms.ui.eclipse.objectview.views
+ org.netxms.ui.eclipse.objectview.views,
+ org.netxms.ui.eclipse.objectview.widgets

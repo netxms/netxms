@@ -16,7 +16,8 @@ Require-Bundle: org.eclipse.ui,
  org.netxms.ui.eclipse.alarmviewer;bundle-version="1.2.9",
  org.netxms.ui.eclipse.filemanager;bundle-version="1.2.7",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.9",
- org.netxms.ui.eclipse.perfview;bundle-version="1.2.9"
+ org.netxms.ui.eclipse.perfview;bundle-version="1.2.9",
+ org.netxms.ui.eclipse.objectview;bundle-version="1.2.9"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.dashboard.api

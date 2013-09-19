@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,6 +94,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	private MenuManager menuManager;
 	private Font titleFont;
 	private boolean groupObjects = true;
+	private int severityFilter = 0xFF;
 	private SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
 	
 	/**
@@ -222,6 +224,21 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			return;
 		
 		List<AbstractObject> objects = new ArrayList<AbstractObject>(root.getAllChilds(AbstractObject.OBJECT_NODE));
+		
+		// apply severity filter
+		if ((severityFilter & 0x1F) != 0x1F)
+		{
+			Iterator<AbstractObject> it = objects.iterator();
+			while(it.hasNext())
+			{
+				AbstractObject o = it.next();
+				if (((1 << o.getStatus()) & severityFilter) == 0)
+				{
+					it.remove();
+				}
+			}
+		}
+		
 		Collections.sort(objects, new Comparator<AbstractObject>() {
 			@Override
 			public int compare(AbstractObject o1, AbstractObject o2)
@@ -284,6 +301,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			if (!(o instanceof AbstractNode))
 				continue;
 			
+			if (((1 << o.getStatus()) & severityFilter) == 0)
+				continue;
+
 			if (section == null)
 			{
 				section = new Composite(dataArea, SWT.NONE);
@@ -535,5 +555,21 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 				});
 			}
 		}
+	}
+
+	/**
+	 * @return
+	 */
+	public int getSeverityFilter()
+	{
+		return severityFilter;
+	}
+
+	/**
+	 * @param severityFilter
+	 */
+	public void setSeverityFilter(int severityFilter)
+	{
+		this.severityFilter = severityFilter;
 	}
 }

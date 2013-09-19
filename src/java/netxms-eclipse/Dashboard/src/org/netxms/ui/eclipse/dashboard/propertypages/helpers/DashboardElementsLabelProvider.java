@@ -28,16 +28,44 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 
 /**
  * Label provider for list of dashboard elements
- *
  */
 public class DashboardElementsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] ELEMENT_TYPES = { Messages.DashboardElementsLabelProvider_TypeLabel, Messages.DashboardElementsLabelProvider_TypeLineChart, Messages.DashboardElementsLabelProvider_TypeBarChart, Messages.DashboardElementsLabelProvider_TypePieChart, 
-		Messages.DashboardElementsLabelProvider_TypeTubeChart, Messages.DashboardElementsLabelProvider_TypeStatusChart, Messages.DashboardElementsLabelProvider_TypeStatusIndicator, Messages.DashboardElementsLabelProvider_TypeDashboard, Messages.DashboardElementsLabelProvider_TypeNetworkMap, Messages.DashboardElementsLabelProvider_TypeCustom, 
-		Messages.DashboardElementsLabelProvider_TypeGeoMap, Messages.DashboardElementsLabelProvider_TypeAlarmViewer, Messages.DashboardElementsLabelProvider_TypeAvailChart, Messages.DashboardElementsLabelProvider_TypeGaugeChart, Messages.DashboardElementsLabelProvider_TypeWebPage, Messages.DashboardElementsLabelProvider_TypeTableBarChart,
-		Messages.DashboardElementsLabelProvider_TypeTablePieChart, Messages.DashboardElementsLabelProvider_TypeTableTubeChart, Messages.DashboardElementsLabelProvider_TypeSeparator, "Table Value" };
-	private static final String[] H_ALIGH = { Messages.DashboardElementsLabelProvider_Fill, Messages.DashboardElementsLabelProvider_Center, Messages.DashboardElementsLabelProvider_Left, Messages.DashboardElementsLabelProvider_Right };
-	private static final String[] V_ALIGH = { Messages.DashboardElementsLabelProvider_Fill, Messages.DashboardElementsLabelProvider_Center, Messages.DashboardElementsLabelProvider_Top, Messages.DashboardElementsLabelProvider_Bottom };
+	private static final String[] ELEMENT_TYPES = { 
+		Messages.DashboardElementsLabelProvider_TypeLabel, 
+		Messages.DashboardElementsLabelProvider_TypeLineChart, 
+		Messages.DashboardElementsLabelProvider_TypeBarChart, 
+		Messages.DashboardElementsLabelProvider_TypePieChart, 
+		Messages.DashboardElementsLabelProvider_TypeTubeChart, 
+		Messages.DashboardElementsLabelProvider_TypeStatusChart, 
+		Messages.DashboardElementsLabelProvider_TypeStatusIndicator, 
+		Messages.DashboardElementsLabelProvider_TypeDashboard, 
+		Messages.DashboardElementsLabelProvider_TypeNetworkMap, 
+		Messages.DashboardElementsLabelProvider_TypeCustom, 
+		Messages.DashboardElementsLabelProvider_TypeGeoMap, 
+		Messages.DashboardElementsLabelProvider_TypeAlarmViewer, 
+		Messages.DashboardElementsLabelProvider_TypeAvailChart, 
+		Messages.DashboardElementsLabelProvider_TypeGaugeChart, 
+		Messages.DashboardElementsLabelProvider_TypeWebPage, 
+		Messages.DashboardElementsLabelProvider_TypeTableBarChart,
+		Messages.DashboardElementsLabelProvider_TypeTablePieChart, 
+		Messages.DashboardElementsLabelProvider_TypeTableTubeChart, 
+		Messages.DashboardElementsLabelProvider_TypeSeparator, 
+		"Table Value", 
+		"Status Map"
+	};
+	private static final String[] H_ALIGH = { 
+		Messages.DashboardElementsLabelProvider_Fill, 
+		Messages.DashboardElementsLabelProvider_Center, 
+		Messages.DashboardElementsLabelProvider_Left, 
+		Messages.DashboardElementsLabelProvider_Right 
+	};
+	private static final String[] V_ALIGH = { 
+		Messages.DashboardElementsLabelProvider_Fill, 
+		Messages.DashboardElementsLabelProvider_Center, 
+		Messages.DashboardElementsLabelProvider_Top, 
+		Messages.DashboardElementsLabelProvider_Bottom 
+	};
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

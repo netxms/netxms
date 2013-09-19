@@ -285,6 +285,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.StatusMap"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.StatusMap#0"
+            name="Status Map">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">
