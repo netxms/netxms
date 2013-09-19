@@ -1507,11 +1507,11 @@ void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly)
  *
  * @param eventSourceOnly if true, only objects that can be event source will be included
  */
-ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly)
+ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly, bool updateRefCount)
 {
 	ObjectIndex list;
 	getFullChildListInternal(&list, eventSourceOnly);
-	return list.getObjects();
+	return list.getObjects(updateRefCount);
 }
 
 /**

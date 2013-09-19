@@ -175,13 +175,19 @@ int ObjectIndex::getSize()
  * Get all objects in index. Result array created dynamically and
  * must be destroyed by the caller. Changes in result array will
  * not affect content of the index.
+ *
+ * @param updateRefCount if set to true, reference count for each object will be increased
  */
-ObjectArray<NetObj> *ObjectIndex::getObjects()
+ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount)
 {
 	RWLockReadLock(m_lock, INFINITE);
 	ObjectArray<NetObj> *result = new ObjectArray<NetObj>(m_size);
 	for(int i = 0; i < m_size; i++)
+   {
+      if (updateRefCount)
+         m_elements[i].object->incRefCount();
 		result->add(m_elements[i].object);
+   }
 	RWLockUnlock(m_lock);
 	return result;
 }

@@ -2003,7 +2003,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
    msg.SetCode(CMD_OBJECT);
 
    // Send objects, one per message
-	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
+	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
    MutexLock(m_mutexSendObjects);
 	for(int i = 0; i < objects->size(); i++)
 	{
@@ -2017,6 +2017,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
             object->commentsToMessage(&msg);
          sendMessage(&msg);
          msg.DeleteAllVariables();
+         object->decRefCount();
       }
 	}
 	delete objects;

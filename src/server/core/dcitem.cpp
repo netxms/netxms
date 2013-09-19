@@ -939,13 +939,14 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
          if (dwRequiredSize < m_thresholds->get(i)->getRequiredCacheSize())
             dwRequiredSize = m_thresholds->get(i)->getRequiredCacheSize();
 
-		ObjectArray<NetObj> *conditions = g_idxConditionById.getObjects();
+		ObjectArray<NetObj> *conditions = g_idxConditionById.getObjects(true);
 		for(int i = 0; i < conditions->size(); i++)
       {
 			Condition *c = (Condition *)conditions->get(i);
 			dwSize = c->getCacheSizeForDCI(m_dwId, dwCondId == c->Id());
          if (dwSize > dwRequiredSize)
             dwRequiredSize = dwSize;
+         c->decRefCount();
       }
 		delete conditions;
    }

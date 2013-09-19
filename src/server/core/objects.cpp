@@ -152,31 +152,31 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 }
 
 /**
+ * Update DCI cache for all data collection targets referenced by given index
+ */
+static void UpdateDataCollectionCache(ObjectIndex *idx)
+{
+	ObjectArray<NetObj> *objects = idx->getObjects(true);
+   for(int i = 0; i < objects->size(); i++)
+   {
+      DataCollectionTarget *t = (DataCollectionTarget *)objects->get(i);
+      t->updateDciCache();
+      t->decRefCount();
+   }
+	delete objects;
+}
+
+/**
  * DCI cache loading thread
  */
 static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 {
    DbgPrintf(1, _T("Started caching of DCI values"));
 
-	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
-   for(int i = 0; i < nodes->size(); i++)
-		((Node *)nodes->get(i))->updateDciCache();
-	delete nodes;
-
-	ObjectArray<NetObj> *clusters = g_idxClusterById.getObjects();
-   for(int i = 0; i < clusters->size(); i++)
-		((Cluster *)clusters->get(i))->updateDciCache();
-	delete clusters;
-
-	ObjectArray<NetObj> *mbs = g_idxMobileDeviceById.getObjects();
-   for(int i = 0; i < mbs->size(); i++)
-		((MobileDevice *)mbs->get(i))->updateDciCache();
-	delete mbs;
-
-	ObjectArray<NetObj> *aps = g_idxAccessPointById.getObjects();
-   for(int i = 0; i < aps->size(); i++)
-		((AccessPoint *)aps->get(i))->updateDciCache();
-	delete aps;
+	UpdateDataCollectionCache(&g_idxNodeById);
+	UpdateDataCollectionCache(&g_idxClusterById);
+	UpdateDataCollectionCache(&g_idxMobileDeviceById);
+	UpdateDataCollectionCache(&g_idxAccessPointById);
 
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;

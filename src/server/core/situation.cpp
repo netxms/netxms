@@ -444,7 +444,7 @@ UINT32 DeleteSituation(UINT32 id)
  */
 void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
 {
-	ObjectArray<NetObj> *list = s_idxSituations.getObjects();
+	ObjectArray<NetObj> *list = s_idxSituations.getObjects(false);
 
 	msg->SetVariable(VID_SITUATION_COUNT, (UINT32)list->size());
 	session->sendMessage(msg);

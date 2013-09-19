@@ -301,20 +301,24 @@ Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT3
    if (tableDefinition == NULL)
       return NULL;
 
-   ObjectArray<NetObj> *childObjects = object->getFullChildList(true);
+   ObjectArray<NetObj> *childObjects = object->getFullChildList(true, true);
    Table *tableData = tableDefinition->createEmptyResultTable();
 
    for(int i = 0; i < childObjects->size(); i++)
    {
-      if (((childObjects->get(i)->Type() != OBJECT_NODE) && (childObjects->get(i)->Type() != OBJECT_MOBILEDEVICE)) || 
-          !childObjects->get(i)->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         continue;
-
-      DataCollectionTarget *dct = (DataCollectionTarget *)childObjects->get(i);
-      if (tableDefinition->filter(dct))
+      NetObj *obj = childObjects->get(i);
+      if (((obj->Type() != OBJECT_NODE) && (obj->Type() != OBJECT_MOBILEDEVICE)) || 
+          !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
-         dct->getLastValuesSummary(tableDefinition, tableData);
+         obj->decRefCount();
+         continue;
       }
+
+      if (tableDefinition->filter((DataCollectionTarget *)obj))
+      {
+         ((DataCollectionTarget *)obj)->getLastValuesSummary(tableDefinition, tableData);
+      }
+      obj->decRefCount();
    }
 
    delete childObjects;

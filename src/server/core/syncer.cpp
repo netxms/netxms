@@ -58,7 +58,7 @@ void SaveObjects(DB_HANDLE hdb)
    if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockWriteLock(s_objectTxnLock, INFINITE);
 
-	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
+	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(false);
 	for(int i = 0; i < objects->size(); i++)
    {
    	NetObj *object = objects->get(i);

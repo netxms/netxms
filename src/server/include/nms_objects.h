@@ -172,7 +172,7 @@ public:
 	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
 
 	int getSize();
-	ObjectArray<NetObj> *getObjects();
+	ObjectArray<NetObj> *getObjects(bool updateRefCount);
 
 	void forEach(void (*callback)(NetObj *, void *), void *data);
 };
@@ -455,7 +455,7 @@ public:
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
 	ObjectArray<NetObj> *getChildList(int typeFilter);
-	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly);
+	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly, bool updateRefCount);
 
 	virtual NXSL_Array *getParentsForNXSL();
 	virtual NXSL_Array *getChildrenForNXSL();

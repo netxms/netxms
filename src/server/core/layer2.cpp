@@ -68,7 +68,7 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 	DbgPrintf(6, _T("Called FindInterfaceConnectionPoint(%s)"), MACToStr(macAddr, macAddrText));
 
 	Interface *iface = NULL;
-	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
+	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true);
 
 	Node *bestMatchNode = NULL;
 	UINT32 bestMatchIfIndex = 0;
@@ -111,6 +111,7 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 			}
 			fdb->decRefCount();
 		}
+      node->decRefCount();
 	}
 	delete nodes;
 

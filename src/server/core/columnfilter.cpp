@@ -167,7 +167,7 @@ String ColumnFilter::generateSql()
 				NetObj *object = FindObjectById((UINT32)m_value.numericValue);
 				if (object != NULL)
 				{
-					ObjectArray<NetObj> *childObjects = object->getFullChildList(true);
+					ObjectArray<NetObj> *childObjects = object->getFullChildList(true, true);
 					if (childObjects->size() > 0)
 					{
 						sql += m_column;
@@ -179,6 +179,7 @@ String ColumnFilter::generateSql()
 							TCHAR buffer[32];
 							_sntprintf(buffer, 32, _T("%d"), (int)childObjects->get(i)->Id());
 							sql += (const TCHAR *)buffer;
+                     childObjects->get(i)->decRefCount();
 						}
 						sql += _T(")");
 					}
