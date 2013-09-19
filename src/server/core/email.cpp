@@ -360,16 +360,19 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
             iState = STATE_ERROR;
          }
       }
-
       // Shutdown communication channel
       shutdown(hSocket, SHUT_RDWR);
-      closesocket(hSocket);
 
       dwRetCode = (iState == STATE_FINISHED) ? SMTP_ERR_SUCCESS : SMTP_ERR_PROTOCOL_FAILURE;
    }
    else
    {
       dwRetCode = SMTP_ERR_COMM_FAILURE;
+   }
+
+   if (hSocket != -1)
+   {
+      closesocket(hSocket);
    }
 
    return dwRetCode;
