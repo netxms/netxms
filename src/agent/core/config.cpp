@@ -91,7 +91,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
    }
 
    hSocket = socket(AF_INET, SOCK_STREAM, 0);
-   if (hSocket != -1)
+   if (hSocket != INVALID_SOCKET)
    {
       // Fill in address structure
       memset(&sa, 0, sizeof(sa));

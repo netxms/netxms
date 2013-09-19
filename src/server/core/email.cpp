@@ -172,7 +172,7 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 
    // Create socket
    hSocket = socket(AF_INET, SOCK_STREAM, 0);
-   if (hSocket == -1)
+   if (hSocket == INVALID_SOCKET)
       return SMTP_ERR_COMM_FAILURE;
 
    // Connect to server

@@ -294,7 +294,7 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, UINT32 dw
        (m_peerAddr.sin_addr.s_addr != INADDR_NONE))
    {
       m_hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-      if (m_hSocket != -1)
+      if (m_hSocket != INVALID_SOCKET)
       {
 			struct sockaddr_in localAddr;
 

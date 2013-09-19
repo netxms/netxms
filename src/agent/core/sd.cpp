@@ -166,7 +166,7 @@ static THREAD_RESULT THREAD_CALL StorageDiscoveryConnector(void *arg)
 	mode_t prevMask = 0;
 
 	SOCKET hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (hPipe == -1)
+	if (hPipe == INVALID_SOCKET)
 	{
 		AgentWriteDebugLog(2, _T("StorageDiscoveryConnector: socket failed (%s)"), _tcserror(errno));
 		goto cleanup;

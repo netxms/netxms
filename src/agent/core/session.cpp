@@ -952,7 +952,7 @@ UINT32 CommSession::setupProxyConnection(CSCPMessage *pRequest)
       dwAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
       wPort = pRequest->GetVariableShort(VID_AGENT_PORT);
       m_hProxySocket = socket(AF_INET, SOCK_STREAM, 0);
-      if (m_hProxySocket != -1)
+      if (m_hProxySocket != INVALID_SOCKET)
       {
          // Fill in address structure
          memset(&sa, 0, sizeof(sa));

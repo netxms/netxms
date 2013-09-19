@@ -679,7 +679,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 
 	// Open a socket.
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sockfd < 0)
+	if (sockfd == INVALID_SOCKET)
 	{
 		DbgPrintf(3, _T("RADIUS: Cannot create socket"));
 		pairfree(req);

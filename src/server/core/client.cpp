@@ -126,7 +126,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
    wListenPort = (WORD)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
 
    // Create socket
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListener"));
       return THREAD_OK;
@@ -217,7 +217,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
    wListenPort = (WORD)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
 
    // Create socket
-   if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
+   if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListener"));
       return THREAD_OK;

@@ -105,7 +105,7 @@ void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse)
 			pRequest->GetVariableBinary(VID_PDU, pduIn, dwSizeIn);
 
 			hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-			if (hSocket != -1)
+			if (hSocket != INVALID_SOCKET)
 			{
 				memset(&addr, 0, sizeof(struct sockaddr_in));
 				addr.sin_family = AF_INET;

@@ -283,7 +283,7 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
 
    // Create socket
    m_socket = socket(AF_INET, SOCK_STREAM, 0);
-   if (m_socket == -1)
+   if (m_socket == INVALID_SOCKET)
    {
 		rcc = ISC_ERR_SOCKET_ERROR;
       PrintMsg(_T("ISC: Call to socket() failed"));

@@ -123,7 +123,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    fd_set rdfs;
 
    // Create socket
-   if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+   if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       exit(1);

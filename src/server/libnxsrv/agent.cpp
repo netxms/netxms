@@ -367,7 +367,7 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
 
    // Create socket
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
-   if (m_hSocket == -1)
+   if (m_hSocket == INVALID_SOCKET)
    {
       printMsg(_T("Call to socket() failed"));
       goto connect_cleanup;

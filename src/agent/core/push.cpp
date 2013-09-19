@@ -208,7 +208,7 @@ static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 	mode_t prevMask = 0;
 
 	SOCKET hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (hPipe == -1)
+	if (hPipe == INVALID_SOCKET)
 	{
 		AgentWriteDebugLog(2, _T("PushConnector: socket failed (%s)"), _tcserror(errno));
 		goto cleanup;

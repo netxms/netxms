@@ -46,19 +46,16 @@ DWORD g_dwRqId = 1;
 static CSCP_MESSAGE *m_pRawMsg;
 static CSCP_BUFFER *m_pRecvBuffer;
 
-
-
-//
-// Connect to server
-//
-
+/**
+ * Connect to server
+ */
 BOOL Connect()
 {
    struct sockaddr_in sa;
 
    // Create socket
    g_hSocket = socket(AF_INET, SOCK_STREAM, 0);
-   if (g_hSocket == -1)
+   if (g_hSocket == INVALID_SOCKET)
    {
       printf("Error creating socket\n");
       return FALSE;

@@ -410,7 +410,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 	SNMP_Engine localEngine(engineId, 12);
 
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-   if (hSocket == -1)
+   if (hSocket == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SNMPTrapReceiver");
       return THREAD_OK;

@@ -105,7 +105,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    socklen_t iSize;
 
    // Create socket
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("LocalAdminListener"));
       return THREAD_OK;

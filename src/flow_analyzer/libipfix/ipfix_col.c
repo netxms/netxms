@@ -2022,7 +2022,8 @@ int ipfix_listen( int *nfds, SOCKET **fds,
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port        = htons(port);
 
-    if ((s=socket( AF_INET, socktype, sockproto )) <0 ) {
+    if ((s=socket( AF_INET, socktype, sockproto )) == INVALID_SOCKET) 
+    {
         mlogf( 0, "[%s] socket() failed: %s\n", func, strerror(errno) );
         return -1;
     }

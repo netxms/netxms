@@ -207,7 +207,7 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries,
 
    // Create raw socket
    sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-   if (sock == -1)
+   if (sock == INVALID_SOCKET)
    {
       return ICMP_RAW_SOCK_FAILED;
    }

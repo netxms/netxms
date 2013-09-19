@@ -876,7 +876,8 @@ int _ipfix_connect ( ipfix_collector_t *col )
         }
 #endif
         sock = socket(aip->ai_family, aip->ai_socktype, aip->ai_protocol);
-        if (sock == -1) {
+        if (sock == INVALID_SOCKET) 
+        {
             mlogf( 0, "[ipfix] socket() failed: %s\n", strerror(errno) );
             freeaddrinfo(res);
             return (-1);

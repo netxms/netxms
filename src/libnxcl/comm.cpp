@@ -286,12 +286,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, con
    if (servAddr.sin_addr.s_addr != INADDR_NONE)
    {
       // Create socket
-      if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) != -1)
+      if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) != INVALID_SOCKET)
       {
-			// enable TCP_NODELAY
-			//int nVal = 1;
-			//setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, &nVal, sizeof(nVal));
-
          // Connect to target
          if (connect(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) == 0)
          {

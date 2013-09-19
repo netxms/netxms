@@ -61,7 +61,7 @@ static void SendSyslogRecord(const TCHAR *text)
 	message[1024] = 0;
 
    SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-	if (hSocket != 0)
+   if (hSocket != INVALID_SOCKET)
 	{
 		struct sockaddr_in addr;
 

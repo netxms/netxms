@@ -264,7 +264,7 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 
    // Create socket
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-   if (hSocket == -1)
+   if (hSocket == INVALID_SOCKET)
       return FALSE;
 
    memset(&addr, 0, sizeof(struct sockaddr_in));

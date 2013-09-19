@@ -483,7 +483,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    }
 
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-   if (hSocket == -1)
+   if (hSocket == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SyslogDaemon"));
       return THREAD_OK;

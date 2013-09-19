@@ -91,7 +91,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 			SetNamedPipeHandleState(hPipe, &pipeMode, NULL, NULL);
 #else
       int hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
-      if (hPipe != -1)
+      if (hPipe != INVALID_SOCKET)
       {
 	      struct sockaddr_un remote;
 	      remote.sun_family = AF_UNIX;

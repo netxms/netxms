@@ -90,7 +90,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceListener(void *arg)
    wListenPort = (WORD)ConfigReadInt(_T("MobileDeviceListenerPort"), SERVER_LISTEN_PORT_FOR_MOBILES);
 
    // Create socket
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("MobileDeviceListener"));
       return THREAD_OK;
@@ -181,7 +181,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *arg)
    wListenPort = (WORD)ConfigReadInt(_T("MobileDeviceListenerPort"), SERVER_LISTEN_PORT_FOR_MOBILES);
 
    // Create socket
-   if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
+   if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("MobileDeviceListener"));
       return THREAD_OK;

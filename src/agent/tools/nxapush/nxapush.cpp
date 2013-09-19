@@ -309,7 +309,7 @@ reconnect:
 	SetNamedPipeHandleState(s_hPipe, &pipeMode, NULL, NULL);
 #else
 	s_hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (s_hPipe == -1)
+	if (s_hPipe == INVALID_SOCKET)
 		return FALSE;
 
 	struct sockaddr_un remote;

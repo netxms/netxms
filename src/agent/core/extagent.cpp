@@ -592,7 +592,7 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 	mode_t prevMask = 0;
 
 	int s = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (s == -1)
+	if (s == INVALID_SOCKET)
 	{
 		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: socket failed (%s)"), _tcserror(errno));
 		goto cleanup;

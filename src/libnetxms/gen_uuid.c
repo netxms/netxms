@@ -134,11 +134,11 @@ static int get_node_id(unsigned char *node_id)
 
 #ifdef AF_INET6
 	sd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
-	if (sd < 0)
+	if (sd == INVALID_SOCKET)
 #endif
 	{
 		sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-		if (sd < 0)
+		if (sd == INVALID_SOCKET)
 		{
 			return -1;
 		}

@@ -216,7 +216,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
 	TCHAR buffer[32];
 
    // Create socket
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ISCListener"));
       return THREAD_OK;
