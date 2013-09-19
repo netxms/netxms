@@ -31,11 +31,9 @@ DECLARE_DRIVER_HEADER("PGSQL")
 extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn);
 static BOOL UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
-
-//
-// Prepare string for using in SQL query - enclose in quotes and escape as needed
-//
-
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
 extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
@@ -95,6 +93,9 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 	return out;
 }
 
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
 extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
@@ -310,7 +311,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, D
 	char *pszQueryUTF8 = ConvertQuery(pwszQuery);
 	PG_STATEMENT *hStmt = (PG_STATEMENT *)malloc(sizeof(PG_STATEMENT));
 	hStmt->connection = pConn;
-	snprintf(hStmt->name, 64, "netxms_stmt_%p", hStmt);
+	snprintf(hStmt->name, 64, "netxms_stmt_%p_%d", hStmt, (int)time(NULL));
 
 	MutexLock(pConn->mutexQueryLock);
 	PGresult	*pResult = PQprepare(pConn->pHandle, hStmt->name, pszQueryUTF8, 0, NULL);
