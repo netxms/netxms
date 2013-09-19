@@ -16,7 +16,8 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
  org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.9",
  org.netxms.ui.eclipse.filemanager;bundle-version="1.2.6",
  org.eclipse.rap.rwt.supplemental.filedialog;bundle-version="1.5.100",
- org.netxms.ui.eclipse.perfview;bundle-version="1.2.9"
+ org.netxms.ui.eclipse.perfview;bundle-version="1.2.9",
+ org.netxms.ui.eclipse.objectview;bundle-version="1.2.9"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.dashboard.api
