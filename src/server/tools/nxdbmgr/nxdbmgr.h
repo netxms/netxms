@@ -82,6 +82,8 @@ BOOL CreateIDataTable(DWORD nodeId);
 BOOL CreateTDataTables(DWORD nodeId);
 BOOL CreateTDataTable_preV281(DWORD nodeId);
 
+void ResetAdmin();
+
 //
 // Global variables
 //

@@ -545,6 +545,7 @@ int main(int argc, char *argv[])
                      _T("   set <name> <value> : Set value of server configuration variable\n")
                      _T("   unlock             : Forced database unlock\n")
                      _T("   upgrade            : Upgrade database to new version\n")
+                     _T("   resetadmin         : Unlock user \"admin\" and reset password to default (\"netxms\")\n")
                      _T("Valid options are:\n")
                      _T("   -c <config> : Use alternate configuration file. Default is ") DEFAULT_CONFIG_FILE _T("\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
@@ -631,7 +632,8 @@ int main(int argc, char *argv[])
        strcmp(argv[optind], "reindex") &&
        strcmp(argv[optind], "set") &&
        strcmp(argv[optind], "unlock") &&
-       strcmp(argv[optind], "upgrade"))
+       strcmp(argv[optind], "upgrade") &&
+       strcmp(argv[optind], "resetadmin"))
    {
       _tprintf(_T("Invalid command \"%hs\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
       return 1;
@@ -763,6 +765,10 @@ int main(int argc, char *argv[])
 			free(value);
 #endif
 		}
+      else if (!strcmp(argv[optind], "resetadmin"))
+      {
+         ResetAdmin();
+      }
    }
 
    // Shutdown
