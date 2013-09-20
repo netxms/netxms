@@ -157,7 +157,7 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
 	if (bResult)
-		m_bIsModified = FALSE;
+		m_isModified = false;
    UnlockData();
 
    return bResult;

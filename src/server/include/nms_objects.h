@@ -316,10 +316,10 @@ protected:
    int m_iStatusTranslation[4];
    int m_iStatusSingleThreshold;
    int m_iStatusThresholds[4];
-   BOOL m_bIsModified;
-   BOOL m_bIsDeleted;
-   BOOL m_bIsHidden;
-	BOOL m_bIsSystem;
+   bool m_isModified;
+   bool m_isDeleted;
+   bool m_isHidden;
+	bool m_isSystem;
 	uuid_t m_image;
    MUTEX m_mutexData;         // Object data access mutex
    MUTEX m_mutexRefCount;     // Reference counter access mutex
@@ -396,13 +396,13 @@ public:
 	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
 	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
 
-   BOOL isModified() { return m_bIsModified; }
-   BOOL isDeleted() { return m_bIsDeleted; }
-   BOOL isOrphaned() { return m_dwParentCount == 0 ? TRUE : FALSE; }
-   BOOL isEmpty() { return m_dwChildCount == 0 ? TRUE : FALSE; }
+   bool isModified() { return m_isModified; }
+   bool isDeleted() { return m_isDeleted; }
+   bool isOrphaned() { return m_dwParentCount == 0; }
+   bool isEmpty() { return m_dwChildCount == 0; }
 	
-	BOOL isSystem() { return m_bIsSystem; }
-	void setSystemFlag(BOOL bFlag) { m_bIsSystem = bFlag; }
+	bool isSystem() { return m_isSystem; }
+	void setSystemFlag(bool flag) { m_isSystem = flag; }
 
    UINT32 getRefCount();
    void incRefCount();
@@ -419,7 +419,7 @@ public:
 
    void deleteObject();     // Prepare object for deletion
 
-   BOOL isHidden() { return m_bIsHidden; }
+   bool isHidden() { return m_isHidden; }
    void hide();
    void unhide();
 
@@ -732,7 +732,7 @@ protected:
 
 public:
    VPNConnector();
-   VPNConnector(BOOL bIsHidden);
+   VPNConnector(bool hidden);
    virtual ~VPNConnector();
 
    virtual int Type() { return OBJECT_VPNCONNECTOR; }
@@ -897,7 +897,7 @@ public:
    void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
    bool isReadyForStatusPoll() 
    {
-      return ((m_iStatus != STATUS_UNMANAGED) && (!m_bIsDeleted) &&
+      return ((m_iStatus != STATUS_UNMANAGED) && (!m_isDeleted) &&
               (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
               ((UINT32)time(NULL) - (UINT32)m_tmLastPoll > g_dwStatusPollingInterval))
                   ? true : false;
@@ -1076,7 +1076,8 @@ public:
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    Interface *createNewInterface(UINT32 dwAddr, UINT32 dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
                                  UINT32 dwIndex = 0, UINT32 dwType = 0, BYTE *pbMacAddr = NULL, UINT32 bridgePort = 0,
-											UINT32 slot = 0, UINT32 port = 0, bool physPort = false, bool manuallyCreated = false);
+											UINT32 slot = 0, UINT32 port = 0, bool physPort = false, bool manuallyCreated = false, 
+                                 bool system = false);
    void deleteInterface(Interface *pInterface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
@@ -1204,7 +1205,7 @@ inline void Node::setDiscoveryPollTimeStamp()
 
 inline bool Node::isReadyForStatusPoll() 
 {
-	if (m_bIsDeleted)
+	if (m_isDeleted)
 		return false;
 	//if (GetMyCluster() != NULL)
 	//	return FALSE;	// Cluster nodes should be polled from cluster status poll
@@ -1223,7 +1224,7 @@ inline bool Node::isReadyForStatusPoll()
 
 inline bool Node::isReadyForConfigurationPoll() 
 { 
-	if (m_bIsDeleted)
+	if (m_isDeleted)
 		return false;
    if (m_dwDynamicFlags & NDF_FORCE_CONFIGURATION_POLL)
    {
@@ -1239,7 +1240,7 @@ inline bool Node::isReadyForConfigurationPoll()
 
 inline bool Node::isReadyForDiscoveryPoll() 
 { 
-	if (m_bIsDeleted)
+	if (m_isDeleted)
 		return false;
    return (g_dwFlags & AF_ENABLE_NETWORK_DISCOVERY) &&
           (m_iStatus != STATUS_UNMANAGED) &&
@@ -1252,7 +1253,7 @@ inline bool Node::isReadyForDiscoveryPoll()
 
 inline bool Node::isReadyForRoutePoll() 
 { 
-	if (m_bIsDeleted)
+	if (m_isDeleted)
 		return false;
    return (m_iStatus != STATUS_UNMANAGED) &&
 	       (!(m_dwFlags & NF_DISABLE_ROUTE_POLL)) &&
@@ -1264,7 +1265,7 @@ inline bool Node::isReadyForRoutePoll()
 
 inline bool Node::isReadyForTopologyPoll() 
 { 
-	if (m_bIsDeleted)
+	if (m_isDeleted)
 		return false;
    return (m_iStatus != STATUS_UNMANAGED) &&
 	       (!(m_dwFlags & NF_DISABLE_TOPOLOGY_POLL)) &&
@@ -1568,7 +1569,7 @@ protected:
 
 public:
    Condition();
-   Condition(BOOL bHidden);
+   Condition(bool hidden);
    virtual ~Condition();
 
    virtual int Type() { return OBJECT_CONDITION; }
@@ -1588,7 +1589,7 @@ public:
    BOOL ReadyForPoll(void) 
    {
       return ((m_iStatus != STATUS_UNMANAGED) && 
-              (!m_bQueuedForPolling) && (!m_bIsDeleted) &&
+              (!m_bQueuedForPolling) && (!m_isDeleted) &&
               ((UINT32)time(NULL) - (UINT32)m_tmLastPoll > g_dwConditionPollingInterval))
                   ? TRUE : FALSE;
    }

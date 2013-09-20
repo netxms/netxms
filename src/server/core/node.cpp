@@ -151,7 +151,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy
    m_dwProxyNode = dwProxyNode;
 	m_dwSNMPProxy = dwSNMPProxy;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
    m_pRoutingTable = NULL;
    m_tFailTimeSNMP = 0;
    m_tFailTimeAgent = 0;
@@ -311,7 +311,7 @@ BOOL Node::CreateFromDB(UINT32 dwId)
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
 
-   if (!m_bIsDeleted)
+   if (!m_isDeleted)
    {
       // Link node to subnets
 		hStmt = DBPrepare(g_hCoreDB, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
@@ -476,7 +476,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 
 	// Clear modifications flag
 	LockData();
-   m_bIsModified = FALSE;
+   m_isModified = false;
 	UnlockData();
 
 	return bResult;
@@ -843,7 +843,7 @@ BOOL Node::isMyIP(UINT32 dwIpAddr)
  */
 Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCHAR *name, const TCHAR *descr,
                                     UINT32 dwIndex, UINT32 dwType, BYTE *pbMacAddr, UINT32 bridgePort, 
-										      UINT32 slot, UINT32 port, bool physPort, bool manuallyCreated)
+										      UINT32 slot, UINT32 port, bool physPort, bool manuallyCreated, bool system)
 {
    Interface *pInterface;
    Subnet *pSubnet = NULL;
@@ -917,15 +917,17 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
 	pInterface->setPortNumber(port);
 	pInterface->setPhysicalPortFlag(physPort);
 	pInterface->setManualCreationFlag(manuallyCreated);
+   pInterface->setSystemFlag(system);
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, TRUE);
    addInterface(pInterface);
-   if (!m_bIsHidden)
+   if (!m_isHidden)
       pInterface->unhide();
-   PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
-             pInterface->Name(), pInterface->IpAddr(),
-             pInterface->getIpNetMask(), pInterface->getIfIndex());
+   if (!pInterface->isSystem())
+      PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
+                pInterface->Name(), pInterface->IpAddr(),
+                pInterface->getIpNetMask(), pInterface->getIfIndex());
 
    // Bind node to appropriate subnet
    if (pSubnet != NULL)
@@ -2486,7 +2488,8 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 										 ifInfo->dwBridgePortNumber,
 										 ifInfo->dwSlotNumber,
 										 ifInfo->dwPortNumber,
-										 ifInfo->isPhysicalPort);
+										 ifInfo->isPhysicalPort,
+                               ifInfo->isSystem);
             hasChanges = TRUE;
          }
       }

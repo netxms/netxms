@@ -45,7 +45,7 @@ AccessPoint::AccessPoint(const TCHAR *name, BYTE *macAddr) : DataCollectionTarge
 	m_model = NULL;
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
-	m_bIsHidden = TRUE;
+	m_isHidden = true;
 }
 
 /**
@@ -94,7 +94,7 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 
    // Link access point to node
 	BOOL success = FALSE;
-   if (!m_bIsDeleted)
+   if (!m_isDeleted)
    {
       NetObj *object = FindObjectById(nodeId);
       if (object == NULL)
@@ -169,7 +169,7 @@ BOOL AccessPoint::SaveToDB(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
 	if (bResult)
-		m_bIsModified = FALSE;
+		m_isModified = false;
    UnlockData();
 
    return bResult;

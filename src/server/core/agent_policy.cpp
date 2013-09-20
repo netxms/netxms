@@ -134,7 +134,7 @@ BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
 
 	// Clear modifications flag and unlock object
 	if (success)
-		m_bIsModified = FALSE;
+		m_isModified = false;
    UnlockData();
 
    return success;
@@ -168,7 +168,7 @@ BOOL AgentPolicy::CreateFromDB(UINT32 dwId)
       return FALSE;
    }
 
-   if (!m_bIsDeleted)
+   if (!m_isDeleted)
    {
 		TCHAR query[256];
 

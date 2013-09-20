@@ -141,7 +141,7 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 	saveACLToDB(hdb);
 
 	LockData();
-	m_bIsModified = FALSE;
+	m_isModified = false;
 	UnlockData();
 
 	return ServiceContainer::SaveToDB(hdb);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,13 +22,10 @@
 
 #include "nxcore.h"
 
-
-//
-// Default constructor for VPNConnector object
-//
-
-VPNConnector::VPNConnector()
-             :NetObj()
+/**
+ * Default constructor for VPNConnector object
+ */
+VPNConnector::VPNConnector() : NetObj()
 {
    m_dwPeerGateway = 0;
    m_dwNumLocalNets = 0;
@@ -37,38 +34,31 @@ VPNConnector::VPNConnector()
    m_pRemoteNetList = NULL;
 }
 
-
-//
-// Constructor for new VPNConnector object
-//
-
-VPNConnector::VPNConnector(BOOL bIsHidden)
-             :NetObj()
+/**
+ * Constructor for new VPNConnector object
+ */
+VPNConnector::VPNConnector(bool hidden) : NetObj()
 {
    m_dwPeerGateway = 0;
    m_dwNumLocalNets = 0;
    m_dwNumRemoteNets = 0;
    m_pLocalNetList = NULL;
    m_pRemoteNetList = NULL;
-   m_bIsHidden = bIsHidden;
+   m_isHidden = hidden;
 }
 
-
-//
-// VPNConnector class destructor
-//
-
+/**
+ * VPNConnector class destructor
+ */
 VPNConnector::~VPNConnector()
 {
    safe_free(m_pLocalNetList);
    safe_free(m_pRemoteNetList);
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL VPNConnector::CreateFromDB(UINT32 dwId)
 {
    TCHAR szQuery[256];
@@ -121,7 +111,7 @@ BOOL VPNConnector::CreateFromDB(UINT32 dwId)
       m_dwPeerGateway = DBGetFieldULong(hResult, 0, 1);
 
       // Link VPN connector to node
-      if (!m_bIsDeleted)
+      if (!m_isDeleted)
       {
          pObject = FindObjectById(dwNodeId);
          if (pObject == NULL)
@@ -221,7 +211,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
-   m_bIsModified = FALSE;
+   m_isModified = false;
    UnlockData();
 
    return TRUE;

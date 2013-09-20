@@ -134,7 +134,7 @@ BOOL Report::SaveToDB(DB_HANDLE hdb)
 	if (!saveACLToDB(hdb))
 		goto fail;
 
-	m_bIsModified = FALSE;
+	m_isModified = false;
 	UnlockData();
 	return TRUE;
 
@@ -167,7 +167,7 @@ BOOL Report::CreateFromDB(UINT32 dwId)
       return FALSE;
    }
 
-   if (!m_bIsDeleted)
+   if (!m_isDeleted)
    {
 		DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT definition FROM reports WHERE id=?"));
 		if (hStmt == NULL)

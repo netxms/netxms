@@ -207,6 +207,7 @@ typedef struct
    BYTE bMacAddr[MAC_ADDR_LENGTH];
    int iNumSecondary;      // Number of secondary IP's on this interface
 	bool isPhysicalPort;
+   bool isSystem;
 } NX_INTERFACE_INFO;
 
 /**

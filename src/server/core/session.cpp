@@ -2010,7 +2010,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 		NetObj *object = objects->get(i);
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
           (object->getTimeStamp() >= dwTimeStamp) &&
-          !object->isHidden())
+          !object->isHidden() && !object->isSystem())
       {
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
@@ -2067,7 +2067,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
       if ((object != NULL) && 
 		    object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
           (object->getTimeStamp() >= dwTimeStamp) &&
-          !object->isHidden())
+          !object->isHidden() && !object->isSystem())
       {
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)

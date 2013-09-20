@@ -97,7 +97,7 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
 
    // Unlock object and clear modification flag
    UnlockData();
-   m_bIsModified = FALSE;
+   m_isModified = false;
    return TRUE;
 }
 

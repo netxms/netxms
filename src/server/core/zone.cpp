@@ -157,7 +157,7 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
    saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
-   m_bIsModified = FALSE;
+   m_isModified = false;
    UnlockData();
    return TRUE;
 }

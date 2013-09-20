@@ -75,7 +75,7 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
 }
 
 /**
@@ -108,23 +108,19 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
 }
 
-
-//
-// Interface class destructor
-//
-
+/**
+ * Interface class destructor
+ */
 Interface::~Interface()
 {
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database record
+ */
 BOOL Interface::CreateFromDB(UINT32 dwId)
 {
    BOOL bResult = FALSE;
@@ -172,7 +168,7 @@ BOOL Interface::CreateFromDB(UINT32 dwId)
 		m_operState = (WORD)DBGetFieldLong(hResult, 0, 17);
 
       // Link interface to node
-      if (!m_bIsDeleted)
+      if (!m_isDeleted)
       {
          NetObj *object = FindObjectById(nodeId);
          if (object == NULL)
@@ -287,7 +283,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
 	if (success)
-		m_bIsModified = FALSE;
+		m_isModified = false;
    UnlockData();
 
    return success;

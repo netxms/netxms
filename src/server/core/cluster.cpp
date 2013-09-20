@@ -97,7 +97,7 @@ BOOL Cluster::CreateFromDB(UINT32 dwId)
       if (!m_dcObjects->get(i)->loadThresholdsFromDB())
          return FALSE;
 
-   if (!m_bIsDeleted)
+   if (!m_isDeleted)
    {
 		// Load member nodes
 		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM cluster_members WHERE cluster_id=%d"), m_dwId);
@@ -314,7 +314,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
 	if (bResult)
-		m_bIsModified = FALSE;
+		m_isModified = false;
    UnlockData();
 
    return bResult;

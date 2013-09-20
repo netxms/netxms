@@ -60,7 +60,7 @@ Container::Container(const TCHAR *pszName, UINT32 dwCategory) : NetObj()
 	m_flags = 0;
 	m_bindFilter = NULL;
 	m_bindFilterSource = NULL;
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
 }
 
 /**
@@ -122,7 +122,7 @@ BOOL Container::CreateFromDB(UINT32 dwId)
    loadACLFromDB();
 
    // Load child list for later linkage
-   if (!m_bIsDeleted)
+   if (!m_isDeleted)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, szQuery);
@@ -196,7 +196,7 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 		saveACLToDB(hdb);
 
 		// Clear modifications flag and unlock object
-		m_bIsModified = FALSE;
+		m_isModified = false;
 	}
 
    UnlockData();

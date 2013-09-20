@@ -66,7 +66,7 @@ Template::Template(const TCHAR *pszName) : NetObj()
 	m_applyFilter = NULL;
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
 }
 
@@ -75,7 +75,7 @@ Template::Template(const TCHAR *pszName) : NetObj()
  */
 Template::Template(ConfigEntry *config) : NetObj()
 {
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
    m_dwDCILockStatus = INVALID_INDEX;
    m_iStatus = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
@@ -213,7 +213,7 @@ BOOL Template::CreateFromDB(UINT32 dwId)
          bResult = FALSE;
 
    // Load related nodes list
-   if (!m_bIsDeleted)
+   if (!m_isDeleted)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, szQuery);
@@ -314,7 +314,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 
    // Clear modifications flag
 	LockData();
-   m_bIsModified = FALSE;
+   m_isModified = false;
 	UnlockData();
 
    return success;
@@ -494,7 +494,7 @@ bool Template::updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNum
 				object->updateFromMessage(pMsg);
 			}
 			success = true;
-			m_bIsModified = TRUE;
+			m_isModified = true;
          break;
       }
 	}

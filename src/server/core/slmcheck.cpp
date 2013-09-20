@@ -58,14 +58,12 @@ SlmCheck::SlmCheck() : NetObj()
 	m_currentTicketId = 0;
 }
 
-
-//
-// Constructor for new check object
-//
-
+/**
+ * Constructor for new check object
+ */
 SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : NetObj()
 {
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_type = SlmCheck::check_script;
 	m_script = NULL;
@@ -84,7 +82,7 @@ SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : NetObj()
 
 SlmCheck::SlmCheck(SlmCheck *tmpl) : NetObj()
 {
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
 	nx_strncpy(m_szName, tmpl->m_szName, MAX_OBJECT_NAME);
 	m_type = tmpl->m_type;
 	m_script = ((m_type == check_script) && (tmpl->m_script != NULL)) ? _tcsdup(tmpl->m_script) : NULL;
@@ -272,7 +270,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 
 finish:
 	// Unlock object and clear modification flag
-	m_bIsModified = FALSE;
+	m_isModified = false;
 	UnlockData();
 	return ret;
 }

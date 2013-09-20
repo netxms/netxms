@@ -82,7 +82,7 @@ NetworkMap::NetworkMap(int type, UINT32 seed) : NetObj()
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
-	m_bIsHidden = TRUE;
+	m_isHidden = true;
 }
 
 /**
@@ -353,7 +353,7 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
       return FALSE;
    }
 
-   if (!m_bIsDeleted)
+   if (!m_isDeleted)
    {
 		TCHAR query[256];
 

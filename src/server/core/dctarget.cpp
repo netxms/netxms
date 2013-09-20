@@ -206,7 +206,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 	if (bResult)
 	{
 		LockData();
-		m_bIsModified = TRUE;
+		m_isModified = true;
 		UnlockData();
 	}
    return bResult;
@@ -380,7 +380,7 @@ bool DataCollectionTarget::isDataCollectionDisabled()
  */
 void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
 {
-   if ((m_iStatus == STATUS_UNMANAGED) || isDataCollectionDisabled() || m_bIsDeleted)
+   if ((m_iStatus == STATUS_UNMANAGED) || isDataCollectionDisabled() || m_isDeleted)
       return;  // Do not collect data for unmanaged objects or if data collection is disabled
 
    time_t currTime = time(NULL);

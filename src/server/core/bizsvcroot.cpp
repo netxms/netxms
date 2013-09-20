@@ -74,15 +74,13 @@ BOOL BusinessServiceRoot::SaveToDB(DB_HANDLE hdb)
 
    // Unlock object and clear modification flag
    UnlockData();
-   m_bIsModified = FALSE;
+   m_isModified = false;
    return TRUE;
 }
 
-
-//
-// Load properties from database
-//
-
+/**
+ * Load properties from database
+ */
 void BusinessServiceRoot::LoadFromDB()
 {
    loadCommonProperties();

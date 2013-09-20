@@ -58,7 +58,7 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
 }
 
 /**
@@ -120,7 +120,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
-   m_bIsModified = FALSE;
+   m_isModified = false;
    UnlockData();
    return TRUE;
 }
@@ -161,7 +161,7 @@ BOOL NetworkService::CreateFromDB(UINT32 dwId)
       m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 8);
 
       // Link service to node
-      if (!m_bIsDeleted)
+      if (!m_isDeleted)
       {
          // Find host node
          pObject = FindObjectById(dwHostNodeId);

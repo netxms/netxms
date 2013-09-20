@@ -143,7 +143,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
-   m_bIsModified = FALSE;
+   m_isModified = false;
    UnlockData();
 
    return TRUE;

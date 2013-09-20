@@ -90,7 +90,7 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 
 	// Clear modifications flag and unlock object
 	if (success)
-		m_bIsModified = FALSE;
+		m_isModified = false;
    UnlockData();
 
    return success;

@@ -45,7 +45,7 @@ Condition::Condition() : NetObj()
 /**
  * Constructor for new objects
  */
-Condition::Condition(BOOL bHidden) : NetObj()
+Condition::Condition(bool hidden) : NetObj()
 {
    m_pszScript = NULL;
    m_pDCIList = NULL;
@@ -54,7 +54,7 @@ Condition::Condition(BOOL bHidden) : NetObj()
    m_dwSourceObject = 0;
    m_nActiveStatus = STATUS_MAJOR;
    m_nInactiveStatus = STATUS_NORMAL;
-   m_bIsHidden = bHidden;
+   m_isHidden = hidden;
    m_pCompiledScript = NULL;
    m_bIsActive = FALSE;
    m_tmLastPoll = 0;
@@ -215,7 +215,7 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
-   m_bIsModified = FALSE;
+   m_isModified = false;
    UnlockData();
    return TRUE;
 }

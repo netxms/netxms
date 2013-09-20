@@ -38,10 +38,10 @@ NetObj::NetObj()
    m_iStatus = STATUS_UNKNOWN;
    m_szName[0] = 0;
    m_pszComments = NULL;
-   m_bIsModified = FALSE;
-   m_bIsDeleted = FALSE;
-   m_bIsHidden = FALSE;
-	m_bIsSystem = FALSE;
+   m_isModified = false;
+   m_isDeleted = false;
+   m_isHidden = false;
+	m_isSystem = false;
    m_dwIpAddr = 0;
    m_dwChildCount = 0;
    m_pChildList = NULL;
@@ -168,7 +168,7 @@ BOOL NetObj::loadCommonProperties()
 			{
 				DBGetField(hResult, 0, 0, m_szName, MAX_OBJECT_NAME);
 				m_iStatus = DBGetFieldLong(hResult, 0, 1);
-				m_bIsDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
+				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
 				m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? TRUE : FALSE;
 				m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
 				m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 5);
@@ -180,7 +180,7 @@ BOOL NetObj::loadCommonProperties()
 				DBGetFieldByteArray(hResult, 0, 11, m_iStatusThresholds, 4, 50);
 				safe_free(m_pszComments);
 				m_pszComments = DBGetField(hResult, 0, 12, NULL, 0);
-				m_bIsSystem = DBGetFieldLong(hResult, 0, 13) ? TRUE : FALSE;
+				m_isSystem = DBGetFieldLong(hResult, 0, 13) ? true : false;
 
 				int locType = DBGetFieldLong(hResult, 0, 14);
 				if (locType != GL_UNSET)
@@ -299,7 +299,7 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_szName, DB_BIND_STATIC);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_iStatus);
-	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_bIsDeleted);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_bInheritAccessRights);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_dwTimeStamp);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_iStatusCalcAlg);
@@ -310,7 +310,7 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_iStatusSingleThreshold);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
 	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_pszComments, DB_BIND_STATIC);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)m_bIsSystem);
+   DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)(m_isSystem ? 1 : 0));
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
 	DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
 	DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
@@ -489,7 +489,7 @@ void NetObj::deleteObject()
 	// (to prevent object re-appearance in GUI if client hides object
 	// after successful call to Session::deleteObject())
 	LockData();
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
 	UnlockData();
 
 	// Notify modules about object deletion
@@ -531,8 +531,8 @@ void NetObj::deleteObject()
    UnlockChildList();
 
    LockData();
-   m_bIsHidden = FALSE;
-   m_bIsDeleted = TRUE;
+   m_isHidden = false;
+   m_isDeleted = true;
    Modify();
    UnlockData();
 
@@ -815,8 +815,8 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_OBJECT_NAME, m_szName);
    pMsg->SetVariable(VID_OBJECT_STATUS, (WORD)m_iStatus);
    pMsg->SetVariable(VID_IP_ADDRESS, m_dwIpAddr);
-   pMsg->SetVariable(VID_IS_DELETED, (WORD)m_bIsDeleted);
-   pMsg->SetVariable(VID_IS_SYSTEM, (WORD)m_bIsSystem);
+   pMsg->SetVariable(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
+   pMsg->SetVariable(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
 
    LockParentList(FALSE);
    pMsg->SetVariable(VID_PARENT_CNT, m_dwParentCount);
@@ -880,11 +880,11 @@ void NetObj::Modify()
    if (g_bModificationsLocked)
       return;
 
-   m_bIsModified = TRUE;
+   m_isModified = true;
    m_dwTimeStamp = (UINT32)time(NULL);
 
    // Send event to all connected clients
-   if (!m_bIsHidden)
+   if (!m_isHidden && !m_isSystem)
       EnumerateClientSessions(BroadcastObjectChange, this);
 }
 
@@ -1007,7 +1007,7 @@ UINT32 NetObj::getUserRights(UINT32 userId)
       return 0xFFFFFFFF;
 
 	// Non-admin users have no rights to system objects
-	if (m_bIsSystem)
+	if (m_isSystem)
 		return 0;
 
    // Check if have direct right assignment
@@ -1245,7 +1245,7 @@ void NetObj::hide()
    UnlockChildList();
 
 	LockData();
-   m_bIsHidden = TRUE;
+   m_isHidden = true;
    UnlockData();
 }
 
@@ -1257,8 +1257,9 @@ void NetObj::unhide()
    UINT32 i;
 
    LockData();
-   m_bIsHidden = FALSE;
-   EnumerateClientSessions(BroadcastObjectChange, this);
+   m_isHidden = false;
+   if (!m_isSystem)
+      EnumerateClientSessions(BroadcastObjectChange, this);
    UnlockData();
 
    LockChildList(FALSE);
