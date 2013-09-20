@@ -37,7 +37,7 @@ void ResetAdmin()
 		return;
    }
 
-   SQLQuery("UPDATE users SET password='3A445C0072CD69D9030CC6644020E5C4576051B1', flags=8, grace_logins=5, auth_method=0, auth_failures=0, disabled_until=0 WHERE id=0");
+   SQLQuery(_T("UPDATE users SET password='3A445C0072CD69D9030CC6644020E5C4576051B1', flags=8, grace_logins=5, auth_method=0, auth_failures=0, disabled_until=0 WHERE id=0"));
 
 	_tprintf(_T("All done.\n"));
 }
