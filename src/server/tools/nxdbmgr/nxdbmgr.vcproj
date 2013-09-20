@@ -366,6 +366,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\resetadmin.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tables.cpp"
 				>
 			</File>
