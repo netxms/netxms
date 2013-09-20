@@ -75,7 +75,7 @@ static void CpuUsageCollector()
 	}
 
 	// scan for all CPUs
-	while (1)
+	while(true)
 	{
 		if (fgets(buffer, sizeof(buffer), hStat) == NULL)
 			break;
@@ -107,7 +107,7 @@ static void CpuUsageCollector()
 		uint64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
 		uint64_t guestDelta;
 
-#define DELTA(x, y) (((x) > (y)) ? ((x) - (y)) : 1)
+#define DELTA(x, y) (((x) > (y)) ? ((x) - (y)) : 0)
 		userDelta = DELTA(user, m_user[cpu]);
 		niceDelta = DELTA(nice, m_nice[cpu]);
 		systemDelta = DELTA(system, m_system[cpu]);
@@ -120,7 +120,6 @@ static void CpuUsageCollector()
 #undef DELTA
 
 		uint64_t totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
-
 		float onePercent = (float)totalDelta / 100.0; // 1% of total
 		if (onePercent == 0)
 		{

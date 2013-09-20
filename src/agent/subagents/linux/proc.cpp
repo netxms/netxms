@@ -439,8 +439,8 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
    {    
       rc = SYSINFO_RC_SUCCESS;
 
-	   UINT64 pageSize = getpagesize();
-	   long ticksPerSecond = sysconf(_SC_CLK_TCK);
+      UINT64 pageSize = getpagesize();
+      UINT64 ticksPerSecond = sysconf(_SC_CLK_TCK);
       for(int i = 0; i < nCount; i++)
       {         
          value->addRow();
@@ -450,12 +450,12 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
 #else
          value->set(1, plist[i].szProcName);
 #endif
-         value->set(2, plist[i].threads);
-         value->set(3, plist[i].ktime * 1000 / ticksPerSecond);
-         value->set(4, plist[i].utime * 1000 / ticksPerSecond);
-         value->set(5, plist[i].vmsize);
+         value->set(2, (UINT32)plist[i].threads);
+         value->set(3, (UINT64)plist[i].ktime * 1000 / ticksPerSecond);
+         value->set(4, (UINT64)plist[i].utime * 1000 / ticksPerSecond);
+         value->set(5, (UINT64)plist[i].vmsize);
          value->set(6, (UINT64)plist[i].rss * pageSize);
-         value->set(7, plist[i].minflt + plist[i].majflt);
+         value->set(7, (UINT64)plist[i].minflt + (UINT64)plist[i].majflt);
       }         
    }    
    safe_free(plist);
