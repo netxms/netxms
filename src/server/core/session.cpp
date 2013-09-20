@@ -4522,7 +4522,7 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                ObjectTransactionEnd();
                pParent->calculateCompoundStatus();
                if ((pParent->Type() == OBJECT_TEMPLATE) &&
-                   ((pChild->Type() == OBJECT_NODE) || (pChild->Type() == OBJECT_MOBILEDEVICE)))
+                   ((pChild->Type() == OBJECT_NODE) || (pChild->Type() == OBJECT_CLUSTER) || (pChild->Type() == OBJECT_MOBILEDEVICE)))
                {
                   ((Template *)pParent)->queueRemoveFromTarget(pChild->Id(), pRequest->GetVariableShort(VID_REMOVE_DCI));
                }
@@ -6050,7 +6050,7 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
    {
       // Check object types
       if ((pSource->Type() == OBJECT_TEMPLATE) && 
-          ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_MOBILEDEVICE)))
+          ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_CLUSTER) || (pDestination->Type() == OBJECT_MOBILEDEVICE)))
       {
          TCHAR szLockInfo[MAX_SESSION_NAME];
          BOOL bLockSucceed = FALSE;

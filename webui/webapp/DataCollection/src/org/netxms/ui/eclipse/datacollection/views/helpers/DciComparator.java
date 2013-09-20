@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,6 @@ public class DciComparator extends ViewerComparator
 			case DataCollectionEditor.COLUMN_TEMPLATE:
 				final String text1 = labelProvider.getColumnText(e1, column);
 				final String text2 = labelProvider.getColumnText(e2, column);
-
 				if (text1 != null && text2 != null)
 				{
 					result = text1.compareToIgnoreCase(text2);

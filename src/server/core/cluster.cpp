@@ -763,3 +763,12 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 
    return rcc;
 }
+
+/**
+ * Unbind cluster from template
+ */
+void Cluster::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI)
+{
+   DataCollectionTarget::unbindFromTemplate(dwTemplateId, bRemoveDCI);
+   queueUpdate();
+}

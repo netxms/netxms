@@ -226,7 +226,7 @@ BOOL Template::CreateFromDB(UINT32 dwId)
             pObject = FindObjectById(dwNodeId);
             if (pObject != NULL)
             {
-               if (pObject->Type() == OBJECT_NODE)
+               if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_CLUSTER) || (pObject->Type() == OBJECT_MOBILEDEVICE))
                {
                   AddChild(pObject);
                   pObject->AddParent(this);
@@ -829,6 +829,12 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
    // Cleanup
    free(pdwItemList);
 
+   // Queue update if target is a cluster
+   if (target->Type() == OBJECT_CLUSTER)
+   {
+      target->queueUpdate();
+   }
+
    return bErrors;
 }
 
@@ -842,7 +848,7 @@ void Template::queueUpdate()
 
    LockData();
    for(i = 0; i < m_dwChildCount; i++)
-      if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
+      if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_CLUSTER) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
       {
          incRefCount();
          pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));

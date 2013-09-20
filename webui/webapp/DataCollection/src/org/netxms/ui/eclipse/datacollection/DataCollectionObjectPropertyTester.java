@@ -24,6 +24,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -39,6 +40,7 @@ public class DataCollectionObjectPropertyTester extends PropertyTester
 	{
 		if (!(receiver instanceof DataCollectionObject))
 			return false;
+		
 		if (property.equals("isClusterObject")) //$NON-NLS-1$
 		{
 			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -56,6 +58,14 @@ public class DataCollectionObjectPropertyTester extends PropertyTester
 			}
 			return false;
 		}
+		
+		if (property.equals("isTemplateObject")) //$NON-NLS-1$
+		{
+			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			AbstractObject owner = session.findObjectById(((DataCollectionObject)receiver).getNodeId());		
+			return (owner instanceof Template);
+		}
+		
 		return false;
 	}
 }

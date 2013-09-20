@@ -165,7 +165,10 @@ public class ClusterOptions extends PropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-		editor.getObject().setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
+		if (cluster != null)
+		{
+			editor.getObject().setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
+		}
 		editor.getObject().setAggregateOnCluster(checkAggregate.getSelection());
 		if (editor.getObject() instanceof DataCollectionItem)
 		{

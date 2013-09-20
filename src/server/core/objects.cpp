@@ -101,7 +101,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       dcTarget = FindObjectById(pInfo->targetId);
       if (dcTarget != NULL)
       {
-         if ((dcTarget->Type() == OBJECT_NODE) || (dcTarget->Type() == OBJECT_MOBILEDEVICE))
+         if ((dcTarget->Type() == OBJECT_NODE) || (dcTarget->Type() == OBJECT_CLUSTER) || (dcTarget->Type() == OBJECT_MOBILEDEVICE))
          {
             switch(pInfo->iUpdateType)
             {

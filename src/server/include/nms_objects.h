@@ -781,7 +781,7 @@ public:
 
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
-   void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
+   virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
 };
 
 /**
@@ -887,6 +887,8 @@ public:
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+   virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
 
 	bool isSyncAddr(UINT32 dwAddr);
 	bool isVirtualAddr(UINT32 dwAddr);

@@ -343,10 +343,16 @@
                  <instanceof
                        value="org.netxms.client.datacollection.DataCollectionObject">
                  </instanceof>
-                 <test
-                       forcePluginActivation="true"
-                       property="org.netxms.ui.eclipse.datacollection.isClusterObject">
-                 </test>
+                 <or>
+                    <test
+                          forcePluginActivation="true"
+                          property="org.netxms.ui.eclipse.datacollection.isClusterObject">
+                    </test>
+                    <test
+                          forcePluginActivation="true"
+                          property="org.netxms.ui.eclipse.datacollection.isTemplateObject">
+                    </test>
+                 </or>
               </and>
            </enabledWhen>
         </page>
@@ -532,7 +538,7 @@
             class="org.netxms.ui.eclipse.datacollection.DataCollectionObjectPropertyTester"
             id="org.netxms.ui.eclipse.datacollection.DataCollectionObjectPropertyTester"
             namespace="org.netxms.ui.eclipse.datacollection"
-            properties="isClusterObject"
+            properties="isClusterObject,isTemplateObject"
             type="org.netxms.client.datacollection.DataCollectionObject">
       </propertyTester>
    </extension>
