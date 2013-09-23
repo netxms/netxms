@@ -57,4 +57,6 @@ public class CommonRCC
 	public static final int REUSED_PASSWORD = 88;
 	public static final int ENCRYPTION_ERROR = 98;
 	public static final int XML_PARSE_ERROR = 103;
+	public static final int HIGH_QUERY_COST = 104;
+	public static final int LICENSE_VIOLATION = 105;
 }

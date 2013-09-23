@@ -109,7 +109,7 @@ void UserDatabaseObject::fillMessage(CSCPMessage *msg)
    msg->SetVariable(VID_USER_ID, m_id);
    msg->SetVariable(VID_USER_NAME, m_name);
    msg->SetVariable(VID_USER_FLAGS, (WORD)m_flags);
-   msg->SetVariable(VID_USER_SYS_RIGHTS, m_systemRights);
+   msg->SetVariable(VID_USER_SYS_RIGHTS, (UINT64)m_systemRights);
    msg->SetVariable(VID_USER_DESCRIPTION, m_description);
    msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
 	msg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_attributes.getSize());
@@ -155,7 +155,7 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 	}
 
 	if ((m_id != 0) && (fields & USER_MODIFY_ACCESS_RIGHTS))
-		m_systemRights = msg->GetVariableLong(VID_USER_SYS_RIGHTS);
+		m_systemRights = (UINT32)msg->GetVariableInt64(VID_USER_SYS_RIGHTS);
 
 	if (fields & USER_MODIFY_FLAGS)
 	{

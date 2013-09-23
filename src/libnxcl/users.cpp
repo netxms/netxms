@@ -23,18 +23,16 @@
 
 #include "libnxcl.h"
 
-
-//
-// Fill user record with data from message
-//
-
+/**
+ * Fill user record with data from message
+ */
 void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
 {
    // Process common fields
    pUser->dwId = pMsg->GetVariableLong(VID_USER_ID);
    pMsg->GetVariableStr(VID_USER_NAME, pUser->szName, MAX_USER_NAME);
    pUser->wFlags = pMsg->GetVariableShort(VID_USER_FLAGS);
-   pUser->dwSystemRights = pMsg->GetVariableLong(VID_USER_SYS_RIGHTS);
+   pUser->dwSystemRights = (UINT32)pMsg->GetVariableInt64(VID_USER_SYS_RIGHTS);
    pMsg->GetVariableStr(VID_USER_DESCRIPTION, pUser->szDescription, MAX_USER_DESCR);
    pMsg->GetVariableBinary(VID_GUID, pUser->guid, UUID_LENGTH);
 
@@ -190,7 +188,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserI
    msg.SetVariable(VID_USER_NAME, pUserInfo->szName);
    msg.SetVariable(VID_USER_DESCRIPTION, pUserInfo->szDescription);
    msg.SetVariable(VID_USER_FLAGS, pUserInfo->wFlags);
-   msg.SetVariable(VID_USER_SYS_RIGHTS, pUserInfo->dwSystemRights);
+   msg.SetVariable(VID_USER_SYS_RIGHTS, (UINT64)pUserInfo->dwSystemRights);
 
    // Group-specific fields
    if (pUserInfo->dwId & GROUP_FLAG)
@@ -465,21 +463,17 @@ UINT32 LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, UINT32 dwSessionI
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Get Id of currently logged in user
-//
-
+/**
+ * Get Id of currently logged in user
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->GetCurrentUserId();
 }
 
-
-//
-// Get system access rights of currently logged in user
-//
-
+/**
+ * Get system access rights of currently logged in user
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->GetCurrentSystemAccess();

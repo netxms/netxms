@@ -45,7 +45,7 @@ public abstract class AbstractUserObject
 	protected long id;
 	protected String name;
 	protected UUID guid;
-	protected int systemRights;
+	protected long systemRights;
 	protected int flags;
 	protected String description;
 	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
@@ -89,7 +89,7 @@ public abstract class AbstractUserObject
 		id = msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 		name = msg.getVariableAsString(NXCPCodes.VID_USER_NAME);
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_USER_FLAGS);
-		systemRights = msg.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
+		systemRights = msg.getVariableAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
 		description = msg.getVariableAsString(NXCPCodes.VID_USER_DESCRIPTION);
 		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
 		
@@ -111,7 +111,7 @@ public abstract class AbstractUserObject
 		msg.setVariableInt32(NXCPCodes.VID_USER_ID, (int)id);
 		msg.setVariable(NXCPCodes.VID_USER_NAME, name);
 		msg.setVariableInt16(NXCPCodes.VID_USER_FLAGS, flags);
-		msg.setVariableInt32(NXCPCodes.VID_USER_SYS_RIGHTS, systemRights);
+		msg.setVariableInt64(NXCPCodes.VID_USER_SYS_RIGHTS, systemRights);
 		msg.setVariable(NXCPCodes.VID_USER_DESCRIPTION, description);
 		
 		msg.setVariableInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, customAttributes.size());
@@ -176,7 +176,7 @@ public abstract class AbstractUserObject
 	/**
 	 * @return the systemRights
 	 */
-	public int getSystemRights()
+	public long getSystemRights()
 	{
 		return systemRights;
 	}
@@ -184,7 +184,7 @@ public abstract class AbstractUserObject
 	/**
 	 * @param systemRights the systemRights to set
 	 */
-	public void setSystemRights(int systemRights)
+	public void setSystemRights(long systemRights)
 	{
 		this.systemRights = systemRights;
 	}

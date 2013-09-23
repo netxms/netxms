@@ -132,7 +132,10 @@ public class NXCException extends NetXMSClientException
 		"Invalid mapping table ID",
 		"No software package data",
 		"Invalid DCI summary table ID",
-		"User is logged in"
+		"User is logged in",
+		"XML parse error",
+		"High query cost",
+		"License violation"
 	};
 	private static final String[] extendedErrorTexts_en =
 	{
@@ -244,7 +247,10 @@ public class NXCException extends NetXMSClientException
       "ID de tabla de asignación inválido",
 		"No software package data",	// TODO: translate
 		"Invalid DCI summary table ID",
-		"User is logged in"
+		"User is logged in",
+		"XML parse error",
+		"High query cost",
+		"License violation"
 	};
 	private static final String[] extendedErrorTexts_es =
 	{

@@ -959,11 +959,9 @@ void NXCL_Session::AbortFileTransfer(void)
    MutexUnlock(m_mutexFileRq);
 }
 
-
-//
-// Execute simple command (command without arguments and returnning only RCC)
-//
-
+/**
+ * Execute simple command (command without arguments and returnning only RCC)
+ */
 UINT32 NXCL_Session::SimpleCommand(WORD wCmd)
 {
    CSCPMessage msg;
@@ -978,11 +976,9 @@ UINT32 NXCL_Session::SimpleCommand(WORD wCmd)
    return WaitForRCC(dwRqId);
 }
 
-
-//
-// Parse login response message
-//
-
+/**
+ * Parse login response message
+ */
 void NXCL_Session::ParseLoginMessage(CSCPMessage *pMsg)
 {
    m_dwUserId = pMsg->GetVariableLong(VID_USER_ID);
@@ -993,11 +989,9 @@ void NXCL_Session::ParseLoginMessage(CSCPMessage *pMsg)
       m_dwFlags |= NXC_SF_BAD_DBCONN;
 }
 
-
-//
-// Start watchdog thread
-//
-
+/**
+ * Start watchdog thread
+ */
 void NXCL_Session::StartWatchdogThread()
 {
    if (m_hWatchdogThread == INVALID_THREAD_HANDLE)
