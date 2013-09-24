@@ -2,9 +2,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+      <groupId>org.netxms</groupId>
+      <artifactId>netxms</artifactId>
+      <version>1.2.8-SNAPSHOT</version>
+    </parent>
+
     <groupId>org.netxms</groupId>
     <artifactId>nxshell</artifactId>
-    <version>1.2.9-SNAPSHOT</version>
+    <version>${parent.version}</version>
     <packaging>jar</packaging>
 
     <name>shell</name>
@@ -29,7 +35,7 @@
         <dependency>
             <groupId>org.netxms</groupId>
             <artifactId>netxms-client</artifactId>
-            <version>1.2.9</version>
+            <version>${version}</version>
         </dependency>
     </dependencies>
 

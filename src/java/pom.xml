@@ -3,14 +3,13 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.netxms</groupId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.2.9-SNAPSHOT</version>
   <artifactId>netxms</artifactId>
   <packaging>pom</packaging>
   <name>NetXMS Meta-package</name>
   <url>http://www.netxms.org</url>
 
   <properties>
-    <projectversion>1.2.9</projectversion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   

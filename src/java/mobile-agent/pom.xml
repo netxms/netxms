@@ -4,14 +4,14 @@
 	<parent>
 		<groupId>org.netxms</groupId>
 		<artifactId>netxms</artifactId>
-		<version>1.0-SNAPSHOT</version>
+		<version>1.2.9-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.netxms</groupId>
 	<artifactId>netxms-mobile-agent</artifactId>
 	<packaging>jar</packaging>
-	<version>${projectversion}</version>
+  <version>${parent.version}</version>
 	<name>NetXMS Mobile Agent Connector</name>
 	<url>http://www.netxms.org</url>
 	
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>org.netxms</groupId>
 			<artifactId>netxms-base</artifactId>
-			<version>${projectversion}</version>
+      <version>${version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

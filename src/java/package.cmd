@@ -5,10 +5,12 @@ del /q /s /f netxms-client-api\target\*
 del /q /s /f netxms-client\target\*
 del /q /s /f mobile-agent\target\*
 
+call mvn -N versions:update-child-modules
+
 call mvn -Dmaven.test.skip=true package %*
 call mvn -Dmaven.test.skip=true install %*
 
-for /f "tokens=2 delims=>< " %%a in ('findstr projectversion pom.xml') do @set version=%%a
+for /f "tokens=2 delims=>< " %%a in ('findstr "<version>" pom.xml') do @set version=%%a
 
 copy netxms-base\target\netxms-base-%version%.jar netxms-eclipse\core\jar\
 copy netxms-client-api\target\netxms-client-api-%version%.jar netxms-eclipse\core\jar\

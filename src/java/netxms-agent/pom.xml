@@ -11,7 +11,7 @@
 	<groupId>org.netxms</groupId>
 	<artifactId>netxms-agent</artifactId>
 	<packaging>jar</packaging>
-	<version>${projectversion}</version>
+	<version>${parent.version}</version>
 	<name>NetXMS Java Agent</name>
 	<url>http://www.netxms.org</url>
 	
@@ -42,7 +42,7 @@
 		<dependency>
 			<groupId>org.netxms</groupId>
 			<artifactId>netxms-base</artifactId>
-			<version>${projectversion}</version>
+			<version>${version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

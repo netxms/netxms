@@ -1,9 +1,10 @@
 #!/bin/sh
 
+mvn -N versions:update-child-modules
 mvn -Dmaven.test.skip=true package
 mvn -Dmaven.test.skip=true install
 
-version=`grep projectversion pom.xml | cut -f 2 -d \> | cut -f 1 -d \<`
+version=`grep '<version>' pom.xml | cut -f 2 -d \> | cut -f 1 -d \<`
 
 rm -f \
   netxms-eclipse/core/jar/netxms-base*.jar \
