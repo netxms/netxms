@@ -33,6 +33,7 @@
 				<configuration>
 					<instructions>
 						<Bundle-SymbolicName>${groupId}.${artifactId}</Bundle-SymbolicName>
+            <Import-Package>org.netxms.*;version="$(@)",*</Import-Package>
 					</instructions>
 				</configuration>
 			</plugin>

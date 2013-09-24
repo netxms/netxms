@@ -6,7 +6,7 @@ del /q /s /f netxms-client\target\*
 del /q /s /f mobile-agent\target\*
 
 call mvn -N versions:update-child-modules
-
+call mvn clean
 call mvn -Dmaven.test.skip=true package %*
 call mvn -Dmaven.test.skip=true install %*
 

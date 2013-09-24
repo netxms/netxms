@@ -3,6 +3,7 @@
 set -e
 
 mvn -N versions:update-child-modules
+mvn clean
 mvn -Dmaven.test.skip=true package
 mvn -Dmaven.test.skip=true install
 
