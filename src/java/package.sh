@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 mvn -N versions:update-child-modules
 mvn -Dmaven.test.skip=true package
 mvn -Dmaven.test.skip=true install
