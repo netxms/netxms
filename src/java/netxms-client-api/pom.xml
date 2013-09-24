@@ -11,7 +11,7 @@
 	<groupId>org.netxms</groupId>
 	<artifactId>netxms-client-api</artifactId>
 	<packaging>bundle</packaging>
-  <version>${parent.version}</version>
+	<version>${parent.version}</version>
 	<name>NetXMS Client Library Interfaces</name>
 	<url>http://www.netxms.org</url>
 	
