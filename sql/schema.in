@@ -425,11 +425,9 @@ CREATE TABLE vpn_connector_networks
 	PRIMARY KEY(vpn_id,ip_addr)
 ) TABLE_TYPE;
 
-
 /*
 ** Container objects
 */
-
 CREATE TABLE containers
 (
 	id integer not null,
@@ -440,11 +438,9 @@ CREATE TABLE containers
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Condition objects
 */
-
 CREATE TABLE conditions
 (
 	id integer not null,
@@ -457,11 +453,9 @@ CREATE TABLE conditions
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** DCI to condition mapping
 */
-
 CREATE TABLE cond_dci_map
 (
 	condition_id integer not null,
@@ -1232,11 +1226,9 @@ CREATE TABLE ap_common
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Agent policies - node binding
 */
-
 CREATE TABLE ap_bindings
 (
 	policy_id integer not null,
@@ -1244,11 +1236,9 @@ CREATE TABLE ap_bindings
 	PRIMARY KEY(policy_id,node_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Agent policies - configuration files
 */
-
 CREATE TABLE ap_config_files
 (
 	policy_id integer not null,
@@ -1288,6 +1278,7 @@ CREATE TABLE network_maps
 	bg_color integer not null,
 	link_color integer not null,
 	link_routing integer not null,
+	filter SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1306,7 +1297,6 @@ CREATE TABLE network_map_elements
 /*
 ** Links on network maps
 */
-
 CREATE TABLE network_map_links
 (
 	map_id integer not null,
@@ -1323,11 +1313,9 @@ CREATE TABLE network_map_links
 	PRIMARY KEY(map_id,element1,element2)
 ) TABLE_TYPE;
 
-
 /*
 ** Image Library
 */
-
 CREATE TABLE images
 (
    guid varchar(36) not null,
@@ -1339,11 +1327,9 @@ CREATE TABLE images
    UNIQUE(name, category)
 ) TABLE_TYPE;
 
-
 /*
 ** Dashboards
 */
-
 CREATE TABLE dashboards
 (
 	id integer not null,
@@ -1352,11 +1338,9 @@ CREATE TABLE dashboards
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Dashboard elements
 */
-
 CREATE TABLE dashboard_elements
 (
 	dashboard_id integer not null,
@@ -1367,22 +1351,18 @@ CREATE TABLE dashboard_elements
 	PRIMARY KEY(dashboard_id,element_id)
 ) TABLE_TYPE;
 
-
 /*
 ** SLA business services
 */
-
 CREATE TABLE business_services
 (
      service_id integer not null,
      PRIMARY KEY(service_id)
 ) TABLE_TYPE;
 
-
 /*
 ** SLA service checks
 */
-
 CREATE TABLE slm_checks
 (
      id integer not null,
@@ -1399,7 +1379,6 @@ CREATE TABLE slm_checks
 /*
 ** SLA node links
 */
-
 CREATE TABLE node_links
 (
      nodelink_id integer not null,
@@ -1407,11 +1386,9 @@ CREATE TABLE node_links
      PRIMARY KEY(nodelink_id)
 ) TABLE_TYPE;
 
-
 /*
 ** SLA - agreements
 */
-
 CREATE TABLE slm_agreements
 (
      agreement_id integer not null,

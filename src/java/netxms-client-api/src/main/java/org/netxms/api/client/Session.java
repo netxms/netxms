@@ -198,7 +198,7 @@ public interface Session
 	 * @return System-wide rights of currently logged in user
 	 */
 
-	public abstract int getUserSystemRights();
+	public abstract long getUserSystemRights();
 
 	/**
 	 * @return the passwordExpired

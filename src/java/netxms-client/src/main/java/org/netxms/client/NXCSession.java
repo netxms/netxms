@@ -1748,7 +1748,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @see org.netxms.api.client.Session#getUserSystemRights()
 	 */
 	@Override
-	public int getUserSystemRights()
+	public long getUserSystemRights()
 	{
 		return userSystemRights;
 	}
