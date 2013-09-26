@@ -341,12 +341,10 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Prog
    return nRet;
 }
 
-
-//
-// Convert time_t into string
-// PATCH: by Edgar Chupit
-//
-
+/**
+ * Convert time_t into string
+ * PATCH: by Edgar Chupit
+ */
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {   
    TCHAR buffer[512];

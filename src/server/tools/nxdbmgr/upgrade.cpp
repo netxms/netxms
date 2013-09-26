@@ -354,6 +354,16 @@ static BOOL RecreateTData(const TCHAR *className)
 }
 
 /**
+ * Upgrade from V289 to V290
+ */
+static BOOL H_UpgradeFromV289(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE network_maps ADD filter $SQL:TEXT")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='290' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V288 to V289
  */
 static BOOL H_UpgradeFromV288(int currVersion, int newVersion)
@@ -7134,6 +7144,7 @@ static struct
    { 286, 287, H_UpgradeFromV286 },
    { 287, 288, H_UpgradeFromV287 },
    { 288, 289, H_UpgradeFromV288 },
+   { 289, 290, H_UpgradeFromV289 },
    { 0, 0, NULL }
 };
 

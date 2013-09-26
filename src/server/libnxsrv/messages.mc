@@ -896,4 +896,16 @@ Language=English
 Failed to load rack object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_NETMAP_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile filter script for network map object %1 "%2": %3
+.
+
+MessageId=
+SymbolicName=MSG_NETMAP_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute filter script for network map object %1 "%2": %3
+.
+
 ;#endif

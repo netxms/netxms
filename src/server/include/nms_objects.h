@@ -565,7 +565,7 @@ public:
    UINT32 *getDCIEventsList(UINT32 *pdwCount);
 
    BOOL applyToTarget(DataCollectionTarget *pNode);
-	BOOL isApplicable(Node *node);
+	bool isApplicable(Node *node);
 	bool isAutoApplyEnabled() { return (m_flags & TF_AUTO_APPLY) ? true : false; }
 	bool isAutoRemoveEnabled() { return ((m_flags & (TF_AUTO_APPLY | TF_AUTO_REMOVE)) == (TF_AUTO_APPLY | TF_AUTO_REMOVE)) ? true : false; }
 	void setAutoApplyFilter(const TCHAR *filter);
@@ -1737,6 +1737,8 @@ protected:
 	UINT32 m_nextElementId;
 	ObjectArray<NetworkMapElement> *m_elements;
 	ObjectArray<NetworkMapLink> *m_links;
+	TCHAR *m_filterSource;
+	NXSL_Program *m_filter;
 
 	void updateObjects(nxmap_ObjList *objects);
 	UINT32 objectIdFromElementId(UINT32 eid);
@@ -1761,6 +1763,9 @@ public:
 
    int getBackgroundColor() { return m_backgroundColor; }
    void setBackgroundColor(int color) { m_backgroundColor = color; }
+
+	void setFilter(const TCHAR *filter);
+   bool isAllowedOnMap(NetObj *object);
 };
 
 /**

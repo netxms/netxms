@@ -199,12 +199,18 @@ BOOL SQLQuery(const TCHAR *pszQuery)
 	if (*pszQuery == 0)
 		return TRUE;
 
-   if (g_bTrace)
-      ShowQuery(pszQuery);
+	String query(pszQuery);
 
-   bResult = DBQueryEx(g_hCoreDB, pszQuery, errorText);
+   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
+   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+
+   if (g_bTrace)
+      ShowQuery(query);
+
+   bResult = DBQueryEx(g_hCoreDB, query, errorText);
    if (!bResult)
-      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
+      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, query);
    return bResult;
 }
 

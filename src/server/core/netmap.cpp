@@ -59,6 +59,8 @@ NetworkMap::NetworkMap() : NetObj()
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
+   m_filterSource = NULL;
+   m_filter = NULL;
 }
 
 /**
@@ -82,6 +84,8 @@ NetworkMap::NetworkMap(int type, UINT32 seed) : NetObj()
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
+   m_filterSource = NULL;
+   m_filter = NULL;
 	m_isHidden = true;
 }
 
@@ -92,6 +96,8 @@ NetworkMap::~NetworkMap()
 {
 	delete m_elements;
 	delete m_links;
+   delete m_filter;
+   safe_free(m_filterSource);
 }
 
 /**
@@ -239,11 +245,11 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_dwId))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,seed=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=?,link_routing=?,bg_color=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,seed=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=?,link_routing=?,bg_color=?,filter=? WHERE id=?"));
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		goto fail;
@@ -260,7 +266,8 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkColor);
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkRouting);
 	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (LONG)m_backgroundColor);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwId);
 
 	if (!DBExecute(hStmt))
 	{
@@ -359,7 +366,7 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
 
 	   loadACLFromDB();
 
-		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,filter FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 		if (hResult == NULL)
 			return FALSE;
@@ -376,7 +383,12 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
 		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 9);
 		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 10);
 		m_backgroundColor = DBGetFieldLong(hResult, 0, 11);
-		DBFreeResult(hResult);
+      
+      TCHAR *filter = DBGetField(hResult, 0, 12, NULL, 0);
+      setFilter(filter);
+      safe_free(filter);
+		
+      DBFreeResult(hResult);
 
 	   // Load elements
       _sntprintf(query, 256, _T("SELECT element_id,element_type,element_data FROM network_map_elements WHERE map_id=%d"), m_dwId);
@@ -473,6 +485,7 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
 	msg->SetVariable(VID_LINK_ROUTING, (WORD)m_defaultLinkRouting);
 	msg->SetVariable(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
+   msg->SetVariable(VID_FILTER, CHECK_NULL_EX(m_filterSource));
 
 	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
@@ -530,6 +543,15 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		m_backgroundLongitude = request->GetVariableDouble(VID_BACKGROUND_LONGITUDE);
 		m_backgroundZoom = (int)request->GetVariableShort(VID_BACKGROUND_ZOOM);
 	}
+
+   if (request->IsVariableExist(VID_FILTER))
+   {
+      TCHAR *filter = request->GetVariableStr(VID_FILTER);
+      if (filter != NULL)
+         StrStrip(filter);
+      setFilter(filter);
+      safe_free(filter);
+   }
 
 	if (request->IsVariableExist(VID_NUM_ELEMENTS))
 	{
@@ -772,4 +794,68 @@ UINT32 NetworkMap::elementIdFromObjectId(UINT32 oid)
 		}
 	}
 	return 0;
+}
+
+/**
+ * Set filter.
+ *
+ * @param filter new filter script code or NULL to clear filter
+ */
+void NetworkMap::setFilter(const TCHAR *filter)
+{
+	LockData();
+	safe_free(m_filterSource);
+	delete m_filter;
+	if ((filter != NULL) && (*filter != 0))
+	{
+		TCHAR error[256];
+
+		m_filterSource = _tcsdup(filter);
+		m_filter = NXSLCompile(m_filterSource, error, 256);
+		if (m_filter == NULL)
+			nxlog_write(MSG_NETMAP_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+	}
+	else
+	{
+		m_filterSource = NULL;
+		m_filter = NULL;
+	}
+	Modify();
+	UnlockData();
+}
+
+/**
+ * Check if given object should be placed on map
+ */
+bool NetworkMap::isAllowedOnMap(NetObj *object)
+{
+	NXSL_ServerEnv *pEnv;
+	NXSL_Value *value;
+	bool result = true;
+
+	LockData();
+	if (m_filter != NULL)
+	{
+		pEnv = new NXSL_ServerEnv;
+      m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
+      if (object->Type() == OBJECT_NODE)
+      {
+		   m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+      }
+		if (m_filter->run(pEnv, 0, NULL) == 0)
+		{
+			value = m_filter->getResult();
+			result = ((value != NULL) && (value->getValueAsInt32() != 0));
+		}
+		else
+		{
+			TCHAR buffer[1024];
+
+			_sntprintf(buffer, 1024, _T("NetworkMap::%s::%d"), m_szName, m_dwId);
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_filter->getErrorText(), m_dwId);
+			nxlog_write(MSG_NETMAP_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_filter->getErrorText());
+		}
+	}
+	UnlockData();
+	return result;
 }

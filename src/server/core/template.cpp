@@ -992,11 +992,11 @@ void Template::prepareForDeletion()
 /**
  * Check if template should be automatically applied to node
  */
-BOOL Template::isApplicable(Node *node)
+bool Template::isApplicable(Node *node)
 {
 	NXSL_ServerEnv *pEnv;
 	NXSL_Value *value;
-	BOOL result = FALSE;
+	bool result = false;
 
 	LockData();
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
@@ -1013,8 +1013,7 @@ BOOL Template::isApplicable(Node *node)
 			TCHAR buffer[1024];
 
 			_sntprintf(buffer, 1024, _T("Template::%s::%d"), m_szName, m_dwId);
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer,
-						 m_applyFilter->getErrorText(), m_dwId);
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_applyFilter->getErrorText(), m_dwId);
 			nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_applyFilter->getErrorText());
 		}
 	}
