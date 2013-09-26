@@ -19,10 +19,16 @@
 package org.netxms.ui.eclipse.networkmaps.views;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
@@ -81,6 +87,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ExpansionAlgorithm;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
+import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandler;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.BendpointEditor;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
@@ -101,18 +108,17 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected static final int LAYOUT_HTREE = 2;
 	protected static final int LAYOUT_VTREE = 3;
 	protected static final int LAYOUT_SPARSE_VTREE = 4;
-	
-	private static final String[] layoutAlgorithmNames = 
-		{ "&Spring", "&Radial", "&Horizontal tree", "&Vertical tree", "S&parse vertical tree" };
-	private static final String[] connectionRouterNames =
-		{ "&Direct", "&Manhattan" };
-	
+
+	private static final String[] layoutAlgorithmNames = { "&Spring", "&Radial", "&Horizontal tree", "&Vertical tree",
+			"S&parse vertical tree" };
+	private static final String[] connectionRouterNames = { "&Direct", "&Manhattan" };
+
 	private static final int SELECTION_EMPTY = 0;
 	private static final int SELECTION_MIXED = 1;
 	private static final int SELECTION_OBJECTS = 2;
 	private static final int SELECTION_ELEMENTS = 3;
 	private static final int SELECTION_LINKS = 4;
-	
+
 	protected NXCSession session;
 	protected AbstractObject rootObject;
 	protected NetworkMapPage mapPage;
@@ -120,9 +126,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected MapLabelProvider labelProvider;
 	protected int layoutAlgorithm = LAYOUT_SPRING;
 	protected int routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
-	protected boolean allowManualLayout = false;     // True if manual layout can be switched on
+	protected boolean allowManualLayout = false; // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
-	
+
 	protected Action actionRefresh;
 	protected Action actionShowStatusIcon;
 	protected Action actionShowStatusBackground;
@@ -142,36 +148,39 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
-	
+
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	private BendpointEditor bendpointEditor = null;
 	private SessionListener sessionListener;
 
-	/* (non-Javadoc)
+	private List<DoubleClickHandlerData> doubleClickHandlers = new ArrayList<DoubleClickHandlerData>(0);
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		
+
 		session = (NXCSession)ConsoleSharedData.getSession();
 		String[] parts = site.getSecondaryId().split("&");
 		rootObject = session.findObjectById(Long.parseLong((parts.length > 0) ? parts[0] : site.getSecondaryId()));
 		if (rootObject == null)
 			throw new PartInitException("Root object for this map is no longer exist or is not accessible");
-		
+
 		viewId = site.getId() + ".";
 		viewId += (parts.length > 0) ? parts[0] : site.getSecondaryId();
-	
+
 		parseSecondaryId(parts);
 	}
-	
+
 	/**
-	 * Parse secondary ID (already splitted by & characters). Intended to be
-	 * overrided in subclasses.
+	 * Parse secondary ID (already splitted by & characters). Intended to be overrided in subclasses.
 	 * 
 	 * @param parts secondary ID divided at & characters
 	 * @throws PartInitException
@@ -179,14 +188,15 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected void parseSecondaryId(String[] parts) throws PartInitException
 	{
 	}
-	
+
 	/**
-	 * Build map page containing data to display. Should be implemented
-	 * in derived classes.
+	 * Build map page containing data to display. Should be implemented in derived classes.
 	 */
 	protected abstract void buildMapPage();
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.ui.part.ViewPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -194,7 +204,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
-		
+
 		viewer = new ExtendedGraphViewer(parent, SWT.NONE);
 		viewer.setContentProvider(new MapContentProvider(viewer));
 		labelProvider = new MapLabelProvider(viewer);
@@ -208,9 +218,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		catch(Exception e)
 		{
 		}
-		
+
 		getSite().setSelectionProvider(this);
-		
+
 		ISelectionChangedListener listener = new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent e)
@@ -220,7 +230,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 					bendpointEditor.stop();
 					bendpointEditor = null;
 				}
-				
+
 				currentSelection = transformSelection(e.getSelection());
 
 				if (currentSelection.size() == 1)
@@ -239,7 +249,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 							NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
 							if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS)
 							{
-								bendpointEditor = new BendpointEditor(link, (GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
+								bendpointEditor = new BendpointEditor(link,
+										(GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
 							}
 						}
 					}
@@ -248,10 +259,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				{
 					actionOpenSubmap.setEnabled(false);
 				}
-				
+
 				if (selectionListeners.isEmpty())
 					return;
-				
+
 				SelectionChangedEvent event = new SelectionChangedEvent(AbstractNetworkMapView.this, currentSelection);
 				for(ISelectionChangedListener l : selectionListeners)
 				{
@@ -260,11 +271,30 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		viewer.addPostSelectionChangedListener(listener);
-		
+
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{
+				int selectionType = analyzeSelection(currentSelection);
+				if (selectionType == SELECTION_OBJECTS)
+				{
+					AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
+
+					for(DoubleClickHandlerData h : doubleClickHandlers)
+					{
+						if ((h.enabledFor == null) || (h.enabledFor.isInstance(object)))
+						{
+							if (h.handler.onDoubleClick(object))
+							{
+								return;
+							}
+						}
+					}
+				}
+
+				// Default behaviour
+
 				actionOpenSubmap.run();
 			}
 		});
@@ -290,7 +320,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
+
 		if (automaticLayoutEnabled)
 		{
 			setLayoutAlgorithm(layoutAlgorithm, true);
@@ -299,8 +329,49 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		{
 			viewer.setLayoutAlgorithm(new ManualLayout());
 		}
-		
+
+		registerDoubleClickHandlers();
 		refreshMap();
+	}
+
+	private void registerDoubleClickHandlers()
+	{
+		// Read all registered extensions and create handlers
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg
+				.getConfigurationElementsFor("org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers"); //$NON-NLS-1$
+		for(int i = 0; i < elements.length; i++)
+		{
+			try
+			{
+				final DoubleClickHandlerData h = new DoubleClickHandlerData();
+				h.handler = (ObjectDoubleClickHandler)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
+				h.priority = safeParseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
+				final String className = elements[i].getAttribute("enabledFor"); //$NON-NLS-1$
+				try
+				{
+					h.enabledFor = (className != null) ? Class.forName(className) : null;
+				}
+				catch(Exception e)
+				{
+					h.enabledFor = null;
+				}
+				doubleClickHandlers.add(h);
+			}
+			catch(CoreException e)
+			{
+				e.printStackTrace();
+			}
+		}
+
+		// Sort handlers by priority
+		Collections.sort(doubleClickHandlers, new Comparator<DoubleClickHandlerData>() {
+			@Override
+			public int compare(DoubleClickHandlerData arg0, DoubleClickHandlerData arg1)
+			{
+				return arg0.priority - arg1.priority;
+			}
+		});
 	}
 
 	/**
@@ -311,7 +382,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		buildMapPage();
 		viewer.setInput(mapPage);
 	}
-	
+
 	/**
 	 * Replace current map page with new one
 	 * 
@@ -328,9 +399,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		});
 	}
-	
+
 	/**
 	 * Set layout algorithm for map
+	 * 
 	 * @param alg
 	 */
 	protected void setLayoutAlgorithm(int alg, boolean forceChange)
@@ -338,25 +410,25 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		if (alg == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
 		{
 			if (!automaticLayoutEnabled)
-				return;	// manual layout already
-			
+				return; // manual layout already
+
 			automaticLayoutEnabled = false;
 			actionSetAlgorithm[layoutAlgorithm].setChecked(false);
 			actionEnableAutomaticLayout.setChecked(false);
 			return;
 		}
-		
+
 		if (automaticLayoutEnabled && (alg == layoutAlgorithm) && !forceChange)
-			return;	// nothing to change
-		
+			return; // nothing to change
+
 		if (!automaticLayoutEnabled)
 		{
 			actionEnableAutomaticLayout.setChecked(true);
 			automaticLayoutEnabled = true;
 		}
-		
+
 		LayoutAlgorithm algorithm;
-		
+
 		switch(alg)
 		{
 			case LAYOUT_SPRING:
@@ -379,15 +451,15 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				algorithm = new GridLayoutAlgorithm();
 				break;
 		}
-		//viewer.setLayoutAlgorithm(algorithm);
-		
+		// viewer.setLayoutAlgorithm(algorithm);
+
 		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { algorithm, new ExpansionAlgorithm() }));
 
 		actionSetAlgorithm[layoutAlgorithm].setChecked(false);
 		layoutAlgorithm = alg;
 		actionSetAlgorithm[layoutAlgorithm].setChecked(true);
 	}
-	
+
 	/**
 	 * Update stored object positions with actual positions read from graph control
 	 */
@@ -416,15 +488,15 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected void setManualLayout()
 	{
 		updateObjectPositions();
-		
+
 		automaticLayoutEnabled = false;
 		viewer.setLayoutAlgorithm(new ManualLayout(), true);
-		
+
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			actionSetAlgorithm[i].setEnabled(false);
 		actionSaveLayout.setEnabled(true);
 	}
-	
+
 	/**
 	 * Set automatic layout mode
 	 */
@@ -432,7 +504,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		automaticLayoutEnabled = true;
 		setLayoutAlgorithm(layoutAlgorithm, true);
-		
+
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			actionSetAlgorithm[i].setEnabled(true);
 		actionSaveLayout.setEnabled(false);
@@ -450,7 +522,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				refreshMap();
 			}
 		};
-		
+
 		actionShowStatusBackground = new Action("Show status &background", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -464,7 +536,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
 		actionShowStatusBackground.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
-	
+
 		actionShowStatusIcon = new Action("Show status &icon", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -478,7 +550,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
 		actionShowStatusIcon.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
-		
+
 		actionShowStatusFrame = new Action("Show status &frame", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -492,7 +564,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
-	
+
 		actionZoomIn = new Action("Zoom &in") {
 			@Override
 			public void run()
@@ -510,7 +582,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
-		
+
 		actionZoomTo = viewer.createZoomActions();
 
 		actionSetAlgorithm = new Action[layoutAlgorithmNames.length];
@@ -528,7 +600,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			actionSetAlgorithm[i].setChecked(layoutAlgorithm == i);
 			actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
 		}
-		
+
 		actionSetRouter = new Action[connectionRouterNames.length];
 		for(int i = 0; i < connectionRouterNames.length; i++)
 		{
@@ -542,7 +614,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			};
 			actionSetRouter[i].setChecked(routingAlgorithm == alg);
 		}
-		
+
 		actionEnableAutomaticLayout = new Action("Enable &automatic layout", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -559,7 +631,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
-		
+
 		actionSaveLayout = new Action("&Save layout") {
 			@Override
 			public void run()
@@ -570,7 +642,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionSaveLayout.setImageDescriptor(SharedIcons.SAVE);
 		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
-		
+
 		actionOpenSubmap = new Action("Open s&ubmap") {
 			@Override
 			public void run()
@@ -579,7 +651,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionOpenSubmap.setEnabled(false);
-		
+
 		actionFiguresIcons = new Action("&Icons", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
@@ -594,7 +666,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
-		
+
 		actionFiguresSmallLabels = new Action("&Small labels", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
@@ -609,7 +681,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.SMALL_LABEL);
-		
+
 		actionFiguresLargeLabels = new Action("&Large labels", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
@@ -624,7 +696,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
-		
+
 		actionShowGrid = new Action("Show &grid", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -634,7 +706,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionShowGrid.setImageDescriptor(Activator.getImageDescriptor("icons/grid.png"));
 		actionShowGrid.setChecked(viewer.isGridVisible());
-		
+
 		actionSnapToGrid = new Action("S&nap to grid", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -644,7 +716,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionSnapToGrid.setImageDescriptor(Activator.getImageDescriptor("icons/snap_to_grid.png"));
 		actionSnapToGrid.setChecked(viewer.isSnapToGrid());
-		
+
 		actionAlignToGrid = new Action("&Align to grid", Activator.getImageDescriptor("icons/align_to_grid.gif")) {
 			@Override
 			public void run()
@@ -662,9 +734,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 	}
-	
+
 	/**
 	 * Create "Layout" submenu
+	 * 
 	 * @return
 	 */
 	protected IContributionItem createLayoutSubmenu()
@@ -684,9 +757,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 		return layout;
 	}
-	
+
 	/**
 	 * Create "Routing" submenu
+	 * 
 	 * @return
 	 */
 	protected IContributionItem createRoutingSubmenu()
@@ -696,7 +770,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			submenu.add(actionSetRouter[i]);
 		return submenu;
 	}
-	
+
 	/**
 	 * Fill action bars
 	 */
@@ -709,6 +783,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 
 	/**
 	 * Fill local pull-down menu
+	 * 
 	 * @param manager
 	 */
 	protected void fillLocalPullDown(IMenuManager manager)
@@ -716,12 +791,12 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		MenuManager zoom = new MenuManager("&Zoom");
 		for(int i = 0; i < actionZoomTo.length; i++)
 			zoom.add(actionZoomTo[i]);
-		
+
 		MenuManager figureType = new MenuManager("&Display objects as");
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
-		
+
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
@@ -740,6 +815,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 
 	/**
 	 * Fill local tool bar
+	 * 
 	 * @param manager
 	 */
 	protected void fillLocalToolBar(IToolBarManager manager)
@@ -757,7 +833,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 		manager.add(actionRefresh);
 	}
-	
+
 	/**
 	 * Create popup menu for map
 	 */
@@ -787,17 +863,18 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				}
 			}
 		});
-	
+
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-	
+
 		// Register menu for extension.
 		getSite().registerContextMenu(menuMgr, this);
 	}
 
 	/**
 	 * Fill context menu for map object
+	 * 
 	 * @param manager Menu manager
 	 */
 	protected void fillObjectContextMenu(IMenuManager manager)
@@ -817,7 +894,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
-		
+
 		if (currentSelection.size() == 1)
 		{
 			manager.add(new Separator());
@@ -826,25 +903,28 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			manager.add(new PropertyDialogAction(getSite(), this));
 		}
 	}
-	
+
 	/**
 	 * Fill context menu for map element
+	 * 
 	 * @param manager Menu manager
 	 */
 	protected void fillElementContextMenu(IMenuManager manager)
 	{
 	}
-	
+
 	/**
 	 * Fill context menu for link between objects
+	 * 
 	 * @param manager Menu manager
 	 */
 	protected void fillLinkContextMenu(IMenuManager manager)
 	{
 	}
-	
+
 	/**
 	 * Fill context menu for map view
+	 * 
 	 * @param manager Menu manager
 	 */
 	protected void fillMapContextMenu(IMenuManager manager)
@@ -852,12 +932,12 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		MenuManager zoom = new MenuManager("&Zoom");
 		for(int i = 0; i < actionZoomTo.length; i++)
 			zoom.add(actionZoomTo[i]);
-		
+
 		MenuManager figureType = new MenuManager("&Display objects as");
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
-		
+
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
@@ -875,7 +955,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
-	
+
 	/**
 	 * Tests if given selection contains only NetXMS objects
 	 * 
@@ -887,7 +967,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		if (selection.isEmpty())
 			return SELECTION_EMPTY;
-		
+
 		Iterator it = selection.iterator();
 		Object first = it.next();
 		int type;
@@ -911,7 +991,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		{
 			return SELECTION_MIXED;
 		}
-		
+
 		while(it.hasNext())
 		{
 			final Object o = it.next();
@@ -920,7 +1000,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 		return type;
 	}
-	
+
 	/**
 	 * Called by session listener when NetXMS object was changed.
 	 * 
@@ -931,25 +1011,27 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
 		if (element != null)
 			viewer.refresh(element, true);
-		
+
 		List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());
 		if (links != null)
 			for(NetworkMapLink l : links)
 				viewer.refresh(l);
-		
+
 		if (object.getObjectId() == rootObject.getObjectId())
 			rootObject = object;
 	}
-	
+
 	/**
-	 * Called when map layout has to be saved. Object positions already updated
-	 * when this method is called. Default implementation does nothing.
+	 * Called when map layout has to be saved. Object positions already updated when this method is called. Default implementation
+	 * does nothing.
 	 */
 	protected void saveLayout()
 	{
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -958,7 +1040,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		viewer.getControl().setFocus();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
 	 */
 	@Override
@@ -973,20 +1057,22 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 		super.dispose();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
 	 */
 	@Override
 	public void addSelectionChangedListener(ISelectionChangedListener listener)
 	{
 		selectionListeners.add(listener);
 	}
-	
+
 	/**
-	 * Transform viewer's selection to form usable by another plugins by extracting
-	 * NetXMS objects from map elements.
-	 *  
+	 * Transform viewer's selection to form usable by another plugins by extracting NetXMS objects from map elements.
+	 * 
 	 * @param viewerSelection viewer's selection
 	 * @return selection containing only NetXMS objects
 	 */
@@ -996,7 +1082,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		IStructuredSelection selection = (IStructuredSelection)viewerSelection;
 		if (selection.isEmpty())
 			return selection;
-				
+
 		List<Object> objects = new ArrayList<Object>();
 		Iterator it = selection.iterator();
 		while(it.hasNext())
@@ -1025,7 +1111,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 
 		return new StructuredSelection(objects.toArray());
 	}
-	
+
 	/**
 	 * Tests if given map element is selectable. Default implementation always returns false.
 	 * 
@@ -1037,18 +1123,24 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		return false;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
 	 */
 	@Override
 	public ISelection getSelection()
 	{
-		//return transformSelection((IStructuredSelection)viewer.getSelection());
+		// return transformSelection((IStructuredSelection)viewer.getSelection());
 		return currentSelection;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener
+	 * )
 	 */
 	@Override
 	public void removeSelectionChangedListener(ISelectionChangedListener listener)
@@ -1056,7 +1148,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		selectionListeners.remove(listener);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
 	 */
 	@Override
@@ -1064,7 +1158,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.zest.core.viewers.IZoomableWorkbenchPart#getZoomableViewer()
 	 */
 	@Override
@@ -1072,7 +1168,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		return viewer;
 	}
-	
+
 	/**
 	 * Open submap for currently selected object
 	 */
@@ -1080,11 +1176,12 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		if (currentSelection == null)
 			return;
-		
+
 		Object object = currentSelection.getFirstElement();
 		if (object instanceof AbstractObject)
 		{
-			long submapId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object).getSubmapId();
+			long submapId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object)
+					.getSubmapId();
 			if (submapId != 0)
 			{
 				try
@@ -1098,7 +1195,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		}
 	}
-	
+
 	/**
 	 * Set map default connection routing algorithm
 	 * 
@@ -1126,7 +1223,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 		viewer.refresh();
 	}
-	
+
 	/**
 	 * Show details for selected object
 	 */
@@ -1134,13 +1231,14 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		if ((currentSelection.size() != 1) || !(currentSelection.getFirstElement() instanceof AbstractObject))
 			return;
-		
+
 		AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
 		if (object != null)
 		{
 			try
 			{
-				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view");
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+						.showView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view");
 
 				if (!selectionListeners.isEmpty())
 				{
@@ -1153,8 +1251,34 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(getSite().getShell(), "Error", "Error opening object details view: " + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getSite().getShell(), "Error",
+						"Error opening object details view: " + e.getLocalizedMessage());
 			}
 		}
 	}
+
+	private static int safeParseInt(String string)
+	{
+		if (string == null)
+			return 65535;
+		try
+		{
+			return Integer.parseInt(string);
+		}
+		catch(NumberFormatException e)
+		{
+			return 65535;
+		}
+	}
+
+	/**
+	 * Internal data for object double click handlers
+	 */
+	private class DoubleClickHandlerData
+	{
+		ObjectDoubleClickHandler handler;
+		int priority;
+		Class<?> enabledFor;
+	}
+
 }

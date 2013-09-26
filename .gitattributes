@@ -1523,6 +1523,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/service_deps.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/snap_to_grid.png -text
 src/java/netxms-eclipse/NetworkMaps/plugin.xml -text
 src/java/netxms-eclipse/NetworkMaps/schema/org.netxms.ui.eclipse.networkmaps.imageproviders.exsd -text
+src/java/netxms-eclipse/NetworkMaps/schema/org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers.exsd -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Messages.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/NetworkMapOpenHandler.java -text
@@ -3166,6 +3167,7 @@ webui/webapp/NetworkMaps/icons/service_deps.gif -text
 webui/webapp/NetworkMaps/icons/snap_to_grid.png -text
 webui/webapp/NetworkMaps/plugin.xml -text
 webui/webapp/NetworkMaps/schema/org.netxms.ui.eclipse.networkmaps.imageproviders.exsd -text
+webui/webapp/NetworkMaps/schema/org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers.exsd -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Messages.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/NetworkMapOpenHandler.java -text

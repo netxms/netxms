@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.netxms.ui.eclipse.networkmaps" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.netxms.ui.eclipse.networkmaps" id="org.netxms.ui.eclipse.networkmaps.doubleClickHandlers" name="Double Click Handlers"/>
+      </appInfo>
+      <documentation>
+         
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="handler" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="handler">
+      <annotation>
+         <documentation>
+            Object open handler
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Class implementing handler
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandler"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="priority" type="string">
+            <annotation>
+               <documentation>
+                  Handler priority
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="enabledFor" type="string">
+            <annotation>
+               <documentation>
+                  Class filter - handler will only be enabled for objects of given class
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.netxms.client.objects.GenericObject:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         1.2.9
+      </documentation>
+   </annotation>
+
+
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         Raden Solutions
+      </documentation>
+   </annotation>
+
+</schema>

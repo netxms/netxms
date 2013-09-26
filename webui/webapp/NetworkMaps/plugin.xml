@@ -2,6 +2,7 @@
 <?eclipse version="3.2"?>
 <plugin>
    <extension-point id="org.netxms.ui.eclipse.networkmaps.imageproviders" name="Network Map Image Providers" schema="schema/org.netxms.ui.eclipse.networkmaps.imageproviders.exsd"/>
+   <extension-point id="org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers" name="Object Double Click Handlers" schema="schema/org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">
