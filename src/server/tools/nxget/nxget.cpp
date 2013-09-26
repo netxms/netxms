@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
                      _T("   -s <secret>  : Shared secret for authentication.\n")
                      _T("   -S <addr>    : Check state of network service at given address.\n")
                      _T("   -t <type>    : Set type of service to be checked.\n")
-				         _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, telnet.\n")
+				         _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n")
                      _T("   -T           : Requested parameter is a table.\n")
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds).\n")
@@ -423,6 +423,10 @@ int main(int argc, char *argv[])
 					else if (!stricmp(optarg, "http"))
 					{
 						iServiceType = NETSRV_HTTP;
+					}
+					else if (!stricmp(optarg, "https"))
+					{
+						iServiceType = NETSRV_HTTPS;
 					}
 					else if (!stricmp(optarg, "pop3"))
 					{

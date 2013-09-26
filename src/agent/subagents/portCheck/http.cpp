@@ -36,7 +36,16 @@ LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	}
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-	ret_int(pValue, CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout));
+   if (pArg == NULL)
+   {
+      // HTTP
+      ret_int(pValue, CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout));
+   }
+   else
+   {
+      // HTTPS
+      ret_int(pValue, CheckHTTPS(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout));
+   }
 	return nRet;
 }
 
@@ -123,4 +132,133 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
 	regfree(&preg);
 
 	return nRet;
+}
+
+int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
+{
+#ifdef WITH_OPENSSL
+   if (szMatch[0] == 0)
+   {
+      strcpy(szMatch, "^HTTP/1.[01] 200 .*");
+   }
+
+   regex_t preg;
+   if (tre_regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
+   {
+      return PC_ERR_BAD_PARAMS;
+   }
+
+   int ret = PC_ERR_INTERNAL;
+
+   SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
+   if (ctx != NULL)
+   {
+      SSL *ssl = SSL_new(ctx);
+      if (ssl != NULL)
+      {
+         SSL_set_connect_state(ssl);
+
+         BIO *ssl_bio = BIO_new(BIO_f_ssl());
+         if (ssl_bio != NULL)
+         {
+            BIO_set_ssl(ssl_bio, ssl, BIO_CLOSE);
+
+            BIO *out = BIO_new(BIO_s_connect());
+            if (out != NULL)
+            {
+               if (szAddr != NULL)
+               {
+                  BIO_set_conn_hostname(out, szAddr);
+               }
+               else
+               {
+                  BIO_set_conn_ip(out, htonl(dwAddr));
+               }
+               BIO_set_conn_int_port(out, &nPort);
+               BIO_set_nbio(out, 1);
+               out = BIO_push(ssl_bio, out);
+
+               ret = PC_ERR_CONNECT;
+
+               bool sendFailed = false;
+               // send request
+               char szHostHeader[256];
+               char szTmp[2048];
+               snprintf(szHostHeader, sizeof(szHostHeader), "Host: %s:%u\r\n", szHost[0] != 0 ? szHost : szAddr, nPort); 
+               snprintf(szTmp, sizeof(szTmp), "GET %s HTTP/1.1\r\nConnection: close\r\nAccept: */*\r\n%s\r\n", szURI, szHostHeader);
+               int len = strlen(szTmp);
+               int offset = 0;
+               while (true)
+               {
+                  int sent = BIO_write(out, &(szTmp[offset]), len);
+                  if (sent <= 0)
+                  {
+                     if (BIO_should_retry(out))
+                     {
+                        continue;
+                     }
+                     else
+                     {
+                        sendFailed = true;
+                        break;
+                     }
+                  }
+                  offset += sent;
+                  len -= sent;
+                  if (len <= 0)
+                  {
+                     break;
+                  }
+               }
+
+               ret = PC_ERR_HANDSHAKE;
+
+               // read reply
+               if (!sendFailed)
+               {
+#define BUFSIZE (10 * 1024 * 1024)
+                  char *buffer = (char *)malloc(BUFSIZE); // 10Mb
+                  memset(buffer, 0, BUFSIZE);
+
+                  int i;
+                  int offset = 0;
+                  while (true)
+                  {
+                     i = BIO_read(out, buffer + offset, BUFSIZE - offset - 1);
+                     if (i == 0)
+                     {
+                        break;
+                     }
+                     if (i < 0)
+                     {
+                        if (BIO_should_retry(out))
+                        {
+                           continue;
+                        }
+                        break;
+                     }
+                     offset += i;
+                  }
+                  if (buffer[0] != 0 && tre_regexec(&preg, buffer, 0, NULL, 0) == 0)
+                  {
+                     ret = PC_ERR_NONE;
+                  }
+                  safe_free(buffer);
+               }
+
+               BIO_free_all(out);
+            }
+         }
+         //SSL_free(ssl);
+      }
+      SSL_CTX_free(ctx);
+   }
+
+   regfree(&preg);
+
+   return ret;
+
+#else
+   return PC_ERR_INTERNAL;
+#endif
 }

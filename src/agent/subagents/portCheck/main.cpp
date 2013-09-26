@@ -103,6 +103,7 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 			bHandled = FALSE;
 			break;
 		case NETSRV_HTTP:
+		case NETSRV_HTTPS:
 			{
 				char *pHost;
 				char *pURI;
@@ -116,8 +117,14 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 					*pURI = 0;
 					pURI++;
 
-					nRet = CheckHTTP(NULL, dwAddress, wPort, pURI, pHost,
-							szResponse, 0);
+               if (wType == NETSRV_HTTP)
+               {
+                  nRet = CheckHTTP(NULL, dwAddress, wPort, pURI, pHost, szResponse, 0);
+               }
+               else
+               {
+                  nRet = CheckHTTPS(NULL, dwAddress, wPort, pURI, pHost, szResponse, 0);
+               }
 				}
 
 				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
@@ -148,6 +155,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 static BOOL SubagentInit(Config *config)
 {
 	config->parseTemplate(_T("portCheck"), m_cfgTemplate);
+#ifdef WITH_OPENSSL
+   SSL_load_error_strings();
+   OpenSSL_add_ssl_algorithms();
+#endif
 	return TRUE;
 }
 
@@ -166,6 +177,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_INT,		_T("Status of remote SSH service") },
 	{ _T("ServiceCheck.HTTP(*)"),         H_CheckHTTP,       NULL,
 		DCI_DT_INT,		_T("Status of remote HTTP service") },
+	{ _T("ServiceCheck.HTTPS(*)"),        H_CheckHTTP,       "S",
+		DCI_DT_INT,		_T("Status of remote HTTPS service") },
 	{ _T("ServiceCheck.Custom(*)"),       H_CheckCustom,     NULL,
 		DCI_DT_INT,		_T("Status of remote TCP service") },
 	{ _T("ServiceCheck.Telnet(*)"),       H_CheckTelnet,     NULL,

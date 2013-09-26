@@ -79,6 +79,7 @@ public class NetworkServicePolling extends PropertyPage
 		serviceType.add("SMTP");
 		serviceType.add("FTP");
 		serviceType.add("HTTP");
+		serviceType.add("HTTPS");
 		serviceType.add("Telnet");
 		serviceType.select(object.getServiceType());
 		

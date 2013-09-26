@@ -33,7 +33,8 @@ public class NetworkService extends GenericObject
 	public static final int SMTP = 3;
 	public static final int FTP = 4;
 	public static final int HTTP = 5;
-	public static final int TELNET = 6;
+	public static final int HTTPS = 6;
+	public static final int TELNET = 7;
 	
 	int serviceType;
 	int protocol;

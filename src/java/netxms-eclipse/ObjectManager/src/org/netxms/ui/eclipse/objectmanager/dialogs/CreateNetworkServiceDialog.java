@@ -107,6 +107,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		serviceTypeField.add("SMTP");
 		serviceTypeField.add("FTP");
 		serviceTypeField.add("HTTP");
+		serviceTypeField.add("HTTPS");
 		serviceTypeField.add("Telnet");
 		serviceTypeField.select(NetworkService.CUSTOM);
 		
