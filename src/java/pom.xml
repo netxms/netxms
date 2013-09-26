@@ -12,7 +12,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  
+
   <modules>
     <module>netxms-base</module>
     <module>netxms-client-api</module>
@@ -20,4 +20,17 @@
     <module>mobile-agent</module>
     <!--<module>netxms-agent</module>-->
   </modules>
+
+  <distributionManagement>
+    <repository>
+      <id>releases</id>
+      <name>Releases</name>
+      <url>https://maven.netxms.org/nexus/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>Snapshots</name>
+      <url>https://maven.netxms.org/nexus/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
 </project>
