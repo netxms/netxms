@@ -7,13 +7,14 @@
 - User-defined constants in NXSL
 - New methods deleteColumn and deleteRow in NXSL class Table
 - New NXSL functions: chr, ord
+- HTTPS support in port checker subagent
 - Added MIBs for Nortel/Trapeze Wireless security switches
 - New MIBs: BAY-STACK-NOTIFICATIONS-MIB, SUN-HW-CTRL-MIB, SUN-HW-TRAP-MIB, 
             SUN-PLATFORM-MIB
 - Management console:
 	- New dashboard elements: status map and table value
-- Fixed issues: #202, #300, #305, #311, #325, #327, #334, #335, #336, #337, 
-                #338, #339, #342
+- Fixed issues: #202, #300, #304, #305, #309, #311, #325, #327, #332, #334,
+                #335, #336, #337, #338, #339, #340, #342
 
 
 *

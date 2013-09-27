@@ -18,7 +18,7 @@ Procedure InitializeWizard;
 begin
   DetailsPage := CreateInputQueryPage(wpSelectComponents,
       'Server Settings',
-      'Web interface server server settings',
+      'Web interface server settings',
       'Please check default settings and adjust them if required');
   DetailsPage.Add('Port:', False);
   DetailsPage.Values[0] := GetPreviousData('JettyPort', '8787');
