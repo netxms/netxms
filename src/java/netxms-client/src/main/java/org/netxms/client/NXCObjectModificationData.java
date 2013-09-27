@@ -93,6 +93,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_CONNECTION_ROUTING = 0x02000000000000L;
 	public static final long MODIFY_DISCOVERY_RADIUS   = 0x04000000000000L;
 	public static final long MODIFY_HEIGHT             = 0x08000000000000L;
+	public static final long MODIFY_FILTER             = 0x10000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -164,6 +165,7 @@ public class NXCObjectModificationData
 	private int connectionRouting;
 	private int discoveryRadius;
 	private int height;
+	private String filter;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1340,5 +1342,22 @@ public class NXCObjectModificationData
 	{
 		this.height = height;
 		flags |= MODIFY_HEIGHT;
+	}
+
+	/**
+	 * @return the filter
+	 */
+	public String getFilter()
+	{
+		return filter;
+	}
+
+	/**
+	 * @param filter the filter to set
+	 */
+	public void setFilter(String filter)
+	{
+		this.filter = filter;
+		flags |= MODIFY_FILTER;
 	}
 }

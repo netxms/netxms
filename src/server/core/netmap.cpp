@@ -665,6 +665,23 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 	bool modified = false;
 
 	DbgPrintf(5, _T("NetworkMap(%s): updateObjects called"), m_szName);
+
+   // Filter out unallowed objects
+   if ((m_filter != NULL) && (objects->getNumObjects() > 0))
+   {
+      UINT32 count = objects->getNumObjects();
+      UINT32 *idList = (UINT32 *)nx_memdup(objects->getObjects(), sizeof(UINT32) * count);
+	   for(UINT32 i = 0; i < count; i++)
+      {
+         NetObj *object = FindObjectById(idList[i]);
+         if ((object == NULL) || !isAllowedOnMap(object))
+         {
+            objects->removeObject(object->Id());
+         }
+      }
+      free(idList);
+   }
+
 	LockData();
 
 	// remove non-existing links

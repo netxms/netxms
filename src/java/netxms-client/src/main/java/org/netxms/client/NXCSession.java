@@ -3388,6 +3388,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariable(NXCPCodes.VID_AUTOBIND_FILTER, data.getAutoBindFilter());
 		}
 
+		if ((flags & NXCObjectModificationData.MODIFY_FILTER) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_FILTER, data.getFilter());
+		}
+
 		if ((flags & NXCObjectModificationData.MODIFY_DESCRIPTION) != 0)
 		{
 			msg.setVariable(NXCPCodes.VID_DESCRIPTION, data.getDescription());

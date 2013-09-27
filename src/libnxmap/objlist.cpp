@@ -94,13 +94,13 @@ void nxmap_ObjList::clear()
 /**
  * Add object to list
  */
-void nxmap_ObjList::addObject(UINT32 dwId)
+void nxmap_ObjList::addObject(UINT32 id)
 {
    UINT32 i;
 
    for(i = 0; i < m_dwNumObjects; i++)
    {
-      if (m_pdwObjectList[i] == dwId)
+      if (m_pdwObjectList[i] == id)
          break;
    }
 
@@ -111,14 +111,40 @@ void nxmap_ObjList::addObject(UINT32 dwId)
 			m_allocatedObjects += 64;
 	      m_pdwObjectList = (UINT32 *)realloc(m_pdwObjectList, sizeof(UINT32) * m_allocatedObjects);
 		}
-      m_pdwObjectList[m_dwNumObjects++] = dwId;
+      m_pdwObjectList[m_dwNumObjects++] = id;
+   }
+}
+
+/**
+ * Remove object from list
+ */
+void nxmap_ObjList::removeObject(UINT32 id)
+{
+   for(UINT32 i = 0; i < m_dwNumObjects; i++)
+   {
+      if (m_pdwObjectList[i] == id)
+      {
+         m_dwNumObjects--;
+         memmove(&m_pdwObjectList[i], &m_pdwObjectList[i + 1], (m_dwNumObjects - i) * sizeof(UINT32));
+         break;
+      }
+   }
+
+   for(UINT32 i = 0; i < m_dwNumLinks; i++)
+   {
+      if ((m_pLinkList[i].dwId1 == id) || (m_pLinkList[i].dwId2 == id))
+      {
+         m_dwNumLinks--;
+         memmove(&m_pLinkList[i], &m_pLinkList[i + 1], (m_dwNumLinks - i) * sizeof(UINT32));
+         i--;
+      }
    }
 }
 
 /**
  * Link two objects
  */
-void nxmap_ObjList::linkObjects(UINT32 dwId1, UINT32 dwId2)
+void nxmap_ObjList::linkObjects(UINT32 id1, UINT32 id2)
 {
    UINT32 i;
    int nCount;
@@ -126,8 +152,8 @@ void nxmap_ObjList::linkObjects(UINT32 dwId1, UINT32 dwId2)
    // Validate object IDs
    for(i = 0, nCount = 0; (i < m_dwNumObjects) && (nCount < 2); i++)
    {
-      if ((m_pdwObjectList[i] == dwId1) ||
-          (m_pdwObjectList[i] == dwId2))
+      if ((m_pdwObjectList[i] == id1) ||
+          (m_pdwObjectList[i] == id2))
          nCount++;
    }
 
@@ -136,8 +162,8 @@ void nxmap_ObjList::linkObjects(UINT32 dwId1, UINT32 dwId2)
       // Check for duplicate links
       for(i = 0; i < m_dwNumLinks; i++)
       {
-         if (((m_pLinkList[i].dwId1 == dwId1) && (m_pLinkList[i].dwId2 == dwId2)) ||
-             ((m_pLinkList[i].dwId2 == dwId1) && (m_pLinkList[i].dwId1 == dwId2)))
+         if (((m_pLinkList[i].dwId1 == id1) && (m_pLinkList[i].dwId2 == id2)) ||
+             ((m_pLinkList[i].dwId2 == id1) && (m_pLinkList[i].dwId1 == id2)))
             break;
       }
       if (i == m_dwNumLinks)
@@ -147,8 +173,8 @@ void nxmap_ObjList::linkObjects(UINT32 dwId1, UINT32 dwId2)
 				m_allocatedLinks += 64;
 	         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_allocatedLinks);
 			}
-         m_pLinkList[m_dwNumLinks].dwId1 = dwId1;
-         m_pLinkList[m_dwNumLinks].dwId2 = dwId2;
+         m_pLinkList[m_dwNumLinks].dwId1 = id1;
+         m_pLinkList[m_dwNumLinks].dwId2 = id2;
          m_pLinkList[m_dwNumLinks].nType = LINK_TYPE_NORMAL;
 			m_pLinkList[m_dwNumLinks].szPort1[0] = 0;
 			m_pLinkList[m_dwNumLinks].szPort2[0] = 0;
@@ -171,7 +197,7 @@ static void UpdatePortNames(OBJLINK *link, const TCHAR *port1, const TCHAR *port
 /**
  * Link two objects with named links
  */
-void nxmap_ObjList::linkObjectsEx(UINT32 dwId1, UINT32 dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, UINT32 portId1, UINT32 portId2)
+void nxmap_ObjList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2)
 {
    UINT32 i;
    int nCount;
@@ -179,8 +205,8 @@ void nxmap_ObjList::linkObjectsEx(UINT32 dwId1, UINT32 dwId2, const TCHAR *pszPo
    // Validate object IDs
    for(i = 0, nCount = 0; (i < m_dwNumObjects) && (nCount < 2); i++)
    {
-      if ((m_pdwObjectList[i] == dwId1) ||
-          (m_pdwObjectList[i] == dwId2))
+      if ((m_pdwObjectList[i] == id1) ||
+          (m_pdwObjectList[i] == id2))
          nCount++;
    }
 
@@ -189,7 +215,7 @@ void nxmap_ObjList::linkObjectsEx(UINT32 dwId1, UINT32 dwId2, const TCHAR *pszPo
       // Check for duplicate links
       for(i = 0; i < m_dwNumLinks; i++)
       {
-			if ((m_pLinkList[i].dwId1 == dwId1) && (m_pLinkList[i].dwId2 == dwId2))
+			if ((m_pLinkList[i].dwId1 == id1) && (m_pLinkList[i].dwId2 == id2))
 			{
 				int j;
 				for(j = 0; j < m_pLinkList[i].portIdCount; j++)
@@ -203,12 +229,12 @@ void nxmap_ObjList::linkObjectsEx(UINT32 dwId1, UINT32 dwId2, const TCHAR *pszPo
 					m_pLinkList[i].portId1[j] = portId1;
 					m_pLinkList[i].portId2[j] = portId2;
 					m_pLinkList[i].portIdCount++;
-					UpdatePortNames(&m_pLinkList[i], pszPort1, pszPort2);
+					UpdatePortNames(&m_pLinkList[i], port1, port2);
 					m_pLinkList[i].nType = LINK_TYPE_MULTILINK;
 				}
 				break;
 			}
-			if ((m_pLinkList[i].dwId1 == dwId2) && (m_pLinkList[i].dwId2 == dwId1))
+			if ((m_pLinkList[i].dwId1 == id2) && (m_pLinkList[i].dwId2 == id1))
 			{
 				int j;
 				for(j = 0; j < m_pLinkList[i].portIdCount; j++)
@@ -222,7 +248,7 @@ void nxmap_ObjList::linkObjectsEx(UINT32 dwId1, UINT32 dwId2, const TCHAR *pszPo
 					m_pLinkList[i].portId1[j] = portId2;
 					m_pLinkList[i].portId2[j] = portId1;
 					m_pLinkList[i].portIdCount++;
-					UpdatePortNames(&m_pLinkList[i], pszPort2, pszPort1);
+					UpdatePortNames(&m_pLinkList[i], port2, port1);
 					m_pLinkList[i].nType = LINK_TYPE_MULTILINK;
 				}
 				break;
@@ -235,14 +261,14 @@ void nxmap_ObjList::linkObjectsEx(UINT32 dwId1, UINT32 dwId2, const TCHAR *pszPo
 				m_allocatedLinks += 64;
 	         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_allocatedLinks);
 			}
-         m_pLinkList[m_dwNumLinks].dwId1 = dwId1;
-         m_pLinkList[m_dwNumLinks].dwId2 = dwId2;
+         m_pLinkList[m_dwNumLinks].dwId1 = id1;
+         m_pLinkList[m_dwNumLinks].dwId2 = id2;
          m_pLinkList[m_dwNumLinks].nType = LINK_TYPE_NORMAL;
 			m_pLinkList[m_dwNumLinks].portIdCount = 1;
 			m_pLinkList[m_dwNumLinks].portId1[0] = portId1;
 			m_pLinkList[m_dwNumLinks].portId2[0] = portId2;
-			nx_strncpy(m_pLinkList[m_dwNumLinks].szPort1, pszPort1, MAX_CONNECTOR_NAME);
-			nx_strncpy(m_pLinkList[m_dwNumLinks].szPort2, pszPort2, MAX_CONNECTOR_NAME);
+			nx_strncpy(m_pLinkList[m_dwNumLinks].szPort1, port1, MAX_CONNECTOR_NAME);
+			nx_strncpy(m_pLinkList[m_dwNumLinks].szPort2, port2, MAX_CONNECTOR_NAME);
          m_dwNumLinks++;
       }
    }

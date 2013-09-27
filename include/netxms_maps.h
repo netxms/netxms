@@ -98,9 +98,10 @@ public:
    nxmap_ObjList(CSCPMessage *pMsg);
    ~nxmap_ObjList();
 
-   void addObject(UINT32 dwId);
-   void linkObjects(UINT32 dwId1, UINT32 dwId2);
-   void linkObjectsEx(UINT32 dwId1, UINT32 dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, UINT32 portId1, UINT32 portId2);
+   void addObject(UINT32 id);
+   void linkObjects(UINT32 id1, UINT32 id2);
+   void linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2);
+   void removeObject(UINT32 id);
    void clear();
 
    UINT32 getNumObjects() { return m_dwNumObjects; }

@@ -154,7 +154,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	private BendpointEditor bendpointEditor = null;
 	private SessionListener sessionListener;
-
 	private List<DoubleClickHandlerData> doubleClickHandlers = new ArrayList<DoubleClickHandlerData>(0);
 
 	/*
@@ -294,7 +293,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				}
 
 				// Default behaviour
-
 				actionOpenSubmap.run();
 			}
 		});
@@ -1131,7 +1129,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	@Override
 	public ISelection getSelection()
 	{
-		// return transformSelection((IStructuredSelection)viewer.getSelection());
 		return currentSelection;
 	}
 
@@ -1280,5 +1277,4 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		int priority;
 		Class<?> enabledFor;
 	}
-
 }

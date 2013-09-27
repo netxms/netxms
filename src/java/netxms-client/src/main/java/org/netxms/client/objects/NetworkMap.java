@@ -65,6 +65,7 @@ public class NetworkMap extends GenericObject
 	private int defaultLinkRouting;
 	private int backgroundColor;
 	private int discoveryRadius;
+	private String filter;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
 	
@@ -86,6 +87,7 @@ public class NetworkMap extends GenericObject
 		defaultLinkRouting = msg.getVariableAsInteger(NXCPCodes.VID_LINK_ROUTING);
 		backgroundColor = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND_COLOR);
 		discoveryRadius = msg.getVariableAsInteger(NXCPCodes.VID_DISCOVERY_RADIUS);
+		filter = msg.getVariableAsString(NXCPCodes.VID_FILTER);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -223,5 +225,13 @@ public class NetworkMap extends GenericObject
 	public final int getDiscoveryRadius()
 	{
 		return discoveryRadius;
+	}
+
+	/**
+	 * @return the filter
+	 */
+	public String getFilter()
+	{
+		return filter;
 	}
 }

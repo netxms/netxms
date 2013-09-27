@@ -196,7 +196,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.ui.part.ViewPart#createPartControl(org.eclipse.swt.widgets .Composite)
+	 * @see org.eclipse.ui.part.ViewPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent)
@@ -1059,8 +1059,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener
-	 * (org.eclipse.jface.viewers.ISelectionChangedListener)
+	 * @see
+	 * org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
 	 */
 	@Override
 	public void addSelectionChangedListener(ISelectionChangedListener listener)
@@ -1129,16 +1129,15 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	@Override
 	public ISelection getSelection()
 	{
-		// return
-		// transformSelection((IStructuredSelection)viewer.getSelection());
 		return currentSelection;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener
-	 * (org.eclipse.jface.viewers.ISelectionChangedListener)
+	 * @see
+	 * org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener
+	 * )
 	 */
 	@Override
 	public void removeSelectionChangedListener(ISelectionChangedListener listener)
@@ -1149,7 +1148,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse .jface.viewers.ISelection)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
 	 */
 	@Override
 	public void setSelection(ISelection selection)

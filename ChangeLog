@@ -3,6 +3,7 @@
 *
 
 - Templates can be applied on clusters
+- Filters for automaticaly populated network maps
 - User-defined constants in NXSL
 - New methods deleteColumn and deleteRow in NXSL class Table
 - New NXSL functions: chr, ord
@@ -11,8 +12,8 @@
             SUN-PLATFORM-MIB
 - Management console:
 	- New dashboard elements: status map and table value
-- Fixed issues: #202, #300, #305, #311, #325, #327, #335, #336, #337, #338, 
-                #339, #342
+- Fixed issues: #202, #300, #305, #311, #325, #327, #334, #335, #336, #337, 
+                #338, #339, #342
 
 
 *

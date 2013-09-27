@@ -228,6 +228,16 @@
          </enabledWhen>
       </page>
       <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.MapObjectFilter"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.MapObjectFilter"
+            name="Object Filter">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.NetworkMap">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.MapBackground"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapBackground"
             name="Map Background">
