@@ -177,7 +177,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_INT,		_T("Status of remote SSH service") },
 	{ _T("ServiceCheck.HTTP(*)"),         H_CheckHTTP,       NULL,
 		DCI_DT_INT,		_T("Status of remote HTTP service") },
-	{ _T("ServiceCheck.HTTPS(*)"),        H_CheckHTTP,       "S",
+	{ _T("ServiceCheck.HTTPS(*)"),        H_CheckHTTP,       _T("S"),
 		DCI_DT_INT,		_T("Status of remote HTTPS service") },
 	{ _T("ServiceCheck.Custom(*)"),       H_CheckCustom,     NULL,
 		DCI_DT_INT,		_T("Status of remote TCP service") },
