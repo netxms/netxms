@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = lib baystack cat2900xl catalyst cisco-esw dell-pwc dlink \
-          ers8000 netscreen procurve symbol-ws
+          ers8000 netscreen ntws procurve symbol-ws
