@@ -127,6 +127,8 @@ Source: "..\..\..\x64\Release\ers8000.ndd"; DestDir: "{app}\lib\ndd"; Flags: ign
 Source: "..\..\..\x64\Release\ers8000.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\netscreen.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\netscreen.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\ntws.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server
+Source: "..\..\..\x64\Release\ntws.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\procurve.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\procurve.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\symbol-ws.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server

@@ -75,7 +75,7 @@
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console&#x0A;&#x0A;Version 1.2.8&#x0A;Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein">
+               value="NetXMS Management Console&#x0A;&#x0A;Version 1.2.9&#x0A;Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein">
          </property>
          <property
                name="windowImages"

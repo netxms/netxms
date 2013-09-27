@@ -1,7 +1,6 @@
 package org.netxms.webui.core;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -140,7 +139,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	{
 		boolean success = false;
 		
-		final Properties properties = readAppProperties();
+		final Properties properties = new AppPropertiesLoader().load();
 		
 		String password = "";
 		boolean autoLogin = (RWT.getRequest().getParameter("auto") != null); //$NON-NLS-1$
@@ -240,38 +239,5 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 				}
 			}
 		}
-	}
-	
-	/**
-	 * Read application properties from nxmc.properties in the root of WAR file
-	 */
-	private Properties readAppProperties()
-	{
-		Properties properties = new Properties();
-		InputStream in = null;
-		try
-		{
-			in = getClass().getResourceAsStream("/nxmc.properties"); //$NON-NLS-1$
-			if (in != null)
-				properties.load(in);
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			if (in != null)
-			{
-				try
-				{
-					in.close();
-				}
-				catch(IOException e)
-				{
-				}
-			}
-		}
-		return properties;
 	}
 }
