@@ -683,6 +683,7 @@ src/install/windows/files/sqlncli.msi -text
 src/install/windows/files/ssleay32.dll -text
 src/install/windows/files/vcredist_x86.exe -text
 src/install/windows/netxms-x64.iss -text
+src/install/windows/nxmc/nxmc.properties -text
 src/install/windows/setup.iss -text
 src/install/windows/winstone/winstone-0.9.10.jar -text
 src/java/eclipse_addons.txt -text
