@@ -208,9 +208,9 @@ BOOL SQLQuery(const TCHAR *pszQuery)
    if (g_bTrace)
       ShowQuery(query);
 
-   bResult = DBQueryEx(g_hCoreDB, query, errorText);
+   bResult = DBQueryEx(g_hCoreDB, (const TCHAR *)query, errorText);
    if (!bResult)
-      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, query);
+      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, (const TCHAR *)query);
    return bResult;
 }
 
