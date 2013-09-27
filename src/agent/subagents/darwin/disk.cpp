@@ -123,7 +123,11 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
          table->set(1, sf[i].f_mntfromname); // volume
 #endif
          table->set(2, _T("")); // label
+#ifdef UNICODE	  
+         table->setPreallocated(3, WideStringFromMBString(sf[i].f_fstypename)); // fstype
+#else
          table->set(3, sf[i].f_fstypename); // fstype
+#endif
          table->set(4, sizeTotal); // size.total
          table->set(5, sizeFree); // size.free
          table->set(6, 100.0 * sizeFree / sizeTotal); // size.free.pct
