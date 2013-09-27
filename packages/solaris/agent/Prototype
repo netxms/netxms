@@ -1,12 +1,13 @@
 i pkginfo
 i preinstall
 i postinstall
-f none /etc/init.d/nxagentd 0755 root root
+i preremove
 d none /opt/netxms 0755 root root
 d none /opt/netxms/bin 0755 root root
 d none /opt/netxms/lib 0755 root root
 d none /opt/netxms/lib/netxms 0755 root root
 d none /opt/netxms/lib/netxms/dbdrv 0755 root root
+d none /opt/netxms/svc 0755 root root
 f none /opt/netxms/bin/nxagentd 0755 root root
 f none /opt/netxms/bin/nxappget 0755 root root
 f none /opt/netxms/bin/nxapush 0755 root root
@@ -27,6 +28,10 @@ f none /opt/netxms/lib/netxms/sms.nsm 0755 root root
 f none /opt/netxms/lib/netxms/sunos.nsm 0755 root root
 f none /opt/netxms/lib/netxms/ups.nsm 0755 root root
 f none /opt/netxms/lib/netxms/dbdrv/oracle.ddr 0755 root root
+f none /opt/netxms/lib/libcrypto.so.1.0.0 0555 root other
+s none /opt/netxms/lib/libcrypto.so=libcrypto.so.1.0.0
+f none /opt/netxms/lib/libssl.so.1.0.0 0555 root other
+s none /opt/netxms/lib/libssl.so=libssl.so.1.0.0
 s none /opt/netxms/lib/libappagent.so.1=libappagent.so.1.0.0
 s none /opt/netxms/lib/libappagent.so=libappagent.so.1.0.0
 s none /opt/netxms/lib/libnetxms.so.1=libnetxms.so.1.0.0
@@ -50,3 +55,5 @@ s none /opt/netxms/lib/libnxsqlite.so.1=libnxsqlite.so.1.0.0
 s none /opt/netxms/lib/libnxsqlite.so=libnxsqlite.so.1.0.0
 s none /opt/netxms/lib/libnxtre.so.5=libnxtre.so.5.0.0
 s none /opt/netxms/lib/libnxtre.so=libnxtre.so.5.0.0
+f none /opt/netxms/svc/nxagentd 0555 root root
+f none /var/svc/manifest/application/management/nxagentd.xml 0444 root root

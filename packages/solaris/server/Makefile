@@ -10,6 +10,11 @@ endif
 all: package
 
 package:
+	mkdir /opt/netxms/svc
+	cp files/netxmsd.xml /var/svc/manifest/application/management/
+	cp ../agent/files/nxagentd.xml /var/svc/manifest/application/management/
+	cp files/netxmsd /opt/netxms/svc/
+	cp ../agent/files/nxagentd /opt/netxms/svc/
 	sed 's,@version@,$(NX_VERSION),' < pkginfo.in > pkginfo
 	rm -rf /tmp/RADnetxms
 	pkgmk -o -r / -d /tmp -f Prototype
@@ -17,3 +22,8 @@ package:
 	gzip -f9 /tmp/RADnetxms.$(NX_VERSION).$(_SUFFIX)$(PLATFORM).pkg
 	rm -rf /tmp/RADnetxms
 	rm pkginfo
+	rm -f /var/svc/manifest/application/management/nxagentd.xml
+	rm -f /var/svc/manifest/application/management/netxmsd.xml
+	rm -f /opt/netxms/svc/nxagentd
+	rm -f /opt/netxms/svc/netxmsd
+	rmdir /opt/netxms/svc

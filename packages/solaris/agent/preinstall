@@ -2,4 +2,11 @@
 
 if test -x /etc/init.d/nxagentd; then
 	/etc/init.d/nxagentd stop
+	rm -f /etc/init.d/nxagentd
+fi
+
+svcs nxagentd >/dev/null 2>&1
+if [ $? = 0 ]; then
+	svcadm disable nxagentd
+	svccfg delete nxagentd
 fi

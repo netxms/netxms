@@ -3,14 +3,10 @@ SUBAGENT = portcheck
 pkglib_LTLIBRARIES = portcheck.la
 portcheck_la_SOURCES = custom.cpp http.cpp main.cpp net.cpp pop3.cpp smtp.cpp ssh.cpp telnet.cpp
 portcheck_la_CPPFLAGS=-I@top_srcdir@/include
-portcheck_la_LDFLAGS = -module -avoid-version
+portcheck_la_LDFLAGS = -module -avoid-version -L/opt/netxms/lib -lcrypto -lssl
 portcheck_la_LIBADD = ../../../libnetxms/libnetxms.la
 if USE_INTERNAL_LIBTRE
 portcheck_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
-endif
-
-if USE_ENCRYPTION
-portcheck_la_LDFLAGS += -lssl
 endif
 
 EXTRA_DIST = main.h net.h portcheck.vcproj

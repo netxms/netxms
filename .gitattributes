@@ -403,11 +403,15 @@ packages/osx/dmg-icon.icns -text svneol=unset#unset
 packages/osx/dmg-icon.psd -text svneol=unset#unset
 packages/solaris/agent/Makefile -text
 packages/solaris/agent/Prototype -text
+packages/solaris/agent/files/nxagentd -text
+packages/solaris/agent/files/nxagentd.xml -text svneol=unset#application/xml
 packages/solaris/agent/pkginfo.in -text
 packages/solaris/agent/postinstall -text
 packages/solaris/agent/preinstall -text
 packages/solaris/server/Makefile -text
 packages/solaris/server/Prototype -text
+packages/solaris/server/files/netxmsd -text
+packages/solaris/server/files/netxmsd.xml -text svneol=unset#application/xml
 packages/solaris/server/pkginfo.in -text
 packages/solaris/server/postinstall -text
 packages/solaris/server/preinstall -text

@@ -2,4 +2,13 @@
 
 if test -x /etc/init.d/netxmsd; then
 	/etc/init.d/netxmsd stop
+	rm -f /etc/init.d/netxmsd
+fi
+if test -x /etc/init.d/nxagentd; then
+	/etc/init.d/nxagentd stop
+	rm -f /etc/init.d/nxagentd
+fi
+
+if test -x /etc/init.d/netxmsd; then
+	/etc/init.d/netxmsd stop
 fi

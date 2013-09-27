@@ -2305,6 +2305,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/netscreen/Makefile
 	src/server/drivers/procurve/Makefile
 	src/server/drivers/symbol-ws/Makefile
+	src/server/drivers/ntws/Makefile
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile

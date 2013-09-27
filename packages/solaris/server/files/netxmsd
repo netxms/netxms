@@ -1,0 +1,50 @@
+#!/sbin/sh
+#
+# Copyright 2013 Raden Solutions, SIA
+#
+
+. /lib/svc/share/smf_include.sh
+
+# SMF_FMRI is the name of the target service. This allows multiple instances 
+# to use the same script.
+
+getproparg() {
+        val=`svcprop -p $1 $SMF_FMRI`
+        [ -n "$val" ] && echo $val
+}
+
+NXBIN=`getproparg netxms/bin`
+CONFIGFILE=`getproparg netxms/agent_config`
+DEBUGLEVEL=`getproparg netxms/agent_debuglevel`
+
+ARGS=
+
+if [ -z $SMF_FMRI ]; then
+	echo "Error: SMF framework variables are not initialized"
+	exit $SMF_EXIT_ERR
+fi
+
+if [ x"$CONFIGFILE" != "x" ]; then
+	ARGS=$ARGS -c \"$CONFIGFILE\"
+fi
+
+if [ x"$DEBUGLEVEL" != "x" ]; then
+	ARGS=$ARGS -D $DEBUGLEVEL
+fi
+
+case "$1" in
+'start')
+	$NXBIN/netxmsd -d $ARGS
+        ;;
+
+'stop')
+	pkill netxmsd
+        ;;
+
+*)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+
+esac
+exit $SMF_EXIT_OK
