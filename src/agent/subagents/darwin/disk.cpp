@@ -103,33 +103,38 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
     rc = SYSINFO_RC_ERROR;
   }
 
-  for (int i = 0; i < count; i++)
-  {
-    if (!(sf[i].f_flags & MNT_DONTBROWSE)) // ignore /dev, autofs, etc.
-    {
-      int blockSize = sf[i].f_bsize;
-      INT64 sizeTotal = sf[i].f_blocks * blockSize;
-      INT64 sizeFree = sf[i].f_bfree * blockSize;
-      INT64 sizeAvailable = sf[i].f_bavail * blockSize;
-      INT64 sizeUsed = sizeTotal - sizeFree;
+   for (int i = 0; i < count; i++)
+   {
+      if (!(sf[i].f_flags & MNT_DONTBROWSE)) // ignore /dev, autofs, etc.
+      {
+         int blockSize = sf[i].f_bsize;
+         INT64 sizeTotal = sf[i].f_blocks * blockSize;
+         INT64 sizeFree = sf[i].f_bfree * blockSize;
+         INT64 sizeAvailable = sf[i].f_bavail * blockSize;
+         INT64 sizeUsed = sizeTotal - sizeFree;
 
-      table->addRow();
+         table->addRow();
 
-      table->set(0, sf[i].f_mntonname); // mountpoint
-      table->set(1, sf[i].f_mntfromname); // volume
-      table->set(2, ""); // label
-      table->set(3, sf[i].f_fstypename); // fstype
-      table->set(4, sizeTotal); // size.total
-      table->set(5, sizeFree); // size.free
-      table->set(6, 100.0 * sizeFree / sizeTotal); // size.free.pct
-      table->set(7, sizeAvailable); // size.avail
-      table->set(8, 100.0 * sizeAvailable / sizeTotal); // size.avail.pct
-      table->set(9, sizeUsed); // size.used
-      table->set(10, 100.0 * sizeUsed / sizeTotal); // size.used.pct
-    }
-  }
+#ifdef UNICODE	  
+         table->setPreallocated(0, WideStringFromMBString(sf[i].f_mntonname)); // mountpoint
+         table->setPreallocated(1, WideStringFromMBString(sf[i].f_mntfromname)); // volume
+#else
+         table->set(0, sf[i].f_mntonname); // mountpoint
+         table->set(1, sf[i].f_mntfromname); // volume
+#endif
+         table->set(2, _T("")); // label
+         table->set(3, sf[i].f_fstypename); // fstype
+         table->set(4, sizeTotal); // size.total
+         table->set(5, sizeFree); // size.free
+         table->set(6, 100.0 * sizeFree / sizeTotal); // size.free.pct
+         table->set(7, sizeAvailable); // size.avail
+         table->set(8, 100.0 * sizeAvailable / sizeTotal); // size.avail.pct
+         table->set(9, sizeUsed); // size.used
+         table->set(10, 100.0 * sizeUsed / sizeTotal); // size.used.pct
+      }
+   }
 
-  return rc;
+   return rc;
 }
 
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
@@ -145,8 +150,11 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
     {
       if (!(sf[i].f_flags & MNT_DONTBROWSE)) // ignore /dev, autofs, etc.
       {
+#ifdef UNICODE
+        value->addPreallocated(WideStringFromMBString(sf[i].f_mntonname)); // mountpoint
+#else      
         value->add(sf[i].f_mntonname); // mountpoint
-        //table->set(1, sf[i].f_mntfromname); // volume
+#endif
       }
     }
   }
