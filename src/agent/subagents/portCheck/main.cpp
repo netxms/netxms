@@ -21,6 +21,7 @@
 //
 
 char g_szDomainName[128] = "netxms.org";
+char g_szFailedDir[1024] = "";
 
 
 //
@@ -149,6 +150,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
 	{ _T("DomainName"), CT_MB_STRING, 0, 0, 128, 0, g_szDomainName },
 	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_dwDefaultTimeout },
+	{ _T("FailedDirectory"), CT_MB_STRING, 0, 0, 1024, 0, &g_szFailedDir },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

@@ -5,6 +5,33 @@
 #include "main.h"
 #include "net.h"
 
+/**
+ * Save HTTP(s) responce to file for later investigation
+ * (Should be enabled by setting "FailedDirectory" in config
+ */
+static void SaveResponse(char *host, UINT32 ip, char *buffer)
+{
+   if (g_szFailedDir[0] == 0)
+   {
+      return;
+   }
+
+   time_t now = time(NULL);
+   char fileName[2048];
+   char tmp[32];
+   snprintf(fileName, 2048, "%s%s%s-%d",
+         g_szFailedDir, FS_PATH_SEPARATOR_A,
+         host != NULL ? host : IpToStrA(ip, tmp),
+         now);
+   FILE *f = fopen(fileName, "wb");
+   if (f != NULL)
+   {
+      fwrite(buffer, strlen(buffer), 1, f);
+      fclose(f);
+   }
+}
+
+
 LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
@@ -118,6 +145,10 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
 				{
 					nRet = PC_ERR_NONE;
 				}
+            else
+            {
+               SaveResponse(szAddr, dwAddr, buff);
+            }
 
 				safe_free(buff);
 			}
@@ -239,10 +270,17 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                      }
                      offset += i;
                   }
-                  if (buffer[0] != 0 && tre_regexec(&preg, buffer, 0, NULL, 0) == 0)
-                  {
-                     ret = PC_ERR_NONE;
+                  if (buffer[0] != 0) {
+                     if (tre_regexec(&preg, buffer, 0, NULL, 0) == 0)
+                     {
+                        ret = PC_ERR_NONE;
+                     }
+                     else
+                     {
+                        SaveResponse(szAddr, dwAddr, buffer);
+                     }
                   }
+
                   safe_free(buffer);
                }
 

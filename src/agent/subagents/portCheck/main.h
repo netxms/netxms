@@ -29,5 +29,6 @@ LONG H_CheckTelnet(const TCHAR *, const TCHAR *, TCHAR *);
 int CheckTelnet(char *, UINT32, short, char *, char *, UINT32);
 
 extern char g_szDomainName[];
+extern char g_szFailedDir[];
 
 #endif // __MAIN__H__
