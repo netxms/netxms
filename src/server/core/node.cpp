@@ -2489,6 +2489,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 										 ifInfo->dwSlotNumber,
 										 ifInfo->dwPortNumber,
 										 ifInfo->isPhysicalPort,
+                               false,
                                ifInfo->isSystem);
             hasChanges = TRUE;
          }

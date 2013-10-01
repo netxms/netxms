@@ -4324,7 +4324,8 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 																				               pRequest->GetVariableLong(VID_IF_SLOT),
 																				               pRequest->GetVariableLong(VID_IF_PORT),
 																				               pRequest->GetVariableShort(VID_IS_PHYS_PORT) ? true : false,
-																								   true);
+																								   true,
+                                                                           false);
 								   break;
 							   default:
 								   // Try to create unknown classes by modules
