@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 version=`grep AC_INIT ../../configure.ac|cut -d'[' -f3|cut -d']' -f1`
 
 rm -rf dist/* nxmc-${version}.dmg
