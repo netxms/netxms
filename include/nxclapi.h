@@ -533,6 +533,7 @@ enum
 #define RCC_XML_PARSE_ERROR          ((UINT32)103)
 #define RCC_HIGH_QUERY_COST          ((UINT32)104)
 #define RCC_LICENSE_VIOLATION        ((UINT32)105)
+#define RCC_CLIENT_LICENSE_EXCEEDED  ((UINT32)106)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

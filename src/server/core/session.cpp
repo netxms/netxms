@@ -1704,6 +1704,23 @@ void ClientSession::login(CSCPMessage *pRequest)
 				break;
 		}
 
+      // Additional validation by loaded modules
+      if (dwResult == RCC_SUCCESS)
+      {
+         for(UINT32 i = 0; i < g_dwNumModules; i++)
+         {
+            if (g_pModuleList[i].pfAdditionalLoginCheck != NULL)
+            {
+               dwResult = g_pModuleList[i].pfAdditionalLoginCheck(m_dwUserId, pRequest);
+               if (dwResult != RCC_SUCCESS)
+               {
+                  debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), g_pModuleList[i].szName, dwResult);
+                  break;
+               }
+            }
+         }
+      }
+
       if (dwResult == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
@@ -4145,228 +4162,246 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 					pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
 					if (IsValidObjectName(szObjectName, TRUE))
 					{
-                  ObjectTransactionStart();
+                  // Do additional validation by modules
+                  BOOL allow = TRUE;
+                  for(UINT32 i = 0; i < g_dwNumModules; i++)
+	               {
+		               if (g_pModuleList[i].pfValidateObjectCreation != NULL)
+		               {
+			               if (!g_pModuleList[i].pfValidateObjectCreation(iClass, szObjectName, dwIpAddr, zoneId, pRequest))
+                        {
+				               allow = FALSE;	// filtered out by module
+                           DbgPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s"), szObjectName, iClass, g_pModuleList[i].szName);
+                           break;
+                        }
+		               }
+	               }
 
-						// Create new object
-						switch(iClass)
-						{
-							case OBJECT_NODE:
-								pObject = PollNewNode(dwIpAddr,
-															 pRequest->GetVariableLong(VID_IP_NETMASK),
-															 pRequest->GetVariableLong(VID_CREATION_FLAGS),
-															 pRequest->GetVariableShort(VID_AGENT_PORT),
-															 pRequest->GetVariableShort(VID_SNMP_PORT),
-															 szObjectName,
-															 pRequest->GetVariableLong(VID_AGENT_PROXY),
-															 pRequest->GetVariableLong(VID_SNMP_PROXY),
-															 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
-															 zoneId, false, false);
-								if (pObject != NULL)
-								{
-									((Node *)pObject)->setPrimaryName(nodePrimaryName);
-								}
-								break;
-							case OBJECT_MOBILEDEVICE:
-								pRequest->GetVariableStr(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
-								pObject = new MobileDevice(szObjectName, deviceId);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_CONTAINER:
-								pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));
-								NetObjInsert(pObject, TRUE);
-								pObject->calculateCompoundStatus();	// Force status change to NORMAL
-								break;
-							case OBJECT_RACK:
-								pObject = new Rack(szObjectName, (int)pRequest->GetVariableShort(VID_HEIGHT));
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_TEMPLATEGROUP:
-								pObject = new TemplateGroup(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								pObject->calculateCompoundStatus();	// Force status change to NORMAL
-								break;
-							case OBJECT_TEMPLATE:
-								pObject = new Template(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								pObject->calculateCompoundStatus();	// Force status change to NORMAL
-								break;
-							case OBJECT_POLICYGROUP:
-								pObject = new PolicyGroup(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								pObject->calculateCompoundStatus();	// Force status change to NORMAL
-								break;
-							case OBJECT_AGENTPOLICY_CONFIG:
-								pObject = new AgentPolicyConfig(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								pObject->calculateCompoundStatus();	// Force status change to NORMAL
-								break;
-							case OBJECT_CLUSTER:
-								pObject = new Cluster(szObjectName, zoneId);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_NETWORKSERVICE:
-								iServiceType = (int)pRequest->GetVariableShort(VID_SERVICE_TYPE);
-								wIpProto = pRequest->GetVariableShort(VID_IP_PROTO);
-								wIpPort = pRequest->GetVariableShort(VID_IP_PORT);
-								pszRequest = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
-								pszResponse = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
-								pObject = new NetworkService(iServiceType, wIpProto, wIpPort, 
-																	  pszRequest, pszResponse, (Node *)pParent);
-								pObject->setName(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_VPNCONNECTOR:
-								pObject = new VPNConnector(TRUE);
-								pObject->setName(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_CONDITION:
-								pObject = new Condition(TRUE);
-								pObject->setName(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_NETWORKMAPGROUP:
-								pObject = new NetworkMapGroup(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								pObject->calculateCompoundStatus();	// Force status change to NORMAL
-								break;
-							case OBJECT_NETWORKMAP:
-								pObject = new NetworkMap((int)pRequest->GetVariableShort(VID_MAP_TYPE), pRequest->GetVariableLong(VID_SEED_OBJECT));
-								pObject->setName(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_DASHBOARD:
-								pObject = new Dashboard(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_ZONE:
-								if ((zoneId > 0) && (g_idxZoneByGUID.get(zoneId) == NULL))
-								{
-									pObject = new Zone(zoneId, szObjectName);
-									NetObjInsert(pObject, TRUE);
-								}
-								else
-								{
-									pObject = NULL;
-								}
-								break;
-							case OBJECT_REPORTGROUP:
-								pObject = new ReportGroup(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								pObject->calculateCompoundStatus();	// Force status change to NORMAL
-								break;
-							case OBJECT_REPORT:
-								pObject = new Report(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_BUSINESSSERVICE:
-								pObject = new BusinessService(szObjectName);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_NODELINK:
-								nodeId = pRequest->GetVariableLong(VID_NODE_ID);
-								if (nodeId > 0)
-								{
-									pObject = new NodeLink(szObjectName, nodeId);
-									NetObjInsert(pObject, TRUE);
-								}
-								else
-								{
-									pObject = NULL;
-								}
-								break;
-							case OBJECT_SLMCHECK:
-								pObject = new SlmCheck(szObjectName, pRequest->GetVariableShort(VID_IS_TEMPLATE) ? true : false);
-								NetObjInsert(pObject, TRUE);
-								break;
-							case OBJECT_INTERFACE:
-								pRequest->GetVariableBinary(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-								pObject = ((Node *)pParent)->createNewInterface(pRequest->GetVariableLong(VID_IP_ADDRESS),
-								                                                pRequest->GetVariableLong(VID_IP_NETMASK),
-								                                                szObjectName, NULL,
-																				            pRequest->GetVariableLong(VID_IF_INDEX),
-								                                                pRequest->GetVariableLong(VID_IF_TYPE),
-																				            macAddr, 0,
-																				            pRequest->GetVariableLong(VID_IF_SLOT),
-																				            pRequest->GetVariableLong(VID_IF_PORT),
-																				            pRequest->GetVariableShort(VID_IS_PHYS_PORT) ? true : false,
-																								true);
-								break;
-							default:
-								// Try to create unknown classes by modules
-								for(UINT32 i = 0; i < g_dwNumModules; i++)
-								{
-									if (g_pModuleList[i].pfCreateObject != NULL)
-									{
-										pObject = g_pModuleList[i].pfCreateObject(iClass, szObjectName, pParent, pRequest);
-										if (pObject != NULL)
-											break;
-									}
-								}
-								break;
-						}
+                  if (allow)
+                  {
+                     ObjectTransactionStart();
 
-						// If creation was successful do binding and set comments if needed
-						if (pObject != NULL)
-						{
-							if ((pParent != NULL) &&          // parent can be NULL for nodes
-							    (iClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
-							{
-								pParent->AddChild(pObject);
-								pObject->AddParent(pParent);
-								pParent->calculateCompoundStatus();
-								if (pParent->Type() == OBJECT_CLUSTER)
-								{
-									((Cluster *)pParent)->applyToTarget((DataCollectionTarget *)pObject);
-								}
-								if (pObject->Type() == OBJECT_NODELINK)
-								{
-									((NodeLink *)pObject)->applyTemplates();
-								}
-								if (pObject->Type() == OBJECT_NETWORKSERVICE)
-								{
-									if (pRequest->GetVariableShort(VID_CREATE_STATUS_DCI))
-									{
-										TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
+						   // Create new object
+						   switch(iClass)
+						   {
+							   case OBJECT_NODE:
+								   pObject = PollNewNode(dwIpAddr,
+															    pRequest->GetVariableLong(VID_IP_NETMASK),
+															    pRequest->GetVariableLong(VID_CREATION_FLAGS),
+															    pRequest->GetVariableShort(VID_AGENT_PORT),
+															    pRequest->GetVariableShort(VID_SNMP_PORT),
+															    szObjectName,
+															    pRequest->GetVariableLong(VID_AGENT_PROXY),
+															    pRequest->GetVariableLong(VID_SNMP_PROXY),
+															    (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
+															    zoneId, false, false);
+								   if (pObject != NULL)
+								   {
+									   ((Node *)pObject)->setPrimaryName(nodePrimaryName);
+								   }
+								   break;
+							   case OBJECT_MOBILEDEVICE:
+								   pRequest->GetVariableStr(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
+								   pObject = new MobileDevice(szObjectName, deviceId);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_CONTAINER:
+								   pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));
+								   NetObjInsert(pObject, TRUE);
+								   pObject->calculateCompoundStatus();	// Force status change to NORMAL
+								   break;
+							   case OBJECT_RACK:
+								   pObject = new Rack(szObjectName, (int)pRequest->GetVariableShort(VID_HEIGHT));
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_TEMPLATEGROUP:
+								   pObject = new TemplateGroup(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   pObject->calculateCompoundStatus();	// Force status change to NORMAL
+								   break;
+							   case OBJECT_TEMPLATE:
+								   pObject = new Template(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   pObject->calculateCompoundStatus();	// Force status change to NORMAL
+								   break;
+							   case OBJECT_POLICYGROUP:
+								   pObject = new PolicyGroup(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   pObject->calculateCompoundStatus();	// Force status change to NORMAL
+								   break;
+							   case OBJECT_AGENTPOLICY_CONFIG:
+								   pObject = new AgentPolicyConfig(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   pObject->calculateCompoundStatus();	// Force status change to NORMAL
+								   break;
+							   case OBJECT_CLUSTER:
+								   pObject = new Cluster(szObjectName, zoneId);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_NETWORKSERVICE:
+								   iServiceType = (int)pRequest->GetVariableShort(VID_SERVICE_TYPE);
+								   wIpProto = pRequest->GetVariableShort(VID_IP_PROTO);
+								   wIpPort = pRequest->GetVariableShort(VID_IP_PORT);
+								   pszRequest = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
+								   pszResponse = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
+								   pObject = new NetworkService(iServiceType, wIpProto, wIpPort, 
+																	     pszRequest, pszResponse, (Node *)pParent);
+								   pObject->setName(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_VPNCONNECTOR:
+								   pObject = new VPNConnector(TRUE);
+								   pObject->setName(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_CONDITION:
+								   pObject = new Condition(TRUE);
+								   pObject->setName(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_NETWORKMAPGROUP:
+								   pObject = new NetworkMapGroup(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   pObject->calculateCompoundStatus();	// Force status change to NORMAL
+								   break;
+							   case OBJECT_NETWORKMAP:
+								   pObject = new NetworkMap((int)pRequest->GetVariableShort(VID_MAP_TYPE), pRequest->GetVariableLong(VID_SEED_OBJECT));
+								   pObject->setName(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_DASHBOARD:
+								   pObject = new Dashboard(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_ZONE:
+								   if ((zoneId > 0) && (g_idxZoneByGUID.get(zoneId) == NULL))
+								   {
+									   pObject = new Zone(zoneId, szObjectName);
+									   NetObjInsert(pObject, TRUE);
+								   }
+								   else
+								   {
+									   pObject = NULL;
+								   }
+								   break;
+							   case OBJECT_REPORTGROUP:
+								   pObject = new ReportGroup(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   pObject->calculateCompoundStatus();	// Force status change to NORMAL
+								   break;
+							   case OBJECT_REPORT:
+								   pObject = new Report(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_BUSINESSSERVICE:
+								   pObject = new BusinessService(szObjectName);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_NODELINK:
+								   nodeId = pRequest->GetVariableLong(VID_NODE_ID);
+								   if (nodeId > 0)
+								   {
+									   pObject = new NodeLink(szObjectName, nodeId);
+									   NetObjInsert(pObject, TRUE);
+								   }
+								   else
+								   {
+									   pObject = NULL;
+								   }
+								   break;
+							   case OBJECT_SLMCHECK:
+								   pObject = new SlmCheck(szObjectName, pRequest->GetVariableShort(VID_IS_TEMPLATE) ? true : false);
+								   NetObjInsert(pObject, TRUE);
+								   break;
+							   case OBJECT_INTERFACE:
+								   pRequest->GetVariableBinary(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+								   pObject = ((Node *)pParent)->createNewInterface(pRequest->GetVariableLong(VID_IP_ADDRESS),
+								                                                   pRequest->GetVariableLong(VID_IP_NETMASK),
+								                                                   szObjectName, NULL,
+																				               pRequest->GetVariableLong(VID_IF_INDEX),
+								                                                   pRequest->GetVariableLong(VID_IF_TYPE),
+																				               macAddr, 0,
+																				               pRequest->GetVariableLong(VID_IF_SLOT),
+																				               pRequest->GetVariableLong(VID_IF_PORT),
+																				               pRequest->GetVariableShort(VID_IS_PHYS_PORT) ? true : false,
+																								   true);
+								   break;
+							   default:
+								   // Try to create unknown classes by modules
+								   for(UINT32 i = 0; i < g_dwNumModules; i++)
+								   {
+									   if (g_pModuleList[i].pfCreateObject != NULL)
+									   {
+										   pObject = g_pModuleList[i].pfCreateObject(iClass, szObjectName, pParent, pRequest);
+										   if (pObject != NULL)
+											   break;
+									   }
+								   }
+								   break;
+						   }
 
-										_sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), pObject->Id());
-										_sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), pObject->Name());
-										((Node *)pParent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
-											ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
-											ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)pParent, dciDescription));
-									}
-								}
-							}
-							
-							pszComments = pRequest->GetVariableStr(VID_COMMENTS);
-							if (pszComments != NULL)
-								pObject->setComments(pszComments);
+						   // If creation was successful do binding and set comments if needed
+						   if (pObject != NULL)
+						   {
+							   if ((pParent != NULL) &&          // parent can be NULL for nodes
+							       (iClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
+							   {
+								   pParent->AddChild(pObject);
+								   pObject->AddParent(pParent);
+								   pParent->calculateCompoundStatus();
+								   if (pParent->Type() == OBJECT_CLUSTER)
+								   {
+									   ((Cluster *)pParent)->applyToTarget((DataCollectionTarget *)pObject);
+								   }
+								   if (pObject->Type() == OBJECT_NODELINK)
+								   {
+									   ((NodeLink *)pObject)->applyTemplates();
+								   }
+								   if (pObject->Type() == OBJECT_NETWORKSERVICE)
+								   {
+									   if (pRequest->GetVariableShort(VID_CREATE_STATUS_DCI))
+									   {
+										   TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
 
-							pObject->unhide();
-							msg.SetVariable(VID_RCC, RCC_SUCCESS);
-							msg.SetVariable(VID_OBJECT_ID, pObject->Id());
-						}
-						else
-						{
-							// :DIRTY HACK:
-							// PollNewNode will return NULL only if IP already
-							// in use. some new() can fail there too, but server will
-							// crash in that case
-							if (iClass == OBJECT_NODE)
-							{
-                  		msg.SetVariable(VID_RCC, RCC_ALREADY_EXIST);
-							}
-							else if (iClass == OBJECT_ZONE)
-							{
-                  		msg.SetVariable(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
-							}
-							else
-							{
-                  		msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
-							}
-						}
+										   _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), pObject->Id());
+										   _sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), pObject->Name());
+										   ((Node *)pParent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
+											   ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
+											   ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)pParent, dciDescription));
+									   }
+								   }
+							   }
+   							
+							   pszComments = pRequest->GetVariableStr(VID_COMMENTS);
+							   if (pszComments != NULL)
+								   pObject->setComments(pszComments);
 
-                  ObjectTransactionEnd();
+							   pObject->unhide();
+							   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+							   msg.SetVariable(VID_OBJECT_ID, pObject->Id());
+						   }
+						   else
+						   {
+							   // :DIRTY HACK:
+							   // PollNewNode will return NULL only if IP already
+							   // in use. some new() can fail there too, but server will
+							   // crash in that case
+							   if (iClass == OBJECT_NODE)
+							   {
+                  		   msg.SetVariable(VID_RCC, RCC_ALREADY_EXIST);
+							   }
+							   else if (iClass == OBJECT_ZONE)
+							   {
+                  		   msg.SetVariable(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
+							   }
+							   else
+							   {
+                  		   msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+							   }
+						   }
+
+                     ObjectTransactionEnd();
+                  }
 					}
 					else
 					{

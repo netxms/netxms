@@ -59,4 +59,5 @@ public class CommonRCC
 	public static final int XML_PARSE_ERROR = 103;
 	public static final int HIGH_QUERY_COST = 104;
 	public static final int LICENSE_VIOLATION = 105;
+	public static final int CLIENT_LICENSE_EXCEEDED = 106;
 }

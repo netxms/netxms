@@ -135,7 +135,8 @@ public class NXCException extends NetXMSClientException
 		"User is logged in",
 		"XML parse error",
 		"High query cost",
-		"License violation"
+		"License violation",
+		"Number of available client licenses exceeded"
 	};
 	private static final String[] extendedErrorTexts_en =
 	{
@@ -250,7 +251,8 @@ public class NXCException extends NetXMSClientException
 		"User is logged in",
 		"XML parse error",
 		"High query cost",
-		"License violation"
+		"License violation",
+		"Number of available client licenses exceeded"
 	};
 	private static final String[] extendedErrorTexts_es =
 	{
