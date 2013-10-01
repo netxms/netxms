@@ -67,8 +67,8 @@ typedef struct
 	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, CSCPMessage *msg);
 	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
 	BOOL (* pfAcceptNewNode)(UINT32 ipAddr, UINT32 ipNetMask, UINT32 zoneId, BYTE *macAddr);
-	BOOL (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, CSCPMessage *request);
-   DWORD (* pfAdditionalLoginCheck)(UINT32 userId, CSCPMessage *request);
+	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, CSCPMessage *request);
+   UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, CSCPMessage *request);
    NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;

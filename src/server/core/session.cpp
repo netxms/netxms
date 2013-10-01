@@ -4163,21 +4163,21 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 					if (IsValidObjectName(szObjectName, TRUE))
 					{
                   // Do additional validation by modules
-                  BOOL allow = TRUE;
+                  UINT32 moduleRCC = RCC_SUCCESS;
                   for(UINT32 i = 0; i < g_dwNumModules; i++)
 	               {
 		               if (g_pModuleList[i].pfValidateObjectCreation != NULL)
 		               {
-			               if (!g_pModuleList[i].pfValidateObjectCreation(iClass, szObjectName, dwIpAddr, zoneId, pRequest))
+                        moduleRCC = g_pModuleList[i].pfValidateObjectCreation(iClass, szObjectName, dwIpAddr, zoneId, pRequest);
+			               if (moduleRCC != RCC_SUCCESS)
                         {
-				               allow = FALSE;	// filtered out by module
-                           DbgPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s"), szObjectName, iClass, g_pModuleList[i].szName);
+                           DbgPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%d)"), szObjectName, iClass, g_pModuleList[i].szName, moduleRCC);
                            break;
                         }
 		               }
 	               }
 
-                  if (allow)
+                  if (moduleRCC == RCC_SUCCESS)
                   {
                      ObjectTransactionStart();
 
@@ -4401,6 +4401,10 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 						   }
 
                      ObjectTransactionEnd();
+                  }
+                  else
+                  {
+   						msg.SetVariable(VID_RCC, moduleRCC);
                   }
 					}
 					else
