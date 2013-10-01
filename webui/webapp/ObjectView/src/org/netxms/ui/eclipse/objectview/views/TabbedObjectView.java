@@ -234,6 +234,16 @@ public class TabbedObjectView extends ViewPart
 				return null;
 			}
 		});
+
+		CommandBridge.getInstance().registerCommand("TabbedObjectView/changeObject", new Command() {
+			@Override
+			public Object execute(String name, Object arg)
+			{
+				if (arg instanceof Long)
+					setObject(session.findObjectById((Long)arg));
+				return null;
+			}
+		});
 	}
 	
 	/**

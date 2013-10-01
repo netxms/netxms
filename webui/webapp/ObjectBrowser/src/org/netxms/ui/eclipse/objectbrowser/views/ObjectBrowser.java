@@ -285,6 +285,7 @@ public class ObjectBrowser extends ViewPart
 		if (object != null)
 		{
 			objectTree.getTreeViewer().setSelection(new StructuredSelection(object), true);
+			CommandBridge.getInstance().execute("TabbedObjectView/changeObject", objectId);
 			if (tabId != null)
 			{		
 				CommandBridge.getInstance().execute("TabbedObjectView/selectTab", tabId);
