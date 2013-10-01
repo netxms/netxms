@@ -14,4 +14,4 @@ install-exec-hook:
 	mv $(DESTDIR)$(pkglibdir)/$(DRIVER).so $(DESTDIR)$(pkglibdir)/dbdrv/$(DRIVER).ddr
 	rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).la	
 	rm -f $(DESTDIR)$(libdir)/libnxddr_$(DRIVER).so*
-	ln -s $(pkglibdir)/dbdrv/$(DRIVER).ddr $(DESTDIR)$(libdir)/libnxddr_$(DRIVER).so
+	ln -s netxms/dbdrv/$(DRIVER).ddr $(DESTDIR)$(libdir)/libnxddr_$(DRIVER).so

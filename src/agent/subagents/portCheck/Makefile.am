@@ -21,5 +21,5 @@ install-exec-hook:
 	mv $(DESTDIR)$(pkglibdir)/$(SUBAGENT).so $(DESTDIR)$(pkglibdir)/$(SUBAGENT).nsm
 	rm -f $(DESTDIR)$(pkglibdir)/$(SUBAGENT).la
 	rm -f $(DESTDIR)$(libdir)/libnsm_$(SUBAGENT).so
-	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(DESTDIR)$(libdir)/libnsm_$(SUBAGENT).so
+	ln -s netxms/$(SUBAGENT).nsm $(DESTDIR)$(libdir)/libnsm_$(SUBAGENT).so
 endif
