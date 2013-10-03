@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,11 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.widgets.CGroup;
 
@@ -27,28 +30,23 @@ import org.netxms.ui.eclipse.widgets.CGroup;
  * Abstract element of "Object Overview" tab
  *
  */
-public abstract class OverviewPageElement extends CGroup
+public abstract class OverviewPageElement
 {
-	private AbstractObject object;
+	private AbstractObject object = null;
+	private Composite parent;
+	private CGroup widget = null;
+	private OverviewPageElement anchor;
 	
 	/**
 	 * @param parent
 	 * @param text
 	 */
-	public OverviewPageElement(Composite parent, AbstractObject object)
+	public OverviewPageElement(Composite parent, OverviewPageElement anchor)
 	{
-		super(parent, "");
-		setText(getTitle());
-		this.object = object;
+		this.parent = parent;
+		this.anchor = anchor;
 	}
 	
-	/**
-	 * Get element's title
-	 * 
-	 * @return element's title
-	 */
-	abstract protected String getTitle();
-
 	/**
 	 * @return the object
 	 */
@@ -63,13 +61,32 @@ public abstract class OverviewPageElement extends CGroup
 	public void setObject(AbstractObject object)
 	{
 		this.object = object;
+		if ((widget == null) || widget.isDisposed())
+		{
+			widget = new CGroup(parent, getTitle()) {
+				@Override
+				protected Control createClientArea(Composite parent)
+				{
+					return OverviewPageElement.this.createClientArea(parent);
+				}
+			};
+			GridData gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			gd.verticalAlignment = SWT.TOP;
+			widget.setLayoutData(gd);
+		}
 		onObjectChange();
 	}
 	
 	/**
-	 * Handler for object change.
+	 * Dispose widget associated with this element
 	 */
-	abstract void onObjectChange();
+	public void dispose()
+	{
+		if ((widget != null) && !widget.isDisposed())
+			widget.dispose();
+	}
 	
 	/**
 	 * Check if element is applicable for given object. Default implementation
@@ -82,15 +99,62 @@ public abstract class OverviewPageElement extends CGroup
 	{
 		return true;
 	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+	
+	/**
+	 * Fix control placement
 	 */
-	@Override
-	public Point computeSize(int wHint, int hHint, boolean changed)
+	public void fixPlacement()
 	{
-		if (!isVisible())
-			return new Point(0, 0);
-		return super.computeSize(wHint, hHint, changed);
+		if ((widget != null) && !widget.isDisposed())
+		{
+			if (anchor == null)
+			{
+				widget.moveAbove(null);
+			}
+			else
+			{
+				widget.moveBelow(anchor.getAnchorControl());
+			}
+		}
 	}
+	
+	/**
+	 * @return
+	 */
+	private Control getAnchorControl()
+	{
+		if ((widget != null) && !widget.isDisposed())
+			return widget;
+		if (anchor != null)
+			return anchor.getAnchorControl();
+		return null;
+	}
+	
+	/**
+	 * @return
+	 */
+	protected Display getDisplay()
+	{
+		return ((widget != null) && !widget.isDisposed()) ? widget.getDisplay() : Display.getCurrent();
+	}
+
+	/**
+	 * Create client area.
+	 * 
+	 * @param parent
+	 * @return
+	 */
+	protected abstract Control createClientArea(Composite parent);
+	
+	/**
+	 * Handler for object change.
+	 */
+	protected abstract void onObjectChange();
+	
+	/**
+	 * Get element's title
+	 * 
+	 * @return element's title
+	 */
+	protected abstract String getTitle();
 }

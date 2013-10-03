@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ import org.netxms.ui.eclipse.widgets.CommandBox;
 
 /**
  * "Commands" element
- *
  */
 public class Commands extends OverviewPageElement
 {
@@ -47,11 +46,10 @@ public class Commands extends OverviewPageElement
 	
 	/**
 	 * @param parent
-	 * @param object
 	 */
-	public Commands(Composite parent, AbstractObject object)
+	public Commands(Composite parent, OverviewPageElement anchor)
 	{
-		super(parent, object);
+		super(parent, anchor);
 		createActions();
 	}
 	
@@ -89,7 +87,7 @@ public class Commands extends OverviewPageElement
 			public void run()
 			{
 				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(commandBox.getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
 				{
 					new ConsoleJob("Initiate agent restart on node " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 						@Override
@@ -114,7 +112,7 @@ public class Commands extends OverviewPageElement
 			public void run()
 			{
 				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(commandBox.getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
 				{
 					new ConsoleJob("Initiate node restart", null, Activator.PLUGIN_ID, null) {
 						@Override
@@ -139,7 +137,7 @@ public class Commands extends OverviewPageElement
 			public void run()
 			{
 				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be shut down. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(commandBox.getShell(), "Confirmation", "Node " + object.getObjectName() + " will be shut down. Are you sure?"))
 				{
 					new ConsoleJob("Initiate node shutdown", null, Activator.PLUGIN_ID, null) {
 						@Override
@@ -173,7 +171,7 @@ public class Commands extends OverviewPageElement
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
 	 */
 	@Override
-	void onObjectChange()
+	protected void onObjectChange()
 	{
 		commandBox.deleteAll(false);
 		if (getObject() instanceof Node)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,12 +96,18 @@ public class ObjectOverview extends ObjectTab
 		gd.minimumWidth = SWT.DEFAULT;
 		rightColumn.setLayoutData(gd);
 
-		addElement(new GeneralInfo(leftColumn, getObject()));
-		addElement(new Commands(leftColumn, getObject()));
-		addElement(new AvailabilityChart(leftColumn, getObject()));
-		addElement(new Comments(leftColumn, getObject()));
-		addElement(new Capabilities(rightColumn, getObject()));
-		addElement(new Connection(rightColumn, getObject()));
+		OverviewPageElement e = new GeneralInfo(leftColumn, null);
+		elements.add(e);
+		e = new Commands(leftColumn, e);
+		elements.add(e);
+		e = new AvailabilityChart(leftColumn, e);
+		elements.add(e);
+		e = new Comments(leftColumn, e);
+		elements.add(e);
+		e = new Capabilities(rightColumn, null);
+		elements.add(e);
+		e = new Connection(rightColumn, e);
+		elements.add(e);
 	}
 	
 	/**
@@ -116,24 +122,6 @@ public class ObjectOverview extends ObjectTab
 		layout.marginWidth = 0;
 		layout.verticalSpacing = 5;
 		return layout;
-	}
-	
-	/**
-	 * Add page element
-	 * 
-	 * @param element
-	 * @param span
-	 * @param grabExcessSpace
-	 */
-	private void addElement(OverviewPageElement element)
-	{
-		GridData gd = new GridData();
-		gd.exclude = false;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		element.setLayoutData(gd);
-		elements.add(element);
 	}
 
 	/* (non-Javadoc)
@@ -156,15 +144,15 @@ public class ObjectOverview extends ObjectTab
 		{
 			if (element.isApplicableForObject(object))
 			{
-				element.setVisible(true);
 				element.setObject(object);
 			}
 			else
 			{
-				element.setVisible(false);
+				element.dispose();
 			}
-			((GridData)element.getLayoutData()).exclude = !element.isVisible();
 		}
+		for(OverviewPageElement element : elements)
+			element.fixPlacement();
 		viewArea.layout(true, true);
 		viewArea.setRedraw(true);
 		
@@ -173,19 +161,6 @@ public class ObjectOverview extends ObjectTab
 		
 		Point s = viewArea.getSize();
 		viewArea.redraw(0, 0, s.x, s.y, true);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
-	 */
-	@Override
-	public void selected()
-	{
-		super.selected();
-		// I don't know why, but content lay out incorrectly if object selection
-		// changes while this tab is not active.
-		// As workaround, we force reconstruction of the content on each tab activation
-		objectChanged(getObject());
 	}
 
 	/* (non-Javadoc)

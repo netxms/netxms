@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,18 +43,18 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class AvailabilityChart extends OverviewPageElement
 {
-	DataComparisonChart dayChart;
-	DataComparisonChart weekChart;
-	DataComparisonChart monthChart;
-	ColorCache colors;
+	private DataComparisonChart dayChart;
+	private DataComparisonChart weekChart;
+	private DataComparisonChart monthChart;
+	private ColorCache colors;
 	
 	/**
 	 * @param parent
 	 * @param object
 	 */
-	public AvailabilityChart(Composite parent, AbstractObject object)
+	public AvailabilityChart(Composite parent, OverviewPageElement anchor)
 	{
-		super(parent, object);
+		super(parent, anchor);
 	}
 
 	/* (non-Javadoc)
@@ -70,7 +70,7 @@ public class AvailabilityChart extends OverviewPageElement
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
 	 */
 	@Override
-	void onObjectChange()
+	protected void onObjectChange()
 	{
 		ServiceContainer service = (ServiceContainer)getObject();
 		

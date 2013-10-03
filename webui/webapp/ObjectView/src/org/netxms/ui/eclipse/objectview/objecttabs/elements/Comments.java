@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 
 /**
@@ -37,11 +36,10 @@ public class Comments extends OverviewPageElement
 	 * The constructor
 	 * 
 	 * @param parent
-	 * @param object
 	 */
-	public Comments(Composite parent, AbstractObject object)
+	public Comments(Composite parent, OverviewPageElement anchor)
 	{
-		super(parent, object);
+		super(parent, anchor);
 	}
 
 	/* (non-Javadoc)
@@ -51,7 +49,7 @@ public class Comments extends OverviewPageElement
 	protected Control createClientArea(Composite parent)
 	{
 		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY | SWT.WRAP);
-		comments.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+		comments.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
 		if (getObject() != null)
 			comments.setText(getObject().getComments());
 		return comments;
@@ -70,7 +68,7 @@ public class Comments extends OverviewPageElement
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
 	 */
 	@Override
-	void onObjectChange()
+	protected void onObjectChange()
 	{
 		if (getObject() != null)
 			comments.setText(getObject().getComments());

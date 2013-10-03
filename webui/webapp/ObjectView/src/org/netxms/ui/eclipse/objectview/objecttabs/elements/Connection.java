@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,20 +45,11 @@ public class Connection extends OverviewPageElement
 	
 	/**
 	 * @param parent
-	 * @param object
 	 */
-	public Connection(Composite parent, AbstractObject object)
+	public Connection(Composite parent, OverviewPageElement anchor)
 	{
-		super(parent, object);
+		super(parent, anchor);
 		session = (NXCSession)ConsoleSharedData.getSession();
-		labelProvider = new WorkbenchLabelProvider();
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				labelProvider.dispose();
-			}
-		});
 	}
 
 	/* (non-Javadoc)
@@ -67,10 +58,19 @@ public class Connection extends OverviewPageElement
 	@Override
 	protected Control createClientArea(Composite parent)
 	{
+		labelProvider = new WorkbenchLabelProvider();
+		parent.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				labelProvider.dispose();
+			}
+		});
+		
 		Composite area = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		area.setLayout(layout);
-		area.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+		area.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
 		
 		nodeLabel = new CLabel(area, SWT.NONE);
 		nodeLabel.setBackground(area.getBackground());
@@ -103,7 +103,7 @@ public class Connection extends OverviewPageElement
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
 	 */
 	@Override
-	void onObjectChange()
+	protected void onObjectChange()
 	{
 		if ((getObject() == null) || !(getObject() instanceof Interface))
 			return;

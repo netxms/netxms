@@ -49,6 +49,7 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IMemento;
@@ -270,6 +271,16 @@ public class ObjectBrowser extends ViewPart
 				return;	// path element is missing
 		}
 		objectTree.getTreeViewer().setSelection(new TreeSelection(new TreePath(elements)), true);
+		
+		final Display display = getSite().getShell().getDisplay();
+		display.asyncExec(new Runnable() {
+			@Override
+			public void run()
+			{
+				while(display.readAndDispatch()); // wait for events to finish before continue
+				CommandBridge.getInstance().execute("TabbedObjectView/changeObject", ((AbstractObject)elements[elements.length - 1]).getObjectId());
+			}
+		});
 	}
 	
 	/**

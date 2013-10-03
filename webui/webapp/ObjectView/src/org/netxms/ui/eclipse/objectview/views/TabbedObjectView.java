@@ -43,9 +43,9 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IViewSite;
@@ -97,31 +97,6 @@ public class TabbedObjectView extends ViewPart
 		super.init(site);
 		sourceProvider = SourceProvider.getInstance();
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void init(IViewSite site, IMemento memento) throws PartInitException
-	{
-		super.init(site, memento);
-		if (memento != null)
-		{
-			Integer i = memento.getInteger("TabbedObjectView.objectId");
-			if (i != null)
-				objectId = i; 
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void saveState(IMemento memento)
-	{
-		super.saveState(memento);
-		memento.putInteger("TabbedObjectView.objectId", (int)objectId);
 	}
 
 	/* (non-Javadoc)
@@ -203,9 +178,6 @@ public class TabbedObjectView extends ViewPart
 		getSite().setSelectionProvider(selectionProvider);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		if (objectId != 0)
-			setObject(session.findObjectById(objectId));
-		
 		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -321,6 +293,11 @@ public class TabbedObjectView extends ViewPart
 	 */
 	public void setObject(final AbstractObject object)
 	{
+		// Prevent multiple calls to setObjectInternal
+		if (objectId == getObjectId(object))
+			return;
+		objectId = getObjectId(object);
+		
 		// Current focus event may not be finished yet, so we have
 		// to wait for any outstanding events and only then start
 		// changing tabs. Otherwise runtime exception will be thrown.
@@ -330,9 +307,20 @@ public class TabbedObjectView extends ViewPart
 			public void run() 
 			{
 				while(display.readAndDispatch()); // wait for events to finish before continue
+				if (objectId != getObjectId(object))
+					return;	// already received next object change
 				setObjectInternal(object);
 			}
 		});
+	}
+	
+	/**
+	 * @param object
+	 * @return
+	 */
+	private static long getObjectId(AbstractObject object)
+	{
+		return (object != null) ? object.getObjectId() : 0;
 	}
 	
 	/**
@@ -342,6 +330,7 @@ public class TabbedObjectView extends ViewPart
 	 */
 	private void setObjectInternal(AbstractObject object)
 	{
+		Control focusControl = Display.getCurrent().getFocusControl();
 		if (object != null)
 		{
 			header.setText(object.getObjectName());
@@ -384,6 +373,8 @@ public class TabbedObjectView extends ViewPart
 			objectId = 0;
 			header.setText("");
 		}
+		if (focusControl != null)
+			focusControl.setFocus();
 	}
 
 	/* (non-Javadoc)

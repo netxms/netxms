@@ -492,7 +492,6 @@ public class ObjectTree extends Composite
 	{
 		final String text = filterText.getText();
 		filter.setFilterString(text);
-		objectTree.refresh(false);
 		AbstractObject obj = filter.getLastMatch();
 		if (obj != null)
 		{
@@ -504,6 +503,7 @@ public class ObjectTree extends Composite
 			if (statusIndicatorEnabled)
 				updateStatusIndicator();
 		}
+		objectTree.refresh(false);
 	}
 
 	/**

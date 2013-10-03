@@ -10,9 +10,11 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 
+/**
+ * Generic table element
+ */
 public abstract class TableElement extends OverviewPageElement
 {
 	private Table table;
@@ -21,9 +23,9 @@ public abstract class TableElement extends OverviewPageElement
 	 * @param parent
 	 * @param object
 	 */
-	public TableElement(Composite parent, AbstractObject object)
+	public TableElement(Composite parent, OverviewPageElement anchor)
 	{
-		super(parent, object);
+		super(parent, anchor);
 	}
 
 	/* (non-Javadoc)
