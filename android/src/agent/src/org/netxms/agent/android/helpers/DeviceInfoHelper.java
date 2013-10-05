@@ -157,10 +157,11 @@ public class DeviceInfoHelper
 				return "ANDROID (JELLY_BEAN)";
 			case Build.VERSION_CODES.JELLY_BEAN_MR1:
 				return "ANDROID (JELLY_BEAN_MR1)";
+			case Build.VERSION_CODES.JELLY_BEAN_MR2:
+				return "ANDROID (JELLY_BEAN_MR2)";
 		}
 		return "ANDROID (UNKNOWN)";
 	}
-
 	/**
 	 * Get battery level as percentage
 	 * 
