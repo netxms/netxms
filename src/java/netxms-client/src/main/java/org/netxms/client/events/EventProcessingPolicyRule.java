@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -49,6 +50,7 @@ public class EventProcessingPolicyRule
 
 	public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 	
+	private UUID guid;
 	private List<Long> sources;
 	private List<Long> events;
 	private String script;
@@ -69,6 +71,7 @@ public class EventProcessingPolicyRule
 	 */
 	public EventProcessingPolicyRule()
 	{
+		guid = UUID.randomUUID();
 		sources = new ArrayList<Long>(0);
 		events = new ArrayList<Long>(0);
 		script = "";
@@ -90,6 +93,7 @@ public class EventProcessingPolicyRule
 	 */
 	public EventProcessingPolicyRule(EventProcessingPolicyRule src)
 	{
+		guid = UUID.randomUUID();
 		sources = new ArrayList<Long>(src.sources);
 		events = new ArrayList<Long>(src.events);
 		script = src.script;
@@ -113,6 +117,7 @@ public class EventProcessingPolicyRule
 	 */
 	public EventProcessingPolicyRule(NXCPMessage msg)
 	{
+		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
 		sources = Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCES));
 		events = Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));
 		script = msg.getVariableAsString(NXCPCodes.VID_SCRIPT);
@@ -145,6 +150,7 @@ public class EventProcessingPolicyRule
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
+		msg.setVariable(NXCPCodes.VID_GUID, guid);
 		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
 		msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
 		msg.setVariable(NXCPCodes.VID_SCRIPT, script);
@@ -431,5 +437,13 @@ public class EventProcessingPolicyRule
 	public boolean isEventsInverted()
 	{
 		return (flags & NEGATED_EVENTS) != 0;
+	}
+
+	/**
+	 * @return the guid
+	 */
+	public UUID getGuid()
+	{
+		return guid;
 	}
 }

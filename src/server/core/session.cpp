@@ -8811,11 +8811,9 @@ void ClientSession::sendDCIEventList(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
-//
-// Export server configuration (event, templates, etc.)
-//
-
+/**
+ * Export server configuration (event, templates, etc.)
+ */
 void ClientSession::exportConfiguration(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -8826,7 +8824,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   if ((m_dwSystemAccess & (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB)) == (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB))
+   if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
       dwNumTemplates = pRequest->GetVariableLong(VID_NUM_OBJECTS);
       if (dwNumTemplates > 0)
@@ -8893,7 +8891,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
             pObject = FindObjectById(pdwTemplateList[i]);
             if (pObject != NULL)
             {
-               ((Template *)pObject)->CreateNXMPRecord(str);
+               ((Template *)pObject)->createNXMPRecord(str);
             }
          }
          str += _T("\t</templates>\n");

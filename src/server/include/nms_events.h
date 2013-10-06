@@ -114,6 +114,7 @@ class EPRule
 {
 private:
    UINT32 m_dwId;
+   uuid_t m_guid;
    UINT32 m_dwFlags;
    UINT32 m_dwNumSources;
    UINT32 *m_pdwSourceList;
@@ -154,6 +155,7 @@ public:
 	void saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
    void createMessage(CSCPMessage *pMsg);
+   void createNXMPRecord(String &str);
 
    bool isActionInUse(UINT32 dwActionId);
 };

@@ -681,8 +681,8 @@ public:
 
 	bool checkSysAccessRights(UINT32 requiredAccess) 
    { 
-      return m_dwUserId == 0 ? true : 
-         ((requiredAccess & m_dwSystemAccess) ? true : false);
+      return (m_dwUserId == 0) ? true : 
+         ((requiredAccess & m_dwSystemAccess) == requiredAccess);
    }
 
    void kill();

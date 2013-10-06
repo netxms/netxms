@@ -28,6 +28,7 @@
 EPRule::EPRule(UINT32 dwId)
 {
    m_dwId = dwId;
+   uuid_generate(m_guid);
    m_dwFlags = 0;
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
@@ -48,18 +49,19 @@ EPRule::EPRule(UINT32 dwId)
 /**
  * Construct event policy rule from database record
  * Assuming the following field order:
- * rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,
+ * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
  * alarm_timeout,alarm_timeout_event,situation_id,situation_instance
  */
 EPRule::EPRule(DB_RESULT hResult, int iRow)
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
-   m_dwFlags = DBGetFieldULong(hResult, iRow, 1);
-   m_pszComment = DBGetField(hResult, iRow, 2, NULL, 0);
-	DBGetField(hResult, iRow, 3, m_szAlarmMessage, MAX_EVENT_MSG_LENGTH);
-   m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
-   DBGetField(hResult, iRow, 5, m_szAlarmKey, MAX_DB_STRING);
-   m_pszScript = DBGetField(hResult, iRow, 6, NULL, 0);
+   DBGetFieldGUID(hResult, iRow, 1, m_guid);
+   m_dwFlags = DBGetFieldULong(hResult, iRow, 2);
+   m_pszComment = DBGetField(hResult, iRow, 3, NULL, 0);
+	DBGetField(hResult, iRow, 4, m_szAlarmMessage, MAX_EVENT_MSG_LENGTH);
+   m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 5);
+   DBGetField(hResult, iRow, 6, m_szAlarmKey, MAX_DB_STRING);
+   m_pszScript = DBGetField(hResult, iRow, 7, NULL, 0);
    if ((m_pszScript != NULL) && (*m_pszScript != 0))
    {
       TCHAR szError[256];
@@ -79,10 +81,10 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    {
       m_pScript = NULL;
    }
-	m_dwAlarmTimeout = DBGetFieldULong(hResult, iRow, 7);
-	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, iRow, 8);
-	m_dwSituationId = DBGetFieldULong(hResult, iRow, 9);
-   DBGetField(hResult, iRow, 10, m_szSituationInstance, MAX_DB_STRING);
+	m_dwAlarmTimeout = DBGetFieldULong(hResult, iRow, 8);
+	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, iRow, 9);
+	m_dwSituationId = DBGetFieldULong(hResult, iRow, 10);
+   DBGetField(hResult, iRow, 11, m_szSituationInstance, MAX_DB_STRING);
 }
 
 /**
@@ -95,6 +97,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
 	
    m_dwFlags = pMsg->GetVariableLong(VID_FLAGS);
    m_dwId = pMsg->GetVariableLong(VID_RULE_ID);
+   pMsg->GetVariableBinary(VID_GUID, m_guid, UUID_LENGTH);
    m_pszComment = pMsg->GetVariableStr(VID_COMMENTS);
 
    m_dwNumActions = pMsg->GetVariableLong(VID_NUM_ACTIONS);
@@ -158,6 +161,14 @@ EPRule::~EPRule()
    safe_free(m_pszComment);
    safe_free(m_pszScript);
    delete m_pScript;
+}
+
+/**
+ * Create management pack record
+ */
+void EPRule::createNXMPRecord(String &str)
+{
+
 }
 
 /**
@@ -488,11 +499,12 @@ void EPRule::saveToDB(DB_HANDLE hdb)
    TCHAR *pszQuery = (TCHAR *)malloc(len * sizeof(TCHAR));
 
    // General attributes
-   _sntprintf(pszQuery, len, _T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,")
+   TCHAR guidText[128];
+   _sntprintf(pszQuery, len, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,")
                        _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
 							  _T("situation_id,situation_instance) ")
-                       _T("VALUES (%d,%d,%s,%s,%d,%s,%s,%d,%d,%d,%s)"),
-	           m_dwId, m_dwFlags, (const TCHAR *)DBPrepareString(hdb, m_pszComment),
+                       _T("VALUES (%d,'%s',%d,%s,%s,%d,%s,%s,%d,%d,%d,%s)"),
+              m_dwId, uuid_to_string(m_guid, guidText),m_dwFlags, (const TCHAR *)DBPrepareString(hdb, m_pszComment),
 				  (const TCHAR *)DBPrepareString(hdb, m_szAlarmMessage), m_iAlarmSeverity,
 	           (const TCHAR *)DBPrepareString(hdb, m_szAlarmKey),
 	           (const TCHAR *)DBPrepareString(hdb, m_pszScript), m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
@@ -546,6 +558,7 @@ void EPRule::createMessage(CSCPMessage *pMsg)
 
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_RULE_ID, m_dwId);
+   pMsg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
    pMsg->SetVariable(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
    pMsg->SetVariable(VID_ALARM_KEY, m_szAlarmKey);
    pMsg->SetVariable(VID_ALARM_MESSAGE, m_szAlarmMessage);
@@ -622,7 +635,7 @@ bool EventPolicy::loadFromDB()
    DB_RESULT hResult;
    bool bSuccess = false;
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT rule_id,flags,comments,alarm_message,")
+   hResult = DBSelect(g_hCoreDB, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
                                  _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
 											_T("situation_id,situation_instance ")
                                  _T("FROM event_policy ORDER BY rule_id"));

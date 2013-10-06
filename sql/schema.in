@@ -807,6 +807,7 @@ CREATE TABLE event_group_members
 CREATE TABLE event_policy
 (
 	rule_id integer not null,   // Rule number
+   rule_guid varchar(36) not null,
 	flags integer not null,
 	comments SQL_TEXT null,
 	script SQL_TEXT null,
