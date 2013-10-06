@@ -860,7 +860,7 @@ void ClientSession::processingThread()
 				CALL_IN_NEW_THREAD(clearDCIData, pMsg);
 				break;
          case CMD_OPEN_EPP:
-            openEPP(pMsg->GetId());
+            openEPP(pMsg);
             break;
          case CMD_CLOSE_EPP:
             closeEPP(pMsg->GetId());
@@ -3874,29 +3874,34 @@ void ClientSession::getTableLastValues(CSCPMessage *pRequest)
 /**
  * Open event processing policy
  */
-void ClientSession::openEPP(UINT32 dwRqId)
+void ClientSession::openEPP(CSCPMessage *request)
 {
    CSCPMessage msg;
-   TCHAR szBuffer[256];
-   BOOL bSuccess = FALSE;
+   bool success = false;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
+   msg.SetId(request->GetId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_EPP)
+   bool readOnly = request->GetVariableShort(VID_READ_ONLY) ? true : false;
+
+   if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      if (!LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, szBuffer))
+      TCHAR buffer[256];
+      if (!readOnly && !LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, buffer))
       {
          msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-         msg.SetVariable(VID_LOCKED_BY, szBuffer);
+         msg.SetVariable(VID_LOCKED_BY, buffer);
       }
       else
       {
-         m_dwFlags |= CSF_EPP_LOCKED;
+         if (!readOnly)
+         {
+            m_dwFlags |= CSF_EPP_LOCKED;
+         }
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_NUM_RULES, g_pEventPolicy->getNumRules());
-         bSuccess = TRUE;
+         success = true;
       }
    }
    else
@@ -3909,8 +3914,8 @@ void ClientSession::openEPP(UINT32 dwRqId)
    sendMessage(&msg);
 
    // Send policy to client
-   if (bSuccess)
-      g_pEventPolicy->sendToClient(this, dwRqId);
+   if (success)
+      g_pEventPolicy->sendToClient(this, request->GetId());
 }
 
 /**

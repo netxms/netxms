@@ -494,7 +494,7 @@ private:
    void getLastValues(CSCPMessage *pRequest);
    void getTableLastValues(CSCPMessage *pRequest);
 	void getThresholdSummary(CSCPMessage *request);
-   void openEPP(UINT32 dwRqId);
+   void openEPP(CSCPMessage *request);
    void closeEPP(UINT32 dwRqId);
    void saveEPP(CSCPMessage *pRequest);
    void processEPPRecord(CSCPMessage *pRequest);

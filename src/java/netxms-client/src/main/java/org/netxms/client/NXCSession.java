@@ -4260,21 +4260,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
-
+	
 	/**
-	 * Open event processing policy for editing. This call will lock event
-	 * processing policy on server until closeEventProcessingPolicy called or
-	 * session terminated.
+	 * Internal implementation for open/get event processing policy.
 	 * 
+	 * @param readOnly true to get read-only copy of the policy
 	 * @return Event processing policy
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public EventProcessingPolicy openEventProcessingPolicy() throws IOException, NXCException
+	private EventProcessingPolicy getEventProcessingPolicyInternal(boolean readOnly) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_EPP);
+		msg.setVariableInt16(NXCPCodes.VID_READ_ONLY, readOnly ? 1 : 0);
 		sendMessage(msg);
 		NXCPMessage response = waitForRCC(msg.getMessageId());
 
@@ -4288,6 +4286,32 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		}
 
 		return policy;
+	}
+	
+	/**
+	 * Get read-only copy of ebent processing policy.
+	 * 
+	 * @return Event processing policy
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public EventProcessingPolicy getEventProcessingPolicy() throws IOException, NXCException
+	{
+		return getEventProcessingPolicyInternal(true);
+	}
+
+	/**
+	 * Open event processing policy for editing. This call will lock event
+	 * processing policy on server until closeEventProcessingPolicy called or
+	 * session terminated.
+	 * 
+	 * @return Event processing policy
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public EventProcessingPolicy openEventProcessingPolicy() throws IOException, NXCException
+	{
+		return getEventProcessingPolicyInternal(false);
 	}
 
 	/**
