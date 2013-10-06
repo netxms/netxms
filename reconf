@@ -9,6 +9,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+autoreconf -fi -W none,obsolete,syntax
+exit $?
+
 ACLOCAL=aclocal
 AUTOCONF=autoconf
 AUTOHEADER=autoheader

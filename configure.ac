@@ -963,7 +963,7 @@ if test "x$CXX" != "xaCC"; then
 			AC_MSG_CHECKING(whether -I/usr/local/include needed)
 			OLD_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="$CPPFLAGS -Werror -I/usr/local/include"
-			AC_TRY_COMPILE([],[],
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[])],
 				[
 					CPPFLAGS="$OLD_CPPFLAGS -I/usr/local/include"
 					AC_MSG_RESULT(yes)
