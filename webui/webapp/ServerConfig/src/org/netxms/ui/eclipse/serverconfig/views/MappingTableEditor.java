@@ -26,7 +26,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ICellModifier;
@@ -56,6 +55,7 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryCompara
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -158,21 +158,17 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 				
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
 				if (modified)
-					if (!MessageDialog.openQuestion(getSite().getShell(), "Refresh Confirmation", "This will destroy unsaved changes. Are you sure?"))
+					if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Refresh Confirmation", "This will destroy unsaved changes. Are you sure?"))
 						return;
 				refresh();
 			}
 		};
 		
 		actionNewRow = new Action("&New row", SharedIcons.ADD_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -184,8 +180,6 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		handlerService.activateHandler(actionNewRow.getActionDefinitionId(), new ActionHandler(actionNewRow));
 		
 		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -197,8 +191,6 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		handlerService.activateHandler(actionDelete.getActionDefinitionId(), new ActionHandler(actionDelete));
 		
 		actionSave = new Action("&Save", SharedIcons.SAVE) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -249,8 +241,6 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

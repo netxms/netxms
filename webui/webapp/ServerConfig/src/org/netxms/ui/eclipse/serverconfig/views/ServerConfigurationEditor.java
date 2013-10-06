@@ -29,7 +29,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -56,6 +55,7 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.ServerVariableComparator
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ServerVariablesLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -114,8 +114,6 @@ public class ServerConfigurationEditor extends ViewPart
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTableViewerSettings(viewer, settings, "ServerConfigurationEditor");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -201,8 +199,6 @@ public class ServerConfigurationEditor extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -211,8 +207,6 @@ public class ServerConfigurationEditor extends ViewPart
 		};
 		
 		actionAdd = new Action("&Create new...", SharedIcons.ADD_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -221,8 +215,6 @@ public class ServerConfigurationEditor extends ViewPart
 		};
 		
 		actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -232,8 +224,6 @@ public class ServerConfigurationEditor extends ViewPart
 		actionEdit.setEnabled(false);
 		
 		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -255,8 +245,6 @@ public class ServerConfigurationEditor extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -363,7 +351,7 @@ public class ServerConfigurationEditor extends ViewPart
 		if ((selection == null) || (selection.size() == 0))
 			return;
 		
-		if (!MessageDialog.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected configuration variables?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected configuration variables?"))
 			return;
 		
 		final List<String> names = new ArrayList<String>(selection.size());

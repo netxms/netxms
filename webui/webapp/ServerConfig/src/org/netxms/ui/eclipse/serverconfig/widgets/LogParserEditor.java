@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -59,6 +58,7 @@ import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListene
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRule;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRuleEditor;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -66,8 +66,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class LogParserEditor extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final int TAB_NONE = 0;
 	private static final int TAB_BUILDER = 1;
 	private static final int TAB_XML = 2;
@@ -96,8 +94,6 @@ public class LogParserEditor extends Composite
 		tabFolder = new CTabFolder(this, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
 		tabFolder.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -231,8 +227,6 @@ public class LogParserEditor extends Composite
 		tabItem.setData(TAB_XML);
 		
 		xmlEditor.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -407,7 +401,7 @@ public class LogParserEditor extends Composite
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			MessageDialog.openError(getShell(), "Error", "Log parser definition is invalid");
+			MessageDialogHelper.openError(getShell(), "Error", "Log parser definition is invalid");
 			parser = new LogParser();
 		}
 		

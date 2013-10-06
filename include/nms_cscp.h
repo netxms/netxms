@@ -1103,6 +1103,9 @@ typedef struct
 
 #define VID_RADIO_LIST_BASE         ((UINT32)0x30000000)
 
+#define VID_RADIO_LIST_BASE         ((UINT32)0x30000000)
+
+#define VID_RULE_LIST_BASE          ((UINT32)0x10000000)
 
 //
 // Inline functions

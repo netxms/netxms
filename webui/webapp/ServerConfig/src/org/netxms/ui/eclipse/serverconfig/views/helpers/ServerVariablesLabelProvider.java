@@ -29,8 +29,6 @@ import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
  */
 public class ServerVariablesLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */

@@ -16,19 +16,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.serverconfig.views.helpers;
+package org.netxms.ui.eclipse.epp.dialogs.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.swt.SWT;
-import org.netxms.api.client.mt.MappingTableEntry;
-import org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.client.events.EventProcessingPolicyRule;
 
 /**
- * Comparator for mapping table elements
+ * Comparator for event processing policy rules - sort them alphabetically
  */
-public class MappingTableEntryComparator extends ViewerComparator
+public class RuleComparator extends ViewerComparator
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,25 +33,6 @@ public class MappingTableEntryComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		int result;
-		
-		MappingTableEntry me1 = (MappingTableEntry)e1;
-		MappingTableEntry me2 = (MappingTableEntry)e2;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
-		{
-			case MappingTableEditor.COLUMN_KEY:
-				result = me1.getKey().compareToIgnoreCase(me2.getKey());
-				break;
-			case MappingTableEditor.COLUMN_VALUE:
-				result = me1.getValue().compareToIgnoreCase(me2.getValue());
-				break;
-			case MappingTableEditor.COLUMN_DESCRIPTION:
-				result = me1.getDescription().compareToIgnoreCase(me2.getDescription());
-				break;
-			default:
-				result = 0;
-				break;
-		}
-		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		return ((EventProcessingPolicyRule)e1).getComments().compareToIgnoreCase(((EventProcessingPolicyRule)e2).getComments());
 	}
 }

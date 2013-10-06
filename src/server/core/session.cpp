@@ -8911,6 +8911,18 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
          safe_free(pdwList);
          str += _T("\t</traps>\n");
 
+         // Write rules
+         str += _T("\t<rules>\n");
+         dwCount = pRequest->GetVariableLong(VID_NUM_RULES);
+         DWORD varId = VID_RULE_LIST_BASE;
+         uuid_t guid;
+         for(i = 0; i < dwCount; i++)
+         {
+            pRequest->GetVariableBinary(varId++, guid, UUID_LENGTH);
+            g_pEventPolicy->exportRule(str, guid);
+         }
+         str += _T("\t</rules>\n");
+
 			// Close document
 			str += _T("</configuration>\n");
 
@@ -8929,11 +8941,9 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Import server configuration (events, templates, etc.)
-//
-
+/**
+ * Import server configuration (events, templates, etc.)
+ */
 void ClientSession::importConfiguration(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

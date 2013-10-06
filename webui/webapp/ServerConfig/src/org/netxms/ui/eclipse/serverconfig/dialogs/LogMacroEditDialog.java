@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class LogMacroEditDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabeledText textName;
 	private LabeledText textValue;
 	private String name;

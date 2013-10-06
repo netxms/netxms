@@ -127,7 +127,7 @@ public class DiscoveryConfig
 	}
 	
 	/**
-	 * Save discovery configuration on server. This methis calls communication
+	 * Save discovery configuration on server. This method calls communication
 	 * API directly, so it should not be called from UI thread.
 	 * 
 	 * @throws IOException if socket I/O error occurs

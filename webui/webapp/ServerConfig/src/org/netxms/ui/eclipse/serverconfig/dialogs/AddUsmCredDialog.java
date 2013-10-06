@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AddUsmCredDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabeledText name;
 	private LabeledText authPasswd;
 	private LabeledText privPasswd;

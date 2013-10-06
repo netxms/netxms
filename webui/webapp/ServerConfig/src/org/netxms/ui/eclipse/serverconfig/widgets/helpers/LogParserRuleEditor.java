@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,8 +53,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class LogParserRuleEditor extends DashboardComposite
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getCurrent(), 198,214,172);
 	private static final Color ACTION_BORDER_COLOR = new Color(Display.getCurrent(), 186,176,201);
 	private static final Color TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
@@ -99,8 +97,6 @@ public class LogParserRuleEditor extends DashboardComposite
 		fillControlBar(controlBar);
 		
 		final CGroup condition = new CGroup(this, "Condition") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -117,8 +113,6 @@ public class LogParserRuleEditor extends DashboardComposite
 		condition.setLayoutData(gd);
 
 		final CGroup action = new CGroup(this, "Action") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -187,8 +181,6 @@ public class LogParserRuleEditor extends DashboardComposite
 		area.setLayout(layout);
 		
 		final ModifyListener listener = new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -284,8 +276,6 @@ public class LogParserRuleEditor extends DashboardComposite
 		gd.grabExcessHorizontalSpace = true;
 		event.setLayoutData(gd);
 		event.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -317,8 +307,6 @@ public class LogParserRuleEditor extends DashboardComposite
 			eventParamCount.setEnabled(false);
 		}
 		eventParamCount.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -338,8 +326,6 @@ public class LogParserRuleEditor extends DashboardComposite
 		gd.horizontalSpan = 2;
 		context.setLayoutData(gd);
 		context.getTextControl().addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -380,8 +366,6 @@ public class LogParserRuleEditor extends DashboardComposite
 			contextAction.setEnabled(false);
 		}
 		contextAction.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -414,8 +398,6 @@ public class LogParserRuleEditor extends DashboardComposite
 			contextResetMode.setEnabled(false);
 		}
 		contextResetMode.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

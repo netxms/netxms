@@ -168,7 +168,67 @@ EPRule::~EPRule()
  */
 void EPRule::createNXMPRecord(String &str)
 {
+   str.addFormattedString(_T("\t\t<rule id=\"%d\">\n")
+                          _T("\t\t\t<flags>%d</flags>\n")
+                          _T("\t\t\t<alarmMessage>%s</alarmMessage>\n")
+                          _T("\t\t\t<alarmKey>%s</alarmKey>\n")
+                          _T("\t\t\t<alarmSeverity>%d</alarmSeverity>\n")
+                          _T("\t\t\t<alarmTimeout>%d</alarmTimeout>\n")
+                          _T("\t\t\t<alarmTimeoutEvent>%d</alarmTimeoutEvent>\n")
+                          _T("\t\t\t<situation>%d</situation>\n")
+                          _T("\t\t\t<situationInstance>%s</situationInstance>\n")
+                          _T("\t\t\t<script>%s</script>\n")
+                          _T("\t\t\t<comments>%s</comments>\n")
+                          _T("\t\t\t<sources>\n"),
+                          m_dwId, m_dwFlags,
+                          (const TCHAR *)EscapeStringForXML2(m_szAlarmMessage),
+                          (const TCHAR *)EscapeStringForXML2(m_szAlarmKey),
+                          m_iAlarmSeverity, m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
+                          m_dwSituationId, (const TCHAR *)EscapeStringForXML2(m_szSituationInstance),
+                          (const TCHAR *)EscapeStringForXML2(m_pszScript),
+                          (const TCHAR *)EscapeStringForXML2(m_pszComment));
 
+   for(UINT32 i = 0; i < m_dwNumSources; i++)
+   {
+      NetObj *object = FindObjectById(m_pdwSourceList[i]);
+      if (object != NULL)
+      {
+         uuid_t guid;
+         object->getGuid(guid);
+         TCHAR guidText[128];
+         str.addFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
+                                _T("\t\t\t\t\t<name>%s</name>\n")
+                                _T("\t\t\t\t\t<guid>%s</guid>\n")
+                                _T("\t\t\t\t\t<class>%d</class>\n")
+                                _T("\t\t\t\t</source>\n"),
+                                object->Id(),
+                                (const TCHAR *)EscapeStringForXML2(object->Name()),
+                                uuid_to_string(guid, guidText), object->Type());
+      }
+   }
+   
+   str += _T("\t\t\t</sources>\n\t\t\t<events>\n");
+
+   for(UINT32 i = 0; i < m_dwNumEvents; i++)
+   {
+      TCHAR eventName[MAX_EVENT_NAME];
+      EventNameFromCode(m_pdwEventList[i], eventName);
+      str.addFormattedString(_T("\t\t\t\t<event id=\"%d\">\n")
+                             _T("\t\t\t\t\t<name>%s</name>\n")
+                             _T("\t\t\t\t</event>\n"),
+                             m_pdwEventList[i], (const TCHAR *)EscapeStringForXML2(eventName));
+   }
+
+   str += _T("\t\t\t</events>\n\t\t\t<actions>\n");
+
+   for(UINT32 i = 0; i < m_dwNumActions; i++)
+   {
+      str.addFormattedString(_T("\t\t\t\t<action id=\"%d\">\n")
+                             _T("\t\t\t\t</action>\n"),
+                             m_pdwActionList[i]);
+   }
+
+   str += _T("\t\t\t</actions>\n\t\t</rule>\n");
 }
 
 /**
@@ -745,11 +805,10 @@ void EventPolicy::replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList)
 bool EventPolicy::isActionInUse(UINT32 dwActionId)
 {
    bool bResult = false;
-   UINT32 i;
 
    readLock();
 
-   for(i = 0; i < m_dwNumRules; i++)
+   for(UINT32 i = 0; i < m_dwNumRules; i++)
       if (m_ppRuleList[i]->isActionInUse(dwActionId))
       {
          bResult = true;
@@ -758,4 +817,21 @@ bool EventPolicy::isActionInUse(UINT32 dwActionId)
 
    unlock();
    return bResult;
+}
+
+/**
+ * Export rule
+ */
+void EventPolicy::exportRule(String &str, uuid_t guid)
+{
+   readLock();
+   for(UINT32 i = 0; i < m_dwNumRules; i++)
+   {
+      if (!uuid_compare(guid, m_ppRuleList[i]->getGuid()))
+      {
+         m_ppRuleList[i]->createNXMPRecord(str);
+         break;
+      }
+   }
+   unlock();
 }

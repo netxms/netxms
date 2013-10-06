@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -83,10 +84,10 @@ public class RuleSourceObjects extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText("Inverted rule (match objects NOT in the list below)");
+      checkInverted.setText(Messages.RuleSourceObjects_InvertRule);
       checkInverted.setSelection(rule.isSourceInverted());
       
-      final String[] columnNames = { "Object" };
+      final String[] columnNames = { Messages.RuleSourceObjects_Object };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -125,10 +126,8 @@ public class RuleSourceObjects extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton.setText(Messages.RuleSourceObjects_Add);
       addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -146,10 +145,8 @@ public class RuleSourceObjects extends PropertyPage
       addButton.setLayoutData(rd);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(Messages.RuleSourceObjects_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -170,7 +167,7 @@ public class RuleSourceObjects extends PropertyPage
 	}
 
 	/**
-	 * Add new event
+	 * Add new source object
 	 */
 	private void addSourceObject()
 	{

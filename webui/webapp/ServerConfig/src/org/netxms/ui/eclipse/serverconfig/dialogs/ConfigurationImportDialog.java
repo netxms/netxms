@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,8 +41,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ConfigurationImportDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text textFileName;
 	private Button browseButton;
 	private Button overrideEventsByName;
@@ -82,8 +80,6 @@ public class ConfigurationImportDialog extends Dialog
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       browseButton.setLayoutData(gd);
       browseButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

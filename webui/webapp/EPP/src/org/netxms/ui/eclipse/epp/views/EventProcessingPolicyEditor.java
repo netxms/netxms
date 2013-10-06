@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Activator;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -87,10 +88,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private Set<RuleEditor> selection = new HashSet<RuleEditor>();
 	private int lastSelectedRule = -1;
 	private List<EventProcessingPolicyRule> clipboard = new ArrayList<EventProcessingPolicyRule>(0);
-	
+
 	private Font normalFont;
 	private Font boldFont;
-	
+
 	private Image imageAlarm;
 	private Image imageSituation;
 	private Image imageExecute;
@@ -99,7 +100,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private Image imageCollapse;
 	private Image imageExpand;
 	private Image imageEdit;
-	
+
 	private Action actionHorizontal;
 	private Action actionVertical;
 	private Action actionSave;
@@ -125,25 +126,25 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		// Initiate loading of required plugins if they was not loaded yet
 		try
 		{
-			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
-			Platform.getAdapterManager().loadAdapter(new ServerAction(0), "org.eclipse.ui.model.IWorkbenchAdapter");
-			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
+			Platform.getAdapterManager().loadAdapter(new ServerAction(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
+			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
 		}
-		
-		imageStop = Activator.getImageDescriptor("icons/stop.png").createImage();
-		imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage();
-		imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage();
-		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage();
-		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage();
+
+		imageStop = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
+		imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage(); //$NON-NLS-1$
+		imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage(); //$NON-NLS-1$
+		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage(); //$NON-NLS-1$
+		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage(); //$NON-NLS-1$
 		imageCollapse = SharedIcons.COLLAPSE.createImage();
 		imageExpand = SharedIcons.EXPAND.createImage();
 		imageEdit = SharedIcons.EDIT.createImage();
-		
+
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
-		
+
 		dataArea = new Composite(scroller, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -151,13 +152,11 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		layout.verticalSpacing = 0;
 		dataArea.setLayout(layout);
 		dataArea.setBackground(BACKGROUND_COLOR);
-		
+
 		scroller.setContent(dataArea);
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
 		scroller.addControlListener(new ControlAdapter() {
-			private static final long serialVersionUID = 1L;
-
 			public void controlResized(ControlEvent e)
 			{
 				Rectangle r = scroller.getClientArea();
@@ -179,7 +178,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 		createActions();
 		contributeToActionBars();
-		
+
 		openEventProcessingPolicy();
 	}
 
@@ -188,9 +187,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	 */
 	private void createActions()
 	{
-		actionHorizontal = new Action("&Horizontal layout", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
+		actionHorizontal = new Action(Messages.EventProcessingPolicyEditor_LayoutH, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -199,11 +196,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 		actionHorizontal.setChecked(!verticalLayout);
-		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif"));
-		
-		actionVertical = new Action("&Vertical layout", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
+		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif")); //$NON-NLS-1$
 
+		actionVertical = new Action(Messages.EventProcessingPolicyEditor_LayoutV, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -212,11 +207,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 		actionVertical.setChecked(verticalLayout);
-		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif"));
+		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif")); //$NON-NLS-1$
 
-		actionSave = new Action("&Save policy") {
-			private static final long serialVersionUID = 1L;
-
+		actionSave = new Action(Messages.EventProcessingPolicyEditor_Save) {
 			@Override
 			public void run()
 			{
@@ -226,9 +219,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
 		actionSave.setEnabled(false);
 
-		actionCollapseAll = new Action("&Collapse all") {
-			private static final long serialVersionUID = 1L;
-
+		actionCollapseAll = new Action(Messages.EventProcessingPolicyEditor_CollapseAll) {
 			@Override
 			public void run()
 			{
@@ -237,9 +228,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 		actionCollapseAll.setImageDescriptor(SharedIcons.COLLAPSE_ALL);
 
-		actionExpandAll = new Action("&Expand all") {
-			private static final long serialVersionUID = 1L;
-
+		actionExpandAll = new Action(Messages.EventProcessingPolicyEditor_ExpandAll) {
 			@Override
 			public void run()
 			{
@@ -247,10 +236,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 		actionExpandAll.setImageDescriptor(SharedIcons.EXPAND_ALL);
-		
-		actionDelete = new Action("&Delete") {
-			private static final long serialVersionUID = 1L;
 
+		actionDelete = new Action(Messages.EventProcessingPolicyEditor_Delete) {
 			@Override
 			public void run()
 			{
@@ -260,9 +247,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 		actionDelete.setEnabled(false);
 
-		actionInsertBefore = new Action("Insert &before") {
-			private static final long serialVersionUID = 1L;
-
+		actionInsertBefore = new Action(Messages.EventProcessingPolicyEditor_InsertBefore) {
 			@Override
 			public void run()
 			{
@@ -270,9 +255,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionInsertAfter = new Action("Insert &after") {
-			private static final long serialVersionUID = 1L;
-
+		actionInsertAfter = new Action(Messages.EventProcessingPolicyEditor_InsertAfter) {
 			@Override
 			public void run()
 			{
@@ -280,9 +263,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionCut = new Action("Cu&t") {
-			private static final long serialVersionUID = 1L;
-
+		actionCut = new Action(Messages.EventProcessingPolicyEditor_Cut) {
 			@Override
 			public void run()
 			{
@@ -292,9 +273,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCut.setImageDescriptor(SharedIcons.CUT);
 		actionCut.setEnabled(false);
 
-		actionCopy = new Action("&Copy") {
-			private static final long serialVersionUID = 1L;
-
+		actionCopy = new Action(Messages.EventProcessingPolicyEditor_Copy) {
 			@Override
 			public void run()
 			{
@@ -304,9 +283,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCopy.setImageDescriptor(SharedIcons.COPY);
 		actionCopy.setEnabled(false);
 
-		actionPaste = new Action("&Paste") {
-			private static final long serialVersionUID = 1L;
-
+		actionPaste = new Action(Messages.EventProcessingPolicyEditor_Paste) {
 			@Override
 			public void run()
 			{
@@ -315,10 +292,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 		actionPaste.setImageDescriptor(SharedIcons.PASTE);
 		actionPaste.setEnabled(false);
-		
-		actionEnableRule = new Action("E&nable") {
-			private static final long serialVersionUID = 1L;
 
+		actionEnableRule = new Action(Messages.EventProcessingPolicyEditor_Enable) {
 			@Override
 			public void run()
 			{
@@ -326,9 +301,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionDisableRule = new Action("D&isable") {
-			private static final long serialVersionUID = 1L;
-
+		actionDisableRule = new Action(Messages.EventProcessingPolicyEditor_Disable) {
 			@Override
 			public void run()
 			{
@@ -336,7 +309,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 	}
-	
+
 	/**
 	 * Contribute actions to action bar
 	 */
@@ -350,8 +323,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Fill local pull-down menu
 	 * 
-	 * @param manager
-	 *           Menu manager for pull-down menu
+	 * @param manager Menu manager for pull-down menu
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
@@ -379,8 +351,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Fill local tool bar
 	 * 
-	 * @param manager
-	 *           Menu manager for local toolbar
+	 * @param manager Menu manager for local toolbar
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
@@ -403,11 +374,11 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	 */
 	private void openEventProcessingPolicy()
 	{
-		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.EventProcessingPolicyEditor_OpenJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot open event processing policy";
+				return Messages.EventProcessingPolicyEditor_OpenJob_Error;
 			}
 
 			@Override
@@ -421,7 +392,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 						EventProcessingPolicyEditor.this.actions.put(a.getId(), a);
 					}
 				}
-				
+
 				policy = session.openEventProcessingPolicy();
 				policyLocked = true;
 				runInUIThread(new Runnable() {
@@ -447,7 +418,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 		job.start();
 	}
-	
+
 	/**
 	 * Init policy editor
 	 */
@@ -468,7 +439,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		Rectangle r = scroller.getClientArea();
 		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 	}
-	
+
 	/**
 	 * Update editor's layout
 	 */
@@ -478,7 +449,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			editor.setVerticalLayout(verticalLayout, false);
 		updateEditorAreaLayout();
 	}
-	
+
 	/**
 	 * Process session notifications
 	 * 
@@ -508,7 +479,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				break;
 		}
 	}
-	
+
 	/**
 	 * Set all rules to collapsed or expanded state
 	 * 
@@ -529,14 +500,14 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		dataArea.setFocus();
 	}
-	
+
 	/**
 	 * Save policy to server
 	 */
 	private void savePolicy()
 	{
 		actionSave.setEnabled(false);
-		new ConsoleJob("Save event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.EventProcessingPolicyEditor_SaveJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -566,7 +537,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save event processing policy";
+				return Messages.EventProcessingPolicyEditor_SaveJob_Error;
 			}
 		}.start();
 	}
@@ -579,10 +550,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		if (sessionListener != null)
 			session.removeListener(sessionListener);
-		
+
 		if (policyLocked)
 		{
-			new ConsoleJob("Close event processing policy", null, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.EventProcessingPolicyEditor_CloseJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -592,7 +563,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot close event processing policy";
+					return Messages.EventProcessingPolicyEditor_CloseJob_Error;
 				}
 			}.start();
 		}
@@ -604,13 +575,13 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		imageCollapse.dispose();
 		imageExpand.dispose();
 		imageEdit.dispose();
-		
+
 		super.dispose();
 		ImageFactory.clearCache();
 	}
 
 	/**
-	 * Update entire editor area layout after change in rule editor windget's size 
+	 * Update entire editor area layout after change in rule editor windget's size
 	 */
 	public void updateEditorAreaLayout()
 	{
@@ -618,7 +589,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		Rectangle r = scroller.getClientArea();
 		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 	}
-	
+
 	/**
 	 * Find server action by ID
 	 * 
@@ -629,7 +600,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		return actions.get(id);
 	}
-	
+
 	/**
 	 * Find server actions for list of Ids
 	 * 
@@ -647,7 +618,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		}
 		return resultSet;
 	}
-	
+
 	/**
 	 * Return complete actions list
 	 * 
@@ -760,8 +731,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(getViewSite().getShell(), "Error", "Cannot save event processing policy: " + e.getMessage());
-		}	
+			MessageDialogHelper.openError(getViewSite().getShell(), Messages.EventProcessingPolicyEditor_Error, Messages.EventProcessingPolicyEditor_SaveError + e.getMessage());
+		}
 	}
 
 	/* (non-Javadoc)
@@ -798,7 +769,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		return modified;
 	}
-	
+
 	/**
 	 * Clear selection
 	 */
@@ -809,7 +780,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		selection.clear();
 		lastSelectedRule = -1;
 	}
-	
+
 	/**
 	 * Set selection to given rule
 	 * 
@@ -820,7 +791,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		clearSelection();
 		addToSelection(e, false);
 	}
-	
+
 	/**
 	 * Add rule to selection
 	 * 
@@ -843,7 +814,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		lastSelectedRule = e.getRuleNumber();
 		onSelectionChange();
 	}
-	
+
 	/**
 	 * Internal handler for selection change
 	 */
@@ -856,7 +827,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCopy.setEnabled(selection.size() > 0);
 		actionPaste.setEnabled((selection.size() == 1) && !clipboard.isEmpty());
 	}
-	
+
 	/**
 	 * Delete selected rules
 	 */
@@ -868,15 +839,15 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			ruleEditors.remove(e);
 			e.dispose();
 		}
-		
+
 		// Renumber rules
 		for(int i = 0; i < ruleEditors.size(); i++)
 			ruleEditors.get(i).setRuleNumber(i + 1);
-		
+
 		selection.clear();
 		lastSelectedRule = -1;
 		onSelectionChange();
-		
+
 		updateEditorAreaLayout();
 		setModified(true);
 	}
@@ -890,24 +861,24 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		EventProcessingPolicyRule rule = new EventProcessingPolicyRule();
 		policy.insertRule(rule, position);
-		
+
 		RuleEditor editor = new RuleEditor(dataArea, rule, position + 1, this);
 		ruleEditors.add(position, editor);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		editor.setLayoutData(gd);
-		
+
 		for(int i = position + 1; i < ruleEditors.size(); i++)
 			ruleEditors.get(i).setRuleNumber(i + 1);
-		
+
 		if (position < ruleEditors.size() - 1)
 			editor.moveAbove(ruleEditors.get(position + 1));
 		updateEditorAreaLayout();
-		
+
 		setModified(true);
 	}
-	
+
 	/**
 	 * Cut selected rules to internal clipboard
 	 */
@@ -915,7 +886,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		clipboard.clear();
 		actionPaste.setEnabled(true);
-		
+
 		for(RuleEditor e : selection)
 		{
 			clipboard.add(e.getRule());
@@ -923,15 +894,15 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			ruleEditors.remove(e);
 			e.dispose();
 		}
-		
+
 		// Renumber rules
 		for(int i = 0; i < ruleEditors.size(); i++)
 			ruleEditors.get(i).setRuleNumber(i + 1);
-		
+
 		selection.clear();
 		lastSelectedRule = -1;
 		onSelectionChange();
-		
+
 		updateEditorAreaLayout();
 		setModified(true);
 	}
@@ -943,7 +914,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		clipboard.clear();
 		actionPaste.setEnabled(true);
-		
+
 		for(RuleEditor e : selection)
 			clipboard.add(new EventProcessingPolicyRule(e.getRule()));
 	}
@@ -964,16 +935,16 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			editor.setLayoutData(gd);
-			
+
 			if (position < ruleEditors.size() - 1)
 				editor.moveAbove(ruleEditors.get(position + 1));
-			
+
 			position++;
 		}
-		
+
 		for(int i = position; i < ruleEditors.size(); i++)
 			ruleEditors.get(i).setRuleNumber(i + 1);
-		
+
 		updateEditorAreaLayout();
 		setModified(true);
 	}

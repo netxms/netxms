@@ -150,6 +150,7 @@ public:
    ~EPRule();
 
    UINT32 getId() { return m_dwId; }
+   BYTE *getGuid() { return m_guid; }
    void setId(UINT32 dwNewId) { m_dwId = dwNewId; }
    bool loadFromDB();
 	void saveToDB(DB_HANDLE hdb);
@@ -185,6 +186,7 @@ public:
    void processEvent(Event *pEvent);
    void sendToClient(ClientSession *pSession, UINT32 dwRqId);
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
+   void exportRule(String &str, uuid_t guid);
 
    bool isActionInUse(UINT32 dwActionId);
 };

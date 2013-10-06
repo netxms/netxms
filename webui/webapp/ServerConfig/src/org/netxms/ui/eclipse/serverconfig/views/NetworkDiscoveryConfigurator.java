@@ -24,7 +24,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -67,6 +66,7 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.SnmpUsmComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.SnmpUsmLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -163,8 +163,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private void createActions()
 	{
 		actionSave = new Action("&Save", SharedIcons.SAVE) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -224,8 +222,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		section.setClient(clientArea);
 		
 		final SelectionListener listener = new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -264,8 +260,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		gd.verticalIndent = 10;
 		defaultSnmpCommunity.setLayoutData(gd);
 		defaultSnmpCommunity.getTextControl().addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -294,8 +288,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		section.setClient(clientArea);
 
 		final SelectionListener radioButtonListener = new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -323,8 +315,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		};
 		
 		final SelectionListener checkBoxListener = new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -359,8 +349,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		gd.horizontalIndent = 20;
 		filterScript.setLayoutData(gd);
 		filterScript.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -746,7 +734,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getSite().getShell(), "Error", "Cannot save network discovery configuration: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot save network discovery configuration: " + e.getLocalizedMessage());
 		}
 	}
 

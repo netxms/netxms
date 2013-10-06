@@ -4940,7 +4940,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws NXCException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-	public String exportConfiguration(String description, long[] events, long[] traps, long[] templates) throws IOException,
+	public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules) throws IOException,
 			NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
@@ -4951,6 +4951,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariable(NXCPCodes.VID_OBJECT_LIST, templates);
 		msg.setVariableInt32(NXCPCodes.VID_NUM_TRAPS, traps.length);
 		msg.setVariable(NXCPCodes.VID_TRAP_LIST, traps);
+		
+		msg.setVariableInt32(NXCPCodes.VID_NUM_RULES, rules.length);
+		long varId = NXCPCodes.VID_RULE_LIST_BASE;
+		for(int i = 0; i < rules.length; i++)
+		{
+			msg.setVariable(varId++, rules[i]);
+		}
+		
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsString(NXCPCodes.VID_NXMP_CONTENT);

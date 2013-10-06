@@ -848,4 +848,5 @@ public class NXCPCodes
 	public static final long VID_COMPONENT_LIST_BASE = 0x20000000L;
 	public static final long VID_RADIO_LIST_BASE = 0x30000000L;
 	public static final long VID_UUID_LIST_BASE = 0x10000000L;
+	public static final long VID_RULE_LIST_BASE = 0x10000000L;
 }

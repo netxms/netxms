@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.epp.propertypages;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -34,8 +33,10 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -96,7 +97,7 @@ public class RuleAlarm extends PropertyPage
 		radioGroup.setLayoutData(gd);
 		
 		alarmNoAction = new Button(radioGroup, SWT.RADIO);
-		alarmNoAction.setText("Do not change alarms");
+		alarmNoAction.setText(Messages.RuleAlarm_DoNotChange);
 		alarmNoAction.setSelection(alarmAction == ALARM_NO_ACTION);
 		alarmNoAction.addSelectionListener(new SelectionListener() {
 			@Override
@@ -113,7 +114,7 @@ public class RuleAlarm extends PropertyPage
 		});
 		
 		alarmCreate = new Button(radioGroup, SWT.RADIO);
-		alarmCreate.setText("Create new alarm");
+		alarmCreate.setText(Messages.RuleAlarm_CreateNew);
 		alarmCreate.setSelection(alarmAction == ALARM_CREATE);
 		alarmCreate.addSelectionListener(new SelectionListener() {
 			@Override
@@ -130,7 +131,7 @@ public class RuleAlarm extends PropertyPage
 		});
 		
 		alarmResolve = new Button(radioGroup, SWT.RADIO);
-		alarmResolve.setText("Resolve alarms");
+		alarmResolve.setText(Messages.RuleAlarm_Resolve);
 		alarmResolve.setSelection(alarmAction == ALARM_RESOLVE);
 		alarmResolve.addSelectionListener(new SelectionListener() {
 			@Override
@@ -147,7 +148,7 @@ public class RuleAlarm extends PropertyPage
 		});
 		
 		alarmTerminate = new Button(radioGroup, SWT.RADIO);
-		alarmTerminate.setText("Terminate alarms");
+		alarmTerminate.setText(Messages.RuleAlarm_Terminate);
 		alarmTerminate.setSelection(alarmAction == ALARM_TERMINATE);
 		alarmTerminate.addSelectionListener(new SelectionListener() {
 			@Override
@@ -178,7 +179,7 @@ public class RuleAlarm extends PropertyPage
 		alarmCreationGroup.setLayout(layout);
 		
 		alarmMessage = new LabeledText(alarmCreationGroup, SWT.NONE);
-		alarmMessage.setLabel("Message");
+		alarmMessage.setLabel(Messages.RuleAlarm_Message);
 		alarmMessage.setText(rule.getAlarmMessage());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -186,7 +187,7 @@ public class RuleAlarm extends PropertyPage
 		alarmMessage.setLayoutData(gd);
 		
 		alarmKeyCreate = new LabeledText(alarmCreationGroup, SWT.NONE);
-		alarmKeyCreate.setLabel("Alarm key");
+		alarmKeyCreate.setLabel(Messages.RuleAlarm_Key);
 		alarmKeyCreate.setText(rule.getAlarmKey());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -215,11 +216,11 @@ public class RuleAlarm extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		severityGroup.setLayoutData(gd);
-		new Label(severityGroup, SWT.NONE).setText("Alarm severity");
+		new Label(severityGroup, SWT.NONE).setText(Messages.RuleAlarm_Severity);
 		alarmSeverity = new Combo(severityGroup, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER);
 		for(int i = 0; i < Severity.UNKNOWN; i++)
 			alarmSeverity.add(StatusDisplayInfo.getStatusText(i));
-		alarmSeverity.add("From event");
+		alarmSeverity.add(Messages.RuleAlarm_FromEvent);
 		alarmSeverity.select(rule.getAlarmSeverity());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -227,7 +228,7 @@ public class RuleAlarm extends PropertyPage
 		alarmSeverity.setLayoutData(gd);
 		
 		alarmTimeout = new LabeledText(alarmCreationSubgroup, SWT.NONE);
-		alarmTimeout.setLabel("Alarm timeout");
+		alarmTimeout.setLabel(Messages.RuleAlarm_Timeout);
 		alarmTimeout.getTextControl().setTextLimit(5);
 		alarmTimeout.setText(Integer.toString(rule.getAlarmTimeout()));
 		gd = new GridData();
@@ -236,7 +237,7 @@ public class RuleAlarm extends PropertyPage
 		alarmTimeout.setLayoutData(gd);
 		
 		timeoutEvent = new EventSelector(alarmCreationGroup, SWT.NONE);
-		timeoutEvent.setLabel("Timeout event");
+		timeoutEvent.setLabel(Messages.RuleAlarm_TimeoutEvent);
 		timeoutEvent.setEventCode(rule.getAlarmTimeoutEvent());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -258,7 +259,7 @@ public class RuleAlarm extends PropertyPage
 		alarmTerminationGroup.setLayout(layout);
 		
 		alarmKeyTerminate = new LabeledText(alarmTerminationGroup, SWT.NONE);
-		alarmKeyTerminate.setLabel((alarmAction == ALARM_TERMINATE)? "Terminate all alarms with key" : "Resolve all alarms with key");
+		alarmKeyTerminate.setLabel((alarmAction == ALARM_TERMINATE)? Messages.RuleAlarm_TerminateAll : Messages.RuleAlarm_ResolveAll);
 		alarmKeyTerminate.setText(rule.getAlarmKey());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -266,7 +267,7 @@ public class RuleAlarm extends PropertyPage
 		alarmKeyTerminate.setLayoutData(gd);
 		
 		checkTerminateWithRegexp = new Button(alarmTerminationGroup, SWT.CHECK);
-		checkTerminateWithRegexp.setText((alarmAction == ALARM_TERMINATE)? "Use regular expression for alarm termination" : "Use regular expression for alarm resolve");
+		checkTerminateWithRegexp.setText((alarmAction == ALARM_TERMINATE)? Messages.RuleAlarm_UseRegexpForTerminate : Messages.RuleAlarm_UseRegexpForResolve);
 		checkTerminateWithRegexp.setSelection((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0);
 
 		return dialogArea;
@@ -309,8 +310,8 @@ public class RuleAlarm extends PropertyPage
 			Composite group = (alarmAction == ALARM_CREATE) ? alarmCreationGroup : alarmTerminationGroup;
 			((GridData)group.getLayoutData()).exclude = false;
 			group.setVisible(true);
-			alarmKeyTerminate.setLabel((alarmAction == ALARM_TERMINATE)? "Terminate all alarms with key" : "Resolve all alarms with key");
-			checkTerminateWithRegexp.setText((alarmAction == ALARM_TERMINATE)? "Use regular expression for alarm termination" : "Use regular expression for alarm resolve");
+			alarmKeyTerminate.setLabel((alarmAction == ALARM_TERMINATE)? Messages.RuleAlarm_TerminateAll : Messages.RuleAlarm_ResolveAll);
+			checkTerminateWithRegexp.setText((alarmAction == ALARM_TERMINATE)? Messages.RuleAlarm_UseRegexpForTerminate : Messages.RuleAlarm_UseRegexpForResolve);
 		}
 		dialogArea.layout(true, true);
 	}
@@ -328,14 +329,14 @@ public class RuleAlarm extends PropertyPage
 					int t = Integer.parseInt(alarmTimeout.getText());
 					if (t < 0)
 					{
-						MessageDialog.openWarning(getShell(), "Warning", "Please enter valid timeout value (must be 0 or positive integer");
+						MessageDialogHelper.openWarning(getShell(), Messages.RuleAlarm_Warning, Messages.RuleAlarm_WarningInvalidTimeout);
 						return false;
 					}
 					rule.setAlarmTimeout(t);
 				}
 				catch(NumberFormatException e)
 				{
-					MessageDialog.openWarning(getShell(), "Warning", "Please enter valid timeout value (must be 0 or positive integer");
+					MessageDialogHelper.openWarning(getShell(), Messages.RuleAlarm_Warning, Messages.RuleAlarm_WarningInvalidTimeout);
 					return false;
 				}
 				rule.setAlarmMessage(alarmMessage.getText());

@@ -39,8 +39,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class SelectSnmpTrapDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_OID = 0;
 	public static final int COLUMN_EVENT = 1;
 	public static final int COLUMN_DESCRIPTION = 2;

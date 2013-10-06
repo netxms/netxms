@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.epp.propertypages;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -337,7 +336,7 @@ public class RuleAlarm extends PropertyPage
 				}
 				catch(NumberFormatException e)
 				{
-					MessageDialog.openWarning(getShell(), Messages.RuleAlarm_Warning, Messages.RuleAlarm_WarningInvalidTimeout);
+					MessageDialogHelper.openWarning(getShell(), Messages.RuleAlarm_Warning, Messages.RuleAlarm_WarningInvalidTimeout);
 					return false;
 				}
 				rule.setAlarmMessage(alarmMessage.getText());

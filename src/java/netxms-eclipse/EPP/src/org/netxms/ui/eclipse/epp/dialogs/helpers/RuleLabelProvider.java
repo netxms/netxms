@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.serverconfig.widgets.helpers;
+package org.netxms.ui.eclipse.epp.dialogs.helpers;
 
-import java.util.Map.Entry;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.events.EventProcessingPolicyRule;
 
 /**
- * Label provider for macro list
- *
+ * Label provider for rule list
  */
-public class MacroListLabelProvider extends LabelProvider implements ITableLabelProvider
+public class RuleLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -41,17 +40,20 @@ public class MacroListLabelProvider extends LabelProvider implements ITableLabel
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		switch(columnIndex)
-		{
-			case 0:
-				return ((Entry<String, String>)element).getKey();
-			case 1:
-				return ((Entry<String, String>)element).getValue();
-		}
+		if (columnIndex == 0)
+			return getText(element);
 		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+	 */
+	@Override
+	public String getText(Object element)
+	{
+		return ((EventProcessingPolicyRule)element).getComments();
 	}
 }

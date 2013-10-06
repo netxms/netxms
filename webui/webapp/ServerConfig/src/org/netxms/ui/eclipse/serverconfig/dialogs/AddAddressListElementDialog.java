@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.serverconfig.dialogs;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -32,6 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.IpAddressListElement;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -40,8 +40,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AddAddressListElementDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private Button radioSubnet;
 	private Button radioRange;
 	private LabeledText textAddr1;
@@ -86,8 +84,6 @@ public class AddAddressListElementDialog extends Dialog
 		radioSubnet.setText("&Subnet");
 		radioSubnet.setSelection(true);
 		radioSubnet.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -105,8 +101,6 @@ public class AddAddressListElementDialog extends Dialog
 		radioRange = new Button(dialogArea, SWT.RADIO);
 		radioRange.setText("Address &range");
 		radioRange.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -155,7 +149,7 @@ public class AddAddressListElementDialog extends Dialog
 		}
 		catch(UnknownHostException e)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid IP address/mask");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid IP address/mask");
 			return;
 		}
 		super.okPressed();

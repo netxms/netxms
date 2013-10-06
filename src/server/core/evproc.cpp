@@ -22,18 +22,14 @@
 
 #include "nxcore.h"
 
-
-//
-// Global variables
-//
-
+/**
+ * Number of processed events since start
+ */
 INT64 g_totalEventsProcessed = 0;
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static THREAD s_threadStormDetector = INVALID_THREAD_HANDLE;
 static THREAD s_threadLogger = INVALID_THREAD_HANDLE;
 static Queue *s_loggerQueue = NULL;
