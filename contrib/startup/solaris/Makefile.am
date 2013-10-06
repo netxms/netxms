@@ -23,5 +23,5 @@ netxmsd: netxmsd.in
 	$(REPLACE_CMD)
 	chmod 755 $@
 
-clean:
+clean-local:
 	rm -f nxagentd netxmsd

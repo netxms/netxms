@@ -61,7 +61,7 @@ dbschema_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 dbschema_db2.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_DB2 -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
-clean:
+clean-local:
 	rm -f dbinit_*.sql dbschema_*.sql
 
 EXTRA_DIST = \

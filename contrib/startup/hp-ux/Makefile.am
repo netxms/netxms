@@ -21,5 +21,5 @@ netxmsd: netxmsd.in
 nxagentd: nxagentd.in
 	$(REPLACE_CMD)
 
-clean:
+clean-local:
 	rm -f netxmsd nxagentd
