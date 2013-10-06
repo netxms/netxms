@@ -205,7 +205,8 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                {
                   BIO_set_conn_ip(out, htonl(dwAddr));
                }
-               BIO_set_conn_int_port(out, &nPort);
+               int intPort = nPort;
+               BIO_set_conn_int_port(out, &intPort);
                BIO_set_nbio(out, 1);
                out = BIO_push(ssl_bio, out);
 
