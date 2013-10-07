@@ -35,14 +35,19 @@ public class LocalFileSelector extends AbstractSelector
 	private File file = null;
 	private String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
 	private String[] filterNames = { Messages.LocalFileSelector_AllFiles };
+
+	private int selectorType;
 	
 	/**
 	 * @param parent
 	 * @param style
+	 * @param selectorType Selector type: SWT.OPEN or SWT.SAVE
 	 */
-	public LocalFileSelector(Composite parent, int style, boolean useHyperlink)
+	public LocalFileSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
 		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
+		
+		this.selectorType = selectorType;
 
 		setText(Messages.LocalFileSelector_None);
 	}
@@ -53,7 +58,7 @@ public class LocalFileSelector extends AbstractSelector
 	@Override
 	protected void selectionButtonHandler()
 	{
-		FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
+		FileDialog fd = new FileDialog(getShell(), selectorType);
 		fd.setText(Messages.LocalFileSelector_SelectFile);
 		fd.setFilterExtensions(filterExtensions);
 		fd.setFilterNames(filterNames);
