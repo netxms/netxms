@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.filemanager.widgets;
 
 import java.io.File;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.ui.eclipse.filemanager.Messages;
@@ -33,25 +32,31 @@ public class LocalFileSelector extends AbstractSelector
 	private File file = null;
 	private String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
 	private String[] filterNames = { Messages.LocalFileSelector_AllFiles };
-	
+	private int selectorType;
+
 	/**
 	 * @param parent
 	 * @param style
+	 * @param Selector type: SWT.OPEN or SWT.SAVE
 	 */
-	public LocalFileSelector(Composite parent, int style, boolean useHyperlink)
+	public LocalFileSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
 		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
+
+		this.selectorType = selectorType;
 
 		setText(Messages.LocalFileSelector_None);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
 	 */
 	@Override
 	protected void selectionButtonHandler()
 	{
-		FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
+		FileDialog fd = new FileDialog(getShell(), selectorType);
 		fd.setText(Messages.LocalFileSelector_SelectFile);
 		fd.setFilterExtensions(filterExtensions);
 		fd.setFilterNames(filterNames);
@@ -62,7 +67,9 @@ public class LocalFileSelector extends AbstractSelector
 			setFile(null);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getButtonToolTip()
 	 */
 	@Override

@@ -152,7 +152,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 		
-		exportFile = new LocalFileSelector(clientArea, SWT.NONE, true);
+		exportFile = new LocalFileSelector(clientArea, SWT.NONE, true, SWT.SAVE);
 		toolkit.adapt(exportFile);
 		exportFile.setLabel("File name");
 		GridData gd = new GridData();

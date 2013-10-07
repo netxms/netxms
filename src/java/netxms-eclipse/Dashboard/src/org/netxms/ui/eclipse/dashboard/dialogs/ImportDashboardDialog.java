@@ -84,7 +84,7 @@ public class ImportDashboardDialog extends Dialog
       gd.widthHint = 350;
       textName.setLayoutData(gd);
       
-      importFileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false);
+      importFileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false, SWT.OPEN);
       importFileSelector.setLabel(Messages.ImportDashboardDialog_ImportFile);
       importFileSelector.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
       importFileSelector.setFilterNames(new String[] { Messages.ImportDashboardDialog_XMLFiles, Messages.ImportDashboardDialog_AllFiles });
