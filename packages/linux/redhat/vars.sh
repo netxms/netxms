@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 DIR_ROOT='rpmbuild'
 DIR_SPEC='SPECS'

@@ -148,7 +148,9 @@ public class Messages extends NLS
 	public static String WorkbenchGeneralPrefs_HideWhenMinimized;
 	public static String WorkbenchGeneralPrefs_show_heap;
 	public static String WorkbenchGeneralPrefs_show_tray_icon;
-	public static String WorkbenchGeneralPrefs_ShowHiddenAttrs;	public static String SplashHandler_Version;
+	public static String WorkbenchGeneralPrefs_ShowHiddenAttrs;	
+	public static String SplashHandler_Version;
+	
 	static
 	{
 		// initialize resource bundle

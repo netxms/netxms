@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+
 source ./vars.sh
 
 script_dir="$(pwd)"

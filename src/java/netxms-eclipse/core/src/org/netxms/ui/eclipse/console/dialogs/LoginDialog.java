@@ -24,6 +24,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
@@ -38,8 +39,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
@@ -92,7 +95,9 @@ public class LoginDialog extends Dialog
       // monitor data to determine right position
       Monitor [] ma = newShell.getDisplay().getMonitors();
       if (ma != null)
-      	newShell.setLocation((ma[0].getClientArea().width - newShell.getSize().x) / 2, (ma[0].getClientArea().height - newShell.getSize().y) / 2);   
+      	newShell.setLocation(
+      	   (ma[0].getClientArea().width - newShell.getSize().x) / 2, 
+      	   (ma[0].getClientArea().height - newShell.getSize().y) / 2);  
 	}
 
 	/* (non-Javadoc)
@@ -112,7 +117,9 @@ public class LoginDialog extends Dialog
       dialogArea.setLayout(dialogLayout);
       
       RGB customColor = BrandingManager.getInstance().getLoginTitleColor();
-      labelColor = (customColor != null) ? new Color(dialogArea.getDisplay(), customColor) : new Color(dialogArea.getDisplay(), 36, 66, 90);
+      labelColor = (customColor != null) ? 
+         new Color(dialogArea.getDisplay(), customColor) : 
+         new Color(dialogArea.getDisplay(), 36, 66, 90);
       dialogArea.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -154,53 +161,15 @@ public class LoginDialog extends Dialog
       fields.setLayoutData(gd);
       
       // Connection
-      Group groupConn = new Group(fields, SWT.SHADOW_ETCHED_IN);
-      groupConn.setText(Messages.LoginDialog_connection); //$NON-NLS-1$
-      GridLayout gridLayout = new GridLayout(2, false);
-      gridLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-      gridLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      groupConn.setLayout(gridLayout);
-
-      label = new Label(groupConn, SWT.NONE);
-      label.setText(Messages.LoginDialog_server); //$NON-NLS-1$
-      comboServer = new Combo(groupConn, SWT.DROP_DOWN);
-      String[] items = settings.getArray("Connect.ServerHistory"); //$NON-NLS-1$
-      if (items != null)
-      	comboServer.setItems(items);
-      String text = settings.get("Connect.Server"); //$NON-NLS-1$
-      if (text != null)
-      	comboServer.setText(text);
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      comboServer.setLayoutData(gridData);
-      
-      label = new Label(groupConn, SWT.NONE);
-      label.setText(Messages.LoginDialog_login); //$NON-NLS-1$
-      textLogin = new Text(groupConn, SWT.SINGLE | SWT.BORDER);
-      text = settings.get("Connect.Login"); //$NON-NLS-1$
-      if (text != null)
-      	textLogin.setText(text);
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 16;
-      textLogin.setLayoutData(gridData);
-      
-      label = new Label(groupConn, SWT.NONE);
-      label.setText(Messages.LoginDialog_password); //$NON-NLS-1$
-      textPassword = new Text(groupConn, SWT.SINGLE | SWT.PASSWORD | SWT.BORDER);
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      textPassword.setLayoutData(gridData);
+//      Group groupConn = attachConnectionGroup(settings, fields);
+      Group groupConn = attachConnectionGroup(settings, fields);
       
       // Options
       Group groupOpts = new Group(fields, SWT.SHADOW_ETCHED_IN);
       groupOpts.setText(Messages.LoginDialog_options); //$NON-NLS-1$
       RowLayout rowLayout = new RowLayout();
       rowLayout.type = SWT.VERTICAL;
-      //rowLayout.justify = true;
+//      rowLayout.justify = true;
       rowLayout.spacing = 4;
       groupOpts.setLayout(rowLayout);
 
@@ -247,7 +216,150 @@ public class LoginDialog extends Dialog
 		
       return dialogArea;
    }
-	
+
+   private Group attachConnectionGroup(IDialogSettings settings,
+         Composite fields)
+   {
+      Group groupConn = new Group(fields, SWT.SHADOW_ETCHED_IN);
+      groupConn.setText(Messages.LoginDialog_connection); //$NON-NLS-1$
+      GridLayout gridLayout = new GridLayout(1, false);
+      gridLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      gridLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+      groupConn.setLayout(gridLayout);
+
+      attachLoginFields(settings, groupConn);
+      
+      attachAuthenticationFields(settings, groupConn);
+      
+      return groupConn;
+   }
+
+   private void attachLoginFields(IDialogSettings settings, Group groupConn)
+   {
+      Composite loginFields = new Composite(groupConn, SWT.NONE);
+      
+      GridLayout loginFieldsLayout = new GridLayout(2, false);
+      
+      loginFields.setLayout(loginFieldsLayout);
+      
+      Label label;
+      label = new Label(loginFields, SWT.NONE);
+      label.setText(Messages.LoginDialog_server + ":"); //$NON-NLS-1$
+      comboServer = new Combo(loginFields, SWT.DROP_DOWN);
+      String[] items = settings.getArray("Connect.ServerHistory"); //$NON-NLS-1$
+      if (items != null)
+         comboServer.setItems(items);
+      String text = settings.get("Connect.Server"); //$NON-NLS-1$
+      if (text != null)
+      	comboServer.setText(text);
+      GridData gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      comboServer.setLayoutData(gridData);
+      
+      label = new Label(loginFields, SWT.NONE);
+      label.setText(Messages.LoginDialog_login + ":"); //$NON-NLS-1$
+      textLogin = new Text(loginFields, SWT.SINGLE | SWT.BORDER);
+      text = settings.get("Connect.Login"); //$NON-NLS-1$
+      if (text != null)
+      	textLogin.setText(text);
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 16;
+      textLogin.setLayoutData(gridData);
+   }
+
+   private void attachAuthenticationFields(IDialogSettings settings, Group group)
+   {
+      final Composite authComposite = new Composite(group, SWT.BORDER);     
+      final GridLayout authCompositeLayout = new GridLayout(1, true);
+      authComposite.setLayout(authCompositeLayout);
+      authComposite.setLayoutData(new GridData(
+         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+      
+      final Composite radios = new Composite(authComposite, SWT.NONE);
+      
+      final RowLayout radiosLayout = new RowLayout(SWT.HORIZONTAL);
+      radiosLayout.justify = true;
+      radiosLayout.pack = false;
+      
+      radios.setLayout(radiosLayout);
+      radios.setLayoutData(new GridData(
+         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+      
+      final Button passwdButton = new Button(radios, SWT.RADIO);
+      passwdButton.setText(Messages.LoginDialog_password);
+      passwdButton.setSelection(true);
+      
+      final Button certButton = new Button(radios, SWT.RADIO);
+      certButton.setText("Certificate");
+      certButton.setEnabled(false);
+      
+      attachAuthMethodComposite(authComposite, passwdButton, certButton);
+   }
+
+   private void attachAuthMethodComposite(final Composite authComposite,
+      final Button passwdButton, final Button certButton)
+   {
+      final Composite authMethod = new Composite(authComposite, SWT.NONE);
+      final StackLayout authMethodLayout = new StackLayout();      
+      
+      authMethod.setLayout(authMethodLayout);
+      authMethod.setLayoutData(new GridData(
+         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+      
+      final Composite passwdField = attachPasswdField(authMethod);
+      final Composite certField = attachCertField(authMethod);
+      
+      authMethodLayout.topControl = 
+         passwdButton.getSelection() ? passwdField : certField;
+      
+      Listener radioButtonListener = new Listener() {
+         @Override
+         public void handleEvent(Event event)
+         {
+            StackLayout layout = (StackLayout) authMethod.getLayout();
+            layout.topControl = 
+               passwdButton.getSelection() ? passwdField : certField;
+            authMethod.layout();
+         }         
+      };
+      
+      passwdButton.addListener(SWT.Selection, radioButtonListener);
+      certButton.addListener(SWT.Selection, radioButtonListener);
+   }
+
+   private Composite attachPasswdField(final Composite authMethod)
+   {
+      final Composite passwdField = new Composite(authMethod, SWT.NONE);
+      passwdField.setLayout(new GridLayout(2, false));
+      passwdField.setLayoutData(new GridData(
+         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+      
+      final Label label = new Label(passwdField, SWT.NONE);
+      label.setText(Messages.LoginDialog_password + ":"); //$NON-NLS-1$
+      textPassword = new Text(passwdField, SWT.SINGLE | SWT.PASSWORD | SWT.BORDER);
+      textPassword.setLayoutData(new GridData(
+         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+      
+      return passwdField;
+   }
+   
+   private Composite attachCertField(Composite authMethod)
+   {
+      final Composite certField = new Composite(authMethod, SWT.NONE);
+      certField.setLayout(new GridLayout(2, false));
+      certField.setLayoutData(new GridData(
+         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+      final Label label = new Label(certField, SWT.NONE);
+      label.setText("Certificate:");
+      final Combo certCombo = new Combo(certField, SWT.READ_ONLY);
+      certCombo.setItems(new String[] {"A", "B", "C"});
+      
+      return certField;
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */

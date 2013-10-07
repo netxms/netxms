@@ -164,51 +164,54 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			}
 		} while(!success);
 
-		if (success)
-		{
-			// Suggest user to change password if it is expired
-			final Session session = ConsoleSharedData.getSession();
-			if (session.isPasswordExpired())
-			{
-				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
-				if (dlg.open() == Window.OK)
-				{
-					final String currentPassword = password;
-					IRunnableWithProgress job = new IRunnableWithProgress() {
-						@Override
-						public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
-						{
-							try
-							{
-								monitor.setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
-								((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
-								monitor.setTaskName(""); //$NON-NLS-1$
-							}
-							catch(Exception e)
-							{
-								throw new InvocationTargetException(e);
-							}
-							finally
-							{
-								monitor.done();
-							}
-						}
-					};
-					try
-					{
-						ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
-						MessageDialog.openInformation(null, Messages.NXMCWorkbenchWindowAdvisor_title_information, Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
-					}
-					catch(InvocationTargetException e)
-					{
-						MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_title_error, Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
-					}
-					catch(InterruptedException e)
-					{
-						MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
-					}
-				}
-			}
-		}
+		if (!success) return;
+		
+      // Suggest user to change password if it is expired
+      final Session session = ConsoleSharedData.getSession();
+      if (!session.isPasswordExpired()) return;
+
+      final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
+      if (dlg.open() != Window.OK) return;
+
+      final String currentPassword = password;
+      IRunnableWithProgress job = new IRunnableWithProgress() {
+         @Override
+         public void run(IProgressMonitor monitor)
+            throws InvocationTargetException, InterruptedException
+         {
+            try
+            {
+               monitor
+                  .setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
+               ((UserManager) session).setUserPassword(session.getUserId(),
+                  dlg.getPassword(), currentPassword);
+               monitor.setTaskName(""); //$NON-NLS-1$
+            } catch (Exception e)
+            {
+               throw new InvocationTargetException(e);
+            } finally
+            {
+               monitor.done();
+            }
+         }
+      };
+      try
+      {
+         ModalContext.run(job, true, SplashHandler.getInstance()
+            .getBundleProgressMonitor(), Display.getCurrent());
+         MessageDialog.openInformation(null,
+            Messages.NXMCWorkbenchWindowAdvisor_title_information,
+            Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
+      } catch (InvocationTargetException e)
+      {
+         MessageDialog.openError(null,
+            Messages.NXMCWorkbenchWindowAdvisor_title_error,
+            Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd
+               + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+      } catch (InterruptedException e)
+      {
+         MessageDialog.openError(null,
+            Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
+      }
 	}
 }

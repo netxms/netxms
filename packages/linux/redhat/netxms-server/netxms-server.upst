@@ -7,5 +7,3 @@ if [ "$1" -eq 0 ]; then
     rm -f /etc/netxmsd.conf.sample
     rm -rf /usr/share/netxms
 fi
-
-ldconfig

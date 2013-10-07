@@ -15,4 +15,3 @@ if [ -x /etc/init.d/nxagentd ]; then
     fi
 fi
 
-ldconfig

@@ -7,5 +7,3 @@ then
     rm -f /etc/nxagentd.conf.bak
     rm -f /etc/nxagentd.conf.sample
 fi
-
-ldconfig
