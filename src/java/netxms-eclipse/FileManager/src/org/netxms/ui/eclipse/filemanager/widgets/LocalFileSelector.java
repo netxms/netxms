@@ -37,7 +37,7 @@ public class LocalFileSelector extends AbstractSelector
 	/**
 	 * @param parent
 	 * @param style
-	 * @param Selector type: SWT.OPEN or SWT.SAVE
+	 * @param selectorType Selector type: SWT.OPEN or SWT.SAVE
 	 */
 	public LocalFileSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
