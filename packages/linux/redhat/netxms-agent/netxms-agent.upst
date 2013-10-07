@@ -1,0 +1,11 @@
+# Post-uninstall phase
+
+if [ "$1" -eq 0 ]
+then
+    chkconfig --del nxagentd &> /dev/null
+    rm -f /etc/nxagentd.conf
+    rm -f /etc/nxagentd.conf.bak
+    rm -f /etc/nxagentd.conf.sample
+fi
+
+ldconfig

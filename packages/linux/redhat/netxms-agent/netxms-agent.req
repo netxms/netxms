@@ -1,0 +1,2 @@
+netxms-base = %{version}
+lm_sensors

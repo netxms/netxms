@@ -1,0 +1,22 @@
+# Post-install phase
+
+ldconfig
+
+echo "NetXMS: compiling MIB files"
+/usr/bin/nxmibc -z -d /usr/share/netxms/mibs -o /usr/share/netxms/mibs/netxms.mib > /dev/null
+
+if [ -x /etc/init.d/netxmsd ]; then
+    chkconfig --add netxmsd --level 12345 &> /dev/null || exit $?
+    if [ -f /etc/netxmsd.conf ]; then
+        echo "NetXMS: upgrading database"
+        /usr/bin/nxdbmgr upgrade
+        /etc/init.d/netxmsd start
+    else
+        echo "****************************************************"
+        echo "WARNING"
+        echo "Configuration file /etc/netxmsd.conf not found"
+        echo "Please create it and then start server by running"
+        echo "/etc/init.d/netxmsd start"
+        echo "****************************************************"
+    fi
+fi

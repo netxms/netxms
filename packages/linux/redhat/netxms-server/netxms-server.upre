@@ -1,0 +1,9 @@
+# Pre-uninstall phase
+
+xmsd=/etc/init.d/netxmsd
+xmsdconf=/etc/netxmsd.conf
+
+[ -f "$xmsd" ] && "$xmsd" stop
+[ -f "$xmsdconf" ] && cp "$xmsdconf" "$xmsdconf.bak"
+
+unset xmsd xmsdconf

@@ -1,0 +1,2 @@
+%attr(755, root, root) %{_libdir}/netxms/dbdrv/pgsql.ddr
+%attr(755, root, root) %{_libdir}/libnxddr_pgsql.so*

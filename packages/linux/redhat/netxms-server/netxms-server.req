@@ -1,0 +1,2 @@
+netxms-agent = %{version}
+readline >= 5.0

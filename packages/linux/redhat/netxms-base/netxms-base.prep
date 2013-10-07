@@ -1,0 +1,4 @@
+%define _unpackaged_files_terminate_build 0
+%define buildroot %{_buildrootdir}/%{name}-%{version}.%{_arch}
+%define _build_name_fmt %{name}-%{version}.%{_arch}.rpm
+%define _libdir %{_prefix}/lib

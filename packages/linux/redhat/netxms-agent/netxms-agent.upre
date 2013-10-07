@@ -1,0 +1,10 @@
+# Pre-uninstall phase
+
+agentd=/etc/init.d/nxagentd
+agentd_conf=/etc/nxagentd.conf
+
+[ -f "$agentd" ] && "$agentd" stop
+[ -f "$agentd_conf" ] && \
+    cp "$agentd_conf" "$agentd_conf.bak"
+    
+unset agentd agentd_conf

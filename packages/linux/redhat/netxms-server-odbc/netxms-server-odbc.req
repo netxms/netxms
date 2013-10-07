@@ -1,0 +1,2 @@
+netxms-server = %{version}
+unixODBC >= 2.2.0

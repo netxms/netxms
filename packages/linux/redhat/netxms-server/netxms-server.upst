@@ -1,0 +1,11 @@
+# Post-uninstall phase
+
+if [ "$1" -eq 0 ]; then
+    chkconfig --del netxmsd &> /dev/null
+    rm -f /etc/netxmsd.conf
+    rm -f /etc/netxmsd.conf.bak
+    rm -f /etc/netxmsd.conf.sample
+    rm -rf /usr/share/netxms
+fi
+
+ldconfig

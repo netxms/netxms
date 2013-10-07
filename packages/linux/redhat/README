@@ -1,0 +1,16 @@
+Run `package.sh -ver version` to build the packages.
+
+The script will look for the archive named netxms-"version".tar.gz in the 
+script's directory. If the archive isn't found, it'll be downloaded from
+http://www.netxms.org/download/archive/ (if it exists).
+
+RPM packages will be stored in the "rpms" directory.
+
+Required development packages:
+> openssl-devel
+> expat-devel
+> readline-devel
+> lm_sensors-devel
+> mysql-devel
+> unixODBC-devel
+> postgresql-devel
