@@ -369,6 +369,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ctrl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\epp.cpp"
 				>
 			</File>

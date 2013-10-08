@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,25 +22,19 @@
 
 #include "nxagentd.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
-
-//
-// Constants
-//
-
+/**
+ * Max NXCP message size
+ */
 #define MAX_MSG_SIZE    262144
 
-
-//
-// Save config to file
-//
-
+/**
+ * Save config to file
+ */
 static BOOL SaveConfig(TCHAR *pszConfig)
 {
    FILE *fp;
@@ -55,11 +49,9 @@ static BOOL SaveConfig(TCHAR *pszConfig)
    return bRet;
 }
 
-
-//
-// Download agent's config from management server
-//
-
+/**
+ * Download agent's config from management server
+ */
 BOOL DownloadConfig(TCHAR *pszServer)
 {
    UINT32 dwAddr;

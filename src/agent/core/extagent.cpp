@@ -156,6 +156,17 @@ void ExternalSubagent::connect(HPIPE hPipe)
 }
 
 /**
+ * Send shutdown command
+ */
+void ExternalSubagent::shutdown()
+{
+	CSCPMessage msg;
+	msg.SetCode(CMD_SHUTDOWN);
+	msg.SetId(m_requestId++);
+	sendMessage(&msg);
+}
+
+/**
  * Get list of supported parameters
  */
 NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(UINT32 *count)
@@ -839,4 +850,19 @@ UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
 		}
 	}
 	return rc;
+}
+
+/**
+ * Shutdown all connected external subagents
+ */
+void ShutdownExtSubagents()
+{
+	for(int i = 0; i < s_subagents.size(); i++)
+	{
+		if (s_subagents.get(i)->isConnected())
+		{
+         DebugPrintf(INVALID_INDEX, 1, _T("Sending SHUTDOWN command to external subagent %s\n"), s_subagents.get(i)->getName());
+         s_subagents.get(i)->shutdown();
+		}
+	}
 }

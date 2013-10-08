@@ -477,6 +477,7 @@ typedef struct
 #define CMD_DELETE_SUMMARY_TABLE       0x0117
 #define CMD_GET_SUMMARY_TABLE_DETAILS  0x0118
 #define CMD_QUERY_SUMMARY_TABLE        0x0119
+#define CMD_SHUTDOWN                   0x011A
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

@@ -133,6 +133,7 @@
 #define AF_CATCH_EXCEPTIONS         0x00010000
 #define AF_WRITE_FULL_DUMP          0x00020000
 #define AF_ARBITRARY_FILE_UPLOAD    0x00040000
+#define AF_ENABLE_CONTROL_CONNECTOR 0x00080000
 
 
 #ifdef _WIN32
@@ -278,6 +279,7 @@ public:
 	void listLists(StringList *list);
 	void listTables(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listTables(StringList *list);
+   void shutdown();
 };
 
 /**
@@ -423,6 +425,7 @@ void ListTablesFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 void ListTablesFromExtSubagents(StringList *list);
 CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent);
 bool SendMessageToPipe(HPIPE hPipe, CSCP_MESSAGE *msg);
+void ShutdownExtSubagents();
 
 void RegisterApplicationAgent(const TCHAR *name);
 UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
@@ -443,6 +446,8 @@ BOOL PushData(const TCHAR *parameter, const TCHAR *value);
 
 void StartStorageDiscoveryConnector();
 
+void StartControlConnector();
+bool SendControlMessage(CSCPMessage *msg);
 
 #ifdef _WIN32
 

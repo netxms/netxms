@@ -147,6 +147,11 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 						response.SetVariable(VID_RCC, ERR_SUCCESS);
 						GetTableList(&response);
 						break;
+               case CMD_SHUTDOWN:
+                  Shutdown();
+                  ThreadSleep(10);
+                  exit(0);
+                  break;
 					default:
 						response.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
 						break;

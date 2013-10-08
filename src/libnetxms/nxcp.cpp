@@ -320,10 +320,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_MODIFY_SUMMARY_TABLE"),
 		_T("CMD_DELETE_SUMMARY_TABLE"),
 		_T("CMD_GET_SUMMARY_TABLE_DETAILS"),
-		_T("CMD_QUERY_SUMMARY_TABLE")
+		_T("CMD_QUERY_SUMMARY_TABLE"),
+      _T("CMD_SHUTDOWN")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_QUERY_SUMMARY_TABLE))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_SHUTDOWN))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

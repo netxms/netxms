@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,22 +26,18 @@
 #include <syslog.h>
 #endif
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 #ifdef _WIN32
 static HANDLE m_hWatchdogProcess = INVALID_HANDLE_VALUE;
 #else
 static pid_t m_pidWatchdogProcess = -1;
 #endif
 
-
-//
-// Start watchdog process
-//
-
+/**
+ * Start watchdog process
+ */
 void StartWatchdog()
 {
 #ifdef _NETWARE
@@ -116,11 +112,9 @@ void StartWatchdog()
 #endif  /* _NETWARE */
 }
 
-
-//
-// Stop watchdog process
-//
-
+/**
+ * Stop watchdog process
+ */
 void StopWatchdog()
 {
 #ifdef _WIN32
@@ -131,11 +125,9 @@ void StopWatchdog()
    nxlog_write(MSG_WATCHDOG_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
 }
 
-
-//
-// Watchdog process main
-//
-
+/**
+ * Watchdog process main
+ */
 int WatchdogMain(DWORD pid)
 {
 	TCHAR cmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];

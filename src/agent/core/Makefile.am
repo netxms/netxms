@@ -1,7 +1,7 @@
 AM_CPPFLAGS=-I@top_srcdir@/include
 bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = messages.c actions.cpp appagent.cpp comm.cpp config.cpp \
-                   epp.cpp exec.cpp extagent.cpp getparam.cpp master.cpp \
+                   ctrl.cpp epp.cpp exec.cpp extagent.cpp getparam.cpp master.cpp \
                    nxagentd.cpp policy.cpp push.cpp register.cpp sd.cpp \
                    session.cpp snmpproxy.cpp static_subagents.cpp subagent.cpp \
                    sysinfo.cpp tools.cpp trap.cpp upgrade.cpp watchdog.cpp

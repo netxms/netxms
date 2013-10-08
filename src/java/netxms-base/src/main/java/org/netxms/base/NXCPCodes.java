@@ -305,6 +305,7 @@ public class NXCPCodes
 	public static final int CMD_DELETE_SUMMARY_TABLE = 0x0117;
 	public static final int CMD_GET_SUMMARY_TABLE_DETAILS = 0x0118;
 	public static final int CMD_QUERY_SUMMARY_TABLE = 0x0119;
+	public static final int CMD_SHUTDOWN = 0x011A;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
