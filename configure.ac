@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.9], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.10], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -77,6 +77,7 @@ LDFLAGS_SUFFIX=""
 LTINIT_CC=""
 LTINIT_CXX=""
 SQLFLAGS=""
+RUNTIME_PREFIX=""
 
 
 #--------------------------------------------------------------------
@@ -89,6 +90,12 @@ CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DTRE_WCHAR=1"
 #--------------------------------------------------------------------
 # Parse command line parameters
 #--------------------------------------------------------------------
+
+AC_ARG_WITH(runtime-prefix,
+[AS_HELP_STRING(--with-runtime-prifix=prefix,installation prefix to be used at run time)],
+[
+   RUNTIME_PREFIX="$withval"
+])
 
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
@@ -2108,10 +2115,18 @@ fi
 # Other settings
 #--------------------------------------------------------------------
 
-if test "x${BUILD_UNICODE}" = "xyes"; then
-	CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"\${prefix}\\\" -DDATADIR=L\\\"\${pkgdatadir}\\\" -DBINDIR=L\\\"\${bindir}\\\" -DLIBDIR=L\\\"\${libdir}\\\" -DPKGLIBDIR=L\\\"\${pkglibdir}\\\""
+if test "x$RUNTIME_PREFIX" = "x"; then
+	if test "x${BUILD_UNICODE}" = "xyes"; then
+		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"\${prefix}\\\" -DDATADIR=L\\\"\${pkgdatadir}\\\" -DBINDIR=L\\\"\${bindir}\\\" -DLIBDIR=L\\\"\${libdir}\\\" -DPKGLIBDIR=L\\\"\${pkglibdir}\\\""
+	else
+		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\""
+	fi
 else
-	CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\""
+	if test "x${BUILD_UNICODE}" = "xyes"; then
+		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"$RUNTIME_PREFIX\\\" -DDATADIR=L\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=L\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=L\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=L\\\"$RUNTIME_PREFIX/lib/netxms\\\""
+	else
+		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"$RUNTIME_PREFIX\\\" -DDATADIR=\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=\\\"$RUNTIME_PREFIX/lib/netxms\\\""
+	fi
 fi
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
 
