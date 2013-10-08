@@ -33,11 +33,9 @@ static int m_iStageErrors;
 static int m_iStageFixes;
 static TCHAR *m_pszStageMsg = NULL;
 
-
-//
-// Start stage
-//
-
+/**
+ * Start stage
+ */
 static void StartStage(const TCHAR *pszMsg)
 {
    if (pszMsg != NULL)
@@ -53,11 +51,9 @@ static void StartStage(const TCHAR *pszMsg)
    m_iStageFixes = m_iNumFixes;
 }
 
-
-//
-// End stage
-//
-
+/**
+ * End stage
+ */
 static void EndStage()
 {
    static const TCHAR *pszStatus[] = { _T("PASSED"), _T("FIXED "), _T("ERROR ") };
@@ -77,11 +73,9 @@ static void EndStage()
    WriteToTerminalEx(_T(" \x1b[37;1m[\x1b[%d;1m%s\x1b[37;1m]\x1b[0m\n"), nColor[nCode], pszStatus[nCode]);
 }
 
-
-//
-// Get object name from object_properties table
-//
-
+/**
+ * Get object name from object_properties table
+ */
 static TCHAR *GetObjectName(DWORD dwId, TCHAR *pszBuffer)
 {
 	TCHAR szQuery[256];
@@ -857,6 +851,48 @@ static void CheckTemplateNodeMapping()
 }
 
 /**
+ * Check network map links
+ */
+static void CheckMapLinks()
+{
+   StartStage(_T("Checking network map links..."));
+
+   for(int pass = 1; pass <= 2; pass++)
+   {
+      TCHAR query[1024];
+      _sntprintf(query, 1024,
+         _T("SELECT network_map_links.map_id,network_map_links.element1,network_map_links.element2 ")
+         _T("FROM network_map_links ")
+         _T("LEFT OUTER JOIN network_map_elements ON ")
+         _T("   network_map_links.map_id = network_map_elements.map_id AND ")
+         _T("   network_map_links.element%d = network_map_elements.element_id ")
+         _T("WHERE network_map_elements.element_id IS NULL"), pass);
+
+      DB_RESULT hResult = SQLSelect(query);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            m_iNumErrors++;
+            DWORD mapId = DBGetFieldULong(hResult, i, 0);
+            TCHAR name[MAX_OBJECT_NAME];
+				GetObjectName(mapId, name);
+            if (GetYesNo(_T("\rInvalid link on network map %s [%d]. Delete?"), name, mapId))
+            {
+               _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d AND element1=%d AND element2=%d"),
+                          mapId, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
+               if (SQLQuery(query))
+                  m_iNumFixes++;
+            }
+         }
+         DBFreeResult(hResult);
+      }
+   }
+   EndStage();
+}
+
+/**
  * Check database for errors
  */
 void CheckDatabase()
@@ -936,6 +972,7 @@ void CheckDatabase()
 				CheckTemplateNodeMapping();
 				CheckObjectProperties();
 				CheckEPP();
+            CheckMapLinks();
 				if (g_checkData)
 					CheckIData();
 

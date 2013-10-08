@@ -120,6 +120,16 @@ public class NetworkMapPage
 	public void removeElement(long elementId)
 	{
 		elements.remove(elementId);
+
+		Iterator<NetworkMapLink> it = links.iterator();
+		while(it.hasNext())
+		{
+			NetworkMapLink l = it.next();
+			if ((l.getElement1() == elementId) || (l.getElement2() == elementId))
+			{
+				it.remove();
+			}
+		}
 	}
 	
 	/**
@@ -129,16 +139,22 @@ public class NetworkMapPage
 	 */
 	public void removeObjectElement(long objectId)
 	{
+		long elementId = -1;
 		for(NetworkMapElement element : elements.values())
 		{
 			if (element instanceof NetworkMapObject)
 			{
 				if (((NetworkMapObject)element).getObjectId() == objectId)
 				{
-					elements.remove(element.getId());
+					elementId = element.getId();
 					break;
 				}
 			}
+		}
+
+		if (elementId != -1)
+		{
+			removeElement(elementId);
 		}
 	}
 	
