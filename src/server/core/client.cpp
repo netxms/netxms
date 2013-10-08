@@ -308,13 +308,18 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
       {
-         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %-7s %s [%s]\n"), i, 
+         TCHAR webServer[256] = _T("");
+         if (m_pSessionList[i]->getClientType() == CLIENT_TYPE_WEB)
+         {
+            _sntprintf(webServer, 256, _T(" (%s)"), m_pSessionList[i]->getWebServerAddress());
+         }
+         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %-7s %s%s [%s]\n"), i, 
                        (m_pSessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
                          pszStateName[m_pSessionList[i]->getState()] :
                          NXCPMessageCodeName(m_pSessionList[i]->getCurrentCmd(), szBuffer),
 					        pszCipherName[m_pSessionList[i]->getCipher() + 1],
 							  pszClientType[m_pSessionList[i]->getClientType()],
-                       m_pSessionList[i]->getUserName(),
+                       m_pSessionList[i]->getUserName(), webServer,
                        m_pSessionList[i]->getClientInfo());
          iCount++;
       }

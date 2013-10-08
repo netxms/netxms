@@ -59,6 +59,7 @@ public class LoginJob implements IRunnableWithProgress
 	private String server;
 	private String loginName;
 	private String password;
+	private String clientAddress;
 
 	/**
 	 * @param server
@@ -72,6 +73,7 @@ public class LoginJob implements IRunnableWithProgress
 		this.loginName = loginName;
 		this.password = password;
 		this.display = display;
+		clientAddress = RWT.getRequest().getRemoteAddr();
 	}
 
 	/* (non-Javadoc)
@@ -107,6 +109,8 @@ public class LoginJob implements IRunnableWithProgress
 			NXCSession session = createSession(hostName, port);
 			if (loginName == null)	// SSO login with ticket
 				session.setAuthType(NXCSession.AUTH_TYPE_SSO_TICKET);
+			session.setClientType(NXCSession.WEB_CLIENT);
+			session.setClientAddress(clientAddress);
 			monitor.worked(10);
 
 			session.connect();

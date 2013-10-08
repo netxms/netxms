@@ -228,6 +228,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private boolean connUseEncryption;
 	private String connClientInfo = "nxjclient/" + NXCommon.VERSION;
 	private int clientType = DESKTOP_CLIENT;
+	private String clientAddress = null;
 	private int authType = AUTH_TYPE_PASSWORD;
 	private boolean ignoreProtocolVersion = false;
 
@@ -1476,6 +1477,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			request.setVariable(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
 			request.setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
 			request.setVariableInt16(NXCPCodes.VID_CLIENT_TYPE, clientType);
+			if (clientAddress != null)
+				request.setVariable(NXCPCodes.VID_CLIENT_ADDRESS, clientAddress);
 			sendMessage(request);
 			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
 			int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
@@ -6962,6 +6965,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	/**
+	 * @param clientAddress the clientAddress to set
+	 */
+	public void setClientAddress(String clientAddress)
+	{
+		this.clientAddress = clientAddress;
 	}
 
 }

@@ -397,7 +397,8 @@ private:
 	MUTEX m_mutexSendSituations;
    MUTEX m_mutexPollerInit;
 	struct sockaddr *m_clientAddr;
-	TCHAR m_szWorkstation[256]; // IP address of name of conneced host in textual form
+	TCHAR m_workstation[256];      // IP address or name of connected host in textual form
+   TCHAR m_webServerAddress[256]; // IP address or name of web server for web sessions
    TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
    UINT32 m_dwOpenDCIListSize; // Number of open DCI lists
@@ -669,7 +670,8 @@ public:
    int getState() { return m_iState; }
    const TCHAR *getUserName() { return m_szUserName; }
    const TCHAR *getClientInfo() { return m_szClientInfo; }
-	const TCHAR *getWorkstation() { return m_szWorkstation; }
+	const TCHAR *getWorkstation() { return m_workstation; }
+   const TCHAR *getWebServerAddress() { return m_webServerAddress; }
    UINT32 getUserId() { return m_dwUserId; }
 	UINT32 getSystemRights() { return m_dwSystemAccess; }
    bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }

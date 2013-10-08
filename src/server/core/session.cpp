@@ -257,11 +257,12 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
 	if (addr->sa_family == AF_INET)
-		IpToStr(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr), m_szWorkstation);
+		IpToStr(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr), m_workstation);
 #ifdef WITH_IPV6
 	else
-		Ip6ToStr(((struct sockaddr_in6 *)m_clientAddr)->sin6_addr.s6_addr, m_szWorkstation);
+		Ip6ToStr(((struct sockaddr_in6 *)m_clientAddr)->sin6_addr.s6_addr, m_workstation);
 #endif
+   m_webServerAddress[0] = 0;
    _tcscpy(m_szUserName, _T("<not logged in>"));
 	_tcscpy(m_szClientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
@@ -560,7 +561,7 @@ void ClientSession::readThread()
       } while(m_dwRefCount > 0);
    }
 
-	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
+	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
    debugPrintf(3, _T("Session closed"));
 }
 
@@ -1646,6 +1647,16 @@ void ClientSession::login(CSCPMessage *pRequest)
 	if ((m_clientType < 0) || (m_clientType > CLIENT_TYPE_APPLICATION))
 		m_clientType = CLIENT_TYPE_DESKTOP;
 
+   if (m_clientType == CLIENT_TYPE_WEB)
+   {
+      _tcscpy(m_webServerAddress, m_workstation);
+      if (pRequest->IsVariableExist(VID_CLIENT_ADDRESS))
+      {
+         pRequest->GetVariableStr(VID_CLIENT_ADDRESS, m_workstation, 256);
+         debugPrintf(5, _T("Real web client address is %s"), m_workstation);
+      }
+   }
+
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
@@ -1724,7 +1735,7 @@ void ClientSession::login(CSCPMessage *pRequest)
       if (dwResult == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
-         _sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_szWorkstation);
+         _sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_workstation);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);
@@ -1735,18 +1746,18 @@ void ClientSession::login(CSCPMessage *pRequest)
 			msg.SetVariable(VID_POLLING_INTERVAL, ConfigReadULong(_T("DefaultDCIPollingInterval"), 60));
 			msg.SetVariable(VID_RETENTION_TIME, ConfigReadULong(_T("DefaultDCIRetentionTime"), 30));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
-			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
+			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
       }
       else
       {
          msg.SetVariable(VID_RCC, dwResult);
-			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szWorkstation, 0,
+			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" login failed with error code %d (client info: %s)"),
 							  szLogin, dwResult, m_szClientInfo);
 			if (intruderLockout)
 			{
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szWorkstation, 0,
+				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, 0,
 								  _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), szLogin);
 			}
       }
@@ -1950,7 +1961,7 @@ void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
 
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
 							  _T("Event template %d deleted"), dwEventCode);
       }
       else
@@ -2280,7 +2291,7 @@ void ClientSession::setConfigVariable(CSCPMessage *pRequest)
       if (ConfigWriteStr(szName, szValue, TRUE))
 		{
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
 							  _T("Server configuration variable \"%s\" set to \"%s\""), szName, szValue);
 		}
       else
@@ -2317,7 +2328,7 @@ void ClientSession::deleteConfigVariable(CSCPMessage *pRequest)
       if (DBQuery(g_hCoreDB, szQuery))
 		{
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
 							  _T("Server configuration variable \"%s\" deleted"), szName);
 		}
       else
@@ -2354,7 +2365,7 @@ void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 			if (ConfigWriteCLOB(name, value, TRUE))
 			{
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
 								  _T("Server configuration variable \"%s\" set to \"%s\""), name, value);
 				free(value);
 			}
@@ -2522,19 +2533,19 @@ void ClientSession::modifyObject(CSCPMessage *pRequest)
 
 			if (dwResult == RCC_SUCCESS)
 			{
-				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, dwObjectId,
+				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, dwObjectId,
 								  _T("Object modified from client"));
 			}
 			else
 			{
-				WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, dwObjectId,
+				WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, dwObjectId,
 								  _T("Failed to modify object from client - error %d"), dwResult);
 			}
       }
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, dwObjectId,
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, dwObjectId,
 							  _T("Failed to modify object from client - access denied"), dwResult);
       }
    }
@@ -4469,14 +4480,14 @@ void ClientSession::addClusterNode(CSCPMessage *request)
 					((Node *)node)->forceConfigurationPoll();
 
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
-					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, cluster->Id(),
+					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, cluster->Id(),
 									  _T("Node %s [%d] added to cluster %s [%d]"), 
 									  node->Name(), node->Id(), cluster->Name(), cluster->Id());
 				}
 				else
 				{
 					msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-					WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, cluster->Id(),
+					WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, cluster->Id(),
 									  _T("Access denied on adding node %s [%d] to cluster %s [%d]"), 
 									  node->Name(), node->Id(), cluster->Name(), cluster->Id());
 				}
@@ -11316,7 +11327,7 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 				TCHAR *cmd = request->GetVariableStr(VID_COMMAND);
 				TCHAR *expCmd = ((Node *)object)->expandText(cmd);
 				free(cmd);
-				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId, _T("Server command executed: %s"), expCmd);
+				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, nodeId, _T("Server command executed: %s"), expCmd);
 				ThreadCreate(RunCommand, 0, expCmd);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
@@ -11328,7 +11339,7 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, nodeId, _T("Access denied on server command execution"));
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, nodeId, _T("Access denied on server command execution"));
 		}
 	}
 	else
@@ -11377,7 +11388,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 					                                   request->GetVariableShort(VID_CREATE_JOB_ON_HOLD) ? true : false);
 					if (AddJob(job))
 					{
-						WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId,
+						WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, nodeId,
 										  _T("File upload initiated, local='%s' remote='%s'"), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
 						msg.SetVariable(VID_JOB_ID, job->getId());
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -11403,7 +11414,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, nodeId, _T("Access denied on file upload"));
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, nodeId, _T("Access denied on file upload"));
 		}
 	}
 	else
