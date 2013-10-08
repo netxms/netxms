@@ -909,18 +909,16 @@ enum
 #define DEPLOYMENT_STATUS_INITIALIZE   5
 #define DEPLOYMENT_STATUS_FINISHED     255
 
-
-//
-// Session subscription codes (data channels)
-//
-
-#define NXC_CHANNEL_EVENTS       0x0001
-#define NXC_CHANNEL_SYSLOG       0x0002
-#define NXC_CHANNEL_ALARMS       0x0004
-#define NXC_CHANNEL_OBJECTS      0x0008
-#define NXC_CHANNEL_SNMP_TRAPS   0x0010
-#define NXC_CHANNEL_AUDIT_LOG    0x0020
-#define NXC_CHANNEL_SITUATIONS   0x0040
+/**
+ * Session subscription codes (data channels)
+ */
+#define NXC_CHANNEL_EVENTS       0x00000001
+#define NXC_CHANNEL_SYSLOG       0x00000002
+#define NXC_CHANNEL_ALARMS       0x00000004
+#define NXC_CHANNEL_OBJECTS      0x00000008
+#define NXC_CHANNEL_SNMP_TRAPS   0x00000010
+#define NXC_CHANNEL_AUDIT_LOG    0x00000020
+#define NXC_CHANNEL_SITUATIONS   0x00000040
 
 
 //

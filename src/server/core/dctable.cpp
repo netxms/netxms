@@ -386,7 +386,7 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
                DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
 				   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, colId);
                const TCHAR *s = data->getAsString(row, col);
-               if (_tcslen(s) < MAX_DB_STRING)
+               if ((s == NULL) || (_tcslen(s) < MAX_DB_STRING))
                {
 				      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, s, DB_BIND_STATIC);
                }

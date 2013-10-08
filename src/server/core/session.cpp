@@ -7536,16 +7536,14 @@ void ClientSession::KillSession(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Handler for new syslog messages
-//
-
+/**
+ * Handler for new syslog messages
+ */
 void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
 {
    UPDATE_INFO *pUpdate;
 
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SYSLOG))
+   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SYSLOG))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
@@ -7662,16 +7660,14 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
    MutexUnlock(m_mutexSendSyslog);
 }
 
-
-//
-// Handler for new traps
-//
-
+/**
+ * Handler for new traps
+ */
 void ClientSession::onNewSNMPTrap(CSCPMessage *pMsg)
 {
    UPDATE_INFO *pUpdate;
 
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SNMP_TRAPS))
+   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SNMP_TRAPS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SNMP_TRAP;
@@ -7680,11 +7676,9 @@ void ClientSession::onNewSNMPTrap(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Send collected trap log
-//
-
+/**
+ * Send collected trap log
+ */
 void ClientSession::SendTrapLog(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
