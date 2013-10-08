@@ -276,6 +276,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
    m_dwActiveChannels = 0;
 	m_console = NULL;
+   m_loginTime = time(NULL);
 }
 
 /**
@@ -1736,6 +1737,7 @@ void ClientSession::login(CSCPMessage *pRequest)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
          _sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_workstation);
+         m_loginTime = time(NULL);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);

@@ -401,6 +401,7 @@ private:
    TCHAR m_webServerAddress[256]; // IP address or name of web server for web sessions
    TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
+   time_t m_loginTime;
    UINT32 m_dwOpenDCIListSize; // Number of open DCI lists
    UINT32 *m_pOpenDCIList;     // List of nodes with DCI lists open
    UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
@@ -680,6 +681,7 @@ public:
    WORD getCurrentCmd() { return m_wCurrentCmd; }
    int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
 	int getClientType() { return m_clientType; }
+   time_t getLoginTime() { return m_loginTime; }
 
 	bool checkSysAccessRights(UINT32 requiredAccess) 
    { 
