@@ -38,12 +38,74 @@ EPRule::EPRule(UINT32 dwId)
    m_pdwActionList = NULL;
    m_pszComment = NULL;
    m_iAlarmSeverity = 0;
+   m_szAlarmKey[0] = 0;
+   m_szAlarmMessage[0] = 0;
    m_pszScript = NULL;
    m_pScript = NULL;
 	m_dwAlarmTimeout = 0;
 	m_dwAlarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 	m_dwSituationId = 0;
 	m_szSituationInstance[0] = 0;
+}
+
+/**
+ * Create rule from config entry
+ */
+EPRule::EPRule(ConfigEntry *config)
+{
+   m_dwId = 0;
+   config->getSubEntryValueUUID(_T("guid"), m_guid);
+   m_dwFlags = config->getSubEntryValueUInt(_T("flags"));
+   m_dwNumSources = 0;
+   m_pdwSourceList = NULL;
+   m_dwNumActions = 0;
+   m_pdwActionList = NULL;
+
+	ConfigEntry *eventsRoot = config->findEntry(_T("events"));
+   if (eventsRoot != NULL)
+   {
+		ConfigEntryList *events = eventsRoot->getSubEntries(_T("event#*"));
+      m_dwNumEvents = 0;
+      m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * events->getSize());
+      for(int i = 0; i < events->getSize(); i++)
+      {
+         EVENT_TEMPLATE *e = FindEventTemplateByName(events->getEntry(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
+         if (e != NULL)
+         {
+            m_pdwEventList[m_dwNumEvents++] = e->dwCode;
+         }
+      }
+   }
+
+   m_pszComment = _tcsdup(config->getSubEntryValue(_T("comments"), 0, _T("")));
+   m_iAlarmSeverity = config->getSubEntryValueInt(_T("alarmSeverity"));
+	m_dwAlarmTimeout = config->getSubEntryValueUInt(_T("alarmTimeout"));
+	m_dwAlarmTimeoutEvent = config->getSubEntryValueUInt(_T("alarmTimeout"), 0, EVENT_ALARM_TIMEOUT);
+   nx_strncpy(m_szAlarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
+   nx_strncpy(m_szAlarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
+
+   m_dwSituationId = 0;
+	m_szSituationInstance[0] = 0;
+
+   m_pszScript = _tcsdup(config->getSubEntryValue(_T("script"), 0, _T("")));
+   if ((m_pszScript != NULL) && (*m_pszScript != 0))
+   {
+      TCHAR szError[256];
+
+      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      if (m_pScript != NULL)
+      {
+      	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
+      }
+      else
+      {
+         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_dwId, szError);
+      }
+   }
+   else
+   {
+      m_pScript = NULL;
+   }
 }
 
 /**
@@ -833,5 +895,38 @@ void EventPolicy::exportRule(String &str, uuid_t guid)
          break;
       }
    }
+   unlock();
+}
+
+/**
+ * Add rule
+ */
+void EventPolicy::addRule(EPRule *rule)
+{
+   writeLock();
+
+   // Find rule with same GUID and replace it if found
+   bool newRule = true;
+   for(UINT32 i = 0; i < m_dwNumRules; i++)
+   {
+      if (!uuid_compare(rule->getGuid(), m_ppRuleList[i]->getGuid()))
+      {
+         delete m_ppRuleList[i];
+         m_ppRuleList[i] = rule;
+         rule->setId(i);
+         newRule = false;
+         break;
+      }
+   }
+
+   // Add new rule at the end
+   if (newRule)
+   {
+      rule->setId(m_dwNumRules);
+      m_dwNumRules++;
+      m_ppRuleList = (EPRule **)realloc(m_ppRuleList, sizeof(EPRule *) * m_dwNumRules);
+      m_ppRuleList[m_dwNumRules - 1] = rule;
+   }
+
    unlock();
 }

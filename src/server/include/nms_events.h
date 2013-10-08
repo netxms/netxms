@@ -147,6 +147,7 @@ public:
    EPRule(UINT32 dwId);
    EPRule(DB_RESULT hResult, int iRow);
    EPRule(CSCPMessage *pMsg);
+   EPRule(ConfigEntry *config);
    ~EPRule();
 
    UINT32 getId() { return m_dwId; }
@@ -187,6 +188,7 @@ public:
    void sendToClient(ClientSession *pSession, UINT32 dwRqId);
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
    void exportRule(String &str, uuid_t guid);
+   void addRule(EPRule *rule);
 
    bool isActionInUse(UINT32 dwActionId);
 };

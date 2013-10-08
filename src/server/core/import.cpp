@@ -336,8 +336,8 @@ static UINT32 ImportTrap(ConfigEntry *trap)
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
 {
-	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL;
-	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
+	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL;
+	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot;
 	UINT32 rcc = RCC_SUCCESS;
 	int i;
 
@@ -394,10 +394,23 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		}
 	}
 
+	// Import rules
+	rulesRoot = config->getEntry(_T("/rules"));
+	if (rulesRoot != NULL)
+	{
+		rules = rulesRoot->getSubEntries(_T("rule#*"));
+		for(i = 0; i < rules->getSize(); i++)
+		{
+         EPRule *rule = new EPRule(rules->getEntry(i));
+         g_pEventPolicy->addRule(rule);
+		}
+	}
+
 stop_processing:
 	delete events;
 	delete traps;
 	delete templates;
+   delete rules;
 
 	DbgPrintf(4, _T("ImportConfig() finished, rcc = %d"), rcc);
 	return rcc;
