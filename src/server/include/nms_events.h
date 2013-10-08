@@ -188,7 +188,7 @@ public:
    void sendToClient(ClientSession *pSession, UINT32 dwRqId);
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
    void exportRule(String &str, uuid_t guid);
-   void addRule(EPRule *rule);
+   void importRule(EPRule *rule);
 
    bool isActionInUse(UINT32 dwActionId);
 };

@@ -392,6 +392,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 			g_pTemplateRoot->AddChild(object);
 			object->unhide();
 		}
+		DbgPrintf(5, _T("ImportConfig(): templates imported"));
 	}
 
 	// Import rules
@@ -402,8 +403,9 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		for(i = 0; i < rules->getSize(); i++)
 		{
          EPRule *rule = new EPRule(rules->getEntry(i));
-         g_pEventPolicy->addRule(rule);
+         g_pEventPolicy->importRule(rule);
 		}
+		DbgPrintf(5, _T("ImportConfig(): event processing policy rules imported"));
 	}
 
 stop_processing:

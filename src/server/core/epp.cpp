@@ -899,9 +899,9 @@ void EventPolicy::exportRule(String &str, uuid_t guid)
 }
 
 /**
- * Add rule
+ * Import rule
  */
-void EventPolicy::addRule(EPRule *rule)
+void EventPolicy::importRule(EPRule *rule)
 {
    writeLock();
 
