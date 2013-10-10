@@ -38,8 +38,12 @@ static bool IsEventExist(const TCHAR *name, Config *config)
 		{
 			ConfigEntry *event = events->getEntry(i);
 			if (!_tcsicmp(event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")), name))
+         {
+            delete events;
 				return true;
+         }
 		}
+      delete events;
 	}
 
 	return false;
