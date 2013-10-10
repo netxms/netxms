@@ -684,7 +684,7 @@ esac
 #  * Turn on 64bit mode on Solaris
 #--------------------------------------------------------------------
 
-if test "x$CC" = "xgcc" ; then
+if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
 
 	AC_LANG_PUSH([C++])
@@ -749,8 +749,8 @@ if test "x$CC" = "xgcc" ; then
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-maix32 $LDFLAGS"
-					LTINIT_CC="gcc -maix32"
-					LTINIT_CXX="g++ -maix32"
+					LTINIT_CC="$CC -maix32"
+					LTINIT_CXX="$CXX -maix32"
 					OBJECT_MODE=32
 					AC_MSG_RESULT(yes) 
 				], 
@@ -765,8 +765,8 @@ if test "x$CC" = "xgcc" ; then
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-maix64 $LDFLAGS"
-					LTINIT_CC="gcc -maix64"
-					LTINIT_CXX="g++ -maix64"
+					LTINIT_CC="$CC -maix64"
+					LTINIT_CXX="$CXX -maix64"
 					OBJECT_MODE=64
 					AC_MSG_RESULT(yes) 
 				], 
@@ -966,7 +966,7 @@ fi
 
 if test "x$CXX" != "xaCC"; then
 	if test -d /usr/local/include; then
-		if test "x$CC" = "xgcc"; then
+		if test "x$ac_compiler_gnu" = "xyes"; then
 			AC_MSG_CHECKING(whether -I/usr/local/include needed)
 			OLD_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="$CPPFLAGS -Werror -I/usr/local/include"
@@ -2357,7 +2357,7 @@ echo "Updating libtool"
 sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
 
 # On HP-UX, libtool passes +b instead of -Wl,+b even if gcc/g++ used as linker 
-if test "x$CC" = "xgcc" && test "x$PLATFORM" = "xHP-UX"; then
+if test "x$ac_compiler_gnu" = "xyes" && test "x$PLATFORM" = "xHP-UX"; then
 	sed "s,hardcode_libdir_flag_spec_ld=,#hardcode_libdir_flag_spec_ld=,g" < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
 fi
 
