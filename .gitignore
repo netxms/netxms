@@ -1,7 +1,6 @@
 /*.suo
 /Makefile
 /Makefile.in
-/README
 /aclocal.m4
 android/eclipse
 android/src/agent/bin
@@ -23,6 +22,18 @@ android/src/console/res/values/build_number.xml
 /config.status
 /configure
 contrib/mibs/netxms.mib
+contrib/startup/debian/netxmsd
+contrib/startup/debian/nxagentd
+contrib/startup/hp-ux/netxmsd
+contrib/startup/hp-ux/nxagentd
+contrib/startup/redhat/netxmsd
+contrib/startup/redhat/nxagentd
+contrib/startup/solaris/netxmsd
+contrib/startup/solaris/nxagentd
+contrib/startup/suse/netxmsd
+contrib/startup/suse/nxagentd
+contrib/startup/ubuntu/netxmsd
+contrib/startup/ubuntu/nxagentd
 /debug
 doc/Makefile
 doc/Makefile.in
@@ -428,6 +439,7 @@ src/tools/nxdevcfg/.deps
 src/tools/nxdevcfg/.libs
 src/tools/nxdevcfg/Makefile
 src/tools/nxdevcfg/Makefile.in
+src/tools/nxdevcfg/flags.cpp
 src/tools/nxdevcfg/nxdevcfg
 src/zlib/.deps
 src/zlib/Makefile
