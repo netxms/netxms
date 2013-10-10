@@ -116,7 +116,7 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 			   break;
 		   }
 	   }
-	   delete dcis;
+	   delete dctables;
    }
    
    return success;
