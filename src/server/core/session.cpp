@@ -1786,7 +1786,7 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
+   if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
       {
@@ -1841,7 +1841,10 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
  */
 static void SendEventDBChangeNotification(ClientSession *session, void *arg)
 {
-	if (session->isAuthenticated() && session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
+	if (session->isAuthenticated() && 
+       (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) ||
+        session->checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) ||
+        session->checkSysAccessRights(SYSTEM_ACCESS_EPP)))
 		session->postMessage((CSCPMessage *)arg);
 }
 
@@ -8960,7 +8963,7 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   if ((m_dwSystemAccess & (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP)) == (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
+   if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
       char *content = pRequest->GetVariableStrUTF8(VID_NXMP_CONTENT);
       if (content != NULL)
