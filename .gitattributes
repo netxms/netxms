@@ -493,6 +493,8 @@ src/agent/subagents/ecs/ecs.vcproj -text
 src/agent/subagents/hpux/iostat.cpp -text
 src/agent/subagents/informix/Makefile.am -text
 src/agent/subagents/informix/informix.vcproj -text
+src/agent/subagents/java/java.vcproj -text
+src/agent/subagents/java/java/pom.xml -text
 src/agent/subagents/linux/packages.cpp -text
 src/agent/subagents/lmsensors/Makefile.am -text
 src/agent/subagents/lmsensors/main.cpp -text

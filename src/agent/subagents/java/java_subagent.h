@@ -1,0 +1,75 @@
+/* 
+ ** Java-Bridge NetXMS subagent
+ ** Copyright (C) 2013 TEMPEST a.s.
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **
+ ** File: java_subagent.h
+ **
+ **/
+
+#ifndef _java_subagent_h
+#define _java_subagent_h
+
+#include <nms_util.h>
+#include <nms_agent.h>
+#include <jni.h>
+#include <unicode.h>
+
+/**
+ * Convert Java string to C string.
+ * Result string is dynamically allocated and must be disposed by calling free().
+ */
+inline TCHAR *CStringFromJavaString(JNIEnv *env, jstring jstr)
+{
+   const jchar *chars = env->GetStringChars(jstr, NULL);
+#ifdef UNICODE
+#if UNICODE_UCS4
+   TCHAR *str = UCS4StringFromUCS2String((const UCS2CHAR *)chars);
+#else
+   TCHAR *str = wcsdup((const WCHAR *)chars);
+#endif
+#else
+   size_t len = ucs2_strlen(chars) + 1;
+   char *str = (char *)malloc(len);
+   ucs2_to_mb(chars, len - 1, str, len);
+#endif
+   env->ReleaseStringChars(jstr, chars);
+   return str;
+}
+
+/**
+ * Convert C string to Java string.
+ */
+inline jstring JavaStringFromCString(JNIEnv *env, const TCHAR *str)
+{
+   jsize len = (jsize)_tcslen(str);
+#ifdef UNICODE
+#if UNICODE_UCS4
+   jchar *tmp = (jchar *)UCS2StringFromUCS4String(str);
+   jstring js = env->NewString(tmp, len);
+   free(tmp);
+#else
+   jstring js = env->NewString((jchar *)str, len);
+#endif
+#else
+   jchar *tmp = (jchar *)UCS2StringFromMBString(str);
+   jstring js = env->NewString(tmp, len);
+   free(tmp);
+#endif
+   return js;
+}
+
+#endif

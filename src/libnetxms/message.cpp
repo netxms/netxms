@@ -97,11 +97,9 @@ CSCPMessage::CSCPMessage(int nVersion)
    m_nVersion = nVersion;
 }
 
-
-//
-// Create a copy of prepared CSCP message
-//
-
+/**
+ * Create a copy of prepared CSCP message
+ */
 CSCPMessage::CSCPMessage(CSCPMessage *pMsg)
 {
    UINT32 i;
@@ -119,11 +117,9 @@ CSCPMessage::CSCPMessage(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Create CSCPMessage object from received message
-//
-
+/**
+ * Create CSCPMessage object from received message
+ */
 CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion)
 {
    UINT32 i, dwPos, dwSize, dwVar;
@@ -198,11 +194,9 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion)
    m_dwNumVar = dwVar;
 }
 
-
-//
-// Create CSCPMessage object from XML document
-//
-
+/**
+ * Create CSCPMessage object from XML document
+ */
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
 	if (!strcmp(name, "nxcp"))
@@ -378,21 +372,17 @@ void CSCPMessage::ProcessXMLData(void *state)
 	}
 }
 
-
-//
-// Destructor for CSCPMessage
-//
-
+/**
+ * Destructor for CSCPMessage
+ */
 CSCPMessage::~CSCPMessage()
 {
    DeleteAllVariables();
 }
 
-
-//
-// Find variable by name
-//
-
+/**
+ * Find variable by name
+ */
 UINT32 CSCPMessage::FindVariable(UINT32 dwVarId)
 {
    UINT32 i;
@@ -490,11 +480,9 @@ void *CSCPMessage::Set(UINT32 dwVarId, BYTE bType, const void *pValue, UINT32 dw
 #undef __buffer
 }
 
-
-//
-// Get variable value
-//
-
+/**
+ * Get variable value
+ */
 void *CSCPMessage::Get(UINT32 dwVarId, BYTE bType)
 {
    UINT32 dwIndex;
@@ -513,11 +501,9 @@ void *CSCPMessage::Get(UINT32 dwVarId, BYTE bType)
              ((void *)((BYTE *)m_ppVarList[dwIndex] + 8));
 }
 
-
-//
-// Get integer variable
-//
-
+/**
+ * Get integer variable
+ */
 UINT32 CSCPMessage::GetVariableLong(UINT32 dwVarId)
 {
    char *pValue;
@@ -559,11 +545,9 @@ UINT64 CSCPMessage::GetVariableInt64(UINT32 dwVarId)
    return pValue ? *((UINT64 *)pValue) : 0;
 }
 
-
-//
-// Get 64-bit floating point variable
-//
-
+/**
+ * Get 64-bit floating point variable
+ */
 double CSCPMessage::GetVariableDouble(UINT32 dwVarId)
 {
    char *pValue;
@@ -572,15 +556,13 @@ double CSCPMessage::GetVariableDouble(UINT32 dwVarId)
    return pValue ? *((double *)pValue) : 0;
 }
 
-
-//
-// Get string variable
-// If szBuffer is NULL, memory block of required size will be allocated
-// for result; if szBuffer is not NULL, entire result or part of it will
-// be placed to szBuffer and pointer to szBuffer will be returned.
-// Note: dwBufSize is buffer size in characters, not bytes!
-//
-
+/**
+ * Get string variable
+ * If szBuffer is NULL, memory block of required size will be allocated
+ * for result; if szBuffer is not NULL, entire result or part of it will
+ * be placed to szBuffer and pointer to szBuffer will be returned.
+ * Note: dwBufSize is buffer size in characters, not bytes!
+ */
 TCHAR *CSCPMessage::GetVariableStr(UINT32 dwVarId, TCHAR *pszBuffer, UINT32 dwBufSize)
 {
    void *pValue;
@@ -629,13 +611,11 @@ TCHAR *CSCPMessage::GetVariableStr(UINT32 dwVarId, TCHAR *pszBuffer, UINT32 dwBu
    return pStr;
 }
 
-
-//
-// Get variable as multibyte string
-//
-
 #ifdef UNICODE
 
+/**
+ * Get variable as multibyte string
+ */
 char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBufSize)
 {
    void *pValue;
@@ -674,6 +654,9 @@ char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBuf
 
 #else
 
+/**
+ * Get variable as multibyte string
+ */
 char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBufSize)
 {
 	return GetVariableStr(dwVarId, pszBuffer, dwBufSize);
@@ -681,11 +664,9 @@ char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBuf
 
 #endif
 
-
-//
-// Get variable as UTF-8 string
-//
-
+/**
+ * Get variable as UTF-8 string
+ */
 char *CSCPMessage::GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer, UINT32 dwBufSize)
 {
    void *pValue;
