@@ -742,6 +742,8 @@ src/install/windows/netxms-x64.iss -text
 src/install/windows/nxmc/nxmc.properties -text
 src/install/windows/setup.iss -text
 src/install/windows/winstone/winstone-0.9.10.jar -text
+src/java/certiifcate-manager/pom.xml -text
+src/java/certiifcate-manager/src/test/resource/keystore.p12 -text
 src/java/eclipse_addons.txt -text
 src/java/mobile-agent/pom.xml -text
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/META-INF/MANIFEST.MF -text
