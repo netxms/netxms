@@ -222,11 +222,9 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
       free(pszArgList[i]);
 }
 
-
-//
-// Handler for EnumerateSessions()
-//
-
+/**
+ * Handler for EnumerateSessions()
+ */
 static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 {
    pSession->onNewSNMPTrap((CSCPMessage *)pArg);

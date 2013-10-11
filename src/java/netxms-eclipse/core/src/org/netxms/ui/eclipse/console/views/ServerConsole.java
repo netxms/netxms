@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.console.views;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -83,7 +82,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	{
 		parent.setLayout(new FillLayout());
 		
-		terminal = TerminalViewControlFactory.makeControl(this, parent, null);
+		terminal = TerminalViewControlFactory.makeControl(this, parent, null, false);
 		connector = new ServerConsoleTerminalConnector();
 		terminal.setConnector(connector);
 		terminal.connectTerminal();

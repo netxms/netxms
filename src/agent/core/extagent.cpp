@@ -86,7 +86,7 @@ CSCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
  */
 CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent)
 {
-	BYTE buffer[8192];
+	BYTE buffer[65536];
 	DWORD bytes;
 
 #ifdef _WIN32
@@ -96,7 +96,7 @@ CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent)
 
 		memset(&ov, 0, sizeof(OVERLAPPED));
 		ov.hEvent = hEvent;
-		if (!ReadFile(hPipe, buffer, 8192, NULL, &ov))
+		if (!ReadFile(hPipe, buffer, 65536, NULL, &ov))
 		{
 			if (GetLastError() != ERROR_IO_PENDING)
 				return NULL;
@@ -108,14 +108,14 @@ CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent)
 	}
 	else
 	{
-		if (!ReadFile(hPipe, buffer, 8192, &bytes, NULL))
+		if (!ReadFile(hPipe, buffer, 65536, &bytes, NULL))
 			return NULL;
 	}
 #else
 	NXCPEncryptionContext *dummyCtx = NULL;
 	CSCP_BUFFER nxcpBuffer;
 	RecvNXCPMessage(0, NULL, &nxcpBuffer, 0, NULL, NULL, 0);
-	bytes = RecvNXCPMessage(hPipe, (CSCP_MESSAGE *)buffer, &nxcpBuffer, 8192, &dummyCtx, NULL, INFINITE);
+	bytes = RecvNXCPMessage(hPipe, (CSCP_MESSAGE *)buffer, &nxcpBuffer, 65536, &dummyCtx, NULL, INFINITE);
 #endif
 
 	if (bytes < CSCP_HEADER_SIZE)

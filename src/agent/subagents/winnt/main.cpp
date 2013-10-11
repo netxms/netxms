@@ -129,8 +129,7 @@ static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const
 
 	if (SetCurrentPrivilege(SE_SHUTDOWN_NAME, TRUE))
 	{
-		if (InitiateSystemShutdown(NULL, NULL, 0, TRUE,
-					(*pData == _T('R')) ? TRUE : FALSE))
+		if (InitiateSystemShutdown(NULL, NULL, 0, TRUE, (*pData == _T('R')) ? TRUE : FALSE))
 			nRet = ERR_SUCCESS;
 	}
 	return nRet;
