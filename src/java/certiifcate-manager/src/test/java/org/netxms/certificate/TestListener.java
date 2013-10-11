@@ -7,7 +7,7 @@ public class TestListener implements CertificateManagerProviderRequestListener
    @Override
    public String keyStorePasswordRequested()
    {
-      return "helloo";
+      return "test1337";
    }
 
    @Override

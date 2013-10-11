@@ -8,13 +8,14 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
+import java.util.List;
 
 public class MSCKeyStoreLoader implements KeyStoreLoader
 {
    @Override
-   public Certificate[] retrieveCertificates()
+   public List<Certificate> retrieveCertificates()
    {
-      return new Certificate[0];
+      return null;
    }
 
    protected KeyStore getMscKeyStore()

@@ -5,6 +5,8 @@ import org.netxms.certificate.loader.KeyStoreLoader;
 import org.netxms.certificate.loader.MSCKeyStoreLoader;
 import org.netxms.certificate.loader.PKCS12KeyStoreLoader;
 
+import java.util.List;
+
 public class CertificateManagerProvider
 {
    private static volatile CertificateManager manager;
@@ -30,7 +32,7 @@ public class CertificateManagerProvider
    {
       final String os = System.getProperty("os.name");
       final KeyStoreLoader loader;
-      Certificate[] certs;
+      List<Certificate> certs;
 
       if (os.startsWith("Windows"))
       {

@@ -26,7 +26,7 @@ public class Main
 
       if (!mgr.hasNoCertificates())
       {
-         System.out.println(mgr.getCerts()[0].getCommonName());
+         System.out.println(mgr.getCerts().get(0).getCommonName());
       }
       else
       {

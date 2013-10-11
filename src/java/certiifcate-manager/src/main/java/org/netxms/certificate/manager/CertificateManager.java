@@ -2,22 +2,24 @@ package org.netxms.certificate.manager;
 
 import org.netxms.certificate.Certificate;
 
+import java.util.List;
+
 public class CertificateManager
 {
-   private final Certificate[] certs;
+   private final List<Certificate> certs;
 
-   CertificateManager(Certificate[] certs)
+   CertificateManager(List<Certificate> certs)
    {
       this.certs = certs;
    }
 
-   public Certificate[] getCerts()
+   public List<Certificate> getCerts()
    {
       return certs;
    }
 
    public boolean hasNoCertificates()
    {
-      return certs.length == 0;
+      return certs.size() == 0;
    }
 }

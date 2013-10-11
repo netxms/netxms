@@ -11,32 +11,66 @@ import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 public class PKCS12KeyStoreLoader implements KeyStoreLoader
 {
    private final CertificateManagerProviderRequestListener listener;
+   private String keyStorePassword;
 
    public PKCS12KeyStoreLoader(
       CertificateManagerProviderRequestListener listener)
    {
-
       this.listener = listener;
    }
 
    @Override
-   public Certificate[] retrieveCertificates()
+   public List<Certificate> retrieveCertificates()
    {
-      return new Certificate[0];  //To change body of implemented methods use File | Settings | File Templates.
+      List<Certificate> certs;
+
+      try
+      {
+         KeyStore ks = loadKeyStore();
+         certs = getCertsFromKeyStore(ks);
+      }
+      catch(KeyStoreException e)
+      {
+         e.printStackTrace();
+         certs = new ArrayList<Certificate>(0);
+      }
+      catch(CertificateException e)
+      {
+         e.printStackTrace();
+         certs = new ArrayList<Certificate>(0);
+      }
+      catch(NoSuchAlgorithmException e)
+      {
+         e.printStackTrace();
+         certs = new ArrayList<Certificate>(0);
+      }
+      catch(IOException e)
+      {
+         e.printStackTrace();
+         certs = new ArrayList<Certificate>(0);
+      }
+      catch(UnrecoverableEntryException e)
+      {
+         e.printStackTrace();
+         certs = new ArrayList<Certificate>(0);
+      }
+
+      return certs;
    }
 
-   protected KeyStore getPkcsKeyStore()
+   protected KeyStore loadKeyStore()
       throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException
    {
-
       KeyStore ks = KeyStore.getInstance("PKCS12");
       String ksLocation = listener.keyStoreLocationRequested();
-      String keyStorePass = listener.keyStorePasswordRequested();
+      this.keyStorePassword = listener.keyStorePasswordRequested();
 
       FileInputStream fis;
       try
@@ -44,7 +78,7 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
          fis = new FileInputStream(ksLocation);
          try
          {
-            ks.load(fis, keyStorePass.toCharArray());
+            ks.load(fis, this.keyStorePassword.toCharArray());
          }
          finally
          {
@@ -60,22 +94,19 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
       return ks;
    }
 
-   protected Certificate[] getCertsFromKeyStore(KeyStore ks)
+   protected List<Certificate> getCertsFromKeyStore(KeyStore ks)
       throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException
    {
-
-      int numOfCerts = ks.size();
-      final Certificate[] certs = new Certificate[numOfCerts];
-
-      if (numOfCerts == 0)
+      if (ks.size() == 0)
       {
-         return certs;
+         return new ArrayList<Certificate>(0);
       }
 
+      List<Certificate> certs = new ArrayList<Certificate>();
       Enumeration<String> aliases = ks.aliases();
-      KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection("helloo".toCharArray());
+      KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(this.keyStorePassword.toCharArray());
 
-      for(int i = 0; i < numOfCerts; i++)
+      while(aliases.hasMoreElements())
       {
          String alias = aliases.nextElement();
          X509Certificate x509Cert = (X509Certificate) ks.getCertificate(alias);
@@ -85,7 +116,7 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
          KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) ks.getEntry(alias, protParam);
          PrivateKey pk = pkEntry.getPrivateKey();
 
-         certs[i] = new Certificate(subject, pk);
+         certs.add(new Certificate(subject, pk));
       }
 
       return certs;

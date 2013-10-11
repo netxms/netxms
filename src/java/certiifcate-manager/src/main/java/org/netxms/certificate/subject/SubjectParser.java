@@ -10,10 +10,10 @@ public class SubjectParser
       String state = "";
       String country = "";
 
-      String[] subjectFields = subjectString.split(",");
+      String[] subjectFields = subjectString.split("\\s*,\\s*");
       for(String field : subjectFields)
       {
-         String[] keyVal = field.split("=");
+         String[] keyVal = field.split("\\s*=\\s*");
 
          if (keyVal[0].equals("CN"))
          {

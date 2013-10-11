@@ -34,4 +34,9 @@ public class Certificate
    {
       return subject.getCountry();
    }
+
+   public PrivateKey getPrivateKey()
+   {
+      return privateKey;
+   }
 }

@@ -1,6 +1,6 @@
 package org.netxms.certificate.request;
 
-public interface PasswordRequestListener
+public interface KeyStorePasswordRequestListener
 {
    String keyStorePasswordRequested();
 }

@@ -28,7 +28,7 @@ public class CertificateManagerProviderTest
    }
 
    @Test
-   public void testProvideCertificateManage_SameInstance()
+   public void testProvideCertificateManager_SameInstance()
    {
       CertificateManager mgr1 = CertificateManagerProvider.provideCertificateManager(testListener);
       CertificateManager mgr2 = CertificateManagerProvider.provideCertificateManager(testListener);
