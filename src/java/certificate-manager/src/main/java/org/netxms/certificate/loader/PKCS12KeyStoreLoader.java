@@ -1,6 +1,5 @@
 package org.netxms.certificate.loader;
 
-import org.netxms.certificate.Certificate;
 import org.netxms.certificate.manager.CertificateManagerProviderRequestListener;
 import org.netxms.certificate.subject.Subject;
 import org.netxms.certificate.subject.SubjectParser;
@@ -9,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.*;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -109,14 +109,15 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
       while(aliases.hasMoreElements())
       {
          String alias = aliases.nextElement();
-         X509Certificate x509Cert = (X509Certificate) ks.getCertificate(alias);
-         Principal subjectField = x509Cert.getSubjectDN();
+         //X509Certificate x509Cert = (X509Certificate) ks.getCertificate(alias);
+         //Principal subjectField = x509Cert.getSubjectDN();
 
-         Subject subject = SubjectParser.parseSubject(subjectField.toString());
+         //Subject subject = SubjectParser.parseSubject(subjectField.toString());
+         Certificate cert = ks.getCertificate(alias);
          KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) ks.getEntry(alias, protParam);
          PrivateKey pk = pkEntry.getPrivateKey();
 
-         certs.add(new Certificate(subject, pk));
+         certs.add(cert);
       }
 
       return certs;

@@ -1,7 +1,6 @@
 package org.netxms.certificate.manager;
 
-import org.netxms.certificate.Certificate;
-
+import java.security.cert.Certificate;
 import java.util.List;
 
 public class CertificateManager

@@ -1,10 +1,10 @@
 package org.netxms.certificate.manager;
 
-import org.netxms.certificate.Certificate;
 import org.netxms.certificate.loader.KeyStoreLoader;
 import org.netxms.certificate.loader.MSCKeyStoreLoader;
 import org.netxms.certificate.loader.PKCS12KeyStoreLoader;
 
+import java.security.cert.Certificate;
 import java.util.List;
 
 public class CertificateManagerProvider

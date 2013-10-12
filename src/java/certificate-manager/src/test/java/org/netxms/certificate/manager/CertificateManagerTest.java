@@ -3,9 +3,9 @@ package org.netxms.certificate.manager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.netxms.certificate.Certificate;
 import org.netxms.certificate.TestListener;
 
+import java.security.cert.Certificate;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;

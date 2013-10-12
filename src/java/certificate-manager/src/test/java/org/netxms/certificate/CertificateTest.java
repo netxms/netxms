@@ -6,6 +6,9 @@ import org.junit.Test;
 import org.netxms.certificate.manager.CertificateManager;
 import org.netxms.certificate.manager.CertificateManagerProvider;
 
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,42 +33,8 @@ public class CertificateTest
    }
 
    @Test
-   public void testGetCommonName()
+   public void testCertificate_TestKeyPair()
    {
-      String commonName = cert.getCommonName();
-
-      assertThat(commonName, equalTo("John Doe"));
-   }
-
-   @Test
-   public void testGetOrganization()
-   {
-      String organization = cert.getOrganization();
-
-      assertThat(organization, equalTo("Raden Solutions"));
-   }
-
-   @Test
-   public void testGetState()
-   {
-      String state = cert.getState();
-
-      assertThat(state, equalTo("Riga"));
-   }
-
-   @Test
-   public void testGetCountry()
-   {
-      String country = cert.getCountry();
-
-      assertThat(country, equalTo("LV"));
-   }
-
-   @Test
-   public void testGetPrivateKey_ReturnsSomething() throws Exception
-   {
-      Object o = cert.getPrivateKey();
-
-      assertThat(o, notNullValue());
+      PublicKey pk = cert.getPublicKey();
    }
 }
