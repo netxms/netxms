@@ -1,8 +1,8 @@
 package org.netxms.certificate;
 
-import org.netxms.certificate.manager.CertificateManagerProviderRequestListener;
+import org.netxms.certificate.loader.KeyStoreRequestListener;
 
-public class TestListener implements CertificateManagerProviderRequestListener
+public class TestListener implements KeyStoreRequestListener
 {
    @Override
    public String keyStorePasswordRequested()
