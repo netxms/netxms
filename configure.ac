@@ -1279,7 +1279,7 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
   AC_CHECK_LIB(curl, curl_global_init, , [ HAVE_LIBCURL=no ])
 fi
 if test "x$HAVE_LIBCURL" = "xyes"; then
-  SUBAGENT_DIRS="$SUBAGENT_DIRS service"
+  SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
 fi
 
 #--------------------------------------------------------------------
@@ -2306,7 +2306,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/darwin/Makefile
 	src/agent/subagents/rpi/Makefile
-	src/agent/subagents/service/Makefile
+	src/agent/subagents/netsvc/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile

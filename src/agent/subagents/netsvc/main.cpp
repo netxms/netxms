@@ -25,9 +25,9 @@
 
 #include <curl/curl.h>
 
-#include "service.h"
+#include "netsvc.h"
 
-UINT32 g_flags = SERVICE_AF_VERIFYPEER;
+UINT32 g_flags = NETSVC_AF_VERIFYPEER;
 char g_certBundle[1024] = {0};
 UINT32 g_timeout = 30;
 
@@ -37,7 +37,7 @@ UINT32 g_timeout = 30;
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("VerifyPeer"), CT_BOOLEAN, 0, 0, SERVICE_AF_VERIFYPEER, 0, &g_flags },
+   { _T("VerifyPeer"), CT_BOOLEAN, 0, 0, NETSVC_AF_VERIFYPEER, 0, &g_flags },
    { _T("CA"), CT_MB_STRING, 0, 0, 1024, 0, &g_certBundle },
    { _T("Timeout"), CT_WORD, 0, 0, 0, 0, &g_timeout },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
@@ -113,7 +113,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
 
             // SSL-related stuff
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, g_flags & SERVICE_AF_VERIFYPEER);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, g_flags & NETSVC_AF_VERIFYPEER);
             if (g_certBundle[0] != 0)
             {
                curl_easy_setopt(curl, CURLOPT_CAINFO, g_certBundle);
@@ -185,7 +185,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
 static BOOL SubagentInit(Config *config) {
    bool ret = false;
 
-	config->parseTemplate(_T("service"), m_cfgTemplate);
+	config->parseTemplate(_T("netsvc"), m_cfgTemplate);
 
    ret = curl_global_init(CURL_GLOBAL_ALL) == 0;
 
@@ -229,7 +229,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_INFO m_info = 
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-   _T("SERVICE"), NETXMS_VERSION_STRING,
+   _T("NETSVC"), NETXMS_VERSION_STRING,
    SubagentInit, SubagentShutdown, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
@@ -243,7 +243,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_ENTRY_POINT(SERVICE)
+DECLARE_SUBAGENT_ENTRY_POINT(NETSVC)
 {
    *ppInfo = &m_info;
    return TRUE;

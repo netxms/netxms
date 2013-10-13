@@ -1,10 +1,10 @@
-SUBAGENT = service
+SUBAGENT = netsvc
 
-pkglib_LTLIBRARIES = service.la
-service_la_SOURCES = main.cpp
-service_la_CPPFLAGS=-I@top_srcdir@/include
-service_la_LDFLAGS = -module -avoid-version
-service_la_LIBADD = ../../../libnetxms/libnetxms.la -lcurl
+pkglib_LTLIBRARIES = netsvc.la
+netsvc_la_SOURCES = main.cpp
+netsvc_la_CPPFLAGS=-I@top_srcdir@/include
+netsvc_la_LDFLAGS = -module -avoid-version
+netsvc_la_LIBADD = ../../../libnetxms/libnetxms.la -lcurl
 
 if !STATIC_BUILD
 install-exec-hook:

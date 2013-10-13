@@ -18,7 +18,7 @@
 **
 **/
 
-#ifndef __service__h__
+#ifndef __netsvc__h__
 
 enum
 {
@@ -37,9 +37,9 @@ typedef struct
    char *data;
 } RequestData;
 
-#define SERVICE_AF_VERIFYPEER 1
+#define NETSVC_AF_VERIFYPEER 1
 
 extern UINT32 g_flags;
 extern char g_certBundle[];
 
-#endif // __service__h__
+#endif // __netsvc__h__
