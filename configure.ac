@@ -2276,6 +2276,7 @@ AC_CONFIG_FILES([
 	src/agent/libnxsd/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
+	src/agent/subagents/darwin/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/hpux/Makefile
@@ -2290,23 +2291,22 @@ AC_CONFIG_FILES([
 	src/agent/subagents/java/java/src/main/java/org/netxms/Makefile
 	src/agent/subagents/java/java/src/main/java/org/netxms/agent/Makefile
 	src/agent/subagents/linux/Makefile
+	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
 	src/agent/subagents/netbsd/Makefile
+	src/agent/subagents/netsvc/Makefile
 	src/agent/subagents/odbcquery/Makefile
 	src/agent/subagents/openbsd/Makefile
 	src/agent/subagents/oracle/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/portCheck/Makefile
+	src/agent/subagents/rpi/Makefile
 	src/agent/subagents/sms/Makefile
 	src/agent/subagents/sunos/Makefile
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
-	src/agent/subagents/lmsensors/Makefile
-	src/agent/subagents/darwin/Makefile
-	src/agent/subagents/rpi/Makefile
-	src/agent/subagents/netsvc/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
