@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.console;
 
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;

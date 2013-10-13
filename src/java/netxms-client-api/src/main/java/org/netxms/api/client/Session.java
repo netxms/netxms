@@ -232,6 +232,13 @@ public interface Session
 	 * @return connection state
 	 */
 	public abstract boolean isConnected();
+	
+	/**
+	 * Get encryption state for current session.
+	 * 
+	 * @return true if session is encrypted
+	 */
+	public abstract boolean isEncrypted();
 
    /**
     * Send KEEPALIVE message. Return nothing is connection is fine, exception thrown otherwise

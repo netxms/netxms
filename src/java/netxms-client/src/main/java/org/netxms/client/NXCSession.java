@@ -5589,11 +5589,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		waitForRCC(msg.getMessageId());
 	}
 
-	/** {@inheritDoc} */
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#isConnected()
+	 */
 	@Override
 	public boolean isConnected()
 	{
 		return isConnected;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#isEncrypted()
+	 */
+	@Override
+	public boolean isEncrypted()
+	{
+		return connUseEncryption;
 	}
 
 	/**

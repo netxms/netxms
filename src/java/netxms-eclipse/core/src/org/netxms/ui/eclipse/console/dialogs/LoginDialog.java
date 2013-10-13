@@ -24,48 +24,37 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.forms.widgets.Form;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.BrandingManager;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Login dialog
  */
 public class LoginDialog extends Dialog
 {
+	private FormToolkit toolkit;
 	private ImageDescriptor loginImage;
-	private Button checkBoxEncrypt;
-	private Button checkBoxDontCache;
-	private Button checkBoxClearCache;
-	private Button checkBoxMatchVersion;
 	private Combo comboServer;
-	private Text textLogin;
-	private Text textPassword;
+	private LabeledText textLogin;
+	private LabeledText textPassword;
 	private String password;
-	private boolean isOk = false;
 	private Color labelColor;
 	
 	/**
@@ -107,14 +96,18 @@ public class LoginDialog extends Dialog
 	protected Control createDialogArea(Composite parent) 
 	{
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      Composite dialogArea = (Composite)super.createDialogArea(parent);
+      
+      toolkit = new FormToolkit(parent.getDisplay());
+      Form dialogArea = toolkit.createForm(parent);
+      dialogArea.setLayoutData(new GridData(GridData.FILL_BOTH));
+		applyDialogFont(dialogArea);
       
       GridLayout dialogLayout = new GridLayout();
       dialogLayout.numColumns = 2;
       dialogLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       dialogLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      dialogLayout.horizontalSpacing = 0;
-      dialogArea.setLayout(dialogLayout);
+      dialogLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      dialogArea.getBody().setLayout(dialogLayout);
       
       RGB customColor = BrandingManager.getInstance().getLoginTitleColor();
       labelColor = (customColor != null) ? 
@@ -128,16 +121,8 @@ public class LoginDialog extends Dialog
 			}
 		});
       
-      // Header image
-      Label label = new Label(dialogArea, SWT.NONE);
-      label.setBackground(labelColor);
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      label.setLayoutData(gd);
-      
-      label = new Label(dialogArea, SWT.NONE);
+      // Login image
+      Label label = new Label(dialogArea.getBody(), SWT.NONE);
       label.setImage(loginImage.createImage());
       label.addDisposeListener(new DisposeListener() {
       	@Override
@@ -146,67 +131,58 @@ public class LoginDialog extends Dialog
 				((Label)event.widget).getImage().dispose();
 			}
 		});
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.RIGHT;
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.CENTER;
+      gd.verticalAlignment = SWT.CENTER;
+      gd.grabExcessVerticalSpace = true;
       label.setLayoutData(gd);
       
-      Composite fields = new Composite(dialogArea, SWT.NONE);
-      FormLayout formLayout = new FormLayout();
-      formLayout.spacing = WidgetHelper.DIALOG_SPACING;
-      fields.setLayout(formLayout);
+      Composite fields = toolkit.createComposite(dialogArea.getBody());
+      GridLayout fieldsLayout = new GridLayout();
+      fieldsLayout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      fieldsLayout.marginHeight = 0;
+      fieldsLayout.marginWidth = 0;
+      fields.setLayout(fieldsLayout);
       gd = new GridData();
-      gd.horizontalSpan = 2;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.TOP;
+      gd.grabExcessVerticalSpace = true;
       fields.setLayoutData(gd);
-      
-      // Connection
-//      Group groupConn = attachConnectionGroup(settings, fields);
-      Group groupConn = attachConnectionGroup(settings, fields);
-      
-      // Options
-      Group groupOpts = new Group(fields, SWT.SHADOW_ETCHED_IN);
-      groupOpts.setText(Messages.LoginDialog_options); //$NON-NLS-1$
-      RowLayout rowLayout = new RowLayout();
-      rowLayout.type = SWT.VERTICAL;
-//      rowLayout.justify = true;
-      rowLayout.spacing = 4;
-      groupOpts.setLayout(rowLayout);
 
-      checkBoxEncrypt = new Button(groupOpts, SWT.CHECK);
-      checkBoxEncrypt.setText(Messages.LoginDialog_opt_encrypt);
-      boolean encrypt = true;
-      if (settings.get("Connect.Encrypt") != null) //$NON-NLS-1$
-      {
-      	encrypt = settings.getBoolean("Connect.Encrypt"); //$NON-NLS-1$
-      }
-      checkBoxEncrypt.setSelection(encrypt);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      comboServer = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN, Messages.LoginDialog_server, gd, toolkit);
       
-      checkBoxClearCache = new Button(groupOpts, SWT.CHECK);
-      checkBoxClearCache.setText(Messages.LoginDialog_opt_clear_cache);
-      checkBoxClearCache.setSelection(settings.getBoolean("Connect.ClearCache")); //$NON-NLS-1$
+      textLogin = new LabeledText(fields, SWT.NONE, SWT.SINGLE | SWT.BORDER, toolkit);
+      textLogin.setLabel(Messages.LoginDialog_login);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 24;
+      textLogin.setLayoutData(gd);
       
-      checkBoxDontCache = new Button(groupOpts, SWT.CHECK);
-      checkBoxDontCache.setText(Messages.LoginDialog_opt_dont_cache);
-      checkBoxDontCache.setSelection(settings.getBoolean("Connect.DontCache")); //$NON-NLS-1$
+      textPassword = new LabeledText(fields, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, toolkit);
+      textPassword.setLabel(Messages.LoginDialog_password);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      textPassword.setLayoutData(gd);
       
-      checkBoxMatchVersion = new Button(groupOpts, SWT.CHECK);
-      checkBoxMatchVersion.setText(Messages.LoginDialog_opt_version_match);
-      checkBoxMatchVersion.setSelection(settings.getBoolean("Connect.MatchVersion")); //$NON-NLS-1$
+      // Read field data
+      String[] items = settings.getArray("Connect.ServerHistory"); //$NON-NLS-1$
+      if (items != null)
+         comboServer.setItems(items);
+      String text = settings.get("Connect.Server"); //$NON-NLS-1$
+      if (text != null)
+      	comboServer.setText(text);
 
-      FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(groupOpts, 0, SWT.LEFT);
-      fd.bottom = new FormAttachment(100, 0);
-		groupConn.setLayoutData(fd);   
-
-      fd = new FormData();
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-		groupOpts.setLayoutData(fd);
+      text = settings.get("Connect.Login"); //$NON-NLS-1$
+      if (text != null)
+      	textLogin.setText(text);
 		
+      // Set initial focus
 		if (comboServer.getText().isEmpty())
 			comboServer.setFocus();
 		else if (textLogin.getText().isEmpty())
@@ -217,149 +193,6 @@ public class LoginDialog extends Dialog
       return dialogArea;
    }
 
-   private Group attachConnectionGroup(IDialogSettings settings,
-         Composite fields)
-   {
-      Group groupConn = new Group(fields, SWT.SHADOW_ETCHED_IN);
-      groupConn.setText(Messages.LoginDialog_connection); //$NON-NLS-1$
-      GridLayout gridLayout = new GridLayout(1, false);
-      gridLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-      gridLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      groupConn.setLayout(gridLayout);
-
-      attachLoginFields(settings, groupConn);
-      
-      attachAuthenticationFields(settings, groupConn);
-      
-      return groupConn;
-   }
-
-   private void attachLoginFields(IDialogSettings settings, Group groupConn)
-   {
-      Composite loginFields = new Composite(groupConn, SWT.NONE);
-      
-      GridLayout loginFieldsLayout = new GridLayout(2, false);
-      
-      loginFields.setLayout(loginFieldsLayout);
-      
-      Label label;
-      label = new Label(loginFields, SWT.NONE);
-      label.setText(Messages.LoginDialog_server + ":"); //$NON-NLS-1$
-      comboServer = new Combo(loginFields, SWT.DROP_DOWN);
-      String[] items = settings.getArray("Connect.ServerHistory"); //$NON-NLS-1$
-      if (items != null)
-         comboServer.setItems(items);
-      String text = settings.get("Connect.Server"); //$NON-NLS-1$
-      if (text != null)
-      	comboServer.setText(text);
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      comboServer.setLayoutData(gridData);
-      
-      label = new Label(loginFields, SWT.NONE);
-      label.setText(Messages.LoginDialog_login + ":"); //$NON-NLS-1$
-      textLogin = new Text(loginFields, SWT.SINGLE | SWT.BORDER);
-      text = settings.get("Connect.Login"); //$NON-NLS-1$
-      if (text != null)
-      	textLogin.setText(text);
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 16;
-      textLogin.setLayoutData(gridData);
-   }
-
-   private void attachAuthenticationFields(IDialogSettings settings, Group group)
-   {
-      final Composite authComposite = new Composite(group, SWT.BORDER);     
-      final GridLayout authCompositeLayout = new GridLayout(1, true);
-      authComposite.setLayout(authCompositeLayout);
-      authComposite.setLayoutData(new GridData(
-         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      
-      final Composite radios = new Composite(authComposite, SWT.NONE);
-      
-      final RowLayout radiosLayout = new RowLayout(SWT.HORIZONTAL);
-      radiosLayout.justify = true;
-      radiosLayout.pack = false;
-      
-      radios.setLayout(radiosLayout);
-      radios.setLayoutData(new GridData(
-         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      
-      final Button passwdButton = new Button(radios, SWT.RADIO);
-      passwdButton.setText(Messages.LoginDialog_password);
-      passwdButton.setSelection(true);
-      
-      final Button certButton = new Button(radios, SWT.RADIO);
-      certButton.setText("Certificate");
-      certButton.setEnabled(false);
-      
-      attachAuthMethodComposite(authComposite, passwdButton, certButton);
-   }
-
-   private void attachAuthMethodComposite(final Composite authComposite,
-      final Button passwdButton, final Button certButton)
-   {
-      final Composite authMethod = new Composite(authComposite, SWT.NONE);
-      final StackLayout authMethodLayout = new StackLayout();      
-      
-      authMethod.setLayout(authMethodLayout);
-      authMethod.setLayoutData(new GridData(
-         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      
-      final Composite passwdField = attachPasswdField(authMethod);
-      final Composite certField = attachCertField(authMethod);
-      
-      authMethodLayout.topControl = 
-         passwdButton.getSelection() ? passwdField : certField;
-      
-      Listener radioButtonListener = new Listener() {
-         @Override
-         public void handleEvent(Event event)
-         {
-            StackLayout layout = (StackLayout) authMethod.getLayout();
-            layout.topControl = 
-               passwdButton.getSelection() ? passwdField : certField;
-            authMethod.layout();
-         }         
-      };
-      
-      passwdButton.addListener(SWT.Selection, radioButtonListener);
-      certButton.addListener(SWT.Selection, radioButtonListener);
-   }
-
-   private Composite attachPasswdField(final Composite authMethod)
-   {
-      final Composite passwdField = new Composite(authMethod, SWT.NONE);
-      passwdField.setLayout(new GridLayout(2, false));
-      passwdField.setLayoutData(new GridData(
-         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      
-      final Label label = new Label(passwdField, SWT.NONE);
-      label.setText(Messages.LoginDialog_password + ":"); //$NON-NLS-1$
-      textPassword = new Text(passwdField, SWT.SINGLE | SWT.PASSWORD | SWT.BORDER);
-      textPassword.setLayoutData(new GridData(
-         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      
-      return passwdField;
-   }
-   
-   private Composite attachCertField(Composite authMethod)
-   {
-      final Composite certField = new Composite(authMethod, SWT.NONE);
-      certField.setLayout(new GridLayout(2, false));
-      certField.setLayoutData(new GridData(
-         GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      final Label label = new Label(certField, SWT.NONE);
-      label.setText("Certificate:");
-      final Combo certCombo = new Combo(certField, SWT.READ_ONLY);
-      certCombo.setItems(new String[] {"A", "B", "C"});
-      
-      return certField;
-   }
-   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
@@ -375,15 +208,10 @@ public class LoginDialog extends Dialog
       settings.put("Connect.Server", comboServer.getText()); //$NON-NLS-1$
       settings.put("Connect.ServerHistory", items.toArray(new String[items.size()])); //$NON-NLS-1$
       settings.put("Connect.Login", textLogin.getText()); //$NON-NLS-1$
-      settings.put("Connect.Encrypt", checkBoxEncrypt.getSelection()); //$NON-NLS-1$
-      settings.put("Connect.DontCache", checkBoxDontCache.getSelection()); //$NON-NLS-1$
-      settings.put("Connect.ClearCache", checkBoxClearCache.getSelection()); //$NON-NLS-1$
-      settings.put("Connect.MatchVersion", checkBoxMatchVersion.getSelection()); //$NON-NLS-1$
+//      settings.put("Connect.Encrypt", checkBoxEncrypt.getSelection()); //$NON-NLS-1$
       
       password = textPassword.getText();
   
-      isOk = true;
-      
       super.okPressed();
    }
 
@@ -393,14 +221,5 @@ public class LoginDialog extends Dialog
 	public String getPassword()
 	{
 		return password;
-	}
-
-	
-	/**
-	 * @return true if dialog was closed with OK button, false otherwise
-	 */
-	public boolean isOk()
-	{
-		return isOk;
 	}
 }

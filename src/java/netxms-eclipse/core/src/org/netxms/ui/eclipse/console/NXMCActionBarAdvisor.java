@@ -36,7 +36,6 @@ import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.Dialog;
@@ -361,7 +360,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	@Override
 	protected void fillStatusLine(IStatusLineManager statusLine)
 	{
-		StatusLineContributionItem statusItem = new StatusLineContributionItem("ConnectionStatus"); //$NON-NLS-1$
+		StatusLineContributionItem statusItem = new StatusLineContributionItem("ConnectionStatus", StatusLineContributionItem.CALC_TRUE_WIDTH); //$NON-NLS-1$
 		statusItem.setText(""); //$NON-NLS-1$
 		statusLine.add(statusItem);
 		Activator.getDefault().setStatusItemConnection(statusItem);

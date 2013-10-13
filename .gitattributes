@@ -2199,6 +2199,8 @@ src/java/netxms-eclipse/core/icons/clear_log.gif -text
 src/java/netxms-eclipse/core/icons/close.gif -text
 src/java/netxms-eclipse/core/icons/collapse.png -text
 src/java/netxms-eclipse/core/icons/collapseall.png -text
+src/java/netxms-eclipse/core/icons/conn_encrypted.png -text
+src/java/netxms-eclipse/core/icons/conn_unencrypted.png -text
 src/java/netxms-eclipse/core/icons/copy.gif -text
 src/java/netxms-eclipse/core/icons/csv.png -text
 src/java/netxms-eclipse/core/icons/cut.gif -text
@@ -2235,6 +2237,7 @@ src/java/netxms-eclipse/core/icons/refresh.gif -text
 src/java/netxms-eclipse/core/icons/restart.gif -text
 src/java/netxms-eclipse/core/icons/save.gif -text
 src/java/netxms-eclipse/core/icons/scroll_lock.gif -text
+src/java/netxms-eclipse/core/icons/security-warning.png -text
 src/java/netxms-eclipse/core/icons/server_console.png -text
 src/java/netxms-eclipse/core/icons/status/critical.png -text
 src/java/netxms-eclipse/core/icons/status/disabled.png -text

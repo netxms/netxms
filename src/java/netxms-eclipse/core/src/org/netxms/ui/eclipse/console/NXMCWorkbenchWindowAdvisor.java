@@ -34,8 +34,11 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.users.UserManager;
+import org.netxms.client.NXCException;
+import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
+import org.netxms.ui.eclipse.console.dialogs.SecurityWarningDialog;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -90,7 +93,10 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		
 		Session session = ConsoleSharedData.getSession();
-		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		Activator.getDefault().getStatusItemConnection().setImage(Activator.getImageDescriptor(
+				session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage());
+		Activator.getDefault().getStatusItemConnection().setText(
+				session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
 			Activator.showTrayIcon();
@@ -128,6 +134,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			}
 		}
 
+		boolean encrypt = true;
 		LoginDialog loginDialog;
 		do
 		{
@@ -147,15 +154,36 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			{
 				LoginJob job = new LoginJob(display, settings.get("Connect.Server"), //$NON-NLS-1$ 
 				                            settings.get("Connect.Login"), password, //$NON-NLS-1$
-				                            settings.getBoolean("Connect.Encrypt")); //$NON-NLS-1$
+				                            encrypt); //$NON-NLS-1$
 
 				ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
 				success = true;
 			}
 			catch(InvocationTargetException e)
 			{
-				e.getCause().printStackTrace();
-				MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+				if ((e.getCause() instanceof NXCException) && (((NXCException)e.getCause()).getErrorCode() == RCC.NO_ENCRYPTION_SUPPORT) && encrypt)
+				{
+					Boolean alwaysAllow = settings.getBoolean("Connect.AllowUnencrypted." + settings.get("Connect.Server"));
+					int action = 
+						((alwaysAllow != null) && alwaysAllow) ? SecurityWarningDialog.YES :
+							SecurityWarningDialog.showSecurityWarning(null, 
+								String.format("NetXMS server %s does not support encryption. Do you want to connect anyway?", settings.get("Connect.Server")),
+								"NetXMS server you are connecting to does not support encryption. If you countinue, information including your credentials will be sent in clear text and could easily be read by a third party.\n\nFor assistance, contact your network administrator or the owner of the NetXMS server.\n\n");
+					if (action != SecurityWarningDialog.NO)
+					{
+						autoConnect = true;
+						encrypt = false;
+						if (action == SecurityWarningDialog.ALWAYS)
+						{
+							settings.put("Connect.AllowUnencrypted." + settings.get("Connect.Server"), true);
+						}
+					}
+				}
+				else
+				{
+					e.getCause().printStackTrace();
+					MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+				}
 			}
 			catch(Exception e)
 			{
@@ -164,14 +192,17 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			}
 		} while(!success);
 
-		if (!success) return;
+		if (!success) 
+			return;
 		
       // Suggest user to change password if it is expired
       final Session session = ConsoleSharedData.getSession();
-      if (!session.isPasswordExpired()) return;
+      if (!session.isPasswordExpired()) 
+      	return;
 
       final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
-      if (dlg.open() != Window.OK) return;
+      if (dlg.open() != Window.OK) 
+      	return;
 
       final String currentPassword = password;
       IRunnableWithProgress job = new IRunnableWithProgress() {
@@ -181,20 +212,21 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          {
             try
             {
-               monitor
-                  .setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
-               ((UserManager) session).setUserPassword(session.getUserId(),
-                  dlg.getPassword(), currentPassword);
+               monitor.setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
+               ((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
                monitor.setTaskName(""); //$NON-NLS-1$
-            } catch (Exception e)
+            } 
+            catch(Exception e)
             {
                throw new InvocationTargetException(e);
-            } finally
+            } 
+            finally
             {
                monitor.done();
             }
          }
       };
+      
       try
       {
          ModalContext.run(job, true, SplashHandler.getInstance()
@@ -202,13 +234,15 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          MessageDialog.openInformation(null,
             Messages.NXMCWorkbenchWindowAdvisor_title_information,
             Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
-      } catch (InvocationTargetException e)
+      } 
+      catch(InvocationTargetException e)
       {
          MessageDialog.openError(null,
             Messages.NXMCWorkbenchWindowAdvisor_title_error,
             Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd
                + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
-      } catch (InterruptedException e)
+      } 
+      catch(InterruptedException e)
       {
          MessageDialog.openError(null,
             Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
