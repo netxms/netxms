@@ -1,32 +1,27 @@
 package org.netxms.certificate.manager;
 
+import java.security.KeyStore;
 import java.security.cert.Certificate;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CertificateManager
 {
-   private final List<CertificateEntry> entries;
+   private final KeyStore keyStore;
+   private final List<Certificate> certs;
 
-   CertificateManager(List<CertificateEntry> entries)
+   CertificateManager(KeyStore keyStore, List<Certificate> certs)
    {
-      this.entries = entries;
+      this.keyStore = keyStore;
+      this.certs = certs;
    }
 
    public List<Certificate> getCerts()
    {
-      final List<Certificate> certs = new ArrayList<Certificate>(entries.size());
-
-      for(CertificateEntry entry : entries)
-      {
-         certs.add(entry.getCert());
-      }
-
       return certs;
    }
 
    public boolean hasNoCertificates()
    {
-      return entries.size() == 0;
+      return certs.size() == 0;
    }
 }
