@@ -31,7 +31,7 @@ namespace org_netxms_agent
    {
 
       private:
-         JavaVM * jvm;
+         JavaVM *jvm;
 
       protected:
                                  // cache method id

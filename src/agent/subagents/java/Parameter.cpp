@@ -31,15 +31,14 @@ namespace org_netxms_agent
 
    // Returns the current env
 
-   JNIEnv * Parameter::getCurrentEnv()
+   JNIEnv *Parameter::getCurrentEnv()
    {
-      JNIEnv * curEnv = NULL;
-      jint res=this->jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL);
+      JNIEnv *curEnv = NULL;
+      jint res = jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL);
       if (res != JNI_OK)
       {
          AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not retrieve the current JVM."));
          throw JNIException();
-
       }
       return curEnv;
    }
@@ -47,8 +46,8 @@ namespace org_netxms_agent
 
    Parameter::~Parameter()
    {
-      JNIEnv * curEnv = NULL;
-      this->jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL);
+      JNIEnv *curEnv = NULL;
+      jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL);
 
       curEnv->DeleteGlobalRef(this->instance);
       curEnv->DeleteGlobalRef(this->instanceClass);
@@ -62,15 +61,14 @@ namespace org_netxms_agent
 
       const char *construct="<init>";
       const char *param="()V";
-      jvm=jvm_;
+      jvm = jvm_;
 
-      JNIEnv * curEnv = getCurrentEnv();
+      JNIEnv *curEnv = getCurrentEnv();
 
       localClass = curEnv->FindClass( this->className() ) ;
       if (localClass == NULL)
       {
-         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not get the Class %s"), WideStringFromMBString(this->className()));
-
+         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not get class %hs"), className());
          throw JNIException();
       }
 
@@ -81,15 +79,14 @@ namespace org_netxms_agent
 
       if (this->instanceClass == NULL)
       {
-         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not create a Global Ref of %s"), WideStringFromMBString(this->className()));
-
+         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not create a Global Ref of %hs"), className());
          throw JNIException();
       }
 
       constructObject = curEnv->GetMethodID( this->instanceClass, construct , param ) ;
       if(constructObject == NULL)
       {
-         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not retrieve the constructor of the class %s with the profile : %s%s"), WideStringFromMBString(this->className()), WideStringFromMBString(construct), WideStringFromMBString(param));
+         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not retrieve the constructor of the class %hs with the profile %hs%hs"), className(), construct, param);
 
          throw JNIException();
       }
@@ -97,16 +94,15 @@ namespace org_netxms_agent
       localInstance = curEnv->NewObject( this->instanceClass, constructObject ) ;
       if(localInstance == NULL)
       {
-         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not instantiate the object %s with the constructor : %s%s"), WideStringFromMBString(this->className()), WideStringFromMBString(construct), WideStringFromMBString(param));
+         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not instantiate object %hs with the constructor %hs%hs"), className(), construct, param);
 
          throw JNIException();
       }
 
-      this->instance = curEnv->NewGlobalRef(localInstance) ;
-      if(this->instance == NULL)
+      instance = curEnv->NewGlobalRef(localInstance);
+      if (instance == NULL)
       {
-         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not create a new global ref of %s"), WideStringFromMBString(this->className()));
-
+         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not create a new global ref of %s"), className());
          throw JNIException();
       }
       /* localInstance not needed anymore */
@@ -133,8 +129,7 @@ namespace org_netxms_agent
       if (this->instanceClass == NULL)
       {
 
-         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not create a Global Ref of %s"), WideStringFromMBString(this->className()));
-
+         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not create a Global Ref of %hs"), className());
          throw JNIException();
       }
 
@@ -142,7 +137,7 @@ namespace org_netxms_agent
       if(this->instance == NULL)
       {
 
-         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not create a new global ref of %s"), WideStringFromMBString(this->className()));
+         AgentWriteLog(NXLOG_ERROR, _T("Parameter: Could not create a new global ref of %hs"), className());
 
          throw JNIException();
       }

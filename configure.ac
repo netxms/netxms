@@ -183,6 +183,18 @@ AC_ARG_WITH(static-subagents,
 	PROPOSED_STATIC_SUBAGENTS="$withval"
 ])
 
+AC_ARG_WITH(jdk,
+[AS_HELP_STRING(--with-jdk,build Java-dependent components)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+	COMPONENTS="$COMPONENTS java"
+fi ])
+
+AC_ARG_WITH(oracle,
 AC_ARG_WITH(sqlite,
 [AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
 [ if test "x$withval" != "xno" ; then
@@ -202,7 +214,6 @@ AC_ARG_WITH(odbc,
 	DBDRIVER_SELECTED="yes"
 fi ])
 
-AC_ARG_WITH(oracle,
 [AS_HELP_STRING(--with-oracle,build Oracle database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
@@ -370,7 +381,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images"
 	SERVER_INCLUDE="include"
@@ -599,6 +610,11 @@ if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS rpi"
 fi
 
+check_substr "$COMPONENTS" "java"
+if test $? = 0; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS java"
+fi
+
 #--------------------------------------------------------------------
 # Check for programs
 #--------------------------------------------------------------------
@@ -699,15 +715,18 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_MSG_RESULT(no)
 		])
 
-	AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
-	OLD_CXXFLAGS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -fno-exceptions"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-		])
+	check_substr "$COMPONENTS" "java"
+	if test $? != 0; then
+		AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
+		OLD_CXXFLAGS="$CXXFLAGS"
+		CXXFLAGS="$CXXFLAGS -fno-exceptions"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			[ AC_MSG_RESULT(yes) ], 
+			[ 
+				CXXFLAGS="$OLD_CXXFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	fi
 
 	AC_LANG_POP([C++])
 
@@ -2122,6 +2141,18 @@ fi
 
 
 #--------------------------------------------------------------------
+# Java
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "java"
+if test $? = 0; then
+	AC_CHECK_HEADER(jni.h,,AC_MSG_ERROR([*** Cannot find jni.h - check your JDK installation ***]))
+#	AC_CHECK_LIB(jvm, SQLAllocHandle, [JAVA_LIBS="-ljvm"],
+#		[AC_MSG_ERROR(libjvm is required for Java support)])
+fi
+
+
+#--------------------------------------------------------------------
 # Other settings
 #--------------------------------------------------------------------
 
@@ -2250,6 +2281,14 @@ AC_CONFIG_FILES([
 	src/agent/subagents/hpux/Makefile
 	src/agent/subagents/informix/Makefile
 	src/agent/subagents/ipso/Makefile
+	src/agent/subagents/java/Makefile
+	src/agent/subagents/java/java/Makefile
+	src/agent/subagents/java/java/src/Makefile
+	src/agent/subagents/java/java/src/main/Makefile
+	src/agent/subagents/java/java/src/main/java/Makefile
+	src/agent/subagents/java/java/src/main/java/org/Makefile
+	src/agent/subagents/java/java/src/main/java/org/netxms/Makefile
+	src/agent/subagents/java/java/src/main/java/org/netxms/agent/Makefile
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/logwatch/Makefile
 	src/agent/subagents/netbsd/Makefile

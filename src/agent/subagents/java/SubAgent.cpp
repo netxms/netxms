@@ -586,9 +586,8 @@ namespace org_netxms_agent
       return NULL;
    }
 
-   Parameter SubAgent::getParameter (TCHAR const* id)
+   Parameter *SubAgent::getParameter(TCHAR const* id)
    {
-
       JNIEnv * curEnv = getCurrentEnv();
 
       /* Use the cache */
@@ -609,26 +608,20 @@ namespace org_netxms_agent
          throw JNIException();
       }
 
-      jobject res =  static_cast<jobject>( curEnv->CallObjectMethod( this->instance, jobjectgetParameterjstringjava_lang_StringID ,id_));
+      jobject res =  static_cast<jobject>(curEnv->CallObjectMethod(instance, jobjectgetParameterjstringjava_lang_StringID ,id_));
       if (curEnv->ExceptionCheck())
       {
-         curEnv->ExceptionDescribe() ;
+         curEnv->ExceptionDescribe();
       }
       if (res != NULL)
       {
-
-         return *(new Parameter(jvm, res));
+         return new Parameter(jvm, res);
       }
-      else
-      {
-         curEnv->DeleteLocalRef(res);
-         return NULL;
-      }
+      return NULL;
    }
 
-   TCHAR** SubAgent::getListParameterIds (int *lenRow)
+   TCHAR **SubAgent::getListParameterIds(int *lenRow)
    {
-
       JNIEnv * curEnv = getCurrentEnv();
 
       /* Use the cache */

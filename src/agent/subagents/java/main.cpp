@@ -125,7 +125,7 @@ LONG parameterHandler (const TCHAR *pszParam, const TCHAR *id, TCHAR *pValue)
    {
       // route the call to SubAgent
       TCHAR *resultString = subAgent->parameterHandler(pszParam, id);
-      wcsncpy(pValue, resultString, MAX_RESULT_LENGTH);
+      nx_strncpy(pValue, resultString, MAX_RESULT_LENGTH);
       free(resultString);
       return SYSINFO_RC_SUCCESS;
    }
@@ -145,8 +145,7 @@ LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value)
       TCHAR **res = subAgent->listParameterHandler(cmd, id, &len);
       for (int i=0; i<len; i++)
       {
-         value->add(res[i]);
-         free(res[i]);           // TODO free the array itself? Or use value->addPreallocated(res[i]) ???
+         value->addPreallocated(res[i]);
       }
       return SYSINFO_RC_SUCCESS;
    }
@@ -180,8 +179,7 @@ LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table)
          table->addRow();
          for (int j=0; j<numColumns; j++)
          {
-            table->setAt(i, j, res[i][j]);
-            free(res[i][j]);     // TODO free the array itself? Or use table->setPreallocatedAt(res[i][j]) ???
+            table->setPreallocatedAt(i, j, res[i][j]);
          }
       }
       return SYSINFO_RC_SUCCESS;
@@ -204,7 +202,7 @@ jstring JNICALL Java_org_netxms_agent_SubAgent_AgentGetParameterArg(JNIEnv *jenv
    {
       TCHAR *param = CStringFromJavaString(jenv, jparam);
       TCHAR arg[MAX_PATH];
-      if (AgentGetParameterArgW(param, (int)jindex, arg, MAX_PATH))
+      if (AgentGetParameterArg(param, (int)jindex, arg, MAX_PATH))
       {
          jresult = JavaStringFromCString(jenv, arg);
       }
@@ -318,7 +316,7 @@ static bool RegisterNatives(JNIEnv *curEnv)
    }
    else
    {
-      AgentWriteLog(NXLOG_ERROR, _T("Failed to find main class %s"), WideStringFromMBString( SubAgent::className() ));;
+      AgentWriteLog(NXLOG_ERROR, _T("Failed to find main class %hs"), SubAgent::className());;
       return false;
    }
 }
@@ -423,10 +421,10 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
                            for (int i=0; i<numActions; i++)
                            {
                               Action action = subAgent->getAction(actionIds[i]);
-                              wcsncpy(g_subAgentInfo.actions[i].name, action.getName(), MAX_PARAM_NAME);
+                              nx_strncpy(g_subAgentInfo.actions[i].name, action.getName(), MAX_PARAM_NAME);
                               g_subAgentInfo.actions[i].handler = actionHandler;
                               g_subAgentInfo.actions[i].arg = actionIds[i];
-                              wcsncpy(g_subAgentInfo.actions[i].description, action.getDescription(), MAX_DB_STRING);
+                              nx_strncpy(g_subAgentInfo.actions[i].description, action.getDescription(), MAX_DB_STRING);
                               // TODO deallocate/destroy action
                            }
 
@@ -439,15 +437,15 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
                               g_subAgentInfo.numParameters = numParameters;
                               g_subAgentInfo.parameters = new NETXMS_SUBAGENT_PARAM[numParameters];
                            }
-                           for (int i=0; i<numParameters; i++)
+                           for(int i = 0; i < numParameters; i++)
                            {
-                              Parameter parameter = subAgent->getParameter(parameterIds[i]);
-                              wcsncpy(g_subAgentInfo.parameters[i].name, parameter.getName(), MAX_PARAM_NAME);
-                              g_subAgentInfo.parameters[i].dataType = parameter.getType().getValue();
+                              Parameter *parameter = subAgent->getParameter(parameterIds[i]);
+                              nx_strncpy(g_subAgentInfo.parameters[i].name, parameter->getName(), MAX_PARAM_NAME);
+                              g_subAgentInfo.parameters[i].dataType = parameter->getType().getValue();
                               g_subAgentInfo.parameters[i].handler = parameterHandler;
                               g_subAgentInfo.parameters[i].arg = parameterIds[i];
-                              wcsncpy(g_subAgentInfo.parameters[i].description, parameter.getDescription(), MAX_DB_STRING);
-                              // TODO deallocate/destroy parameter
+                              nx_strncpy(g_subAgentInfo.parameters[i].description, parameter->getDescription(), MAX_DB_STRING);
+                              delete parameter;
                            }
 
                            AgentWriteDebugLog(7, _T("JAVA: Loading lists"));
@@ -462,7 +460,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
                            for (int i=0; i<numListParameters; i++)
                            {
                               ListParameter listParameter = subAgent->getListParameter(listParameterIds[i]);
-                              wcsncpy(g_subAgentInfo.lists[i].name, listParameter.getName(), MAX_PARAM_NAME);
+                              nx_strncpy(g_subAgentInfo.lists[i].name, listParameter.getName(), MAX_PARAM_NAME);
                               g_subAgentInfo.lists[i].handler = listParameterHandler;
                               g_subAgentInfo.lists[i].arg = listParameterIds[i];
                               // TODO deallocate/destroy listParameter
@@ -480,9 +478,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
                            for (int i=0; i<numPushParameters; i++)
                            {
                               PushParameter pushParameter = subAgent->getPushParameter(pushParameterIds[i]);
-                              wcsncpy(g_subAgentInfo.pushParameters[i].name, pushParameter.getName(), MAX_PARAM_NAME);
+                              nx_strncpy(g_subAgentInfo.pushParameters[i].name, pushParameter.getName(), MAX_PARAM_NAME);
                               g_subAgentInfo.pushParameters[i].dataType = pushParameter.getType().getValue();
-                              wcsncpy(g_subAgentInfo.pushParameters[i].description, pushParameter.getDescription(), MAX_DB_STRING);
+                              nx_strncpy(g_subAgentInfo.pushParameters[i].description, pushParameter.getDescription(), MAX_DB_STRING);
                               // TODO deallocate/destroy pushParameter
                            }
 
@@ -498,23 +496,23 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
                            for (int i=0; i<numTableParameters; i++)
                            {
                               TableParameter tableParameter = subAgent->getTableParameter(tableParameterIds[i]);
-                              wcsncpy(g_subAgentInfo.tables[i].name, tableParameter.getName(), MAX_PARAM_NAME);
+                              nx_strncpy(g_subAgentInfo.tables[i].name, tableParameter.getName(), MAX_PARAM_NAME);
                               g_subAgentInfo.tables[i].handler = tableParameterHandler;
                               g_subAgentInfo.tables[i].arg = tableParameterIds[i];
-                              wcsncpy(g_subAgentInfo.tables[i].instanceColumns, _T(""), MAX_PARAM_NAME);
+                              nx_strncpy(g_subAgentInfo.tables[i].instanceColumns, _T(""), MAX_PARAM_NAME);
                               int numTableColumns;
                               bool haveInstanceColumn = false;
                               TableColumn ** tableColumns = tableParameter.getColumns(&numTableColumns);
                               for (int j=0; j<numTableColumns; j++) {
                                  if (tableColumns[j]->isInstance()) {
                                     if (haveInstanceColumn) {
-                                       wcsncat(g_subAgentInfo.tables[i].instanceColumns, _T("|"), MAX_PARAM_NAME);
+                                       _tcsncat(g_subAgentInfo.tables[i].instanceColumns, _T("|"), MAX_PARAM_NAME);
                                     }
-                                    wcsncat(g_subAgentInfo.tables[i].instanceColumns, tableColumns[j]->getName(), MAX_PARAM_NAME);
+                                    _tcsncat(g_subAgentInfo.tables[i].instanceColumns, tableColumns[j]->getName(), MAX_PARAM_NAME);
                                     haveInstanceColumn = true;
                                  }      
                               }
-                              wcsncpy(g_subAgentInfo.tables[i].description, tableParameter.getDescription(), MAX_DB_STRING);
+                              nx_strncpy(g_subAgentInfo.tables[i].description, tableParameter.getDescription(), MAX_DB_STRING);
                               // TODO deallocate/destroy tableParameter
                            }
                            initialized = TRUE;

@@ -35,18 +35,19 @@
 inline TCHAR *CStringFromJavaString(JNIEnv *env, jstring jstr)
 {
    const jchar *chars = env->GetStringChars(jstr, NULL);
+   jsize len = env->GetStringLength(jstr);
+   TCHAR *str = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
 #ifdef UNICODE
 #if UNICODE_UCS4
-   TCHAR *str = UCS4StringFromUCS2String((const UCS2CHAR *)chars);
+   ucs2_to_ucs4(chars, len, str, len + 1);
 #else
-   TCHAR *str = wcsdup((const WCHAR *)chars);
+   memcpy(str, chars, len * sizeof(WCHAR));
 #endif
 #else
-   size_t len = ucs2_strlen(chars) + 1;
-   char *str = (char *)malloc(len);
-   ucs2_to_mb(chars, len - 1, str, len);
+   ucs2_to_mb(chars, len, str, len + 1);
 #endif
    env->ReleaseStringChars(jstr, chars);
+   str[len] = 0;
    return str;
 }
 

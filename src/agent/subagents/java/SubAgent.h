@@ -129,9 +129,9 @@ namespace org_netxms_agent
 
          Action getAction(TCHAR const* id);
 
-         TCHAR** getParameterIds(int *lenRow);
+         TCHAR **getParameterIds(int *lenRow);
 
-         Parameter getParameter(TCHAR const* id);
+         Parameter *getParameter(TCHAR const* id);
 
          TCHAR** getListParameterIds(int *lenRow);
 
