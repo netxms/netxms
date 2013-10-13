@@ -1061,18 +1061,20 @@ else
 	AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
 	if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
 		AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
-			[AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <pthread.h>
-			],
-			[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
-			ac_cv_struct_pthread_rw=yes, [
-				AC_TRY_COMPILE([
-#define _XOPEN_SOURCE 500
+			[AC_COMPILE_IFELSE([
+				AC_LANG_PROGRAM([
 #include <sys/types.h>
 #include <pthread.h>
 				],
-				[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
+				[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
+			ac_cv_struct_pthread_rw=yes, [
+				AC_COMPILE_IFELSE([
+					AC_LANG_PROGRAM([
+#define _XOPEN_SOURCE 500
+#include <sys/types.h>
+#include <pthread.h>
+					],
+					[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
 				ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
 				if test "$ac_cv_struct_pthread_rw" = "yes"; then
 					CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
@@ -1161,20 +1163,20 @@ if test "x$BUILD_SERVER" = "xyes" ; then
 
       AC_MSG_CHECKING(for rl_insert cast)
 
-      AC_TRY_COMPILE(
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
          [
 #include <stdio.h>
 #include <readline/readline.h>
-         ],[ rl_bind_key('\t', (Function *)rl_insert); ],
+         ],[ rl_bind_key('\t', (Function *)rl_insert); ])],
          [ 
             AC_MSG_RESULT((Function *)) 
             AC_DEFINE(RL_INSERT_CAST,(Function *),Required cast for rl_insert)
          ],[
-         AC_TRY_COMPILE(
+         AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
             [
 #include <stdio.h>
 #include <readline/readline.h>
-            ],[ rl_bind_key('\t', (rl_command_func_t *)rl_insert); ],
+            ],[ rl_bind_key('\t', (rl_command_func_t *)rl_insert); ])],
             [ 
                AC_MSG_RESULT((rl_command_func_t *)) 
                AC_DEFINE(RL_INSERT_CAST,(rl_command_func_t *),Required cast for rl_insert)
