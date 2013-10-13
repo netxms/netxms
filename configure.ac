@@ -194,7 +194,6 @@ AC_ARG_WITH(jdk,
 	COMPONENTS="$COMPONENTS java"
 fi ])
 
-AC_ARG_WITH(oracle,
 AC_ARG_WITH(sqlite,
 [AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
 [ if test "x$withval" != "xno" ; then
@@ -214,6 +213,7 @@ AC_ARG_WITH(odbc,
 	DBDRIVER_SELECTED="yes"
 fi ])
 
+AC_ARG_WITH(oracle,
 [AS_HELP_STRING(--with-oracle,build Oracle database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
