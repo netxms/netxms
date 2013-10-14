@@ -32,7 +32,6 @@ import java.util.jar.Manifest;
 import java.util.jar.Attributes;
 import java.net.URL;
 import java.net.URLClassLoader;
-import bsh.*;
 
 public class SubAgent {
 
