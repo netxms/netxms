@@ -4,7 +4,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.netxms.certificate.TestListener;
-import org.netxms.certificate.loader.KeyStoreRequestListener;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -13,7 +12,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class CertificateManagerProviderTest
 {
    private CertificateManager manager;
-   private final KeyStoreRequestListener testListener = new TestListener();
+   private final CertificateManagerRequestListener testListener = new TestListener();
 
    @Before
    public void setUp()

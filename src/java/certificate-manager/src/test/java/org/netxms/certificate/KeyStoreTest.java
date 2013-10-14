@@ -4,7 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.FileInputStream;
-import java.security.*;
+import java.security.KeyStore;
+import java.security.Signature;
 import java.security.cert.Certificate;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,8 +34,8 @@ public class KeyStoreTest
       fis.close();
 
       cert = keyStore.getCertificate("John Doe");
-      pkEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(
-         "John Doe", new KeyStore.PasswordProtection(password.toCharArray()));
+      pkEntry = (KeyStore.PrivateKeyEntry) keyStore
+         .getEntry("John Doe", new KeyStore.PasswordProtection(password.toCharArray()));
    }
 
    @Test

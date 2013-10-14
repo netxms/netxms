@@ -48,6 +48,7 @@ public class CertificateManagerProvider
          loader = new PKCS12KeyStoreLoader(listener);
       }
 
+      // TODO: JAVA7 Short ver.
       try
       {
          ks = loader.loadKeyStore();
@@ -55,7 +56,6 @@ public class CertificateManagerProvider
       }
       catch(KeyStoreException e)
       {
-         e.printStackTrace();
          certs = new ArrayList<Certificate>(0);
       }
       catch(CertificateException e)
@@ -73,18 +73,21 @@ public class CertificateManagerProvider
          e.printStackTrace();
          certs = new ArrayList<Certificate>(0);
       }
-      catch (NoSuchProviderException e)
+      catch(NoSuchProviderException e)
       {
          e.printStackTrace();
          certs = new ArrayList<Certificate>(0);
       }
-      catch (UnrecoverableEntryException e)
+      catch(UnrecoverableEntryException e)
       {
          e.printStackTrace();
          certs = new ArrayList<Certificate>(0);
       }
 
-      return new CertificateManager(ks, certs);
+      Certificate[] certArray = new Certificate[certs.size()];
+      certs.toArray(certArray);
+
+      return new CertificateManager(ks, certArray);
    }
 
    protected List<Certificate> getCertsFromKeyStore(KeyStore ks)
@@ -97,19 +100,16 @@ public class CertificateManagerProvider
 
       List<Certificate> certs = new ArrayList<Certificate>();
       Enumeration<String> aliases = ks.aliases();
-      //KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(null);
 
       while(aliases.hasMoreElements())
       {
          String alias = aliases.nextElement();
-            //X509Certificate x509Cert = (X509Certificate) ks.getCertificate(alias);
-            //Principal subjectField = x509Cert.getSubjectDN();
-            //Subject subject = SubjectParser.parseSubject(subjectField.toString());
-         if(!ks.isKeyEntry(alias)) continue;
+         //X509Certificate x509Cert = (X509Certificate) ks.getCertificate(alias);
+         //Principal subjectField = x509Cert.getSubjectDN();
+         //Subject subject = SubjectParser.parseSubject(subjectField.toString());
+         if (!ks.isKeyEntry(alias)) continue;
 
          Certificate cert = ks.getCertificate(alias);
-         //KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) ks.getEntry(alias, protParam);
-         //PrivateKey pk = pkEntry.getPrivateKey();
 
          certs.add(cert);
       }
@@ -119,6 +119,9 @@ public class CertificateManagerProvider
 
    public static synchronized void dispose()
    {
+      if (manager == null) return;
+
+      manager.setListener(null);
       manager = null;
    }
 }

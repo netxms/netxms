@@ -1,8 +1,8 @@
 package org.netxms.certificate;
 
-import org.netxms.certificate.loader.KeyStoreRequestListener;
+import org.netxms.certificate.manager.CertificateManagerRequestListener;
 
-public class TestListener implements KeyStoreRequestListener
+public class TestListener implements CertificateManagerRequestListener
 {
    @Override
    public String keyStorePasswordRequested()
@@ -14,5 +14,11 @@ public class TestListener implements KeyStoreRequestListener
    public String keyStoreLocationRequested()
    {
       return "src/test/resource/keystore.p12";
+   }
+
+   @Override
+   public String keyStoreEntryPasswordRequested()
+   {
+      return "test1337";
    }
 }
