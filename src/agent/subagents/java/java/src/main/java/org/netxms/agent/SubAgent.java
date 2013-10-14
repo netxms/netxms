@@ -1,3 +1,25 @@
+/* 
+ ** Java-Bridge NetXMS subagent
+ ** Copyright (C) 2013 TEMPEST a.s.
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **
+ ** File: SubAgent.java
+ **
+ **/
+
 package org.netxms.agent;
 
 // This class is a Java representation of native subagent exposing to it required APIs
@@ -52,6 +74,9 @@ public class SubAgent {
 	protected static native String AgentGetParameterArg(String param, int index);
 	protected static native void AgentSendTrap(int event, String name, String[]args);
 	protected static native boolean AgentPushParameterData(String name, String value);
+	protected static boolean AgentPushParameterData(PushParameter pushParameter) {
+		return AgentPushParameterData(pushParameter.getName(), pushParameter.getValue());
+	}
 	
 	protected static native void AgentWriteLog(int level, String message);
 	protected static void AgentWriteLog(LogLevel level, String message) {
