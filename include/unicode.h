@@ -184,6 +184,7 @@
 #define _tcscpy   wcscpy
 #define _tcsncpy  wcsncpy
 #define _tcslen   wcslen
+#define _tcsnlen  wcsnlen
 #define _tcschr   wcschr
 #define _tcsrchr  wcsrchr
 #define _tcscmp   wcscmp
@@ -262,6 +263,7 @@
 #define _tcscpy   strcpy
 #define _tcsncpy  strncpy
 #define _tcslen   strlen
+#define _tcsnlen  strnlen
 #define _tcschr   strchr
 #define _tcsrchr  strrchr
 #define _tcscmp   strcmp
