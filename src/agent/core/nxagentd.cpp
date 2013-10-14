@@ -541,10 +541,10 @@ static void LoadPlatformSubagent()
 /**
  * Send file to server (subagent API)
  */
-static BOOL SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
+static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
 {
 	if (session == NULL)
-		return FALSE;
+		return false;
 
 	return ((CommSession *)session)->sendFile(requestId, file, offset);
 }

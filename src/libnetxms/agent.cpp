@@ -23,16 +23,14 @@
 
 #include "libnetxms.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
-static BOOL (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
-static BOOL (* s_fpPushData)(const TCHAR *, const TCHAR *) = NULL;
+static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
+static bool (* s_fpPushData)(const TCHAR *, const TCHAR *) = NULL;
 
 /**
  * Initialize subagent API
@@ -40,8 +38,8 @@ static BOOL (* s_fpPushData)(const TCHAR *, const TCHAR *) = NULL;
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
 														void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
 														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-														BOOL (* sendFile)(void *, UINT32, const TCHAR *, long),
-														BOOL (* pushData)(const TCHAR *, const TCHAR *))
+														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
+														bool (* pushData)(const TCHAR *, const TCHAR *))
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;
@@ -50,11 +48,9 @@ void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHA
 	s_fpPushData = pushData;
 }
 
-
-//
-// Write message to agent's log
-//
-
+/**
+ * Write message to agent's log
+ */
 void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
 {
    TCHAR szBuffer[4096];

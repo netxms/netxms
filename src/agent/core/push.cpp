@@ -22,14 +22,13 @@
 
 #include "nxagentd.h"
 
-
 /**
  * Push parameter's data
  */
-BOOL PushData(const TCHAR *parameter, const TCHAR *value)
+bool PushData(const TCHAR *parameter, const TCHAR *value)
 {
 	CSCPMessage msg;
-	BOOL success = FALSE;
+	bool success = false;
 
 	AgentWriteDebugLog(6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
 
@@ -37,16 +36,22 @@ BOOL PushData(const TCHAR *parameter, const TCHAR *value)
 	msg.SetVariable(VID_NAME, parameter);
 	msg.SetVariable(VID_VALUE, value);
 
-   MutexLock(g_hSessionListAccess);
-   for(DWORD i = 0; i < g_dwMaxSessions; i++)
-      if (g_pSessionList[i] != NULL)
-         if (g_pSessionList[i]->canAcceptTraps())
-         {
-            g_pSessionList[i]->sendMessage(&msg);
-            success = TRUE;
-         }
-   MutexUnlock(g_hSessionListAccess);
-
+   if (g_dwFlags & AF_SUBAGENT_LOADER)
+   {
+      success = SendMessageToMasterAgent(&msg);
+   }
+   else
+   {
+      MutexLock(g_hSessionListAccess);
+      for(DWORD i = 0; i < g_dwMaxSessions; i++)
+         if (g_pSessionList[i] != NULL)
+            if (g_pSessionList[i]->canAcceptTraps())
+            {
+               g_pSessionList[i]->sendMessage(&msg);
+               success = true;
+            }
+      MutexUnlock(g_hSessionListAccess);
+   }
 	return success;
 }
 

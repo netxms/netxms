@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,27 +23,23 @@
 #include "nxagentd.h"
 #include <stdarg.h>
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static Queue *s_trapQueue = NULL;
 static QWORD s_genTrapCount = 0;	// Number of generated traps
 static QWORD s_sentTrapCount = 0;	// Number of sent traps
 static QWORD s_trapId = 0;
 static time_t s_lastTrapTime = 0;
 
-
-//
-// Trap sender
-//
-
+/**
+ * Trap sender
+ */
 THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 {
    CSCP_MESSAGE *pMsg;
    UINT32 i;
-   BOOL bTrapSent;
+   bool trapSent;
 
    s_trapQueue = new Queue;
 	s_trapId = (QWORD)time(NULL) << 32;
@@ -53,19 +49,26 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
-      bTrapSent = FALSE;
+      trapSent = false;
 
-      MutexLock(g_hSessionListAccess);
-      for(i = 0; i < g_dwMaxSessions; i++)
-         if (g_pSessionList[i] != NULL)
-            if (g_pSessionList[i]->canAcceptTraps())
-            {
-               g_pSessionList[i]->sendRawMessage(pMsg);
-               bTrapSent = TRUE;
-            }
-      MutexUnlock(g_hSessionListAccess);
+      if (g_dwFlags & AF_SUBAGENT_LOADER)
+      {
+         trapSent = SendRawMessageToMasterAgent(pMsg);
+      }
+      else
+      {
+         MutexLock(g_hSessionListAccess);
+         for(i = 0; i < g_dwMaxSessions; i++)
+            if (g_pSessionList[i] != NULL)
+               if (g_pSessionList[i]->canAcceptTraps())
+               {
+                  g_pSessionList[i]->sendRawMessage(pMsg);
+                  trapSent = true;
+               }
+         MutexUnlock(g_hSessionListAccess);
+      }
 
-      if (bTrapSent)
+      if (trapSent)
 		{
 	      free(pMsg);
 			s_sentTrapCount++;
@@ -120,7 +123,6 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **
       s_trapQueue->Put(msg.CreateMessage());
 	}
 }
-
 
 //
 // Send trap - variant 2
@@ -191,12 +193,10 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
 
 }
 
-
-//
-// Send trap - variant 3
-// Same as variant 2, but uses argument list instead of va_list
-//
-
+/**
+ * Send trap - variant 3
+ * Same as variant 2, but uses argument list instead of va_list
+ */
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, ...)
 {
    va_list args;
@@ -207,11 +207,23 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
 
 }
 
+/**
+ * Forward trap from external subagent to server
+ */
+void ForwardTrap(CSCPMessage *msg)
+{
+	msg->SetVariable(VID_TRAP_ID, s_trapId++);
+   if (s_trapQueue != NULL)
+	{
+		s_genTrapCount++;
+		s_lastTrapTime = time(NULL);
+      s_trapQueue->Put(msg->CreateMessage());
+	}
+}
 
-//
-// Handler for trap statistic DCIs
-//
-
+/**
+ * Handler for trap statistic DCIs
+ */
 LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	switch(arg[0])

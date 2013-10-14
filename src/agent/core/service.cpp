@@ -22,27 +22,21 @@
 
 #include "nxagentd.h"
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 TCHAR g_windowsServiceName[MAX_PATH] = DEFAULT_AGENT_SERVICE_NAME;
 TCHAR g_windowsServiceDisplayName[MAX_PATH] = _T("NetXMS Agent");
 TCHAR g_windowsEventSourceName[MAX_PATH] = DEFAULT_AGENT_EVENT_SOURCE;
 
-
-//
-// Static data
-//
-
+/**
+ * Service handle
+ */
 static SERVICE_STATUS_HANDLE serviceHandle;
 
-
-//
-// Service control handler
-//
-
+/**
+ * Service control handler
+ */
 static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
 {
    SERVICE_STATUS status;
@@ -76,11 +70,9 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
    SetServiceStatus(serviceHandle, &status);
 }
 
-
-//
-// Service main
-//
-
+/**
+ * Service main
+ */
 static VOID WINAPI AgentServiceMain(DWORD argc, LPTSTR *argv)
 {
    SERVICE_STATUS status;
@@ -117,11 +109,9 @@ static VOID WINAPI AgentServiceMain(DWORD argc, LPTSTR *argv)
    Main();
 }
 
-
-//
-// Initialize service
-//
-
+/**
+ * Initialize service
+ */
 void InitService()
 {
    static SERVICE_TABLE_ENTRY serviceTable[2]={ { g_windowsServiceName, AgentServiceMain }, { NULL, NULL } };
@@ -131,11 +121,9 @@ void InitService()
       _tprintf(_T("StartServiceCtrlDispatcher() failed: %s\n"), GetSystemErrorText(GetLastError(), szErrorText, 256));
 }
 
-
-//
-// Create service
-//
-
+/**
+ * Create service
+ */
 void InstallService(TCHAR *execName, TCHAR *confFile)
 {
    SC_HANDLE mgr, service;
@@ -188,11 +176,9 @@ void InstallService(TCHAR *execName, TCHAR *confFile)
    CloseServiceHandle(mgr);
 }
 
-
-//
-// Remove service
-//
-
+/**
+ * Remove service
+ */
 void RemoveService()
 {
    SC_HANDLE mgr, service;
@@ -228,11 +214,9 @@ void RemoveService()
    RemoveEventSource();
 }
 
-
-//
-// Start service
-//
-
+/**
+ * Start service
+ */
 void StartAgentService()
 {
    SC_HANDLE mgr, service;
@@ -266,11 +250,9 @@ void StartAgentService()
    CloseServiceHandle(mgr);
 }
 
-
-//
-// Stop service
-//
-
+/**
+ * Stop service
+ */
 void StopAgentService()
 {
    SC_HANDLE mgr, service;
@@ -331,11 +313,9 @@ void InstallEventSource(const TCHAR *path)
    _tprintf(_T("Event source \"%s\" installed successfully\n"), g_windowsEventSourceName);
 }
 
-
-//
-// Remove event source
-//
-
+/**
+ * Remove event source
+ */
 void RemoveEventSource()
 {
    TCHAR szErrorText[256], key[MAX_PATH];
@@ -352,23 +332,21 @@ void RemoveEventSource()
    }
 }
 
-
-//
-// Wait for service
-//
-
-BOOL WaitForService(DWORD dwDesiredState)
+/**
+ * Wait for service
+ */
+bool WaitForService(DWORD dwDesiredState)
 {
    SC_HANDLE mgr, service;
    TCHAR szErrorText[256];
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
       _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), 
              GetSystemErrorText(GetLastError(), szErrorText, 256));
-      return FALSE;
+      return false;
    }
 
    service = OpenService(mgr, g_windowsServiceName, SERVICE_QUERY_STATUS);
@@ -387,7 +365,7 @@ BOOL WaitForService(DWORD dwDesiredState)
          {
             if (status.dwCurrentState == dwDesiredState)
             {
-               bResult = TRUE;
+               bResult = true;
                break;
             }
          }

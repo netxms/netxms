@@ -1256,8 +1256,8 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
                                           void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
                                           void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-                                          BOOL (* sendFile)(void *, UINT32, const TCHAR *, long),
-                                          BOOL (* pushData)(const TCHAR *, const TCHAR *));
+                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long),
+                                          bool (* pushData)(const TCHAR *, const TCHAR *));
 
 #endif
 

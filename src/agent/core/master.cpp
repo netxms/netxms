@@ -74,6 +74,16 @@ static void H_GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 }
 
 /**
+ * Pipe to master agent
+ */
+#ifdef _WIN32
+static HANDLE s_pipe = INVALID_HANDLE_VALUE;
+#else
+static int s_pipe = -1;
+#endif
+static MUTEX s_mutexPipeWrite = MutexCreate();
+
+/**
  * Listener thread for master agent commands
  */
 THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
@@ -84,14 +94,14 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
       TCHAR pipeName[MAX_PATH];
       _sntprintf(pipeName, MAX_PATH, _T("\\\\.\\pipe\\nxagentd.subagent.%s"), g_masterAgent);
 
-		HANDLE hPipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-		if (hPipe != INVALID_HANDLE_VALUE)
+		s_pipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+		if (s_pipe != INVALID_HANDLE_VALUE)
 		{
 			DWORD pipeMode = PIPE_READMODE_MESSAGE;
-			SetNamedPipeHandleState(hPipe, &pipeMode, NULL, NULL);
+			SetNamedPipeHandleState(s_pipe, &pipeMode, NULL, NULL);
 #else
-      int hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
-      if (hPipe != INVALID_SOCKET)
+      s_pipe = socket(AF_UNIX, SOCK_STREAM, 0);
+      if (s_pipe != INVALID_SOCKET)
       {
 	      struct sockaddr_un remote;
 	      remote.sun_family = AF_UNIX;
@@ -100,21 +110,21 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 #else
          sprintf(remote.sun_path, "/tmp/.nxagentd.subagent.%s", g_masterAgent);
 #endif
-	      if (connect(hPipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
+	      if (connect(s_pipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
          {
-            close(hPipe);
-            hPipe = -1;
+            close(s_pipe);
+            s_pipe = -1;
          }
       }
 
-      if (hPipe != -1)
+      if (s_pipe != -1)
       {
 #endif
 			AgentWriteDebugLog(1, _T("Connected to master agent"));
 
 			while(!(g_dwFlags & AF_SHUTDOWN))
 			{
-				CSCPMessage *msg = ReadMessageFromPipe(hPipe, NULL);
+				CSCPMessage *msg = ReadMessageFromPipe(s_pipe, NULL);
 				if ((msg == NULL) || (g_dwFlags & AF_SHUTDOWN))
 					break;
 
@@ -160,15 +170,15 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 
 				// Send response to pipe
 				CSCP_MESSAGE *rawMsg = response.CreateMessage();
-            bool sendSuccess = SendMessageToPipe(hPipe, rawMsg);
+            bool sendSuccess = SendMessageToPipe(s_pipe, rawMsg);
             free(rawMsg);
             if (!sendSuccess)
                break;
 			}
 #ifdef _WIN32
-			CloseHandle(hPipe);
+			CloseHandle(s_pipe);
 #else
-         close(hPipe);
+         close(s_pipe);
 #endif
 			AgentWriteDebugLog(1, _T("Disconnected from master agent"));
 		}
@@ -189,4 +199,26 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 	}
 	AgentWriteDebugLog(1, _T("Master agent listener stopped"));
 	return THREAD_OK;
+}
+
+/**
+ * Send message to master agent
+ */
+bool SendMessageToMasterAgent(CSCPMessage *msg)
+{
+   CSCP_MESSAGE *rawMsg = msg->CreateMessage();
+   bool success = SendRawMessageToMasterAgent(rawMsg);
+   free(rawMsg);
+   return success;
+}
+
+/**
+ * Send raw message to master agent
+ */
+bool SendRawMessageToMasterAgent(CSCP_MESSAGE *msg)
+{
+	MutexLock(s_mutexPipeWrite);
+   bool success = SendMessageToPipe(s_pipe, msg);
+	MutexUnlock(s_mutexPipeWrite);
+   return success;
 }

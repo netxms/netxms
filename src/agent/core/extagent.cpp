@@ -147,7 +147,27 @@ void ExternalSubagent::connect(HPIPE hPipe)
 		if (msg == NULL)
 			break;
 		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
-		m_msgQueue->put(msg);
+      switch(msg->GetCode())
+      {
+         case CMD_PUSH_DCI_DATA:
+            MutexLock(g_hSessionListAccess);
+            for(DWORD i = 0; i < g_dwMaxSessions; i++)
+               if (g_pSessionList[i] != NULL)
+                  if (g_pSessionList[i]->canAcceptTraps())
+                  {
+                     g_pSessionList[i]->sendMessage(msg);
+                  }
+            MutexUnlock(g_hSessionListAccess);
+            delete msg;
+            break;
+         case CMD_TRAP:
+            ForwardTrap(msg);
+            delete msg;
+            break;
+         default:
+		      m_msgQueue->put(msg);
+            break;
+      }
 	}
 
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection closed"), m_name);
@@ -670,12 +690,18 @@ bool SendMessageToPipe(HPIPE hPipe, CSCP_MESSAGE *msg)
 	bool success = false;
 
 #ifdef _WIN32
+   if (hPipe == INVALID_HANDLE_VALUE)
+      return false;
+
 	DWORD bytes = 0;
    if (WriteFile(hPipe, msg, ntohl(msg->dwSize), &bytes, NULL))
 	{
 		success = (bytes == ntohl(msg->dwSize));
 	}
 #else
+   if (hPipe == -1)
+      return false;
+
 	int bytes = SendEx(hPipe, msg, ntohl(msg->dwSize), 0, NULL); 
 	success = (bytes == ntohl(msg->dwSize));
 #endif

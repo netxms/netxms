@@ -425,6 +425,8 @@ void ListTablesFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 void ListTablesFromExtSubagents(StringList *list);
 CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent);
 bool SendMessageToPipe(HPIPE hPipe, CSCP_MESSAGE *msg);
+bool SendMessageToMasterAgent(CSCPMessage *msg);
+bool SendRawMessageToMasterAgent(CSCP_MESSAGE *msg);
 void ShutdownExtSubagents();
 
 void RegisterApplicationAgent(const TCHAR *name);
@@ -437,12 +439,13 @@ UINT32 UpgradeAgent(TCHAR *pszPkgFile);
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList);
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, ...);
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
+void ForwardTrap(CSCPMessage *msg);
 
 Config *OpenRegistry();
 void CloseRegistry(bool modified);
 
 void StartPushConnector();
-BOOL PushData(const TCHAR *parameter, const TCHAR *value);
+bool PushData(const TCHAR *parameter, const TCHAR *value);
 
 void StartStorageDiscoveryConnector();
 
@@ -456,7 +459,7 @@ void InstallService(TCHAR *execName, TCHAR *confFile);
 void RemoveService();
 void StartAgentService();
 void StopAgentService();
-BOOL WaitForService(DWORD dwDesiredState);
+bool WaitForService(DWORD dwDesiredState);
 void InstallEventSource(const TCHAR *path);
 void RemoveEventSource();
 
