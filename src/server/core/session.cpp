@@ -2539,7 +2539,7 @@ void ClientSession::modifyObject(CSCPMessage *pRequest)
 			if (dwResult == RCC_SUCCESS)
 			{
 				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, dwObjectId,
-								  _T("Object modified from client"));
+								  _T("Object %s modified from client"), pObject->Name());
 			}
 			else
 			{
@@ -2630,7 +2630,10 @@ void ClientSession::createUser(CSCPMessage *pRequest)
          dwResult = CreateNewUser(szUserName, bIsGroup, &dwUserId);
          msg.SetVariable(VID_RCC, dwResult);
          if (dwResult == RCC_SUCCESS)
+         {
             msg.SetVariable(VID_USER_ID, dwUserId);   // Send id of new user to client
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, dwUserId, _T("%s %s created"), bIsGroup ? _T("Group") : _T("User"), szUserName);
+         }
       }
       else
       {
@@ -2666,7 +2669,16 @@ void ClientSession::updateUser(CSCPMessage *pRequest)
    }
    else
    {
-      msg.SetVariable(VID_RCC, ModifyUserDatabaseObject(pRequest));
+      UINT32 result = ModifyUserDatabaseObject(pRequest);
+      if (result == RCC_SUCCESS)
+      {
+         TCHAR name[MAX_DB_STRING];
+         UINT32 id = pRequest->GetVariableLong(VID_USER_ID);
+         ResolveUserId(id, name, MAX_DB_STRING);
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, id, 
+            _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
+      }
+      msg.SetVariable(VID_RCC, result);
    }
 
    // Send response
@@ -2827,11 +2839,11 @@ void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 				 (pObject->Type() != OBJECT_TEMPLATEGROUP) &&
 				 (pObject->Type() != OBJECT_TEMPLATEROOT))
 			{
-				BOOL bIsManaged;
-
-				bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
+				BOOL bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
 				pObject->setMgmtStatus(bIsManaged);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, pObject->Id(),
+               _T("Object %s set to %s state"), bIsManaged ? _T("managed") : _T("unmanaged"), pObject->Name());
 			}
 			else
 			{
@@ -2886,6 +2898,13 @@ void ClientSession::setPassword(CSCPMessage *pRequest)
 			oldPassword[0] = 0;
       dwResult = SetUserPassword(dwUserId, newPassword, oldPassword, dwUserId == m_dwUserId);
       msg.SetVariable(VID_RCC, dwResult);
+
+      if (dwResult == RCC_SUCCESS)
+      {
+         TCHAR userName[MAX_DB_STRING];
+         ResolveUserId(dwUserId, userName, MAX_DB_STRING);
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0, _T("Changed password for user %s"), userName);
+      }
    }
    else
    {
@@ -4365,6 +4384,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 						   // If creation was successful do binding and set comments if needed
 						   if (pObject != NULL)
 						   {
+							   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, pObject->Id(), _T("Object %s created"), pObject->Name());
 							   if ((pParent != NULL) &&          // parent can be NULL for nodes
 							       (iClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
 							   {
@@ -4657,6 +4677,7 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
 				{
 					ThreadCreate(DeleteObjectWorker, 0, pObject);
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, pObject->Id(), _T("Object %s deleted"), pObject->Name());
 				}
 				else
 				{
@@ -4666,11 +4687,13 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
          else
          {
             msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+            WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, pObject->Id(), _T("Access denied on delete object %s"), pObject->Name());
          }
       }
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, pObject->Id(), _T("Access denied on delete object %s"), pObject->Name());
       }
    }
    else
@@ -4812,6 +4835,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
       if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
 			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, m_dwUserId, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0));
+			WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, pObject->Id(), _T("Acknowledged alarm %d on object %s"), dwAlarmId, pObject->Name());
       }
       else
       {
@@ -4851,6 +4875,8 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
       if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.resolveById(dwAlarmId, m_dwUserId, terminate));
+         WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, pObject->Id(),
+            _T("%s alarm %d on object %s"), terminate ? _T("Terminated") : _T("Resolved"), dwAlarmId, pObject->Name());
       }
       else
       {
@@ -11394,7 +11420,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 					if (AddJob(job))
 					{
 						WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, nodeId,
-										  _T("File upload initiated, local='%s' remote='%s'"), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
+										  _T("File upload to agent initiated, local='%s' remote='%s'"), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
 						msg.SetVariable(VID_JOB_ID, job->getId());
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
 					}
@@ -11640,11 +11666,9 @@ void ClientSession::getVlans(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Receive file from client
-//
-
+/**
+ * Receive file from client
+ */
 void ClientSession::receiveFile(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -11673,6 +11697,8 @@ void ClientSession::receiveFile(CSCPMessage *request)
             m_dwFileRqId = request->GetId();
             m_dwUploadCommand = CMD_UPLOAD_FILE;
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
+               _T("Started upload of file \"%s\" to server"), fileName);
          }
          else
          {

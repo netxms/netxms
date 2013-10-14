@@ -174,11 +174,9 @@ BOOL LoadUsers()
    return TRUE;
 }
 
-
-//
-// Save user list to database
-//
-
+/**
+ * Save user list to database
+ */
 void SaveUsers(DB_HANDLE hdb)
 {
    int i;
