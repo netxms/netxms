@@ -341,6 +341,7 @@ doc/RadenSolutions.xml -text
 doc/asn1.npp.styling.xml -text
 doc/comparison_netxms_nnm.doc -text
 doc/doxygen.md -text
+doc/idea-codestyle/RadenSolutions.xml -text svneol=unset#application/xml
 doc/integration/HPOM_Integration.docx -text
 doc/internal/ComponentDiscovery[!!-~]-[!!-~]Draft.odt -text
 doc/internal/NetworkDeviceDrivers.docx -text
