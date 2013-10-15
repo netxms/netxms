@@ -34,9 +34,6 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.users.UserManager;
-import org.netxms.certificate.loader.KeyStoreRequestListener;
-import org.netxms.certificate.manager.CertificateManager;
-import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
@@ -143,7 +140,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		{
 			if (!autoConnect)
 			{
-				
 				LoginDialog loginDialog = new LoginDialog(null);
 				if (loginDialog.open() != Window.OK)
 					System.exit(0);
@@ -196,7 +192,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			}
 		} while(!success);
 
-		if (!success) return;
+		if (!success) 
+			return;
 		
       // Suggest user to change password if it is expired
       final Session session = ConsoleSharedData.getSession();
@@ -206,53 +203,59 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       }
 	}
 
-	private void requestPasswordChange(String password, final Session session)
+	/**
+	 * @param currentPassword
+	 * @param session
+	 */
+	private void requestPasswordChange(final String currentPassword, final Session session)
 	{
-		final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
-      if (dlg.open() != Window.OK) return;
-
-      final String currentPassword = password;
-      IRunnableWithProgress job = new IRunnableWithProgress() {
-         @Override
-         public void run(IProgressMonitor monitor)
-            throws InvocationTargetException, InterruptedException
-         {
-            try
-            {
-               monitor.setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
-               ((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
-               monitor.setTaskName(""); //$NON-NLS-1$
-            } 
-            catch(Exception e)
-            {
-               throw new InvocationTargetException(e);
-            } 
-            finally
-            {
-               monitor.done();
-            }
-         }
-      };
-      
-      try
-      {
-         ModalContext.run(job, true, SplashHandler.getInstance()
-            .getBundleProgressMonitor(), Display.getCurrent());
-         MessageDialog.openInformation(null,
-            Messages.NXMCWorkbenchWindowAdvisor_title_information,
-            Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
-      } 
-      catch(InvocationTargetException e)
-      {
-         MessageDialog.openError(null,
-            Messages.NXMCWorkbenchWindowAdvisor_title_error,
-            Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd
-               + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
-      } 
-      catch(InterruptedException e)
-      {
-         MessageDialog.openError(null,
-            Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
-      }
+		while(true)
+		{
+			final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
+	      if (dlg.open() != Window.OK) 
+	      	return;
+	
+	      IRunnableWithProgress job = new IRunnableWithProgress() {
+	         @Override
+	         public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
+	         {
+	            try
+	            {
+	               monitor.setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
+	               ((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
+	               monitor.setTaskName(""); //$NON-NLS-1$
+	            } 
+	            catch(Exception e)
+	            {
+	               throw new InvocationTargetException(e);
+	            } 
+	            finally
+	            {
+	               monitor.done();
+	            }
+	         }
+	      };
+	      
+	      try
+	      {
+	         ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
+	         MessageDialog.openInformation(null, 
+	         	Messages.NXMCWorkbenchWindowAdvisor_title_information,
+	            Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
+	         return;
+	      } 
+	      catch(InvocationTargetException e)
+	      {
+	         MessageDialog.openError(null,
+	            Messages.NXMCWorkbenchWindowAdvisor_title_error,
+	            Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd
+	               + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+	      } 
+	      catch(InterruptedException e)
+	      {
+	         MessageDialog.openError(null,
+	            Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
+	      }
+		}
 	}
 }

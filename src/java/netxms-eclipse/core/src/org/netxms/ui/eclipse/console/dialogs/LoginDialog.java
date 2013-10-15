@@ -40,7 +40,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -340,7 +339,6 @@ public class LoginDialog extends Dialog implements SelectionListener, Certificat
 		settings.put("Connect.Server", comboServer.getText()); //$NON-NLS-1$
 		settings.put("Connect.ServerHistory", items.toArray(new String[items.size()])); //$NON-NLS-1$
 		settings.put("Connect.Login", textLogin.getText()); //$NON-NLS-1$
-		//      settings.put("Connect.Encrypt", checkBoxEncrypt.getSelection()); //$NON-NLS-1$
 
 		password = textPassword.getText();
 
