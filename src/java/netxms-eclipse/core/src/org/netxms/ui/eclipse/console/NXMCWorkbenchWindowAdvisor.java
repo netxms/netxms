@@ -34,6 +34,9 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.users.UserManager;
+import org.netxms.certificate.loader.KeyStoreRequestListener;
+import org.netxms.certificate.manager.CertificateManager;
+import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
@@ -46,7 +49,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  * Workbench window advisor
  */
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
-{
+{	
 	/**
 	 * @param configurer
 	 */
@@ -135,12 +138,13 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		}
 
 		boolean encrypt = true;
-		LoginDialog loginDialog;
+
 		do
 		{
 			if (!autoConnect)
 			{
-				loginDialog = new LoginDialog(null);
+				
+				LoginDialog loginDialog = new LoginDialog(null);
 				if (loginDialog.open() != Window.OK)
 					System.exit(0);
 				password = loginDialog.getPassword();
@@ -192,17 +196,20 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			}
 		} while(!success);
 
-		if (!success) 
-			return;
+		if (!success) return;
 		
       // Suggest user to change password if it is expired
       final Session session = ConsoleSharedData.getSession();
-      if (!session.isPasswordExpired()) 
-      	return;
+      if (session.isPasswordExpired()) 
+      {
+      	requestPasswordChange(password, session);
+      }
+	}
 
-      final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
-      if (dlg.open() != Window.OK) 
-      	return;
+	private void requestPasswordChange(String password, final Session session)
+	{
+		final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
+      if (dlg.open() != Window.OK) return;
 
       final String currentPassword = password;
       IRunnableWithProgress job = new IRunnableWithProgress() {

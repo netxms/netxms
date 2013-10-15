@@ -37,7 +37,6 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
@@ -286,6 +285,7 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.zest.jface"/>
       <plugin id="org.eclipse.zest.layouts"/>
       <plugin id="org.mozilla.javascript"/>
+      <plugin id="org.netxms.certificatemanager"/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
