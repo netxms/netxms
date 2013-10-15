@@ -249,6 +249,7 @@ src/java/netxms-client-api/.settings
 src/java/netxms-client/.classpath
 src/java/netxms-client/.project
 src/java/netxms-client/.settings
+src/java/netxms-eclipse/core/jar/certificate-manager-*.jar
 src/java/netxms-eclipse/core/jar/netxms-base-*.jar
 src/java/netxms-eclipse/core/jar/netxms-client-*.jar
 src/libexpat/Makefile

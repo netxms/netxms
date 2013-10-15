@@ -9,8 +9,8 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>certificate-manager</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
-    <name>Certificate Manager</name>
+    <version>${parent.version}</version>
+    <name>NetXMS Certificate Manager</name>
     <url>http://www.netxms.org</url>
 
     <properties>
