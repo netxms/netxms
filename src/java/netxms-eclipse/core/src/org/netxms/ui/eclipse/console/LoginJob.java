@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.console;
 
 import java.lang.reflect.InvocationTargetException;
+import java.security.cert.Certificate;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -32,6 +33,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.console.api.SessionProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+
+import static org.netxms.ui.eclipse.console.AuthenticationMethod.*;
 
 /**
  * Login job
@@ -59,22 +62,24 @@ public class LoginJob implements IRunnableWithProgress
 	private Display display;
 	private String server;
 	private String loginName;
-	private String password;
 	private boolean encryptSession;
-
+	private AuthenticationMethod authMethod;
+	private String password;
+	private Certificate cert;
+	
 	/**
 	 * @param display
 	 * @param server
 	 * @param loginName
-	 * @param password
+	 * @param encryptSession
 	 */
-	public LoginJob(Display display, String server, String loginName, String password, boolean encryptSession)
+	public LoginJob(Display display, String server, String loginName, boolean encryptSession)
 	{
 		this.display = display;
 		this.server = server;
 		this.loginName = loginName;
-		this.password = password;
 		this.encryptSession = encryptSession;
+		authMethod = AUTHENTICATION_NULL;
 	}
 
 	/* (non-Javadoc)
@@ -227,5 +232,37 @@ public class LoginJob implements IRunnableWithProgress
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	/**
+	 * Set the authentication method for this login job
+	 * 
+	 * @param method authentication method to use
+	 */
+	private void setAuthenticationMethod(AuthenticationMethod method)
+	{
+	   authMethod = method;
+	}
+	
+	/**
+	 * Set password for this login job
+	 * 
+	 * @param password
+	 */
+	public void setPassword(String password) 
+	{
+	   this.password = password;
+	   setAuthenticationMethod(AUTHENTICATION_PASSWORD);
+	}
+	
+	/**
+	 * Set certificate for this login job
+	 * 
+	 * @param cert
+	 */
+	public void setCertificate(Certificate cert)
+	{
+	   this.cert = cert;
+	   setAuthenticationMethod(AUTHENTICATION_CERTIFICATE);
 	}
 }
