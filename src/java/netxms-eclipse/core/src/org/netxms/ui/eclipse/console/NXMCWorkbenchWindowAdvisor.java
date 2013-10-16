@@ -117,7 +117,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       boolean success = false;
       boolean autoConnect = false;
       String password;
-      AuthenticationMethod authMethod = null;
 
       for(String s : Platform.getCommandLineArgs())
       {
@@ -146,7 +145,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       {
          if (!autoConnect)
          {
-            authMethod = showLoginDialog(loginDialog);
+            showLoginDialog(loginDialog);
          }
          else
          {
@@ -158,7 +157,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
                encrypt); //$NON-NLS-1$
          
 
-         switch(authMethod) 
+         switch(loginDialog.getAuthenticationMethod()) 
          { 
             case AUTHENTICATION_PASSWORD:
                job.setPassword(loginDialog.getPassword());
@@ -238,15 +237,13 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
    }
 
    /**
+    * 
     * @param dialog
-    * @return
     */
-   private AuthenticationMethod showLoginDialog(LoginDialog dialog)
+   private void showLoginDialog(LoginDialog dialog)
    {
       if (dialog.open() != Window.OK)
          System.exit(0);
-
-      return dialog.getAuthenticationMethod();
    }
 
    /**
