@@ -19,11 +19,12 @@
 package org.netxms.ui.eclipse.dashboard.api;
 
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
  * Base class for custom dashboard widgets
  */
-public abstract class CustomDashboardElement extends Composite
+public abstract class CustomDashboardElement extends DashboardComposite
 {
 	/**
 	 * @param parent

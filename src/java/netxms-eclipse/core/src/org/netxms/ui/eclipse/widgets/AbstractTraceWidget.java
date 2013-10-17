@@ -360,7 +360,7 @@ public abstract class AbstractTraceWidget extends Composite
 	 */
 	protected void runInUIThread(final Runnable runnable)
 	{
-		viewer.getControl().getDisplay().asyncExec(runnable);
+		getDisplay().asyncExec(runnable);
 	}
 	
 	/**
