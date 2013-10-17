@@ -24,12 +24,12 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
          ks = KeyStore.getInstance("PKCS12");
 
          String ksLocation = listener.keyStoreLocationRequested();
-         String keyStorePassword = listener.keyStorePasswordRequested();
 
          // TODO: JAVA7 try-with-resources
          FileInputStream fis = new FileInputStream(ksLocation);
          try
          {
+            String keyStorePassword = listener.keyStorePasswordRequested();
             ks.load(fis, keyStorePassword.toCharArray());
          }
          finally
@@ -39,7 +39,6 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
       }
       catch(Exception e)
       {
-         //e.printStackTrace();
          throw new KeyStoreLoaderException(e.getMessage());
       }
 

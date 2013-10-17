@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
@@ -40,6 +41,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -429,14 +431,15 @@ public class LoginDialog extends Dialog implements SelectionListener
       if (comboCert.getItemCount() != 0)
          return;
 
-
       try
       {
          certMgr.load();
       }
       catch(KeyStoreLoaderException ksle)
       {
-         System.out.println(ksle.getMessage());
+         Shell shell = Display.getCurrent().getActiveShell();
+      	MessageDialog.openError(shell, "Whoops!", "The password you provided appears to be wrong.");
+         return;
       }
 
       Certificate[] certs = certMgr.getCerts();
@@ -454,6 +457,11 @@ public class LoginDialog extends Dialog implements SelectionListener
       }
 
       comboCert.setItems(subjectStrings);
+      
+      if(comboCert.getItemCount() != 0)
+      {
+      	comboCert.select(0);
+      }
    }
 
    @Override
