@@ -29,8 +29,6 @@ import org.netxms.client.snmp.MibObject;
  */
 public class MibTreeLabelProvider implements ILabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ILabelProvider#getImage(java.lang.Object)
 	 */

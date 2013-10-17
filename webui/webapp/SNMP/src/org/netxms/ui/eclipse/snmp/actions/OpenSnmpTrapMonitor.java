@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.snmp.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
@@ -31,6 +30,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Open syslog monitor view
@@ -81,7 +81,7 @@ public class OpenSnmpTrapMonitor implements IWorkbenchWindowActionDelegate
 						} 
 						catch (PartInitException e) 
 						{
-							MessageDialog.openError(window.getShell(), Messages.OpenSnmpTrapMonitor_Error, Messages.OpenSnmpTrapMonitor_ErrorText + e.getMessage());
+							MessageDialogHelper.openError(window.getShell(), Messages.OpenSnmpTrapMonitor_Error, Messages.OpenSnmpTrapMonitor_ErrorText + e.getMessage());
 						}
 					}
 				});

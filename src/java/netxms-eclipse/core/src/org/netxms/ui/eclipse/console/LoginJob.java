@@ -222,11 +222,11 @@ public class LoginJob implements IRunnableWithProgress
       switch(authMethod)
       {
          case AUTHENTICATION_PASSWORD:
-            session.usePassword(password);
+            session.setPassword(password);
             break;
 
          case AUTHENTICATION_CERTIFICATE:
-            session.useSignature(signature);
+            session.setSignature(signature);
       }
 
       return session;

@@ -54,8 +54,6 @@ import org.netxms.webui.core.Messages;
  */
 public class AbstractSelector extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int USE_HYPERLINK = 0x0001;
 	public static final int HIDE_LABEL = 0x0002;
 	public static final int USE_TEXT = 0x0004;
@@ -75,6 +73,7 @@ public class AbstractSelector extends Composite
 	 * 
 	 * @param parent
 	 * @param style
+	 * @param options
 	 */
 	public AbstractSelector(Composite parent, int style, int options)
 	{
@@ -148,8 +147,6 @@ public class AbstractSelector extends Composite
 			selectionButton.setImage(SharedIcons.IMG_FIND);
 			selectionButton.setToolTipText(getSelectionButtonToolTip());
 			selectionButton.addSelectionListener(new SelectionListener() {
-				private static final long serialVersionUID = 1L;
-	
 				@Override
 				public void widgetDefaultSelected(SelectionEvent e)
 				{
@@ -172,8 +169,6 @@ public class AbstractSelector extends Composite
 				clearingButton.setImage(SharedIcons.IMG_CLEAR);
 				clearingButton.setToolTipText(getClearingButtonToolTip());
 				clearingButton.addSelectionListener(new SelectionListener() {
-					private static final long serialVersionUID = 1L;
-
 					@Override
 					public void widgetDefaultSelected(SelectionEvent e)
 					{
@@ -195,8 +190,6 @@ public class AbstractSelector extends Composite
 		text.setToolTipText(getTextToolTip());
 		
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -222,8 +215,6 @@ public class AbstractSelector extends Composite
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

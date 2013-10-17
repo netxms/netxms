@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,7 @@ package org.netxms.ui.eclipse.snmp.dialogs;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -54,6 +52,7 @@ import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.helpers.ParamMappingLabelProvider;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -62,8 +61,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class TrapConfigurationDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-	private static final String PARAMLIST_TABLE_SETTINGS = "TrapConfigurationDialog.ParamList";
+	private static final String PARAMLIST_TABLE_SETTINGS = "TrapConfigurationDialog.ParamList"; //$NON-NLS-1$
 	
 	private SnmpTrap trap;
 	private List<SnmpTrapParameterMapping> pmap;
@@ -139,8 +137,6 @@ public class TrapConfigurationDialog extends Dialog
 		gd.verticalAlignment = SWT.BOTTOM;
 		buttonSelect.setLayoutData(gd);
 		buttonSelect.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -203,8 +199,6 @@ public class TrapConfigurationDialog extends Dialog
 		buttonAdd.setText(Messages.TrapConfigurationDialog_Add);
 		buttonAdd.setLayoutData(new RowData(WidgetHelper.BUTTON_WIDTH_HINT, SWT.DEFAULT));
 		buttonAdd.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -221,8 +215,6 @@ public class TrapConfigurationDialog extends Dialog
 		buttonEdit = new Button(buttonArea, SWT.PUSH);
 		buttonEdit.setText(Messages.TrapConfigurationDialog_Edit);
 		buttonEdit.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -239,8 +231,6 @@ public class TrapConfigurationDialog extends Dialog
 		buttonDelete = new Button(buttonArea, SWT.PUSH);
 		buttonDelete.setText(Messages.TrapConfigurationDialog_Delete);
 		buttonDelete.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -397,7 +387,7 @@ public class TrapConfigurationDialog extends Dialog
 		}
 		catch(SnmpObjectIdFormatException e)
 		{
-			MessageDialog.openWarning(getShell(), Messages.TrapConfigurationDialog_Warning, Messages.TrapConfigurationDialog_WarningInvalidOID);
+			MessageDialogHelper.openWarning(getShell(), Messages.TrapConfigurationDialog_Warning, Messages.TrapConfigurationDialog_WarningInvalidOID);
 			return;
 		}
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,49 +19,27 @@
 package org.netxms.ui.eclipse.snmp.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapMonitorFilter;
-import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapMonitorLabelProvider;
+import org.netxms.ui.eclipse.snmp.widgets.SnmpTrapTraceWidget;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
+import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
 
 /**
  * SNMP trap monitor
  */
-public class SnmpTrapMonitor extends AbstractTraceView implements SessionListener
+public class SnmpTrapMonitor extends AbstractTraceView
 {
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor"; //$NON-NLS-1$
 	
-	public static final int COLUMN_TIMESTAMP = 0;
-	public static final int COLUMN_SOURCE_IP = 1;
-	public static final int COLUMN_SOURCE_NODE = 2;
-	public static final int COLUMN_OID = 3;
-	public static final int COLUMN_VARBINDS = 4;
-	
-	private NXCSession session;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
-	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
-		session.addListener(this);
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
 	 */
@@ -71,6 +49,7 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 		super.init(site, memento);
 		if (memento != null)
 		{
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.SnmpTrapMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -88,65 +67,12 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#setupViewer(org.eclipse.jface.viewers.TableViewer)
-	 */
-	@Override
-	protected void setupViewer(TableViewer viewer)
-	{
-		addColumn(Messages.SnmpTrapMonitor_ColTime, 150);
-		addColumn(Messages.SnmpTrapMonitor_ColSourceIP, 120);
-		addColumn(Messages.SnmpTrapMonitor_ColSourceNode, 200);
-		addColumn(Messages.SnmpTrapMonitor_ColOID, 200);
-		addColumn(Messages.SnmpTrapMonitor_ColVarbinds, 600);
-		
-		viewer.setLabelProvider(new SnmpTrapMonitorLabelProvider());
-		setFilter(new SnmpTrapMonitorFilter());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#getDialogSettings()
-	 */
-	@Override
-	protected IDialogSettings getDialogSettings()
-	{
-		return Activator.getDefault().getDialogSettings();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#getConfigPrefix()
-	 */
-	@Override
-	protected String getConfigPrefix()
-	{
-		return "SnmpTrapMonitor"; //$NON-NLS-1$
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
-	 */
-	@Override
-	public void notificationHandler(final SessionNotification n)
-	{
-		if (n.getCode() == NXCNotification.NEW_SNMP_TRAP)
-		{
-			runInUIThread(new Runnable() {
-				@Override
-				public void run()
-				{
-					addElement(n.getObject());
-				}
-			});
-		}
-	}
-
-	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
 	 */
 	@Override
 	public void dispose()
 	{
-		session.removeListener(this);
-		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.SnmpTrapMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -161,5 +87,14 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 			}
 		}.start();
 		super.dispose();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#createTraceWidget(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	protected AbstractTraceWidget createTraceWidget(Composite parent)
+	{
+		return new SnmpTrapTraceWidget(parent, SWT.NONE, this);
 	}
 }

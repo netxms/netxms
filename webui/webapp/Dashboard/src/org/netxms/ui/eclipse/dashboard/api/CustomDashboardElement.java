@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,12 @@
 package org.netxms.ui.eclipse.dashboard.api;
 
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
  * Base class for custom dashboard widgets
  */
-public abstract class CustomDashboardElement extends Composite
+public abstract class CustomDashboardElement extends DashboardComposite
 {
 	/**
 	 * @param parent

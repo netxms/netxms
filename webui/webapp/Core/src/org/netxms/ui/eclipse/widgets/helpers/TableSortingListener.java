@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@ import org.eclipse.swt.widgets.TableColumn;
  */
 public class TableSortingListener extends SelectionAdapter
 {
-	private static final long serialVersionUID = 1L;
-
 	private TableViewer viewer;
 	
 	/**

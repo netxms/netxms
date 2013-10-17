@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,18 +24,18 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Composite widget - text wit label
+ * Composite widget - text with label
  */
 public class LabeledText extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	private Label label;
 	private Text text;
-
+	private FormToolkit toolkit;
+	
 	/**
 	 * @param parent
 	 * @param style
@@ -43,11 +43,11 @@ public class LabeledText extends Composite
 	public LabeledText(Composite parent, int style)
 	{
 		super(parent, style);
+		toolkit = null;
 		createContent(SWT.SINGLE | SWT.BORDER);
 	}
 
 	/**
-	 * 
 	 * @param parent
 	 * @param style
 	 * @param textStyle
@@ -55,6 +55,21 @@ public class LabeledText extends Composite
 	public LabeledText(Composite parent, int style, int textStyle)
 	{
 		super(parent, style);
+		toolkit = null;
+		createContent(textStyle);
+	}
+	
+	/**
+	 * @param parent
+	 * @param style
+	 * @param textStyle
+	 * @param toolkit
+	 */
+	public LabeledText(Composite parent, int style, int textStyle, FormToolkit toolkit)
+	{
+		super(parent, style);
+		this.toolkit = toolkit;
+		toolkit.adapt(this);
 		createContent(textStyle);
 	}
 	
@@ -73,12 +88,12 @@ public class LabeledText extends Composite
 		layout.marginHeight = 0;
 		setLayout(layout);
 		
-		label = new Label(this, SWT.NONE);
+		label = (toolkit != null) ? toolkit.createLabel(this, "") : new Label(this, SWT.NONE);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
 		
-		text = new Text(this, textStyle);
+		text = (toolkit != null) ? toolkit.createText(this, "", textStyle) : new Text(this, textStyle);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -153,5 +168,14 @@ public class LabeledText extends Composite
 		super.setEnabled(enabled);
 		text.setEnabled(enabled);
 		label.setEnabled(enabled);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Composite#setFocus()
+	 */
+	@Override
+	public boolean setFocus()
+	{
+		return text.setFocus();
 	}
 }

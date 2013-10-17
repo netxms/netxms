@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.snmp.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -39,6 +38,7 @@ import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.client.snmp.SnmpTrapParameterMapping;
 import org.netxms.ui.eclipse.snmp.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -47,8 +47,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ParamMappingEditDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private SnmpTrapParameterMapping pm;
 	private Text description;
 	private Button radioByOid;
@@ -110,8 +108,6 @@ public class ParamMappingEditDialog extends Dialog
 		radioByOid.setText(Messages.ParamMappingEditDialog_ByOID);
 		radioByOid.setSelection(pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID);
 		radioByOid.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -148,8 +144,6 @@ public class ParamMappingEditDialog extends Dialog
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 		buttonSelect.setLayoutData(gd);
 		buttonSelect.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -167,8 +161,6 @@ public class ParamMappingEditDialog extends Dialog
 		radioByPosition.setText(Messages.ParamMappingEditDialog_ByPos);
 		radioByPosition.setSelection(pm.getType() == SnmpTrapParameterMapping.BY_POSITION);
 		radioByPosition.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -266,7 +258,7 @@ public class ParamMappingEditDialog extends Dialog
 			}
 			catch(SnmpObjectIdFormatException e)
 			{
-				MessageDialog.openWarning(getShell(), Messages.ParamMappingEditDialog_Warning, Messages.ParamMappingEditDialog_WarningInvalidOID);
+				MessageDialogHelper.openWarning(getShell(), Messages.ParamMappingEditDialog_Warning, Messages.ParamMappingEditDialog_WarningInvalidOID);
 				return;
 			}
 		}

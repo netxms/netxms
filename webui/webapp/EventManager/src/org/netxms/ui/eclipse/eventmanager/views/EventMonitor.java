@@ -18,105 +18,21 @@
  */
 package org.netxms.ui.eclipse.eventmanager.views;
 
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.PartInitException;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.eventmanager.Activator;
-import org.netxms.ui.eclipse.eventmanager.Messages;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.EventLabelProvider;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.EventMonitorFilter;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventTraceWidget;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
+import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
 
 /**
  * Event monitor
  */
-public class EventMonitor extends AbstractTraceView implements SessionListener
+public class EventMonitor extends AbstractTraceView
 {
 	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.EventMonitor"; //$NON-NLS-1$
 	
-	public static final int COLUMN_TIMESTAMP = 0;
-	public static final int COLUMN_SOURCE = 1;
-	public static final int COLUMN_SEVERITY = 2;
-	public static final int COLUMN_EVENT = 3;
-	public static final int COLUMN_MESSAGE = 4;
-	
-	private NXCSession session;
-	private Action actionShowColor; 
-	private Action actionShowIcons;
-	private EventLabelProvider labelProvider;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
-	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
-		session.addListener(this);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#setupViewer(org.eclipse.jface.viewers.TableViewer)
-	 */
-	@Override
-	protected void setupViewer(final TableViewer viewer)
-	{
-		labelProvider = new EventLabelProvider();
-		viewer.setLabelProvider(labelProvider);
-		
-		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		labelProvider.setShowColor(ps.getBoolean("EventMonitor.showColor")); //$NON-NLS-1$
-		labelProvider.setShowIcons(ps.getBoolean("EventMonitor.showIcons")); //$NON-NLS-1$
-		
-		addColumn(Messages.EventMonitor_ColTimestamp, 150);
-		addColumn(Messages.EventMonitor_ColSource, 200);
-		addColumn(Messages.EventMonitor_ColSeverity, 90);
-		addColumn(Messages.EventMonitor_ColEvent, 200);
-		addColumn(Messages.EventMonitor_ColMessage, 600);
-		
-		setFilter(new EventMonitorFilter());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#createActions()
-	 */
-	@Override
-	protected void createActions()
-	{
-		super.createActions();
-		
-		actionShowColor = new Action(Messages.EventMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
-			@Override
-			public void run()
-			{
-				labelProvider.setShowColor(actionShowColor.isChecked());
-				refresh();
-			}
-		};
-		actionShowColor.setChecked(labelProvider.isShowColor());
-		
-		actionShowIcons = new Action(Messages.EventMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
-			@Override
-			public void run()
-			{
-				labelProvider.setShowIcons(actionShowIcons.isChecked());
-				refresh();
-			}
-		};
-		actionShowIcons.setChecked(labelProvider.isShowIcons());
-	}
-
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
 	 */
@@ -125,57 +41,16 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 	{
 		super.fillLocalPullDown(manager);
 		manager.add(new Separator());
-		manager.add(actionShowColor);
-		manager.add(actionShowIcons);
+		manager.add(((EventTraceWidget)getTraceWidget()).getActionShowColor());
+		manager.add(((EventTraceWidget)getTraceWidget()).getActionShowIcons());
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#createTraceWidget(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	public void notificationHandler(final SessionNotification n)
+	protected AbstractTraceWidget createTraceWidget(Composite parent)
 	{
-		if (n.getCode() == NXCNotification.NEW_EVENTLOG_RECORD)
-		{
-			runInUIThread(new Runnable() {
-				@Override
-				public void run()
-				{
-					addElement(n.getObject());
-				}
-			});
-		}
+		return new EventTraceWidget(parent, SWT.NONE, this);
 	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setValue("EventMonitor.showColor", labelProvider.isShowColor()); //$NON-NLS-1$
-		ps.setValue("EventMonitor.showIcons", labelProvider.isShowIcons()); //$NON-NLS-1$
-		
-		session.removeListener(this);
-		super.dispose();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#getDialogSettings()
-	 */
-	@Override
-	protected IDialogSettings getDialogSettings()
-	{
-		return Activator.getDefault().getDialogSettings();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#getConfigPrefix()
-	 */
-	@Override
-	protected String getConfigPrefix()
-	{
-		return "EventMonitor"; //$NON-NLS-1$
-	}	
 }

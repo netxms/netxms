@@ -28,8 +28,6 @@ import org.netxms.client.snmp.MibTree;
  */
 public class MibTreeContentProvider implements ITreeContentProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
 	 */

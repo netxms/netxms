@@ -930,7 +930,7 @@ public class NXCSession
    /**
     * @param authType the authType to set
     */
-   private void setAuthType(int authType)
+   public void setAuthType(int authType)
    {
       this.authType = authType;
    }
@@ -6672,22 +6672,22 @@ public class NXCSession
    }
 
    /**
-    * Set the password to use in the authentication process
+    * Set the password to use in the authentication process. Will set authentication type to PASSWORD.
     *
     * @param password password string to use
     */
-   public void usePassword(String password)
+   public void setPassword(String password)
    {
       connPassword = password;
       setAuthType(AUTH_TYPE_PASSWORD);
    }
 
    /**
-    * Set the signature to use in the authentication process
+    * Set the signature to use in the authentication process. Will set authentication type to CERTIFICATE.
     *
     * @param signature signature to use
     */
-   public void useSignature(Signature signature)
+   public void setSignature(Signature signature)
    {
       connSignature = signature;
       setAuthType(AUTH_TYPE_CERTIFICATE);

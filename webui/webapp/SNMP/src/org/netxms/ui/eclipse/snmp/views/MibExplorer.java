@@ -190,8 +190,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpValueLabelProvider());
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -228,8 +226,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -238,8 +234,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 		
 		actionWalk = new Action(Messages.MibExplorer_Walk) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -249,8 +243,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		actionWalk.setEnabled(currentNode != null);
 		
 		actionSetNode = new Action(Messages.MibExplorer_SetNodeObject) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -264,8 +256,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 		
 		actionSelect = new Action("Select in MIB tree") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -333,8 +323,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillTreeContextMenu(mgr);
@@ -372,8 +360,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillResultsContextMenu(mgr);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -122,8 +122,6 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 			}
 		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -185,8 +183,6 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -198,8 +194,6 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		};
 		
 		actionNew = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -213,8 +207,6 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png")); //$NON-NLS-1$
 		
 		actionEdit = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -228,8 +220,6 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		
 		actionDelete = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -252,8 +242,6 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

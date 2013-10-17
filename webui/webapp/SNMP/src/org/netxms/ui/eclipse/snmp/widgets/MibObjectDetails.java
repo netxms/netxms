@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MibObjectDetails extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text oid;
 	private Text oidText;
 	private Text description;
@@ -70,8 +68,6 @@ public class MibObjectDetails extends Composite
 		{
 			oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, Messages.MibObjectDetails_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 			oid.addModifyListener(new ModifyListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void modifyText(ModifyEvent e)
 				{

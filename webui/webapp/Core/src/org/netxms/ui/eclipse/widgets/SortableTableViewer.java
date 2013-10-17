@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.widgets.helpers.TableSortingListener;
  */
 public class SortableTableViewer extends TableViewer
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int DEFAULT_STYLE = -1;
 	
 	private boolean initialized = false;

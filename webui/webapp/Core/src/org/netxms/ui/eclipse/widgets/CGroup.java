@@ -45,8 +45,6 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
  */
 public abstract class CGroup extends Canvas
 {
-	private static final long serialVersionUID = 1L;
-	
 	private static final int BORDER_WIDTH = 3;
 	private static final int HEADER_HEIGHT = 22;
 	
@@ -82,8 +80,6 @@ public abstract class CGroup extends Canvas
 		setFont(JFaceResources.getBannerFont());
 		
 		addPaintListener(new PaintListener() {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -92,8 +88,6 @@ public abstract class CGroup extends Canvas
 		});
 		
 		addMouseListener(new MouseListener() {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void mouseUp(MouseEvent e)
 			{
@@ -247,8 +241,6 @@ public abstract class CGroup extends Canvas
 		l.setToolTipText(button.getName());
 		l.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		l.addMouseListener(new MouseListener() {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{

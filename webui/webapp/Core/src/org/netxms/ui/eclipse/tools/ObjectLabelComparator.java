@@ -32,8 +32,6 @@ import org.eclipse.swt.widgets.TableColumn;
  */
 public class ObjectLabelComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	private ILabelProvider labelProvider;
 
 	/**

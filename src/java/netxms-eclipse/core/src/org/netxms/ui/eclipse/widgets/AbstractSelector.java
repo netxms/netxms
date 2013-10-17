@@ -78,7 +78,7 @@ public class AbstractSelector extends Composite
 	 * 
 	 * @param parent
 	 * @param style
-	 * @param useHyperlink
+	 * @param options
 	 */
 	public AbstractSelector(Composite parent, int style, int options)
 	{

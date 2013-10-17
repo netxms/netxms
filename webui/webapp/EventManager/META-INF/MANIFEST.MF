@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Event Management Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.eventmanager;singleton:=true
-Bundle-Version: 1.2.9
+Bundle-Version: 1.2.10
 Bundle-Activator: org.netxms.ui.eclipse.eventmanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui;bundle-version="2.0.0",

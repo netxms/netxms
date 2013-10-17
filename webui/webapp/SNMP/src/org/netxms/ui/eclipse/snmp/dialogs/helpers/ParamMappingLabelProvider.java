@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.snmp.Messages;
  */
 public class ParamMappingLabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private List<SnmpTrapParameterMapping> pmap;
 	
 	/**

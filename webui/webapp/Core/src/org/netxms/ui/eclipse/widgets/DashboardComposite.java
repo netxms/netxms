@@ -30,12 +30,9 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Composite with lightweight border (Windows 7 style)
- *
  */
 public class DashboardComposite extends Canvas implements PaintListener
 {
-	private static final long serialVersionUID = 1L;
-
 	protected ColorCache colors;
 	
 	private Color borderOuterColor;
