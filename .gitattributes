@@ -1422,12 +1422,8 @@ src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/mess
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventConfigurator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventMonitor.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/SyslogMonitor.java -text
-src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventLabelProvider.java -text
-src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventMonitorFilter.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventTemplateComparator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventTemplateLabelProvider.java -text
-src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/SyslogLabelProvider.java -text
-src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/SyslogMonitorFilter.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/widgets/EventSelector.java -text
 src/java/netxms-eclipse/FileManager/.classpath -text
 src/java/netxms-eclipse/FileManager/.project -text
@@ -2006,8 +2002,6 @@ src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapEditor
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapMonitor.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapComparator.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapLabelProvider.java -text
-src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapMonitorFilter.java -text
-src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapMonitorLabelProvider.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpValueLabelProvider.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/MibBrowser.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/MibObjectDetails.java -text

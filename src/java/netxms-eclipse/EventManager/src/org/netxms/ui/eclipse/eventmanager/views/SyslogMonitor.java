@@ -19,59 +19,29 @@
 package org.netxms.ui.eclipse.eventmanager.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.Messages;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.SyslogLabelProvider;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.SyslogMonitorFilter;
+import org.netxms.ui.eclipse.eventmanager.widgets.SyslogTraceWidget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
+import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
 
 /**
  * Event monitor
  */
-public class SyslogMonitor extends AbstractTraceView implements SessionListener
+public class SyslogMonitor extends AbstractTraceView
 {
 	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor"; //$NON-NLS-1$
 	
-	public static final int COLUMN_TIMESTAMP = 0;
-	public static final int COLUMN_SOURCE = 1;
-	public static final int COLUMN_SEVERITY = 2;
-	public static final int COLUMN_FACILITY = 3;
-	public static final int COLUMN_HOSTNAME = 4;
-	public static final int COLUMN_TAG = 5;
-	public static final int COLUMN_MESSAGE = 6;
-	
-	private NXCSession session;
-	private Action actionShowColor;
-	private Action actionShowIcons;
-	private SyslogLabelProvider labelProvider;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
-	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
-		session.addListener(this);
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
 	 */
@@ -81,6 +51,7 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 		super.init(site, memento);
 		if (memento != null)
 		{
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.SyslogMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -98,56 +69,12 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#setupViewer(org.eclipse.jface.viewers.TableViewer)
+	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#createTraceWidget(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void setupViewer(final TableViewer viewer)
+	protected AbstractTraceWidget createTraceWidget(Composite parent)
 	{
-		labelProvider = new SyslogLabelProvider();
-		viewer.setLabelProvider(labelProvider);
-		
-		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		labelProvider.setShowColor(ps.getBoolean("SyslogMonitor.showColor")); //$NON-NLS-1$
-		labelProvider.setShowIcons(ps.getBoolean("SyslogMonitor.showIcons")); //$NON-NLS-1$
-		
-		addColumn(Messages.SyslogMonitor_ColTimestamp, 150);
-		addColumn(Messages.SyslogMonitor_ColSource, 200);
-		addColumn(Messages.SyslogMonitor_ColSeverity, 90);
-		addColumn(Messages.SyslogMonitor_ColFacility, 90);
-		addColumn(Messages.SyslogMonitor_ColHostName, 130);
-		addColumn(Messages.SyslogMonitor_ColTag, 90);
-		addColumn(Messages.SyslogMonitor_ColMessage, 600);
-		
-		setFilter(new SyslogMonitorFilter());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#createActions()
-	 */
-	@Override
-	protected void createActions()
-	{
-		super.createActions();
-		
-		actionShowColor = new Action(Messages.SyslogMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
-			@Override
-			public void run()
-			{
-				labelProvider.setShowColor(actionShowColor.isChecked());
-				refresh();
-			}
-		};
-		actionShowColor.setChecked(labelProvider.isShowColor());
-		
-		actionShowIcons = new Action(Messages.SyslogMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
-			@Override
-			public void run()
-			{
-				labelProvider.setShowIcons(actionShowIcons.isChecked());
-				refresh();
-			}
-		};
-		actionShowIcons.setChecked(labelProvider.isShowIcons());
+		return new SyslogTraceWidget(parent, SWT.NONE, this);
 	}
 
 	/* (non-Javadoc)
@@ -158,26 +85,8 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 	{
 		super.fillLocalPullDown(manager);
 		manager.add(new Separator());
-		manager.add(actionShowColor);
-		manager.add(actionShowIcons);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
-	 */
-	@Override
-	public void notificationHandler(final SessionNotification n)
-	{
-		if (n.getCode() == NXCNotification.NEW_SYSLOG_RECORD)
-		{
-			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-				@Override
-				public void run()
-				{
-					addElement(n.getObject());
-				}
-			});
-		}
+		manager.add(((SyslogTraceWidget)getTraceWidget()).getActionShowColor());
+		manager.add(((SyslogTraceWidget)getTraceWidget()).getActionShowIcons());
 	}
 
 	/* (non-Javadoc)
@@ -186,12 +95,7 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 	@Override
 	public void dispose()
 	{
-		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setValue("SyslogMonitor.showColor", labelProvider.isShowColor()); //$NON-NLS-1$
-		ps.setValue("SyslogMonitor.showIcons", labelProvider.isShowIcons()); //$NON-NLS-1$
-		
-		session.removeListener(this);
-		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.SyslogMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -207,22 +111,4 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 		}.start();
 		super.dispose();
 	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#getDialogSettings()
-	 */
-	@Override
-	protected IDialogSettings getDialogSettings()
-	{
-		return Activator.getDefault().getDialogSettings();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#getConfigPrefix()
-	 */
-	@Override
-	protected String getConfigPrefix()
-	{
-		return "SyslogMonitor"; //$NON-NLS-1$
-	}	
 }
