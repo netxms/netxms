@@ -58,6 +58,7 @@ m4/libtool.m4
 m4/lt*.m4
 /private
 /release
+/runtime-nxmc.cortex.product
 sql/Makefile
 sql/Makefile.in
 sql/dbinit_db2.sql
