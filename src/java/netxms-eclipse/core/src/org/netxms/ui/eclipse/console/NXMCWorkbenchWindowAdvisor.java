@@ -57,324 +57,324 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implements KeyStoreRequestListener, KeyStoreEntryPasswordRequestListener
 {
-	/**
-	 * @param configurer
-	 */
-	public NXMCWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
-	{
-		super(configurer);
-	}
+   /**
+    * @param configurer
+    */
+   public NXMCWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
+   {
+      super(configurer);
+   }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
-	 */
-	@Override
-	public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer)
-	{
-		return new NXMCActionBarAdvisor(configurer);
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
+    */
+   @Override
+   public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer)
+   {
+      return new NXMCActionBarAdvisor(configurer);
+   }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
-	 */
-	@Override
-	public void preWindowOpen()
-	{
-		doLogin(Display.getCurrent());
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
+    */
+   @Override
+   public void preWindowOpen()
+   {
+      doLogin(Display.getCurrent());
 
-		RegionalSettings.updateFromPreferences();
+      RegionalSettings.updateFromPreferences();
 
-		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
-		configurer.setShowStatusLine(true);
-		configurer.setShowProgressIndicator(true);
-		configurer.setShowPerspectiveBar(true);
+      final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+      IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
+      configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
+      configurer.setShowStatusLine(true);
+      configurer.setShowProgressIndicator(true);
+      configurer.setShowPerspectiveBar(true);
 
-		TweakletManager.preWindowOpen(configurer);
-	}
+      TweakletManager.preWindowOpen(configurer);
+   }
 
-	/**
-	 * Overridden to maximize the window when shown.
-	 */
-	@Override
-	public void postWindowCreate()
-	{
-		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
+   /**
+    * Overridden to maximize the window when shown.
+    */
+   @Override
+   public void postWindowCreate()
+   {
+      IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 
-		Session session = ConsoleSharedData.getSession();
-		Activator activator = Activator.getDefault();
-		StatusLineContributionItem statusItemConnection = activator.getStatusItemConnection();
-		statusItemConnection.setImage(Activator.getImageDescriptor(
-				session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage());
-		statusItemConnection.setText(session.getUserName()
-				+ "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      Session session = ConsoleSharedData.getSession();
+      Activator activator = Activator.getDefault();
+      StatusLineContributionItem statusItemConnection = activator.getStatusItemConnection();
+      statusItemConnection.setImage(Activator.getImageDescriptor(
+            session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage());
+      statusItemConnection.setText(session.getUserName()
+            + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-		if (activator.getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
-			Activator.showTrayIcon();
+      if (activator.getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
+         Activator.showTrayIcon();
 
-		TweakletManager.postWindowCreate(configurer);
-	}
+      TweakletManager.postWindowCreate(configurer);
+   }
 
-	/**
-	 * Show login dialog and perform login
-	 */
-	private void doLogin(final Display display)
-	{
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		boolean success = false;
-		boolean autoConnect = false;
-		String password;
+   /**
+    * Show login dialog and perform login
+    */
+   private void doLogin(final Display display)
+   {
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      boolean success = false;
+      boolean autoConnect = false;
+      String password;
 
-		CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
-		certMgr.setKeyStoreRequestListener(this);
-		certMgr.setEntryListener(this);
+      CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
+      certMgr.setKeyStoreRequestListener(this);
+      certMgr.setEntryListener(this);
 
-		for(String s : Platform.getCommandLineArgs())
-		{
-			if (s.startsWith("-server=")) //$NON-NLS-1$
-			{
-				settings.put("Connect.Server", s.substring(8)); //$NON-NLS-1$
-			}
-			else if (s.startsWith("-login=")) //$NON-NLS-1$
-			{
-				settings.put("Connect.Login", s.substring(7)); //$NON-NLS-1$
-			}
-			else if (s.startsWith("-password=")) //$NON-NLS-1$
-			{
-				password = s.substring(10);
-			}
-			else if (s.equals("-auto")) //$NON-NLS-1$
-			{
-				autoConnect = true;
-			}
-		}
+      for(String s : Platform.getCommandLineArgs())
+      {
+         if (s.startsWith("-server=")) //$NON-NLS-1$
+         {
+            settings.put("Connect.Server", s.substring(8)); //$NON-NLS-1$
+         }
+         else if (s.startsWith("-login=")) //$NON-NLS-1$
+         {
+            settings.put("Connect.Login", s.substring(7)); //$NON-NLS-1$
+         }
+         else if (s.startsWith("-password=")) //$NON-NLS-1$
+         {
+            password = s.substring(10);
+         }
+         else if (s.equals("-auto")) //$NON-NLS-1$
+         {
+            autoConnect = true;
+         }
+      }
 
-		boolean encrypt = true;
-		LoginDialog loginDialog = new LoginDialog(null, certMgr);
+      boolean encrypt = true;
+      LoginDialog loginDialog = new LoginDialog(null, certMgr);
 
-		while(!success)
-		{
-			if (!autoConnect)
-			{
-				showLoginDialog(loginDialog);
-			}
-			else
-			{
-				autoConnect = false; // only do auto connect first time
-			}
+      while(!success)
+      {
+         if (!autoConnect)
+         {
+            showLoginDialog(loginDialog);
+         }
+         else
+         {
+            autoConnect = false; // only do auto connect first time
+         }
 
-			LoginJob job = new LoginJob(display, settings.get("Connect.Server"), //$NON-NLS-1$ 
-					settings.get("Connect.Login"), //$NON-NLS-1$
-					encrypt); //$NON-NLS-1$
+         LoginJob job = new LoginJob(display, settings.get("Connect.Server"), //$NON-NLS-1$ 
+               settings.get("Connect.Login"), //$NON-NLS-1$
+               encrypt); //$NON-NLS-1$
 
-			switch(loginDialog.getAuthenticationMethod())
-			{
-				case AUTHENTICATION_PASSWORD:
-					job.setPassword(loginDialog.getPassword());
-					break;
+         switch(loginDialog.getAuthenticationMethod())
+         {
+            case AUTHENTICATION_PASSWORD:
+               job.setPassword(loginDialog.getPassword());
+               break;
 
-				case AUTHENTICATION_CERTIFICATE:
-					Signature sign = getSignature(certMgr, loginDialog);
-					job.setSignature(sign);
-					break;
-			}
+            case AUTHENTICATION_CERTIFICATE:
+               Signature sign = getSignature(certMgr, loginDialog);
+               job.setSignature(sign);
+               break;
+         }
 
-			try
-			{
-				ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
-				success = true;
-			}
-			catch(InvocationTargetException e)
-			{
-				if ((e.getCause() instanceof NXCException)
-						&& (((NXCException)e.getCause()).getErrorCode() == RCC.NO_ENCRYPTION_SUPPORT) && encrypt)
-				{
-					boolean alwaysAllow = settings.getBoolean("Connect.AllowUnencrypted." + settings.get("Connect.Server"));
-					int action = getAction(settings, alwaysAllow);
-					if (action != SecurityWarningDialog.NO)
-					{
-						autoConnect = true;
-						encrypt = false;
-						if (action == SecurityWarningDialog.ALWAYS)
-						{
-							settings.put("Connect.AllowUnencrypted." + settings.get("Connect.Server"), true);
-						}
-					}
-				}
-				else
-				{
-					e.getCause().printStackTrace();
-					MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause()
-							.getLocalizedMessage()); //$NON-NLS-1$
-				}
-			}
-			catch(Exception e)
-			{
-				e.printStackTrace();
-				MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString()); //$NON-NLS-1$
-			}
-		}
+         try
+         {
+            ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
+            success = true;
+         }
+         catch(InvocationTargetException e)
+         {
+            if ((e.getCause() instanceof NXCException)
+                  && (((NXCException)e.getCause()).getErrorCode() == RCC.NO_ENCRYPTION_SUPPORT) && encrypt)
+            {
+               boolean alwaysAllow = settings.getBoolean("Connect.AllowUnencrypted." + settings.get("Connect.Server"));
+               int action = getAction(settings, alwaysAllow);
+               if (action != SecurityWarningDialog.NO)
+               {
+                  autoConnect = true;
+                  encrypt = false;
+                  if (action == SecurityWarningDialog.ALWAYS)
+                  {
+                     settings.put("Connect.AllowUnencrypted." + settings.get("Connect.Server"), true);
+                  }
+               }
+            }
+            else
+            {
+               e.getCause().printStackTrace();
+               MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause()
+                     .getLocalizedMessage()); //$NON-NLS-1$
+            }
+         }
+         catch(Exception e)
+         {
+            e.printStackTrace();
+            MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString()); //$NON-NLS-1$
+         }
+      }
 
-		CertificateManagerProvider.dispose();
-		// if (!success)
-		// return;
+      CertificateManagerProvider.dispose();
+      // if (!success)
+      // return;
 
-		// TODO: refactor to not require this
-		password = loginDialog.getPassword();
+      // TODO: refactor to not require this
+      password = loginDialog.getPassword();
 
-		// Suggest user to change password if it is expired
-		final Session session = ConsoleSharedData.getSession();
-		if (session.isPasswordExpired())
-		{
-			requestPasswordChange(password, session);
-		}
-	}
+      // Suggest user to change password if it is expired
+      final Session session = ConsoleSharedData.getSession();
+      if (session.isPasswordExpired())
+      {
+         requestPasswordChange(password, session);
+      }
+   }
 
-	/**
-	 * @param certMgr
-	 * @param loginDialog
-	 * @return
-	 * @throws SignatureImpossibleException
-	 */
-	private Signature getSignature(CertificateManager certMgr, LoginDialog loginDialog)
-	{
-		Certificate cert = loginDialog.getCertificate();
-		Signature sign;
+   /**
+    * @param certMgr
+    * @param loginDialog
+    * @return
+    * @throws SignatureImpossibleException
+    */
+   private Signature getSignature(CertificateManager certMgr, LoginDialog loginDialog)
+   {
+      Certificate cert = loginDialog.getCertificate();
+      Signature sign;
 
-		try
-		{
-			sign = certMgr.extractSignature(cert);
-		}
-		catch(SignatureImpossibleException sie)
-		{
-			return null;
-		}
+      try
+      {
+         sign = certMgr.extractSignature(cert);
+      }
+      catch(SignatureImpossibleException sie)
+      {
+         return null;
+      }
 
-		return sign;
-	}
+      return sign;
+   }
 
-	/**
-	 * @param settings
-	 * @param alwaysAllow
-	 * @return
-	 */
-	private int getAction(IDialogSettings settings, boolean alwaysAllow)
-	{
-		if (alwaysAllow)
-			return SecurityWarningDialog.YES;
+   /**
+    * @param settings
+    * @param alwaysAllow
+    * @return
+    */
+   private int getAction(IDialogSettings settings, boolean alwaysAllow)
+   {
+      if (alwaysAllow)
+         return SecurityWarningDialog.YES;
 
-		return SecurityWarningDialog
-				.showSecurityWarning(
-						null,
-						String.format("NetXMS server %s does not support encryption. Do you want to connect anyway?",
-								settings.get("Connect.Server")),
-						"NetXMS server you are connecting to does not support encryption. If you countinue, information containing your credentials will be "
-								+ "sent in clear text and could easily be read by a third party.\n\n"
-								+ "For assistance, contact your network administrator or the owner of the NetXMS server.\n\n");
-	}
+      return SecurityWarningDialog
+            .showSecurityWarning(
+                  null,
+                  String.format("NetXMS server %s does not support encryption. Do you want to connect anyway?",
+                        settings.get("Connect.Server")),
+                  "NetXMS server you are connecting to does not support encryption. If you countinue, information containing your credentials will be "
+                        + "sent in clear text and could easily be read by a third party.\n\n"
+                        + "For assistance, contact your network administrator or the owner of the NetXMS server.\n\n");
+   }
 
-	/**
-	 * 
-	 * @param dialog
-	 */
-	private void showLoginDialog(LoginDialog dialog)
-	{
-		if (dialog.open() != Window.OK)
-			System.exit(0);
-	}
+   /**
+    * 
+    * @param dialog
+    */
+   private void showLoginDialog(LoginDialog dialog)
+   {
+      if (dialog.open() != Window.OK)
+         System.exit(0);
+   }
 
-	/**
-	 * @param currentPassword
-	 * @param session
-	 */
-	private void requestPasswordChange(final String currentPassword, final Session session)
-	{
-		final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
+   /**
+    * @param currentPassword
+    * @param session
+    */
+   private void requestPasswordChange(final String currentPassword, final Session session)
+   {
+      final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
 
-		while(true)
-		{
-			if (dlg.open() != Window.OK)
-				return;
+      while(true)
+      {
+         if (dlg.open() != Window.OK)
+            return;
 
-			IRunnableWithProgress job = new IRunnableWithProgress() {
-				@Override
-				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
-				{
-					try
-					{
-						monitor.setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
-						((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
-						monitor.setTaskName(""); //$NON-NLS-1$
-					}
-					catch(Exception e)
-					{
-						throw new InvocationTargetException(e);
-					}
-					finally
-					{
-						monitor.done();
-					}
-				}
-			};
+         IRunnableWithProgress job = new IRunnableWithProgress() {
+            @Override
+            public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
+            {
+               try
+               {
+                  monitor.setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
+                  ((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
+                  monitor.setTaskName(""); //$NON-NLS-1$
+               }
+               catch(Exception e)
+               {
+                  throw new InvocationTargetException(e);
+               }
+               finally
+               {
+                  monitor.done();
+               }
+            }
+         };
 
-			try
-			{
-				ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
-				MessageDialog.openInformation(null, Messages.NXMCWorkbenchWindowAdvisor_title_information,
-						Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
-				return;
-			}
-			catch(InvocationTargetException e)
-			{
-				MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_title_error,
-						Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
-			}
-			catch(InterruptedException e)
-			{
-				MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
-			}
-		}
-	}
+         try
+         {
+            ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
+            MessageDialog.openInformation(null, Messages.NXMCWorkbenchWindowAdvisor_title_information,
+                  Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
+            return;
+         }
+         catch(InvocationTargetException e)
+         {
+            MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_title_error,
+                  Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+         }
+         catch(InterruptedException e)
+         {
+            MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
+         }
+      }
+   }
 
-	@Override
-	public String keyStoreLocationRequested()
-	{
-		Shell shell = Display.getCurrent().getActiveShell();
+   @Override
+   public String keyStoreLocationRequested()
+   {
+      Shell shell = Display.getCurrent().getActiveShell();
 
-		FileDialog dialog = new FileDialog(shell);
-		dialog.setText("Path to the certificate store");
-		dialog.setFilterExtensions(new String[] { "*.p12; *.pfx" });
-		dialog.setFilterNames(new String[] { "PKCS12 file (*.p12, *.pfx)" });
+      FileDialog dialog = new FileDialog(shell);
+      dialog.setText("Path to the certificate store");
+      dialog.setFilterExtensions(new String[] { "*.p12; *.pfx" });
+      dialog.setFilterNames(new String[] { "PKCS12 file (*.p12, *.pfx)" });
 
-		return dialog.open();
-	}
+      return dialog.open();
+   }
 
-	@Override
-	public String keyStorePasswordRequested()
-	{
-		Shell shell = Display.getCurrent().getActiveShell();
+   @Override
+   public String keyStorePasswordRequested()
+   {
+      Shell shell = Display.getCurrent().getActiveShell();
 
-		PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
-		dialog.setMessage("The selected store is password-protected, plese provide the password.");
-		dialog.open();
+      PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
+      dialog.setMessage("The selected store is password-protected, plese provide the password.");
+      dialog.open();
 
-		return dialog.getPassword();
-	}
+      return dialog.getPassword();
+   }
 
-	@Override
-	public String keyStoreEntryPasswordRequested()
-	{
-		Shell shell = Display.getCurrent().getActiveShell();
+   @Override
+   public String keyStoreEntryPasswordRequested()
+   {
+      Shell shell = Display.getCurrent().getActiveShell();
 
-		PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
-		dialog.setMessage("The selected certificate is password-protected, plese provide the password.");
-		dialog.open();
+      PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
+      dialog.setMessage("The selected certificate is password-protected, plese provide the password.");
+      dialog.open();
 
-		return dialog.getPassword();
-	}
+      return dialog.getPassword();
+   }
 }
