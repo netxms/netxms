@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.console;
 
 import java.lang.reflect.InvocationTargetException;
+import java.security.Signature;
+import java.security.cert.Certificate;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogSettings;
@@ -34,6 +36,11 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.users.UserManager;
+import org.netxms.certificate.loader.KeyStoreRequestListener;
+import org.netxms.certificate.manager.CertificateManager;
+import org.netxms.certificate.manager.CertificateManagerProvider;
+import org.netxms.certificate.manager.exception.SignatureImpossibleException;
+import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
@@ -45,7 +52,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Workbench window advisor
  */
-public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
+public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implements KeyStoreRequestListener, KeyStoreEntryPasswordRequestListener
 {
    /**
     * @param configurer
@@ -97,12 +104,14 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 
       Session session = ConsoleSharedData.getSession();
-      Activator.getDefault().getStatusItemConnection().setImage(
+      Activator activator = Activator.getDefault();
+      StatusLineContributionItem statusItemConnection = activator.getStatusItemConnection();
+      statusItemConnection.setImage(
             Activator.getImageDescriptor(session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage());
-      Activator.getDefault().getStatusItemConnection().setText(
+      statusItemConnection.setText(
             session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-      if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
+      if (activator.getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
          Activator.showTrayIcon();
 
       TweakletManager.postWindowCreate(configurer);
@@ -115,9 +124,13 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       boolean success = false;
-      boolean autoConnect = false;
+      boolean autoConnect = false;      
       String password;
 
+      CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
+      certMgr.setKeyStoreRequestListener(this);
+      certMgr.setEntryListener(this);
+      
       for(String s : Platform.getCommandLineArgs())
       {
          if (s.startsWith("-server=")) //$NON-NLS-1$
@@ -139,7 +152,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       }
 
       boolean encrypt = true;
-      LoginDialog loginDialog = new LoginDialog(null);
+      LoginDialog loginDialog = new LoginDialog(null, certMgr);
 
       while(!success)
       {
@@ -163,8 +176,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
                job.setPassword(loginDialog.getPassword());
                break;
  
-            case AUTHENTICATION_CERTIFICATE: 
-               job.setCertificate(loginDialog.getCertificate()); 
+            case AUTHENTICATION_CERTIFICATE:
+               Signature sign = getSignature(certMgr, loginDialog);
+               job.setSignature(sign);               
                break; 
          }
 
@@ -204,6 +218,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          }
       }
 
+      CertificateManagerProvider.dispose();
       // if (!success)
       // return;
 
@@ -217,6 +232,29 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       {
          requestPasswordChange(password, session);
       }
+   }
+
+   /**
+    * @param certMgr
+    * @param loginDialog
+    * @return
+    * @throws SignatureImpossibleException
+    */
+   private Signature getSignature(CertificateManager certMgr, LoginDialog loginDialog)
+   {
+      Certificate cert = loginDialog.getCertificate();      
+      Signature sign;
+      
+      try
+      {
+         sign = certMgr.extractSignature(cert);
+      }
+      catch(SignatureImpossibleException sie)
+      {
+         return null;
+      }
+      
+      return sign;
    }
    
    /**
@@ -298,4 +336,22 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          }
       }
    }
+
+   @Override
+   public String keyStoreLocationRequested()
+   {
+      return "";
+   }
+
+   @Override
+   public String keyStorePasswordRequested()
+   {
+      return "";
+   }
+
+   @Override
+   public String keyStoreEntryPasswordRequested()
+   {
+      return "";
+   }   
 }

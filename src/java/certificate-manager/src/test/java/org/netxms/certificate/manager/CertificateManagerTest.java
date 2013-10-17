@@ -23,8 +23,10 @@ public class CertificateManagerTest
    @Before
    public void setUp() throws Exception
    {
-      manager = CertificateManagerProvider.provideCertificateManager(listener);
-      manager.setListener(listener);
+      manager = CertificateManagerProvider.provideCertificateManager();
+      manager.setKeyStoreRequestListener(listener);
+      manager.setEntryListener(listener);
+      manager.load();
    }
 
    @After

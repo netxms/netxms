@@ -48,9 +48,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.Form;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
 import org.netxms.certificate.manager.CertificateManager;
-import org.netxms.certificate.manager.CertificateManagerProvider;
-import org.netxms.certificate.manager.CertificateManagerRequestListener;
 import org.netxms.certificate.subject.Subject;
 import org.netxms.certificate.subject.SubjectParser;
 import org.netxms.ui.eclipse.console.Activator;
@@ -65,7 +64,7 @@ import static org.netxms.ui.eclipse.console.AuthenticationMethod.*;
 /**
  * Login dialog
  */
-public class LoginDialog extends Dialog implements SelectionListener, CertificateManagerRequestListener
+public class LoginDialog extends Dialog implements SelectionListener
 {
    private FormToolkit toolkit;
    private ImageDescriptor loginImage;
@@ -76,12 +75,13 @@ public class LoginDialog extends Dialog implements SelectionListener, Certificat
    private String password;
    private Certificate cert;
    private Color labelColor;
+   private final CertificateManager certMgr;
    private AuthenticationMethod authenticationMethod;
    
    /**
     * @param parentShell
     */
-   public LoginDialog(Shell parentShell)
+   public LoginDialog(Shell parentShell, CertificateManager certMgr)
    {
       super(parentShell);
 
@@ -89,6 +89,7 @@ public class LoginDialog extends Dialog implements SelectionListener, Certificat
       if (loginImage == null)
          loginImage = Activator.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
       
+      this.certMgr = certMgr;
       authenticationMethod = AuthenticationMethod.AUTHENTICATION_NULL;
    }
 
@@ -419,8 +420,7 @@ public class LoginDialog extends Dialog implements SelectionListener, Certificat
    private void selectCert()
    {
       int index = comboCert.getSelectionIndex();
-      CertificateManager cm = CertificateManagerProvider.provideCertificateManager(null);
-      cert = cm.getCerts()[index];
+      cert = certMgr.getCerts()[index];
       authenticationMethod = AuthenticationMethod.AUTHENTICATION_CERTIFICATE;
    }
 
@@ -429,7 +429,16 @@ public class LoginDialog extends Dialog implements SelectionListener, Certificat
       if (comboCert.getItemCount() != 0)
          return;
 
-      CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager(this);
+
+      try
+      {
+         certMgr.load();
+      }
+      catch(KeyStoreLoaderException ksle)
+      {
+         System.out.println(ksle.getMessage());
+      }
+
       Certificate[] certs = certMgr.getCerts();
       String[] subjectStrings = new String[certs.length];
 
@@ -451,27 +460,6 @@ public class LoginDialog extends Dialog implements SelectionListener, Certificat
    public void widgetDefaultSelected(SelectionEvent e)
    {
       // Don't do anything
-   }
-
-   @Override
-   public String keyStoreEntryPasswordRequested()
-   {
-      // TODO Auto-generated method stub
-      return "test1337";
-   }
-
-   @Override
-   public String keyStorePasswordRequested()
-   {
-      // TODO Auto-generated method stub
-      return "test1337";
-   }
-
-   @Override
-   public String keyStoreLocationRequested()
-   {
-      // TODO Auto-generated method stub
-      return "/home/valentine/Documents/Subversion/netxms/src/java/certificate-manager/src/test/resource/keystore.p12";
    }
    
    public AuthenticationMethod getAuthenticationMethod() {

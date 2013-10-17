@@ -1,14 +1,12 @@
 package org.netxms.certificate.loader;
 
-import java.io.IOException;
+import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
+
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.cert.CertificateException;
 
 public interface KeyStoreLoader
 {
-   KeyStore loadKeyStore()
-      throws CertificateException, NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, IOException;
+   KeyStore loadKeyStore() throws KeyStoreLoaderException;
+
+   void setKeyStoreRequestListener(KeyStoreRequestListener listener);
 }

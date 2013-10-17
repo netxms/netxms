@@ -1,36 +1,33 @@
 package org.netxms.certificate.loader;
 
+import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
+
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.cert.CertificateException;
 
 public class PKCS12KeyStoreLoader implements KeyStoreLoader
 {
-   private final KeyStoreRequestListener listener;
-
-   public PKCS12KeyStoreLoader(KeyStoreRequestListener listener)
-   {
-      this.listener = listener;
-   }
+   private KeyStoreRequestListener listener;
 
    @Override
-   public KeyStore loadKeyStore()
-      throws CertificateException, NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, IOException
+   public KeyStore loadKeyStore() throws KeyStoreLoaderException
    {
-      KeyStore ks = KeyStore.getInstance("PKCS12");
-      String ksLocation = listener.keyStoreLocationRequested();
-      String keyStorePassword = listener.keyStorePasswordRequested();
+      if (listener == null)
+      {
+         throw new KeyStoreLoaderException("KeyStoreRequestListener not set!");
+      }
 
-      // TODO: JAVA7 try-with-resources
-      FileInputStream fis;
+      KeyStore ks;
+
       try
       {
-         fis = new FileInputStream(ksLocation);
+         ks = KeyStore.getInstance("PKCS12");
+
+         String ksLocation = listener.keyStoreLocationRequested();
+         String keyStorePassword = listener.keyStorePasswordRequested();
+
+         // TODO: JAVA7 try-with-resources
+         FileInputStream fis = new FileInputStream(ksLocation);
          try
          {
             ks.load(fis, keyStorePassword.toCharArray());
@@ -40,11 +37,18 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
             fis.close();
          }
       }
-      catch(FileNotFoundException fnfe)
+      catch(Exception e)
       {
-         System.out.println(fnfe.getMessage());
+         //e.printStackTrace();
+         throw new KeyStoreLoaderException(e.getMessage());
       }
 
       return ks;
+   }
+
+   @Override
+   public void setKeyStoreRequestListener(KeyStoreRequestListener listener)
+   {
+      this.listener = listener;
    }
 }

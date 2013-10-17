@@ -1,5 +1,8 @@
 package org.netxms.certificate.manager;
 
+import org.netxms.certificate.loader.KeyStoreLoader;
+import org.netxms.certificate.loader.KeyStoreRequestListener;
+import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
 import org.netxms.certificate.manager.exception.CertificateHasNoPrivateKeyException;
 import org.netxms.certificate.manager.exception.CertificateNotInKeyStoreException;
 import org.netxms.certificate.manager.exception.SignatureImpossibleException;
@@ -8,32 +11,62 @@ import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 
 import java.security.*;
 import java.security.cert.Certificate;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 public class CertificateManager
 {
-   private final KeyStore keyStore;
-   private final Certificate[] certs;
-   private KeyStoreEntryPasswordRequestListener listener;
+   private KeyStore keyStore;
+   private Certificate[] certs;
+   private final KeyStoreLoader loader;
+   private KeyStoreEntryPasswordRequestListener entryListener;
 
-   CertificateManager(KeyStore keyStore, Certificate[] certs)
+   CertificateManager(KeyStoreLoader loader)
    {
-      this.keyStore = keyStore;
-      this.certs = certs;
+      this.loader = loader;
    }
 
-   public void setListener(KeyStoreEntryPasswordRequestListener listener)
+   public void setEntryListener(KeyStoreEntryPasswordRequestListener entryListener)
    {
-      this.listener = listener;
+      this.entryListener = entryListener;
+   }
+
+   public void setKeyStoreRequestListener(KeyStoreRequestListener keyStoreListener)
+   {
+      loader.setKeyStoreRequestListener(keyStoreListener);
    }
 
    public Certificate[] getCerts()
    {
+      if (certs != null) return certs;
+
+      try
+      {
+         certs = getCertsFromKeyStore();
+      }
+      catch(KeyStoreException e)
+      {
+         //e.printStackTrace();
+         certs = new Certificate[0];
+      }
+      catch(UnrecoverableEntryException e)
+      {
+         //e.printStackTrace();
+         certs = new Certificate[0];
+      }
+      catch(NoSuchAlgorithmException e)
+      {
+         //e.printStackTrace();
+         certs = new Certificate[0];
+      }
+
       return certs;
    }
 
    public boolean hasNoCertificates()
    {
-      return certs.length == 0;
+      return getCerts().length == 0;
    }
 
    public byte[] sign(Certificate cert, byte[] challenge) throws SignatureImpossibleException
@@ -54,6 +87,24 @@ public class CertificateManager
       }
 
       return signedChallenge;
+   }
+
+   public Signature extractSignature(Certificate cert) throws SignatureImpossibleException
+   {
+      Signature signature;
+
+      try
+      {
+         PrivateKey pk = getPrivateKey(cert);
+         signature = Signature.getInstance("SHA1withRSA");
+         signature.initSign(pk);
+      }
+      catch(Exception e)
+      {
+         throw new SignatureImpossibleException(e.getMessage());
+      }
+
+      return signature;
    }
 
    public boolean verify(Certificate cert, byte[] original, byte[] signed)
@@ -108,8 +159,42 @@ public class CertificateManager
 
    protected String getEntryPassword()
    {
-      if (listener == null) return "";
+      if (entryListener == null) return "";
 
-      return listener.keyStoreEntryPasswordRequested();
+      return entryListener.keyStoreEntryPasswordRequested();
+   }
+
+   public void load() throws KeyStoreLoaderException
+   {
+      keyStore = loader.loadKeyStore();
+   }
+
+   protected Certificate[] getCertsFromKeyStore()
+      throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException
+   {
+      if (keyStore == null || keyStore.size() == 0)
+      {
+         return new Certificate[0];
+      }
+
+      List<Certificate> certList = new ArrayList<Certificate>();
+      Enumeration<String> aliases = keyStore.aliases();
+
+      while(aliases.hasMoreElements())
+      {
+         String alias = aliases.nextElement();
+
+         if (!keyStore.isKeyEntry(alias)) continue;
+
+         Certificate cert = keyStore.getCertificate(alias);
+
+         certList.add(cert);
+      }
+
+      Certificate[] certs = new Certificate[certList.size()];
+
+      certList.toArray(certs);
+
+      return certs;
    }
 }

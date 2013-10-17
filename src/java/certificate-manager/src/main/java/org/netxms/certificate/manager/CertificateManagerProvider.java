@@ -1,34 +1,21 @@
 package org.netxms.certificate.manager;
 
 import org.netxms.certificate.loader.KeyStoreLoader;
-import org.netxms.certificate.loader.KeyStoreRequestListener;
 import org.netxms.certificate.loader.MSCKeyStoreLoader;
 import org.netxms.certificate.loader.PKCS12KeyStoreLoader;
-
-import java.io.IOException;
-import java.security.*;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 
 public class CertificateManagerProvider
 {
    private static volatile CertificateManager manager;
-   private final KeyStoreRequestListener listener;
 
-   private CertificateManagerProvider(
-      KeyStoreRequestListener listener)
+   private CertificateManagerProvider()
    {
-      this.listener = listener;
    }
 
-   public static synchronized CertificateManager provideCertificateManager(
-      KeyStoreRequestListener listener)
+   public static synchronized CertificateManager provideCertificateManager()
    {
       if (manager != null) return manager;
-      manager = new CertificateManagerProvider(listener).createCertificateManager();
+      manager = new CertificateManagerProvider().createCertificateManager();
       return manager;
    }
 
@@ -36,8 +23,6 @@ public class CertificateManagerProvider
    {
       final String os = System.getProperty("os.name");
       final KeyStoreLoader loader;
-      KeyStore ks = null;
-      List<Certificate> certs;
 
       if (os.startsWith("Windows"))
       {
@@ -45,83 +30,18 @@ public class CertificateManagerProvider
       }
       else
       {
-         loader = new PKCS12KeyStoreLoader(listener);
+         loader = new PKCS12KeyStoreLoader();
       }
 
-      // TODO: JAVA7 Short ver.
-      try
-      {
-         ks = loader.loadKeyStore();
-         certs = getCertsFromKeyStore(ks);
-      }
-      catch(KeyStoreException e)
-      {
-         certs = new ArrayList<Certificate>(0);
-      }
-      catch(CertificateException e)
-      {
-         e.printStackTrace();
-         certs = new ArrayList<Certificate>(0);
-      }
-      catch(NoSuchAlgorithmException e)
-      {
-         e.printStackTrace();
-         certs = new ArrayList<Certificate>(0);
-      }
-      catch(IOException e)
-      {
-         e.printStackTrace();
-         certs = new ArrayList<Certificate>(0);
-      }
-      catch(NoSuchProviderException e)
-      {
-         e.printStackTrace();
-         certs = new ArrayList<Certificate>(0);
-      }
-      catch(UnrecoverableEntryException e)
-      {
-         e.printStackTrace();
-         certs = new ArrayList<Certificate>(0);
-      }
-
-      Certificate[] certArray = new Certificate[certs.size()];
-      certs.toArray(certArray);
-
-      return new CertificateManager(ks, certArray);
+      return new CertificateManager(loader);
    }
 
-   protected List<Certificate> getCertsFromKeyStore(KeyStore ks)
-      throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException
-   {
-      if (ks.size() == 0)
-      {
-         return new ArrayList<Certificate>(0);
-      }
-
-      List<Certificate> certs = new ArrayList<Certificate>();
-      Enumeration<String> aliases = ks.aliases();
-
-      while(aliases.hasMoreElements())
-      {
-         String alias = aliases.nextElement();
-         //X509Certificate x509Cert = (X509Certificate) ks.getCertificate(alias);
-         //Principal subjectField = x509Cert.getSubjectDN();
-         //Subject subject = SubjectParser.parseSubject(subjectField.toString());
-         if (!ks.isKeyEntry(alias)) continue;
-
-         Certificate cert = ks.getCertificate(alias);
-
-         certs.add(cert);
-      }
-
-      return certs;
-   }
 
    public static synchronized void dispose()
    {
       if (manager == null) return;
 
-      manager.setListener(null);
+      manager.setEntryListener(null);
       manager = null;
    }
 }
