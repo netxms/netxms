@@ -183,10 +183,12 @@ void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
 																const TCHAR *login, const TCHAR *password, const TCHAR *schema,
 																int basePoolSize, int maxPoolSize, int cooldownTime,
-																DB_HANDLE fallback);
+																int connTTL, DB_HANDLE fallback);
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown();
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection();
 void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection);
+int LIBNXDB_EXPORTABLE DBConnectionPoolGetSize();
+int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount();
 
 void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list));
 

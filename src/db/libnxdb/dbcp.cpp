@@ -23,6 +23,17 @@
 
 #include "libnxdb.h"
 
+/**
+ * Pool connection information
+ */
+struct PoolConnectionInfo
+{
+   DB_HANDLE handle;
+   bool inUse;
+   time_t lastAccessTime;
+   time_t connectTime;
+};
+
 static DB_DRIVER m_driver;
 static TCHAR m_server[256];
 static TCHAR m_login[256];
@@ -32,16 +43,14 @@ static TCHAR m_schema[256];
 
 static int m_basePoolSize;
 static int m_maxPoolSize;
-static int m_currentPoolSize;
 static int m_cooldownTime;
+static int m_connectionTTL;
 
-static MUTEX m_poolAccessMutex;
-
-static DB_HANDLE *m_dbHandles;
-static bool *m_dbHandlesInUseMarker;
-static time_t *m_dbHandleLastAccessTime;
-
+static MUTEX m_poolAccessMutex = INVALID_MUTEX_HANDLE;
+static ObjectArray<PoolConnectionInfo> m_connections;
 static DB_HANDLE m_hFallback;
+static THREAD m_maintThread = INVALID_THREAD_HANDLE;
+static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 
 /**
  * Create connections on pool initialization
@@ -51,9 +60,21 @@ static void DBConnectionPoolPopulate()
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
 	MutexLock(m_poolAccessMutex);
-	for (int i = 0; i < m_basePoolSize; i++)
+	for(int i = 0; i < m_basePoolSize; i++)
 	{
-		m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
+      PoolConnectionInfo *conn = new PoolConnectionInfo;
+      conn->handle = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
+      if (conn->handle != NULL)
+      {
+         conn->inUse = false;
+         conn->connectTime = time(NULL);
+         conn->lastAccessTime = conn->connectTime;
+         m_connections.add(conn);
+      }
+      else
+      {
+         __DBDbgPrintf(3, _T("Database Connection Pool: cannot create DB connection %d (%s)"), i, errorText);
+      }
 	}
 	MutexUnlock(m_poolAccessMutex);
 }
@@ -65,25 +86,73 @@ static void DBConnectionPoolShrink()
 {
 	MutexLock(m_poolAccessMutex);
 
-	for (int i = 0; i < m_maxPoolSize; i++)
+   time_t now = time(NULL);
+   for(int i = m_basePoolSize; i < m_connections.size(); i++)
 	{
-		if (m_currentPoolSize <= m_basePoolSize)
+      PoolConnectionInfo *conn = m_connections.get(i);
+		if (!conn->inUse && (now - conn->lastAccessTime > m_cooldownTime))
 		{
-			break;
-		}
-
-		if (!m_dbHandlesInUseMarker[i] && m_dbHandles[i] != NULL)
-		{
-			if ((time(NULL) - m_dbHandleLastAccessTime[i]) > m_cooldownTime)
-			{
-				DBDisconnect(m_dbHandles[i]);
-				m_dbHandles[i] = NULL;
-				m_currentPoolSize--;
-			}
+			DBDisconnect(conn->handle);
+         m_connections.remove(i);
+         i--;
 		}
 	}
 
 	MutexUnlock(m_poolAccessMutex);
+}
+
+/**
+ * Reconnect old connections
+ */
+static void DBConnectionPoolReconnect()
+{
+   time_t now = time(NULL);
+   MutexLock(m_poolAccessMutex);
+   for(int i = 0; i < m_connections.size(); i++)
+   {
+      PoolConnectionInfo *conn = m_connections.get(i);
+      if (!conn->inUse && (now - conn->connectTime > m_connectionTTL))
+      {
+	      DBDisconnect(conn->handle);
+
+	      TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+         conn->handle = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
+         if (conn->handle != NULL)
+         {
+            conn->connectTime = now;
+            conn->lastAccessTime = now;
+
+            __DBDbgPrintf(3, _T("Database Connection Pool: connection %d reconnected"), i);
+         }
+         else
+         {
+            __DBDbgPrintf(3, _T("Database Connection Pool: connection %d reconnect failure (%s)"), i, errorText);
+            m_connections.remove(i);
+         }
+         break;   // no more then one reconnect at a time to prevent locking pool for long time
+      }
+   }
+   MutexUnlock(m_poolAccessMutex);
+}
+
+/**
+ * Pool maintenance thread
+ */
+static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
+{
+	__DBDbgPrintf(1, _T("Database Connection Pool maintenance thread started"));
+
+   while(!ConditionWait(m_condShutdown, 300000))
+   {
+      DBConnectionPoolShrink();
+      if (m_connectionTTL > 0)
+      {
+         DBConnectionPoolReconnect();
+      }
+   }
+
+	__DBDbgPrintf(1, _T("Database Connection Pool maintenance thread stopped"));
+   return THREAD_OK;
 }
 
 /**
@@ -92,7 +161,7 @@ static void DBConnectionPoolShrink()
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
 																const TCHAR *login, const TCHAR *password, const TCHAR *schema,
 																int basePoolSize, int maxPoolSize, int cooldownTime,
-																DB_HANDLE fallback)
+																int connTTL, DB_HANDLE fallback)
 {
 	m_driver = driver;
 	nx_strncpy(m_server, CHECK_NULL_EX(server), 256);
@@ -102,25 +171,18 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 	nx_strncpy(m_schema, CHECK_NULL_EX(schema), 256);
 
 	m_basePoolSize = basePoolSize;
-	m_currentPoolSize = basePoolSize;
 	m_maxPoolSize = maxPoolSize;
 	m_cooldownTime = cooldownTime;
+   m_connectionTTL = connTTL;
 	m_hFallback = fallback;
 
 	m_poolAccessMutex = MutexCreate();
-
-	m_dbHandles = new DB_HANDLE[maxPoolSize];
-	m_dbHandlesInUseMarker = new bool[maxPoolSize];
-	m_dbHandleLastAccessTime = new time_t[maxPoolSize];
-
-	for (int i = 0; i < m_maxPoolSize; i++)
-	{
-		m_dbHandles[i] = NULL;
-		m_dbHandlesInUseMarker[i] = false;
-		m_dbHandleLastAccessTime[i] = 0;
-	}
+   m_connections.setOwner(true);
+   m_condShutdown = ConditionCreate(TRUE);
 
 	DBConnectionPoolPopulate();
+
+   m_maintThread = ThreadCreateEx(MaintenanceThread, 0, NULL);
 
 	__DBDbgPrintf(1, _T("Database Connection Pool initialized"));
 
@@ -128,24 +190,23 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 }
 
 /**
- * Shutdown connection poo
+ * Shutdown connection pool
  */
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 {
+   ConditionSet(m_condShutdown);
+   ThreadJoin(m_maintThread);
+
+   ConditionDestroy(m_condShutdown);
 	MutexDestroy(m_poolAccessMutex);
 
-	for (int i = 0; i < m_maxPoolSize; i++)
+   for(int i = 0; i < m_connections.size(); i++)
 	{
-		if (m_dbHandles[i] != NULL)
-		{
-			DBDisconnect(m_dbHandles[i]);
-		}
+      DBDisconnect(m_connections.get(i)->handle);
 	}
 
-	delete[] m_dbHandles;
-	delete[] m_dbHandlesInUseMarker;
-	delete[] m_dbHandleLastAccessTime;
-	
+   m_connections.clear();
+
 	__DBDbgPrintf(1, _T("Database Connection Pool terminated"));
 
 }
@@ -159,31 +220,27 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 	MutexLock(m_poolAccessMutex);
 
 	DB_HANDLE handle = NULL;
-	for (int i = 0; i < m_maxPoolSize; i++)
+   for(int i = 0; i < m_connections.size(); i++)
 	{
-		if (m_dbHandles[i] != NULL && !m_dbHandlesInUseMarker[i])
+      PoolConnectionInfo *conn = m_connections.get(i);
+		if (!conn->inUse)
 		{
-			handle = m_dbHandles[i];
-			m_dbHandlesInUseMarker[i] = true;
+			handle = conn->handle;
+			conn->inUse = true;
 			break;
 		}
 	}
 
-	if (handle == NULL && m_currentPoolSize < m_maxPoolSize)
+   if (handle == NULL && (m_connections.size() < m_maxPoolSize))
 	{
-		for (int i = 0; i < m_maxPoolSize; i++)
-		{
-			if (m_dbHandles[i] == NULL)
-			{
-				TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-				m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
-				m_currentPoolSize++;
-
-				handle = m_dbHandles[i];
-				m_dbHandlesInUseMarker[i] = true;
-				break;
-			}
-		}
+	   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+      PoolConnectionInfo *conn = new PoolConnectionInfo;
+      conn->handle = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
+      conn->inUse = true;
+      conn->connectTime = time(NULL);
+      conn->lastAccessTime = conn->connectTime;
+      m_connections.add(conn);
+      handle = conn->handle;
 	}
 
 	MutexUnlock(m_poolAccessMutex);
@@ -191,6 +248,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 	if (handle == NULL)
 	{
 		handle = m_hFallback;
+   	__DBDbgPrintf(1, _T("Database Connection Pool exhausted, fallback connection used"));
 	}
 
 	return handle;
@@ -199,25 +257,48 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 /**
  * Release acquired connection
  */
-void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection)
+void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
 {
-	if (connection == m_hFallback)
+	if (handle == m_hFallback)
 		return;
 
 	MutexLock(m_poolAccessMutex);
 
-	DB_HANDLE handle = NULL;
-	for (int i = 0; i < m_maxPoolSize; i++)
+   for(int i = 0; i < m_connections.size(); i++)
 	{
-		if (m_dbHandles[i] == connection)
+      PoolConnectionInfo *conn = m_connections.get(i);
+      if (conn->handle == handle)
 		{
-			m_dbHandlesInUseMarker[i] = false;
-			m_dbHandleLastAccessTime[i] = time(NULL);
+         conn->inUse = false;
+         conn->lastAccessTime = time(NULL);
 			break;
 		}
 	}
 
 	MutexUnlock(m_poolAccessMutex);
+}
 
-	DBConnectionPoolShrink();
+/**
+ * Get current size of DB connection pool
+ */
+int LIBNXDB_EXPORTABLE DBConnectionPoolGetSize()
+{
+	MutexLock(m_poolAccessMutex);
+   int size = m_connections.size();
+	MutexUnlock(m_poolAccessMutex);
+   return size;
+}
+
+/**
+ * Get number of acquired connections in DB connection pool
+ */
+int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount()
+{
+   int count = 0;
+	MutexLock(m_poolAccessMutex);
+   for(int i = 0; i < m_connections.size(); i++)
+      if (m_connections.get(i)->inUse)
+         count++;
+	MutexUnlock(m_poolAccessMutex);
+   return count;
 }
