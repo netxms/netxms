@@ -57,7 +57,7 @@ public class GalleryVirtualBehaviorTest extends TestCase {
 
 	public void testGalleryVirtualNew() {
 		Gallery widget = createGallery(SWT.V_SCROLL | SWT.VIRTUAL);
-		final ArrayList setDataCalls = new ArrayList();
+		final ArrayList<Object> setDataCalls = new ArrayList<Object>();
 		widget.addListener(SWT.SetData, new Listener() {
 			public void handleEvent(Event event) {
 				setDataCalls.add(event.item);
@@ -97,7 +97,7 @@ public class GalleryVirtualBehaviorTest extends TestCase {
 	 */
 	public void testTreeVirtualNew() {
 		Tree widget = new Tree(s, SWT.VIRTUAL);
-		final ArrayList setDataCalls = new ArrayList();
+		final ArrayList<Object> setDataCalls = new ArrayList<Object>();
 		widget.addListener(SWT.SetData, new Listener() {
 			public void handleEvent(Event event) {
 				setDataCalls.add(event.item);

@@ -11,7 +11,6 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.netxms.nebula.jface.galleryviewer.GalleryTreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 

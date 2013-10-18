@@ -227,6 +227,9 @@ public class LoginJob implements IRunnableWithProgress
 
          case AUTHENTICATION_CERTIFICATE:
             session.setSignature(signature);
+            break;
+         
+         case AUTHENTICATION_NULL:
       }
 
       return session;

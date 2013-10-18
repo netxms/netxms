@@ -25,6 +25,11 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
 
          String ksLocation = listener.keyStoreLocationRequested();
 
+         if (ksLocation == null)
+         {
+            return null;
+         }
+
          // TODO: JAVA7 try-with-resources
          FileInputStream fis = new FileInputStream(ksLocation);
          try

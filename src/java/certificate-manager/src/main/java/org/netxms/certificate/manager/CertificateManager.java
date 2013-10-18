@@ -48,17 +48,17 @@ public class CertificateManager
       catch(KeyStoreException e)
       {
          //e.printStackTrace();
-         certs = new Certificate[0];
+         return new Certificate[0];
       }
       catch(UnrecoverableEntryException e)
       {
          //e.printStackTrace();
-         certs = new Certificate[0];
+         return new Certificate[0];
       }
       catch(NoSuchAlgorithmException e)
       {
          //e.printStackTrace();
-         certs = new Certificate[0];
+         return new Certificate[0];
       }
 
       return certs;
@@ -66,7 +66,7 @@ public class CertificateManager
 
    public boolean hasNoCertificates()
    {
-      return getCerts().length == 0;
+      return (certs == null || certs.length == 0);
    }
 
    public byte[] sign(Certificate cert, byte[] challenge) throws SignatureImpossibleException

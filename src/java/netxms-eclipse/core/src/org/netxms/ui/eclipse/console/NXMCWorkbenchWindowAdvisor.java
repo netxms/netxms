@@ -182,6 +182,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
                Signature sign = getSignature(certMgr, loginDialog);
                job.setSignature(sign);
                break;
+
+            case AUTHENTICATION_NULL:
          }
 
          try
@@ -357,24 +359,30 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    @Override
    public String keyStorePasswordRequested()
    {
-      Shell shell = Display.getCurrent().getActiveShell();
-
-      PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
-      dialog.setMessage("The selected store is password-protected, plese provide the password.");
-      dialog.open();
-
-      return dialog.getPassword();
+      return showPasswordRequestDialog("Certificate store password",
+            "The selected store is password-protected, please provide the password.");
    }
 
    @Override
    public String keyStoreEntryPasswordRequested()
    {
+      return showPasswordRequestDialog("Certificate password",
+            "The selected certificate is password-protected, please provide the password.");
+   }
+
+   private String showPasswordRequestDialog(String title, String message)
+   {
       Shell shell = Display.getCurrent().getActiveShell();
 
       PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
-      dialog.setMessage("The selected certificate is password-protected, plese provide the password.");
-      dialog.open();
-
-      return dialog.getPassword();
+      dialog.setTitle(title);
+      dialog.setMessage(message);
+      
+      if(dialog.open() == Window.OK)
+      {
+         return dialog.getPassword();
+      }
+      
+      return null;
    }
 }

@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.console.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -27,11 +28,14 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.console.Messages;
 
 public class PasswordRequestDialog extends Dialog
 {
-	private Text textPassword;
+	private Composite container;
+   private Text textPassword;
 	private Label lblMessage;
+	private String title;
 	private String password = "";
 	private String message = "";
 	
@@ -41,32 +45,53 @@ public class PasswordRequestDialog extends Dialog
 	public PasswordRequestDialog(Shell parentShell)
 	{
 		super(parentShell);
+	}	
+	
+	@Override
+	protected void configureShell(Shell shell) {
+	   super.configureShell(shell);
+	   
+	   shell.setText(title);
 	}
-
+	
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		// TODO: Make this easier on the eyes
-		final Composite container =  (Composite) super.createDialogArea(parent);
+		container = (Composite) super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
-      layout.verticalSpacing = GridData.CENTER;
+      layout.verticalSpacing = 10;
       layout.marginTop = 10;
       layout.marginBottom = 0;
-      layout.marginWidth = 10;
+      layout.marginWidth = 20;
       layout.marginHeight = 10;
 		
       container.setLayout(layout);
       
       lblMessage = new Label(container, SWT.NONE | SWT.WRAP);
       lblMessage.setText(message);
+      lblMessage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+      
+      final Label lblPassword = new Label(container, SWT.NONE);
+      lblPassword.setText(Messages.LoginDialog_password + ":");
+      lblPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+      
 		textPassword = new Text(container, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
 		textPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
 		
+		//container.pack(true);
+		
 		return container;
-	}
-
+	}	
+	
 	@Override
+   protected Point getInitialSize()
+   {
+      return new Point(300, 210);
+   }
+
+   @Override
 	protected void okPressed()
 	{
 		password = textPassword.getText();
@@ -81,5 +106,10 @@ public class PasswordRequestDialog extends Dialog
 	public void setMessage(String msg)
 	{
 		message = msg;
+	}
+	
+	public void setTitle(String title)
+	{
+	   this.title = title;
 	}
 }

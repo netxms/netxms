@@ -60,7 +60,6 @@ import org.netxms.ui.eclipse.console.BrandingManager;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
-
 import static org.netxms.ui.eclipse.console.AuthenticationMethod.*;
 
 /**
@@ -79,7 +78,7 @@ public class LoginDialog extends Dialog implements SelectionListener
    private Color labelColor;
    private final CertificateManager certMgr;
    private AuthenticationMethod authenticationMethod;
-   
+
    /**
     * @param parentShell
     */
@@ -90,7 +89,7 @@ public class LoginDialog extends Dialog implements SelectionListener
       loginImage = BrandingManager.getInstance().getLoginTitleImage();
       if (loginImage == null)
          loginImage = Activator.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
-      
+
       this.certMgr = certMgr;
       authenticationMethod = AuthenticationMethod.AUTHENTICATION_NULL;
    }
@@ -246,7 +245,7 @@ public class LoginDialog extends Dialog implements SelectionListener
       radios.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
 
       toolkit.adapt(radios);
-      
+
       final Button passwdButton = new Button(radios, SWT.RADIO);
       passwdButton.setText(Messages.LoginDialog_password);
       passwdButton.setSelection(true);
@@ -266,9 +265,9 @@ public class LoginDialog extends Dialog implements SelectionListener
 
       authMethod.setLayout(authMethodLayout);
       authMethod.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      
+
       toolkit.adapt(authMethod);
-      
+
       final Composite passwdField = attachPasswdField(authMethod);
       final Composite certField = attachCertField(authMethod);
 
@@ -279,13 +278,13 @@ public class LoginDialog extends Dialog implements SelectionListener
          public void handleEvent(Event event)
          {
             StackLayout layout = (StackLayout)authMethod.getLayout();
-            
-            if(passwdButton.getSelection())
+
+            if (passwdButton.getSelection())
             {
                layout.topControl = passwdField;
                authenticationMethod = AUTHENTICATION_PASSWORD;
             }
-            else 
+            else
             {
                layout.topControl = certField;
                authenticationMethod = AUTHENTICATION_CERTIFICATE;
@@ -301,7 +300,7 @@ public class LoginDialog extends Dialog implements SelectionListener
    private Composite attachPasswdField(final Composite authMethod)
    {
       final Composite passwdField = new Composite(authMethod, SWT.NONE);
-      
+
       final GridLayout layout = new GridLayout();
       layout.verticalSpacing = GridData.CENTER;
       layout.horizontalSpacing = 0;
@@ -309,26 +308,26 @@ public class LoginDialog extends Dialog implements SelectionListener
       layout.marginBottom = 0;
       layout.marginWidth = 0;
       layout.marginHeight = 0;
-      
+
       passwdField.setLayout(layout);
       passwdField.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
 
       final Label label = new Label(passwdField, SWT.NONE);
-      label.setText(Messages.LoginDialog_password ); //$NON-NLS-1$
+      label.setText(Messages.LoginDialog_password); //$NON-NLS-1$
       textPassword = new Text(passwdField, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
       // textPassword = new LabeledText(passwdField, SWT.SINGLE | SWT.PASSWORD | SWT.BORDER);
       textPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      //textPassword = new LabeledText(authMethod, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, toolkit);
-      //textPassword.setLabel(Messages.LoginDialog_password);
-      //textPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      
+      // textPassword = new LabeledText(authMethod, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, toolkit);
+      // textPassword.setLabel(Messages.LoginDialog_password);
+      // textPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+
       // gd = new GridData();
       // gd.horizontalAlignment = SWT.FILL;
       // gd.grabExcessHorizontalSpace = true;
       // textPassword.setLayoutData(gd);
 
       toolkit.adapt(passwdField);
-      
+
       return passwdField;
    }
 
@@ -360,7 +359,7 @@ public class LoginDialog extends Dialog implements SelectionListener
       // comboCert.setItems(new String[] { "A", "B", "C" });
 
       toolkit.adapt(certField);
-      
+
       return certField;
    }
 
@@ -382,11 +381,11 @@ public class LoginDialog extends Dialog implements SelectionListener
       settings.put("Connect.ServerHistory", items.toArray(new String[items.size()])); //$NON-NLS-1$
       settings.put("Connect.Login", textLogin.getText()); //$NON-NLS-1$
 
-      if(authenticationMethod == AUTHENTICATION_PASSWORD)
+      if (authenticationMethod == AUTHENTICATION_PASSWORD)
       {
          password = textPassword.getText();
       }
-      
+
       super.okPressed();
    }
 
@@ -402,7 +401,7 @@ public class LoginDialog extends Dialog implements SelectionListener
    public void widgetSelected(SelectionEvent e)
    {
       Object source = e.getSource();
-      //System.out.println(source);
+      // System.out.println(source);
       if (source.toString().equals("Button {Certificate}"))
       {
          Button certButton = (Button)source;
@@ -410,36 +409,43 @@ public class LoginDialog extends Dialog implements SelectionListener
          if (!certButton.getSelection())
             return;
 
-         fillCertCombo();
+         if (!fillCertCombo())
+            certButton.setSelection(false);
       }
       else if (source.toString().startsWith("Combo {"))
       {
          selectCert();
       }
-      
+
    }
 
    private void selectCert()
    {
-      int index = comboCert.getSelectionIndex();
-      cert = certMgr.getCerts()[index];
-      authenticationMethod = AuthenticationMethod.AUTHENTICATION_CERTIFICATE;
+      int index = comboCert.getSelectionIndex() - 1;
+      if (index >= 0)
+      {
+         cert = certMgr.getCerts()[index];
+         authenticationMethod = AuthenticationMethod.AUTHENTICATION_CERTIFICATE;
+      }
    }
 
-   private void fillCertCombo()
+   private boolean fillCertCombo()
    {
       if (comboCert.getItemCount() != 0)
-         return;
+         return true;
 
       try
       {
-         certMgr.load();
+         if (certMgr.hasNoCertificates())
+         {
+            certMgr.load();
+         }
       }
       catch(KeyStoreLoaderException ksle)
       {
          Shell shell = Display.getCurrent().getActiveShell();
-      	MessageDialog.openError(shell, "Whoops!", "The password you provided appears to be wrong.");
-         return;
+         MessageDialog.openError(shell, "Whoops!", "The password you provided appears to be wrong.");
+         return false;
       }
 
       Certificate[] certs = certMgr.getCerts();
@@ -456,12 +462,16 @@ public class LoginDialog extends Dialog implements SelectionListener
                subj.getCountry());
       }
 
-      comboCert.setItems(subjectStrings);
-      
-      if(comboCert.getItemCount() != 0)
+      if (subjectStrings.length != 0)
       {
-      	comboCert.select(0);
+         comboCert.setItems(subjectStrings);
+         comboCert.add("+", 0);
+         comboCert.select(0);
+
+         return true;
       }
+
+      return false;
    }
 
    @Override
@@ -469,12 +479,13 @@ public class LoginDialog extends Dialog implements SelectionListener
    {
       // Don't do anything
    }
-   
-   public AuthenticationMethod getAuthenticationMethod() {
+
+   public AuthenticationMethod getAuthenticationMethod()
+   {
       return authenticationMethod;
    }
-   
-   public Certificate getCertificate() 
+
+   public Certificate getCertificate()
    {
       return cert;
    }
