@@ -381,7 +381,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images"
 	SERVER_INCLUDE="include"

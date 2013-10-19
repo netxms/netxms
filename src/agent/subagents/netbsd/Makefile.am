@@ -22,7 +22,7 @@ EXTRA_DIST = disk.h net.h system.h
 
 if !STATIC_BUILD
 install-exec-hook:
-	mv $(DESTDIR)$(pkglibdir)/$(SUBAGENT).so $(DESTDIR)$(pkglibdir)/$(SUBAGENT).nsm
+	mv -f $(DESTDIR)$(pkglibdir)/$(SUBAGENT).so $(DESTDIR)$(pkglibdir)/$(SUBAGENT).nsm
 	rm -f $(DESTDIR)$(pkglibdir)/$(SUBAGENT).la
 	rm -f $(DESTDIR)$(libdir)/libnsm_$(SUBAGENT).so
 	ln -s netxms/$(SUBAGENT).nsm $(DESTDIR)$(libdir)/libnsm_$(SUBAGENT).so
