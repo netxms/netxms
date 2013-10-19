@@ -39,8 +39,11 @@ public class CertificateManager
 
    public Certificate[] getCerts()
    {
-      if (certs != null) return certs;
+      return certs;
+   }
 
+   private void loadCerts()
+   {
       try
       {
          certs = getCertsFromKeyStore();
@@ -48,20 +51,18 @@ public class CertificateManager
       catch(KeyStoreException e)
       {
          //e.printStackTrace();
-         return new Certificate[0];
+         certs = new Certificate[0];
       }
       catch(UnrecoverableEntryException e)
       {
          //e.printStackTrace();
-         return new Certificate[0];
+         certs = new Certificate[0];
       }
       catch(NoSuchAlgorithmException e)
       {
          //e.printStackTrace();
-         return new Certificate[0];
+         certs = new Certificate[0];
       }
-
-      return certs;
    }
 
    public boolean hasNoCertificates()
@@ -167,12 +168,19 @@ public class CertificateManager
    public void load() throws KeyStoreLoaderException
    {
       keyStore = loader.loadKeyStore();
+
+      loadCerts();
    }
 
    protected Certificate[] getCertsFromKeyStore()
       throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException
    {
-      if (keyStore == null || keyStore.size() == 0)
+      if (keyStore == null)
+      {
+         throw new KeyStoreException();
+      }
+
+      if (keyStore.size() == 0)
       {
          return new Certificate[0];
       }

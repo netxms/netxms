@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.KeyStore;
 import java.security.Signature;
 import java.security.cert.Certificate;
@@ -29,9 +30,14 @@ public class KeyStoreTest
 
       FileInputStream fis = new FileInputStream(location);
 
-      keyStore.load(fis, password.toCharArray());
-
-      fis.close();
+      try
+      {
+         keyStore.load(fis, password.toCharArray());
+      }
+      finally
+      {
+         fis.close();
+      }
 
       cert = keyStore.getCertificate("John Doe");
       pkEntry = (KeyStore.PrivateKeyEntry) keyStore
@@ -71,5 +77,22 @@ public class KeyStoreTest
       byte[] signedChallenge = sig.sign();
 
       assertTrue(verifier.verify(signedChallenge));
+   }
+
+   @Test(expected = IOException.class)
+   public void testKeyStore_ThrowsIOExcepitonOnEmptyPassword() throws Exception
+   {
+      keyStore = KeyStore.getInstance("PKCS12");
+
+      FileInputStream fis = new FileInputStream(location);
+
+      try
+      {
+         keyStore.load(fis, new char[0]);
+      }
+      finally
+      {
+         fis.close();
+      }
    }
 }

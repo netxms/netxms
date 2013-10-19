@@ -3,6 +3,7 @@ package org.netxms.certificate.loader;
 import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.KeyStore;
 
 public class PKCS12KeyStoreLoader implements KeyStoreLoader
@@ -34,8 +35,21 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
          FileInputStream fis = new FileInputStream(ksLocation);
          try
          {
-            String keyStorePassword = listener.keyStorePasswordRequested();
-            ks.load(fis, keyStorePassword.toCharArray());
+            try
+            {
+               ks.load(fis, new char[0]);
+            }
+            catch(IOException ioe)
+            {
+               fis.close();
+               fis = new FileInputStream(ksLocation);
+
+               String keyStorePassword = listener.keyStorePasswordRequested();
+
+               if (keyStorePassword == null || keyStorePassword.isEmpty()) return null;
+
+               ks.load(fis, keyStorePassword.toCharArray());
+            }
          }
          finally
          {
