@@ -64,30 +64,34 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="NetXMS Management Console for Cortex">
+            name="NetXMS Management Console">
          <property
                name="appName"
-               value="NetXMS Management Console for Cortex">
+               value="NetXMS Management Console">
          </property>
          <property
                name="aboutText"
-               value="NetXMS Cortex Management Console&#x0A;&#x0A;Copyright (c) 2003-2011 Raden Solutions">
+               value="NetXMS Management Console&#x0A;&#x0A;Version 1.2.9&#x0A;Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein">
          </property>
          <property
                name="startupForegroundColor"
-               value="FFFF00">
+               value="410B73">
          </property>
          <property
                name="startupMessageRect"
-               value="7,265,386,20">
+               value="7,275,441,18">
          </property>
          <property
                name="preferenceCustomization"
                value="plugin_customization.ini">
          </property>
          <property
-               name="startupProgressRect"
-               value="0,285,400,15">
+               name="aboutImage"
+               value="icons/launcher/128x128.png">
+         </property>
+         <property
+               name="windowImages"
+               value="icons/launcher/16x16.png,icons/launcher/32x32.png,icons/launcher/48x48.png,icons/launcher/64x64.png,icons/launcher/128x128.png">
          </property>
       </product>
    </extension>

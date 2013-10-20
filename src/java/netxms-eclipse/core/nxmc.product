@@ -25,7 +25,6 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
    <windowImages i16="/Core/icons/launcher/16x16.png" i32="/Core/icons/launcher/32x32.png" i48="/Core/icons/launcher/48x48.png" i64="/Core/icons/launcher/64x64.png" i128="/Core/icons/launcher/128x128.png"/>
 
    <splash
-      startupProgressRect="500,284,455,10"
       startupMessageRect="7,275,441,18"
       startupForegroundColor="410B73" />
    <launcher name="nxmc">
@@ -36,6 +35,7 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
          <bmp/>
       </win>
    </launcher>
+
 
    <vm>
    </vm>
@@ -285,7 +285,7 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.zest.jface"/>
       <plugin id="org.eclipse.zest.layouts"/>
       <plugin id="org.mozilla.javascript"/>
-      <plugin id="org.netxms.certificatemanager"/>
+      <plugin id="org.netxms.certificatemanager" fragment=""/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>

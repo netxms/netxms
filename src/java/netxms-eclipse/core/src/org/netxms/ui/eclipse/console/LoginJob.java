@@ -33,7 +33,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.console.api.SessionProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import static org.netxms.ui.eclipse.console.AuthenticationMethod.*;
 
 /**
  * Login job
@@ -62,7 +61,7 @@ public class LoginJob implements IRunnableWithProgress
    private String server;
    private String loginName;
    private boolean encryptSession;
-   private AuthenticationMethod authMethod;
+   private int authMethod;
    private String password;
    private Signature signature;
 
@@ -78,7 +77,7 @@ public class LoginJob implements IRunnableWithProgress
       this.server = server;
       this.loginName = loginName;
       this.encryptSession = encryptSession;
-      authMethod = AUTHENTICATION_NULL;
+      authMethod = NXCSession.AUTH_TYPE_PASSWORD;
    }
 
    /*
@@ -217,21 +216,17 @@ public class LoginJob implements IRunnableWithProgress
     */
    private NXCSession createNXCSession(String hostName, int port)
    {
-      NXCSession session = new NXCSession(hostName, port, loginName);
-
+      NXCSession session = new NXCSession(hostName, port, loginName, password, encryptSession);
+      session.setAuthType(authMethod);
       switch(authMethod)
       {
-         case AUTHENTICATION_PASSWORD:
-            session.setPassword(password);
-            break;
-
-         case AUTHENTICATION_CERTIFICATE:
-            session.setSignature(signature);
-            break;
-         
-         case AUTHENTICATION_NULL:
+      	case NXCSession.AUTH_TYPE_PASSWORD:
+   	      session.setPassword(password);
+   	      break;
+      	case NXCSession.AUTH_TYPE_CERTIFICATE:
+   	      session.setSignature(signature);
+   	      break;
       }
-
       return session;
    }
 
@@ -261,16 +256,6 @@ public class LoginJob implements IRunnableWithProgress
    }
 
    /**
-    * Set the authentication method for this login job
-    * 
-    * @param method authentication method to use
-    */
-   private void setAuthenticationMethod(AuthenticationMethod method)
-   {
-      authMethod = method;
-   }
-
-   /**
     * Set password for this login job
     * 
     * @param password
@@ -278,7 +263,7 @@ public class LoginJob implements IRunnableWithProgress
    public void setPassword(String password)
    {
       this.password = password;
-      setAuthenticationMethod(AUTHENTICATION_PASSWORD);
+      authMethod = NXCSession.AUTH_TYPE_PASSWORD;
    }
 
    /**
@@ -289,6 +274,6 @@ public class LoginJob implements IRunnableWithProgress
    public void setSignature(Signature signature)
    {
       this.signature = signature;
-      setAuthenticationMethod(AUTHENTICATION_CERTIFICATE);
+      authMethod = NXCSession.AUTH_TYPE_CERTIFICATE;
    }
 }

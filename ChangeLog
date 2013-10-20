@@ -3,6 +3,8 @@
 *
 
 - Event processing policy rules can be exported and imported
+- NXSL:
+	- Implemented post-increment and post-decrement for array elements
 - Fixed issues: #226, #378
 
 

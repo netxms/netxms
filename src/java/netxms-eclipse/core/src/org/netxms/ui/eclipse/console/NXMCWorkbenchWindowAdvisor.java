@@ -44,6 +44,7 @@ import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.certificate.manager.exception.SignatureImpossibleException;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
@@ -128,7 +129,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       boolean success = false;
       boolean autoConnect = false;
-      String password;
+      String password = "";
 
       CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
       certMgr.setKeyStoreRequestListener(this);
@@ -147,6 +148,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          else if (s.startsWith("-password=")) //$NON-NLS-1$
          {
             password = s.substring(10);
+            settings.put("Connect.AuthMethod", NXCSession.AUTH_TYPE_PASSWORD);
          }
          else if (s.equals("-auto")) //$NON-NLS-1$
          {
@@ -162,28 +164,35 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          if (!autoConnect)
          {
             showLoginDialog(loginDialog);
+            password = loginDialog.getPassword();
          }
          else
          {
             autoConnect = false; // only do auto connect first time
          }
 
-         LoginJob job = new LoginJob(display, settings.get("Connect.Server"), //$NON-NLS-1$ 
+         LoginJob job = new LoginJob(display, 
+         		settings.get("Connect.Server"), //$NON-NLS-1$ 
                settings.get("Connect.Login"), //$NON-NLS-1$
-               encrypt); //$NON-NLS-1$
+               encrypt);
 
-         switch(loginDialog.getAuthenticationMethod())
+         int authMethod;
+         try
          {
-            case AUTHENTICATION_PASSWORD:
-               job.setPassword(loginDialog.getPassword());
+         	authMethod = settings.getInt("Connect.AuthMethod"); //$NON-NLS-1$
+         }
+         catch(NumberFormatException e)
+         {
+         	authMethod = NXCSession.AUTH_TYPE_PASSWORD;
+         }
+         switch(authMethod)
+         {
+            case NXCSession.AUTH_TYPE_PASSWORD:
+               job.setPassword(password);
                break;
-
-            case AUTHENTICATION_CERTIFICATE:
-               Signature sign = getSignature(certMgr, loginDialog);
-               job.setSignature(sign);
+            case NXCSession.AUTH_TYPE_CERTIFICATE:
+               job.setSignature(getSignature(certMgr, loginDialog.getCertificate()));
                break;
-
-            case AUTHENTICATION_NULL:
          }
 
          try
@@ -223,29 +232,22 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       }
 
       CertificateManagerProvider.dispose();
-      // if (!success)
-      // return;
-
-      // TODO: refactor to not require this
-      password = loginDialog.getPassword();
 
       // Suggest user to change password if it is expired
-      final Session session = ConsoleSharedData.getSession();
-      if (session.isPasswordExpired())
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      if ((session.getAuthType() == NXCSession.AUTH_TYPE_PASSWORD) && session.isPasswordExpired())
       {
-         requestPasswordChange(password, session);
+         requestPasswordChange(loginDialog.getPassword(), session);
       }
    }
 
    /**
     * @param certMgr
-    * @param loginDialog
+    * @param cert
     * @return
-    * @throws SignatureImpossibleException
     */
-   private Signature getSignature(CertificateManager certMgr, LoginDialog loginDialog)
+   private static Signature getSignature(CertificateManager certMgr, Certificate cert)
    {
-      Certificate cert = loginDialog.getCertificate();
       Signature sign;
 
       try

@@ -203,11 +203,7 @@ public class NXCSession
     */
    public NXCSession(String connAddress, int connPort, String connLoginName)
    {
-      this.connAddress = connAddress;
-      this.connPort = connPort;
-      this.connLoginName = connLoginName;
-
-      this.connUseEncryption = true;
+      this(connAddress, DEFAULT_CONN_PORT, connLoginName, "", false);
    }
 
    /**
@@ -217,9 +213,7 @@ public class NXCSession
     */
    public NXCSession(String connAddress, String connLoginName, String connPassword)
    {
-      this(connAddress, DEFAULT_CONN_PORT, connLoginName);
-      this.connPassword = connPassword;
-      //this.connUseEncryption = false;
+      this(connAddress, DEFAULT_CONN_PORT, connLoginName, connPassword, false);
    }
 
    /**
@@ -230,9 +224,7 @@ public class NXCSession
     */
    public NXCSession(String connAddress, int connPort, String connLoginName, String connPassword)
    {
-      this(connAddress, connPort, connLoginName);
-      this.connPassword = connPassword;
-      //this.connUseEncryption = false;
+      this(connAddress, connPort, connLoginName, connPassword, false);
    }
 
    /**
@@ -242,10 +234,11 @@ public class NXCSession
     * @param connPassword
     * @param connUseEncryption
     */
-   public NXCSession(
-      String connAddress, int connPort, String connLoginName, String connPassword, boolean connUseEncryption)
+   public NXCSession(String connAddress, int connPort, String connLoginName, String connPassword, boolean connUseEncryption)
    {
-      this(connAddress, connPort, connLoginName);
+      this.connAddress = connAddress;
+      this.connPort = connPort;
+      this.connLoginName = connLoginName;
       this.connPassword = connPassword;
       this.connUseEncryption = connUseEncryption;
    }

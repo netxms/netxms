@@ -237,6 +237,9 @@ src/java/build/solaris.gtk.sparc
 src/java/build/solaris.gtk.x86
 src/java/build/win32.win32.x86
 src/java/build/win32.win32.x86_64
+src/java/certificate-manager/.classpath
+src/java/certificate-manager/.project
+src/java/certificate-manager/.settings
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/.settings
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/bin
 src/java/nebula/org.netxms.nebula.widgets.gallery/.settings
