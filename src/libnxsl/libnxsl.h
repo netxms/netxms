@@ -114,6 +114,10 @@ typedef void *yyscan_t;
 #define OPCODE_SAFE_GET_ATTR  60
 #define OPCODE_CALL_METHOD    61
 #define OPCODE_CASE_CONST     62
+#define OPCODE_INC_ELEMENT    63
+#define OPCODE_DEC_ELEMENT    64
+#define OPCODE_INCP_ELEMENT   65
+#define OPCODE_DECP_ELEMENT   66
 
 class NXSL_Compiler;
 

@@ -368,6 +368,24 @@ Expression:
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_DEC, $1));
 }
+/*
+|	T_INC Expression '[' Expression ']'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_INCP_ELEMENT));
+}
+|	T_DEC Expression '[' Expression ']'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_DECP_ELEMENT));
+}
+*/
+|	Expression '[' Expression ']' T_INC	%prec T_POST_INC
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_INC_ELEMENT));
+}
+|	Expression '[' Expression ']' T_DEC	%prec T_POST_DEC
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_DEC_ELEMENT));
+}
 |	Expression '+' Expression	
 { 
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_ADD));

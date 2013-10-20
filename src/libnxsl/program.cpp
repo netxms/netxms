@@ -48,7 +48,8 @@ static const char *m_szCommandMnemonic[] =
    "IMATCH", "CASE", "ARRAY", "EGET",
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
-	"AGETS", "CALL", "CASE"
+	"AGETS", "CALL", "CASE", "EINC", "EDEC",
+   "EINCP", "EDECP"
 };
 
 /**
@@ -380,6 +381,10 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_DEC:
          case OPCODE_INCP:
          case OPCODE_DECP:
+         case OPCODE_INC_ELEMENT:
+         case OPCODE_DEC_ELEMENT:
+         case OPCODE_INCP_ELEMENT:
+         case OPCODE_DECP_ELEMENT:
 			case OPCODE_SAFE_GET_ATTR:
          case OPCODE_GET_ATTRIBUTE:
          case OPCODE_SET_ATTRIBUTE:
@@ -803,6 +808,10 @@ void NXSL_Program::execute()
          }
 			break;
 		case OPCODE_GET_ELEMENT:	// Get array element; stack should contain: array index (top)
+		case OPCODE_INC_ELEMENT:	// Get array element and increment; stack should contain: array index (top)
+		case OPCODE_DEC_ELEMENT:	// Get array element and decrement; stack should contain: array index (top)
+		case OPCODE_INCP_ELEMENT:	// Increment array element and get; stack should contain: array index (top)
+		case OPCODE_DECP_ELEMENT:	// Decrement array element and get; stack should contain: array index (top)
 			pValue = (NXSL_Value *)m_pDataStack->pop();
 			if (pValue != NULL)
 			{
@@ -815,8 +824,56 @@ void NXSL_Program::execute()
 					{
 						if (pValue->isInteger())
 						{
-							NXSL_Value *element = array->getValueAsArray()->get(pValue->getValueAsInt32());
-							m_pDataStack->push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
+                     int index = pValue->getValueAsInt32();
+							NXSL_Value *element = array->getValueAsArray()->get(index);
+
+                     if (cp->m_nOpCode == OPCODE_INCP_ELEMENT)
+                     {
+                        if (element->isNumeric())
+                        {
+                           element->increment();
+                        }
+                        else
+                        {
+                           error(NXSL_ERR_NOT_NUMBER);
+                        }
+                     }
+                     else if (cp->m_nOpCode == OPCODE_DECP_ELEMENT)
+                     {
+                        if (element->isNumeric())
+                        {
+                           element->decrement();
+                        }
+                        else
+                        {
+                           error(NXSL_ERR_NOT_NUMBER);
+                        }
+                     }
+
+                     m_pDataStack->push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
+
+                     if (cp->m_nOpCode == OPCODE_INC_ELEMENT)
+                     {
+                        if (element->isNumeric())
+                        {
+                           element->increment();
+                        }
+                        else
+                        {
+                           error(NXSL_ERR_NOT_NUMBER);
+                        }
+                     }
+                     else if (cp->m_nOpCode == OPCODE_DEC_ELEMENT)
+                     {
+                        if (element->isNumeric())
+                        {
+                           element->decrement();
+                        }
+                        else
+                        {
+                           error(NXSL_ERR_NOT_NUMBER);
+                        }
+                     }
 						}
 						else
 						{
