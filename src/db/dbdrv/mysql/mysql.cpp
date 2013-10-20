@@ -639,11 +639,9 @@ extern "C" LONG EXPORT DrvGetFieldLength(MYSQL_RESULT *hResult, int iRow, int iC
 	}
 }
 
-
-//
-// Get field value from result
-//
-
+/**
+ * Get field value from result
+ */
 extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColumn, WCHAR *pBuffer, int nBufSize)
 {
 	WCHAR *pRet = NULL;

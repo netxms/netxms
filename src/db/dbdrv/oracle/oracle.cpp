@@ -1,6 +1,6 @@
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007-2012 Victor Kirhenshtein
+** Copyright (C) 2007-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,6 +60,9 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 	return out;
 }
 
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
 extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
@@ -258,11 +261,9 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
    return (DBDRV_CONNECTION)pConn;
 }
 
-
-//
-// Disconnect from database
-//
-
+/**
+ * Disconnect from database
+ */
 extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 {
 	if (pConn != NULL)
@@ -275,11 +276,9 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 	}
 }
 
-
-//
-// Convert query from NetXMS portable format to native Oracle format
-//
-
+/**
+ * Convert query from NetXMS portable format to native Oracle format
+ */
 static UCS2CHAR *ConvertQuery(WCHAR *query)
 {
 #if UNICODE_UCS4

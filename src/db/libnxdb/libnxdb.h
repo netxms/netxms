@@ -28,18 +28,14 @@
 #include <nms_threads.h>
 #include <nxdbapi.h>
 
-
-//
-// Constants
-//
-
+/**
+ * Max number of loaded database drivers
+ */
 #define MAX_DB_DRIVERS			16
 
-
-//
-// Database driver structure
-//
-
+/**
+ * Database driver structure
+ */
 struct db_driver_t
 {
 	const char *m_name;
@@ -81,11 +77,20 @@ struct db_driver_t
 	char* (* m_fpDrvPrepareStringA)(const char *);
 };
 
+/**
+ * Prepared statement
+ */
+struct db_statement_t
+{
+	DB_DRIVER m_driver;
+	DB_HANDLE m_connection;
+	DBDRV_STATEMENT m_statement;
+	TCHAR *m_query;
+};
 
-//
-// database connection structure
-//
-
+/**
+ * Database connection structure
+ */
 struct db_handle_t
 {
    DBDRV_CONNECTION m_connection;
@@ -99,26 +104,12 @@ struct db_handle_t
    char *m_password;
    char *m_dbName;
    char *m_schema;
+   ObjectArray<db_statement_t> *m_preparedStatements;
 };
 
-
-//
-// prepared statement
-//
-
-struct db_statement_t
-{
-	DB_DRIVER m_driver;
-	DB_HANDLE m_connection;
-	DBDRV_STATEMENT m_statement;
-	TCHAR *m_query;
-};
-
-
-//
-// SELECT query result
-//
-
+/**
+ * SELECT query result
+ */
 struct db_result_t
 {
 	DB_DRIVER m_driver;
@@ -126,11 +117,9 @@ struct db_result_t
 	DBDRV_RESULT m_data;
 };
 
-
-//
-// Async SELECT query result
-//
-
+/**
+ * Async SELECT query result
+ */
 struct db_async_result_t
 {
 	DB_DRIVER m_driver;

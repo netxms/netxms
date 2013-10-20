@@ -152,3 +152,14 @@ void Array::clear()
 		m_allocated = m_grow;
 	}
 }
+
+/**
+ * Get index of given object
+ */
+int Array::indexOf(void *object)
+{
+	for(int i = 0; i < m_size; i++)
+      if (m_data[i] == object)
+         return i;
+   return -1;
+}

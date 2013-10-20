@@ -451,6 +451,7 @@ src/zlib/Makefile.in
 tools/Makefile
 tools/Makefile.in
 webui/eclipse
+webui/webapp/Core/jar/certificate-manager-*.jar
 webui/webapp/Core/jar/netxms-base-*.jar
 webui/webapp/Core/jar/netxms-client-*.jar
 webui/webapp/Core/jar/netxms-client-api-*.jar

@@ -407,10 +407,13 @@ public:
 
 	int add(void *object);
 	void *get(int index) { return ((index >= 0) && (index < m_size)) ? m_data[index] : NULL; }
+   int indexOf(void *object);
 	void set(int index, void *object);
 	void replace(int index, void *object);
 	void remove(int index) { internalRemove(index, true); }
+   void remove(void *object) { internalRemove(indexOf(object), true); }
 	void unlink(int index) { internalRemove(index, false); }
+	void unlink(void *object) { internalRemove(indexOf(object), false); }
 	void clear();
 
 	int size() { return m_size; }
@@ -433,8 +436,13 @@ public:
 
 	int add(T *object) { return Array::add((void *)object); }
 	T *get(int index) { return (T*)Array::get(index); }
+   int indexOf(T *object) { return Array::indexOf((void *)object); }
 	void set(int index, T *object) { Array::set(index, (void *)object); }
 	void replace(int index, T *object) { Array::replace(index, (void *)object); }
+	void remove(int index) { Array::remove(index); }
+   void remove(T *object) { Array::remove((void *)object); }
+	void unlink(int index) { Array::unlink(index); }
+   void unlink(T *object) { Array::unlink((void *)object); }
 };
 
 /**

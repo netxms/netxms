@@ -247,11 +247,9 @@ extern "C" void EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int cTy
 	}
 }
 
-
-//
-// Execute prepared statement
-//
-
+/**
+ * Execute prepared statement
+ */
 extern "C" DWORD EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR *errorText)
 {
 	DWORD result;
@@ -279,21 +277,18 @@ extern "C" DWORD EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR
 	return result;
 }
 
-
-//
-// Destroy prepared statement
-//
-
+/**
+ * Destroy prepared statement
+ */
 extern "C" void EXPORT DrvFreeStatement(sqlite3_stmt *stmt)
 {
-	sqlite3_finalize(stmt);
+   if (stmt != NULL)
+	   sqlite3_finalize(stmt);
 }
 
-
-//
-// Internal query
-//
-
+/**
+ * Internal query
+ */
 static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, WCHAR *errorText)
 {
    DWORD result;
