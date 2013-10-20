@@ -54,11 +54,17 @@ public class SplashHandler extends BasicSplashHandler
 			messageRectString = product.getProperty(IProductConstants.STARTUP_MESSAGE_RECT);
 			foregroundColorString = product.getProperty(IProductConstants.STARTUP_FOREGROUND_COLOR);
 		}
-		Rectangle progressRect = StringConverter.asRectangle(progressRectString, new Rectangle(10, 10, 300, 15));
-		setProgressRect(progressRect);
+		if (progressRectString != null)
+		{
+			Rectangle progressRect = StringConverter.asRectangle(progressRectString, new Rectangle(10, 10, 300, 15));
+			setProgressRect(progressRect);
+		}
 
-		Rectangle messageRect = StringConverter.asRectangle(messageRectString, new Rectangle(10, 35, 300, 15));
-		setMessageRect(messageRect);
+		if (messageRectString != null)
+		{
+			Rectangle messageRect = StringConverter.asRectangle(messageRectString, new Rectangle(10, 35, 300, 15));
+			setMessageRect(messageRect);
+		}
 
 		int foregroundColorInteger;
 		try

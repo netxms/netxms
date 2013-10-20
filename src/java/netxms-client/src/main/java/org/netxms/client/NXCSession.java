@@ -140,7 +140,7 @@ public class NXCSession
    private String clientAddress = null;
    private int authType = AUTH_TYPE_PASSWORD;
    private boolean ignoreProtocolVersion = false;
-   private Signature connSignature;
+   private Signature connSignature = null;
 
    // Information about logged in user
    private int sessionId;
@@ -1383,7 +1383,10 @@ public class NXCSession
          }
          else if (authType == AUTH_TYPE_CERTIFICATE)
          {
-            //request.setVariable(NXCPCodes.VID_CERTIFICATE, "");
+         	if ((serverChallenge == null) || (connSignature == null))
+         	{
+         		throw new NXCException(RCC.ENCRYPTION_ERROR);
+         	}
             byte[] signedChallenge = signChallenge(serverChallenge);
             request.setVariable(NXCPCodes.VID_SIGNATURE, signedChallenge);
          }
@@ -6689,8 +6692,9 @@ public class NXCSession
    /**
     * @param challenge challenge string received from server
     * @return
+    * @throws NXCException 
     */
-   private byte[] signChallenge(byte[] challenge)
+   private byte[] signChallenge(byte[] challenge) throws NXCException
    {
       byte[] signed;
 
@@ -6701,7 +6705,7 @@ public class NXCSession
       }
       catch(SignatureException e)
       {
-         return challenge;
+         throw new NXCException(RCC.ENCRYPTION_ERROR);
       }
 
       return signed;
