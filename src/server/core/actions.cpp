@@ -95,11 +95,9 @@ static BOOL LoadActions()
    return bResult;
 }
 
-
-//
-// Initialize action-related stuff
-//
-
+/**
+ * Initialize action-related stuff
+ */
 BOOL InitActions()
 {
    BOOL bSuccess = FALSE;
@@ -110,22 +108,18 @@ BOOL InitActions()
    return bSuccess;
 }
 
-
-//
-// Cleanup action-related stuff
-//
-
+/**
+ * Cleanup action-related stuff
+ */
 void CleanupActions()
 {
    DestroyActionList();
    RWLockDestroy(m_rwlockActionListAccess);
 }
 
-
-//
-// Save action record to database
-//
-
+/**
+ * Save action record to database
+ */
 static void SaveActionToDB(NXC_ACTION *pAction)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -166,33 +160,27 @@ static void SaveActionToDB(NXC_ACTION *pAction)
 	DBConnectionPoolReleaseConnection(hdb);
 }
 
-
-//
-// Compare action's id for bsearch()
-//
-
+/**
+ * Compare action's id for bsearch()
+ */
 static int CompareId(const void *key, const void *elem)
 {
    return CAST_FROM_POINTER(key, UINT32) < ((NXC_ACTION *)elem)->dwId ? -1 : 
             (CAST_FROM_POINTER(key, UINT32) > ((NXC_ACTION *)elem)->dwId ? 1 : 0);
 }
 
-
-//
-// Compare action id for qsort()
-//
-
+/**
+ * Compare action id for qsort()
+ */
 static int CompareElements(const void *p1, const void *p2)
 {
    return ((NXC_ACTION *)p1)->dwId < ((NXC_ACTION *)p2)->dwId ? -1 : 
             (((NXC_ACTION *)p1)->dwId > ((NXC_ACTION *)p2)->dwId ? 1 : 0);
 }
 
-
-//
-// Execute remote action
-//
-
+/**
+ * Execute remote action
+ */
 static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 {
    Node *pNode;
@@ -381,6 +369,8 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
  */
 BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 {
+   static TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT") };
+
    NXC_ACTION *pAction;
    BOOL bSuccess = FALSE;
 
@@ -397,59 +387,110 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
       }
       else
       {
+         DbgPrintf(3, _T("*actions* Executing action %d (%s) of type %s"),
+            dwActionId, pAction->szName, actionType[pAction->iType]);
+
          TCHAR *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
 
          pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
+         StrStrip(pszExpandedData);
+
          pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, pszAlarmMsg);
+         StrStrip(pszExpandedRcpt);
+
          switch(pAction->iType)
          {
             case ACTION_EXEC:
-               DbgPrintf(3, _T("*actions* Executing command \"%s\""), pszExpandedData);
-               //bSuccess = ExecCommand(pszExpandedData);
-					ThreadCreate(RunCommandThread, 0, _tcsdup(pszExpandedData));
+               if (pszExpandedData[0] != 0)
+               {
+                  DbgPrintf(3, _T("*actions* Executing command \"%s\""), pszExpandedData);
+					   ThreadCreate(RunCommandThread, 0, _tcsdup(pszExpandedData));
+               }
+               else
+               {
+                  DbgPrintf(3, _T("*actions* Empty command - nothing to execute"));
+               }
 					bSuccess = TRUE;
                break;
             case ACTION_SEND_EMAIL:
-               DbgPrintf(3, _T("*actions* Sending mail to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-               pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, pszAlarmMsg);
-					curr = pszExpandedRcpt;
-					do
-					{
-						next = _tcschr(curr, _T(';'));
-						if (next != NULL)
-							*next = 0;
-						StrStrip(curr);
-						PostMail(curr, pszExpandedSubject, pszExpandedData);
-						curr = next + 1;
-					} while(next != NULL);
-               free(pszExpandedSubject);
+               if (pszExpandedRcpt[0] != 0)
+               {
+                  DbgPrintf(3, _T("*actions* Sending mail to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
+                  pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, pszAlarmMsg);
+					   curr = pszExpandedRcpt;
+					   do
+					   {
+						   next = _tcschr(curr, _T(';'));
+						   if (next != NULL)
+							   *next = 0;
+						   StrStrip(curr);
+						   PostMail(curr, pszExpandedSubject, pszExpandedData);
+						   curr = next + 1;
+					   } while(next != NULL);
+                  free(pszExpandedSubject);
+               }
+               else
+               {
+                  DbgPrintf(3, _T("*actions* Empty recipients list - mail will not be sent"));
+               }
                bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
-               DbgPrintf(3, _T("*actions* Sending SMS to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-					curr = pszExpandedRcpt;
-					do
-					{
-						next = _tcschr(curr, _T(';'));
-						if (next != NULL)
-							*next = 0;
-						StrStrip(curr);
-	               PostSMS(curr, pszExpandedData);
-						curr = next + 1;
-					} while(next != NULL);
+               if (pszExpandedRcpt[0] != 0)
+               {
+                  DbgPrintf(3, _T("*actions* Sending SMS to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
+					   curr = pszExpandedRcpt;
+					   do
+					   {
+						   next = _tcschr(curr, _T(';'));
+						   if (next != NULL)
+							   *next = 0;
+						   StrStrip(curr);
+	                  PostSMS(curr, pszExpandedData);
+						   curr = next + 1;
+					   } while(next != NULL);
+               }
+               else
+               {
+                  DbgPrintf(3, _T("*actions* Empty recipients list - SMS will not be sent"));
+               }
                bSuccess = TRUE;
                break;
             case ACTION_REMOTE:
-               DbgPrintf(3, _T("*actions* Executing on \"%s\": \"%s\""), pszExpandedRcpt, pszExpandedData);
-               bSuccess = ExecuteRemoteAction(pszExpandedRcpt, pszExpandedData);
+               if (pszExpandedRcpt[0] != 0)
+               {
+                  DbgPrintf(3, _T("*actions* Executing on \"%s\": \"%s\""), pszExpandedRcpt, pszExpandedData);
+                  bSuccess = ExecuteRemoteAction(pszExpandedRcpt, pszExpandedData);
+               }
+               else
+               {
+                  DbgPrintf(3, _T("*actions* Empty target list - remote action will not be executed"));
+                  bSuccess = TRUE;
+               }
                break;
 				case ACTION_FORWARD_EVENT:
-               DbgPrintf(3, _T("*actions* Forwarding event to \"%s\""), pszExpandedRcpt);
-               bSuccess = ForwardEvent(pszExpandedRcpt, pEvent);
+               if (pszExpandedRcpt[0] != 0)
+               {
+                  DbgPrintf(3, _T("*actions* Forwarding event to \"%s\""), pszExpandedRcpt);
+                  bSuccess = ForwardEvent(pszExpandedRcpt, pEvent);
+               }
+               else
+               {
+                  DbgPrintf(3, _T("*actions* Empty destination - event will not be forwarded"));
+                  bSuccess = TRUE;
+               }
 					break;
 				case ACTION_NXSL_SCRIPT:
-               DbgPrintf(3, _T("*actions* Executing NXSL script \"%s\""), pszExpandedRcpt);
-               bSuccess = ExecuteActionScript(pszExpandedRcpt, pEvent);
+               if (pszExpandedRcpt[0] != 0)
+               {
+                  DbgPrintf(3, _T("*actions* Executing NXSL script \"%s\""), pszExpandedRcpt);
+                  bSuccess = ExecuteActionScript(pszExpandedRcpt, pEvent);
+               }
+               else
+               {
+                  DbgPrintf(3, _T("*actions* Empty script name - nothing to execute"));
+                  bSuccess = TRUE;
+               }
 					break;
             default:
                break;
