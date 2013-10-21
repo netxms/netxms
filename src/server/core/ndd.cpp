@@ -24,7 +24,6 @@
 
 #define MAX_DEVICE_DRIVERS		1024
 
-
 /**
  * List of loaded drivers
  */

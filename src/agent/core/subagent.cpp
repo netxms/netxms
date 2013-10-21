@@ -165,7 +165,15 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
    {
       // Assume that subagent name without path given
       // Try to load it from pkglibdir
-      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, szModuleName);
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if (homeDir != NULL)
+      {
+         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, szModuleName);
+      }
+      else
+      {
+         _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, szModuleName);
+      }
    }
    else
    {

@@ -102,6 +102,18 @@ BOOL NXCORE_EXPORTABLE LoadConfig()
 	}
 #endif
 
+   // Read default values from enviroment
+   const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+   if ((homeDir != NULL) && (*homeDir != 0))
+   {
+#ifdef _WIN32
+      _sntprintf(g_szLibDir, MAX_PATH, _T("%s%slib"), homeDir, 
+         (homeDir[_tcslen(homeDir) - 1] != FS_PATH_SEPARATOR_CHAR) ? FS_PATH_SEPARATOR : _T(""));
+#else
+      _sntprintf(g_szLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
+#endif
+   }
+
    if (IsStandalone())
       _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
 
