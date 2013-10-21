@@ -163,11 +163,9 @@ void LogParser::trace(int level, const TCHAR *format, ...)
 	va_end(args);
 }
 
-
-//
-// Add rule
-//
-
+/**
+ * Add rule
+ */
 bool LogParser::addRule(LogParserRule *rule)
 {
 	bool isOK;
@@ -185,16 +183,17 @@ bool LogParser::addRule(LogParserRule *rule)
 	return isOK;
 }
 
+/**
+ * Create and add rule
+ */
 bool LogParser::addRule(const TCHAR *regexp, DWORD eventCode, const TCHAR *eventName, int numParams)
 {
 	return addRule(new LogParserRule(this, regexp, eventCode, eventName, numParams));
 }
 
-
-//
-// Check context
-//
-
+/**
+ * Check context
+ */
 const TCHAR *LogParser::checkContext(LogParserRule *rule)
 {
 	const TCHAR *state;
@@ -309,22 +308,18 @@ void LogParser::setFileName(const TCHAR *name)
 		m_name = _tcsdup(name);	// Set parser name to file name
 }
 
-
-//
-// Set parser name
-//
-
+/**
+ * Set parser name
+ */
 void LogParser::setName(const TCHAR *name)
 {
 	safe_free(m_name);
 	m_name = _tcsdup((name != NULL) ? name : CHECK_NULL(m_fileName));
 }
 
-
-//
-// Add macro
-//
-
+/**
+ * Add macro
+ */
 void LogParser::addMacro(const TCHAR *name, const TCHAR *value)
 {
 	m_macros.set(name, value);

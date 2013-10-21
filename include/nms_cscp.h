@@ -484,7 +484,7 @@ typedef struct
 #define CMD_RS_GET_REPORT              0x1101
 #define CMD_RS_SCHEDULE_EXECUTION      0x1102
 #define CMD_RS_LIST_RESULTS            0x1103
-#define CMD_RS_GET_RESULT              0x1104
+#define CMD_RS_RENDER_RESULT           0x1104
 #define CMD_RS_DELETE_RESULT           0x1105
 
 /**

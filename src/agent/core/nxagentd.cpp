@@ -887,6 +887,7 @@ BOOL Initialize()
    // Agent start time
    g_tmAgentStartTime = time(NULL);
 
+	m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
 		m_thMasterAgentListener = ThreadCreateEx(MasterAgentListener, 0, NULL);
@@ -896,7 +897,6 @@ BOOL Initialize()
 		// Start network listener and session watchdog
 		m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
 		m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
-		m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
 		StartPushConnector();
 		StartStorageDiscoveryConnector();
       if (g_dwFlags & AF_ENABLE_CONTROL_CONNECTOR)
@@ -943,8 +943,8 @@ void Shutdown()
 		ShutdownTrapSender();
 		ThreadJoin(m_thSessionWatchdog);
 		ThreadJoin(m_thListener);
-		ThreadJoin(m_thTrapSender);
 	}
+	ThreadJoin(m_thTrapSender);
 
    UnloadAllSubAgents();
    nxlog_write(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
