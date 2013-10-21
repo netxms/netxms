@@ -6,6 +6,12 @@ http://www.netxms.org/download/archive/ (if it exists).
 
 RPM packages will be stored in the "rpms" directory.
 
+Required tool packages (the list is not comprehensive yet):
+> gcc
+> gcc-c++
+> bison-devel
+> flex-devel
+
 Required development packages:
 > openssl-devel
 > expat-devel

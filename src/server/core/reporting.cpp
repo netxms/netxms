@@ -162,7 +162,7 @@ CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession
    request->SetId(rqId);
 
    // File transfer requests
-   if (request->GetCode() == CMD_RS_GET_RESULT)
+   if (request->GetCode() == CMD_RS_RENDER_RESULT)
    {
       MutexLock(s_fileRequestLock);
       s_fileRequests.add(new FileRequest(originalId, rqId, session));

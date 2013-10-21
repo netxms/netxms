@@ -161,10 +161,8 @@ cd "$build_dir/netxms-$ver"
 
 echo -n "Configuring sources..."
 [ -e "./configure" ] || ./reconf &> /dev/null
-./configure --prefix="$build_root/usr" \ 
-    # --bindir=/usr/bin --libdir=/usr/lib --sysconfdir=/etc \
-    --enable-unicode --with-server --with-odbc --with-sqlite --with-pgsql --with-mysql \
-    --with-client #&> /dev/null
+./configure --prefix="$build_root/usr" --enable-unicode --with-server \
+    --with-odbc --with-sqlite --with-pgsql --with-mysql --with-client &> /dev/null
 if [ $? -ne 0 ]
 then
     echo -e \
@@ -201,6 +199,10 @@ fi
 mkdir -p "$build_root/etc/init.d"
 cp "$build_dir/$source/contrib/startup/redhat/netxmsd" "$build_root/etc/init.d"
 cp "$build_dir/$source/contrib/startup/redhat/nxagentd" "$build_root/etc/init.d"
+
+find "$build_root" -name *.la -exec rm -f {} \;
+#find "$build_root" -name *.la \
+#    -exec sed -i -e "s;libdir='.*';libdir='/usr/lib';" {} \;
 
 cd "$build_root/usr/lib"
 for nsm in netxms/*.nsm
