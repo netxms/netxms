@@ -369,7 +369,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
  */
 BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 {
-   static TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT") };
+   static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT") };
 
    NXC_ACTION *pAction;
    BOOL bSuccess = FALSE;

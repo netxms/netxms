@@ -44,11 +44,11 @@ static bool LoadNetXMSModule(const TCHAR *name)
       const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
       if (homeDir != NULL)
       {
-         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, szModuleName);
+         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, name);
       }
       else
       {
-         _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, szModuleName);
+         _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, name);
       }
    }
    else
