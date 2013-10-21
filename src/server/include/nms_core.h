@@ -810,7 +810,7 @@ Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags, WOR
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
-int GetSessionCount();
+int GetSessionCount(bool withRoot = true);
 bool IsLoggedIn(UINT32 dwUserId);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);

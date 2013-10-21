@@ -372,14 +372,19 @@ void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 /**
  * Get number of active user sessions
  */
-int GetSessionCount()
+int GetSessionCount(bool withRoot)
 {
    int i, nCount;
 
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0, nCount = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if (m_pSessionList[i] != NULL)
+   {
+      if ((m_pSessionList[i] != NULL) &&
+          (withRoot || (m_pSessionList[i]->getUserId() != 0)))
+      {
          nCount++;
+      }
+   }
    RWLockUnlock(m_rwlockSessionListAccess);
    return nCount;
 }
