@@ -249,13 +249,14 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    private static Signature getSignature(CertificateManager certMgr, Certificate cert)
    {
       Signature sign;
-
+      System.out.println(cert);
       try
       {
          sign = certMgr.extractSignature(cert);
       }
       catch(SignatureImpossibleException sie)
       {
+         System.out.println(sie.getMessage());
          return null;
       }
 

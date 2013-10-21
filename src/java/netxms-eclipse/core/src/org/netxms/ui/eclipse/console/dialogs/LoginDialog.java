@@ -216,7 +216,7 @@ public class LoginDialog extends Dialog
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				selectCertificate();
+			   selectCertificate();
 			}
 		});
       
@@ -380,6 +380,7 @@ public class LoginDialog extends Dialog
       {
          comboCert.setItems(subjectStrings);
          comboCert.select(0);
+         selectCertificate();
          return true;
       }
 
