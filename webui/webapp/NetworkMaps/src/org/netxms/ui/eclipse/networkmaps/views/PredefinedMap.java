@@ -532,6 +532,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 				mapPage.removeLink((NetworkMapLink)element);
 			}
 		}
+		saveMap();
 		
 		// for some reason graph viewer does not clear selection 
 		// after all selected elements was removed, so we have to do it manually

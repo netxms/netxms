@@ -1,2 +1,2 @@
 netxms-server = %{version}
-community-mysql >= 5.1
+mysql-server >= 5.1
