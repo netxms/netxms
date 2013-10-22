@@ -23,6 +23,7 @@ import java.security.Signature;
 import java.security.cert.Certificate;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -32,6 +33,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -41,7 +43,6 @@ import org.netxms.api.client.users.UserManager;
 import org.netxms.certificate.loader.KeyStoreRequestListener;
 import org.netxms.certificate.manager.CertificateManager;
 import org.netxms.certificate.manager.CertificateManagerProvider;
-import org.netxms.certificate.manager.exception.SignatureImpossibleException;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -121,7 +122,29 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       TweakletManager.postWindowCreate(configurer);
    }
 
-   /**
+   /* (non-Javadoc)
+	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowOpen()
+	 */
+	@Override
+	public void postWindowOpen()
+	{
+		super.postWindowOpen();
+		
+      for(String s : Platform.getCommandLineArgs())
+      {
+         if (s.equals("-fullscreen")) //$NON-NLS-1$
+         {
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setFullScreen(true);
+				Action a = ((Action)ConsoleSharedData.getProperty("FullScreenAction"));
+				if (a != null)
+				{
+					a.setChecked(true);
+				}
+			}
+      }
+	}
+
+	/**
     * Show login dialog and perform login
     */
    private void doLogin(final Display display)
@@ -254,9 +277,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       {
          sign = certMgr.extractSignature(cert);
       }
-      catch(SignatureImpossibleException sie)
+      catch(Exception e)
       {
-         System.out.println(sie.getMessage());
+      	Activator.logError("Exception in getSignature", e);
          return null;
       }
 
@@ -346,6 +369,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       }
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.certificate.request.KeyStoreLocationRequestListener#keyStoreLocationRequested()
+    */
    @Override
    public String keyStoreLocationRequested()
    {
@@ -359,6 +385,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       return dialog.open();
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.certificate.request.KeyStorePasswordRequestListener#keyStorePasswordRequested()
+    */
    @Override
    public String keyStorePasswordRequested()
    {
@@ -366,6 +395,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
             "The selected store is password-protected, please provide the password.");
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener#keyStoreEntryPasswordRequested()
+    */
    @Override
    public String keyStoreEntryPasswordRequested()
    {
@@ -373,6 +405,11 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
             "The selected certificate is password-protected, please provide the password.");
    }
 
+   /**
+    * @param title
+    * @param message
+    * @return
+    */
    private String showPasswordRequestDialog(String title, String message)
    {
       Shell shell = Display.getCurrent().getActiveShell();

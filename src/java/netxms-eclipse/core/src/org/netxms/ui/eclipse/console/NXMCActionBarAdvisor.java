@@ -53,6 +53,7 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.netxms.base.NXCommon;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -202,6 +203,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionFullScreen.setId("org.netxms.ui.eclipse.console.actions.full_screen"); //$NON-NLS-1$
 		actionFullScreen.setActionDefinitionId("org.netxms.ui.eclipse.console.commands.full_screen"); //$NON-NLS-1$
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
+		ConsoleSharedData.setProperty("FullScreenAction", actionFullScreen);
 		
 		actionLangChinese = new Action(Messages.NXMCActionBarAdvisor_LangChinese, Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$
 			public void run()
