@@ -379,6 +379,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		buildMapPage();
 		viewer.setInput(mapPage);
+		viewer.setSelection(StructuredSelection.EMPTY);
 	}
 
 	/**

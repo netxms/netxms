@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -113,13 +113,13 @@ bool NetObj::deleteFromDB(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_custom_attributes WHERE object_id=?"));
 
    // Delete events
-   if (success && ConfigReadInt(_T("DeleteEventsOfDeletedObject"), 1)) 
+   if (success && ConfigReadInt(_T("DeleteEventsOfDeletedObject"), 1))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM event_log WHERE event_source=?"));
    }
 
    // Delete alarms
-   if (success && ConfigReadInt(_T("DeleteAlarmsOfDeletedObject"), 1)) 
+   if (success && ConfigReadInt(_T("DeleteAlarmsOfDeletedObject"), 1))
    {
       success = g_alarmMgr.deleteObjectAlarms(m_dwId, hdb);
    }
@@ -149,7 +149,7 @@ BOOL NetObj::loadCommonProperties()
    BOOL bResult = FALSE;
 
    // Load access options
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
 	                          _T("SELECT name,status,is_deleted,")
                              _T("inherit_access_rights,last_modified,status_calc_alg,")
                              _T("status_prop_alg,status_fixed_val,status_shift,")
@@ -219,7 +219,7 @@ BOOL NetObj::loadCommonProperties()
 			{
 				int i, count;
 				TCHAR *name, *value;
-				
+
 				count = DBGetNumRows(hResult);
 				for(i = 0; i < count; i++)
 				{
@@ -246,13 +246,13 @@ BOOL NetObj::loadCommonProperties()
 			bResult = FALSE;
 		}
 	}
-	
+
 	if (bResult)
 		bResult = loadTrustedNodes();
 
 	if (!bResult)
 		DbgPrintf(4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_szName, (long)m_dwId, Type());
-		
+
    return bResult;
 }
 
@@ -287,7 +287,7 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 	}
 	if (hStmt == NULL)
 		return FALSE;
-	
+
    TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32], guid[64], image[64];
    for(int i = 0, j = 0; i < 4; i++, j += 2)
    {
@@ -323,7 +323,7 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
-   
+
    // Save custom attributes
    if (bResult)
    {
@@ -636,7 +636,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
             for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < m_dwChildCount; i++)
             {
                iChildStatus = m_pChildList[i]->getPropagatedStatus();
-               if ((iChildStatus < STATUS_UNKNOWN) && 
+               if ((iChildStatus < STATUS_UNKNOWN) &&
                    (iChildStatus > iMostCriticalStatus))
                {
                   iMostCriticalStatus = iChildStatus;
@@ -748,7 +748,7 @@ BOOL NetObj::loadACLFromDB()
 
 			iNumRows = DBGetNumRows(hResult);
 			for(i = 0; i < iNumRows; i++)
-				m_pAccessList->addElement(DBGetFieldULong(hResult, i, 0), 
+				m_pAccessList->addElement(DBGetFieldULong(hResult, i, 0),
 												  DBGetFieldULong(hResult, i, 1));
 			DBFreeResult(hResult);
 			bSuccess = TRUE;
@@ -947,7 +947,7 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_pdwTrustedNodes = (UINT32 *)realloc(m_pdwTrustedNodes, sizeof(UINT32) * m_dwNumTrustedNodes);
 		pRequest->GetVariableInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
    }
-   
+
    // Change custom attributes
    if (pRequest->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
    {
@@ -1330,7 +1330,7 @@ void NetObj::prepareForDeletion()
 }
 
 /**
- * Set object's comments. 
+ * Set object's comments.
  * NOTE: pszText should be dynamically allocated or NULL
  */
 void NetObj::setComments(TCHAR *pszText)
@@ -1519,7 +1519,7 @@ ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly, bool updateR
  * Get list of child objects (direct only). Returned array is
  * dynamically allocated and must be deleted by the caller.
  *
- * @param typeFilter Only return objects with class ID equals given value. 
+ * @param typeFilter Only return objects with class ID equals given value.
  *                   Set to -1 to disable filtering.
  */
 ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)

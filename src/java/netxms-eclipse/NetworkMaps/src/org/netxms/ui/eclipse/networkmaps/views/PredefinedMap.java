@@ -691,7 +691,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected void onObjectChange(final AbstractObject object)
 	{
-		super.onObjectChange(object);
+	   super.onObjectChange(object);
 		
 		if (object.getObjectId() != mapObject.getObjectId())
 			return;

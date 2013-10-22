@@ -1,6 +1,6 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -147,7 +147,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                      continue;
 
                   iChildStatus = object->getPropagatedStatus();
-                  if ((iChildStatus < STATUS_UNKNOWN) && 
+                  if ((iChildStatus < STATUS_UNKNOWN) &&
                       (iChildStatus > iMostCriticalStatus))
                   {
                      iMostCriticalStatus = iChildStatus;
@@ -383,11 +383,11 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
 		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 9);
 		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 10);
 		m_backgroundColor = DBGetFieldLong(hResult, 0, 11);
-      
+
       TCHAR *filter = DBGetField(hResult, 0, 12, NULL, 0);
       setFilter(filter);
       safe_free(filter);
-		
+
       DBFreeResult(hResult);
 
 	   // Load elements
@@ -875,4 +875,51 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 	}
 	UnlockData();
 	return result;
+}
+
+/**
+*  Delete object from the map if it's deleted in session
+*/
+void NetworkMap::onObjectDelete(UINT32 dwObjectId)
+{
+   int i;
+
+   LockData();
+
+   i = 0;
+   while(i < m_links->size())
+   {
+      NetworkMapLink* nmLink = (NetworkMapLink*) m_links->get(i);
+
+      UINT32 elementId = elementIdFromObjectId(dwObjectId);
+      if (nmLink->getElement1() == elementId || nmLink->getElement2() == elementId)
+      {
+         m_links->remove(i);
+      }
+      else
+      {
+         i++;
+      }
+   }
+
+   i = 0;
+   while(i < m_elements->size())
+   {
+      NetworkMapObject* nmObject = (NetworkMapObject*) m_elements->get(i);
+      if (nmObject->getObjectId() == dwObjectId)
+      {
+         m_elements->remove(i);
+         break;
+      }
+      else
+      {
+         i++;
+      }
+   }
+
+   Modify();
+
+   UnlockData();
+
+   NetObj::onObjectDelete(dwObjectId);
 }

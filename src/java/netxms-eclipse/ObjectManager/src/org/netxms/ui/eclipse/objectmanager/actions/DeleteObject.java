@@ -54,7 +54,7 @@ public class DeleteObject extends MultipleObjectAction
 	@Override
 	protected void runObjectAction(NXCSession session, AbstractObject object) throws Exception
 	{
-		session.deleteObject(object.getObjectId());
+	   session.deleteObject(object.getObjectId());
 	}
 
 	/* (non-Javadoc)

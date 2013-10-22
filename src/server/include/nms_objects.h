@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -342,27 +342,27 @@ protected:
 
 	UINT32 m_dwNumTrustedNodes;	// Trusted nodes
 	UINT32 *m_pdwTrustedNodes;
-	
+
 	StringMap m_customAttributes;
 
    void LockData() { MutexLock(m_mutexData); }
    void UnlockData() { MutexUnlock(m_mutexData); }
    void LockACL() { MutexLock(m_mutexACL); }
    void UnlockACL() { MutexUnlock(m_mutexACL); }
-   void LockParentList(BOOL bWrite) 
-   { 
-      if (bWrite) 
+   void LockParentList(BOOL bWrite)
+   {
+      if (bWrite)
          RWLockWriteLock(m_rwlockParentList, INFINITE);
       else
-         RWLockReadLock(m_rwlockParentList, INFINITE); 
+         RWLockReadLock(m_rwlockParentList, INFINITE);
    }
    void UnlockParentList() { RWLockUnlock(m_rwlockParentList); }
-   void LockChildList(BOOL bWrite) 
-   { 
-      if (bWrite) 
+   void LockChildList(BOOL bWrite)
+   {
+      if (bWrite)
          RWLockWriteLock(m_rwlockChildList, INFINITE);
       else
-         RWLockReadLock(m_rwlockChildList, INFINITE); 
+         RWLockReadLock(m_rwlockChildList, INFINITE);
    }
    void UnlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
@@ -386,7 +386,7 @@ public:
    virtual ~NetObj();
 
    virtual int Type() { return OBJECT_GENERIC; }
-   
+
    UINT32 IpAddr() { return m_dwIpAddr; }
    UINT32 Id() { return m_dwId; }
    const TCHAR *Name() { return m_szName; }
@@ -400,7 +400,7 @@ public:
    bool isDeleted() { return m_isDeleted; }
    bool isOrphaned() { return m_dwParentCount == 0; }
    bool isEmpty() { return m_dwChildCount == 0; }
-	
+
 	bool isSystem() { return m_isSystem; }
 	void setSystemFlag(bool flag) { m_isSystem = flag; }
 
@@ -448,7 +448,7 @@ public:
 
    void addChildNodesToList(ObjectArray<Node> *nodeList, UINT32 dwUserId);
    void addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, UINT32 dwUserId);
-   
+
    const TCHAR *getCustomAttribute(const TCHAR *name) { return m_customAttributes.get(name); }
    void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
@@ -471,20 +471,20 @@ public:
  * Get object's reference count
  */
 inline UINT32 NetObj::getRefCount()
-{ 
+{
    UINT32 dwRefCount;
 
    MutexLock(m_mutexRefCount);
    dwRefCount = m_dwRefCount;
    MutexUnlock(m_mutexRefCount);
-   return dwRefCount; 
+   return dwRefCount;
 }
 
 /**
  * Increment object's reference count
  */
 inline void NetObj::incRefCount()
-{ 
+{
    MutexLock(m_mutexRefCount);
    m_dwRefCount++;
    MutexUnlock(m_mutexRefCount);
@@ -494,10 +494,10 @@ inline void NetObj::incRefCount()
  * Decrement object's reference count
  */
 inline void NetObj::decRefCount()
-{ 
+{
    MutexLock(m_mutexRefCount);
-   if (m_dwRefCount > 0) 
-      m_dwRefCount--; 
+   if (m_dwRefCount > 0)
+      m_dwRefCount--;
    MutexUnlock(m_mutexRefCount);
 }
 
@@ -547,7 +547,7 @@ public:
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false);
-   bool updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps, 
+   bool updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps,
                        UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    bool deleteDCObject(UINT32 dcObjectId, bool needLock);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
@@ -573,7 +573,7 @@ public:
    void queueRemoveFromTarget(UINT32 targetId, BOOL bRemoveDCI);
 
    void createNXMPRecord(String &str);
-	
+
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();
 
@@ -646,7 +646,7 @@ public:
 	bool isLoopback() { return (m_flags & IF_LOOPBACK) ? true : false; }
 	bool isManuallyCreated() { return (m_flags & IF_CREATED_MANUALLY) ? true : false; }
 	bool isExcludedFromTopology() { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
-   bool isFake() { return (m_dwIfIndex == 1) && 
+   bool isFake() { return (m_dwIfIndex == 1) &&
                           (m_dwIfType == IFTYPE_OTHER) &&
                           (!_tcscmp(m_szName, _T("lan0")) || !_tcscmp(m_szName, _T("unknown"))) &&
                           (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
@@ -669,7 +669,7 @@ public:
 
    void StatusPoll(ClientSession *pSession, UINT32 dwRqId, Queue *pEventQueue,
 	                BOOL bClusterSync, SNMP_Transport *pTransport);
-   
+
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
@@ -897,7 +897,7 @@ public:
 
    void statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
    void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
-   bool isReadyForStatusPoll() 
+   bool isReadyForStatusPoll()
    {
       return ((m_iStatus != STATUS_UNMANAGED) && (!m_isDeleted) &&
               (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
@@ -1078,7 +1078,7 @@ public:
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    Interface *createNewInterface(UINT32 dwAddr, UINT32 dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
                                  UINT32 dwIndex = 0, UINT32 dwType = 0, BYTE *pbMacAddr = NULL, UINT32 bridgePort = 0,
-											UINT32 slot = 0, UINT32 port = 0, bool physPort = false, bool manuallyCreated = false, 
+											UINT32 slot = 0, UINT32 port = 0, bool physPort = false, bool manuallyCreated = false,
                                  bool system = false);
    void deleteInterface(Interface *pInterface);
 
@@ -1177,7 +1177,7 @@ public:
    QWORD getLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
    void setLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 
-   UINT32 callSnmpEnumerate(const TCHAR *pszRootOid, 
+   UINT32 callSnmpEnumerate(const TCHAR *pszRootOid,
       UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *), void *pArg, const TCHAR *context = NULL);
 
 	nxmap_ObjList *getL2Topology();
@@ -1205,7 +1205,7 @@ inline void Node::setDiscoveryPollTimeStamp()
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
 }
 
-inline bool Node::isReadyForStatusPoll() 
+inline bool Node::isReadyForStatusPoll()
 {
 	if (m_isDeleted)
 		return false;
@@ -1224,8 +1224,8 @@ inline bool Node::isReadyForStatusPoll()
           ((UINT32)time(NULL) - (UINT32)m_tLastStatusPoll > g_dwStatusPollingInterval);
 }
 
-inline bool Node::isReadyForConfigurationPoll() 
-{ 
+inline bool Node::isReadyForConfigurationPoll()
+{
 	if (m_isDeleted)
 		return false;
    if (m_dwDynamicFlags & NDF_FORCE_CONFIGURATION_POLL)
@@ -1240,8 +1240,8 @@ inline bool Node::isReadyForConfigurationPoll()
           ((UINT32)time(NULL) - (UINT32)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval);
 }
 
-inline bool Node::isReadyForDiscoveryPoll() 
-{ 
+inline bool Node::isReadyForDiscoveryPoll()
+{
 	if (m_isDeleted)
 		return false;
    return (g_dwFlags & AF_ENABLE_NETWORK_DISCOVERY) &&
@@ -1253,8 +1253,8 @@ inline bool Node::isReadyForDiscoveryPoll()
           ((UINT32)time(NULL) - (UINT32)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval);
 }
 
-inline bool Node::isReadyForRoutePoll() 
-{ 
+inline bool Node::isReadyForRoutePoll()
+{
 	if (m_isDeleted)
 		return false;
    return (m_iStatus != STATUS_UNMANAGED) &&
@@ -1265,8 +1265,8 @@ inline bool Node::isReadyForRoutePoll()
           ((UINT32)time(NULL) - (UINT32)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval);
 }
 
-inline bool Node::isReadyForTopologyPoll() 
-{ 
+inline bool Node::isReadyForTopologyPoll()
+{
 	if (m_isDeleted)
 		return false;
    return (m_iStatus != STATUS_UNMANAGED) &&
@@ -1278,38 +1278,38 @@ inline bool Node::isReadyForTopologyPoll()
 }
 
 inline void Node::lockForStatusPoll()
-{ 
-   LockData(); 
-   m_dwDynamicFlags |= NDF_QUEUED_FOR_STATUS_POLL; 
-   UnlockData(); 
+{
+   LockData();
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_STATUS_POLL;
+   UnlockData();
 }
 
-inline void Node::lockForConfigurationPoll() 
-{ 
-   LockData(); 
-   m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL; 
-   UnlockData(); 
+inline void Node::lockForConfigurationPoll()
+{
+   LockData();
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL;
+   UnlockData();
 }
 
-inline void Node::lockForDiscoveryPoll() 
-{ 
-   LockData(); 
-   m_dwDynamicFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL; 
-   UnlockData(); 
+inline void Node::lockForDiscoveryPoll()
+{
+   LockData();
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL;
+   UnlockData();
 }
 
-inline void Node::lockForTopologyPoll() 
-{ 
-   LockData(); 
-   m_dwDynamicFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL; 
-   UnlockData(); 
+inline void Node::lockForTopologyPoll()
+{
+   LockData();
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL;
+   UnlockData();
 }
 
-inline void Node::lockForRoutePoll() 
-{ 
-   LockData(); 
-   m_dwDynamicFlags |= NDF_QUEUED_FOR_ROUTE_POLL; 
-   UnlockData(); 
+inline void Node::lockForRoutePoll()
+{
+   LockData();
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
+   UnlockData();
 }
 
 /**
@@ -1415,7 +1415,7 @@ public:
    virtual ~Container();
 
    virtual int Type(void) { return OBJECT_CONTAINER; }
-  
+
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(UINT32 dwId);
@@ -1588,9 +1588,9 @@ public:
    void LockForPoll(void);
    void EndPoll(void);
 
-   BOOL ReadyForPoll(void) 
+   BOOL ReadyForPoll(void)
    {
-      return ((m_iStatus != STATUS_UNMANAGED) && 
+      return ((m_iStatus != STATUS_UNMANAGED) &&
               (!m_bQueuedForPolling) && (!m_isDeleted) &&
               ((UINT32)time(NULL) - (UINT32)m_tmLastPoll > g_dwConditionPollingInterval))
                   ? TRUE : FALSE;
@@ -1766,6 +1766,8 @@ public:
 
 	void setFilter(const TCHAR *filter);
    bool isAllowedOnMap(NetObj *object);
+
+   virtual void onObjectDelete(UINT32 dwObjectId);
 };
 
 /**
@@ -1936,7 +1938,7 @@ public:
 /**
  * Service container - common logic for BusinessService, NodeLink and BusinessServiceRoot
  */
-class NXCORE_EXPORTABLE ServiceContainer : public Container 
+class NXCORE_EXPORTABLE ServiceContainer : public Container
 {
 	enum Period { DAY, WEEK, MONTH };
 
