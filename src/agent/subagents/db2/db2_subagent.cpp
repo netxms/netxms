@@ -19,11 +19,38 @@
 
 #include "db2_subagent.h"
 
+BOOL init(Config* config)
+{
+   return FALSE;
+}
+
+void shutdown()
+{
+}
+
+BOOL commandHandler(INT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+{
+   return FALSE;
+}
+
+static NETXMS_SUBAGENT_PARAM* agentParams =
+{
+
+};
+
 static NETXMS_SUBAGENT_INFO* agentInfo =
 {
-   //NETXMS_SUBAGENT_INFO_MAGIC,
-   //_T("DB2"),
-
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("DB2"),
+   NETXMS_VERSION_STRING,
+   init,
+   shutdown,
+   commandHandler,
+   (sizeof(*agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), agentParams,
+   0, NULL,
+   0, NULL,
+   0, NULL,
+   0, NULL
 };
 
 DECLARE_SUBAGENT_ENTRY_POINT(DB2)
