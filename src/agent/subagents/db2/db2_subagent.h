@@ -20,9 +20,36 @@
 #define DB2_SUBAGENT_H_
 
 #include <nms_agent.h>
-//#include <nms_common.h>
-//#include <nms_util.h>
-//#include <nxdbapi.h>
+#include <nxdbapi.h>
+#include <nms_util.h>
+#include <nms_common.h>
 
+
+#define SUBAGENT_NAME _T("DB2")
+#define MAX_STRING 0xff
+#define DB_MAX 0
+
+typedef struct
+{
+} DB2_INFO, *PDB2_INFO;
+
+typedef struct
+{
+   THREAD threadHandle;
+   MUTEX mutex;
+   PDB2_INFO db2Info;
+} THREAD_INFO, *PTHREAD_INFO;
+
+inline BOOL GetConfigs(Config* config)
+{
+   NX_CFG_TEMPLATE* cfgTemplate =
+   {
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   };
+
+   return config->parseTemplate(SUBAGENT_NAME, cfgTemplate);
+}
+
+THREAD_RESULT THREAD_CALL RunMonitorThread(void * info);
 
 #endif /* DB2_SUBAGENT_H_ */
