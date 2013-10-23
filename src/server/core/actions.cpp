@@ -650,7 +650,7 @@ void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId)
       msg.SetVariable(VID_ACTION_ID, m_pActionList[i].dwId);
       FillActionInfoMessage(&msg, &m_pActionList[i]);
       pSession->sendMessage(&msg);
-      msg.DeleteAllVariables();
+      msg.deleteAllVariables();
    }
 
    RWLockUnlock(m_rwlockActionListAccess);

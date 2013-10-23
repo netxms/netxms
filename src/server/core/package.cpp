@@ -346,7 +346,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
       msg.SetVariable(VID_OBJECT_ID, pStartup->nodeList->get(i)->Id());
       msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
       pStartup->pSession->sendMessage(&msg);
-      msg.DeleteAllVariables();
+      msg.deleteAllVariables();
    }
 
    // Start worker threads

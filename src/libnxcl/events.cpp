@@ -55,16 +55,14 @@ void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
    }
 
    // Notify requestor thread if all messages was received
-   if (pMsg->IsEndOfSequence())
+   if (pMsg->isEndOfSequence())
       pSession->CompleteSync(SYNC_EVENTS, RCC_SUCCESS);
 }
 
-
-//
-// Synchronize event log
-// This function is NOT REENTRANT
-//
-
+/**
+ * Synchronize event log
+ * This function is NOT REENTRANT
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, UINT32 dwMaxRecords)
 {
    CSCPMessage msg;
@@ -147,16 +145,14 @@ void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
    }
 
    // Notify requestor thread if all messages was received
-   if (pMsg->IsEndOfSequence())
+   if (pMsg->isEndOfSequence())
       pSession->CompleteSync(SYNC_SYSLOG, RCC_SUCCESS);
 }
 
-
-//
-// Synchronize syslog
-// This function is NOT REENTRANT
-//
-
+/**
+ * Synchronize syslog
+ * This function is NOT REENTRANT
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, UINT32 dwMaxRecords)
 {
    CSCPMessage msg;

@@ -259,7 +259,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEve
       msg.SetCode(CMD_EPP_RECORD);
       for(i = 0; i < pEventPolicy->dwNumRules; i++)
       {
-         msg.DeleteAllVariables();
+         msg.deleteAllVariables();
 
          msg.SetVariable(VID_FLAGS, pEventPolicy->pRuleList[i].dwFlags);
          msg.SetVariable(VID_RULE_ID, pEventPolicy->pRuleList[i].dwId);

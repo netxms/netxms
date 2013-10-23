@@ -67,6 +67,7 @@ Table::Table(Table *src) : RefCountObject()
 Table::~Table()
 {
 	destroy();
+   delete m_columns;
 }
 
 /**
@@ -163,7 +164,7 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 	msg.SetVariable(VID_NUM_ROWS, (UINT32)(row - offset));
 
 	if (row == m_nNumRows)
-		msg.SetEndOfSequence();
+		msg.setEndOfSequence();
 	return row;
 }
 

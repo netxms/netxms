@@ -1759,15 +1759,15 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-	void updateContent();
+   virtual void onObjectDelete(UINT32 dwObjectId);
+
+   void updateContent();
 
    int getBackgroundColor() { return m_backgroundColor; }
    void setBackgroundColor(int color) { m_backgroundColor = color; }
 
 	void setFilter(const TCHAR *filter);
    bool isAllowedOnMap(NetObj *object);
-
-   virtual void onObjectDelete(UINT32 dwObjectId);
 };
 
 /**

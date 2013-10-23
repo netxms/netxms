@@ -835,7 +835,7 @@ void EventPolicy::sendToClient(ClientSession *pSession, UINT32 dwRqId)
    {
       m_ppRuleList[i]->createMessage(&msg);
       pSession->sendMessage(&msg);
-      msg.DeleteAllVariables();
+      msg.deleteAllVariables();
    }
    unlock();
 }

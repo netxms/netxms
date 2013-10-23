@@ -333,16 +333,14 @@ void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
    }
 
    // Notify requestor thread if all messages was received
-   if (pMsg->IsEndOfSequence())
+   if (pMsg->isEndOfSequence())
       pSession->CompleteSync(SYNC_TRAP_LOG, RCC_SUCCESS);
 }
 
-
-//
-// Synchronize trap log
-// This function is NOT REENTRANT
-//
-
+/**
+ * Synchronize trap log
+ * This function is NOT REENTRANT
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, UINT32 dwMaxRecords)
 {
    CSCPMessage msg;

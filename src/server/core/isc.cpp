@@ -182,7 +182,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0, NULL) != (int)ntohl(pRawMsgOut->dwSize))
 				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
       
-			response.DeleteAllVariables();
+			response.deleteAllVariables();
 			free(pRawMsgOut);
 			delete pRequest;
 		}

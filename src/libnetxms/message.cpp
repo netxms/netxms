@@ -222,7 +222,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		((XML_PARSER_STATE *)userData)->state = XML_STATE_ERROR;
 	}
 	if (((XML_PARSER_STATE *)userData)->state != XML_STATE_ERROR)
-		((XML_PARSER_STATE *)userData)->msg->ProcessXMLToken(userData, attrs);
+		((XML_PARSER_STATE *)userData)->msg->processXMLToken(userData, attrs);
 }
 
 static void EndElement(void *userData, const char *name)
@@ -241,7 +241,7 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "value"))
 	{
-		((XML_PARSER_STATE *)userData)->msg->ProcessXMLData(userData);
+		((XML_PARSER_STATE *)userData)->msg->processXMLData(userData);
 		safe_free(((XML_PARSER_STATE *)userData)->value);
 		((XML_PARSER_STATE *)userData)->state = XML_STATE_VARIABLE;
 	}
@@ -289,7 +289,7 @@ CSCPMessage::CSCPMessage(const char *xml)
 	XML_ParserFree(parser);
 }
 
-void CSCPMessage::ProcessXMLToken(void *state, const char **attrs)
+void CSCPMessage::processXMLToken(void *state, const char **attrs)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)state;
 	const char *type;
@@ -324,7 +324,7 @@ void CSCPMessage::ProcessXMLToken(void *state, const char **attrs)
 	}
 }
 
-void CSCPMessage::ProcessXMLData(void *state)
+void CSCPMessage::processXMLData(void *state)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)state;
 	char *binData;
@@ -377,13 +377,13 @@ void CSCPMessage::ProcessXMLData(void *state)
  */
 CSCPMessage::~CSCPMessage()
 {
-   DeleteAllVariables();
+   deleteAllVariables();
 }
 
 /**
  * Find variable by name
  */
-UINT32 CSCPMessage::FindVariable(UINT32 dwVarId)
+UINT32 CSCPMessage::findVariable(UINT32 dwVarId)
 {
    UINT32 i;
 
@@ -395,11 +395,11 @@ UINT32 CSCPMessage::FindVariable(UINT32 dwVarId)
 }
 
 /**
- * Set variable
+ * set variable
  * Argument dwSize (data size) contains data length in bytes for DT_BINARY type
  * and maximum number of characters for DT_STRING type (0 means no limit)
  */
-void *CSCPMessage::Set(UINT32 dwVarId, BYTE bType, const void *pValue, UINT32 dwSize)
+void *CSCPMessage::set(UINT32 dwVarId, BYTE bType, const void *pValue, UINT32 dwSize)
 {
    UINT32 dwIndex, dwLength;
    CSCP_DF *pVar;
@@ -463,7 +463,7 @@ void *CSCPMessage::Set(UINT32 dwVarId, BYTE bType, const void *pValue, UINT32 dw
    pVar->bType = bType;
 
    // Check if variable exists
-   dwIndex = FindVariable(pVar->dwVarId);
+   dwIndex = findVariable(pVar->dwVarId);
    if (dwIndex == INVALID_INDEX) // Add new variable to list
    {
       m_ppVarList = (CSCP_DF **)realloc(m_ppVarList, sizeof(CSCP_DF *) * (m_dwNumVar + 1));
@@ -481,14 +481,14 @@ void *CSCPMessage::Set(UINT32 dwVarId, BYTE bType, const void *pValue, UINT32 dw
 }
 
 /**
- * Get variable value
+ * get variable value
  */
-void *CSCPMessage::Get(UINT32 dwVarId, BYTE bType)
+void *CSCPMessage::get(UINT32 dwVarId, BYTE bType)
 {
    UINT32 dwIndex;
 
    // Find variable
-   dwIndex = FindVariable(dwVarId);
+   dwIndex = findVariable(dwVarId);
    if (dwIndex == INVALID_INDEX)
       return NULL;      // No such variable
 
@@ -502,62 +502,62 @@ void *CSCPMessage::Get(UINT32 dwVarId, BYTE bType)
 }
 
 /**
- * Get integer variable
+ * get integer variable
  */
 UINT32 CSCPMessage::GetVariableLong(UINT32 dwVarId)
 {
    char *pValue;
 
-   pValue = (char *)Get(dwVarId, CSCP_DT_INTEGER);
+   pValue = (char *)get(dwVarId, CSCP_DT_INTEGER);
    return pValue ? *((UINT32 *)pValue) : 0;
 }
 
 /**
- * Get 16-bit integer variable
+ * get 16-bit integer variable
  */
 UINT16 CSCPMessage::GetVariableShort(UINT32 dwVarId)
 {
    void *pValue;
 
-   pValue = Get(dwVarId, CSCP_DT_INT16);
+   pValue = get(dwVarId, CSCP_DT_INT16);
    return pValue ? *((WORD *)pValue) : 0;
 }
 
 /**
- * Get 16-bit integer variable as signel 32-bit integer
+ * get 16-bit integer variable as signel 32-bit integer
  */
 INT32 CSCPMessage::GetVariableShortAsInt32(UINT32 dwVarId)
 {
    void *pValue;
 
-   pValue = Get(dwVarId, CSCP_DT_INT16);
+   pValue = get(dwVarId, CSCP_DT_INT16);
    return pValue ? *((short *)pValue) : 0;
 }
 
 /**
- * Get 64-bit integer variable
+ * get 64-bit integer variable
  */
 UINT64 CSCPMessage::GetVariableInt64(UINT32 dwVarId)
 {
    char *pValue;
 
-   pValue = (char *)Get(dwVarId, CSCP_DT_INT64);
+   pValue = (char *)get(dwVarId, CSCP_DT_INT64);
    return pValue ? *((UINT64 *)pValue) : 0;
 }
 
 /**
- * Get 64-bit floating point variable
+ * get 64-bit floating point variable
  */
 double CSCPMessage::GetVariableDouble(UINT32 dwVarId)
 {
    char *pValue;
 
-   pValue = (char *)Get(dwVarId, CSCP_DT_FLOAT);
+   pValue = (char *)get(dwVarId, CSCP_DT_FLOAT);
    return pValue ? *((double *)pValue) : 0;
 }
 
 /**
- * Get string variable
+ * get string variable
  * If szBuffer is NULL, memory block of required size will be allocated
  * for result; if szBuffer is not NULL, entire result or part of it will
  * be placed to szBuffer and pointer to szBuffer will be returned.
@@ -572,7 +572,7 @@ TCHAR *CSCPMessage::GetVariableStr(UINT32 dwVarId, TCHAR *pszBuffer, UINT32 dwBu
    if ((pszBuffer != NULL) && (dwBufSize == 0))
       return NULL;   // non-sense combination
 
-   pValue = Get(dwVarId, CSCP_DT_STRING);
+   pValue = get(dwVarId, CSCP_DT_STRING);
    if (pValue != NULL)
    {
       if (pszBuffer == NULL)
@@ -614,7 +614,7 @@ TCHAR *CSCPMessage::GetVariableStr(UINT32 dwVarId, TCHAR *pszBuffer, UINT32 dwBu
 #ifdef UNICODE
 
 /**
- * Get variable as multibyte string
+ * get variable as multibyte string
  */
 char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBufSize)
 {
@@ -625,7 +625,7 @@ char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBuf
    if ((pszBuffer != NULL) && (dwBufSize == 0))
       return NULL;   // non-sense combination
 
-   pValue = Get(dwVarId, CSCP_DT_STRING);
+   pValue = get(dwVarId, CSCP_DT_STRING);
    if (pValue != NULL)
    {
       if (pszBuffer == NULL)
@@ -655,7 +655,7 @@ char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBuf
 #else
 
 /**
- * Get variable as multibyte string
+ * get variable as multibyte string
  */
 char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBufSize)
 {
@@ -665,7 +665,7 @@ char *CSCPMessage::GetVariableStrA(UINT32 dwVarId, char *pszBuffer, UINT32 dwBuf
 #endif
 
 /**
- * Get variable as UTF-8 string
+ * get variable as UTF-8 string
  */
 char *CSCPMessage::GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer, UINT32 dwBufSize)
 {
@@ -677,7 +677,7 @@ char *CSCPMessage::GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer, UINT32 dw
    if ((pszBuffer != NULL) && (dwBufSize == 0))
       return NULL;   // non-sense combination
 
-   pValue = Get(dwVarId, CSCP_DT_STRING);
+   pValue = get(dwVarId, CSCP_DT_STRING);
    if (pValue != NULL)
    {
       if (pszBuffer == NULL)
@@ -713,7 +713,7 @@ char *CSCPMessage::GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer, UINT32 dw
 
 
 //
-// Get binary (byte array) variable
+// get binary (byte array) variable
 // Result will be placed to the buffer provided (no more than dwBufSize bytes,
 // and actual size of data will be returned
 // If pBuffer is NULL, just actual data length is returned
@@ -724,7 +724,7 @@ UINT32 CSCPMessage::GetVariableBinary(UINT32 dwVarId, BYTE *pBuffer, UINT32 dwBu
    void *pValue;
    UINT32 dwSize;
 
-   pValue = Get(dwVarId, CSCP_DT_BINARY);
+   pValue = get(dwVarId, CSCP_DT_BINARY);
    if (pValue != NULL)
    {
       dwSize = *((UINT32 *)pValue);
@@ -818,12 +818,10 @@ CSCP_MESSAGE *CSCPMessage::CreateMessage()
    return pMsg;
 }
 
-
-//
-// Delete all variables
-//
-
-void CSCPMessage::DeleteAllVariables()
+/**
+ * Delete all variables
+ */
+void CSCPMessage::deleteAllVariables()
 {
    if (m_ppVarList != NULL)
    {
@@ -839,29 +837,28 @@ void CSCPMessage::DeleteAllVariables()
 }
 
 
-//
-// Set variable from multibyte string
-//
-
 #ifdef UNICODE
 
+/**
+ * set variable from multibyte string
+ */
 void CSCPMessage::SetVariableFromMBString(UINT32 dwVarId, const char *pszValue)
 {
 	WCHAR *wcValue = WideStringFromMBString(pszValue);
-	Set(dwVarId, CSCP_DT_STRING, wcValue);
+	set(dwVarId, CSCP_DT_STRING, wcValue);
 	free(wcValue);
 }
 
 #endif
 
 /**
- * Set binary variable to an array of UINT32s
+ * set binary variable to an array of UINT32s
  */
 void CSCPMessage::SetVariableToInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData)
 {
    UINT32 i, *pdwBuffer;
 
-   pdwBuffer = (UINT32 *)Set(dwVarId, CSCP_DT_BINARY, pdwData, dwNumElements * sizeof(UINT32));
+   pdwBuffer = (UINT32 *)set(dwVarId, CSCP_DT_BINARY, pdwData, dwNumElements * sizeof(UINT32));
    if (pdwBuffer != NULL)
    {
       pdwBuffer++;   // First UINT32 is a length field
@@ -871,7 +868,7 @@ void CSCPMessage::SetVariableToInt32Array(UINT32 dwVarId, UINT32 dwNumElements, 
 }
 
 /**
- * Get binary variable as an array of UINT32s
+ * get binary variable as an array of UINT32s
  */
 UINT32 CSCPMessage::GetVariableInt32Array(UINT32 dwVarId, UINT32 dwNumElements, UINT32 *pdwBuffer)
 {
@@ -886,7 +883,7 @@ UINT32 CSCPMessage::GetVariableInt32Array(UINT32 dwVarId, UINT32 dwNumElements, 
 
 
 //
-// Set binary variable from file
+// set binary variable from file
 //
 
 BOOL CSCPMessage::SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
@@ -900,7 +897,7 @@ BOOL CSCPMessage::SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
    pFile = _tfopen(pszFileName, _T("rb"));
    if (pFile != NULL)
    {
-      pBuffer = (BYTE *)Set(dwVarId, CSCP_DT_BINARY, NULL, dwSize);
+      pBuffer = (BYTE *)set(dwVarId, CSCP_DT_BINARY, NULL, dwSize);
       if (pBuffer != NULL)
       {
          if (fread(pBuffer + sizeof(UINT32), 1, dwSize, pFile) == dwSize)
@@ -911,12 +908,10 @@ BOOL CSCPMessage::SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
    return bResult;
 }
 
-
-//
-// Create XML document
-//
-
-char *CSCPMessage::CreateXML(void)
+/**
+ * Create XML document
+ */
+char *CSCPMessage::createXML()
 {
 	String xml;
 	UINT32 i;

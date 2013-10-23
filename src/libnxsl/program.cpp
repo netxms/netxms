@@ -1368,6 +1368,7 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
    UINT32 dwLen1, dwLen2;
    int nType;
    LONG nResult;
+   bool dynamicValues = false;
 
    switch(nOpCode)
    {
@@ -1391,6 +1392,7 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
       default:
 		   pVal2 = (NXSL_Value *)m_pDataStack->pop();
 		   pVal1 = (NXSL_Value *)m_pDataStack->pop();
+         dynamicValues = true;
          break;
    }
 
@@ -1412,94 +1414,80 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                      case OPCODE_ADD:
                         pRes = pVal1;
                         pRes->add(pVal2);
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_SUB:
                         pRes = pVal1;
                         pRes->sub(pVal2);
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_MUL:
                         pRes = pVal1;
                         pRes->mul(pVal2);
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_DIV:
                         pRes = pVal1;
                         pRes->div(pVal2);
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_REM:
                         pRes = pVal1;
                         pRes->rem(pVal2);
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_EQ:
                      case OPCODE_NE:
                         nResult = pVal1->EQ(pVal2);
-                        delete pVal1;
-                        delete pVal2;
                         pRes = new NXSL_Value((nOpCode == OPCODE_EQ) ? nResult : !nResult);
                         break;
                      case OPCODE_LT:
                         nResult = pVal1->LT(pVal2);
-                        delete pVal1;
-                        delete pVal2;
                         pRes = new NXSL_Value(nResult);
                         break;
                      case OPCODE_LE:
                         nResult = pVal1->LE(pVal2);
-                        delete pVal1;
-                        delete pVal2;
                         pRes = new NXSL_Value(nResult);
                         break;
                      case OPCODE_GT:
                         nResult = pVal1->GT(pVal2);
-                        delete pVal1;
-                        delete pVal2;
                         pRes = new NXSL_Value(nResult);
                         break;
                      case OPCODE_GE:
                         nResult = pVal1->GE(pVal2);
-                        delete pVal1;
-                        delete pVal2;
                         pRes = new NXSL_Value(nResult);
                         break;
                      case OPCODE_LSHIFT:
                         pRes = pVal1;
                         pRes->lshift(pVal2->getValueAsInt32());
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_RSHIFT:
                         pRes = pVal1;
                         pRes->rshift(pVal2->getValueAsInt32());
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_BIT_AND:
                         pRes = pVal1;
                         pRes->bitAnd(pVal2);
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_BIT_OR:
                         pRes = pVal1;
                         pRes->bitOr(pVal2);
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_BIT_XOR:
                         pRes = pVal1;
                         pRes->bitXor(pVal2);
-                        delete pVal2;
+                        pVal1 = NULL;
                         break;
                      case OPCODE_AND:
                         nResult = (pVal1->isNonZero() && pVal2->isNonZero());
-                        delete pVal1;
-                        delete pVal2;
                         pRes = new NXSL_Value(nResult);
                         break;
                      case OPCODE_OR:
                         nResult = (pVal1->isNonZero() || pVal2->isNonZero());
-                        delete pVal1;
-                        delete pVal2;
                         pRes = new NXSL_Value(nResult);
                         break;
                      case OPCODE_CASE:
@@ -1546,11 +1534,6 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                      else
                         nResult = 0;
                   }
-						if ((nOpCode != OPCODE_CASE) && (nOpCode != OPCODE_CASE_CONST))
-						{
-							delete pVal1;
-							delete pVal2;
-						}
                   pRes = new NXSL_Value((nOpCode == OPCODE_NE) ? !nResult : nResult);
                   break;
                case OPCODE_CONCAT:
@@ -1567,7 +1550,7 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                      pRes = pVal1;
                      pszText2 = pVal2->getValueAsString(&dwLen2);
                      pRes->concatenate(pszText2, dwLen2);
-                     delete pVal2;
+                     pVal1 = NULL;
                   }
                   break;
                case OPCODE_LIKE:
@@ -1577,8 +1560,6 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                      pRes = new NXSL_Value((LONG)MatchString(pVal2->getValueAsCString(),
                                                              pVal1->getValueAsCString(),
                                                              nOpCode == OPCODE_LIKE));
-                     delete pVal1;
-                     delete pVal2;
                   }
                   else
                   {
@@ -1590,8 +1571,6 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                   if (pVal1->isString() && pVal2->isString())
                   {
                      pRes = matchRegexp(pVal1, pVal2, nOpCode == OPCODE_IMATCH);
-                     delete pVal1;
-                     delete pVal2;
                   }
                   else
                   {
@@ -1630,6 +1609,12 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
    else
    {
       error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+   }
+
+   if (dynamicValues)
+   {
+      delete pVal1;
+      delete pVal2;
    }
 
    if (pRes != NULL)

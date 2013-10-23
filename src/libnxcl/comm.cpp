@@ -336,7 +336,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, con
                   // Request encryption if needed
                   if ((dwRetCode == RCC_SUCCESS) && (dwFlags & NXCF_ENCRYPT))
                   {
-                     msg.DeleteAllVariables();
+                     msg.deleteAllVariables();
                      msg.SetId(pSession->CreateRqId());
                      msg.SetCode(CMD_REQUEST_ENCRYPTION);
                      if (pSession->SendMsg(&msg))
@@ -352,7 +352,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, con
                   if (dwRetCode == RCC_SUCCESS)
                   {
                      // Prepare login message
-                     msg.DeleteAllVariables();
+                     msg.deleteAllVariables();
                      msg.SetId(pSession->CreateRqId());
                      msg.SetCode(CMD_LOGIN);
                      msg.SetVariable(VID_LOGIN_NAME, pszLogin);

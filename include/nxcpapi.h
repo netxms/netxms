@@ -31,11 +31,9 @@
 #include <wincrypt.h>
 #endif
 
-
-//
-// Temporary buffer structure for RecvCSCPMessage() function
-//
-
+/**
+ * Temporary buffer structure for RecvCSCPMessage() function
+ */
 typedef struct
 {
    UINT32 dwBufSize;
@@ -46,10 +44,9 @@ typedef struct
 
 #ifdef __cplusplus
 
-//
-// Class for holding CSCP messages
-//
-
+/**
+ * Parsed NXCP message
+ */
 class LIBNETXMS_EXPORTABLE CSCPMessage
 {
 private:
@@ -60,9 +57,9 @@ private:
    CSCP_DF **m_ppVarList;   // List of variables
    int m_nVersion;      // Protocol version
 
-   void *Set(UINT32 dwVarId, BYTE bType, const void *pValue, UINT32 dwSize = 0);
-   void *Get(UINT32 dwVarId, BYTE bType);
-   UINT32 FindVariable(UINT32 dwVarId);
+   void *set(UINT32 dwVarId, BYTE bType, const void *pValue, UINT32 dwSize = 0);
+   void *get(UINT32 dwVarId, BYTE bType);
+   UINT32 findVariable(UINT32 dwVarId);
 
 public:
    CSCPMessage(int nVersion = NXCP_VERSION);
@@ -71,35 +68,35 @@ public:
    CSCPMessage(const char *xml);
    ~CSCPMessage();
 
-   CSCP_MESSAGE *CreateMessage(void);
-	char *CreateXML(void);
-	void ProcessXMLToken(void *state, const char **attrs);
-	void ProcessXMLData(void *state);
+   CSCP_MESSAGE *CreateMessage();
+	char *createXML();
+	void processXMLToken(void *state, const char **attrs);
+	void processXMLData(void *state);
 
-   WORD GetCode(void) { return m_wCode; }
+   WORD GetCode() { return m_wCode; }
    void SetCode(WORD wCode) { m_wCode = wCode; }
 
-   UINT32 GetId(void) { return m_dwId; }
+   UINT32 GetId() { return m_dwId; }
    void SetId(UINT32 dwId) { m_dwId = dwId; }
 
-   BOOL IsVariableExist(UINT32 dwVarId) { return (FindVariable(dwVarId) != INVALID_INDEX) ? TRUE : FALSE; }
-   BOOL IsEndOfSequence(void) { return (m_wFlags & MF_END_OF_SEQUENCE) ? TRUE : FALSE; }
-   BOOL IsReverseOrder(void) { return (m_wFlags & MF_REVERSE_ORDER) ? TRUE : FALSE; }
+   BOOL IsVariableExist(UINT32 dwVarId) { return (findVariable(dwVarId) != INVALID_INDEX) ? TRUE : FALSE; }
+   bool isEndOfSequence() { return (m_wFlags & MF_END_OF_SEQUENCE) ? TRUE : FALSE; }
+   bool isReverseOrder() { return (m_wFlags & MF_REVERSE_ORDER) ? TRUE : FALSE; }
 
-   void SetVariable(UINT32 dwVarId, INT16 wValue) { Set(dwVarId, CSCP_DT_INT16, &wValue); }
-   void SetVariable(UINT32 dwVarId, UINT16 wValue) { Set(dwVarId, CSCP_DT_INT16, &wValue); }
-   void SetVariable(UINT32 dwVarId, INT32 dwValue) { Set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
-   void SetVariable(UINT32 dwVarId, UINT32 dwValue) { Set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
-   void SetVariable(UINT32 dwVarId, INT64 qwValue) { Set(dwVarId, CSCP_DT_INT64, &qwValue); }
-   void SetVariable(UINT32 dwVarId, UINT64 qwValue) { Set(dwVarId, CSCP_DT_INT64, &qwValue); }
-   void SetVariable(UINT32 dwVarId, double dValue) { Set(dwVarId, CSCP_DT_FLOAT, &dValue); }
-   void SetVariable(UINT32 dwVarId, const TCHAR *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
-   void SetVariable(UINT32 dwVarId, const TCHAR *pszValue, UINT32 maxLen) { Set(dwVarId, CSCP_DT_STRING, pszValue, maxLen); }
-   void SetVariable(UINT32 dwVarId, BYTE *pValue, UINT32 dwSize) { Set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
+   void SetVariable(UINT32 dwVarId, INT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
+   void SetVariable(UINT32 dwVarId, UINT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
+   void SetVariable(UINT32 dwVarId, INT32 dwValue) { set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
+   void SetVariable(UINT32 dwVarId, UINT32 dwValue) { set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
+   void SetVariable(UINT32 dwVarId, INT64 qwValue) { set(dwVarId, CSCP_DT_INT64, &qwValue); }
+   void SetVariable(UINT32 dwVarId, UINT64 qwValue) { set(dwVarId, CSCP_DT_INT64, &qwValue); }
+   void SetVariable(UINT32 dwVarId, double dValue) { set(dwVarId, CSCP_DT_FLOAT, &dValue); }
+   void SetVariable(UINT32 dwVarId, const TCHAR *value) { if (value != NULL) set(dwVarId, CSCP_DT_STRING, value); }
+   void SetVariable(UINT32 dwVarId, const TCHAR *value, UINT32 maxLen) { if (value != NULL) set(dwVarId, CSCP_DT_STRING, value, maxLen); }
+   void SetVariable(UINT32 dwVarId, BYTE *pValue, UINT32 dwSize) { set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
 #ifdef UNICODE
    void SetVariableFromMBString(UINT32 dwVarId, const char *pszValue);
 #else
-   void SetVariableFromMBString(UINT32 dwVarId, const char *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
+   void SetVariableFromMBString(UINT32 dwVarId, const char *pszValue) { set(dwVarId, CSCP_DT_STRING, pszValue); }
 #endif
    void SetVariableToInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData);
    BOOL SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName);
@@ -115,18 +112,16 @@ public:
    UINT32 GetVariableBinary(UINT32 dwVarId, BYTE *pBuffer, UINT32 dwBufSize);
    UINT32 GetVariableInt32Array(UINT32 dwVarId, UINT32 dwNumElements, UINT32 *pdwBuffer);
 
-   void DeleteAllVariables(void);
+   void deleteAllVariables();
 
-   void DisableEncryption(void) { m_wFlags |= MF_DONT_ENCRYPT; }
-   void SetEndOfSequence(void) { m_wFlags |= MF_END_OF_SEQUENCE; }
-   void SetReverseOrderFlag(void) { m_wFlags |= MF_REVERSE_ORDER; }
+   void disableEncryption() { m_wFlags |= MF_DONT_ENCRYPT; }
+   void setEndOfSequence() { m_wFlags |= MF_END_OF_SEQUENCE; }
+   void setReverseOrderFlag() { m_wFlags |= MF_REVERSE_ORDER; }
 };
 
-
-//
-// Message waiting queue element structure
-//
-
+/**
+ * Message waiting queue element structure
+ */
 typedef struct
 {
    WORD wCode;       // Message code
@@ -136,11 +131,9 @@ typedef struct
    void *pMsg;       // Pointer to message, either to CSCPMessage object or raw message
 } WAIT_QUEUE_ELEMENT;
 
-
-//
-// Message waiting queue class
-//
-
+/**
+ * Message waiting queue class
+ */
 class LIBNETXMS_EXPORTABLE MsgWaitQueue
 {
 private:

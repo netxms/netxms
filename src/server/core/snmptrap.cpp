@@ -522,11 +522,9 @@ static void FillTrapConfigDataMsg(CSCPMessage &msg, NXC_TRAP_CFG_ENTRY *trap)
    }
 }
 
-
-//
-// Send all trap configuration records to client
-//
-
+/**
+ * Send all trap configuration records to client
+ */
 void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId)
 {
    UINT32 i;
@@ -541,7 +539,7 @@ void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId)
    {
 		FillTrapConfigDataMsg(msg, &m_pTrapCfg[i]);
       pSession->sendMessage(&msg);
-      msg.DeleteAllVariables();
+      msg.deleteAllVariables();
    }
    MutexUnlock(m_mutexTrapCfgAccess);
 
@@ -549,11 +547,9 @@ void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId)
    pSession->sendMessage(&msg);
 }
 
-
-//
-// Prepare single message with all trap configuration records
-//
-
+/**
+ * Prepare single message with all trap configuration records
+ */
 void CreateTrapCfgMessage(CSCPMessage &msg)
 {
    UINT32 i, dwId;
@@ -571,11 +567,9 @@ void CreateTrapCfgMessage(CSCPMessage &msg)
    MutexUnlock(m_mutexTrapCfgAccess);
 }
 
-
-//
-// Notify clients about trap configuration change
-//
-
+/**
+ * Notify clients about trap configuration change
+ */
 static void NotifyOnTrapCfgChangeCB(ClientSession *session, void *arg)
 {
 	if (session->isAuthenticated())
@@ -602,11 +596,9 @@ static void NotifyOnTrapCfgDelete(UINT32 id)
 	EnumerateClientSessions(NotifyOnTrapCfgChangeCB, &msg);
 }
 
-
-//
-// Delete trap configuration record
-//
-
+/**
+ * Delete trap configuration record
+ */
 UINT32 DeleteTrap(UINT32 dwId)
 {
    UINT32 i, j, dwResult = RCC_INVALID_TRAP_ID;

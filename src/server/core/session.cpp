@@ -671,7 +671,7 @@ void ClientSession::updateThread()
             }
             sendMessage(&msg);
             MutexUnlock(m_mutexSendObjects);
-            msg.DeleteAllVariables();
+            msg.deleteAllVariables();
             ((NetObj *)pUpdate->pData)->decRefCount();
             break;
          case INFO_CAT_ALARM:
@@ -681,7 +681,7 @@ void ClientSession::updateThread()
             FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
             sendMessage(&msg);
             MutexUnlock(m_mutexSendAlarms);
-            msg.DeleteAllVariables();
+            msg.deleteAllVariables();
             free(pUpdate->pData);
             break;
          case INFO_CAT_ACTION:
@@ -693,7 +693,7 @@ void ClientSession::updateThread()
                FillActionInfoMessage(&msg, (NXC_ACTION *)pUpdate->pData);
             sendMessage(&msg);
             MutexUnlock(m_mutexSendActions);
-            msg.DeleteAllVariables();
+            msg.deleteAllVariables();
             free(pUpdate->pData);
             break;
          case INFO_CAT_SITUATION:
@@ -716,7 +716,7 @@ void ClientSession::updateThread()
                 msg.SetVariable(VID_FLAGS, (UINT32)0);
               }
               sendMessage(&msg);
-              msg.DeleteAllVariables();
+              msg.deleteAllVariables();
               free(info->guid);
               free(info);
             }
@@ -1792,7 +1792,7 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
       {
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          sendMessage(&msg);
-         msg.DeleteAllVariables();
+         msg.deleteAllVariables();
 
          // Prepare data message
          msg.SetCode(CMD_EVENT_DB_RECORD);
@@ -1815,14 +1815,14 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
                msg.SetVariable(VID_DESCRIPTION, szBuffer);
 
                sendMessage(&msg);
-               msg.DeleteAllVariables();
+               msg.deleteAllVariables();
             }
             DBFreeAsyncResult(hResult);
          }
 
          // End-of-list indicator
          msg.SetVariable(VID_EVENT_CODE, (UINT32)0);
-			msg.SetEndOfSequence();
+			msg.setEndOfSequence();
       }
       else
       {
@@ -2021,7 +2021,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
-   msg.DeleteAllVariables();
+   msg.deleteAllVariables();
 
    // Change "sync comments" flag
    if (pRequest->GetVariableShort(VID_SYNC_COMMENTS))
@@ -2049,7 +2049,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             object->commentsToMessage(&msg);
          sendMessage(&msg);
-         msg.DeleteAllVariables();
+         msg.deleteAllVariables();
          object->decRefCount();
       }
 	}
@@ -2074,7 +2074,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
-   msg.DeleteAllVariables();
+   msg.deleteAllVariables();
 
    // Change "sync comments" flag
    if (pRequest->GetVariableShort(VID_SYNC_COMMENTS))
@@ -2106,7 +2106,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             object->commentsToMessage(&msg);
          sendMessage(&msg);
-         msg.DeleteAllVariables();
+         msg.deleteAllVariables();
       }
 	}
 
@@ -2189,7 +2189,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
    	sendMessage(&msg);
-   	msg.DeleteAllVariables();
+   	msg.deleteAllVariables();
 	   msg.SetCode(CMD_EVENTLOG_RECORDS);
 	   
       for(dwId = VID_EVENTLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
@@ -2199,7 +2199,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
             msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
             msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
             sendMessage(&msg);
-            msg.DeleteAllVariables();
+            msg.deleteAllVariables();
             dwNumRows = 0;
             dwId = VID_EVENTLOG_MSG_BASE;
          }
@@ -2219,7 +2219,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
       // Send remaining records with End-Of-Sequence notification
       msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
       msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
-      msg.SetEndOfSequence();
+      msg.setEndOfSequence();
       sendMessage(&msg);
    }
    else
@@ -2577,7 +2577,7 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
    msg.SetId(dwRqId);
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
-	msg.DeleteAllVariables();
+	msg.deleteAllVariables();
 
    // Send user database
 	users = OpenUserDatabase(&userCount);
@@ -2586,7 +2586,7 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
 		msg.SetCode((users[i]->getId() & GROUP_FLAG) ? CMD_GROUP_DATA : CMD_USER_DATA);
 		users[i]->fillMessage(&msg);
       sendMessage(&msg);
-      msg.DeleteAllVariables();
+      msg.deleteAllVariables();
    }
 	CloseUserDatabase();
 
@@ -5198,7 +5198,7 @@ void ClientSession::SendContainerCategories(UINT32 dwRqId)
       //msg.SetVariable(VID_IMAGE_ID, g_pContainerCatList[i].dwImageId);
       msg.SetVariable(VID_DESCRIPTION, g_pContainerCatList[i].pszDescription);
       sendMessage(&msg);
-      msg.DeleteAllVariables();
+      msg.deleteAllVariables();
    }
 
    // Send end-of-list indicator
@@ -5745,7 +5745,7 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
             bSuccess = TRUE;
 
             msg.SetCode(CMD_PACKAGE_INFO);
-            msg.DeleteAllVariables();
+            msg.deleteAllVariables();
 
             while(DBFetch(hResult))
             {
@@ -5758,7 +5758,7 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
                DecodeSQLString(szBuffer);
                msg.SetVariable(VID_DESCRIPTION, szBuffer);
                sendMessage(&msg);
-               msg.DeleteAllVariables();
+               msg.deleteAllVariables();
             }
 
             msg.SetVariable(VID_PACKAGE_ID, (UINT32)0);
@@ -6583,7 +6583,7 @@ void ClientSession::setupEncryption(CSCPMessage *request)
 	PrepareKeyRequestMsg(&msg, g_pServerKey, request->GetVariableShort(VID_USE_X509_KEY_FORMAT) != 0);
 	msg.SetId(request->GetId());
    sendMessage(&msg);
-   msg.DeleteAllVariables();
+   msg.deleteAllVariables();
 
    // Wait for encryption setup
    ConditionWait(m_condEncryptionSetup, 3000);
@@ -7019,14 +7019,14 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                   }
                   else
                   {
-                     msg.DeleteAllVariables();
+                     msg.deleteAllVariables();
                      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
                   }
                }
             }
             else
             {
-               msg.DeleteAllVariables();
+               msg.deleteAllVariables();
                msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
             }
          }
@@ -7661,7 +7661,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
    {
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
 		sendMessage(&msg);
-		msg.DeleteAllVariables();
+		msg.deleteAllVariables();
 		msg.SetCode(CMD_SYSLOG_RECORDS);
 		
       // Send records, up to 10 per message
@@ -7672,7 +7672,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
             msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
             msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
             sendMessage(&msg);
-            msg.DeleteAllVariables();
+            msg.deleteAllVariables();
             dwNumRows = 0;
             dwId = VID_SYSLOG_MSG_BASE;
          }
@@ -7690,7 +7690,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
       // Send remaining records with End-Of-Sequence notification
       msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
       msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
-      msg.SetEndOfSequence();
+      msg.setEndOfSequence();
       sendMessage(&msg);
    }
    else
@@ -7740,7 +7740,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       sendMessage(&msg);
-      msg.DeleteAllVariables();
+      msg.deleteAllVariables();
       msg.SetCode(CMD_TRAP_LOG_RECORDS);
 
       MutexLock(m_mutexSendTrapLog);
@@ -7798,7 +7798,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
                msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
                msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
                sendMessage(&msg);
-               msg.DeleteAllVariables();
+               msg.deleteAllVariables();
                dwNumRows = 0;
                dwId = VID_TRAP_LOG_MSG_BASE;
             }
@@ -7814,7 +7814,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
          // Send remaining records with End-Of-Sequence notification
          msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
          msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
-         msg.SetEndOfSequence();
+         msg.setEndOfSequence();
       }
 
       MutexUnlock(m_mutexSendTrapLog);
@@ -7872,7 +7872,7 @@ static UINT32 WalkerCallback(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpo
       ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pSession->sendMessage(pMsg);
       ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars = 0;
       ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId = VID_SNMP_WALKER_DATA_BASE;
-      pMsg->DeleteAllVariables();
+      pMsg->deleteAllVariables();
    }
    return SNMP_ERR_SUCCESS;
 }
@@ -7896,7 +7896,7 @@ static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
    args.pSession = ((WALKER_THREAD_ARGS *)pArg)->pSession;
    ((Node *)(((WALKER_THREAD_ARGS *)pArg)->pObject))->callSnmpEnumerate(((WALKER_THREAD_ARGS *)pArg)->szBaseOID, WalkerCallback, &args);
    msg.SetVariable(VID_NUM_VARIABLES, args.dwNumVars);
-   msg.SetEndOfSequence();
+   msg.setEndOfSequence();
    ((WALKER_THREAD_ARGS *)pArg)->pSession->sendMessage(&msg);
 
    ((WALKER_THREAD_ARGS *)pArg)->pSession->decRefCount();
@@ -10613,7 +10613,7 @@ void ClientSession::getServerLogQueryData(CSCPMessage *request)
 		int offset = 0;
 		do
 		{
-			msg.DeleteAllVariables();
+			msg.deleteAllVariables();
 			offset = data->fillMessage(msg, offset, 200);
 			sendMessage(&msg);
 		} while(offset < data->getNumRows());
@@ -11602,7 +11602,7 @@ void ClientSession::processConsoleCommand(CSCPMessage *request)
             InitiateShutdown();
             break;
          case CMD_EXIT_CLOSE_SESSION:
-				msg.SetEndOfSequence();
+				msg.setEndOfSequence();
 				break;
          default:
             break;

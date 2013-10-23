@@ -680,7 +680,7 @@ void AlarmManager::sendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
          {
             FillAlarmInfoMessage(&msg, &m_pAlarmList[i]);
             pSession->sendMessage(&msg);
-            msg.DeleteAllVariables();
+            msg.deleteAllVariables();
          }
       }
    }

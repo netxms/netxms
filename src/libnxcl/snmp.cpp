@@ -61,7 +61,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, UINT32 dwNode,
                pData->GetVariableStr(dwId++, szValue, 4096);
                pfCallback(szVarName, dwType, szValue, pUserData);
             }
-            bStop = pData->IsEndOfSequence();
+            bStop = pData->isEndOfSequence();
             delete pData;
          }
          else
@@ -74,11 +74,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, UINT32 dwNode,
    return dwRetCode;
 }
 
-
-//
-// Set SNMP variable
-//
-
+/**
+ * Set SNMP variable
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCSnmpSet(NXC_SESSION hSession, UINT32 dwNode,
                                     TCHAR *pszVarName, UINT32 dwType, void *pValue)
 {

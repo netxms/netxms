@@ -597,14 +597,14 @@ void Template::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId)
 		{
 			m_dcObjects->get(i)->createMessage(&msg);
 			pSession->sendMessage(&msg);
-			msg.DeleteAllVariables();
+			msg.deleteAllVariables();
 		}
    }
 
    unlockDciAccess();
 
    // Send end-of-list indicator
-	msg.SetEndOfSequence();
+	msg.setEndOfSequence();
    pSession->sendMessage(&msg);
 }
 

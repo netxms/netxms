@@ -545,18 +545,16 @@ void CommSession::processingThread()
 
       // Send response
       sendMessage(&msg);
-      msg.DeleteAllVariables();
+      msg.deleteAllVariables();
    }
 
 stop_processing:
    ;
 }
 
-
-//
-// Authenticate peer
-//
-
+/**
+ * Authenticate peer
+ */
 void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    if (m_bIsAuthenticated)

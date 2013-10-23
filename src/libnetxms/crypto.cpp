@@ -262,7 +262,7 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
       *ppResponse = new CSCPMessage(nNXCPVersion);
       (*ppResponse)->SetCode(CMD_SESSION_KEY);
       (*ppResponse)->SetId(pMsg->GetId());
-      (*ppResponse)->DisableEncryption();
+      (*ppResponse)->disableEncryption();
 
       dwCiphers = pMsg->GetVariableLong(VID_SUPPORTED_ENCRYPTION) & m_dwSupportedCiphers;
       if (dwCiphers == 0)

@@ -379,14 +379,12 @@ void NXCL_Session::CompleteSync(int nSyncOp, UINT32 dwRetCode)
 #endif
 }
 
-
-//
-// Process DCIs coming from server
-//
-
+/**
+ * Process DCIs coming from server
+ */
 void NXCL_Session::processDCI(CSCPMessage *pMsg)
 {
-	if (pMsg->IsEndOfSequence())
+	if (pMsg->isEndOfSequence())
 	{
       CompleteSync(SYNC_DCI_LIST, RCC_SUCCESS);
 	}

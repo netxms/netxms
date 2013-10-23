@@ -103,7 +103,7 @@ void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg)
    if (pMsg->GetCode() == CMD_EVENT_DB_RECORD)
    {
       dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
-		if (!pMsg->IsEndOfSequence() && (dwEventCode != 0))
+		if (!pMsg->isEndOfSequence() && (dwEventCode != 0))
       {
          // Allocate new event template structure and fill it with values from message
          pEventTemplate = (NXC_EVENT_TEMPLATE *)malloc(sizeof(NXC_EVENT_TEMPLATE));

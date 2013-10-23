@@ -633,7 +633,7 @@ void MobileDeviceSession::setupEncryption(CSCPMessage *request)
 	PrepareKeyRequestMsg(&msg, g_pServerKey, request->GetVariableShort(VID_USE_X509_KEY_FORMAT) != 0);
 	msg.SetId(request->GetId());
    sendMessage(&msg);
-   msg.DeleteAllVariables();
+   msg.deleteAllVariables();
 
    // Wait for encryption setup
    ConditionWait(m_condEncryptionSetup, 3000);

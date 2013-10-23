@@ -882,16 +882,14 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 */
 void NetworkMap::onObjectDelete(UINT32 dwObjectId)
 {
-   int i;
-
    LockData();
 
-   i = 0;
+   UINT32 elementId = elementIdFromObjectId(dwObjectId);
+   int i = 0;
    while(i < m_links->size())
    {
       NetworkMapLink* nmLink = (NetworkMapLink*) m_links->get(i);
 
-      UINT32 elementId = elementIdFromObjectId(dwObjectId);
       if (nmLink->getElement1() == elementId || nmLink->getElement2() == elementId)
       {
          m_links->remove(i);

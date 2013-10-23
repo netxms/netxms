@@ -452,7 +452,7 @@ void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
 	msg->SetCode(CMD_SITUATION_DATA);
 	for(int i = 0; i < list->size(); i++)
 	{
-		msg->DeleteAllVariables();
+		msg->deleteAllVariables();
 		((Situation *)list->get(i))->CreateMessage(msg);
 		session->sendMessage(msg);
 	}
