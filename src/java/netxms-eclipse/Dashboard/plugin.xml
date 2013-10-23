@@ -5,7 +5,7 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="Dashboard"
+            name="%perspective.name.Dashboard"
             icon="icons/dashboard.png"
             class="org.netxms.ui.eclipse.dashboard.perspectives.DashboardPerspective"
             id="org.netxms.ui.eclipse.dashboard.DashboardPerspective">
@@ -21,7 +21,7 @@
                class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
                enablesFor="1"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardRoot"
-               label="Create &amp;dashboard..."
+               label="%action.label.CreateDashboard"
                menubarPath="objectcreation">
          </action>
          <action
@@ -29,7 +29,7 @@
                enablesFor="1"
                icon="icons/import.gif"
                id="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard#DashboardRoot"
-               label="&amp;Import dashboard..."
+               label="%action.label.ImportDashboard"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -41,27 +41,27 @@
                class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
                enablesFor="1"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#Dashboard"
-               label="Create &amp;dashboard..."
+               label="%action.label.CreateDashboard"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.dashboard.actions.OpenDashboard"
                enablesFor="1"
                id="org.netxms.ui.eclipse.dashboard.popupActions.OpenDashboard"
-               label="&amp;Open dashboard"
+               label="%action.label.OpenDashboard"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.dashboard.actions.CloneDashboard"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CloneDashboard"
-               label="Clone dashboard"
+               label="%action.label.CloneDashboard"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.dashboard.actions.ExportDashboard"
                icon="icons/export.gif"
                id="org.netxms.ui.eclipse.dashboard.actions.ExportDashboard"
-               label="Export..."
+               label="%action.label.Export"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -73,7 +73,7 @@
             class="org.netxms.ui.eclipse.dashboard.views.DashboardView"
             icon="icons/dashboard.png"
             id="org.netxms.ui.eclipse.dashboard.views.DashboardView"
-            name="Dashboard"
+            name="%view.name.Dashboard"
             restorable="true">
       </view>
       <view
@@ -81,7 +81,7 @@
             class="org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"
             icon="icons/dashboard_nav.gif"
             id="org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"
-            name="Dashboard Navigator"
+            name="%view.name.DashboardNavigator"
             restorable="true">
       </view>
       <view
@@ -89,7 +89,7 @@
             class="org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView"
             icon="icons/dashboard.png"
             id="org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView"
-            name="Dashboard"
+            name="%view.name.Dashboard"
             restorable="true">
       </view>
    </extension>
@@ -98,7 +98,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements"
             id="org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements"
-            name="Dashboard Elements">
+            name="%page.name.DashboardElements">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objects.Dashboard">
@@ -108,7 +108,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.Layout"
             id="org.netxms.ui.eclipse.dashboard.propertypages.Layout#100"
-            name="Layout">
+            name="%page.name.Layout">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig">
@@ -118,7 +118,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties"
             id="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties#0"
-            name="Label">
+            name="%page.name.Label">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig">
@@ -128,7 +128,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.DataSources"
             id="org.netxms.ui.eclipse.dashboard.propertypages.DataSources#20"
-            name="Data Sources">
+            name="%page.name.DataSources">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig">
@@ -138,7 +138,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.EmbeddedDashboard"
             id="org.netxms.ui.eclipse.dashboard.propertypages.EmbeddedDashboard#0"
-            name="Dashboard">
+            name="%page.name.Dashboard">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig">
@@ -148,7 +148,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.AvailabilityChart"
             id="org.netxms.ui.eclipse.dashboard.propertypages.AvailabilityChart#0"
-            name="Availability Chart">
+            name="%page.name.AvailChart">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig">
@@ -158,7 +158,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.StatusIndicator"
             id="org.netxms.ui.eclipse.dashboard.propertypages.StatusIndicator#0"
-            name="Status Indicator">
+            name="%page.name.StatusIndicator">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig">
@@ -168,7 +168,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.ObjectStatusChart"
             id="org.netxms.ui.eclipse.dashboard.propertypages.ObjectStatusChart#0"
-            name="Object Status Chart">
+            name="%page.name.ObjStatusChart">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig">
@@ -178,7 +178,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.NetworkMap"
             id="org.netxms.ui.eclipse.dashboard.propertypages.NetworkMap#0"
-            name="Network Map">
+            name="%page.name.NetworkMap">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig">
@@ -188,7 +188,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.Gauge"
             id="org.netxms.ui.eclipse.dashboard.propertypages.Gauge#10"
-            name="Gauge">
+            name="%page.name.Gauge">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig">
@@ -198,7 +198,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.WebPage"
             id="org.netxms.ui.eclipse.dashboard.propertypages.WebPage#0"
-            name="Web Page">
+            name="%page.name.WebPage">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig">
@@ -208,7 +208,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.AlarmViewer"
             id="org.netxms.ui.eclipse.dashboard.propertypages.AlarmViewer#0"
-            name="Alarm Viewer">
+            name="%page.name.AlarmViewer">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig">
@@ -218,7 +218,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.AbstractChart"
             id="org.netxms.ui.eclipse.dashboard.propertypages.AbstractChart#0"
-            name="Chart">
+            name="%page.name.Chart">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig">
@@ -228,7 +228,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.TableDataSource"
             id="org.netxms.ui.eclipse.dashboard.propertypages.TableDataSource#20"
-            name="Data Source">
+            name="%page.name.DataSource">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig">
@@ -238,7 +238,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.TableComparisonChart"
             id="org.netxms.ui.eclipse.dashboard.propertypages.TableComparisonChart#0"
-            name="Chart">
+            name="%page.name.Chart">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig">
@@ -248,7 +248,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.CustomWidget"
             id="org.netxms.ui.eclipse.dashboard.propertypages.CustomWidget#0"
-            name="Custom Widget">
+            name="%page.name.CustomWidget">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig">
@@ -258,7 +258,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.GeoMap"
             id="org.netxms.ui.eclipse.dashboard.propertypages.GeoMap#0"
-            name="Geo Map">
+            name="%page.name.GeoMap">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig">
@@ -268,7 +268,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.SeparatorProperties"
             id="org.netxms.ui.eclipse.dashboard.propertypages.SeparatorProperties#0"
-            name="Separator">
+            name="%page.name.Separator">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.SeparatorConfig">
@@ -278,7 +278,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.TableValue"
             id="org.netxms.ui.eclipse.dashboard.propertypages.TableValue#0"
-            name="Table Value">
+            name="%page.name.TableValue">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.TableValueConfig">
@@ -288,7 +288,7 @@
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.StatusMap"
             id="org.netxms.ui.eclipse.dashboard.propertypages.StatusMap#0"
-            name="Status Map">
+            name="%page.name.StatusMap">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig">

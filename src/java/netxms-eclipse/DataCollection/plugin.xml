@@ -10,11 +10,11 @@
             class="org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor"
             icon="icons/dc_editor.png"
             id="org.netxms.ui.eclipse.datacollection.view.data_collection_editor"
-            name="Data Collection Configuration"
+            name="%view.name.DataCollection"
             restorable="false">
       </view>
       <view
-            name="Last Values"
+            name="%view.name.LastValues"
             allowMultiple="true"
             icon="icons/last_values.png"
             class="org.netxms.ui.eclipse.datacollection.views.LastValues"
@@ -26,7 +26,7 @@
             class="org.netxms.ui.eclipse.datacollection.views.SummaryTableManager"
             icon="icons/summary_table.png"
             id="org.netxms.ui.eclipse.datacollection.views.SummaryTableManager"
-            name="DCI Summary Tables"
+            name="%view.name.DCISummaryTables"
             restorable="true">
       </view>
       <view
@@ -34,7 +34,7 @@
             class="org.netxms.ui.eclipse.datacollection.views.SummaryTable"
             icon="icons/summary_table.png"
             id="org.netxms.ui.eclipse.datacollection.views.SummaryTable"
-            name="Summary Table"
+            name="%view.name.SummaryTable"
             restorable="true">
       </view>
    </extension>
@@ -48,7 +48,7 @@
                class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Node"
-               label="Data Collection Configuration"
+               label="%action.label.DataCollection"
                icon="icons/dc_editor.png"
                menubarPath="datacollection">
          </action>
@@ -57,7 +57,7 @@
                enablesFor="1"
                icon="icons/last_values.png"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#Node"
-               label="Last values"
+               label="%action.label.LastValues"
                menubarPath="datacollection">
          </action>
       </objectContribution>
@@ -68,7 +68,7 @@
                class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Template"
-               label="Data Collection Configuration"
+               label="%action.label.DataCollection"
                icon="icons/dc_editor.png"
                menubarPath="datacollection">
          </action>
@@ -76,19 +76,19 @@
                class="org.netxms.ui.eclipse.datacollection.actions.RemoveTemplate"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.RemoveTemplate"
-               label="&amp;Remove..."
+               label="%action.label.Remove"
                menubarPath="objectbinding"
                style="push"
-               tooltip="Remove template from node(s)">
+               tooltip="%action.tooltip.Remove">
          </action>
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.ApplyTemplate"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ApplyTemplate"
-               label="&amp;Apply..."
+               label="%action.label.Apply"
                menubarPath="objectbinding"
                style="push"
-               tooltip="Apply template to node(s)">
+               tooltip="%action.tooltip.Apply">
          </action>
       </objectContribution>
       <objectContribution
@@ -99,14 +99,14 @@
                class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplateGroup"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplateGroup#TemplateRoot"
-               label="Create template &amp;group..."
+               label="%action.label.CreateTemplateGroup"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplate"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplate#TemplateRoot"
-               label="Create &amp;template..."
+               label="%action.label.CreateTemplate"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -118,14 +118,14 @@
                class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplateGroup"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplateGroup#TemplateGroup"
-               label="Create template &amp;group..."
+               label="%action.label.CreateTemplateGroup"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplate"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplate#TemplateGroup"
-               label="Create &amp;template..."
+               label="%action.label.CreateTemplate"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -137,7 +137,7 @@
                class="org.netxms.ui.eclipse.datacollection.actions.CreateInterfraceDci"
                enablesFor="+"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateInterfaceDci#Interface"
-               label="Create data collection items..."
+               label="%action.label.CreateDCIs"
                menubarPath="datacollection">
          </action>
       </objectContribution>
@@ -150,7 +150,7 @@
                enablesFor="1"
                icon="icons/dc_editor.png"
                id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Cluster"
-               label="Data Collection Configuration"
+               label="%action.label.DataCollection"
                menubarPath="datacollection">
          </action>
          <action
@@ -158,7 +158,7 @@
                enablesFor="1"
                icon="icons/last_values.png"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#Cluster"
-               label="Last values"
+               label="%action.label.LastValues"
                menubarPath="datacollection">
          </action>
       </objectContribution>
@@ -171,7 +171,7 @@
                enablesFor="+"
                icon="icons/clear.gif"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ClearCollectedData_DciValue"
-               label="Clear collected data"
+               label="%action.label.ClearData"
                menubarPath="secondary">
          </action>
       </objectContribution>
@@ -184,7 +184,7 @@
                enablesFor="+"
                icon="icons/clear.gif"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ClearCollectedData_DataCollectionObject"
-               label="Clear collected data"
+               label="%action.label.ClearData"
                menubarPath="secondary">
          </action>
       </objectContribution>
@@ -196,7 +196,7 @@
                class="org.netxms.ui.eclipse.datacollection.actions.CreateSnmpDci"
                enablesFor="+"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateSnmpDci#SnmpValue"
-               label="Create data collection item..."
+               label="%action.label.CreateDCI"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -208,7 +208,7 @@
                enablesFor="1"
                icon="icons/dc_editor.png"
                id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#MobileDevice"
-               label="Data Collection Configuration"
+               label="%action.label.DataCollection"
                menubarPath="datacollection">
          </action>
          <action
@@ -216,7 +216,7 @@
                enablesFor="1"
                icon="icons/last_values.png"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#MobileDevice"
-               label="Last values"
+               label="%action.label.LastValues"
                menubarPath="datacollection">
          </action>
       </objectContribution>
@@ -226,7 +226,7 @@
      point="org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.datacollection.propertypages.General#1"
-           name="General"
+           name="%page.name.General"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.General">
           <enabledWhen>
              <instanceof
@@ -237,7 +237,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable"
               id="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable#1"
-              name="General">
+              name="%page.name.General">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionTable">
@@ -246,7 +246,7 @@
         </page>
         <page
            id="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule#10"
-           name="Custom Schedule"
+           name="%page.name.CustomSchedule"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule">
           <enabledWhen>
              <instanceof
@@ -256,7 +256,7 @@
         </page>
         <page
            id="org.netxms.ui.eclipse.datacollection.propertypages.Transformation#20"
-           name="Transformation"
+           name="%page.name.Transformation"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.Transformation">
           <enabledWhen>
              <instanceof
@@ -266,7 +266,7 @@
         </page>
         <page
            id="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds#30"
-           name="Thresholds"
+           name="%page.name.Thresholds"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds">
           <enabledWhen>
              <instanceof
@@ -277,7 +277,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.TableColumns"
               id="org.netxms.ui.eclipse.datacollection.propertypages.TableColumns#20"
-              name="Columns">
+              name="%page.name.Columns">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionTable">
@@ -287,7 +287,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery"
               id="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery#50"
-              name="Instance Discovery">
+              name="%page.name.InstanceDiscovery">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionItem">
@@ -297,7 +297,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps"
               id="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps#110"
-              name="Network Maps">
+              name="%page.name.NetworkMaps">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionItem">
@@ -307,7 +307,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableGeneral"
               id="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableGeneral#0"
-              name="General">
+              name="%page.name.General">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DciSummaryTable">
@@ -317,7 +317,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableFilter"
               id="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableFilter#20"
-              name="Filter">
+              name="%page.name.Filter">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DciSummaryTable">
@@ -327,7 +327,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableColumns"
               id="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableColumns#10"
-              name="Columns">
+              name="%page.name.Columns">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DciSummaryTable">
@@ -337,7 +337,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.ClusterOptions"
               id="org.netxms.ui.eclipse.datacollection.propertypages.ClusterOptions#4"
-              name="Cluster">
+              name="%page.name.Cluster">
            <enabledWhen>
               <and>
                  <instanceof
@@ -359,7 +359,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.TableThresholds"
               id="org.netxms.ui.eclipse.datacollection.propertypages.TableThresholds#30"
-              name="Thresholds">
+              name="%page.name.Thresholds">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionTable">
@@ -386,23 +386,23 @@
             class="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues"
             icon="icons/last_values.png"
             id="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues"
-            name="Last Values"
+            name="%tab.name.LastValues"
             order="30">
       </tab>
       <tab
             class="org.netxms.ui.eclipse.datacollection.objecttabs.ThresholdSummary"
             icon="icons/thresholds.gif"
             id="org.netxms.ui.eclipse.datacollection.objecttabs.ThresholdSummary"
-            name="Thresholds"
+            name="%tab.name.Thresholds"
             order="30">
       </tab>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Toggle DCI Filter"
+            description="%command.description.ToggleFilter"
             id="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
-            name="Toggle DCI Filter">
+            name="%command.name.ToggleFilter">
          <defaultHandler
                class="org.netxms.ui.eclipse.datacollection.actions.ToggleDCIFilterHandler">
             <parameter
@@ -417,9 +417,9 @@
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open DCI Summary Tables configuration"
+            description="%command.description.SummaryTablesConfig"
             id="org.netxms.ui.eclipse.datacollection.commands.open_dcisumtbl_manager"
-            name="DCI Summary Tables">
+            name="%command.name.SummaryTablesConfig">
       </command>
    </extension>
    <extension
@@ -446,9 +446,9 @@
             locationURI="menu:org.netxms.ui.eclipse.objectview.view.tabbed_object_view?after=additions">
          <command
                commandId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
-               label="Show DCI &amp;filter"
+               label="%command.label.ShowDCIFilter"
                style="toggle"
-               tooltip="Show/hide DCI filter">
+               tooltip="%command.tooltip.ShowDCIFilter">
             <visibleWhen
                   checkEnabled="false">
                <with
@@ -475,17 +475,17 @@
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.datacollection.actionSet"
-            label="Data Collection Action Set"
+            label="%actionSet.label.DataCollection"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.OpenSummaryTablesManager"
                definitionId="org.netxms.ui.eclipse.datacollection.commands.open_dcisumtbl_manager"
                icon="icons/summary_table.png"
                id="org.netxms.ui.eclipse.datacollection.actions.open_dcisumtbl_manager"
-               label="DCI Summary Tables"
+               label="%action.label.SummaryTablesConfig"
                menubarPath="config/additions"
                style="push"
-               tooltip="Open DCI Summary Table configuration">
+               tooltip="%action.tooltip.SummaryTablesConfig">
          </action>
       </actionSet>
    </extension>

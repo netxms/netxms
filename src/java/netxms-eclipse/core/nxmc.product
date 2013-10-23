@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.10" useFeatures="false" includeLaunchers="true">
+<product name="%product.name" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.10" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/Core/icons/launcher/128x128.png"/>
@@ -35,7 +35,6 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>

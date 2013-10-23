@@ -64,10 +64,10 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="NetXMS Management Console">
+            name="%product.name">
          <property
                name="appName"
-               value="NetXMS Management Console">
+               value="%product.name">
          </property>
          <property
                name="aboutText"
@@ -161,24 +161,24 @@
             name="%command.PauseTrace">
       </command>
       <command
-            description="Copy to clipboard"
+            description="%command.description.Copy"
             id="org.netxms.ui.eclipse.library.commands.copy"
-            name="Copy">
+            name="%command.name.Copy">
       </command>
       <command
-            description="Refresh"
+            description="%command.description.Refresh"
             id="org.netxms.ui.eclipse.library.commands.refresh"
-            name="Refresh">
+            name="%command.name.Refresh">
       </command>
       <command
-            description="Export to CSV"
+            description="%command.description.ExportCSV"
             id="org.netxms.ui.eclipse.library.commands.export_to_csv_selection"
-            name="Export to CSV">
+            name="%command.name.ExportCSV">
       </command>
       <command
-            description="Export all to CSV"
+            description="%command.description.ExportAllCSV"
             id="org.netxms.ui.eclipse.library.commands.export_to_csv_all"
-            name="Export all to CSV">
+            name="%command.name.ExportAllCSV">
       </command>
    </extension>
    <extension
@@ -253,9 +253,9 @@
             sequence="M1+M3+A">
       </key>
       <scheme
-            description="Default NXMC key binding scheme"
+            description="%scheme.description"
             id="org.netxms.ui.eclipse.defaultKeyBinding"
-            name="NetXMS Default">
+            name="%scheme.name">
       </scheme>
    </extension>
    <extension
