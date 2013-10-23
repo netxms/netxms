@@ -26,11 +26,18 @@
 
 
 #define SUBAGENT_NAME _T("DB2")
-#define MAX_STRING 0xff
-#define DB_MAX 0
+#define STR_MAX 256
+#define DB_MAX_COUNT 32
+
+#ifdef _WIN32
+#define DB2_MAX_USER_NAME 32 + 1
+#else
+#define DB2_MAX_USER_NAME 8 + 1
+#endif
 
 typedef struct
 {
+   TCHAR db2Id[STR_MAX];
 } DB2_INFO, *PDB2_INFO;
 
 typedef struct
@@ -40,16 +47,17 @@ typedef struct
    PDB2_INFO db2Info;
 } THREAD_INFO, *PTHREAD_INFO;
 
-inline BOOL GetConfigs(Config* config)
+inline BOOL GetConfigs(Config* config, const TCHAR* section, const PDB2_INFO db2Info)
 {
    NX_CFG_TEMPLATE* cfgTemplate =
    {
+      { _T("Id"), CT_STRING, 0, 0, STR_MAX, 0, db2Info->db2Id },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
    };
 
-   return config->parseTemplate(SUBAGENT_NAME, cfgTemplate);
+   return config->parseTemplate(section, cfgTemplate);
 }
 
-THREAD_RESULT THREAD_CALL RunMonitorThread(void * info);
+THREAD_RESULT THREAD_CALL RunMonitorThread(void* info);
 
 #endif /* DB2_SUBAGENT_H_ */

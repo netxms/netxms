@@ -21,8 +21,8 @@
 
 DB_DRIVER g_drvHandle = NULL;
 CONDITION g_sdownCondition = NULL;
-PTHREAD_INFO g_threads;
-int g_numToWatch = 0;
+PTHREAD_INFO g_threads = NULL;;
+int g_numOfThreads = 0;
 
 static BOOL DB2Init(Config* config)
 {
@@ -32,57 +32,77 @@ static BOOL DB2Init(Config* config)
    g_drvHandle = DBLoadDriver(LIBDIR _T("/netxms/dbdrv/db2.ddr"), NULL, TRUE, NULL, NULL);
 #endif
 
-   if (g_driverHandle == NULL)
+   if (g_drvHandle == NULL)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load the database driver"), SUBAGENT_NAME);
       return FALSE;
    }
 
-   for(int i = 0; i < DB_MAX; i++)
+   const TCHAR section[STR_MAX];
+   const PDB2_INFO arrDb2Info = new DB2_INFO[DB_MAX_COUNT];
+
+   for(int i = 0; i < DB_MAX_COUNT; i++)
    {
-      if (!GetConfigs(config))
+      arrDb2Info[g_numOfThreads] = new DB2_INFO;
+      if (!GetConfigs(config, section, &arrDb2Info[g_numOfThreads]))
       {
-         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration data"), SUBAGENT_NAME);
+         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration data for section \"%s\""), SUBAGENT_NAME, section);
+         delete arrDb2Info[g_numOfThreads];
          continue;
       }
 
-      g_numToWatch++;
+      g_numOfThreads++;
    }
 
-   if(g_numToWatch > 0)
+   if(g_numOfThreads > 0)
    {
-      g_threads = new THREAD_INFO[g_numToWatch];
+      g_threads = new THREAD_INFO[g_numOfThreads];
       g_sdownCondition = ConditionCreate(TRUE);
    }
 
-   for(int i = 0; i < g_numToWatch; i++)
+   for(int i = 0; i < g_numOfThreads; i++)
    {
-      g_threads[i] = new THREAD_INFO();
+      g_threads[i] = new THREAD_INFO;
       g_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, 0, (void*) g_threads[i]);
       g_threads[i].mutex = MutexCreate();
+      g_threads[i].db2Info = arrDb2Info[i];
    }
+
+   delete[] arrDb2Info;
 
    return TRUE;
 }
 
 static void DB2Shutdown()
 {
-   for(int i = 0; i < g_numToWatch; i++)
+   for(int i = 0; i < g_numOfThreads; i++)
    {
       ThreadJoin(g_threads[i].threadHandle);
       MutexDestroy(g_threads[i].mutex);
+      delete g_threads[i].db2Info;
+      delete g_threads[i];
    }
+   delete[] g_threads;
+
+   DBUnloadDriver(g_drvHandle);
+
+   g_drvHandle = NULL;
+   g_sdownCondition = NULL;
+   g_threads = NULL;
+
    ConditionDestroy(g_sdownCondition);
 }
 
-static BOOL DB2CommandHandler(INT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+static BOOL DB2CommandHandler(INT32 dwCommand, CSCPMessage* pRequest, CSCPMessage* pResponse, void* session)
 {
    return FALSE;
 }
 
-THREAD_RESULT THREAD_CALL RunMonitorThread(void * info)
+THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
 {
    PTHREAD_INFO threadInfo = (PTHREAD_INFO) info;
+
+   //DBConnect();
 
    return THREAD_OK;
 }
