@@ -74,7 +74,7 @@ public class AlarmViewer extends PropertyPage
 		title.setLayoutData(gd);
 		
 		Group severityGroup = new Group(dialogArea, SWT.NONE);
-		severityGroup.setText("Severity Filter");
+		severityGroup.setText(Messages.AlarmViewer_SeverityFilter);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

@@ -41,7 +41,7 @@ public class ScriptComparator extends ViewerComparator
 
 		Script s1 = (Script)e1;
 		Script s2 = (Script)e2;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case ScriptLibrary.COLUMN_ID:
 				result = Long.signum(s1.getId() - s2.getId());

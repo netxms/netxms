@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Dialog for showing security warnings
@@ -76,7 +77,7 @@ public class SecurityWarningDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Security Warning");
+		newShell.setText(Messages.SecurityWarningDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -117,7 +118,7 @@ public class SecurityWarningDialog extends Dialog
 		
 		final Label icon = new Label(topArea, SWT.NONE);
 		icon.setBackground(BACKGROUND_COLOR);
-		icon.setImage(Activator.getImageDescriptor("icons/security-warning.png").createImage());
+		icon.setImage(Activator.getImageDescriptor("icons/security-warning.png").createImage()); //$NON-NLS-1$
 		icon.setLayoutData(new GridData(SWT.TOP, SWT.CENTER, false, false));
 		icon.addDisposeListener(new DisposeListener() {	
 			@Override
@@ -162,7 +163,7 @@ public class SecurityWarningDialog extends Dialog
 		detailsText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 		
 		checkDontAskAgain = new Button(bottomArea, SWT.CHECK);
-		checkDontAskAgain.setText("Don't ask me again for connections to this server");
+		checkDontAskAgain.setText(Messages.SecurityWarningDialog_DontAskAgain);
 				
 		return dialogArea;
 	}

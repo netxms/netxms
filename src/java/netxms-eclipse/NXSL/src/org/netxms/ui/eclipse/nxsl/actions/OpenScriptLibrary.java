@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.views.ScriptLibrary;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -61,7 +62,7 @@ public class OpenScriptLibrary implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenScriptLibrary_Error, Messages.OpenScriptLibrary_ErrorMsg + e.getMessage());
 			}
 		}
 	}

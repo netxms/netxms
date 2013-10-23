@@ -35,7 +35,7 @@ public class ScriptLabelProvider implements ITableLabelProvider
 	
 	public ScriptLabelProvider()
 	{
-		iconScript = Activator.getImageDescriptor("icons/script.png").createImage();
+		iconScript = Activator.getImageDescriptor("icons/script.png").createImage(); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)

@@ -160,13 +160,13 @@ public class ImageProvider
 			}
 			catch(SWTException e)
 			{
-				Activator.logError("Cannot decode image", e);
+				Activator.logError("Cannot decode image", e); //$NON-NLS-1$
 				cache.put(guid, missingImage);
 			}
 		}
 		catch(Exception e)
 		{
-			Activator.logError("Cannot retrive image from server", e);
+			Activator.logError("Cannot retrive image from server", e); //$NON-NLS-1$
 		}
 	}
 

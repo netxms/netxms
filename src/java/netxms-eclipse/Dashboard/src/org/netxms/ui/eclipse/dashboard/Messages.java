@@ -40,10 +40,13 @@ public class Messages extends NLS
 	public static String AddDashboardElementDlg_Separator;
 	public static String AddDashboardElementDlg_StatusChart;
 	public static String AddDashboardElementDlg_StatusIndicator;
-	public static String AddDashboardElementDlg_TubeChart;
+   public static String AddDashboardElementDlg_StatusMap;
+	public static String AddDashboardElementDlg_TableValue;
+   public static String AddDashboardElementDlg_TubeChart;
 	public static String AddDashboardElementDlg_TubeChartForTable;
 	public static String AddDashboardElementDlg_WebPage;
 	public static String AlarmViewer_RootObject;
+   public static String AlarmViewer_SeverityFilter;
 	public static String AlarmViewer_Title;
 	public static String AvailabilityChart_3DView;
 	public static String AvailabilityChart_Object;
@@ -97,7 +100,9 @@ public class Messages extends NLS
 	public static String DashboardElementsLabelProvider_FillFill;
 	public static String DashboardElementsLabelProvider_Left;
 	public static String DashboardElementsLabelProvider_Right;
-	public static String DashboardElementsLabelProvider_Top;
+   public static String DashboardElementsLabelProvider_StatusMap;
+	public static String DashboardElementsLabelProvider_TableValue;
+   public static String DashboardElementsLabelProvider_Top;
 	public static String DashboardElementsLabelProvider_TypeAlarmViewer;
 	public static String DashboardElementsLabelProvider_TypeAvailChart;
 	public static String DashboardElementsLabelProvider_TypeBarChart;
@@ -178,7 +183,13 @@ public class Messages extends NLS
 	public static String ExportDashboard_JobTitle;
 	public static String ExportDashboard_SelectFile;
 	public static String ExportDashboard_XMLFiles;
-	public static String GeoMap_Error;
+	public static String Gauge_Bar;
+   public static String Gauge_Dial;
+   public static String Gauge_FontName;
+   public static String Gauge_Text;
+   public static String Gauge_Type;
+   public static String Gauge_Vertical;
+   public static String GeoMap_Error;
 	public static String GeoMap_ErrorText;
 	public static String GeoMap_Latitude;
 	public static String GeoMap_Longitude;
@@ -216,6 +227,8 @@ public class Messages extends NLS
 	public static String Layout_Bottom;
 	public static String Layout_Center;
 	public static String Layout_Fill;
+   public static String Layout_GrapExtraH;
+   public static String Layout_GrapExtraV;
 	public static String Layout_HAlign;
 	public static String Layout_HHint;
 	public static String Layout_HSpan;
@@ -225,10 +238,12 @@ public class Messages extends NLS
 	public static String Layout_VAlign;
 	public static String Layout_VSpan;
 	public static String Layout_WHint;
-	public static String LineChartElement_JobErrorPrefix;
+	public static String LineChartElement_JobError;
+   public static String LineChartElement_JobErrorPrefix;
 	public static String LineChartElement_JobTitle;
 	public static String NetworkMap_NetworkMap;
 	public static String NetworkMap_Title;
+   public static String NetworkMap_ZoomLevel;
 	public static String ObjectStatusChart_3DView;
 	public static String ObjectStatusChart_Options;
 	public static String ObjectStatusChart_RefreshInterval;
@@ -246,7 +261,11 @@ public class Messages extends NLS
 	public static String SeparatorProperties_TopMargin;
 	public static String StatusIndicator_Object;
 	public static String StatusIndicator_Title;
-	public static String TableComparisonChart_3DView;
+	public static String StatusMap_DisplayMode;
+   public static String StatusMap_Group;
+   public static String StatusMap_NoGroup;
+   public static String StatusMap_SeverityFilter;
+   public static String TableComparisonChart_3DView;
 	public static String TableComparisonChart_Bottom;
 	public static String TableComparisonChart_Left;
 	public static String TableComparisonChart_LegendPosition;
@@ -265,6 +284,7 @@ public class Messages extends NLS
 	public static String TableDataSource_IgnoreZero;
 	public static String TableDataSource_InstanceColumn;
 	public static String TableDataSource_Object;
+   public static String TableValue_Table;
 	public static String WebPage_Title;
 	public static String WebPage_URL;
 	static

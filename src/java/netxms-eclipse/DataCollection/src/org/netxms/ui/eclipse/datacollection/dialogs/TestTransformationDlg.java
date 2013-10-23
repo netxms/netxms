@@ -39,6 +39,7 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.TransformationTestResult;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -75,7 +76,7 @@ public class TestTransformationDlg extends Dialog
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
-		Button b = createButton(parent, RUN, "&Run", true);
+		Button b = createButton(parent, RUN, Messages.TestTransformationDlg_Run, true);
 		b.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -88,7 +89,7 @@ public class TestTransformationDlg extends Dialog
 			{
 			}
 		});
-		createButton(parent, Window.CANCEL, "Close", false);
+		createButton(parent, Window.CANCEL, Messages.TestTransformationDlg_Close, false);
 	}
 
 	/* (non-Javadoc)
@@ -97,7 +98,7 @@ public class TestTransformationDlg extends Dialog
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
-		imageWaiting = Activator.getImageDescriptor("icons/waiting.png").createImage();
+		imageWaiting = Activator.getImageDescriptor("icons/waiting.png").createImage(); //$NON-NLS-1$
 		parent.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -112,7 +113,7 @@ public class TestTransformationDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		inputValue = new LabeledText(dialogArea, SWT.NONE);
-		inputValue.setLabel("Input value");
+		inputValue.setLabel(Messages.TestTransformationDlg_Input);
 		GridData gd = new GridData();
 		gd.widthHint = 300;
 		gd.horizontalAlignment = SWT.FILL;
@@ -121,11 +122,11 @@ public class TestTransformationDlg extends Dialog
 		
 		status = new CLabel(dialogArea, SWT.BORDER);
 		status.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		status.setText("Idle");
+		status.setText(Messages.TestTransformationDlg_Idle);
 		status.setImage(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN));
 		
 		result = new LabeledText(dialogArea, SWT.NONE);
-		result.setLabel("Result");
+		result.setLabel(Messages.TestTransformationDlg_Result);
 		result.getTextControl().setEditable(false);
 		result.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
@@ -142,13 +143,13 @@ public class TestTransformationDlg extends Dialog
 		final String input = inputValue.getText();
 		inputValue.getTextControl().setEditable(false);
 		
-		status.setText("Running...");
+		status.setText(Messages.TestTransformationDlg_Running);
 		status.setImage(imageWaiting);
 		
-		result.setText("");
+		result.setText(""); //$NON-NLS-1$
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Execute script on server", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.TestTransformationDlg_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -162,12 +163,12 @@ public class TestTransformationDlg extends Dialog
 						
 						if (r.success)
 						{
-							status.setText("Success");
+							status.setText(Messages.TestTransformationDlg_Success);
 							status.setImage(StatusDisplayInfo.getStatusImage(Severity.NORMAL));
 						}
 						else
 						{
-							status.setText("Failure");
+							status.setText(Messages.TestTransformationDlg_Failure);
 							status.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
 						}
 						result.setText(r.result);
@@ -178,7 +179,7 @@ public class TestTransformationDlg extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot execute script";
+				return Messages.TestTransformationDlg_JobError;
 			}
 
 			/* (non-Javadoc)

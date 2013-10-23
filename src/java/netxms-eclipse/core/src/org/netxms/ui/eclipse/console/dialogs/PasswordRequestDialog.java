@@ -27,17 +27,20 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
+/**
+ *
+ */
 public class PasswordRequestDialog extends Dialog
 {
-	private Composite container;
-   private Text textPassword;
+   private LabeledText textPassword;
 	private Label lblMessage;
 	private String title;
-	private String password = "";
-	private String message = "";
+	private String password = ""; //$NON-NLS-1$
+	private String message = ""; //$NON-NLS-1$
 	
 	/**
 	 * @param parentShell
@@ -47,25 +50,30 @@ public class PasswordRequestDialog extends Dialog
 		super(parentShell);
 	}	
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
 	@Override
-	protected void configureShell(Shell shell) {
+	protected void configureShell(Shell shell) 
+	{
 	   super.configureShell(shell);
 	   
 	   shell.setText(title);
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		// TODO: Make this easier on the eyes
-		container = (Composite) super.createDialogArea(parent);
+		final Composite container = (Composite) super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
-      layout.verticalSpacing = 10;
-      layout.marginTop = 10;
-      layout.marginBottom = 0;
-      layout.marginWidth = 20;
-      layout.marginHeight = 10;
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		
       container.setLayout(layout);
       
@@ -73,24 +81,25 @@ public class PasswordRequestDialog extends Dialog
       lblMessage.setText(message);
       lblMessage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
       
-      final Label lblPassword = new Label(container, SWT.NONE);
-      lblPassword.setText(Messages.LoginDialog_password + ":");
-      lblPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-      
-		textPassword = new Text(container, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
+		textPassword = new LabeledText(container, SWT.NONE, SWT.BORDER | SWT.PASSWORD);
+		textPassword.setLabel(Messages.LoginDialog_Passwd);
 		textPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-		
-		//container.pack(true);
 		
 		return container;
 	}	
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#getInitialSize()
+	 */
 	@Override
    protected Point getInitialSize()
    {
       return new Point(300, 210);
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
    @Override
 	protected void okPressed()
 	{
@@ -99,15 +108,25 @@ public class PasswordRequestDialog extends Dialog
 		super.okPressed();
 	}
 
-	public String getPassword() {
+	/**
+	 * @return
+	 */
+	public String getPassword() 
+	{
 		return password; 
 	}
 	
+	/**
+	 * @param msg
+	 */
 	public void setMessage(String msg)
 	{
 		message = msg;
 	}
 	
+	/**
+	 * @param title
+	 */
 	public void setTitle(String title)
 	{
 	   this.title = title;

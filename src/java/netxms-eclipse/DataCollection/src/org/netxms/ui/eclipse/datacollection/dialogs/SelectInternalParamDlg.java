@@ -84,9 +84,9 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isWirelessController()))
 		{
-			list.add(new AgentParameter("WirelessController.AdoptedAPCount", "Adopted access points", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-			list.add(new AgentParameter("WirelessController.TotalAPCount", "Total access points", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-			list.add(new AgentParameter("WirelessController.UnadoptedAPCount", "Unadopted access points", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+			list.add(new AgentParameter("WirelessController.AdoptedAPCount", Messages.SelectInternalParamDlg_AdoptedAPs, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+			list.add(new AgentParameter("WirelessController.TotalAPCount", Messages.SelectInternalParamDlg_TotalAPs, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+			list.add(new AgentParameter("WirelessController.UnadoptedAPCount", Messages.SelectInternalParamDlg_UnadoptedAPs, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		}
 
 		viewer.setInput(list.toArray());

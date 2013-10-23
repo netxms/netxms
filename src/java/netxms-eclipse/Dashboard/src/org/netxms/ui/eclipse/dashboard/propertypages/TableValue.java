@@ -56,7 +56,7 @@ public class TableValue extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		dciSelector = new DciSelector(dialogArea, SWT.NONE, true);
-		dciSelector.setLabel("Table");
+		dciSelector.setLabel(Messages.TableValue_Table);
 		dciSelector.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);
 		dciSelector.setDciId(config.getObjectId(), config.getDciId());
 		GridData gd = new GridData();

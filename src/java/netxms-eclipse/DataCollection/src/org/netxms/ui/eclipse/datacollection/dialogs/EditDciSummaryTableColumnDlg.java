@@ -85,7 +85,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       dciName.setText(column.getDciName());
       
       checkRegexpMatch = new Button(dialogArea, SWT.CHECK);
-      checkRegexpMatch.setText("Use regular expression for parameter name matching");
+      checkRegexpMatch.setText(Messages.EditDciSummaryTableColumnDlg_UseRegExp);
       checkRegexpMatch.setSelection(column.isRegexpMatch());
       
 		return dialogArea;

@@ -269,7 +269,7 @@ public class LastValuesWidget extends Composite
 		};
 		actionShowUnsupported.setChecked(isShowUnsupported());
 		
-		actionShowDisabled = new Action("Show disabled", Action.AS_CHECK_BOX) {
+		actionShowDisabled = new Action(Messages.LastValuesWidget_ShowDisabled, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

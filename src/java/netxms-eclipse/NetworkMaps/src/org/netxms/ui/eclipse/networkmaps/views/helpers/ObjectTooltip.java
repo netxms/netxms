@@ -41,6 +41,7 @@ import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.figures.BirtChartFigure;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
@@ -80,7 +81,7 @@ public class ObjectTooltip extends Figure
 			MacAddress mac = ((Node)object).getPrimaryMAC();
 			if (mac != null)
 			{
-				sb.append(" (");
+				sb.append(" ("); //$NON-NLS-1$
 				sb.append(mac.toString());
 				sb.append(')');
 			}
@@ -124,15 +125,15 @@ public class ObjectTooltip extends Figure
 
 			for(RadioInterface rif : ((AccessPoint)object).getRadios())
 			{
-				sb.append("\nRadio ");
+				sb.append(Messages.ObjectTooltip_Radio);
 				sb.append(rif.getIndex());
-				sb.append(" (");
+				sb.append(" ("); //$NON-NLS-1$
 				sb.append(rif.getMacAddress().toString());
-				sb.append(")\n\tChannel: ");
+				sb.append(Messages.ObjectTooltip_Channel);
 				sb.append(rif.getChannel());
-				sb.append("\n\tTX power: ");
+				sb.append(Messages.ObjectTooltip_TXPower);
 				sb.append(rif.getPowerMW());
-				sb.append(" mW");
+				sb.append(Messages.ObjectTooltip_mW);
 			}
 
 			Label info = new Label();
@@ -153,7 +154,7 @@ public class ObjectTooltip extends Figure
 			setConstraint(page, gd);
 
 			TextFlow text = new TextFlow();
-			text.setText("\n" + object.getComments());
+			text.setText("\n" + object.getComments()); //$NON-NLS-1$
 			page.add(text);
 		}
 	}
@@ -176,7 +177,7 @@ public class ObjectTooltip extends Figure
 		collectData(objectCount, object);
 
 		chart.setTitleVisible(true);
-		chart.setChartTitle("Underlying Nodes Status");
+		chart.setChartTitle(Messages.ObjectTooltip_ChartTitle);
 		chart.setLegendPosition(GraphSettings.POSITION_RIGHT);
 		chart.setLegendVisible(true);
 		chart.set3DModeEnabled(true);

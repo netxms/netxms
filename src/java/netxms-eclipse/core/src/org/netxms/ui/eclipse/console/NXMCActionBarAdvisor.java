@@ -203,7 +203,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionFullScreen.setId("org.netxms.ui.eclipse.console.actions.full_screen"); //$NON-NLS-1$
 		actionFullScreen.setActionDefinitionId("org.netxms.ui.eclipse.console.commands.full_screen"); //$NON-NLS-1$
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
-		ConsoleSharedData.setProperty("FullScreenAction", actionFullScreen);
+		ConsoleSharedData.setProperty("FullScreenAction", actionFullScreen); //$NON-NLS-1$
 		
 		actionLangChinese = new Action(Messages.NXMCActionBarAdvisor_LangChinese, Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$
 			public void run()

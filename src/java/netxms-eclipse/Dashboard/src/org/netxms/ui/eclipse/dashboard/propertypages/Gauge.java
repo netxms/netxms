@@ -68,14 +68,14 @@ public class Gauge extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
-		gaugeType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Gauge type", gd);
-		gaugeType.add("Dial");
-		gaugeType.add("Bar");
-		gaugeType.add("Text");
+		gaugeType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.Gauge_Type, gd);
+		gaugeType.add(Messages.Gauge_Dial);
+		gaugeType.add(Messages.Gauge_Bar);
+		gaugeType.add(Messages.Gauge_Text);
 		gaugeType.select(config.getGaugeType());
 		
 		fontName = new LabeledText(dialogArea, SWT.NONE);
-		fontName.setLabel("Font name (leave empty to use default)");
+		fontName.setLabel(Messages.Gauge_FontName);
 		fontName.setText(config.getFontName());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -141,7 +141,7 @@ public class Gauge extends PropertyPage
 		checkLegendInside.setLayoutData(gd);
 		
 		checkVertical = new Button(dialogArea, SWT.CHECK);
-		checkVertical.setText("&Vertical orientation");
+		checkVertical.setText(Messages.Gauge_Vertical);
 		checkVertical.setSelection(config.isVertical());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

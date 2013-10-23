@@ -74,8 +74,8 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_PieChartForTable);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_TubeChartForTable);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_Separator);
-		elementTypeSelector.add("Table Value");
-		elementTypeSelector.add("Status Map");
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_TableValue);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_StatusMap);
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

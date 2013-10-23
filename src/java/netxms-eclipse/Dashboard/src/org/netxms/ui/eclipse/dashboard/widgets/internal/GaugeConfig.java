@@ -45,7 +45,7 @@ public class GaugeConfig extends AbstractChartConfig
 	private double rightRedZone = 90.0;
 	
 	@Element(required = false)
-	private String fontName = "";
+	private String fontName = ""; //$NON-NLS-1$
 	
 	/**
 	 * Create dial chart settings object from XML document
@@ -209,7 +209,7 @@ public class GaugeConfig extends AbstractChartConfig
 	 */
 	public String getFontName()
 	{
-		return (fontName != null) ? fontName : "";
+		return (fontName != null) ? fontName : ""; //$NON-NLS-1$
 	}
 
 	/**

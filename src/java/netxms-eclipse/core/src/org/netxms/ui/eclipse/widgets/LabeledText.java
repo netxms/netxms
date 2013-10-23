@@ -88,12 +88,12 @@ public class LabeledText extends Composite
 		layout.marginHeight = 0;
 		setLayout(layout);
 		
-		label = (toolkit != null) ? toolkit.createLabel(this, "") : new Label(this, SWT.NONE);
+		label = (toolkit != null) ? toolkit.createLabel(this, "") : new Label(this, SWT.NONE); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
 		
-		text = (toolkit != null) ? toolkit.createText(this, "", textStyle) : new Text(this, textStyle);
+		text = (toolkit != null) ? toolkit.createText(this, "", textStyle) : new Text(this, textStyle); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

@@ -84,7 +84,7 @@ public abstract class ConsoleJob extends Job
 		}
 		catch(Exception e)
 		{
-			Activator.logError("Exception in ConsoleJob", e);
+			Activator.logError("Exception in ConsoleJob", e); //$NON-NLS-1$
 			jobFailureHandler();
 			status = createFailureStatus(e);
 		}

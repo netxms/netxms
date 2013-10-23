@@ -319,7 +319,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 		
-		actionSelect = new Action("Select in MIB tree") {
+		actionSelect = new Action(Messages.MibExplorer_SelectInTree) {
 			@Override
 			public void run()
 			{

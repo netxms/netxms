@@ -51,8 +51,8 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 		Messages.DashboardElementsLabelProvider_TypeTablePieChart, 
 		Messages.DashboardElementsLabelProvider_TypeTableTubeChart, 
 		Messages.DashboardElementsLabelProvider_TypeSeparator, 
-		"Table Value", 
-		"Status Map"
+		Messages.DashboardElementsLabelProvider_TableValue, 
+		Messages.DashboardElementsLabelProvider_StatusMap
 	};
 	private static final String[] H_ALIGH = { 
 		Messages.DashboardElementsLabelProvider_Fill, 

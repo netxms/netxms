@@ -156,16 +156,16 @@ public class SituationsManager extends ViewPart implements SessionListener
 		session.addListener(this);
 		
 		int[] weights = new int[] { 50, 50 };
-		weights[0] = safeGetInt(settings, "SituationManager.weights.0", weights[0]);
-		weights[1] = safeGetInt(settings, "SituationManager.weights.1", weights[1]);
+		weights[0] = safeGetInt(settings, "SituationManager.weights.0", weights[0]); //$NON-NLS-1$
+		weights[1] = safeGetInt(settings, "SituationManager.weights.1", weights[1]); //$NON-NLS-1$
 		splitter.setWeights(weights);
 		splitter.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
 				int[] weights = splitter.getWeights();
-				settings.put("SituationManager.weights.0", weights[0]);
-				settings.put("SituationManager.weights.1", weights[1]);
+				settings.put("SituationManager.weights.0", weights[0]); //$NON-NLS-1$
+				settings.put("SituationManager.weights.1", weights[1]); //$NON-NLS-1$
 			}
 		});
 		

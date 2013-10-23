@@ -34,6 +34,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -70,7 +71,7 @@ public class MapObjectFilter extends PropertyPage
 
       // Enable/disable check box
       checkboxEnableFilter = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableFilter.setText("Filter objects");
+      checkboxEnableFilter.setText(Messages.MapObjectFilter_FilterObjects);
       checkboxEnableFilter.setSelection(!initialFilter.isEmpty());
       checkboxEnableFilter.addSelectionListener(new SelectionListener() {
 			@Override
@@ -96,7 +97,7 @@ public class MapObjectFilter extends PropertyPage
       
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Filtering script");
+      label.setText(Messages.MapObjectFilter_FilteringScript);
 
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
@@ -125,7 +126,7 @@ public class MapObjectFilter extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		final String filter = checkboxEnableFilter.getSelection() ? filterSource.getText().trim() : "";
+		final String filter = checkboxEnableFilter.getSelection() ? filterSource.getText().trim() : ""; //$NON-NLS-1$
 		if (initialFilter.equals(filter))
 			return;		// Nothing to apply
 
@@ -136,7 +137,7 @@ public class MapObjectFilter extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setFilter(filter);
 		
-		new ConsoleJob("Update map object filter", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.MapObjectFilter_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -162,7 +163,7 @@ public class MapObjectFilter extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change map object filter";
+				return Messages.MapObjectFilter_JobError;
 			}
 		}.start();
 	}

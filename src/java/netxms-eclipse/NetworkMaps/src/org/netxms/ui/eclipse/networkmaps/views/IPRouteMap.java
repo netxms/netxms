@@ -31,13 +31,14 @@ import org.netxms.client.topology.HopInfo;
 import org.netxms.client.topology.NetworkPath;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 
 /**
  * IP route map
  */
 public class IPRouteMap extends AbstractNetworkMapView
 {
-	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.IPRouteMap";
+	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.IPRouteMap"; //$NON-NLS-1$
 	
 	private AbstractObject targetObject;
 
@@ -48,7 +49,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName("IP Route Map - [" + rootObject.getObjectName() + " - " + targetObject.getObjectName() + "]");
+		setPartName(Messages.IPRouteMap_PartTitle + " - [" + rootObject.getObjectName() + " - " + targetObject.getObjectName() + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/* (non-Javadoc)
@@ -60,11 +61,11 @@ public class IPRouteMap extends AbstractNetworkMapView
 		super.parseSecondaryId(parts);
 		
 		if (parts.length < 2)
-			throw new PartInitException("Incorrect view invocation");
+			throw new PartInitException("Incorrect view invocation"); //$NON-NLS-1$
 		
 		targetObject = session.findObjectById(Long.parseLong(parts[1]));
 		if (targetObject == null)
-			throw new PartInitException("Target object does not exist or cannot be accessed");
+			throw new PartInitException(Messages.IPRouteMap_TargetObjectNotExist);
 	}
 
 	/* (non-Javadoc)
@@ -86,7 +87,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 		if (mapPage == null)
 			mapPage = new NetworkMapPage();
 		
-		new ConsoleJob("Get IP route " + rootObject.getObjectName() + " - " + targetObject.getObjectName(), 
+		new ConsoleJob(String.format(Messages.IPRouteMap_JobTitle, rootObject.getObjectName(), targetObject.getObjectName()),
 				this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -106,7 +107,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get route information for " + rootObject.getObjectName() + " - " + targetObject.getObjectName();
+				return String.format(Messages.IPRouteMap_JobError, rootObject.getObjectName(), targetObject.getObjectName());
 			}
 		}.start();
 	}

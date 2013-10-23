@@ -88,7 +88,10 @@ public class Messages extends NLS
 	public static String RuleEvents_Delete;
 	public static String RuleEvents_Event;
 	public static String RuleEvents_InvertedRule;
-	public static String RuleServerActions_Action;
+	public static String RuleSelectionDialog_JobError;
+   public static String RuleSelectionDialog_JobTitle;
+   public static String RuleSelectionDialog_Title;
+   public static String RuleServerActions_Action;
 	public static String RuleServerActions_Add;
 	public static String RuleServerActions_Delete;
 	public static String RuleSituation_Add;

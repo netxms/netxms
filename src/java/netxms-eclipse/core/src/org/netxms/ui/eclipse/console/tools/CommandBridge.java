@@ -80,7 +80,7 @@ public final class CommandBridge
 		}
 		catch(Exception e)
 		{
-			Activator.logError("Exception while calling handler for bridged command " + name, e);
+			Activator.logError("Exception while calling handler for bridged command " + name, e); //$NON-NLS-1$
 			return null;
 		}
 	}

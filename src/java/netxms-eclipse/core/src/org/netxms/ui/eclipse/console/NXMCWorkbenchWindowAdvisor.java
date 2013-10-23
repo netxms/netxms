@@ -112,7 +112,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       Activator activator = Activator.getDefault();
       StatusLineContributionItem statusItemConnection = activator.getStatusItemConnection();
       statusItemConnection.setImage(Activator.getImageDescriptor(
-            session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage());
+            session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage()); //$NON-NLS-1$ //$NON-NLS-2$
       statusItemConnection.setText(session.getUserName()
             + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
@@ -135,7 +135,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          if (s.equals("-fullscreen")) //$NON-NLS-1$
          {
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setFullScreen(true);
-				Action a = ((Action)ConsoleSharedData.getProperty("FullScreenAction"));
+				Action a = ((Action)ConsoleSharedData.getProperty("FullScreenAction")); //$NON-NLS-1$
 				if (a != null)
 				{
 					a.setChecked(true);
@@ -152,7 +152,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       boolean success = false;
       boolean autoConnect = false;
-      String password = "";
+      String password = ""; //$NON-NLS-1$
 
       CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
       certMgr.setKeyStoreRequestListener(this);
@@ -171,7 +171,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          else if (s.startsWith("-password=")) //$NON-NLS-1$
          {
             password = s.substring(10);
-            settings.put("Connect.AuthMethod", NXCSession.AUTH_TYPE_PASSWORD);
+            settings.put("Connect.AuthMethod", NXCSession.AUTH_TYPE_PASSWORD); //$NON-NLS-1$
          }
          else if (s.equals("-auto")) //$NON-NLS-1$
          {
@@ -186,7 +186,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       {
          if (!autoConnect)
          {
-            showLoginDialog(loginDialog);
+            if (loginDialog.open() != Window.OK)
+               System.exit(0);
             password = loginDialog.getPassword();
          }
          else
@@ -228,7 +229,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
             if ((e.getCause() instanceof NXCException)
                   && (((NXCException)e.getCause()).getErrorCode() == RCC.NO_ENCRYPTION_SUPPORT) && encrypt)
             {
-               boolean alwaysAllow = settings.getBoolean("Connect.AllowUnencrypted." + settings.get("Connect.Server"));
+               boolean alwaysAllow = settings.getBoolean("Connect.AllowUnencrypted." + settings.get("Connect.Server")); //$NON-NLS-1$ //$NON-NLS-2$
                int action = getAction(settings, alwaysAllow);
                if (action != SecurityWarningDialog.NO)
                {
@@ -236,15 +237,14 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
                   encrypt = false;
                   if (action == SecurityWarningDialog.ALWAYS)
                   {
-                     settings.put("Connect.AllowUnencrypted." + settings.get("Connect.Server"), true);
+                     settings.put("Connect.AllowUnencrypted." + settings.get("Connect.Server"), true); //$NON-NLS-1$ //$NON-NLS-2$
                   }
                }
             }
             else
             {
                e.getCause().printStackTrace();
-               MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause()
-                     .getLocalizedMessage()); //$NON-NLS-1$
+               MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage());
             }
          }
          catch(Exception e)
@@ -279,7 +279,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       }
       catch(Exception e)
       {
-      	Activator.logError("Exception in getSignature", e);
+      	Activator.logError("Exception in getSignature", e); //$NON-NLS-1$
          return null;
       }
 
@@ -296,24 +296,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       if (alwaysAllow)
          return SecurityWarningDialog.YES;
 
-      return SecurityWarningDialog
-            .showSecurityWarning(
-                  null,
-                  String.format("NetXMS server %s does not support encryption. Do you want to connect anyway?",
-                        settings.get("Connect.Server")),
-                  "NetXMS server you are connecting to does not support encryption. If you countinue, information containing your credentials will be "
-                        + "sent in clear text and could easily be read by a third party.\n\n"
-                        + "For assistance, contact your network administrator or the owner of the NetXMS server.\n\n");
-   }
-
-   /**
-    * 
-    * @param dialog
-    */
-   private void showLoginDialog(LoginDialog dialog)
-   {
-      if (dialog.open() != Window.OK)
-         System.exit(0);
+      return SecurityWarningDialog.showSecurityWarning(null,
+                  String.format(Messages.NXMCWorkbenchWindowAdvisor_NoEncryptionSupport, settings.get("Connect.Server")), //$NON-NLS-1$
+                  Messages.NXMCWorkbenchWindowAdvisor_NoEncryptionSupportDetails);
    }
 
    /**
@@ -378,9 +363,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       Shell shell = Display.getCurrent().getActiveShell();
 
       FileDialog dialog = new FileDialog(shell);
-      dialog.setText("Path to the certificate store");
-      dialog.setFilterExtensions(new String[] { "*.p12; *.pfx" });
-      dialog.setFilterNames(new String[] { "PKCS12 file (*.p12, *.pfx)" });
+      dialog.setText(Messages.NXMCWorkbenchWindowAdvisor_CertDialogTitle);
+      dialog.setFilterExtensions(new String[] { "*.p12; *.pfx" }); //$NON-NLS-1$
+      dialog.setFilterNames(new String[] { Messages.NXMCWorkbenchWindowAdvisor_PkcsFiles });
 
       return dialog.open();
    }
@@ -391,8 +376,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    @Override
    public String keyStorePasswordRequested()
    {
-      return showPasswordRequestDialog("Certificate store password",
-            "The selected store is password-protected, please provide the password.");
+      return showPasswordRequestDialog(Messages.NXMCWorkbenchWindowAdvisor_CertStorePassword,
+            Messages.NXMCWorkbenchWindowAdvisor_CertStorePasswordMsg);
    }
 
    /* (non-Javadoc)
@@ -401,8 +386,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    @Override
    public String keyStoreEntryPasswordRequested()
    {
-      return showPasswordRequestDialog("Certificate password",
-            "The selected certificate is password-protected, please provide the password.");
+      return showPasswordRequestDialog(Messages.NXMCWorkbenchWindowAdvisor_CertPassword,
+            Messages.NXMCWorkbenchWindowAdvisor_CertPasswordMsg);
    }
 
    /**

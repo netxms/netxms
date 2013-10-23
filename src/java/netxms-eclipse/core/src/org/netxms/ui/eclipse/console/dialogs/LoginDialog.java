@@ -186,15 +186,15 @@ public class LoginDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 24;
+      gd.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 24; //$NON-NLS-1$
       textLogin.setLayoutData(gd);
 
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, "Authentication", gd, toolkit);
-      comboAuth.add("Password");
-      comboAuth.add("Certificate");
+      comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.LoginDialog_Auth, gd, toolkit);
+      comboAuth.add(Messages.LoginDialog_Passwd);
+      comboAuth.add(Messages.LoginDialog_Cert);
       comboAuth.select(authMethod);
       comboAuth.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -209,9 +209,9 @@ public class LoginDialog extends Dialog
       authEntryFields.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       textPassword = new LabeledText(authEntryFields, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, toolkit);
-      textPassword.setLabel(Messages.LoginDialog_password);
+      textPassword.setLabel(Messages.LoginDialog_Passwd);
       
-      comboCert = WidgetHelper.createLabeledCombo(authEntryFields, SWT.DROP_DOWN | SWT.READ_ONLY, "Certificate", null, toolkit);
+      comboCert = WidgetHelper.createLabeledCombo(authEntryFields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.LoginDialog_Cert, null, toolkit);
       comboCert.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -299,7 +299,7 @@ public class LoginDialog extends Dialog
    {
    	if ((authMethod == NXCSession.AUTH_TYPE_CERTIFICATE) && (comboCert.getSelectionIndex() == -1))
    	{
-   		MessageDialogHelper.openWarning(getShell(), "Warning", "No certificate selected. Please select certificate from the list or choose different authentication method.");
+   		MessageDialogHelper.openWarning(getShell(), Messages.LoginDialog_Warning, Messages.LoginDialog_NoCertSelected);
    		return;
    	}
    	
@@ -358,7 +358,7 @@ public class LoginDialog extends Dialog
       catch(KeyStoreLoaderException ksle)
       {
          Shell shell = Display.getCurrent().getActiveShell();
-         MessageDialog.openError(shell, "Error", "The key store password you provided appears to be wrong.");
+         MessageDialog.openError(shell, Messages.LoginDialog_Error, Messages.LoginDialog_WrongKeyStorePasswd);
          return false;
       }
 
@@ -372,7 +372,7 @@ public class LoginDialog extends Dialog
 
          Subject subj = SubjectParser.parseSubject(subjString);
 
-         subjectStrings[i] = String.format("%s (%s, %s, %s)", subj.getCommonName(), subj.getOrganization(), subj.getState(),
+         subjectStrings[i] = String.format("%s (%s, %s, %s)", subj.getCommonName(), subj.getOrganization(), subj.getState(), //$NON-NLS-1$
                subj.getCountry());
       }
 

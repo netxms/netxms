@@ -112,7 +112,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		// Initiate loading of object browser plugin if it was not loaded before
-		Platform.getAdapterManager().loadAdapter(new UnknownObject(99, session), "org.eclipse.ui.model.IWorkbenchAdapter");
+		Platform.getAdapterManager().loadAdapter(new UnknownObject(99, session), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		
 		workbenchLabelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 
@@ -120,31 +120,31 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
 
-		imgNetMap = Activator.getImageDescriptor("icons/objects/netmap.png").createImage();
-		imgNodeGeneric = Activator.getImageDescriptor("icons/objects/node.png").createImage();
-		imgNodeOSX = Activator.getImageDescriptor("icons/objects/macserver.png").createImage();
-		imgNodeWindows = Activator.getImageDescriptor("icons/objects/windowsserver.png").createImage();
-		imgNodeLinux = Activator.getImageDescriptor("icons/objects/linuxserver.png").createImage();
-		imgNodeFreeBSD = Activator.getImageDescriptor("icons/objects/freebsdserver.png").createImage();
-		imgNodeSwitch = Activator.getImageDescriptor("icons/objects/switch.png").createImage();
-		imgNodeRouter = Activator.getImageDescriptor("icons/objects/router.png").createImage();
-		imgNodePrinter = Activator.getImageDescriptor("icons/objects/printer.png").createImage();
-		imgSubnet = Activator.getImageDescriptor("icons/objects/subnet.png").createImage();
-		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
-		imgCluster = Activator.getImageDescriptor("icons/objects/cluster.png").createImage();
-		imgAccessPoint = Activator.getImageDescriptor("icons/objects/accesspoint.png").createImage();
-		imgOther = Activator.getImageDescriptor("icons/objects/other.png").createImage();
-		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
-		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage();
+		imgNetMap = Activator.getImageDescriptor("icons/objects/netmap.png").createImage(); //$NON-NLS-1$
+		imgNodeGeneric = Activator.getImageDescriptor("icons/objects/node.png").createImage(); //$NON-NLS-1$
+		imgNodeOSX = Activator.getImageDescriptor("icons/objects/macserver.png").createImage(); //$NON-NLS-1$
+		imgNodeWindows = Activator.getImageDescriptor("icons/objects/windowsserver.png").createImage(); //$NON-NLS-1$
+		imgNodeLinux = Activator.getImageDescriptor("icons/objects/linuxserver.png").createImage(); //$NON-NLS-1$
+		imgNodeFreeBSD = Activator.getImageDescriptor("icons/objects/freebsdserver.png").createImage(); //$NON-NLS-1$
+		imgNodeSwitch = Activator.getImageDescriptor("icons/objects/switch.png").createImage(); //$NON-NLS-1$
+		imgNodeRouter = Activator.getImageDescriptor("icons/objects/router.png").createImage(); //$NON-NLS-1$
+		imgNodePrinter = Activator.getImageDescriptor("icons/objects/printer.png").createImage(); //$NON-NLS-1$
+		imgSubnet = Activator.getImageDescriptor("icons/objects/subnet.png").createImage(); //$NON-NLS-1$
+		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage(); //$NON-NLS-1$
+		imgCluster = Activator.getImageDescriptor("icons/objects/cluster.png").createImage(); //$NON-NLS-1$
+		imgAccessPoint = Activator.getImageDescriptor("icons/objects/accesspoint.png").createImage(); //$NON-NLS-1$
+		imgOther = Activator.getImageDescriptor("icons/objects/other.png").createImage(); //$NON-NLS-1$
+		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage(); //$NON-NLS-1$
+		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage(); //$NON-NLS-1$
 
 		final Display display = viewer.getControl().getDisplay();
-		fontLabel = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 9), SWT.NORMAL);
-		fontTitle = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 15), SWT.NORMAL);
+		fontLabel = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 9), SWT.NORMAL); //$NON-NLS-1$
+		fontTitle = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 15), SWT.NORMAL); //$NON-NLS-1$
 
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon");
-		showStatusFrame = store.getBoolean("NetMap.ShowStatusFrame");
-		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground");
+		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon"); //$NON-NLS-1$
+		showStatusFrame = store.getBoolean("NetMap.ShowStatusFrame"); //$NON-NLS-1$
+		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground"); //$NON-NLS-1$
 		
 		colors = new ColorCache();
 	}
@@ -200,11 +200,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 							return imgNodeRouter;
 						if ((((Node)object).getFlags() & Node.NF_IS_PRINTER) != 0)
 							return imgNodePrinter;
-						if (((Node)object).getPlatformName().startsWith("windows"))
+						if (((Node)object).getPlatformName().startsWith("windows")) //$NON-NLS-1$
 							return imgNodeWindows;
-						if (((Node)object).getPlatformName().startsWith("Linux"))
+						if (((Node)object).getPlatformName().startsWith("Linux")) //$NON-NLS-1$
 							return imgNodeLinux;
-						if (((Node)object).getPlatformName().startsWith("FreeBSD"))
+						if (((Node)object).getPlatformName().startsWith("FreeBSD")) //$NON-NLS-1$
 							return imgNodeFreeBSD;
 						return imgNodeGeneric;
 					case AbstractObject.OBJECT_SUBNET:
@@ -456,7 +456,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				break;
 			case NetworkMapLink.ROUTING_BENDPOINTS:
 				connection.setRouter(bendpointRouter);
-				connection.setData("ROUTER", bendpointRouter);
+				connection.setData("ROUTER", bendpointRouter); //$NON-NLS-1$
 				Object bp = getConnectionPoints(link);
 				bendpointRouter.setConstraint(connection.getConnectionFigure(), bp);
 				connection.getConnectionFigure().setRoutingConstraint(bp);

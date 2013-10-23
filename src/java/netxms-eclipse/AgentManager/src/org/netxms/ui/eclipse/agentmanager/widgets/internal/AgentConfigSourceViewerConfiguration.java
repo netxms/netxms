@@ -49,13 +49,44 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 	};
 	
 	private static final String[] configKeywords = { 
-		"Action", "ActionShellExec", "CodePage", "ConfigIncludeDir", "ControlServers", "CreateCrashDumps", 
-		"DumpDirectory", "EnableActions", "EnabledCiphers", "EnableProxy", "EnableSNMPProxy", "EnableSubagentAutoload",
-		"EnableWatchdog", "ExecTimeout", "ExternalParameter", "ExternalParameterShellExec", "ExternalSubAgent",
-		"FileStore", "ListenAddress", "ListenPort", "LogFile", "LogHistorySize", "LogRotationMode", 
-		"LogUnresolvedSymbols", "MasterServers", "MaxLogSize", "MaxSessions",
-		"PlatformSuffix", "RequireAuthentication", "RequireEncryption", "Servers", "SessionIdleTimeout",
-		"SharedSecret", "SNMPTimeout", "StartupDelay", "SubAgent", "WaitForProcess" };
+		"Action",  //$NON-NLS-1$
+		"ActionShellExec",  //$NON-NLS-1$
+		"CodePage",  //$NON-NLS-1$
+		"ConfigIncludeDir",  //$NON-NLS-1$
+		"ControlServers",  //$NON-NLS-1$
+		"CreateCrashDumps",  //$NON-NLS-1$
+		"DumpDirectory",  //$NON-NLS-1$
+		"EnableActions",  //$NON-NLS-1$
+		"EnabledCiphers", //$NON-NLS-1$
+		"EnableProxy", //$NON-NLS-1$
+		"EnableSNMPProxy", //$NON-NLS-1$
+		"EnableSubagentAutoload", //$NON-NLS-1$
+		"EnableWatchdog", //$NON-NLS-1$
+		"ExecTimeout", //$NON-NLS-1$
+		"ExternalParameter", //$NON-NLS-1$
+		"ExternalParameterShellExec", //$NON-NLS-1$
+		"ExternalSubAgent", //$NON-NLS-1$
+		"FileStore", //$NON-NLS-1$
+		"ListenAddress", //$NON-NLS-1$
+		"ListenPort", //$NON-NLS-1$
+		"LogFile", //$NON-NLS-1$
+		"LogHistorySize", //$NON-NLS-1$
+		"LogRotationMode",  //$NON-NLS-1$
+		"LogUnresolvedSymbols", //$NON-NLS-1$
+		"MasterServers", //$NON-NLS-1$
+		"MaxLogSize", //$NON-NLS-1$
+		"MaxSessions", //$NON-NLS-1$
+		"PlatformSuffix", //$NON-NLS-1$
+		"RequireAuthentication", //$NON-NLS-1$
+		"RequireEncryption", //$NON-NLS-1$
+		"Servers", //$NON-NLS-1$
+		"SessionIdleTimeout", //$NON-NLS-1$
+		"SharedSecret", //$NON-NLS-1$
+		"SNMPTimeout", //$NON-NLS-1$
+		"StartupDelay", //$NON-NLS-1$
+		"SubAgent", //$NON-NLS-1$
+		"WaitForProcess" //$NON-NLS-1$
+	};
 	
 	private static final IRule[] codeRules = { 
 		new KeywordRule(configWordDetector, AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.KEYWORD),

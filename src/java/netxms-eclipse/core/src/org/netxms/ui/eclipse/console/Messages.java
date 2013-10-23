@@ -52,16 +52,29 @@ public class Messages extends NLS
 	public static String IPAddressValidator_ErrorSuffix;
 	public static String IPNetMaskValidator_ErrorPrefix;
 	public static String IPNetMaskValidator_ErrorSuffix;
-	public static String LoginDialog_connection;
+	public static String LoginDialog_Auth;
+
+   public static String LoginDialog_Cert;
+
+   public static String LoginDialog_connection;
+
+   public static String LoginDialog_Error;
 	public static String LoginDialog_login;
+
+   public static String LoginDialog_NoCertSelected;
 	public static String LoginDialog_opt_clear_cache;
 	public static String LoginDialog_opt_dont_cache;
 	public static String LoginDialog_opt_encrypt;
 	public static String LoginDialog_opt_version_match;
 	public static String LoginDialog_options;
-	public static String LoginDialog_password;
+
+   public static String LoginDialog_Passwd;
 	public static String LoginDialog_server;
 	public static String LoginDialog_title;
+
+   public static String LoginDialog_Warning;
+
+   public static String LoginDialog_WrongKeyStorePasswd;
 	public static String LoginJob_connecting;
 	public static String LoginJob_init_extensions;
 	public static String LoginJob_subscribe;
@@ -97,10 +110,26 @@ public class Messages extends NLS
 	public static String NXMCWorkbenchAdvisor_OKToCloseMessage;
 	public static String NXMCWorkbenchAdvisor_ServerShutdownMessage;
 	public static String NXMCWorkbenchWindowAdvisor_cannot_change_passwd;
-	public static String NXMCWorkbenchWindowAdvisor_ChangingPassword;
+	public static String NXMCWorkbenchWindowAdvisor_CertDialogTitle;
+
+   public static String NXMCWorkbenchWindowAdvisor_CertPassword;
+
+   public static String NXMCWorkbenchWindowAdvisor_CertPasswordMsg;
+
+   public static String NXMCWorkbenchWindowAdvisor_CertStorePassword;
+
+   public static String NXMCWorkbenchWindowAdvisor_CertStorePasswordMsg;
+
+   public static String NXMCWorkbenchWindowAdvisor_ChangingPassword;
 	public static String NXMCWorkbenchWindowAdvisor_connectionError;
 	public static String NXMCWorkbenchWindowAdvisor_exception;
+
+   public static String NXMCWorkbenchWindowAdvisor_NoEncryptionSupport;
+
+   public static String NXMCWorkbenchWindowAdvisor_NoEncryptionSupportDetails;
 	public static String NXMCWorkbenchWindowAdvisor_passwd_changed;
+
+   public static String NXMCWorkbenchWindowAdvisor_PkcsFiles;
 	public static String NXMCWorkbenchWindowAdvisor_title_error;
 	public static String NXMCWorkbenchWindowAdvisor_title_information;
 	public static String ObjectNameValidator_ErrorPrefix1;
@@ -124,7 +153,11 @@ public class Messages extends NLS
 	public static String RegionalSettingsPrefPage_FmtJava;
 	public static String RegionalSettingsPrefPage_FmtServer;
 	public static String RegionalSettingsPrefPage_TimeFormatString;
-	public static String SendSMS_DialogTextPrefix;
+	public static String SecurityWarningDialog_DontAskAgain;
+
+   public static String SecurityWarningDialog_Title;
+
+   public static String SendSMS_DialogTextPrefix;
 	public static String SendSMS_DialogTextSuffix;
 	public static String SendSMS_DialogTitle;
 	public static String SendSMS_JobTitle;
