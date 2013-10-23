@@ -10,7 +10,7 @@
             class="org.netxms.ui.eclipse.imagelibrary.views.ImageLibrary"
             icon="icons/imglib.png"
             id="org.netxms.ui.eclipse.imagelibrary.view.imagelibrary"
-            name="Image Library"
+            name="%view.name.ImageLib"
             restorable="true">
       </view>
    </extension>
@@ -18,27 +18,27 @@
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.image_library"
-            label="Image Library"
+            label="%actionSet.label.ImageLib"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.imagelibrary.actions.OpenLibraryManager"
                definitionId="org.netxms.ui.eclipse.imagelibrary.commands.open_library_manager"
                icon="icons/imglib.png"
                id="org.netxms.ui.eclipse.imagelibrary.actions.open"
-               label="Image Library"
+               label="%action.label.ImageLib"
                menubarPath="config/additions"
                style="push"
                toolbarPath="config/additions"
-               tooltip="Open Image Library management">
+               tooltip="%action.tooltip.ImageLib">
          </action>
       </actionSet>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Open Image Library management"
+            description="%command.description.ImageLib"
             id="org.netxms.ui.eclipse.imagelibrary.commands.open_library_manager"
-            name="Image Library">
+            name="%command.name.ImageLib">
       </command>
    </extension>
    <extension

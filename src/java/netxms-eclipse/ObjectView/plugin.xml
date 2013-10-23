@@ -7,7 +7,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Object Details"
+            name="%view.name.ObjectDetails"
             allowMultiple="false"
             icon="icons/object_details.png"
             class="org.netxms.ui.eclipse.objectview.views.TabbedObjectView"
@@ -17,7 +17,7 @@
             allowMultiple="true"
             class="org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView"
             id="org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView"
-            name="Object Status"
+            name="%view.name.ObjectStatus"
             restorable="true">
       </view>
       <view
@@ -25,7 +25,7 @@
             class="org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView"
             icon="icons/software.png"
             id="org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView"
-            name="Software Inventory"
+            name="%view.name.SoftwareInventory"
             restorable="true">
       </view>
    </extension>
@@ -33,8 +33,8 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            name="Object Details"
-            description="Open Object Details"
+            name="%command.name.ObjectDetails"
+            description="%command.description.ObjectDetails"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.objectview.commands.open_tabbed_object_view">
       </command>
@@ -42,12 +42,12 @@
    
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.action_set.object_details"
-		   label="Object Details"
+		   label="%actionSet.label.ObjectDetails"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.objectview.actions.open_tabbed_object_view"
 			   menubarPath="view/primary"
-			   label="Object Details"
-			   tooltip="Open Object Details"
+			   label="%action.label.ObjectDetails"
+			   tooltip="%action.tooltip.ObjectDetails"
 			   icon="icons/object_details.png"
 			   class="org.netxms.ui.eclipse.objectview.actions.ShowObjectDetailsView"
 			   definitionId="org.netxms.ui.eclipse.objectview.commands.open_tabbed_object_view">
@@ -61,28 +61,28 @@
             class="org.netxms.ui.eclipse.objectview.objecttabs.ObjectOverview"
             icon="icons/overview_tab.gif"
             id="org.netxms.ui.eclipse.objectview.objecttabs.ObjectOverview"
-            name="Overview"
+            name="%tab.name.Overview"
             order="10">
       </tab>
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.ClusterTab"
             icon="icons/cluster.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.ClusterTab"
-            name="Cluster"
+            name="%tab.name.Cluster"
             order="15">
       </tab>
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
             icon="icons/components.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
-            name="Components"
+            name="%tab.name.Components"
             order="50">
       </tab>
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
             icon="icons/interface.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
-            name="Interfaces"
+            name="%tab.name.Interfaces"
             order="60">
       </tab>
    </extension>
@@ -96,14 +96,14 @@
                class="org.netxms.ui.eclipse.objectview.actions.ShowStatusMap"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowStatusMap_Container"
-               label="Status Map">
+               label="%action.label.StatusMap">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectview.actions.ShowSoftwareInventory"
                enablesFor="1"
                icon="icons/software.png"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowSoftwareInventory_Container"
-               label="Software Inventory">
+               label="%action.label.SoftwareInventory">
          </action>
       </objectContribution>
       <objectContribution
@@ -114,14 +114,14 @@
                class="org.netxms.ui.eclipse.objectview.actions.ShowStatusMap"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowStatusMap_ServiceRoot"
-               label="Status Map">
+               label="%action.label.StatusMap">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectview.actions.ShowSoftwareInventory"
                enablesFor="1"
                icon="icons/software.png"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowSoftwareInventory_ServiceRoot"
-               label="Software Inventory">
+               label="%action.label.SoftwareInventory">
          </action>
       </objectContribution>
       <objectContribution
@@ -133,7 +133,7 @@
                enablesFor="1"
                icon="icons/software.png"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowSoftwareInventory_Node"
-               label="Software Inventory">
+               label="%action.label.SoftwareInventory">
          </action>
       </objectContribution>
    </extension>

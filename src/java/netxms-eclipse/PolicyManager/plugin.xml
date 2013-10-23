@@ -6,7 +6,7 @@
      point = "org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.policymanager.propertypages.Policy"
-           name="Policy"
+           name="%page.name.Policy"
 	       class="org.netxms.ui.eclipse.policymanager.propertypages.Policy">
           <enabledWhen>
              <instanceof
@@ -17,7 +17,7 @@
 
         <page
            id="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile"
-           name="Configuration File"
+           name="%page.name.ConfigFile"
 	       class="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile">
           <enabledWhen>
              <instanceof
@@ -42,14 +42,14 @@
                class="org.netxms.ui.eclipse.policymanager.actions.CreateAgentPolicyConfig"
                enablesFor="1"
                id="org.netxms.ui.eclipse.policymanager.popupActions.CreateAgentPolicyConfig_PolicyRoot"
-               label="Create agent policy (configuration file)..."
+               label="%action.label.CreateCfgFilePolicy"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.CreatePolicyGroup"
                enablesFor="1"
                id="org.netxms.ui.eclipse.policymanager.popupActions.CreatePolicyGroup_PolicyRoot"
-               label="Create policy group..."
+               label="%action.label.CreatePolicyGrp"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -61,14 +61,14 @@
                class="org.netxms.ui.eclipse.policymanager.actions.CreateAgentPolicyConfig"
                enablesFor="1"
                id="org.netxms.ui.eclipse.policymanager.popupActions.CreateAgentPolicyConfig_PolicyGroup"
-               label="Create agent policy (configuration file)..."
+               label="%action.label.CreateCfgFilePolicy"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.CreatePolicyGroup"
                enablesFor="1"
                id="org.netxms.ui.eclipse.policymanager.popupActions.CreatePolicyGroup_PolicyGroup"
-               label="Create policy group..."
+               label="%action.label.CreatePolicyGrp"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -80,14 +80,14 @@
                class="org.netxms.ui.eclipse.policymanager.actions.UninstallPolicy"
                enablesFor="+"
                id="org.netxms.ui.eclipse.policymanager.popupActions.UninstallPolicy"
-               label="Uninstall..."
+               label="%action.label.Uninstall"
                menubarPath="objectmgmt">
          </action>
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.InstallPolicy"
                enablesFor="+"
                id="org.netxms.ui.eclipse.policymanager.popupActions.InstallPolicy"
-               label="Install..."
+               label="%action.label.Install"
                menubarPath="objectmgmt">
          </action>
       </objectContribution>

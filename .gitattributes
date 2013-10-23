@@ -1351,6 +1351,7 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/EPP/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/EPP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/EPP/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/EPP/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/EPP/build.properties -text
 src/java/netxms-eclipse/EPP/icons/alarm.png -text
 src/java/netxms-eclipse/EPP/icons/epp.png -text
@@ -1401,6 +1402,7 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/ImageF
 src/java/netxms-eclipse/EventManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/EventManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/EventManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/EventManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/EventManager/build.properties -text
 src/java/netxms-eclipse/EventManager/icons/delete.png -text
 src/java/netxms-eclipse/EventManager/icons/edit.png -text
@@ -1433,6 +1435,7 @@ src/java/netxms-eclipse/FileManager/.project -text
 src/java/netxms-eclipse/FileManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/FileManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/FileManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/FileManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/FileManager/build.properties -text
 src/java/netxms-eclipse/FileManager/icons/archive.png -text
 src/java/netxms-eclipse/FileManager/icons/exec.png -text
@@ -1459,6 +1462,7 @@ src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/widget
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/widgets/ServerFileSelector.java -text
 src/java/netxms-eclipse/ImageLibrary/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ImageLibrary/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ImageLibrary/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ImageLibrary/build.properties -text
 src/java/netxms-eclipse/ImageLibrary/icons/imglib.png -text
 src/java/netxms-eclipse/ImageLibrary/icons/missing.png -text
@@ -1479,6 +1483,7 @@ src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/view
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/widgets/ImageSelector.java -text
 src/java/netxms-eclipse/LogViewer/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/LogViewer/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/LogViewer/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/LogViewer/build.properties -text
 src/java/netxms-eclipse/LogViewer/icons/AlarmLog.png -text
 src/java/netxms-eclipse/LogViewer/icons/AuditLog.png -text
@@ -1525,6 +1530,7 @@ src/java/netxms-eclipse/NXSL/.classpath -text
 src/java/netxms-eclipse/NXSL/.project -text
 src/java/netxms-eclipse/NXSL/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/NXSL/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/NXSL/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/NXSL/build.properties -text
 src/java/netxms-eclipse/NXSL/icons/constant.gif -text
 src/java/netxms-eclipse/NXSL/icons/delete.png -text
@@ -1560,6 +1566,7 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/Sin
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/StyledTextContentAdapter.java -text
 src/java/netxms-eclipse/NetworkMaps/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/NetworkMaps/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/NetworkMaps/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/NetworkMaps/build.properties -text
 src/java/netxms-eclipse/NetworkMaps/icons/align_to_grid.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/grid.png -text
@@ -1642,6 +1649,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/widget
 src/java/netxms-eclipse/OSM/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/OSM/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/OSM/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/OSM/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/OSM/build.properties -text
 src/java/netxms-eclipse/OSM/icons/border_tile.png -text
 src/java/netxms-eclipse/OSM/icons/loading_tile.png -text
@@ -1751,6 +1759,7 @@ src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/wi
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/internal/ObjectTreeComparator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/internal/ObjectTreeContentProvider.java -text
 src/java/netxms-eclipse/ObjectManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ObjectManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ObjectManager/build.properties -text
 src/java/netxms-eclipse/ObjectManager/icons/delete.png -text
 src/java/netxms-eclipse/ObjectManager/icons/poller_view.png -text
@@ -1821,6 +1830,7 @@ src/java/netxms-eclipse/ObjectTools/.classpath -text
 src/java/netxms-eclipse/ObjectTools/.project -text
 src/java/netxms-eclipse/ObjectTools/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ObjectTools/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ObjectTools/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ObjectTools/build.properties -text
 src/java/netxms-eclipse/ObjectTools/icons/agent_action.gif -text
 src/java/netxms-eclipse/ObjectTools/icons/browser.png -text
@@ -1857,6 +1867,7 @@ src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/helpers/TableItemComparator.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/helpers/TableLabelProvider.java -text
 src/java/netxms-eclipse/ObjectView/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ObjectView/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ObjectView/build.properties -text
 src/java/netxms-eclipse/ObjectView/icons/cluster.png -text
 src/java/netxms-eclipse/ObjectView/icons/components.png -text
@@ -1899,6 +1910,7 @@ src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/helpers/SoftwareInventoryNode.java -text
 src/java/netxms-eclipse/PerfView/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PerfView/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/PerfView/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/PerfView/build.properties -text
 src/java/netxms-eclipse/PerfView/icons/adjust.png -text
 src/java/netxms-eclipse/PerfView/icons/adjust_x.png -text
@@ -1932,6 +1944,7 @@ src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/Histor
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/HistoricalDataLabelProvider.java -text
 src/java/netxms-eclipse/PolicyManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PolicyManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/PolicyManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/PolicyManager/build.properties -text
 src/java/netxms-eclipse/PolicyManager/plugin.xml -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/Activator.java -text
@@ -1944,6 +1957,7 @@ src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/pr
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/propertypages/Policy.java -text
 src/java/netxms-eclipse/Reporter/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Reporter/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/Reporter/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/Reporter/build.properties -text
 src/java/netxms-eclipse/Reporter/icons/pdf.png -text
 src/java/netxms-eclipse/Reporter/icons/report.png -text
@@ -1961,6 +1975,7 @@ src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/help
 src/java/netxms-eclipse/SLM/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/SLM/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SLM/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/SLM/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/SLM/build.properties -text
 src/java/netxms-eclipse/SLM/icons/availability_chart.png -text
 src/java/netxms-eclipse/SLM/plugin.xml -text
@@ -1976,6 +1991,7 @@ src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/messages_zh_CN.propert
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SNMP/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/SNMP/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/SNMP/build.properties -text
 src/java/netxms-eclipse/SNMP/icons/delete.png -text
 src/java/netxms-eclipse/SNMP/icons/edit.png -text
@@ -2019,6 +2035,7 @@ src/java/netxms-eclipse/Scripting/plugin.xml -text
 src/java/netxms-eclipse/Scripting/src/org/netxms/ui/eclipse/scripting/Activator.java -text
 src/java/netxms-eclipse/Scripting/src/org/netxms/ui/eclipse/scripting/views/ScriptingConsole.java -text
 src/java/netxms-eclipse/ServerConfig/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ServerConfig/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ServerConfig/build.properties -text
 src/java/netxms-eclipse/ServerConfig/icons/export.gif -text
 src/java/netxms-eclipse/ServerConfig/icons/import.gif -text
@@ -2057,6 +2074,7 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widg
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/MacroListLabelProvider.java -text
 src/java/netxms-eclipse/ServerJobManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ServerJobManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ServerJobManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ServerJobManager/build.properties -text
 src/java/netxms-eclipse/ServerJobManager/icons/active.gif -text
 src/java/netxms-eclipse/ServerJobManager/icons/cancel.png -text
@@ -2076,6 +2094,7 @@ src/java/netxms-eclipse/ServerJobManager/src/org/netxms/ui/eclipse/serverjobmana
 src/java/netxms-eclipse/ServiceView/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/ServiceView/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ServiceView/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ServiceView/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ServiceView/build.properties -text
 src/java/netxms-eclipse/ServiceView/icons/collapsed.png -text
 src/java/netxms-eclipse/ServiceView/icons/expanded.png -text
@@ -2118,6 +2137,7 @@ src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/vi
 src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortSummary.java -text
 src/java/netxms-eclipse/Topology/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Topology/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/Topology/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/Topology/build.properties -text
 src/java/netxms-eclipse/Topology/icons/ports.gif -text
 src/java/netxms-eclipse/Topology/icons/radio_interfaces.png -text

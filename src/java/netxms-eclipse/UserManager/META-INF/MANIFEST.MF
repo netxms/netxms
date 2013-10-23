@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC User Manager Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.usermanager;singleton:=true
-Bundle-Version: 1.2.8
+Bundle-Version: 1.2.10
 Bundle-Activator: org.netxms.ui.eclipse.usermanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.eclipse.core.runtime;bundle-version="3.7.0",
- org.netxms.ui.eclipse.console;bundle-version="1.2.7"
+ org.netxms.ui.eclipse.console;bundle-version="1.2.10"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.usermanager.dialogs
