@@ -381,7 +381,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images"
 	SERVER_INCLUDE="include"
@@ -436,10 +436,16 @@ if test $? = 0; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/oracle/oracle.la"
 	fi
 
-	check_substr "$STATIC_SUBAGENT_LIST" "informix"
+    check_substr "$STATIC_SUBAGENT_LIST" "informix"
+    if test $? = 0; then
+        COMPONENTS="$COMPONENTS informix"
+        SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/informix/informix.la"
+    fi
+	
+	check_substr "$STATIC_SUBAGENT_LIST" "db2"
 	if test $? = 0; then
-		COMPONENTS="$COMPONENTS informix"
-		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/informix/informix.la"
+		COMPONENTS="$COMPONENTS db2"
+        SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/db2/db2.la"
 	fi
 
 	case "$PLATFORM" in
@@ -596,6 +602,7 @@ fi
 check_substr "$COMPONENTS" "db2"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS db2"
+    SUBAGENT_DIRS="$SUBAGENT_DIRS db2"
 fi
 
 check_substr "$COMPONENTS" "informix"
@@ -2123,6 +2130,9 @@ if test $? = 0; then
 	AC_CHECK_HEADER(sql.h,,AC_MSG_ERROR([*** Cannot find sql.h - check your DB2 client installation ***]))
 	AC_CHECK_LIB(db2, SQLAllocHandle, [DB2_LIBS="-ldb2"],
 		[AC_MSG_ERROR(libdb2 is required for DB2 support)])
+    if test "x$BUILD_STATIC_AGENT" = "xyes"; then
+        SUBAGENT_LIBS="$SUBAGENT_LIBS $DB2_LIBS"
+    fi
 fi
 
 #--------------------------------------------------------------------
@@ -2306,7 +2316,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
-	src/agent/subagents/wmi/Makefile
+    src/agent/subagents/wmi/Makefile
+    src/agent/subagents/db2/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile

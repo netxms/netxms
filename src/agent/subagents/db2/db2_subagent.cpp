@@ -22,7 +22,7 @@
 DB_DRIVER g_drvHandle = NULL;
 CONDITION g_sdownCondition = NULL;
 PTHREAD_INFO g_threads = NULL;;
-int g_numOfThreads = 0;
+UINT32 g_numOfThreads = 0;
 
 static BOOL DB2Init(Config* config)
 {
@@ -63,9 +63,9 @@ static BOOL DB2Init(Config* config)
    for(int i = 0; i < g_numOfThreads; i++)
    {
       g_threads[i] = new THREAD_INFO;
-      g_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, 0, (void*) g_threads[i]);
       g_threads[i].mutex = MutexCreate();
       g_threads[i].db2Info = arrDb2Info[i];
+      g_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, 0, (void*) g_threads[i]);
    }
 
    delete[] arrDb2Info;
@@ -75,6 +75,9 @@ static BOOL DB2Init(Config* config)
 
 static void DB2Shutdown()
 {
+   AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: terminating"), SUBAGENT_NAME);
+   ConditionSet(g_shutdownCondition);
+
    for(int i = 0; i < g_numOfThreads; i++)
    {
       ThreadJoin(g_threads[i].threadHandle);
@@ -98,17 +101,75 @@ static BOOL DB2CommandHandler(INT32 dwCommand, CSCPMessage* pRequest, CSCPMessag
    return FALSE;
 }
 
-THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
+static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
 {
    PTHREAD_INFO threadInfo = (PTHREAD_INFO) info;
+   PDB2_INFO db2Info = threadInfo->db2Info;
+   DB_HANDLE dbHandle = NULL;
+   TCHAR connectError[DBDRV_MAX_ERROR_TEXT];
+   DWORD reconnectInterval = (DWORD) db2Info->db2ReconnectInterval;
 
-   //DBConnect();
+   while(TRUE)
+   {
+      dbHandle = DBConnect(
+         g_drvHandle, NULL /*server*/, db2Info->db2NodeId, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
+
+      if (dbHandle == NULL)
+      {
+         AgentWriteLog(
+            EVENTLOG_ERROR_TYPE,
+            _T("%s: failed to connect to the database \"%s\" (%s), reconnecting in %ds"),
+            SUBAGENT_NAME, db2Info->db2NodeId, connectError, reconnectInterval);
+
+         if (ConditionWait(g_shutdownCondition, (reconnectInterval * 1000)))
+         {
+            break;
+         }
+         else
+         {
+            continue;
+         }
+      }
+
+      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to database \"%s\""), SUBAGENT_NAME, db2Info->db2NodeId);
+
+      if (PerformQueries(threadInfo))
+      {
+         break;
+      }
+   }
+
+   if(dbHandle != NULL)
+   {
+      DBDisconnect(dbHandle);
+   }
 
    return THREAD_OK;
 }
 
-static NETXMS_SUBAGENT_PARAM* m_agentParams = {
+static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
+{
+   PDB2_INFO db2Info = threadInfo->db2Info;
+   DWORD queryInterval = (DWORD) db2Info->db2QueryInterval;
 
+   while(TRUE)
+   {
+      if (ConditionWait(g_shutdownCondition, queryInterval * 1000))
+      {
+         break;
+      }
+   }
+
+   return TRUE;
+}
+
+static LONG getParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
+{
+   return 0;
+}
+
+static NETXMS_SUBAGENT_PARAM m_agentParams = {
+   { _T("DB2.Instance.version"), getParameter, _T(""), DCI_DT_STRING, _T("DB2/Instance: DBMS Version") }
 };
 
 static NETXMS_SUBAGENT_INFO* m_agentInfo =
@@ -117,7 +178,7 @@ static NETXMS_SUBAGENT_INFO* m_agentInfo =
    SUBAGENT_NAME,
    NETXMS_VERSION_STRING,
    DB2Init, DB2Shutdown, DB2CommandHandler,
-   (sizeof(*m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
+   (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
    0, NULL,
    0, NULL,
    0, NULL,
