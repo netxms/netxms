@@ -37,7 +37,7 @@ public class ResourceListComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		
 		int result;
 		switch(column)

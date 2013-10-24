@@ -10,7 +10,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin {
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.serverjobmanager";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.serverjobmanager"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;

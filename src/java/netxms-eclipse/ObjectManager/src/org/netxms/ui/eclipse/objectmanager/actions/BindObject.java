@@ -35,6 +35,7 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -64,11 +65,11 @@ public class BindObject implements IObjectActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Bind object", viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.BindObject_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create object binding";
+					return Messages.BindObject_JobError;
 				}
 
 				@Override

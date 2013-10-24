@@ -34,6 +34,7 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -61,11 +62,11 @@ public class CreateRack implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Rack");
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateRack_Rack);
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create new rack", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateRack_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class CreateRack implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot create rack object \"%s\"", dlg.getObjectName());
+				return String.format(Messages.CreateRack_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

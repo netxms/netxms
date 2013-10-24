@@ -5,7 +5,37 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.networkmaps.messages"; //$NON-NLS-1$
-	public static String AddGroupBoxDialog_Color;
+	public static String AbstractNetworkMapView_AlignToGrid;
+   public static String AbstractNetworkMapView_DisplayObjectAs;
+   public static String AbstractNetworkMapView_EnableAutoLayout;
+   public static String AbstractNetworkMapView_Error;
+   public static String AbstractNetworkMapView_Icons;
+   public static String AbstractNetworkMapView_LargeLabels;
+   public static String AbstractNetworkMapView_LayoutHorzTree;
+   public static String AbstractNetworkMapView_Layout;
+   public static String AbstractNetworkMapView_LayoutRadial;
+   public static String AbstractNetworkMapView_LayoutSparseVertTree;
+   public static String AbstractNetworkMapView_LayoutSpring;
+   public static String AbstractNetworkMapView_LayoutVertTree;
+   public static String AbstractNetworkMapView_OpenObjDetailsError;
+   public static String AbstractNetworkMapView_OpenSubmap;
+   public static String AbstractNetworkMapView_OpenSubmapError;
+   public static String AbstractNetworkMapView_RootObjectNotFound;
+   public static String AbstractNetworkMapView_RouterDirect;
+   public static String AbstractNetworkMapView_RouterManhattan;
+   public static String AbstractNetworkMapView_Routing;
+   public static String AbstractNetworkMapView_SaveLayout;
+   public static String AbstractNetworkMapView_ShowGrid;
+   public static String AbstractNetworkMapView_ShowObjDetails;
+   public static String AbstractNetworkMapView_ShowStatusBkgnd;
+   public static String AbstractNetworkMapView_ShowStatusFrame;
+   public static String AbstractNetworkMapView_ShowStatusIcon;
+   public static String AbstractNetworkMapView_SmallLabels;
+   public static String AbstractNetworkMapView_SnapToGrid;
+   public static String AbstractNetworkMapView_Zoom;
+   public static String AbstractNetworkMapView_ZoomIn;
+   public static String AbstractNetworkMapView_ZoomOut;
+   public static String AddGroupBoxDialog_Color;
 	public static String AddGroupBoxDialog_DialogTitle;
 	public static String AddGroupBoxDialog_Height;
 	public static String AddGroupBoxDialog_Title;
@@ -96,7 +126,20 @@ public class Messages extends NLS
    public static String ObjectTooltip_TXPower;
    public static String OpenMapObject_Error;
 	public static String OpenMapObject_ErrorText;
-	public static String ServiceComponents_Error;
+	public static String PredefinedMap_AddDecoration;
+   public static String PredefinedMap_AddObject;
+   public static String PredefinedMap_ConfirmRemoval;
+   public static String PredefinedMap_GroupBox;
+   public static String PredefinedMap_Image;
+   public static String PredefinedMap_LinkObjects;
+   public static String PredefinedMap_MapProperties;
+   public static String PredefinedMap_Properties;
+   public static String PredefinedMap_RemovalConfirmationPlural;
+   public static String PredefinedMap_RemovalConfirmationSingular;
+   public static String PredefinedMap_RemoveFromMap;
+   public static String PredefinedMap_SaveJobError;
+   public static String PredefinedMap_SaveJobTitle;
+   public static String ServiceComponents_Error;
 	public static String ServiceComponents_PartName;
 	public static String ServiceDependency_Error;
    public static String ServiceDependency_PartTitle;
@@ -111,7 +154,11 @@ public class Messages extends NLS
 	public static String ShowServiceComponents_ErrorText;
 	public static String ShowServiceDependency_Error;
 	public static String ShowServiceDependency_ErrorText;
-	static
+   public static String VlanMap_IncorrectSecondaryId;
+	public static String VlanMap_JobError;
+   public static String VlanMap_JobTitle;
+   public static String VlanMap_PartName;
+   static
 	{
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

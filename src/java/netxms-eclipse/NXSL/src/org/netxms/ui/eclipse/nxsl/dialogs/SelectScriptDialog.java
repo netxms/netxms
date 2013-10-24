@@ -40,6 +40,7 @@ import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
+import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -66,7 +67,7 @@ public class SelectScriptDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText("Select script");
+		newShell.setText(Messages.SelectScriptDialog_Title);
 		super.configureShell(newShell);
 	}
 
@@ -82,7 +83,7 @@ public class SelectScriptDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText("Available scripts");
+		new Label(dialogArea, SWT.NONE).setText(Messages.SelectScriptDialog_AvailableScripts);
 		
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -120,7 +121,7 @@ public class SelectScriptDialog extends Dialog
       viewer.getControl().setLayoutData(gd);
       
 		final ScriptLibraryManager session = (ScriptLibraryManager)ConsoleSharedData.getSession();
-      new ConsoleJob("Get script list", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.SelectScriptDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -137,7 +138,7 @@ public class SelectScriptDialog extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get script list from server";
+				return Messages.SelectScriptDialog_JobError;
 			}
 		}.start();
       
@@ -153,7 +154,7 @@ public class SelectScriptDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() == 0)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "You must select at script from list and then press OK.");
+			MessageDialogHelper.openWarning(getShell(), Messages.SelectScriptDialog_Warning, Messages.SelectScriptDialog_WarningEmptySelection);
 			return;
 		}
 		script = (Script)selection.getFirstElement();

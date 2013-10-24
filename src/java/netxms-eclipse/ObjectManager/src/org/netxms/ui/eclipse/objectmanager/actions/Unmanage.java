@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objectmanager.actions;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 
 /**
  * Set selected object(s) to managed state
@@ -42,7 +43,7 @@ public class Unmanage extends MultipleObjectAction
 	@Override
 	protected String formatJobDescription(AbstractObject object)
 	{
-		return String.format("Changing management status for object %s [%d]", object.getObjectName(), object.getObjectId());
+		return String.format(Messages.Unmanage_JobDescription, object.getObjectName(), object.getObjectId());
 	}
 
 	/* (non-Javadoc)
@@ -51,6 +52,6 @@ public class Unmanage extends MultipleObjectAction
 	@Override
 	protected String formatErrorMessage(AbstractObject object, Display display)
 	{
-		return String.format("Cannot change management status for object %s [%d]", object.getObjectName(), object.getObjectId());
+		return String.format(Messages.Unmanage_JobError, object.getObjectName(), object.getObjectId());
 	}
 }

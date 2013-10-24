@@ -44,7 +44,7 @@ public class AttrViewerComparator extends ViewerComparator
 			return 0;
 		
 		int rc;
-		switch((Integer)sortColumn.getData("ID"))
+		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case CustomAttributes.COLUMN_NAME:
 				rc = ((Entry<String, String>)e1).getKey().compareToIgnoreCase(((Entry<String, String>)e2).getKey());

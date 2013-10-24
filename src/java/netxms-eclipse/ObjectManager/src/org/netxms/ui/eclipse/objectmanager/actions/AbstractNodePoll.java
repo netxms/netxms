@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.views.NodePollerView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -48,12 +49,12 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 		{
 			try
 			{
-				NodePollerView view = (NodePollerView)window.getActivePage().showView(NodePollerView.ID, Long.toString(node.getObjectId()) + "&" + Integer.toString(getPollType()), IWorkbenchPage.VIEW_ACTIVATE);
+				NodePollerView view = (NodePollerView)window.getActivePage().showView(NodePollerView.ID, Long.toString(node.getObjectId()) + "&" + Integer.toString(getPollType()), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
 				view.startPoll();
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.AbstractNodePoll_Error, String.format(Messages.AbstractNodePoll_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

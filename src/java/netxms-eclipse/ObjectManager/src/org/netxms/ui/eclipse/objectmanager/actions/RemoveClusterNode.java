@@ -35,6 +35,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ChildObjectListDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -66,11 +67,11 @@ public class RemoveClusterNode implements IObjectActionDelegate
 		if (dlg.getReturnCode() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Remove cluster node", viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.RemoveClusterNode_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot remove node from cluster";
+					return Messages.RemoveClusterNode_JobError;
 				}
 
 				@Override

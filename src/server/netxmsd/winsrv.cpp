@@ -118,11 +118,9 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    Main(NULL);
 }
 
-
-//
-// Initialize service
-//
-
+/**
+ * Initialize service
+ */
 void InitService()
 {
    static SERVICE_TABLE_ENTRY serviceTable[2] = { { CORE_SERVICE_NAME, CoreServiceMain }, { NULL, NULL } };
@@ -132,13 +130,10 @@ void InitService()
       _tprintf(_T("StartServiceCtrlDispatcher() failed: %s\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
 }
 
-
-//
-// Create service
-//
-
-void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName,
-                    const TCHAR *pszLogin, const TCHAR *pszPassword)
+/**
+ * Create service
+ */
+void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName, const TCHAR *pszLogin, const TCHAR *pszPassword)
 {
    SC_HANDLE hMgr, hService;
    TCHAR szCmdLine[MAX_PATH * 2], errorText[1024];

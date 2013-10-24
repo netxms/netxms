@@ -30,6 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.ZoneSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -72,7 +73,7 @@ public class ChangeZone implements IObjectActionDelegate
 			return;
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Change zone for node %s [%d]", node.getObjectName(), node.getObjectId()), part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.ChangeZone_JobTitle, node.getObjectName(), node.getObjectId()), part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -82,7 +83,7 @@ public class ChangeZone implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot change zone for node %s [%d]", node.getObjectName(), node.getObjectId());
+				return String.format(Messages.ChangeZone_JobError, node.getObjectName(), node.getObjectId());
 			}
 		}.start();
 	}

@@ -33,6 +33,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.CreateMobileDeviceDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -66,7 +67,7 @@ public class CreateMobileDevice implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create new mobile device", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateMobileDevice_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class CreateMobileDevice implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot create mobile device object \"%s\"", dlg.getName());
+				return String.format(Messages.CreateMobileDevice_JobError, dlg.getName());
 			}
 		}.start();
 	}

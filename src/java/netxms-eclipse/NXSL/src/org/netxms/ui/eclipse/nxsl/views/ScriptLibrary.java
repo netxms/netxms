@@ -51,6 +51,7 @@ import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
+import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.dialogs.CreateScriptDialog;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptComparator;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptLabelProvider;
@@ -64,13 +65,13 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ScriptLibrary extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptLibrary";
+	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptLibrary"; //$NON-NLS-1$
 	
 	// Columns
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
 
-	private static final String TABLE_CONFIG_PREFIX = "ScriptLibrary";
+	private static final String TABLE_CONFIG_PREFIX = "ScriptLibrary"; //$NON-NLS-1$
 	
 	private ScriptLibraryManager scriptLibraryManager;
 	private SortableTableViewer viewer;
@@ -90,7 +91,7 @@ public class ScriptLibrary extends ViewPart
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] names = { "ID", "Name" };
+		final String[] names = { Messages.ScriptLibrary_ColumnId, Messages.ScriptLibrary_ColumnName };
 		final int[] widths = { 70, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -154,7 +155,7 @@ public class ScriptLibrary extends ViewPart
 			}
 		};
 
-		actionNew = new Action("&New...", Activator.getImageDescriptor("icons/new.png")) {
+		actionNew = new Action(Messages.ScriptLibrary_New, Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -162,7 +163,7 @@ public class ScriptLibrary extends ViewPart
 			}
 		};
 
-		actionEdit = new Action("&Edit", Activator.getImageDescriptor("icons/edit.png")) {
+		actionEdit = new Action(Messages.ScriptLibrary_Edit, Activator.getImageDescriptor("icons/edit.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -171,7 +172,7 @@ public class ScriptLibrary extends ViewPart
 		};
 		actionEdit.setEnabled(false);
 
-		actionRename = new Action("&Rename...") {
+		actionRename = new Action(Messages.ScriptLibrary_Rename) {
 			@Override
 			public void run()
 			{
@@ -180,7 +181,7 @@ public class ScriptLibrary extends ViewPart
 		};
 		actionRename.setEnabled(false);
 
-		actionDelete = new Action("&Delete", Activator.getImageDescriptor("icons/delete.png")) {
+		actionDelete = new Action(Messages.ScriptLibrary_Delete, Activator.getImageDescriptor("icons/delete.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -270,11 +271,11 @@ public class ScriptLibrary extends ViewPart
 	 */
 	private void refreshScriptList()
 	{
-		new ConsoleJob("Loading script library", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ScriptLibrary_LoadJobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load script library";
+				return Messages.ScriptLibrary_LoadJobError;
 			}
 
 			@Override
@@ -300,11 +301,11 @@ public class ScriptLibrary extends ViewPart
 		final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), null);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Create new script", this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.ScriptLibrary_CreateJobTitle, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					final long id = scriptLibraryManager.modifyScript(0, dlg.getName(), "");
+					final long id = scriptLibraryManager.modifyScript(0, dlg.getName(), ""); //$NON-NLS-1$
 					runInUIThread(new Runnable()
 					{
 						@Override
@@ -314,7 +315,7 @@ public class ScriptLibrary extends ViewPart
 							List<Script> list = new ArrayList<Script>(input.length);
 							for(Object o : input)
 								list.add((Script)o);
-							final Script script = new Script(id, dlg.getName(), "");
+							final Script script = new Script(id, dlg.getName(), ""); //$NON-NLS-1$
 							list.add(script);
 							viewer.setInput(list.toArray());
 							viewer.setSelection(new StructuredSelection(script));
@@ -326,7 +327,7 @@ public class ScriptLibrary extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create script";
+					return Messages.ScriptLibrary_CreateJobError;
 				}
 			}.start();
 		}
@@ -345,7 +346,7 @@ public class ScriptLibrary extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(getSite().getWorkbenchWindow().getShell(), "Error", "Cannot open script editor: " + e.getMessage());
+			MessageDialogHelper.openError(getSite().getWorkbenchWindow().getShell(), Messages.ScriptLibrary_Error, String.format(Messages.ScriptLibrary_EditScriptError, e.getMessage()));
 		}
 	}
 
@@ -359,7 +360,7 @@ public class ScriptLibrary extends ViewPart
 		final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), script.getName());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Rename script", this, Activator.PLUGIN_ID, null)
+			new ConsoleJob(Messages.ScriptLibrary_RenameJobTitle, this, Activator.PLUGIN_ID, null)
 			{
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -388,7 +389,7 @@ public class ScriptLibrary extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot rename script";
+					return Messages.ScriptLibrary_RenameJobError;
 				}
 			}.start();
 		}
@@ -400,12 +401,12 @@ public class ScriptLibrary extends ViewPart
 	@SuppressWarnings("rawtypes")
 	private void deleteScript()
 	{
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirmation", "Do you really want to delete selected scripts?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.ScriptLibrary_Confirmation, Messages.ScriptLibrary_ConfirmationText))
 			return;
 		
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		
-		new ConsoleJob("Delete scripts from library", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ScriptLibrary_DeleteJobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -429,7 +430,7 @@ public class ScriptLibrary extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete script";
+				return Messages.ScriptLibrary_DeleteJobError;
 			}
 		}.start();
 	}

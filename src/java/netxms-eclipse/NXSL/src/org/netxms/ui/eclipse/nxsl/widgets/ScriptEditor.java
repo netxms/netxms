@@ -67,10 +67,10 @@ public class ScriptEditor extends Composite
 		//editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
 		editorFont = JFaceResources.getTextFont();
 		
-		proposalIcons[0] = Activator.getImageDescriptor("icons/function.gif").createImage();
-		proposalIcons[1] = Activator.getImageDescriptor("icons/var_global.gif").createImage();
-		proposalIcons[2] = Activator.getImageDescriptor("icons/var_local.gif").createImage();
-		proposalIcons[3] = Activator.getImageDescriptor("icons/constant.gif").createImage();
+		proposalIcons[0] = Activator.getImageDescriptor("icons/function.gif").createImage(); //$NON-NLS-1$
+		proposalIcons[1] = Activator.getImageDescriptor("icons/var_global.gif").createImage(); //$NON-NLS-1$
+		proposalIcons[2] = Activator.getImageDescriptor("icons/var_local.gif").createImage(); //$NON-NLS-1$
+		proposalIcons[3] = Activator.getImageDescriptor("icons/constant.gif").createImage(); //$NON-NLS-1$
 		
 		setLayout(new FillLayout());
 		editor = new SourceViewer(this, new VerticalRuler(20), editorStyle);

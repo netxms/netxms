@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -38,13 +39,13 @@ public class DeleteObject extends MultipleObjectAction
 		String question;
 		if (selection.size() == 1)
 		{
-			question = "Are you sure you want to delete '" + ((AbstractObject)selection.getFirstElement()).getObjectName() + "'?";
+			question = String.format(Messages.DeleteObject_ConfirmQuestionSingular, ((AbstractObject)selection.getFirstElement()).getObjectName());
 		}
 		else
 		{
-			question = "Are you sure you want to delete selected objects?";
+			question = Messages.DeleteObject_ConfirmQuestionPlural;
 		}
-		boolean confirmed = MessageDialogHelper.openConfirm(getWindow().getShell(), "Confirm Delete", question);
+		boolean confirmed = MessageDialogHelper.openConfirm(getWindow().getShell(), Messages.DeleteObject_ConfirmDelete, question);
 		return confirmed;
 	}
 
@@ -63,7 +64,7 @@ public class DeleteObject extends MultipleObjectAction
 	@Override
 	protected String formatJobDescription(AbstractObject object)
 	{
-		return String.format("Delete object %s [%d]", object.getObjectName(), object.getObjectId());
+		return String.format(Messages.DeleteObject_JobDescription, object.getObjectName(), object.getObjectId());
 	}
 
 	/* (non-Javadoc)
@@ -72,6 +73,6 @@ public class DeleteObject extends MultipleObjectAction
 	@Override
 	protected String formatErrorMessage(AbstractObject object, Display display)
 	{
-		return String.format("Cannot delete object %s [%d]", object.getObjectName(), object.getObjectId());
+		return String.format(Messages.DeleteObject_JobError, object.getObjectName(), object.getObjectId());
 	}
 }

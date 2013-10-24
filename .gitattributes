@@ -1760,6 +1760,7 @@ src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/wi
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/internal/AddressListLabelProvider.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/internal/ObjectTreeComparator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/internal/ObjectTreeContentProvider.java -text
+src/java/netxms-eclipse/ObjectManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/ObjectManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ObjectManager/build.properties -text
@@ -1799,6 +1800,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/di
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/EditClusterResourceDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/SetInterfaceExpStateDlg.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ZoneSelectionDialog.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/messages.properties -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AccessControl.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoApply.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoBind.java -text
@@ -1830,6 +1832,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/pr
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/views/NodePollerView.java -text
 src/java/netxms-eclipse/ObjectTools/.classpath -text
 src/java/netxms-eclipse/ObjectTools/.project -text
+src/java/netxms-eclipse/ObjectTools/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/ObjectTools/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ObjectTools/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectTools/OSGI-INF/l10n/bundle.properties -text
@@ -1854,6 +1857,7 @@ src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Object
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/actions/OpenObjectToolsEditor.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/dialogs/CreateNewToolDialog.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/dialogs/EditColumnDialog.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/messages.properties -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/AccessControl.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/Columns.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/Filter.java -text

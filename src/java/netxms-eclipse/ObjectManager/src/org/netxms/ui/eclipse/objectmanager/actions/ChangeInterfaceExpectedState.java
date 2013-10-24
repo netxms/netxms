@@ -34,6 +34,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.SetInterfaceExpStateDlg;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -72,7 +73,7 @@ public class ChangeInterfaceExpectedState implements IObjectActionDelegate
 			idList[i] = objects.get(i).getObjectId();
 		final int newState = dlg.getExpectedState();
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update expected state for interfaces", viewPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ChangeInterfaceExpectedState_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -87,7 +88,7 @@ public class ChangeInterfaceExpectedState implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update expected state for interface object";
+				return Messages.ChangeInterfaceExpectedState_JobError;
 			}
 		}.start();
 	}

@@ -52,7 +52,7 @@ public class ServerJobComparator extends ViewerComparator
 	{
 		int result;
 		
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case ServerJobManager.COLUMN_STATUS:
 				result = ((ServerJob)e1).getStatus() - ((ServerJob)e2).getStatus();
@@ -60,8 +60,8 @@ public class ServerJobComparator extends ViewerComparator
 			case ServerJobManager.COLUMN_NODE:
 				AbstractObject object1 = session.findObjectById(((ServerJob)e1).getNodeId());
 				AbstractObject object2 = session.findObjectById(((ServerJob)e2).getNodeId());
-				String name1 = (object1 != null) ? object1.getObjectName() : "<unknown>";
-				String name2 = (object2 != null) ? object2.getObjectName() : "<unknown>";
+				String name1 = (object1 != null) ? object1.getObjectName() : "<unknown>"; //$NON-NLS-1$
+				String name2 = (object2 != null) ? object2.getObjectName() : "<unknown>"; //$NON-NLS-1$
 				result = name1.compareToIgnoreCase(name2);
 				break;
 			case ServerJobManager.COLUMN_DESCRIPTION:

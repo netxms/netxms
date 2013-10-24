@@ -23,15 +23,12 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.progress.IProgressService;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
@@ -50,37 +47,43 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 		private ObjectToolDetails result = null;
 		private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 
+		/**
+		 * @param toolId
+		 * @param display
+		 */
 		private ToolDetailLoader(long toolId, Display display)
 		{
 			this.toolId = toolId;
 			this.display = display;
 		}
 
+		/* (non-Javadoc)
+		 * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
+		 */
 		@Override
 		public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 		{
 			try
 			{
 				result = session.getObjectToolDetails(toolId);
-				new UIJob(display, "Update object tool adapter cache") {
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						cache.put(toolId, result);
-						return Status.OK_STATUS;
-					}
-				}.schedule();
+				display.asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  cache.put(toolId, result);
+               }
+            });
 			}
 			catch(final Exception e)
 			{
-				new UIJob(display, "Show error message") {
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot load object tool details: " + e.getLocalizedMessage());
-						return Status.OK_STATUS;
-					}
-				}.schedule();
+            display.asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.ObjectToolsAdapterFactory_Error, 
+                        String.format(Messages.ObjectToolsAdapterFactory_LoaderErrorText, e.getLocalizedMessage()));
+               }
+            });
 			}
 		}
 

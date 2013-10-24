@@ -34,6 +34,7 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -61,12 +62,12 @@ public class CreateCondition implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Condition");
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateCondition_Condition);
 		if (dlg.open() != Window.OK)
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create new condition", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateCondition_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -77,7 +78,7 @@ public class CreateCondition implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot create condition object \"%s\"", dlg.getObjectName());
+				return String.format(Messages.CreateCondition_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

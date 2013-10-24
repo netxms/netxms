@@ -148,18 +148,16 @@ static void CreateMiniDump(DWORD pid)
 
 #endif
 
-
-//
-// Parse command line
-// Returns TRUE on success and FALSE on failure
-//
-
 #ifdef _WIN32
 #define VALID_OPTIONS   "c:CdD:qehIL:P:RsSv"
 #else
 #define VALID_OPTIONS   "c:CdD:qehp:v"
 #endif
 
+/**
+ * Parse command line
+ * Returns TRUE on success and FALSE on failure
+ */
 static BOOL ParseCommandLine(int argc, char *argv[])
 {
    int ch;
@@ -308,11 +306,9 @@ static BOOL ParseCommandLine(int argc, char *argv[])
    return TRUE;
 }
 
-
-//
-// Startup code
-//
-
+/**
+ * Startup code
+ */
 int main(int argc, char *argv[])
 {
 #ifdef _WIN32
