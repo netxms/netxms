@@ -903,7 +903,14 @@ extern "C"
 #define BinToStr BinToStrA
 #endif
 
-   UINT32 LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, UINT32 dwSize);
+   UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 dwSize);
+   UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 dwSize);
+#ifdef UNICODE
+#define StrToBin StrToBinW
+#else
+#define StrToBin StrToBinA
+#endif
+   
    TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);

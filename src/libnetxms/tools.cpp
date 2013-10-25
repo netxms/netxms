@@ -707,13 +707,13 @@ char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pSt
 }
 
 /**
- * Convert string of hexadecimal digits to byte array
+ * Convert string of hexadecimal digits to byte array (wide character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, UINT32 dwSize)
+UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 dwSize)
 {
    UINT32 i;
-   const TCHAR *pCurr;
+   const WCHAR *pCurr;
 
    memset(pData, 0, dwSize);
    for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)
@@ -729,12 +729,33 @@ UINT32 LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, UINT32 dwSi
    return i;
 }
 
+/**
+ * Convert string of hexadecimal digits to byte array (multibyte character version)
+ * Returns number of bytes written to destination
+ */
+UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 dwSize)
+{
+   UINT32 i;
+   const char *pCurr;
 
-//
-// Translate string
-// NOTE: replacement string shouldn't be longer than original
-//
+   memset(pData, 0, dwSize);
+   for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)
+   {
+      pData[i] = hex2bin(*pCurr) << 4;
+      pCurr++;
+		if (*pCurr != 0)
+		{
+			pData[i] |= hex2bin(*pCurr);
+			pCurr++;
+		}
+   }
+   return i;
+}
 
+/**
+ * Translate string
+ * NOTE: replacement string shouldn't be longer than original
+ */
 void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace)
 {
    TCHAR *pszSrc, *pszDst;

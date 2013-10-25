@@ -58,12 +58,10 @@ static int get_random_fd()
 
 #endif
 
-
 /*
  * Generate a series of random bytes.  Use /dev/urandom if possible,
  * and if not, use srandom/random.
  */
-
 static void get_random_bytes(void *buf, int nbytes)
 {
 	int i;
@@ -103,12 +101,22 @@ static void get_random_bytes(void *buf, int nbytes)
 }
 
 /*
- * Get the ethernet hardware address, if we can find it...
+ * Get the ethernet hardware address or other available node ID
  */
 static int get_node_id(unsigned char *node_id)
 {
-#if defined(HAVE_NET_IF_H) && !defined(sun) && !defined(__sun)
-#if defined(SIOCGIFHWADDR) || defined(SIOCGENADDR)
+#if defined(_AIX)
+
+   struct utsname info;
+   if (uname(&info) == -1)
+      return -1;
+   
+   memset(node_id, 0, 6);
+   StrToBinA(info.machine, node_id, 6);
+   return 0;
+
+#elif defined(HAVE_NET_IF_H) && !defined(sun) && !defined(__sun) && (defined(SIOCGIFHWADDR) || defined(SIOCGENADDR))
+
 	int sd;
 	struct ifreq ifr, *ifrp;
 	struct ifconf ifc;
@@ -155,25 +163,20 @@ static int get_node_id(unsigned char *node_id)
 	for (i = 0; i < n; i+= ifreq_size(*ifr) ) {
 		ifrp = (struct ifreq *)((char *) ifc.ifc_buf+i);
 		strncpy(ifr.ifr_name, ifrp->ifr_name, IFNAMSIZ);
-#ifdef SIOCGIFHWADDR
+#if defined(SIOCGIFHWADDR)
 		if (ioctl(sd, SIOCGIFHWADDR, &ifr) < 0)
 			continue;
 		a = (unsigned char *) &ifr.ifr_hwaddr.sa_data;
-#else
-#ifdef SIOCGENADDR
+#elif defined(SIOCGENADDR)
 		if (ioctl(sd, SIOCGENADDR, &ifr) < 0)
 			continue;
 		a = (unsigned char *) ifr.ifr_enaddr;
 #else
-		/*
-		 * XXX we don't have a way of getting the hardware
-		 * address
-		 */
+		 // we don't have a way of getting the hardware address
 		a = (unsigned char *)"\x00\x00\x00\x00\x00\x00";
 		close(sd);
 		return 0;
-#endif /* SIOCGENADDR */
-#endif /* SIOCGIFHWADDR */
+#endif /* SIOCGENADDR / SIOCGIFHWADDR */
 		if (!a[0] && !a[1] && !a[2] && !a[3] && !a[4] && !a[5])
 			continue;
 		if (node_id)
@@ -184,7 +187,6 @@ static int get_node_id(unsigned char *node_id)
 		}
 	}
 	close(sd);
-#endif
 #endif
 	return 0;
 }

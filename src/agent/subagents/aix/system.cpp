@@ -27,11 +27,9 @@
 #include <utmp.h>
 #include <libperfstat.h>
 
-
-//
-// Hander for System.CPU.Count parameter
-//
-
+/**
+ * Hander for System.CPU.Count parameter
+ */
 LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct vario v;
@@ -49,11 +47,9 @@ LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for System.Uname parameter
-//
-
+/**
+ * Handler for System.Uname parameter
+ */
 LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet;
@@ -61,8 +57,7 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 
 	if (uname(&un) == 0)
 	{
-		sprintf(pValue, "%s %s %s %s %s", un.sysname, un.nodename, un.release,
-			un.version, un.machine);
+		sprintf(pValue, "%s %s %s %s %s", un.sysname, un.nodename, un.release, un.version, un.machine);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 	else
@@ -72,11 +67,9 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for System.Uptime parameter
-//
-
+/**
+ * Handler for System.Uptime parameter
+ */
 LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
