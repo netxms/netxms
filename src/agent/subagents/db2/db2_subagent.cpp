@@ -62,11 +62,32 @@ static BOOL DB2Init(Config* config)
 
    if (db2Entry == NULL)
    {
-      AgentWriteDebugLog(7, _T("%s: no entries found in the configuration file"), SUBAGENT_NAME);
+      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: no entries found in the configuration file"), SUBAGENT_NAME);
+      return FALSE;
    }
 
-   db2Entry->getName();
-   AgentWriteDebugLog(7, _T("Entry: %d"), db2Entry->getSubEntries(_T("*"))->getSize());
+   PDB2_INFO arrDb2Info;
+   int numOfPossibleThreads = 0;
+
+   ConfigEntry* xmlFile = db2Entry->findEntry(_T("ConfigFile"));
+   if (xmlFile == NULL)
+   {
+      AgentWriteDebugLog(7, _T("%s: processing configuration entries in section '%s'"), SUBAGENT_NAME, db2Entry->getName());
+
+      const PDB2_INFO db2Info = GetConfigs(db2Entry);
+      if (db2Info == NULL)
+      {
+         return FALSE;
+      }
+
+      g_numOfThreads = 1;
+      arrDb2Info = db2Info;
+   }
+   else
+   {
+      // Include XML file
+   }
+   delete xmlFile;
 
    AgentWriteDebugLog(7, _T("%s: loaded %d configuration sections"), SUBAGENT_NAME, g_numOfThreads);
 
@@ -80,12 +101,15 @@ static BOOL DB2Init(Config* config)
    {
       //g_threads[i] = new THREAD_INFO;
       g_threads[i].mutex = MutexCreate();
-      //g_threads[i].db2Info = arrDb2Info[i];
+      g_threads[i].db2Info = &arrDb2Info[i];
       g_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, 0, (void*) &g_threads[i]);
    }
 
+   memset(arrDb2Info, 0, g_numOfThreads * sizeof(PDB2_INFO));
+
    if (g_numOfThreads > 0)
    {
+      AgentWriteDebugLog(7, _T("%s: starting with %d query thread(s)"), SUBAGENT_NAME, g_numOfThreads);
       return TRUE;
    }
 
@@ -132,7 +156,7 @@ static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
    while(TRUE)
    {
       dbHandle = DBConnect(
-         g_drvHandle, NULL /*server*/, db2Info->db2NodeId, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
+         g_drvHandle, db2Info->db2Server, db2Info->db2NodeId, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
 
       if (dbHandle == NULL)
       {
