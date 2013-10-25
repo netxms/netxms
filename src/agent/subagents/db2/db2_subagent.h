@@ -39,11 +39,11 @@
 
 typedef struct
 {
-   const TCHAR db2NodeId[STR_MAX];
-   const TCHAR db2UName[DB2_MAX_USER_NAME];
-   const TCHAR db2UPass[STR_MAX];
-   LONG db2ReconnectInterval = INTERVAL_RECONNECT_SECONDS;
-   LONG db2QueryInterval = INTERVAL_QUERY_SECONDS;
+   TCHAR db2NodeId[STR_MAX];
+   TCHAR db2UName[DB2_MAX_USER_NAME];
+   TCHAR db2UPass[STR_MAX];
+   LONG db2ReconnectInterval;
+   LONG db2QueryInterval;
 } DB2_INFO, *PDB2_INFO;
 
 typedef struct
@@ -55,7 +55,7 @@ typedef struct
 
 inline BOOL GetConfigs(Config* config, const TCHAR* section, const PDB2_INFO db2Info)
 {
-   NX_CFG_TEMPLATE* cfgTemplate =
+   NX_CFG_TEMPLATE cfgTemplate[] =
    {
       { _T("NodeId"),            CT_STRING,      0, 0, STR_MAX,           0, db2Info->db2NodeId },
       { _T("UserName"),          CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, db2Info->db2UName },
@@ -78,7 +78,18 @@ inline BOOL GetConfigs(Config* config, const TCHAR* section, const PDB2_INFO db2
       noErr = FALSE;
    }
 
-   return noErr;
+   if (db2Info->db2ReconnectInterval == 0)
+   {
+      db2Info->db2ReconnectInterval = INTERVAL_RECONNECT_SECONDS;
+   }
+
+   if (db2Info->db2QueryInterval == 0)
+   {
+      db2Info->db2QueryInterval = INTERVAL_QUERY_SECONDS;
+   }
+
+   //return noErr;
+   return FALSE;
 }
 
 static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info);

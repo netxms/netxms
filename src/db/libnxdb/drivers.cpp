@@ -219,9 +219,16 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
    // Initialize driver
 #ifdef UNICODE
-	char mbInitParameters[1024];
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, initParameters, -1, mbInitParameters, 1024, NULL, NULL);
-	mbInitParameters[1023] = 0;
+   char mbInitParameters[1024];
+   if (initParameters != NULL)
+   {
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, initParameters, -1, mbInitParameters, 1024, NULL, NULL);
+      mbInitParameters[1023] = 0;
+   }
+   else
+   {
+      mbInitParameters[0] = 0;
+   }
    if (!fpDrvInit(mbInitParameters))
 #else
    if (!fpDrvInit(CHECK_NULL_EX(initParameters)))

@@ -53,6 +53,11 @@
 #include <db2ApiDf.h>
 #include <sqlcli1.h>
 
+/**
+ * Fixes build failure
+ * Allows to use SQLConnectA in unicode builds
+ */
+#undef SQLConnect
 
 //
 // Driver connection handle structure
