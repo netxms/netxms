@@ -37,11 +37,9 @@
 extern "C" int getkerninfo(int, void *, void *, void *);
 #endif
 
-
-//
-// Internal interface info structure
-//
-
+/**
+ * Internal interface info structure
+ */
 typedef struct
 {
 	char name[IFNAMSIZ];
@@ -51,31 +49,25 @@ typedef struct
 	DWORD iftype;
 } IF_INFO;
 
-
-//
-// Static data
-//
-
+/**
+ * Interface data
+ */
 static perfstat_netinterface_t *s_ifaceData = NULL;
 static int s_ifaceDataSize = 0;
 static time_t s_ifaceDataTimestamp = 0;
 static MUTEX s_ifaceDataLock = INVALID_MUTEX_HANDLE;
 
-
-//
-// Initialize network stuff
-//
-
+/**
+ * Initialize network stuff
+ */
 void InitNetworkDataCollection()
 {
 	s_ifaceDataLock = MutexCreate();
 }
 
-
-//
-// Get data for all interfaces via libperfstat
-//
-
+/**
+ * Get data for all interfaces via libperfstat
+ */
 static bool GetInterfaceData()
 {
 	int ifCount = perfstat_netinterface(NULL, NULL, sizeof(perfstat_netinterface_t), 0);
@@ -96,11 +88,9 @@ static bool GetInterfaceData()
 	return success;
 }
 
-
-//
-// Get interface data
-//
-
+/**
+ * Get interface data
+ */
 LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value)
 {
 	char ifName[IF_NAMESIZE], *eptr;
@@ -185,11 +175,9 @@ LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value)
 	return nRet;
 }
 
-
-//
-// Get MAC address and type for interface via getkerninfo()
-//
-
+/**
+ * Get MAC address and type for interface via getkerninfo()
+ */
 static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
 {
 	struct kinfo_ndd *nddp;
@@ -217,11 +205,9 @@ static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
 	free(nddp);
 }
 
-
-//
-// Handler for Net.InterfaceList enum
-//
-
+/**
+ * Handler for Net.InterfaceList enum
+ */
 LONG H_NetInterfaceList(const char *pszParam, const char *pArg, StringList *value)
 {
 	LONG nRet;
@@ -308,11 +294,9 @@ retry_ifconf:
 	return nRet;
 }
 
-
-//
-// Handler for Net.Interface.AdminStatus parameter
-//
-
+/**
+ * Handler for Net.Interface.AdminStatus parameter
+ */
 LONG H_NetInterfaceStatus(const char *param, const char *arg, char *value)
 {
 	int nRet = SYSINFO_RC_ERROR;
