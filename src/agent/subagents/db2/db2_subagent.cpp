@@ -58,41 +58,72 @@ static BOOL DB2Init(Config* config)
       g_numOfThreads++;
    }*/
 
-   ConfigEntry* db2Entry = config->getEntry(_T("/db2"));
+   ConfigEntry* db2IniEntry = config->getEntry(_T("/db2"));
 
-   if (db2Entry == NULL)
+   if (db2IniEntry == NULL)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: no entries found in the configuration file"), SUBAGENT_NAME);
       return FALSE;
    }
 
-   PDB2_INFO arrDb2Info;
+   PDB2_INFO* arrDb2Info;
    int numOfPossibleThreads = 0;
 
-   ConfigEntry* xmlFile = db2Entry->findEntry(_T("ConfigFile"));
+   ConfigEntry* xmlFile = db2IniEntry->findEntry(_T("ConfigFile"));
    if (xmlFile == NULL)
    {
-      AgentWriteDebugLog(7, _T("%s: processing configuration entries in section '%s'"), SUBAGENT_NAME, db2Entry->getName());
+      AgentWriteDebugLog(7, _T("%s: processing configuration entries in section '%s'"), SUBAGENT_NAME, db2IniEntry->getName());
 
-      const PDB2_INFO db2Info = GetConfigs(db2Entry);
+      const PDB2_INFO db2Info = GetConfigs(db2IniEntry);
       if (db2Info == NULL)
       {
          return FALSE;
       }
 
       g_numOfThreads = 1;
-      arrDb2Info = db2Info;
+      arrDb2Info = new PDB2_INFO[1];
+      arrDb2Info[0] = db2Info;
    }
    else
    {
-      // Include XML file
-   }
-   delete xmlFile;
+      const TCHAR* pathToXml = xmlFile->getValue();
+      AgentWriteDebugLog(7, _T("%s: processing configuration file '%s'"), SUBAGENT_NAME, pathToXml);
 
-   AgentWriteDebugLog(7, _T("%s: loaded %d configuration sections"), SUBAGENT_NAME, g_numOfThreads);
+      if (!config->loadXmlConfig(pathToXml))
+      {
+        AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: '%s' is not a valid configuration file"), SUBAGENT_NAME, pathToXml);
+        return FALSE;
+      }
+
+      ConfigEntry* db2SubXmlEntry = config->getEntry(_T("/db2sub"));
+      if (db2SubXmlEntry == NULL)
+      {
+         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: '%s' doesn't contain the db2 configuration entry"), SUBAGENT_NAME, pathToXml);
+         return FALSE;
+      }
+
+      ConfigEntryList* db2SubXmlSubEntries = db2SubXmlEntry->getSubEntries(_T("db2#*"));
+      numOfPossibleThreads = db2SubXmlSubEntries->getSize();
+      AgentWriteDebugLog(7, _T("%s: '%s' loaded with number of db2 entries: %d"), SUBAGENT_NAME, pathToXml, numOfPossibleThreads);
+      arrDb2Info = new PDB2_INFO[numOfPossibleThreads];
+
+      for(int i = 0; i < numOfPossibleThreads; i++)
+      {
+         ConfigEntry* entry = db2SubXmlSubEntries->getEntry(i);
+         const PDB2_INFO db2Info = GetConfigs(entry);
+         if (db2Info == NULL)
+         {
+            continue;
+         }
+
+         arrDb2Info[g_numOfThreads] = db2Info;
+         g_numOfThreads++;
+      }
+   }
 
    if(g_numOfThreads > 0)
    {
+      AgentWriteDebugLog(7, _T("%s: loaded %d configuration section(s)"), SUBAGENT_NAME, g_numOfThreads);
       g_threads = new THREAD_INFO[g_numOfThreads];
       g_sdownCondition = ConditionCreate(TRUE);
    }
@@ -101,11 +132,11 @@ static BOOL DB2Init(Config* config)
    {
       //g_threads[i] = new THREAD_INFO;
       g_threads[i].mutex = MutexCreate();
-      g_threads[i].db2Info = &arrDb2Info[i];
+      g_threads[i].db2Info = arrDb2Info[i];
       g_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, 0, (void*) &g_threads[i]);
    }
 
-   memset(arrDb2Info, 0, g_numOfThreads * sizeof(PDB2_INFO));
+   delete[] arrDb2Info;
 
    if (g_numOfThreads > 0)
    {
