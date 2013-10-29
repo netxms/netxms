@@ -31,7 +31,7 @@
 #define INTERVAL_RECONNECT_SECONDS 30
 #define NUM_OF_PARAMS 32
 #define QUERY_MAX 256
-#define DB_ID_DIGITS_MAX 4+1
+#define DB_ID_DIGITS_MAX 10 + 1
 
 /**
  * DB2 constants
@@ -45,6 +45,7 @@
 
 typedef struct
 {
+   int db2Id;
    TCHAR db2DbName[DB2_DB_MAX_NAME];
    TCHAR db2DbAlias[DB2_DB_MAX_NAME];
    TCHAR db2UName[DB2_MAX_USER_NAME];
@@ -104,6 +105,8 @@ inline const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry)
 
    const PDB2_INFO db2Info = new DB2_INFO();
    BOOL noErr = TRUE;
+
+   db2Info->db2Id = configEntry->getId();
 
    NX_CFG_TEMPLATE cfgTemplate[] =
    {

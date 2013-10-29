@@ -162,7 +162,7 @@ cd "$build_dir/netxms-$ver"
 echo -n "Configuring sources..."
 [ -e "./configure" ] || ./reconf &> /dev/null
 ./configure --prefix="$build_root/usr" --enable-unicode --with-server \
-    --with-odbc --with-sqlite --with-pgsql --with-mysql --with-client &> /dev/null
+    --with-odbc --with-sqlite --with-pgsql --with-mysql --with-agent &> /dev/null
 if [ $? -ne 0 ]
 then
     echo -e \

@@ -287,19 +287,33 @@ static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
       return SYSINFO_RC_UNSUPPORTED;
    }
 
-   TCHAR dbIdString[5];
-   int dbId;
+   TCHAR dbIdString[DB_ID_DIGITS_MAX];
+   unsigned long dbId;
 
-   AgentGetParameterArg(parameter, 1, dbIdString, STR_MAX);
-   dbId = atoi((char*)dbIdString) - 1;
+   AgentGetParameterArg(parameter, 1, dbIdString, DB_ID_DIGITS_MAX);
+   dbId = _tcstoul(dbIdString, NULL, 0);
 
-   if (dbId < 0 || dbId >= g_numOfThreads)
+   if (dbId == 0)
    {
       AgentWriteDebugLog(7, _T("%s: id '%s' is invalid"), SUBAGENT_NAME, dbIdString);
       return SYSINFO_RC_UNSUPPORTED;
    }
 
-   ret_string(value, g_threads[dbId].db2Params[dci]);
+   THREAD_INFO threadInfo;
+
+   for(int i = 0; i < g_numOfThreads; i++)
+   {
+      if (g_threads[i].db2Info->db2Id == dbId)
+      {
+         threadInfo = g_threads[i];
+         break;
+      }
+
+      AgentWriteDebugLog(7, _T("%s: no database with id '%d' found"), SUBAGENT_NAME, dbId);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   ret_string(value, threadInfo.db2Params[dci]);
 
    return SYSINFO_RC_SUCCESS;
 }
