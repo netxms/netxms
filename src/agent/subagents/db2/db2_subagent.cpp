@@ -24,6 +24,33 @@ CONDITION g_sdownCondition = NULL;
 PTHREAD_INFO g_threads = NULL;;
 UINT32 g_numOfThreads = 0;
 
+static NETXMS_SUBAGENT_PARAM m_agentParams[] =
+{
+   {
+      _T("DB2.Instance.Version(*)"), GetParameter, DCI_NAME_STRING[DCI_DBMS_VERSION],
+      DCI_DT_STRING, _T("DB2/Instance: DBMS Version")
+   }
+};
+
+static NETXMS_SUBAGENT_INFO m_agentInfo =
+{
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   SUBAGENT_NAME,
+   NETXMS_VERSION_STRING,
+   DB2Init, DB2Shutdown, DB2CommandHandler,
+   (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
+   0, NULL,
+   0, NULL,
+   0, NULL,
+   0, NULL
+};
+
+static QUERY g_queries[] =
+{
+   { DCI_DBMS_VERSION, _T("SELECT service_level FROM TABLE (sysproc.env_get_inst_info())") },
+   { DCI_NULL, _T("\0") }
+};
+
 static BOOL DB2Init(Config* config)
 {
    AgentWriteDebugLog(7, _T("%s: initializing"), SUBAGENT_NAME);
@@ -191,7 +218,7 @@ static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
 
       threadInfo->hDb = dbHandle;
 
-      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to database \"%s\""), SUBAGENT_NAME, db2Info->db2DbName);
+      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to database '%s'"), SUBAGENT_NAME, db2Info->db2DbName);
 
       if (PerformQueries(threadInfo))
       {
@@ -216,9 +243,29 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
    {
       MutexLock(threadInfo->mutex);
 
-      DB_RESULT hResult = DBSelect(threadInfo->hDb, _T(""));
+      DB_RESULT hResult;
 
-      DBFreeResult(hResult);
+      int i = 0;
+      while(g_queries[i].dciName != DCI_NULL)
+      {
+         hResult = DBSelect(threadInfo->hDb, g_queries[i].query);
+
+         if (hResult == NULL)
+         {
+            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: query '%s' failed"), SUBAGENT_NAME, g_queries[i].query);
+            continue;
+         }
+
+         TCHAR* dciName = threadInfo->db2Params[g_queries[i].dciName];
+
+         DBGetField(hResult, 0, 0, dciName, STR_MAX);
+
+         AgentWriteDebugLog(9, _T("%s: got '%s'"), SUBAGENT_NAME, dciName);
+
+         DBFreeResult(hResult);
+
+         i++;
+      }
 
       MutexUnlock(threadInfo->mutex);
 
@@ -231,36 +278,31 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
    return TRUE;
 }
 
-static TCHAR g_queries[] =
+static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
 {
+   Dci dci = stringToDci(arg);
 
-};
+   if (dci == DCI_NULL)
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
 
-static LONG getParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
-{
-   AgentWriteDebugLog(7, _T("%s: param: %s"), SUBAGENT_NAME, parameter[0]);
-   AgentWriteDebugLog(7, _T("%s: arg: %s"), SUBAGENT_NAME, arg[0]);
-   AgentWriteDebugLog(7, _T("%s: value: %s"), SUBAGENT_NAME, value[0]);
-   return 0;
+   TCHAR dbIdString[5];
+   int dbId;
+
+   AgentGetParameterArg(parameter, 1, dbIdString, STR_MAX);
+   dbId = atoi((char*)dbIdString) - 1;
+
+   if (dbId < 0 || dbId >= g_numOfThreads)
+   {
+      AgentWriteDebugLog(7, _T("%s: id '%s' is invalid"), SUBAGENT_NAME, dbIdString);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   ret_string(value, g_threads[dbId].db2Params[dci]);
+
+   return SYSINFO_RC_SUCCESS;
 }
-
-static NETXMS_SUBAGENT_PARAM m_agentParams[] =
-{
-   { _T("DB2.Instance.Version"), getParameter, _T("DCI_DBMS_VERSION"), DCI_DT_STRING, _T("DB2/Instance: DBMS Version") }
-};
-
-static NETXMS_SUBAGENT_INFO m_agentInfo =
-{
-   NETXMS_SUBAGENT_INFO_MAGIC,
-   SUBAGENT_NAME,
-   NETXMS_VERSION_STRING,
-   DB2Init, DB2Shutdown, DB2CommandHandler,
-   (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
-   0, NULL,
-   0, NULL,
-   0, NULL,
-   0, NULL
-};
 
 DECLARE_SUBAGENT_ENTRY_POINT(DB2)
 {

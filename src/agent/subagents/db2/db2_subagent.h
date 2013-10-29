@@ -29,6 +29,9 @@
 #define STR_MAX 256
 #define INTERVAL_QUERY_SECONDS 60
 #define INTERVAL_RECONNECT_SECONDS 30
+#define NUM_OF_PARAMS 32
+#define QUERY_MAX 256
+#define DB_ID_DIGITS_MAX 4+1
 
 /**
  * DB2 constants
@@ -56,12 +59,35 @@ typedef struct
    MUTEX mutex;
    DB_HANDLE hDb;
    PDB2_INFO db2Info;
+   TCHAR db2Params[NUM_OF_PARAMS][STR_MAX];
 } THREAD_INFO, *PTHREAD_INFO;
 
-enum dci
+enum Dci
 {
-   DCI_DBMS_VERSION
+   DCI_DBMS_VERSION,
+   DCI_NULL
 };
+
+static const TCHAR* const DCI_NAME_STRING[] =
+{
+   _T("DCI_DBMS_VERSION")
+};
+
+inline Dci stringToDci(const TCHAR* stringDci)
+{
+   if (stringDci == _T("DCI_DBMS_VERSION"))
+   {
+      return DCI_DBMS_VERSION;
+   }
+
+   return DCI_NULL;
+}
+
+typedef struct
+{
+   Dci dciName;
+   TCHAR query[QUERY_MAX];
+} QUERY;
 
 inline const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry)
 {
@@ -159,7 +185,12 @@ inline const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry)
    return db2Info;
 }
 
+static BOOL DB2Init(Config* config);
+static void DB2Shutdown();
+static BOOL DB2CommandHandler(UINT32 dwCommand, CSCPMessage* pRequest, CSCPMessage* pResponse, void* session);
+
 static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info);
 static BOOL PerformQueries(const PTHREAD_INFO);
+static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value);
 
 #endif /* DB2_SUBAGENT_H_ */
