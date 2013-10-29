@@ -42,22 +42,6 @@ static BOOL DB2Init(Config* config)
 
    AgentWriteDebugLog(7, _T("%s: loaded the database driver"), SUBAGENT_NAME);
 
-   //const TCHAR section[STR_MAX] = {};
-   //PDB2_INFO arrDb2Info[DB_MAX_COUNT] = {};
-
-   /*for(int i = 0; i < DB_MAX_COUNT; i++)
-   {
-      arrDb2Info[g_numOfThreads] = new DB2_INFO;
-      if (!GetConfigs(config, section, arrDb2Info[g_numOfThreads]))
-      {
-         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration data for section \"%s\""), SUBAGENT_NAME, section);
-         delete arrDb2Info[g_numOfThreads];
-         continue;
-      }
-
-      g_numOfThreads++;
-   }*/
-
    ConfigEntry* db2IniEntry = config->getEntry(_T("/db2"));
 
    if (db2IniEntry == NULL)
@@ -74,7 +58,7 @@ static BOOL DB2Init(Config* config)
    {
       AgentWriteDebugLog(7, _T("%s: processing configuration entries in section '%s'"), SUBAGENT_NAME, db2IniEntry->getName());
 
-      const PDB2_INFO db2Info = GetConfigs(db2IniEntry);
+      const PDB2_INFO db2Info = GetConfigs(config, db2IniEntry);
       if (db2Info == NULL)
       {
          return FALSE;
@@ -110,7 +94,7 @@ static BOOL DB2Init(Config* config)
       for(int i = 0; i < numOfPossibleThreads; i++)
       {
          ConfigEntry* entry = db2SubXmlSubEntries->getEntry(i);
-         const PDB2_INFO db2Info = GetConfigs(entry);
+         const PDB2_INFO db2Info = GetConfigs(config, entry);
          if (db2Info == NULL)
          {
             continue;
@@ -161,12 +145,11 @@ static void DB2Shutdown()
    delete[] g_threads;
 
    DBUnloadDriver(g_drvHandle);
+   ConditionDestroy(g_sdownCondition);
 
    g_drvHandle = NULL;
    g_sdownCondition = NULL;
    g_threads = NULL;
-
-   ConditionDestroy(g_sdownCondition);
 
    AgentWriteDebugLog(7, _T("%s: terminated"), SUBAGENT_NAME);
 }
@@ -187,14 +170,14 @@ static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
    while(TRUE)
    {
       dbHandle = DBConnect(
-         g_drvHandle, db2Info->db2Server, db2Info->db2NodeId, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
+         g_drvHandle, db2Info->db2DbAlias, db2Info->db2DbName, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
 
       if (dbHandle == NULL)
       {
          AgentWriteLog(
             EVENTLOG_ERROR_TYPE,
             _T("%s: failed to connect to the database \"%s\" (%s), reconnecting in %ds"),
-            SUBAGENT_NAME, db2Info->db2NodeId, connectError, reconnectInterval);
+            SUBAGENT_NAME, db2Info->db2DbName, connectError, reconnectInterval);
 
          if (ConditionWait(g_sdownCondition, (reconnectInterval * 1000)))
          {
@@ -206,7 +189,9 @@ static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
          }
       }
 
-      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to database \"%s\""), SUBAGENT_NAME, db2Info->db2NodeId);
+      threadInfo->hDb = dbHandle;
+
+      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to database \"%s\""), SUBAGENT_NAME, db2Info->db2DbName);
 
       if (PerformQueries(threadInfo))
       {
@@ -229,6 +214,14 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
 
    while(TRUE)
    {
+      MutexLock(threadInfo->mutex);
+
+      DB_RESULT hResult = DBSelect(threadInfo->hDb, _T(""));
+
+      DBFreeResult(hResult);
+
+      MutexUnlock(threadInfo->mutex);
+
       if (ConditionWait(g_sdownCondition, queryInterval * 1000))
       {
          break;
@@ -238,13 +231,22 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
    return TRUE;
 }
 
+static TCHAR g_queries[] =
+{
+
+};
+
 static LONG getParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
 {
+   AgentWriteDebugLog(7, _T("%s: param: %s"), SUBAGENT_NAME, parameter[0]);
+   AgentWriteDebugLog(7, _T("%s: arg: %s"), SUBAGENT_NAME, arg[0]);
+   AgentWriteDebugLog(7, _T("%s: value: %s"), SUBAGENT_NAME, value[0]);
    return 0;
 }
 
-static NETXMS_SUBAGENT_PARAM m_agentParams[] = {
-   { _T("DB2.Instance.Version"), getParameter, _T("0x0000"), DCI_DT_STRING, _T("DB2/Instance: DBMS Version") }
+static NETXMS_SUBAGENT_PARAM m_agentParams[] =
+{
+   { _T("DB2.Instance.Version"), getParameter, _T("DCI_DBMS_VERSION"), DCI_DT_STRING, _T("DB2/Instance: DBMS Version") }
 };
 
 static NETXMS_SUBAGENT_INFO m_agentInfo =
