@@ -29,6 +29,22 @@ static NETXMS_SUBAGENT_PARAM m_agentParams[] =
    {
       _T("DB2.Instance.Version(*)"), GetParameter, DCI_NAME_STRING[DCI_DBMS_VERSION],
       DCI_DT_STRING, _T("DB2/Instance: DBMS Version")
+   },
+   {
+      _T("DB2.Table.Available(*)"), GetParameter, DCI_NAME_STRING[DCI_NUM_AVAILABLE],
+      DCI_DT_INT, _T("DB2/Table: Number of available tables")
+   },
+   {
+      _T("DB2.Table.Unavailable(*)"), GetParameter, DCI_NAME_STRING[DCI_NUM_UNAVAILABLE],
+      DCI_DT_INT, _T("DB2/Table: Number of unavailable tables")
+   },
+   {
+      _T("DB2.Table.Data.LogicalSize(*)"), GetParameter, DCI_NAME_STRING[DCI_DATA_L_SIZE],
+      DCI_DT_INT64, _T("DB2/Table/Data: Data logical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Data.PhysicalSize(*)"), GetParameter, DCI_NAME_STRING[DCI_DATA_P_SIZE],
+      DCI_DT_INT64, _T("DB2/Table/Data: Data physical size in kilobytes")
    }
 };
 
@@ -47,8 +63,10 @@ static NETXMS_SUBAGENT_INFO m_agentInfo =
 
 static QUERY g_queries[] =
 {
-   { DCI_DBMS_VERSION, _T("SELECT service_level FROM TABLE (sysproc.env_get_inst_info())") },
-   { DCI_NULL, _T("\0") }
+   { { DCI_DBMS_VERSION }, _T("SELECT service_level FROM TABLE (sysproc.env_get_inst_info())") },
+   { { DCI_NUM_AVAILABLE }, _T("SELECT count(available) FROM sysibmadm.admintabinfo WHERE available = 'Y'") },
+   { { DCI_NUM_UNAVAILABLE }, _T("SELECT count(available) FROM sysibmadm.admintabinfo WHERE available = 'N'") },
+   { { DCI_NULL }, _T("\0") }
 };
 
 static BOOL DB2Init(Config* config)
@@ -244,27 +262,34 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
       MutexLock(threadInfo->mutex);
 
       DB_RESULT hResult;
+      Dci* dciList;
 
-      int i = 0;
-      while(g_queries[i].dciName != DCI_NULL)
+      int queryId = 0;
+      while(*(dciList = g_queries[queryId].dciList) != DCI_NULL)
       {
-         hResult = DBSelect(threadInfo->hDb, g_queries[i].query);
+         hResult = DBSelect(threadInfo->hDb, g_queries[queryId].query);
 
          if (hResult == NULL)
          {
-            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: query '%s' failed"), SUBAGENT_NAME, g_queries[i].query);
+            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: query '%s' failed"), SUBAGENT_NAME, g_queries[queryId].query);
+            queryId++;
             continue;
          }
 
-         TCHAR* dciName = threadInfo->db2Params[g_queries[i].dciName];
+         int numCols = DBGetColumnCount(hResult);
 
-         DBGetField(hResult, 0, 0, dciName, STR_MAX);
+         for(int i = 0; i < numCols; i++)
+         {
+            TCHAR* dciVal = threadInfo->db2Params[dciList[i]];
 
-         AgentWriteDebugLog(9, _T("%s: got '%s'"), SUBAGENT_NAME, dciName);
+            DBGetField(hResult, 0, i, dciVal, STR_MAX);
+
+            AgentWriteDebugLog(9, _T("%s: got '%s'"), SUBAGENT_NAME, dciVal);
+         }
 
          DBFreeResult(hResult);
 
-         i++;
+         queryId++;
       }
 
       MutexUnlock(threadInfo->mutex);
@@ -280,7 +305,7 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
 
 static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
 {
-   Dci dci = stringToDci(arg);
+   Dci dci = StringToDci(arg);
 
    if (dci == DCI_NULL)
    {
@@ -316,6 +341,104 @@ static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
    ret_string(value, threadInfo.db2Params[dci]);
 
    return SYSINFO_RC_SUCCESS;
+}
+
+static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry)
+{
+   ConfigEntryList* entryList = configEntry->getSubEntries(_T("*"));
+   TCHAR entryName[STR_MAX] = _T("db2sub/");
+
+   _tcscat(entryName, configEntry->getName());
+
+   if (entryList->getSize() == 0)
+   {
+      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: entry '%s' contained no values"), SUBAGENT_NAME, entryName);
+      return NULL;
+   }
+
+   const PDB2_INFO db2Info = new DB2_INFO();
+   BOOL noErr = TRUE;
+
+   db2Info->db2Id = configEntry->getId();
+
+   NX_CFG_TEMPLATE cfgTemplate[] =
+   {
+      { _T("DBName"),            CT_STRING,      0, 0, DB2_DB_MAX_NAME,   0, db2Info->db2DbName },
+      { _T("DBAlias"),           CT_STRING,      0, 0, DB2_DB_MAX_NAME,   0, db2Info->db2DbAlias },
+      { _T("UserName"),          CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, db2Info->db2UName },
+      { _T("Password"),          CT_STRING,      0, 0, STR_MAX,           0, db2Info->db2UPass },
+      { _T("ReconnectInterval"), CT_LONG,        0, 0, sizeof(LONG),      0, &(db2Info->db2ReconnectInterval) },
+      { _T("QueryInterval"),     CT_LONG,        0, 0, sizeof(LONG),      0, &(db2Info->db2QueryInterval) },
+      { _T(""),                  CT_END_OF_LIST, 0, 0, 0,                 0, NULL }
+   };
+
+   if (!config->parseTemplate(entryName, cfgTemplate))
+   {
+      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to process entry '%s'"), SUBAGENT_NAME, entryName);
+      noErr = FALSE;
+   }
+
+   if (noErr)
+   {
+      if (db2Info->db2DbName[0] == '\0')
+      {
+         AgentWriteDebugLog(7, _T("%s: no DBName in '%s'"), SUBAGENT_NAME, entryName);
+         noErr = FALSE;
+      }
+      else
+      {
+         AgentWriteDebugLog(9, _T("%s: got DBName entry with value '%s'"), SUBAGENT_NAME, db2Info->db2DbName);
+      }
+
+      if (db2Info->db2DbAlias[0] == '\0')
+      {
+         AgentWriteDebugLog(7, _T("%s: no DBAlias in '%s'"), SUBAGENT_NAME, entryName);
+         noErr = FALSE;
+      }
+      else
+      {
+         AgentWriteDebugLog(9, _T("%s: got DBAlias entry with value '%s'"), SUBAGENT_NAME, db2Info->db2DbAlias);
+      }
+
+      if (db2Info->db2UName[0] == '\0')
+      {
+         AgentWriteDebugLog(7, _T("%s: no UserName in '%s'"), SUBAGENT_NAME, entryName);
+         noErr = FALSE;
+      }
+      else
+      {
+         AgentWriteDebugLog(9, _T("%s: got UserName entry with value '%s'"), SUBAGENT_NAME, db2Info->db2UName);
+      }
+
+      if (db2Info->db2UPass[0] == '\0')
+      {
+         AgentWriteDebugLog(7, _T("%s: no Password in '%s'"), SUBAGENT_NAME, entryName);
+         noErr = FALSE;
+      }
+      else
+      {
+         AgentWriteDebugLog(9, _T("%s: got Password entry with value '%s'"), SUBAGENT_NAME, db2Info->db2UPass);
+      }
+
+      if (db2Info->db2ReconnectInterval == 0)
+      {
+         db2Info->db2ReconnectInterval = INTERVAL_RECONNECT_SECONDS;
+      }
+
+      if (db2Info->db2QueryInterval == 0)
+      {
+         db2Info->db2QueryInterval = INTERVAL_QUERY_SECONDS;
+      }
+   }
+
+   if (!noErr)
+   {
+      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to process entry '%s'"), SUBAGENT_NAME, entryName);
+      delete db2Info;
+      return NULL;
+   }
+
+   return db2Info;
 }
 
 DECLARE_SUBAGENT_ENTRY_POINT(DB2)
