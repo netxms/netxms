@@ -27,24 +27,142 @@ UINT32 g_numOfThreads = 0;
 static NETXMS_SUBAGENT_PARAM m_agentParams[] =
 {
    {
-      _T("DB2.Instance.Version(*)"), GetParameter, DCI_NAME_STRING[DCI_DBMS_VERSION],
+      _T("DB2.Instance.Version(*)"), GetParameter, _D(DCI_DBMS_VERSION),
       DCI_DT_STRING, _T("DB2/Instance: DBMS Version")
    },
    {
-      _T("DB2.Table.Available(*)"), GetParameter, DCI_NAME_STRING[DCI_NUM_AVAILABLE],
+      _T("DB2.Table.Available(*)"), GetParameter, _D(DCI_NUM_AVAILABLE),
       DCI_DT_INT, _T("DB2/Table: Number of available tables")
    },
    {
-      _T("DB2.Table.Unavailable(*)"), GetParameter, DCI_NAME_STRING[DCI_NUM_UNAVAILABLE],
+      _T("DB2.Table.Unavailable(*)"), GetParameter, _D(DCI_NUM_UNAVAILABLE),
       DCI_DT_INT, _T("DB2/Table: Number of unavailable tables")
    },
    {
-      _T("DB2.Table.Data.LogicalSize(*)"), GetParameter, DCI_NAME_STRING[DCI_DATA_L_SIZE],
-      DCI_DT_INT64, _T("DB2/Table/Data: Data logical size in kilobytes")
+      _T("DB2.Table.Data.LogicalSize(*)"), GetParameter, _D(DCI_DATA_L_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Data: Data object logical size in kilobytes")
    },
    {
-      _T("DB2.Table.Data.PhysicalSize(*)"), GetParameter, DCI_NAME_STRING[DCI_DATA_P_SIZE],
-      DCI_DT_INT64, _T("DB2/Table/Data: Data physical size in kilobytes")
+      _T("DB2.Table.Data.PhysicalSize(*)"), GetParameter, _D(DCI_DATA_P_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Data: Data object physical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Index.LogicalSize(*)"), GetParameter, _D(DCI_INDEX_L_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Index: Index object logical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Index.PhysicalSize(*)"), GetParameter, _D(DCI_INDEX_P_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Index: Index object physical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Long.LogicalSize(*)"), GetParameter, _D(DCI_LONG_L_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Long: Long object logical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Long.PhysicalSize(*)"), GetParameter, _D(DCI_LONG_P_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Long: Long object physical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Lob.LogicalSize(*)"), GetParameter, _D(DCI_LOB_L_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Lob: LOB object logical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Lob.PhysicalSize(*)"), GetParameter, _D(DCI_LOB_P_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Lob: LOB object physical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Xml.LogicalSize(*)"), GetParameter, _D(DCI_XML_L_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Xml: XML object logical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Xml.PhysicalSize(*)"), GetParameter, _D(DCI_XML_P_SIZE),
+      DCI_DT_INT64, _T("DB2/Table/Xml: XML object physical size in kilobytes")
+   },
+   {
+      _T("DB2.Table.Index.Type1(*)"), GetParameter, _D(DCI_INDEX_TYPE1),
+      DCI_DT_INT, _T("DB2/Table/Index: Number of tables using type-1 indexes")
+   },
+   {
+      _T("DB2.Table.Index.Type2(*)"), GetParameter, _D(DCI_INDEX_TYPE2),
+      DCI_DT_INT, _T("DB2/Table/Index: Number of tables using type-2 indexes")
+   },
+   {
+      _T("DB2.Table.Reorg.Pending(*)"), GetParameter, _D(DCI_REORG_PENDING),
+      DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables pending reorganization")
+   },
+   {
+      _T("DB2.Table.Reorg.Aborted(*)"), GetParameter, _D(DCI_REORG_ABORTED),
+      DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables in aborted reorganization state")
+   },
+   {
+      _T("DB2.Table.Reorg.Executing(*)"), GetParameter, _D(DCI_REORG_EXECUTING),
+      DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables in executing reorganization state")
+   },
+   {
+      _T("DB2.Table.Reorg.Null(*)"), GetParameter, _D(DCI_REORG_NULL),
+      DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables in null reorganization state")
+   },
+   {
+      _T("DB2.Table.Reorg.Paused(*)"), GetParameter, _D(DCI_REORG_PAUSED),
+      DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables in paused reorganization state")
+   },
+   {
+      _T("DB2.Table.Reorg.Alters(*)"), GetParameter, _D(DCI_NUM_REORG_REC_ALTERS),
+      DCI_DT_INT, _T("DB2/Table/Reorg: Number of reorg recommend alter operations")
+   },
+   {
+      _T("DB2.Table.Load.InProgress(*)"), GetParameter, _D(DCI_LOAD_IN_PROGRESS),
+      DCI_DT_INT, _T("DB2/Table/Load: Number of tables with load in progress status")
+   },
+   {
+      _T("DB2.Table.Load.Pending(*)"), GetParameter, _D(DCI_LOAD_PENDING),
+      DCI_DT_INT, _T("DB2/Table/Load: Number of tables with load pending status")
+   },
+   {
+      _T("DB2.Table.Load.Null(*)"), GetParameter, _D(DCI_LOAD_NULL),
+      DCI_DT_INT, _T("DB2/Table/Load: Number of tables with load status neither in progress nor pending")
+   },
+   {
+      _T("DB2.Table.Readonly(*)"), GetParameter, _D(DCI_ACCESS_RO),
+      DCI_DT_INT, _T("DB2/Table: Number of tables in Read Access Only state")
+   },
+   {
+      _T("DB2.Table.NoLoadRestart(*)"), GetParameter, _D(DCI_NO_LOAD_RESTART),
+      DCI_DT_INT, _T("DB2/Table: Number of tables in a state that won't allow a load restart")
+   },
+   {
+      _T("DB2.Table.Index.Rebuild(*)"), GetParameter, _D(DCI_INDEX_REQUIRE_REBUILD),
+      DCI_DT_INT, _T("DB2/Table/Index: Number of tables with indexes that require rebuild")
+   },
+   {
+      _T("DB2.Table.Rid.Large(*)"), GetParameter, _D(DCI_LARGE_RIDS),
+      DCI_DT_INT, _T("DB2/Table/Rid: Number of tables that use large row IDs")
+   },
+   {
+      _T("DB2.Table.Rid.Usual(*)"), GetParameter, _D(DCI_NO_LARGE_RIDS),
+      DCI_DT_INT, _T("DB2/Table/Rid: Number of tables that don't use large row IDs")
+   },
+   {
+      _T("DB2.Table.Rid.Pending(*)"), GetParameter, _D(DCI_LARGE_RIDS_PENDING),
+      DCI_DT_INT, _T("DB2/Table/Rid: Number of tables that use large row Ids but not all indexes have been rebuilt yet")
+   },
+   {
+      _T("DB2.Table.Slot.Large(*)"), GetParameter, _D(DCI_LARGE_SLOTS),
+      DCI_DT_INT, _T("DB2/Table/Slot: Number of tables that use large slots")
+   },
+   {
+      _T("DB2.Table.Slot.Usual(*)"), GetParameter, _D(DCI_NO_LARGE_SLOTS),
+      DCI_DT_INT, _T("DB2/Table/Slot: Number of tables that don't use large slots")
+   },
+   {
+      _T("DB2.Table.Slot.Pending(*)"), GetParameter, _D(DCI_LARGE_SLOTS_PENDING),
+      DCI_DT_INT,
+      _T("DB2/Table/Slot: Number of tables that use large slots but there has not yet been an offline table reorganization")
+      _T(" or table truncation operation")
+   },
+   {
+      _T("DB2.Table.DictSize(*)"), GetParameter, _D(DCI_DICTIONARY_SIZE),
+      DCI_DT_INT64, _T("DB2/Table: Size of the dictionary in bytes")
    }
 };
 
@@ -66,6 +184,34 @@ static QUERY g_queries[] =
    { { DCI_DBMS_VERSION }, _T("SELECT service_level FROM TABLE (sysproc.env_get_inst_info())") },
    { { DCI_NUM_AVAILABLE }, _T("SELECT count(available) FROM sysibmadm.admintabinfo WHERE available = 'Y'") },
    { { DCI_NUM_UNAVAILABLE }, _T("SELECT count(available) FROM sysibmadm.admintabinfo WHERE available = 'N'") },
+   {
+      {
+         DCI_DATA_L_SIZE, DCI_DATA_P_SIZE, DCI_INDEX_L_SIZE, DCI_INDEX_P_SIZE, DCI_LONG_L_SIZE, DCI_LONG_P_SIZE,
+         DCI_LOB_L_SIZE, DCI_LOB_P_SIZE, DCI_XML_L_SIZE, DCI_XML_P_SIZE, DCI_DICTIONARY_SIZE, DCI_NUM_REORG_REC_ALTERS
+      },
+      _T("SELECT sum(data_object_l_size), sum(data_object_p_size), sum(index_object_l_size), sum(index_object_p_size),")
+      _T("sum(long_object_l_size), sum(long_object_p_size), sum(lob_object_l_size), sum(lob_object_p_size),")
+      _T("sum(xml_object_l_size), sum(xml_object_p_size), sum(dictionary_size), sum(num_reorg_rec_alters) FROM sysibmadm.admintabinfo")
+   },
+   { { DCI_INDEX_TYPE1 }, _T("SELECT count(index_type) FROM sysibmadm.admintabinfo WHERE index_type = 1") },
+   { { DCI_INDEX_TYPE2 }, _T("SELECT count(index_type) FROM sysibmadm.admintabinfo WHERE index_type = 2") },
+   { { DCI_REORG_PENDING }, _T("SELECT count(reorg_pending) FROM sysibmadm.admintabinfo WHERE reorg_pending = 'Y'") },
+   { { DCI_REORG_ABORTED }, _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'ABORTED'") },
+   { { DCI_REORG_EXECUTING }, _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'EXECUTING'") },
+   { { DCI_REORG_PAUSED }, _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'PAUSED'") },
+   { { DCI_REORG_NULL }, _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'NULL'") },
+   { { DCI_LOAD_IN_PROGRESS }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'IN_PROGRESS'") },
+   { { DCI_LOAD_PENDING }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'PENDING'") },
+   { { DCI_LOAD_NULL }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'NULL'") },
+   { { DCI_ACCESS_RO }, _T("SELECT count(read_access_only) FROM sysibmadm.admintabinfo WHERE read_access_only = 'Y'") },
+   { { DCI_NO_LOAD_RESTART }, _T("SELECT count(no_load_restart) FROM sysibmadm.admintabinfo WHERE no_load_restart = 'Y'") },
+   { { DCI_INDEX_REQUIRE_REBUILD }, _T("SELECT count(indexes_require_rebuild) FROM sysibmadm.admintabinfo WHERE indexes_require_rebuild = 'Y'") },
+   { { DCI_LARGE_RIDS }, _T("SELECT count(large_rids) FROM sysibmadm.admintabinfo WHERE large_rids = 'Y'") },
+   { { DCI_NO_LARGE_RIDS }, _T("SELECT count(large_rids) FROM sysibmadm.admintabinfo WHERE large_rids = 'N'") },
+   { { DCI_LARGE_RIDS_PENDING }, _T("SELECT count(large_rids) FROM sysibmadm.admintabinfo WHERE large_rids = 'P'") },
+   { { DCI_LARGE_SLOTS }, _T("SELECT count(large_slots) FROM sysibmadm.admintabinfo WHERE large_slots = 'Y'") },
+   { { DCI_NO_LARGE_SLOTS }, _T("SELECT count(large_slots) FROM sysibmadm.admintabinfo WHERE large_slots = 'N'") },
+   { { DCI_LARGE_SLOTS_PENDING }, _T("SELECT count(large_slots) FROM sysibmadm.admintabinfo WHERE large_slots = 'P'") },
    { { DCI_NULL }, _T("\0") }
 };
 
@@ -464,4 +610,3 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 }
 
 #endif
-

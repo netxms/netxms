@@ -30,10 +30,9 @@
 #define STR_MAX 256
 #define INTERVAL_QUERY_SECONDS 60
 #define INTERVAL_RECONNECT_SECONDS 30
-#define NUM_OF_PARAMS 32
-#define QUERY_MAX 256
+#define QUERY_MAX 512
 #define DB_ID_DIGITS_MAX 10 + 1
-#define DCI_LIST_SIZE 8
+#define DCI_LIST_SIZE 12
 
 /**
  * DB2 constants
@@ -62,7 +61,7 @@ typedef struct
    MUTEX mutex;
    DB_HANDLE hDb;
    PDB2_INFO db2Info;
-   TCHAR db2Params[NUM_OF_PARAMS][STR_MAX];
+   TCHAR db2Params[NUM_OF_DCI][STR_MAX];
 } THREAD_INFO, *PTHREAD_INFO;
 
 typedef struct
