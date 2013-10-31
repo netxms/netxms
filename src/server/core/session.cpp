@@ -1532,6 +1532,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
    msg.SetVariable(VID_SUPPORTED_ENCRYPTION, (UINT32)0);
    msg.SetVariable(VID_PROTOCOL_VERSION, (UINT32)CLIENT_PROTOCOL_VERSION);
 	msg.SetVariable(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
+   msg.SetVariable(VID_TIMESTAMP, (UINT32)time(NULL));
 
 #if defined(_WIN32)
 	TIME_ZONE_INFORMATION tz;
@@ -1557,10 +1558,10 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	wdt[i] = 0;
 
 #ifdef UNICODE
-	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (tz.Bias >= 0) ? '+' : '-',
+	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (tz.Bias > 0) ? '-' : '+',
 	         abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #else
-	sprintf(szBuffer, "%S%c%02d%S", wst, (tz.Bias >= 0) ? '+' : '-',
+	sprintf(szBuffer, "%S%c%02d%S", wst, (tz.Bias > 0) ? '-' : '+',
 	        abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #endif
 #elif HAVE_DECL_TIMEZONE
@@ -1609,6 +1610,9 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 
 	ConfigReadStr(_T("DefaultConsoleTimeFormat"), szBuffer, 1024, _T("HH:mm:ss"));
 	msg.SetVariable(VID_TIME_FORMAT, szBuffer);
+
+	ConfigReadStr(_T("DefaultConsoleShortTimeFormat"), szBuffer, 1024, _T("HH:mm"));
+	msg.SetVariable(VID_SHORT_TIME_FORMAT, szBuffer);
 
    // Send response
    sendMessage(&msg);

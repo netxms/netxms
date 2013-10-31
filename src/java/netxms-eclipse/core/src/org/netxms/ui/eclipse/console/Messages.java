@@ -165,7 +165,11 @@ public class Messages extends NLS
 	public static String SendSMSDialog_Message;
 	public static String SendSMSDialog_PhoneNumber;
 	public static String SendSMSDialog_Title;
-	public static String ServerConsole_CannotOpen;
+	public static String ServerClock_ServerTime;
+
+   public static String ServerClock_TimeFormat;
+
+   public static String ServerConsole_CannotOpen;
 	public static String ServerConsole_ClearTerminal;
 	public static String ServerConsole_OpenServerConsole;
 	public static String ServerConsole_ScrollLock;

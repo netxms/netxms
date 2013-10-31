@@ -350,6 +350,8 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
 		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		coolBar.add(new ToolBarContributionItem(toolbar, "config")); //$NON-NLS-1$
+
+		coolBar.add(new ServerClockContributionItem());
 	}
 
 	/*

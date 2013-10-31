@@ -354,6 +354,16 @@ static BOOL RecreateTData(const TCHAR *className)
 }
 
 /**
+ * Upgrade from V292 to V293
+ */
+static BOOL H_UpgradeFromV292(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateConfigParam(_T("DefaultConsoleShortTimeFormat"), _T("HH:mm"), 1, 0));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='293' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V291 to V292
  */
 static BOOL H_UpgradeFromV291(int currVersion, int newVersion)
@@ -7174,6 +7184,7 @@ static struct
    { 289, 290, H_UpgradeFromV289 },
    { 290, 291, H_UpgradeFromV290 },
    { 291, 292, H_UpgradeFromV291 },
+   { 292, 293, H_UpgradeFromV292 },
    { 0, 0, NULL }
 };
 

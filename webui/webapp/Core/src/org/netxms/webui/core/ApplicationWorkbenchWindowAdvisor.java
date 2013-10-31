@@ -108,4 +108,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		shell.getMenuBar().setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowClose()
+	 */
+	@Override
+	public void postWindowClose()
+	{
+		super.postWindowClose();
+	}
 }

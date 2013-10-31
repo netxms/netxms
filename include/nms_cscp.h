@@ -942,6 +942,7 @@ typedef struct
 #define VID_LOCALE                  ((UINT32)450)
 #define VID_READ_ONLY               ((UINT32)451)
 #define VID_CLIENT_ADDRESS          ((UINT32)452)
+#define VID_SHORT_TIME_FORMAT       ((UINT32)453)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

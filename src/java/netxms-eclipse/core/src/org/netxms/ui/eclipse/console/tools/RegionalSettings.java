@@ -22,6 +22,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.api.client.Session;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -37,6 +38,7 @@ public class RegionalSettings
 	private static int dateTimeFormat = DATETIME_FORMAT_SERVER;
 	private static String dateFormatString;
 	private static String timeFormatString;
+	private static String shortTimeFormatString;
 	
 	/**
 	 * Update from preferences
@@ -47,6 +49,7 @@ public class RegionalSettings
 		dateTimeFormat = ps.getInt("DATETIME_FORMAT"); //$NON-NLS-1$
 		dateFormatString = ps.getString("DATE_FORMAT_STRING"); //$NON-NLS-1$
 		timeFormatString = ps.getString("TIME_FORMAT_STRING"); //$NON-NLS-1$
+      shortTimeFormatString = ps.getString("SHORT_TIME_FORMAT_STRING"); //$NON-NLS-1$
 	}
 	
 	/**
@@ -100,4 +103,56 @@ public class RegionalSettings
 				return DateFormat.getDateInstance(DateFormat.SHORT);
 		}
 	}
+
+   /**
+    * Get formatter for time only
+    * 
+    * @return
+    */
+   public static DateFormat getTimeFormat()
+   {
+      switch(dateTimeFormat)
+      {
+         case DATETIME_FORMAT_SERVER:
+            Session session = ConsoleSharedData.getSession();
+            return new SimpleDateFormat(session.getTimeFormat());
+         case DATETIME_FORMAT_CUSTOM:
+            try
+            {
+               return new SimpleDateFormat(timeFormatString);
+            }
+            catch(IllegalArgumentException e)
+            {
+               return DateFormat.getTimeInstance(DateFormat.MEDIUM);
+            }
+         default:
+            return DateFormat.getTimeInstance(DateFormat.MEDIUM);
+      }
+   }
+
+   /**
+    * Get formatter for time only (short form)
+    * 
+    * @return
+    */
+   public static DateFormat getShortTimeFormat()
+   {
+      switch(dateTimeFormat)
+      {
+         case DATETIME_FORMAT_SERVER:
+            NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+            return new SimpleDateFormat(session.getShortTimeFormat());
+         case DATETIME_FORMAT_CUSTOM:
+            try
+            {
+               return new SimpleDateFormat(shortTimeFormatString);
+            }
+            catch(IllegalArgumentException e)
+            {
+               return DateFormat.getTimeInstance(DateFormat.SHORT);
+            }
+         default:
+            return DateFormat.getTimeInstance(DateFormat.SHORT);
+      }
+   }
 }

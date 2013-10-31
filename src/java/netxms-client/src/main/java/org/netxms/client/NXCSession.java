@@ -178,8 +178,11 @@ public class NXCSession
    private String tileServerURL;
    private String dateFormat;
    private String timeFormat;
+   private String shortTimeFormat;
    private int defaultDciRetentionTime;
    private int defaultDciPollingInterval;
+   private long serverTime = System.currentTimeMillis();
+   private long serverTimeRecvTime = System.currentTimeMillis();
 
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
@@ -472,6 +475,10 @@ public class NXCSession
                {
                   case NXCPCodes.CMD_REQUEST_SESSION_KEY:
                      setupEncryption(msg);
+                     break;
+                  case NXCPCodes.CMD_KEEPALIVE:
+                     serverTime = msg.getVariableAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000;
+                     serverTimeRecvTime = System.currentTimeMillis();
                      break;
                   case NXCPCodes.CMD_OBJECT:
                   case NXCPCodes.CMD_OBJECT_UPDATE:
@@ -1344,6 +1351,8 @@ public class NXCSession
          serverVersion = response.getVariableAsString(NXCPCodes.VID_SERVER_VERSION);
          serverId = response.getVariableAsBinary(NXCPCodes.VID_SERVER_ID);
          serverTimeZone = response.getVariableAsString(NXCPCodes.VID_TIMEZONE);
+         serverTime = response.getVariableAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000;
+         serverTimeRecvTime = System.currentTimeMillis();
          serverChallenge = response.getVariableAsBinary(NXCPCodes.VID_CHALLENGE);
 
          tileServerURL = response.getVariableAsString(NXCPCodes.VID_TILE_SERVER_URL);
@@ -1357,10 +1366,16 @@ public class NXCSession
          }
 
          dateFormat = response.getVariableAsString(NXCPCodes.VID_DATE_FORMAT);
-         if ((dateFormat == null) || (dateFormat.length() == 0)) dateFormat = "dd.MM.yyyy";
+         if ((dateFormat == null) || (dateFormat.length() == 0)) 
+            dateFormat = "dd.MM.yyyy";
 
          timeFormat = response.getVariableAsString(NXCPCodes.VID_TIME_FORMAT);
-         if ((timeFormat == null) || (timeFormat.length() == 0)) timeFormat = "HH:mm:ss";
+         if ((timeFormat == null) || (timeFormat.length() == 0)) 
+            timeFormat = "HH:mm:ss";
+
+         shortTimeFormat = response.getVariableAsString(NXCPCodes.VID_SHORT_TIME_FORMAT);
+         if ((shortTimeFormat == null) || (shortTimeFormat.length() == 0)) 
+            shortTimeFormat = "HH:mm";
 
          // Setup encryption if required
          if (connUseEncryption)
@@ -1592,6 +1607,15 @@ public class NXCSession
       return serverTimeZone;
    }
 
+   /**
+    * @return the serverTime
+    */
+   public long getServerTime()
+   {
+      long offset = System.currentTimeMillis() - serverTimeRecvTime;
+      return serverTime + offset;
+   }
+   
    /**
     * @return the serverChallenge
     */
@@ -6291,6 +6315,16 @@ public class NXCSession
       return timeFormat;
    }
 
+   /**
+    * Get time format for short form (usually without seconds).
+    * 
+    * @return
+    */
+   public String getShortTimeFormat()
+   {
+      return shortTimeFormat;
+   }
+   
    /**
     * Handover object cache to new session. After call to this method,
     * object cache of this session invalidated and should not be used.
