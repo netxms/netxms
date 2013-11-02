@@ -351,7 +351,11 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		coolBar.add(new ToolBarContributionItem(toolbar, "config")); //$NON-NLS-1$
 
-		coolBar.add(new ServerClockContributionItem());
+		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_SERVER_CLOCK")) //$NON-NLS-1$
+		{
+		   coolBar.add(new ServerClockContributionItem());
+		}
+		ConsoleSharedData.setProperty("CoolBarManager", coolBar); //$NON-NLS-1$
 	}
 
 	/*

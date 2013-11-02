@@ -21,13 +21,14 @@ package org.netxms.ui.eclipse.console.tools;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.netxms.ui.eclipse.tools.TextFieldValidator;
+import org.netxms.webui.core.Messages;
 
 /**
  * Input validator for IP network mask entry fields
  */
 public class IPNetMaskValidator implements TextFieldValidator
 {
-	private static final String IP_ADDRESS_PATTERN = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+	private static final String IP_ADDRESS_PATTERN = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"; //$NON-NLS-1$
 	
 	private boolean allowEmpty;
 	
@@ -80,6 +81,6 @@ public class IPNetMaskValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return "Please enter valid IP network mask in " + label + " field";
+      return String.format(Messages.get().IPNetMaskValidator_ErrorMessage, label);
 	}
 }

@@ -66,6 +66,6 @@ public class MacAddressValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return Messages.MacAddressValidator_ErrorPrefix + label + Messages.MacAddressValidator_ErrorSuffix;
+      return String.format(Messages.MacAddressValidator_ErrorMessage, label);
 	}
 }

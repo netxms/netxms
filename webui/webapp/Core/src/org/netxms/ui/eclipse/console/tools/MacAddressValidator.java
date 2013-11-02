@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.console.tools;
 import org.netxms.client.MacAddress;
 import org.netxms.client.MacAddressFormatException;
 import org.netxms.ui.eclipse.tools.TextFieldValidator;
+import org.netxms.webui.core.Messages;
 
 /**
  * Input validator for MAC address entry fields
@@ -65,6 +66,6 @@ public class MacAddressValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return "Please enter valid MAC address in " + label + " field";
+      return String.format(Messages.get().MacAddressValidator_ErrorMessage, label);
 	}
 }

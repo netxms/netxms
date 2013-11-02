@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.tools;
 
 import org.netxms.ui.eclipse.console.Messages;
 
-
 /**
  * Concrete implementation of TextFieldValidator interface
  * for validating numeric fields 
@@ -65,6 +64,6 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return Messages.NumericTextFieldValidator_ErrorMessage_Part1 + range + Messages.NumericTextFieldValidator_ErrorMessage_Part2 + label + Messages.NumericTextFieldValidator_ErrorMessage_Part3;
+		return String.format(Messages.NumericTextFieldValidator_ErrorMessage, range, label);
 	}
 }

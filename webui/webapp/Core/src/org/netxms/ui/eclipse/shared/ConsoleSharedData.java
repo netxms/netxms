@@ -35,4 +35,26 @@ public class ConsoleSharedData
 	{
 		return (Session)RWT.getUISession().getAttribute("netxms.session");
 	}
+
+	/**
+	 * Get value of console property
+	 * 
+	 * @param name name of the property
+	 * @return property value or null
+	 */
+	public static Object getProperty(final String name)
+	{
+		return RWT.getUISession().getAttribute("netxms." + name);
+	}
+	
+	/**
+	 * Set value of console property
+	 * 
+	 * @param name name of the property
+	 * @param value new property value
+	 */
+	public static void setProperty(final String name, final Object value)
+	{
+		RWT.getUISession().setAttribute("netxms." + name, value);
+	}
 }

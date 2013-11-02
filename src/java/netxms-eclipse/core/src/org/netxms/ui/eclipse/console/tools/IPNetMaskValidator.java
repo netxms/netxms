@@ -81,6 +81,6 @@ public class IPNetMaskValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return Messages.IPNetMaskValidator_ErrorPrefix + label + Messages.IPNetMaskValidator_ErrorSuffix;
+      return String.format(Messages.IPNetMaskValidator_ErrorMessage, label);
 	}
 }

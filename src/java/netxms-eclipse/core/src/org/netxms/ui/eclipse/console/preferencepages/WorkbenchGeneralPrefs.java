@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.console.preferencepages;
 
+import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -31,6 +32,8 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.ServerClockContributionItem;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -42,6 +45,7 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 	private Button cbShowTrayIcon;
 	private Button cbHideWhenMinimized;
 	private Button cbShowHiddenAttributes;
+   private Button cbShowServerClock;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -72,6 +76,10 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		cbShowHiddenAttributes.setText(Messages.WorkbenchGeneralPrefs_ShowHiddenAttrs);
 		cbShowHiddenAttributes.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_HIDDEN_ATTRIBUTES")); //$NON-NLS-1$
 		
+      cbShowServerClock = new Button(dialogArea, SWT.CHECK);
+      cbShowServerClock.setText(Messages.WorkbenchGeneralPrefs_ShowServerClock);
+      cbShowServerClock.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_SERVER_CLOCK")); //$NON-NLS-1$
+      
 		cbShowTrayIcon.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -118,6 +126,8 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		cbShowHeapMonitor.setSelection(true);
 		cbShowTrayIcon.setSelection(true);
 		cbHideWhenMinimized.setSelection(false);
+		cbShowHiddenAttributes.setSelection(false);
+		cbShowServerClock.setSelection(false);
 	}
 
 	/* (non-Javadoc)
@@ -130,11 +140,25 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		Activator.getDefault().getPreferenceStore().setValue("SHOW_TRAY_ICON", cbShowTrayIcon.getSelection()); //$NON-NLS-1$
 		Activator.getDefault().getPreferenceStore().setValue("HIDE_WHEN_MINIMIZED", cbHideWhenMinimized.getSelection() && cbShowTrayIcon.getSelection()); //$NON-NLS-1$
 		Activator.getDefault().getPreferenceStore().setValue("SHOW_HIDDEN_ATTRIBUTES", cbShowHiddenAttributes.getSelection()); //$NON-NLS-1$
+      Activator.getDefault().getPreferenceStore().setValue("SHOW_SERVER_CLOCK", cbShowServerClock.getSelection()); //$NON-NLS-1$
 		
 		if (cbShowTrayIcon.getSelection())
 			Activator.showTrayIcon();
 		else
 			Activator.hideTrayIcon();
+		
+      ICoolBarManager coolBar = (ICoolBarManager)ConsoleSharedData.getProperty("CoolBarManager"); //$NON-NLS-1$
+      coolBar.remove(ServerClockContributionItem.ID);
+		if (cbShowServerClock.getSelection())
+		{
+		   coolBar.add(new ServerClockContributionItem());
+	      coolBar.update(true);
+	      PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().layout(true, true);
+		}
+		else
+		{
+         coolBar.update(true);
+		}
 		
 		return super.performOk();
 	}

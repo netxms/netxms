@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@ import org.eclipse.ui.model.ContributionComparator;
 @SuppressWarnings("restriction")
 public class ExtendedContributionComparator extends ContributionComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.model.ContributionComparator#compare(java.lang.Object, java.lang.Object)
 	 */

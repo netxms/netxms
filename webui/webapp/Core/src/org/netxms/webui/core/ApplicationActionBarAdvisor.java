@@ -25,6 +25,7 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.netxms.base.NXCommon;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
@@ -259,5 +260,11 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
 		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		coolBar.add(new ToolBarContributionItem(toolbar, "config")); //$NON-NLS-1$
+
+		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_SERVER_CLOCK")) //$NON-NLS-1$
+		{
+		   coolBar.add(new ServerClockContributionItem());
+		}
+		ConsoleSharedData.setProperty("CoolBarManager", coolBar); //$NON-NLS-1$
 	}
 }

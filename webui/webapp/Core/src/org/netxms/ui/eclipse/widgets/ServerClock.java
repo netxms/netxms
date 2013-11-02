@@ -9,6 +9,7 @@ import java.util.TimeZone;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -18,10 +19,10 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.console.Activator;
-import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.webui.core.Activator;
+import org.netxms.webui.core.Messages;
 
 /**
  * Widget showing server clock
@@ -45,7 +46,7 @@ public class ServerClock extends Composite
       setLayout(new FillLayout());
       
       time = new Label(this, SWT.NONE);
-      time.setToolTipText(Messages.ServerClock_Tooltip);
+      time.setToolTipText(Messages.get().ServerClock_Tooltip);
 
       FontData fd = time.getFont().getFontData()[0];
       fd.setStyle(SWT.BOLD);
@@ -60,6 +61,9 @@ public class ServerClock extends Composite
       });
       
       createPopupMenu();
+      
+		setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
+		time.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$      
       
       final Runnable timer = new Runnable() {
          public void run() {
@@ -82,7 +86,7 @@ public class ServerClock extends Composite
       showText = settings.getBoolean("ServerClock.showText"); //$NON-NLS-1$
       showTimeZone = settings.getBoolean("ServerClock.showTimeZone"); //$NON-NLS-1$
       
-      final Action actionShowText = new Action(Messages.ServerClock_OptionShowText, Action.AS_CHECK_BOX) {
+      final Action actionShowText = new Action(Messages.get().ServerClock_OptionShowText, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -93,7 +97,7 @@ public class ServerClock extends Composite
       };
       actionShowText.setChecked(showText);
       
-      final Action actionShowTimeZone = new Action(Messages.ServerClock_OptionShowTimeZone, Action.AS_CHECK_BOX) {
+      final Action actionShowTimeZone = new Action(Messages.get().ServerClock_OptionShowTimeZone, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -123,7 +127,7 @@ public class ServerClock extends Composite
       StringBuilder sb = new StringBuilder();
       if (showText)
       {
-         sb.append(Messages.ServerClock_ServerTime);
+         sb.append(Messages.get().ServerClock_ServerTime);
          sb.append(' ');
       }
       sb.append(df.format(new Date(session.getServerTime())));

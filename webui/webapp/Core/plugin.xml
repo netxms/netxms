@@ -186,6 +186,11 @@
             id="org.netxms.ui.eclipse.preferencePages.RegionalSettings"
             name="%page.regionalSettings">
       </page>
+      <page
+            class="org.netxms.ui.eclipse.console.preferencepages.WorkbenchGeneralPrefs"
+            id="org.eclipse.ui.preferencePages.Workbench"
+            name="%page.workbench">
+      </page>
    </extension>
    <extension
          point="org.eclipse.rap.ui.entrypoint">

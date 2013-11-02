@@ -37,6 +37,8 @@ public class Messages extends NLS
 	public String FilterText_CloseFilter;
 	public String FilterText_Filter;
 	public String FilterText_FilterIsEmpty;
+	public String IPAddressValidator_ErrorMessage;
+	public String IPNetMaskValidator_ErrorMessage;
 	public String LoginForm_AdvOptionsDisabled;
 	public String LoginForm_Error;
 	public String LoginForm_LoginButton;
@@ -52,17 +54,26 @@ public class Messages extends NLS
 	public String LoginJob_SyncUsers;
 	public String LoginSettingsDialog_ServerAddress;
 	public String LoginSettingsDialog_Title;
+	public String MacAddressValidator_ErrorMessage;
+	public String ObjectNameValidator_ErrorMessage1;
+	public String ObjectNameValidator_ErrorMessage2;
 	public String PasswordExpiredDialog_ConfirmNewPassword;
 	public String PasswordExpiredDialog_NewPassword;
 	public String PasswordExpiredDialog_Prompt;
 	public String PasswordExpiredDialog_Title;
 	public String RefreshAction_Name;
+	public String ServerClock_OptionShowText;
+	public String ServerClock_OptionShowTimeZone;
+	public String ServerClock_ServerTime;
+	public String ServerClock_Tooltip;
 	public String WidgetHelper_Action_Copy;
 	public String WidgetHelper_Action_Cut;
 	public String WidgetHelper_Action_Delete;
 	public String WidgetHelper_Action_Paste;
 	public String WidgetHelper_Action_SelectAll;
 	public String WidgetHelper_InputValidationError;
+	public String WorkbenchGeneralPrefs_ShowHiddenAttrs;
+	public String WorkbenchGeneralPrefs_ShowServerClock;
 	
 	static
 	{

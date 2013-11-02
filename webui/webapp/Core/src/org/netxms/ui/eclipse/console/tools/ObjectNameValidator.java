@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.console.tools;
 
 import org.netxms.ui.eclipse.tools.TextFieldValidator;
+import org.netxms.webui.core.Messages;
 
 /**
  * Object name field validator
@@ -59,6 +60,8 @@ public class ObjectNameValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return isEmpty ? ("Please provide non-empty object name in " + label + " field") : ("Object name in " + label + " field contains invalid characters");
+		return isEmpty ? 
+		      String.format(Messages.get().ObjectNameValidator_ErrorMessage1, label) : 
+		         String.format(Messages.get().ObjectNameValidator_ErrorMessage2, label);
 	}
 }

@@ -21,10 +21,9 @@ public class Messages extends NLS
 	public static String FilterText_CloseFilter;
 	public static String FilterText_Filter;
 	public static String FilterText_FilterIsEmpty;
-	public static String NumericTextFieldValidator_ErrorMessage_Part1;
-	public static String NumericTextFieldValidator_ErrorMessage_Part2;
-	public static String NumericTextFieldValidator_ErrorMessage_Part3;
-	public static String NumericTextFieldValidator_RangeSeparator;
+	public static String NumericTextFieldValidator_ErrorMessage;
+
+   public static String NumericTextFieldValidator_RangeSeparator;
 	public static String RefreshAction_Name;
 	public static String WidgetHelper_Action_Copy;
 	public static String WidgetHelper_Action_Cut;
@@ -48,32 +47,29 @@ public class Messages extends NLS
 	public static String HttpProxyPrefs_ProxyRequireAuth;
 	public static String HttpProxyPrefs_ProxyServer;
 	public static String HttpProxyPrefs_UserProxyMessage;
-	public static String IPAddressValidator_ErrorPrefix;
+	public static String IPAddressValidator_ErrorMessage;
+
+   public static String IPAddressValidator_ErrorPrefix;
 	public static String IPAddressValidator_ErrorSuffix;
-	public static String IPNetMaskValidator_ErrorPrefix;
+	public static String IPNetMaskValidator_ErrorMessage;
+
+   public static String IPNetMaskValidator_ErrorPrefix;
 	public static String IPNetMaskValidator_ErrorSuffix;
 	public static String LoginDialog_Auth;
-
    public static String LoginDialog_Cert;
-
    public static String LoginDialog_connection;
-
    public static String LoginDialog_Error;
 	public static String LoginDialog_login;
-
    public static String LoginDialog_NoCertSelected;
 	public static String LoginDialog_opt_clear_cache;
 	public static String LoginDialog_opt_dont_cache;
 	public static String LoginDialog_opt_encrypt;
 	public static String LoginDialog_opt_version_match;
 	public static String LoginDialog_options;
-
    public static String LoginDialog_Passwd;
 	public static String LoginDialog_server;
 	public static String LoginDialog_title;
-
    public static String LoginDialog_Warning;
-
    public static String LoginDialog_WrongKeyStorePasswd;
 	public static String LoginJob_connecting;
 	public static String LoginJob_init_extensions;
@@ -81,7 +77,9 @@ public class Messages extends NLS
 	public static String LoginJob_sync_event_db;
 	public static String LoginJob_sync_objects;
 	public static String LoginJob_sync_users;
-	public static String MacAddressValidator_ErrorPrefix;
+	public static String MacAddressValidator_ErrorMessage;
+
+   public static String MacAddressValidator_ErrorPrefix;
 	public static String MacAddressValidator_ErrorSuffix;
 	public static String NXMCActionBarAdvisor_About;
 	public static String NXMCActionBarAdvisor_AboutTitle;
@@ -111,28 +109,24 @@ public class Messages extends NLS
 	public static String NXMCWorkbenchAdvisor_ServerShutdownMessage;
 	public static String NXMCWorkbenchWindowAdvisor_cannot_change_passwd;
 	public static String NXMCWorkbenchWindowAdvisor_CertDialogTitle;
-
    public static String NXMCWorkbenchWindowAdvisor_CertPassword;
-
    public static String NXMCWorkbenchWindowAdvisor_CertPasswordMsg;
-
    public static String NXMCWorkbenchWindowAdvisor_CertStorePassword;
-
    public static String NXMCWorkbenchWindowAdvisor_CertStorePasswordMsg;
-
    public static String NXMCWorkbenchWindowAdvisor_ChangingPassword;
 	public static String NXMCWorkbenchWindowAdvisor_connectionError;
 	public static String NXMCWorkbenchWindowAdvisor_exception;
-
    public static String NXMCWorkbenchWindowAdvisor_NoEncryptionSupport;
-
    public static String NXMCWorkbenchWindowAdvisor_NoEncryptionSupportDetails;
 	public static String NXMCWorkbenchWindowAdvisor_passwd_changed;
-
    public static String NXMCWorkbenchWindowAdvisor_PkcsFiles;
 	public static String NXMCWorkbenchWindowAdvisor_title_error;
 	public static String NXMCWorkbenchWindowAdvisor_title_information;
-	public static String ObjectNameValidator_ErrorPrefix1;
+	public static String ObjectNameValidator_ErrorMessage1;
+
+   public static String ObjectNameValidator_ErrorMessage2;
+
+   public static String ObjectNameValidator_ErrorPrefix1;
 	public static String ObjectNameValidator_ErrorPrefix2;
 	public static String ObjectNameValidator_ErrorSuffix1;
 	public static String ObjectNameValidator_ErrorSuffix2;
@@ -145,6 +139,8 @@ public class Messages extends NLS
 	public static String PasswordExpiredDialog_passwd_expired;
 	public static String PasswordExpiredDialog_title;
 	public static String PreferenceInitializer_DefaultDateFormat;
+
+   public static String PreferenceInitializer_DefaultShortTimeFormat;
 	public static String PreferenceInitializer_DefaultTimeFormat;
 	public static String RegionalSettingsPrefPage_DateFormatString;
 	public static String RegionalSettingsPrefPage_DateTimeFormat;
@@ -152,11 +148,13 @@ public class Messages extends NLS
 	public static String RegionalSettingsPrefPage_FmtCustom;
 	public static String RegionalSettingsPrefPage_FmtJava;
 	public static String RegionalSettingsPrefPage_FmtServer;
-	public static String RegionalSettingsPrefPage_TimeFormatString;
+	public static String RegionalSettingsPrefPage_ShortTimeExample;
+
+   public static String RegionalSettingsPrefPage_ShortTimeFormatString;
+
+   public static String RegionalSettingsPrefPage_TimeFormatString;
 	public static String SecurityWarningDialog_DontAskAgain;
-
    public static String SecurityWarningDialog_Title;
-
    public static String SendSMS_DialogTextPrefix;
 	public static String SendSMS_DialogTextSuffix;
 	public static String SendSMS_DialogTitle;
@@ -165,10 +163,13 @@ public class Messages extends NLS
 	public static String SendSMSDialog_Message;
 	public static String SendSMSDialog_PhoneNumber;
 	public static String SendSMSDialog_Title;
-	public static String ServerClock_ServerTime;
+	public static String ServerClock_OptionShowText;
 
-   public static String ServerClock_TimeFormat;
+   public static String ServerClock_OptionShowTimeZone;
 
+   public static String ServerClock_ServerTime;
+
+   public static String ServerClock_Tooltip;
    public static String ServerConsole_CannotOpen;
 	public static String ServerConsole_ClearTerminal;
 	public static String ServerConsole_OpenServerConsole;
@@ -185,7 +186,9 @@ public class Messages extends NLS
 	public static String WorkbenchGeneralPrefs_HideWhenMinimized;
 	public static String WorkbenchGeneralPrefs_show_heap;
 	public static String WorkbenchGeneralPrefs_show_tray_icon;
-	public static String WorkbenchGeneralPrefs_ShowHiddenAttrs;	
+	public static String WorkbenchGeneralPrefs_ShowHiddenAttrs;
+
+   public static String WorkbenchGeneralPrefs_ShowServerClock;	
 	public static String SplashHandler_Version;
 	
 	static

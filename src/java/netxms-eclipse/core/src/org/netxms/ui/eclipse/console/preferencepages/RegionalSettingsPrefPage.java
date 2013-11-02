@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.api.client.Session;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
@@ -52,7 +53,9 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 	private Combo dateTimeFormat;
 	private LabeledText dateFormatString;
 	private LabeledText timeFormatString;
+   private LabeledText shortTimeFormatString;
 	private LabeledText dateTimeExample;
+	private LabeledText shortTimeExample;
 	private int format;
 	
 	/* (non-Javadoc)
@@ -75,13 +78,14 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-		layout.numColumns = 2;
+		layout.numColumns = 3;
+		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+		gd.horizontalSpan = 3;
 		dateTimeFormat = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.RegionalSettingsPrefPage_DateTimeFormat, gd); //$NON-NLS-1$
 		dateTimeFormat.add(Messages.RegionalSettingsPrefPage_FmtServer); //$NON-NLS-1$
 		dateTimeFormat.add(Messages.RegionalSettingsPrefPage_FmtJava); //$NON-NLS-1$
@@ -95,7 +99,9 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 				format = dateTimeFormat.getSelectionIndex();
 				dateFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
 				timeFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
+            shortTimeFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
 				updateExample(null);
+				updateShortTimeExample(null);
 			}
 			
 			@Override
@@ -132,6 +138,22 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		timeFormatString.setText(getPreferenceStore().getString("TIME_FORMAT_STRING")); //$NON-NLS-1$
 		timeFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
 		timeFormatString.getTextControl().addModifyListener(listener);
+
+      shortTimeFormatString = new LabeledText(dialogArea, SWT.NONE);
+      shortTimeFormatString.setLabel(Messages.RegionalSettingsPrefPage_ShortTimeFormatString);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      shortTimeFormatString.setLayoutData(gd);
+      shortTimeFormatString.setText(getPreferenceStore().getString("SHORT_TIME_FORMAT_STRING")); //$NON-NLS-1$
+      shortTimeFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
+      shortTimeFormatString.getTextControl().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            updateShortTimeExample((Control)e.widget);
+         }
+      });
 		
 		dateTimeExample = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
 		dateTimeExample.setLabel(Messages.RegionalSettingsPrefPage_Example); //$NON-NLS-1$
@@ -140,7 +162,16 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		dateTimeExample.setLayoutData(gd);
+
+      shortTimeExample = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
+      shortTimeExample.setLabel(Messages.RegionalSettingsPrefPage_ShortTimeExample);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      shortTimeExample.setLayoutData(gd);
+		
 		updateExample(null);
+      updateShortTimeExample(null);
 		
 		return dialogArea;
 	}
@@ -181,6 +212,41 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		timeFormatString.getTextControl().setBackground(null);
 	}
 
+   /**
+    * Update formatting example
+    */
+   private void updateShortTimeExample(Control updatedControl)
+   {
+      DateFormat df;
+      switch(format)
+      {
+         case RegionalSettings.DATETIME_FORMAT_SERVER:
+            NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+            df = new SimpleDateFormat(session.getShortTimeFormat());
+            break;
+         case RegionalSettings.DATETIME_FORMAT_CUSTOM:
+            try
+            {
+               df = new SimpleDateFormat(shortTimeFormatString.getText());
+            }
+            catch(IllegalArgumentException e)
+            {
+               setErrorMessage(e.getLocalizedMessage());
+               if (updatedControl != null)
+                  updatedControl.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, getShell().getDisplay()));
+               return;
+            }
+            break;
+         default:
+            df = DateFormat.getTimeInstance(DateFormat.SHORT);
+            break;
+      }
+      shortTimeExample.setText(df.format(new Date(System.currentTimeMillis())));
+      
+      setErrorMessage(null);
+      shortTimeFormatString.getTextControl().setBackground(null);
+   }
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
 	 */
@@ -192,8 +258,10 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		dateTimeFormat.select(format);
 		dateFormatString.setText(getPreferenceStore().getString("DATE_FORMAT_STRING")); //$NON-NLS-1$
 		timeFormatString.setText(getPreferenceStore().getString("TIME_FORMAT_STRING")); //$NON-NLS-1$
+      shortTimeFormatString.setText(getPreferenceStore().getString("SHORT_TIME_FORMAT_STRING")); //$NON-NLS-1$
 		dateFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
 		timeFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
+      shortTimeFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
 		updateExample(null);
 	}
 
@@ -208,6 +276,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		ps.setValue("DATETIME_FORMAT", format); //$NON-NLS-1$
 		ps.setValue("DATE_FORMAT_STRING", dateFormatString.getText()); //$NON-NLS-1$
 		ps.setValue("TIME_FORMAT_STRING", timeFormatString.getText()); //$NON-NLS-1$
+      ps.setValue("SHORT_TIME_FORMAT_STRING", shortTimeFormatString.getText()); //$NON-NLS-1$
 		
 		RegionalSettings.updateFromPreferences();
 		

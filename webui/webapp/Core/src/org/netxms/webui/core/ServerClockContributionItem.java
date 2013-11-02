@@ -1,9 +1,10 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.console;
+package org.netxms.webui.core;
 
 import org.eclipse.jface.action.ContributionItem;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -39,6 +40,7 @@ public class ServerClockContributionItem extends ContributionItem
    {
       coolItem = new CoolItem(parent, SWT.NONE, index);
       coolItem.setData(this);
+		coolItem.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
       
       clientArea = new Composite(parent, SWT.NONE);
       coolItem.setControl(clientArea);
@@ -46,6 +48,7 @@ public class ServerClockContributionItem extends ContributionItem
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       clientArea.setLayout(layout);
+		clientArea.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
       
       clock = new ServerClock(clientArea, SWT.NONE);
       GridData gd = new GridData();
