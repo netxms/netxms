@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.netxms.base.NXCommon;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
 import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
@@ -49,8 +50,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
 
 	private static final String TAG = "nxclient/HomeScreen";
-	private static final long ALL_SERVICES_ID = 2;
-	private static final long DASHBOARDS_ID = 7;
 	private ActivityListAdapter adapter;
 	private TextView statusText;
 
@@ -208,7 +207,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public void refreshActivityStatus()
 	{
 		refreshPendingAlarms();
-		new SyncTopNodes().execute(new Long[] { ALL_SERVICES_ID, DASHBOARDS_ID });
+		new SyncTopNodes().execute(new Long[] { (long)GenericObject.SERVICEROOT, (long)GenericObject.DASHBOARDROOT });
 	}
 
 	/**
