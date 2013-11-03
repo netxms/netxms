@@ -927,7 +927,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			case NXCNotification.OBJECT_CHANGED:
 			case NXCNotification.OBJECT_SYNC_COMPLETED:
 				processObjectUpdate((AbstractObject)n.getObject());
-				Log.v(TAG, "NXCNotification.OBJECT_CHANGED/SYNC_COMPLETED: ID=" + ((AbstractObject)n.getObject()).getObjectId());
+//				Log.v(TAG, "NXCNotification.OBJECT_CHANGED/SYNC_COMPLETED: ID=" + ((AbstractObject)n.getObject()).getObjectId());
 				break;
 			case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
 				processGraphUpdate();
