@@ -44,7 +44,7 @@ public class TimePreference extends DialogPreference
 
 	public TimePreference(Context ctxt, AttributeSet attrs)
 	{
-		this(ctxt, attrs, 0);
+		this(ctxt, attrs, android.R.attr.dialogPreferenceStyle);
 	}
 
 	public TimePreference(Context ctxt, AttributeSet attrs, int defStyle)
