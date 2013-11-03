@@ -18,6 +18,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
@@ -677,7 +678,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private void doBackgroundObjectSync(final long objectId)
 	{
-		new Thread("Background object sync") {
+		new Thread("Background object sync")
+		{
 			@Override
 			public void run()
 			{
@@ -737,10 +739,17 @@ public class ClientConnectorService extends Service implements SessionListener
 				alarmNotification(unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
 				unknownAlarm = null;
 			}
-			refreshHomeScreen();
-			refreshAlarmBrowser();
-			refreshNodeBrowser();
-			refreshDashboardBrowser();
+			//	Force refresh only when receiving an update from a root object
+			switch ((int)object.getObjectId())
+			{
+				case GenericObject.DASHBOARDROOT:
+				case GenericObject.SERVICEROOT:
+					refreshHomeScreen();
+					refreshAlarmBrowser();
+					refreshNodeBrowser();
+					refreshDashboardBrowser();
+					break;
+			}
 		}
 	}
 
@@ -918,6 +927,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			case NXCNotification.OBJECT_CHANGED:
 			case NXCNotification.OBJECT_SYNC_COMPLETED:
 				processObjectUpdate((AbstractObject)n.getObject());
+				Log.v(TAG, "NXCNotification.OBJECT_CHANGED/SYNC_COMPLETED: ID=" + ((AbstractObject)n.getObject()).getObjectId());
 				break;
 			case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
 				processGraphUpdate();
