@@ -224,8 +224,6 @@ src/install/Makefile.in
 src/install/windows/Makefile
 src/install/windows/Makefile.in
 src/install/windows/Output
-src/install/windows/files-x64/jre
-src/install/windows/files/*
 src/install/windows/nxmc/*.war
 src/java/build/*.gz
 src/java/build/*.zip
