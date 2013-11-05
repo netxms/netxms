@@ -257,11 +257,11 @@ static NETXMS_SUBAGENT_PARAM m_agentParams[] =
       DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of tables being in the process of becoming not shared")
    },
    {
-      _T("DB2.Table.Data.Sharing.RemoteLockwaitCount(*)"), GetParameter, _D(DCI_SHARING_LOCKWAIT_COUNT),
+      _T("DB2.Table.Data.Sharing.RemoteLockWaitCount(*)"), GetParameter, _D(DCI_SHARING_LOCKWAIT_COUNT),
       DCI_DT_INT64, _T("DB2/Table/Data/Sharing: The number of exits from the NOT_SHARED data sharing state")
    },
    {
-      _T("DB2.Table.Data.Sharing.RemoteLockwaitTime(*)"), GetParameter, _D(DCI_SHARING_LOCKWAIT_TIME),
+      _T("DB2.Table.Data.Sharing.RemoteLockWaitTime(*)"), GetParameter, _D(DCI_SHARING_LOCKWAIT_TIME),
       DCI_DT_INT64, _T("DB2/Table/Data/Sharing: The time spent on waiting for a table to become shared")
    },
    {
@@ -352,10 +352,6 @@ static NETXMS_SUBAGENT_PARAM m_agentParams[] =
    {
       _T("DB2.Table.StatsRowsModified(*)"), GetParameter, _D(DCI_STATS_ROWS_MODIFIED),
       DCI_DT_INT64, _T("DB2/Table: The number of rows modified since the last RUNSTATS")
-   },
-   {
-      _T("DB2.Table.ColObjectLogicalPages(*)"), GetParameter, _D(DCI_COL_OBJECT_L_PAGES),
-      DCI_DT_INT64, _T("DB2/Table: The number of logical pages")
    },
    {
       _T("DB2.Table.ColObjectLogicalPages(*)"), GetParameter, _D(DCI_COL_OBJECT_L_PAGES),
@@ -476,7 +472,7 @@ static QUERY g_queries[] =
    {
       {
          DCI_TABLE_SCANS, DCI_ROWS_READ, DCI_ROWS_INSERTED, DCI_ROWS_UPDATED, DCI_ROWS_DELETED, DCI_OVERFLOW_ACCESSES,
-         DCI_OVERFLOW_CREATES, DCI_PAGE_REORGS, DCI_DATA_L_PAGES, DCI_LOB_L_PAGES , DCI_LONG_L_PAGES, DCI_INDEX_L_PAGES,
+         DCI_OVERFLOW_CREATES, DCI_PAGE_REORGS, DCI_DATA_L_PAGES, DCI_LOB_L_PAGES, DCI_LONG_L_PAGES, DCI_INDEX_L_PAGES,
          DCI_XDA_L_PAGES, DCI_NO_CHANGE_UPDATES, DCI_LOCK_WAIT_TIME, DCI_LOCK_WAIT_TIME_GLOBAL, DCI_LOCK_WAITS,
          DCI_LOCK_WAITS_GLOBAL, DCI_LOCK_ESCALS, DCI_LOCK_ESCALS_GLOBAL, DCI_SHARING_LOCKWAIT_COUNT, DCI_SHARING_LOCKWAIT_TIME,
          DCI_DIRECT_WRITES, DCI_DIRECT_WRITE_REQS, DCI_DIRECT_READS, DCI_DIRECT_READ_REQS, DCI_DATA_L_READS, DCI_DATA_P_READS,
