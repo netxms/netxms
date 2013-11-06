@@ -102,6 +102,9 @@ target
 /src/client/nxsms/nxsms
 /src/flow_analyzer/nxflowd/MSG00001.bin
 /src/flow_analyzer/nxflowd/messages.h
+/src/java/certificate-manager/.classpath
+/src/java/certificate-manager/.project
+/src/java/certificate-manager/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/bin
 /src/java/nebula/org.netxms.nebula.widgets.gallery/.settings
