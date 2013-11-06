@@ -684,15 +684,15 @@ case "$PLATFORM" in
       fi
       ;;
    SunOS)
-      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS"
+      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -O2"
       LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
       export LD_LIBRARY_PATH
       ;;
    Linux)
-      CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
+      CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE -O2"
       ;;
    Darwin)
-      CPPFLAGS="$CPPFLAGS -Wno-deprecated-declarations"
+      CPPFLAGS="$CPPFLAGS -Wno-deprecated-declarations -O2"
       ;;
    *)
       ;;
@@ -1546,6 +1546,17 @@ if test "x$PLATFORM" = "xAIX"; then
 #if HAVE_PROCINFO_H
 #include <procinfo.h>
 #endif
+	])
+fi
+
+
+#--------------------------------------------------------------------
+# Solaris specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xSunOS"; then
+	AC_CHECK_FUNCS([atomic_inc_32_nv atomic_dec_32_nv],,,[
+#include <sys/atomic.h>
 	])
 fi
 

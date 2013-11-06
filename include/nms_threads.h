@@ -896,21 +896,31 @@ inline THREAD GetCurrentThreadId()
 #ifdef _WIN32
 
 typedef volatile LONG VolatileCounter;
-typedef volatile LONGLONG VolatileCounter64;
 
 #else
 
 #if defined(__sun)
 
 typedef volatile uint32_t VolatileCounter;
-typedef volatile uint64_t VolatileCounter64;
+
+#if !HAVE_ATOMIC_INC_32_NV
+extern "C" volatile uint32_t solaris9_atomic_inc32(volatile uint32_t *v);
+#endif
+
+#if !HAVE_ATOMIC_DEC_32_NV
+extern "C" volatile uint32_t solaris9_atomic_dec32(volatile uint32_t *v);
+#endif
 
 /**
  * Atomically increment 32-bit value by 1
  */
 inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 {
+#if HAVE_ATOMIC_INC_32_NV
    return atomic_inc_32_nv(v);
+#else
+   return solaris9_atomic_inc32(v);
+#endif
 }
 
 /**
@@ -918,29 +928,16 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
  */
 inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 {
+#if HAVE_ATOMIC_DEC_32_NV
    return atomic_dec_32_nv(v);
-}
-
-/**
- * Atomically increment 64-bit value by 1
- */
-inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
-{
-   return atomic_inc_64_nv(v);
-}
-
-/**
- * Atomically decrement 64-bit value by 1
- */
-inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
-{
-   return atomic_dec_64_nv(v);
+#else
+   return solaris9_atomic_dec32(v);
+#endif
 }
 
 #elif defined(__HP_aCC)
 
 typedef volatile uint32_t VolatileCounter;
-typedef volatile uint64_t VolatileCounter64;
 
 /**
  * Atomically increment 32-bit value by 1
@@ -968,36 +965,9 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 #endif
 }
 
-/**
- * Atomically increment 64-bit value by 1
- */
-inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
-{
-#if HAVE_ATOMIC_H
-   return atomic_inc_64(v) + 1;
-#else
-   _Asm_mf(_DFLT_FENCE);
-   return (uint64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
-#endif
-}
-
-/**
- * Atomically decrement 64-bit value by 1
- */
-inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
-{
-#if HAVE_ATOMIC_H
-   return atomic_dec_64(v) - 1;
-#else
-   _Asm_mf(_DFLT_FENCE);
-   return (uint64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
-#endif
-}
-
 #else /* not Solaris nor HP-UX */
 
 typedef volatile INT32 VolatileCounter;
-typedef volatile INT64 VolatileCounter64;
 
 /**
  * Atomically increment 32-bit value by 1
@@ -1032,48 +1002,6 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
    return __sync_sub_and_fetch(v, 1);
 #endif
 }
-
-#if (defined(__IBMC__) || defined(__IBMCPP__)) && !defined(__LP64__)
-
-/* interlocked ops on 64bit values not supported by 32 bit xlC */
-
-#else
-
-/**
- * Atomically increment 64-bit value by 1
- */
-inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
-{
-#if (defined(__IBMC__) || defined(__IBMCPP__)) && !HAVE_DECL___SYNC_ADD_AND_FETCH
-   VolatileCounter64 oldval;
-   do
-   {
-      oldval = __ldarx(v);
-   } while(__stdcx(v, oldval + 1) == 0);
-   return oldval + 1;
-#else
-   return __sync_add_and_fetch(v, 1);
-#endif
-}
-
-/**
- * Atomically decrement 64-bit value by 1
- */
-inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
-{
-#if (defined(__IBMC__) || defined(__IBMCPP__)) && !HAVE_DECL___SYNC_ADD_AND_FETCH
-   VolatileCounter64 oldval;
-   do
-   {
-      oldval = __ldarx(v);
-   } while(__stdcx(v, oldval - 1) == 0);
-   return oldval - 1;
-#else
-   return __sync_sub_and_fetch(v, 1);
-#endif
-}
-
-#endif   /* __IBMC__ */
 
 #endif   /* __sun */
 
