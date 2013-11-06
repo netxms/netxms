@@ -550,11 +550,13 @@ static BOOL DB2Init(Config* config)
    {
       AgentWriteDebugLog(7, _T("%s: processing configuration entries in section '%s'"), SUBAGENT_NAME, db2IniEntry->getName());
 
-      const PDB2_INFO db2Info = GetConfigs(config, db2IniEntry);
+      const PDB2_INFO db2Info = GetConfigs(config, db2IniEntry, _T("db2"));
       if (db2Info == NULL)
       {
          return FALSE;
       }
+
+      db2Info->db2Id = 1;
 
       g_numOfThreads = 1;
       arrDb2Info = new PDB2_INFO[1];
@@ -582,11 +584,15 @@ static BOOL DB2Init(Config* config)
       numOfPossibleThreads = db2SubXmlSubEntries->getSize();
       AgentWriteDebugLog(7, _T("%s: '%s' loaded with number of db2 entries: %d"), SUBAGENT_NAME, pathToXml, numOfPossibleThreads);
       arrDb2Info = new PDB2_INFO[numOfPossibleThreads];
+      TCHAR entryName[STR_MAX];
 
       for(int i = 0; i < numOfPossibleThreads; i++)
       {
          ConfigEntry* entry = db2SubXmlSubEntries->getEntry(i);
-         const PDB2_INFO db2Info = GetConfigs(config, entry);
+         _tcscpy(entryName, _T("db2sub/"));
+         _tcscat_s(entryName, STR_MAX, entry->getName());
+
+         const PDB2_INFO db2Info = GetConfigs(config, entry, entryName);
          if (db2Info == NULL)
          {
             continue;
@@ -790,12 +796,9 @@ static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
    return SYSINFO_RC_SUCCESS;
 }
 
-static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry)
+static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, const TCHAR* entryName)
 {
    ConfigEntryList* entryList = configEntry->getSubEntries(_T("*"));
-   TCHAR entryName[STR_MAX] = _T("db2sub/");
-
-   _tcscat(entryName, configEntry->getName());
 
    if (entryList->getSize() == 0)
    {
