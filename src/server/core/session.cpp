@@ -1566,10 +1566,10 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 #endif
 #elif HAVE_DECL_TIMEZONE
 #ifdef UNICODE
-	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (timezone >= 0) ? '+' : '-',
+	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (timezone > 0) ? '-' : '+',
 	         (int)(abs(timezone) / 3600), (tzname[1] != NULL) ? tzname[1] : "");
 #else
-	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (timezone >= 0) ? '+' : '-',
+	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (timezone > 0) ? '-' : '+',
 	        (int)(abs(timezone) / 3600), (tzname[1] != NULL) ? tzname[1] : "");
 #endif
 #elif HAVE_TM_GMTOFF
@@ -1586,7 +1586,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 #else
 	loc = localtime(&t);
 #endif
-	gmtOffset = -loc->tm_gmtoff / 3600;
+	gmtOffset = loc->tm_gmtoff / 3600;
 	if (loc->tm_isdst)
 		gmtOffset++;
 #ifdef UNICODE
