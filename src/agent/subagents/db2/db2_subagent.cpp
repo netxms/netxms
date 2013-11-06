@@ -163,6 +163,248 @@ static NETXMS_SUBAGENT_PARAM m_agentParams[] =
    {
       _T("DB2.Table.DictSize(*)"), GetParameter, _D(DCI_DICTIONARY_SIZE),
       DCI_DT_INT64, _T("DB2/Table: Size of the dictionary in bytes")
+   },
+   {
+      _T("DB2.Table.Scans(*)"), GetParameter, _D(DCI_TABLE_SCANS),
+      DCI_DT_INT64, _T("DB2/Table: The number of scans on all tables")
+   },
+   {
+      _T("DB2.Table.Row.Read(*)"), GetParameter, _D(DCI_ROWS_READ),
+      DCI_DT_INT64, _T("DB2/Table/Row: The number of reads on all tables")
+   },
+   {
+      _T("DB2.Table.Row.Inserted(*)"), GetParameter, _D(DCI_ROWS_INSERTED),
+      DCI_DT_INT64, _T("DB2/Table/Row: The number of insertions attempted on all tables")
+   },
+   {
+      _T("DB2.Table.Row.Updated(*)"), GetParameter, _D(DCI_ROWS_UPDATED),
+      DCI_DT_INT64, _T("DB2/Table/Row: The number of updates attempted on all tables")
+   },
+   {
+      _T("DB2.Table.Row.Deleted(*)"), GetParameter, _D(DCI_ROWS_DELETED),
+      DCI_DT_INT64, _T("DB2/Table/Row: The number of deletes attempted on all tables")
+   },
+   {
+      _T("DB2.Table.Overflow.Accesses(*)"), GetParameter, _D(DCI_OVERFLOW_ACCESSES),
+      DCI_DT_INT64, _T("DB2/Table/Overflow: The number of r/w operations on overflowed rows of all tables")
+   },
+   {
+      _T("DB2.Table.Overflow.Creates(*)"), GetParameter, _D(DCI_OVERFLOW_CREATES),
+      DCI_DT_INT64, _T("DB2/Table/Overflow: The number of overflowed rows created on all tables")
+   },
+   {
+      _T("DB2.Table.Reorg.Page(*)"), GetParameter, _D(DCI_PAGE_REORGS),
+      DCI_DT_INT64, _T("DB2/Table/Reorg: The number of page reorganizations executed for all tables")
+   },
+   {
+      _T("DB2.Table.Data.LogicalPages(*)"), GetParameter, _D(DCI_DATA_L_PAGES),
+      DCI_DT_INT64, _T("DB2/Table/Data: The number of logical pages used on disk by data")
+   },
+   {
+      _T("DB2.Table.Lob.LogicalPages(*)"), GetParameter, _D(DCI_LOB_L_PAGES),
+      DCI_DT_INT64, _T("DB2/Table/Lob: The number of logical pages used on disk by LOBs")
+   },
+   {
+      _T("DB2.Table.Long.LogicalPages(*)"), GetParameter, _D(DCI_LONG_L_PAGES),
+      DCI_DT_INT64, _T("DB2/Table/Long: The number of logical pages used on disk by long data")
+   },
+   {
+      _T("DB2.Table.Index.LogicalPages(*)"), GetParameter, _D(DCI_INDEX_L_PAGES),
+      DCI_DT_INT64, _T("DB2/Table/Index: The number of logical pages used on disk by indexes")
+   },
+   {
+      _T("DB2.Table.Xda.LogicalPages(*)"), GetParameter, _D(DCI_XDA_L_PAGES),
+      DCI_DT_INT64, _T("DB2/Table/Xda: The number of logical pages used on disk by XDA (XML storage object)")
+   },
+   {
+      _T("DB2.Table.Row.NoChange(*)"), GetParameter, _D(DCI_NO_CHANGE_UPDATES),
+      DCI_DT_INT64, _T("DB2/Table/Row: The number of row updates that yielded no changes")
+   },
+   {
+      _T("DB2.Table.Lock.WaitTime(*)"), GetParameter, _D(DCI_LOCK_WAIT_TIME),
+      DCI_DT_INT64, _T("DB2/Table/Lock: The total elapsed time spent waiting for locks (ms)")
+   },
+   {
+      _T("DB2.Table.Lock.WaitTimeGlob(*)"), GetParameter, _D(DCI_LOCK_WAIT_TIME_GLOBAL),
+      DCI_DT_INT64, _T("DB2/Table/Lock: The total elapsed time spent on global lock waits (ms)")
+   },
+   {
+      _T("DB2.Table.Lock.Waits(*)"), GetParameter, _D(DCI_LOCK_WAITS),
+      DCI_DT_INT64, _T("DB2/Table/Lock: The total amount of locks occurred")
+   },
+   {
+      _T("DB2.Table.Lock.WaitsGlob(*)"), GetParameter, _D(DCI_LOCK_WAITS_GLOBAL),
+      DCI_DT_INT64, _T("DB2/Table/Lock: The total amount of global locks occurred")
+   },
+   {
+      _T("DB2.Table.Lock.EscalsGlob(*)"), GetParameter, _D(DCI_LOCK_ESCALS_GLOBAL),
+      DCI_DT_INT64, _T("DB2/Table/Lock: The number of lock escalations on a global lock")
+   },
+   {
+      _T("DB2.Table.Data.Sharing.Shared(*)"), GetParameter, _D(DCI_STATE_SHARED),
+      DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of fully shared tables")
+   },
+   {
+      _T("DB2.Table.Data.Sharing.BecomingShared(*)"), GetParameter, _D(DCI_STATE_SHARED_BECOMING),
+      DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of tables being in the process of becoming shared")
+   },
+   {
+      _T("DB2.Table.Data.Sharing.NotShared(*)"), GetParameter, _D(DCI_STATE_NOT_SHARED),
+      DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of tables not being shared")
+   },
+   {
+      _T("DB2.Table.Data.Sharing.BecomingNotShared(*)"), GetParameter, _D(DCI_STATE_NOT_SHARED_BECOMING),
+      DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of tables being in the process of becoming not shared")
+   },
+   {
+      _T("DB2.Table.Data.Sharing.RemoteLockWaitCount(*)"), GetParameter, _D(DCI_SHARING_LOCKWAIT_COUNT),
+      DCI_DT_INT64, _T("DB2/Table/Data/Sharing: The number of exits from the NOT_SHARED data sharing state")
+   },
+   {
+      _T("DB2.Table.Data.Sharing.RemoteLockWaitTime(*)"), GetParameter, _D(DCI_SHARING_LOCKWAIT_TIME),
+      DCI_DT_INT64, _T("DB2/Table/Data/Sharing: The time spent on waiting for a table to become shared")
+   },
+   {
+      _T("DB2.Table.DirectWrites(*)"), GetParameter, _D(DCI_DIRECT_WRITES),
+      DCI_DT_INT64, _T("DB2/Table: The number of write operations that don't use the buffer pool")
+   },
+   {
+      _T("DB2.Table.DirectWriteReqs(*)"), GetParameter, _D(DCI_DIRECT_WRITE_REQS),
+      DCI_DT_INT64, _T("DB2/Table: The number of request to perform a direct write operation")
+   },
+   {
+      _T("DB2.Table.DirectRead(*)"), GetParameter, _D(DCI_DIRECT_READS),
+      DCI_DT_INT64, _T("DB2/Table: The number of read operations that don't use the buffer pool")
+   },
+   {
+      _T("DB2.Table.DirectReadReqs(*)"), GetParameter, _D(DCI_DIRECT_READ_REQS),
+      DCI_DT_INT64, _T("DB2/Table: The number of request to perform a direct read operation")
+   },
+   {
+      _T("DB2.Table.Data.LogicalReads(*)"), GetParameter, _D(DCI_DATA_L_READS),
+      DCI_DT_INT64, _T("DB2/Table/Data: The number of data pages that are logically read from the buffer pool")
+   },
+   {
+      _T("DB2.Table.Data.PhysicalReads(*)"), GetParameter, _D(DCI_DATA_P_READS),
+      DCI_DT_INT64, _T("DB2/Table/Data: The number of data pages that are physically read")
+   },
+   {
+      _T("DB2.Table.Data.Gbp.LogicalReads(*)"), GetParameter, _D(DCI_DATA_GBP_L_READS),
+      DCI_DT_INT64, _T("DB2/Table/Data/Gbp: The number of times that a group buffer pool (GBP) page is requested from the GBP")
+   },
+   {
+      _T("DB2.Table.Data.Gbp.PhysicalReads(*)"), GetParameter, _D(DCI_DATA_GBP_P_READS),
+      DCI_DT_INT64,
+      _T("DB2/Table/Data/Gbp: The number of times that a group buffer pool (GBP) page is read into the local buffer pool (LBP)")
+   },
+   {
+      _T("DB2.Table.Data.Gbp.InvalidPages(*)"), GetParameter, _D(DCI_DATA_GBP_INVALID_PAGES),
+      DCI_DT_INT64, _T("DB2/Table/Data/Gbp: The number of times that a group buffer pool (GBP) page is requested from the GBP")
+      _T(" when the version stored in the local buffer pool (LBP) is invalid")
+   },
+   {
+      _T("DB2.Table.Data.Lbp.PagesFound(*)"), GetParameter, _D(DCI_DATA_LBP_PAGES_FOUND),
+      DCI_DT_INT64, _T("DB2/Table/Data/Lbp: The number of times that a data page is present in the local buffer pool (LBP)")
+   },
+   {
+      _T("DB2.Table.Data.Lbp.IndepPagesFound(*)"), GetParameter, _D(DCI_DATA_GBP_INDEP_PAGES_FOUND_IN_LBP),
+      DCI_DT_INT64,
+      _T("DB2/Table/Data/Lbp: The number of group buffer pool (GBP) independent pages found in a local buffer pool (LBP)")
+   },
+   {
+      _T("DB2.Table.Xda.LogicalReads(*)"), GetParameter, _D(DCI_XDA_L_READS),
+      DCI_DT_INT64,
+      _T("DB2/Table/Xda: The number of data pages for XML storage objects (XDA) that are logically read from the buffer pool")
+   },
+   {
+      _T("DB2.Table.Xda.PhysicalReads(*)"), GetParameter, _D(DCI_XDA_P_READS),
+      DCI_DT_INT64, _T("DB2/Table/Xda: The number of data pages for XML storage objects (XDA) that are physically read")
+   },
+   {
+      _T("DB2.Table.Xda.Gbp.LogicalReads(*)"), GetParameter, _D(DCI_XDA_GBP_L_READS),
+      DCI_DT_INT64, _T("DB2/Table/Xda/Gbp: The number of times that a data page for an XML storage object (XDA) is requested")
+      _T(" from the group buffer pool (GBP)")
+   },
+   {
+      _T("DB2.Table.Xda.Gbp.PhysicalReads(*)"), GetParameter, _D(DCI_XDA_GBP_P_READS),
+      DCI_DT_INT64, _T("DB2/Table/Xda/Gbp: The number of times that a group buffer pool (GBP) dependent data page for an XML")
+      _T(" storage object (XDA) is read into the local buffer pool (LBP)")
+   },
+   {
+      _T("DB2.Table.Xda.Gbp.InvalidPages(*)"), GetParameter, _D(DCI_XDA_GBP_INVALID_PAGES),
+      DCI_DT_INT64, _T("DB2/Table/Xda/Gbp: The number of times that a page for an XML storage objects (XDA) is requested from the")
+      _T(" group buffer pool (GBP) because the version in the local buffer pool (LBP) is invalid")
+   },
+   {
+      _T("DB2.Table.Xda.Lbp.PagesFound(*)"), GetParameter, _D(DCI_XDA_LBP_PAGES_FOUND),
+      DCI_DT_INT64, _T("DB2/Table/Xda/Lbp: The number of times that an XML storage objects (XDA) page is present in the local")
+      _T(" buffer pool (LBP)")
+   },
+   {
+      _T("DB2.Table.Xda.Gbp.IndepPagesFound(*)"), GetParameter, _D(DCI_XDA_GBP_INDEP_PAGES_FOUND_IN_LBP),
+      DCI_DT_INT64, _T("DB2/Table/Xda/Gbp: The number of group buffer pool (GBP) independent XML storage object (XDA) pages found")
+      _T(" in the local buffer pool (LBP)")
+   },
+   {
+      _T("DB2.Table.DictNum(*)"), GetParameter, _D(DCI_NUM_PAGE_DICT_BUILT),
+      DCI_DT_INT64, _T("DB2/Table: The number of page-level compression dictionaries created or recreated")
+   },
+   {
+      _T("DB2.Table.StatsRowsModified(*)"), GetParameter, _D(DCI_STATS_ROWS_MODIFIED),
+      DCI_DT_INT64, _T("DB2/Table: The number of rows modified since the last RUNSTATS")
+   },
+   {
+      _T("DB2.Table.ColObjectLogicalPages(*)"), GetParameter, _D(DCI_COL_OBJECT_L_PAGES),
+      DCI_DT_INT64, _T("DB2/Table: The number of logical pages used on disk by column-organized data")
+   },
+   {
+      _T("DB2.Table.Organization.Rows(*)"), GetParameter, _D(DCI_ORGANIZATION_ROWS),
+      DCI_DT_INT, _T("DB2/Table/Organization: The number of tables with row-organized data")
+   },
+   {
+      _T("DB2.Table.Organization.Cols(*)"), GetParameter, _D(DCI_ORGANIZATION_COLS),
+      DCI_DT_INT, _T("DB2/Table/Organization: The number of tables with column-organized data")
+   },
+   {
+      _T("DB2.Table.Col.LogicalReads(*)"), GetParameter, _D(DCI_COL_L_READS),
+      DCI_DT_INT, _T("DB2/Table/Col: The number of column-organized pages that are logically read from the buffer pool")
+   },
+   {
+      _T("DB2.Table.Col.PhysicalReads(*)"), GetParameter, _D(DCI_COL_P_READS),
+      DCI_DT_INT, _T("DB2/Table/Col: The number of column-organized pages that are physically read")
+   },
+   {
+      _T("DB2.Table.Col.Gbp.LogicalReads(*)"), GetParameter, _D(DCI_COL_GBP_L_READS),
+      DCI_DT_INT, _T("DB2/Table/Col/Gbp: The number of times that a group buffer pool (GBP) dependent column-organized page")
+      _T(" is requested from the GBP")
+   },
+   {
+      _T("DB2.Table.Col.Gbp.PhysicalReads(*)"), GetParameter, _D(DCI_COL_GBP_P_READS),
+      DCI_DT_INT, _T("DB2/Table/Col/Gbp: The number of times that a group buffer pool (GBP) dependent column-organized page")
+      _T(" is read into the local buffer pool (LBP) from disk")
+   },
+   {
+      _T("DB2.Table.Col.Gbp.InvalidPages(*)"), GetParameter, _D(DCI_COL_GBP_INVALID_PAGES),
+      DCI_DT_INT, _T("DB2/Table/Col/Gbp: The number of times that a column-organized page is requested from the group buffer pool")
+      _T(" (GBP) when the page in the local buffer pool (LBP) is invalid")
+   },
+   {
+      _T("DB2.Table.Col.Lbp.PagesFound(*)"), GetParameter, _D(DCI_COL_LBP_PAGES_FOUND),
+      DCI_DT_INT, _T("DB2/Table/Col/Lbp: The number of times that a column-organized page is present in")
+      _T(" the local buffer pool (LBP)")
+   },
+   {
+      _T("DB2.Table.Col.Gbp.IndepPagesFound(*)"), GetParameter, _D(DCI_COL_GBP_INDEP_PAGES_FOUND_IN_LBP),
+      DCI_DT_INT, _T("DB2/Table/Col/Gbp: The number of group buffer pool (GBP) independent column-organized pages found in")
+      _T(" the local buffer pool (LBP)")
+   },
+   {
+      _T("DB2.Table.ColsReferenced(*)"), GetParameter, _D(DCI_NUM_COL_REFS),
+      DCI_DT_INT, _T("DB2/Table: The number of columns referenced during the execution of a section for an SQL statement")
+   },
+   {
+      _T("DB2.Table.SectionExecutions(*)"), GetParameter, _D(DCI_SECTION_EXEC_WITH_COL_REFS),
+      DCI_DT_INT, _T("DB2/Table: The number of section executions that referenced columns in tables using a scan")
    }
 };
 
@@ -191,27 +433,86 @@ static QUERY g_queries[] =
       },
       _T("SELECT sum(data_object_l_size), sum(data_object_p_size), sum(index_object_l_size), sum(index_object_p_size),")
       _T("sum(long_object_l_size), sum(long_object_p_size), sum(lob_object_l_size), sum(lob_object_p_size),")
-      _T("sum(xml_object_l_size), sum(xml_object_p_size), sum(dictionary_size), sum(num_reorg_rec_alters) FROM sysibmadm.admintabinfo")
+      _T("sum(xml_object_l_size), sum(xml_object_p_size), sum(dictionary_size), sum(num_reorg_rec_alters) ")
+      _T("FROM sysibmadm.admintabinfo")
    },
    { { DCI_INDEX_TYPE1 }, _T("SELECT count(index_type) FROM sysibmadm.admintabinfo WHERE index_type = 1") },
    { { DCI_INDEX_TYPE2 }, _T("SELECT count(index_type) FROM sysibmadm.admintabinfo WHERE index_type = 2") },
    { { DCI_REORG_PENDING }, _T("SELECT count(reorg_pending) FROM sysibmadm.admintabinfo WHERE reorg_pending = 'Y'") },
-   { { DCI_REORG_ABORTED }, _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'ABORTED'") },
-   { { DCI_REORG_EXECUTING }, _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'EXECUTING'") },
-   { { DCI_REORG_PAUSED }, _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'PAUSED'") },
-   { { DCI_REORG_NULL }, _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'NULL'") },
+   {
+      { DCI_REORG_ABORTED },
+      _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'ABORTED'") },
+   {
+      { DCI_REORG_EXECUTING },
+      _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'EXECUTING'")
+   },
+   {
+      { DCI_REORG_PAUSED },
+      _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'PAUSED'")
+   },
+   {
+      { DCI_REORG_NULL },
+      _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'NULL'")
+   },
    { { DCI_LOAD_IN_PROGRESS }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'IN_PROGRESS'") },
    { { DCI_LOAD_PENDING }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'PENDING'") },
    { { DCI_LOAD_NULL }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'NULL'") },
    { { DCI_ACCESS_RO }, _T("SELECT count(read_access_only) FROM sysibmadm.admintabinfo WHERE read_access_only = 'Y'") },
    { { DCI_NO_LOAD_RESTART }, _T("SELECT count(no_load_restart) FROM sysibmadm.admintabinfo WHERE no_load_restart = 'Y'") },
-   { { DCI_INDEX_REQUIRE_REBUILD }, _T("SELECT count(indexes_require_rebuild) FROM sysibmadm.admintabinfo WHERE indexes_require_rebuild = 'Y'") },
+   {
+      { DCI_INDEX_REQUIRE_REBUILD },
+      _T("SELECT count(indexes_require_rebuild) FROM sysibmadm.admintabinfo WHERE indexes_require_rebuild = 'Y'")
+   },
    { { DCI_LARGE_RIDS }, _T("SELECT count(large_rids) FROM sysibmadm.admintabinfo WHERE large_rids = 'Y'") },
    { { DCI_NO_LARGE_RIDS }, _T("SELECT count(large_rids) FROM sysibmadm.admintabinfo WHERE large_rids = 'N'") },
    { { DCI_LARGE_RIDS_PENDING }, _T("SELECT count(large_rids) FROM sysibmadm.admintabinfo WHERE large_rids = 'P'") },
    { { DCI_LARGE_SLOTS }, _T("SELECT count(large_slots) FROM sysibmadm.admintabinfo WHERE large_slots = 'Y'") },
    { { DCI_NO_LARGE_SLOTS }, _T("SELECT count(large_slots) FROM sysibmadm.admintabinfo WHERE large_slots = 'N'") },
    { { DCI_LARGE_SLOTS_PENDING }, _T("SELECT count(large_slots) FROM sysibmadm.admintabinfo WHERE large_slots = 'P'") },
+   {
+      {
+         DCI_TABLE_SCANS, DCI_ROWS_READ, DCI_ROWS_INSERTED, DCI_ROWS_UPDATED, DCI_ROWS_DELETED, DCI_OVERFLOW_ACCESSES,
+         DCI_OVERFLOW_CREATES, DCI_PAGE_REORGS, DCI_DATA_L_PAGES, DCI_LOB_L_PAGES, DCI_LONG_L_PAGES, DCI_INDEX_L_PAGES,
+         DCI_XDA_L_PAGES, DCI_NO_CHANGE_UPDATES, DCI_LOCK_WAIT_TIME, DCI_LOCK_WAIT_TIME_GLOBAL, DCI_LOCK_WAITS,
+         DCI_LOCK_WAITS_GLOBAL, DCI_LOCK_ESCALS, DCI_LOCK_ESCALS_GLOBAL, DCI_SHARING_LOCKWAIT_COUNT, DCI_SHARING_LOCKWAIT_TIME,
+         DCI_DIRECT_WRITES, DCI_DIRECT_WRITE_REQS, DCI_DIRECT_READS, DCI_DIRECT_READ_REQS, DCI_DATA_L_READS, DCI_DATA_P_READS,
+         DCI_DATA_GBP_L_READS, DCI_DATA_GBP_P_READS, DCI_DATA_GBP_INVALID_PAGES, DCI_DATA_LBP_PAGES_FOUND,
+         DCI_DATA_GBP_INDEP_PAGES_FOUND_IN_LBP, DCI_XDA_L_READS, DCI_XDA_P_READS, DCI_XDA_GBP_L_READS, DCI_XDA_GBP_P_READS,
+         DCI_XDA_GBP_INVALID_PAGES, DCI_XDA_LBP_PAGES_FOUND, DCI_XDA_GBP_INDEP_PAGES_FOUND_IN_LBP, DCI_NUM_PAGE_DICT_BUILT,
+         DCI_STATS_ROWS_MODIFIED, DCI_RTS_ROWS_MODIFIED, DCI_COL_OBJECT_L_PAGES, DCI_COL_L_READS, DCI_COL_P_READS,
+         DCI_COL_GBP_L_READS, DCI_COL_GBP_P_READS, DCI_COL_GBP_INVALID_PAGES, DCI_COL_LBP_PAGES_FOUND,
+         DCI_COL_GBP_INDEP_PAGES_FOUND_IN_LBP, DCI_NUM_COL_REFS, DCI_SECTION_EXEC_WITH_COL_REFS
+      },
+      _T("SELECT sum(table_scans), sum(rows_read), sum(rows_inserted), sum(rows_updated), sum(rows_deleted),")
+      _T("sum(overflow_accesses), sum(overflow_creates), sum(page_reorgs), sum(data_object_l_pages), sum(lob_object_l_pages),")
+      _T("sum(long_object_l_pages), sum(index_object_l_pages), sum(xda_object_l_pages), sum(no_change_updates),")
+      _T("sum(lock_wait_time), sum(lock_wait_time_global), sum(lock_waits), sum(lock_waits_global), sum(lock_escals),")
+      _T("sum(lock_escals_global), sum(data_sharing_remote_lockwait_count), sum(data_sharing_remote_lockwait_time),")
+      _T("sum(direct_writes), sum(direct_write_reqs), sum(direct_reads), sum(direct_read_reqs), sum(object_data_l_reads),")
+      _T("sum(object_data_p_reads), sum(object_data_gbp_l_reads), sum(object_data_gbp_p_reads),")
+      _T("sum(object_data_gbp_invalid_pages), sum(object_data_lbp_pages_found), sum(object_data_gbp_indep_pages_found_in_lbp),")
+      _T("sum(object_xda_l_reads), sum(object_xda_p_reads), sum(object_xda_gbp_l_reads), sum(object_xda_gbp_p_reads),")
+      _T("sum(object_xda_gbp_invalid_pages), sum(object_xda_lbp_pages_found), sum(object_xda_gbp_indep_pages_found_in_lbp),")
+      _T("sum(num_page_dict_built), sum(stats_rows_modified), sum(rts_rows_modified), sum(col_object_l_pages),")
+      _T("sum(object_col_l_reads), sum(object_col_p_reads), sum(object_col_gbp_l_reads), sum(object_col_gbp_p_reads),")
+      _T("sum(object_col_gbp_invalid_pages), sum(object_col_lbp_pages_found), sum(object_col_gbp_indep_pages_found_in_lbp),")
+      _T("sum(num_columns_referenced), sum(section_exec_with_col_references) FROM TABLE (mon_get_table('', '', -2))")
+   },
+   { { DCI_STATE_SHARED }, _T("SELECT count(*) FROM TABLE (mon_get_table('', '', -2)) WHERE data_sharing_state = 'SHARED'") },
+   {
+      { DCI_STATE_NOT_SHARED },
+      _T("SELECT count(*) FROM TABLE (mon_get_table('', '', -2)) WHERE data_sharing_state = 'NOT_SHARED'")
+   },
+   {
+      { DCI_STATE_SHARED_BECOMING },
+      _T("SELECT count(*) FROM TABLE (mon_get_table('', '', -2)) WHERE data_sharing_state = 'BECOMING_SHARED'")
+   },
+   {
+      { DCI_STATE_NOT_SHARED_BECOMING },
+      _T("SELECT count(*) FROM TABLE (mon_get_table('', '', -2)) WHERE data_sharing_state = 'BECOMING_NOT_SHARED'")
+   },
+   { { DCI_ORGANIZATION_ROWS }, _T("SELECT count(*) FROM TABLE (mon_get_table('', '', -2)) WHERE tab_organization = 'R'") },
+   { { DCI_ORGANIZATION_COLS }, _T("SELECT count(*) FROM TABLE (mon_get_table('', '', -2)) WHERE tab_organization = 'C'") },
    { { DCI_NULL }, _T("\0") }
 };
 

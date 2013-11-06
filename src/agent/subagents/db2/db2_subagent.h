@@ -30,9 +30,9 @@
 #define STR_MAX 256
 #define INTERVAL_QUERY_SECONDS 60
 #define INTERVAL_RECONNECT_SECONDS 30
-#define QUERY_MAX 512
+#define QUERY_MAX 2048
 #define DB_ID_DIGITS_MAX 10 + 1
-#define DCI_LIST_SIZE 12
+#define DCI_LIST_SIZE 53
 
 /**
  * DB2 constants

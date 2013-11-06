@@ -170,3 +170,10 @@ target
 /webui/eclipse
 /webui/webapp/Core/jar/*.jar
 /x64
+
+# Eclipse CDT
+.project
+.cproject
+
+# Dolphin browser
+.directory
