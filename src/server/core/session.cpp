@@ -7194,6 +7194,7 @@ void ClientSession::changeSubscription(CSCPMessage *pRequest)
    UINT32 dwFlags;
 
    dwFlags = pRequest->GetVariableLong(VID_FLAGS);
+
    if (pRequest->GetVariableShort(VID_OPERATION) != 0)
    {
       m_dwActiveChannels |= dwFlags;   // Subscribe
@@ -7712,7 +7713,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
 void ClientSession::onNewSNMPTrap(CSCPMessage *pMsg)
 {
    UPDATE_INFO *pUpdate;
-
+   WriteToTerminal(_T("Sup from onNewSNMPTrap!!!"));
    if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SNMP_TRAPS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));

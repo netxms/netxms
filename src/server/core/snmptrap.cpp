@@ -262,7 +262,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
    pNode = FindNodeByIP(0, dwOriginAddr);
 
    // Write trap to log if required
-   if (m_bLogAllTraps)
+   if (m_bLogAllTraps || pNode != NULL)
    {
       CSCPMessage msg;
       TCHAR szQuery[8192];
@@ -311,12 +311,16 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
    {
       // Pass trap to loaded modules
       for(i = 0; i < g_dwNumModules; i++)
+      {
          if (g_pModuleList[i].pfTrapHandler != NULL)
+         {
             if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
 				{
 					processed = TRUE;
                break;   // Trap was processed by the module
 				}
+         }
+      }
 
       // Find if we have this trap in our list
       MutexLock(m_mutexTrapCfgAccess);
