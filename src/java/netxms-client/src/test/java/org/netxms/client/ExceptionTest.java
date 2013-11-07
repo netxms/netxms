@@ -19,6 +19,11 @@ public class ExceptionTest extends TestCase
       testLocale("ru", e);
       testLocale("es", e);
       testLocale("fr", e);
+
+      // test for non-existing error message
+      e = new NXCException(235);
+      testLocale("en", e);
+      testLocale("ru", e);
    }
    
    private void testLocale(String lang, NXCException e)

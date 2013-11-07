@@ -63,13 +63,11 @@ public class NXCException extends NetXMSClientException
    	   }
    	   catch(MissingResourceException e)
    	   {
-   	      e.printStackTrace();
    	      return String.format(bundle.getString("RCC_UNKNOWN"), code);
    	   }
 	   }
 	   catch(Exception e)
 	   {
-	      e.printStackTrace();
          return "Error " + Integer.toString(code);
 	   }
 	}
