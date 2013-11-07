@@ -39,6 +39,7 @@ target
 .idea
 
 /aclocal.m4
+/android/src/agent/libs/*.jar
 /android/src/console/bin
 /android/src/console/gen
 /android/src/console/libs/*.jar
