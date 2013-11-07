@@ -157,6 +157,15 @@ else
     echo "OK."
 fi
 
+# Directory hacks
+find "$build_dir" -name nxsrvapi.h -exec \
+    sed -i -e 's;#ifndef LIBDIR;#undef LIBDIR\n#ifndef LIBDIR;' \
+    -e 's;#ifndef DATADIR;#undef DATADIR\n#ifndef DATADIR;' \
+    -e 's;#define DEFAULT_DATA_DIR.*;#define DEFAULT_DATA_DIR _T("/usr/share/netxms");' \
+    -e 's;#ifndef PKGLIBDIR;#undef PKGLIBDIR\n#ifndef PKGLIBDIR;' {} \;    
+find "$build_dir" -name libnxdb.h -exec \
+    sed -i -e 's;#include <nxdbapi.h>;#include <nxdbapi.h>\n#define PKGLIBDIR _T("/usr/lib/netxms");' {} \;
+
 cd "$build_dir/netxms-$ver"
 
 echo -n "Configuring sources..."
@@ -195,6 +204,8 @@ then
 else
     echo "OK."
 fi
+
+echo
 
 mkdir -p "$build_root/etc/init.d"
 cp "$build_dir/$source/contrib/startup/redhat/netxmsd" "$build_root/etc/init.d"
