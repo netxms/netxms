@@ -7713,7 +7713,6 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
 void ClientSession::onNewSNMPTrap(CSCPMessage *pMsg)
 {
    UPDATE_INFO *pUpdate;
-   WriteToTerminal(_T("Sup from onNewSNMPTrap!!!"));
    if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SNMP_TRAPS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
