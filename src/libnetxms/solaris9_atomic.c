@@ -1,5 +1,7 @@
 #include "libnetxms.h"
 
+#ifdef __sun
+
 #if !HAVE_ATOMIC_INC_32_NV
 
 volatile uint32_t solaris9_atomic_inc32(volatile uint32_t *v)
@@ -10,7 +12,7 @@ volatile uint32_t solaris9_atomic_inc32(volatile uint32_t *v)
       "1:     add      %0, 1, %1;"
       "       cas      [%2], %0, %1;"
       "       cmp      %0, %1;"
-      "       bne,a,pn %icc,1b;"
+      "       bne,a,pn %icc, 1b;"
       "       mov      %1, %0;"
          : "=&r" (t1), "=&r" (t2) : "r" (v) : "memory");
    return t1 + 1;
@@ -36,3 +38,4 @@ volatile uint32_t solaris9_atomic_dec32(volatile uint32_t *v)
 
 #endif
 
+#endif /* __sun */
