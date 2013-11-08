@@ -303,7 +303,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
             if (szQueryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id());
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id(), pObject->Id());
                DBQuery(g_hCoreDB, szQuery);
             }
          }

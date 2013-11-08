@@ -264,15 +264,17 @@ DCTable::~DCTable()
  */
 void DCTable::deleteExpiredData()
 {
-   TCHAR szQuery[256];
+   TCHAR query[256];
    time_t now;
 
    now = time(NULL);
+
    lock();
-   _sntprintf(szQuery, 256, _T("DELETE FROM tdata_%d WHERE (item_id=%d) AND (tdata_timestamp<%ld)"),
+   _sntprintf(query, 256, _T("DELETE FROM tdata_%d WHERE (item_id=%d) AND (tdata_timestamp<%ld)"),
               (int)m_pNode->Id(), (int)m_dwId, (long)(now - (time_t)m_iRetentionTime * 86400));
    unlock();
-   QueueSQLRequest(szQuery);
+
+   QueueSQLRequest(query);
 }
 
 /**

@@ -82,12 +82,10 @@ void NxStackWalker::OnOutput(LPCSTR pszText)
 	}
 }
 
-
-//
-// Initialize SEH functions
-//
-
-void SEHInit(void)
+/**
+ * Initialize SEH functions
+ */
+void SEHInit()
 {
 	m_hExceptionLock = CreateMutex(NULL, FALSE, NULL);
 }
@@ -185,22 +183,18 @@ BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo)
 	return TRUE;
 }
 
-
-//
-// Show call stack
-//
-
+/**
+ * Show call stack
+ */
 void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx)
 {
 	NxStackWalker sw(NxStackWalker::StackWalkOptions::OptionsAll, NULL, GetCurrentProcessId(), GetCurrentProcess());
 	sw.ShowCallstack(GetCurrentThread(), pCtx);
 }
 
-
-//
-// Exception handler
-//
-
+/**
+ * Exception handler
+ */
 int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
 	if ((m_pfExceptionHandler != NULL) &&
@@ -217,11 +211,9 @@ int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
-
-//
-// Starter for threads
-//
-
+/**
+ * Starter for threads
+ */
 THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *pArg)
 {
 	__try
@@ -236,35 +228,28 @@ THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *pArg)
 	return THREAD_OK;
 }
 
-
 /*
  * Windows service exception handling
  * ****************************************************
  */
 
-
-//
-// Static data
-//
-
+/**
+ * Exception info file handle
+ */
 static FILE *m_pExInfoFile = NULL;
 
-
-//
-// Writer for SEHShowCallStack()
-//
-
+/**
+ * Writer for SEHShowCallStack()
+ */
 void LIBNETXMS_EXPORTABLE SEHServiceExceptionDataWriter(const TCHAR *pszText)
 {
 	if (m_pExInfoFile != NULL)
 		_fputts(pszText, m_pExInfoFile);
 }
 
-
-//
-// Exception handler
-//
-
+/**
+ * Exception handler
+ */
 BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
 	TCHAR szWindowsVersion[256] = _T("ERROR"), szInfoFile[MAX_PATH], szDumpFile[MAX_PATH], szProcNameUppercase[64];
