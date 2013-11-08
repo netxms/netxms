@@ -211,13 +211,8 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		return NXSL_ERR_BAD_CLASS;
 	
 	Node *node = (Node *)object->getData();
-	UINT32 nodeId = node->Id();
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
-	if (dci == NULL || dci->getType() != DCO_TYPE_ITEM)
-	{
-		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
-	}
-	else
+	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 	{
 		double result = 0;
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -272,6 +267,10 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
 		DBConnectionPoolReleaseConnection(hdb);
 	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+	}
 
 	return 0;
 }
@@ -306,6 +305,73 @@ static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_SUM);
+}
+
+/**
+ * Get all DCI values for period
+ * Format: GetDCIValues(node, dciId, startTime, endTime)
+ * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
+ */
+static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isInteger() || !argv[2]->isInteger() || !argv[3]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+	Node *node = (Node *)object->getData();
+
+	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
+	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+	{
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+      TCHAR query[1024];
+      _sntprintf(query, 1024, _T("SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ORDER BY idata_timestamp DESC"), node->Id());
+
+      DB_STATEMENT hStmt = DBPrepare(hdb, query);
+		if (hStmt != NULL)
+		{
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, argv[3]->getValueAsInt32());
+			DB_RESULT hResult = DBSelectPrepared(hStmt);
+			if (hResult != NULL)
+			{
+            NXSL_Array *result = new NXSL_Array();
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               TCHAR buffer[MAX_RESULT_LENGTH];
+               DBGetField(hResult, i, 0, buffer, MAX_RESULT_LENGTH);
+               result->set(i, new NXSL_Value(buffer));
+            }
+				*ppResult = new NXSL_Value(result);
+				DBFreeResult(hResult);
+			}
+			else
+			{
+				*ppResult = new NXSL_Value;	// Return NULL if prepared select failed
+			}
+			DBFreeStatement(hStmt);
+		}
+		else
+		{
+			*ppResult = new NXSL_Value;	// Return NULL if prepare failed
+		}
+
+		DBConnectionPoolReleaseConnection(hdb);
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+	}
+
+	return 0;
 }
 
 /**
@@ -382,6 +448,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { _T("GetDCIObject"), F_GetDCIObject, 2 },
    { _T("GetDCIRawValue"), F_GetDCIRawValue, 2 },
    { _T("GetDCIValue"), F_GetDCIValue, 2 },
+   { _T("GetDCIValues"), F_GetDCIValues, 4 },
    { _T("GetDCIValueByDescription"), F_GetDCIValueByDescription, 2 },
    { _T("GetDCIValueByName"), F_GetDCIValueByName, 2 },
 	{ _T("GetMaxDCIValue"), F_GetMaxDCIValue, 4 },

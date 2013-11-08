@@ -5,9 +5,10 @@
 - Event processing policy rules can be exported and imported
 - NXSL:
 	- Implemented post-increment and post-decrement for array elements
+	- New functions: GetDCIValues
 - Management console:
 	- New command line option -fullscreen
-- Fixed issues: #150, #226, #378, #401
+- Fixed issues: #150, #226, #378, #401, #410
 
 
 *
