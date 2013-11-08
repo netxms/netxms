@@ -8,7 +8,7 @@
 	- New functions: GetDCIValues
 - Management console:
 	- New command line option -fullscreen
-- Fixed issues: #150, #226, #378, #401, #410
+- Fixed issues: #150, #226, #378, #401, #410, #384
 
 
 *
