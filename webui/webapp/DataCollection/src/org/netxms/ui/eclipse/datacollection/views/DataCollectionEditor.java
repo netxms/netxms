@@ -81,6 +81,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 
 /**
  * Data collection configuration view
@@ -122,6 +123,8 @@ public class DataCollectionEditor extends ViewPart
 	private Action actionDisable;
 	private Action actionShowFilter;
 	private RefreshAction actionRefresh;
+	private Action actionExportToCsv;
+	private Action actionExportAllToCsv;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -332,6 +335,7 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(new GroupMarker(IActionConstants.MB_SECONDARY));
 		manager.add(new Separator());
 		manager.add(actionRefresh);
+		manager.add(actionExportAllToCsv);
 	}
 
 	/**
@@ -344,6 +348,7 @@ public class DataCollectionEditor extends ViewPart
 	{
 		manager.add(actionCreateItem);
 		manager.add(actionRefresh);
+		manager.add(actionExportAllToCsv);
 	}
 
 	/**
@@ -361,6 +366,7 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(actionMove);
 		manager.add(actionConvert);
 		manager.add(actionDuplicate);
+		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(actionActivate);
 		manager.add(actionDisable);
@@ -487,6 +493,9 @@ public class DataCollectionEditor extends ViewPart
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+		
+		actionExportToCsv = new ExportToCsvAction(this, viewer, true); 
+		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
 
 	/**
