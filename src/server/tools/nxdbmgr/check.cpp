@@ -720,7 +720,7 @@ BOOL CreateTDataTables(DWORD nodeId)
       MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
       if (szQueryTemplate[0] != 0)
       {
-         _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
+         _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
          if (!SQLQuery(szQuery))
 		      return FALSE;
       }

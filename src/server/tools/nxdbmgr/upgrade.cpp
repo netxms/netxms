@@ -312,9 +312,9 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 /**
  * Re-create TDATA tables
  */
-static BOOL RecreateTData(const TCHAR *className)
+static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 {
-   TCHAR query[256];
+   TCHAR query[1024];
    _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
    DB_RESULT hResult = SQLSelect(query);
    if (hResult != NULL)
@@ -324,8 +324,15 @@ static BOOL RecreateTData(const TCHAR *className)
       {
          DWORD id = DBGetFieldULong(hResult, i, 0);
 
-         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), id);
-         if (!SQLQuery(query))
+         if (multipleTables)
+         {
+            _sntprintf(query, 1024, _T("DROP TABLE tdata_rows_%d\nDROP TABLE tdata_records_%d\nDROP TABLE tdata_%d\n<END>"), id, id, id);
+         }
+         else
+         {
+            _sntprintf(query, 256, _T("DROP TABLE tdata_%d\n<END>"), id);
+         }
+         if (!SQLBatch(query))
          {
             if (!g_bIgnoreErrors)
             {
@@ -350,6 +357,30 @@ static BOOL RecreateTData(const TCHAR *className)
       if (!g_bIgnoreErrors)
          return FALSE;
    }
+   return TRUE;
+}
+
+/**
+ * Upgrade from V293 to V294
+ */
+static BOOL H_UpgradeFromV293(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%'\n")
+      _T("INSERT INTO metadata (var_name,var_value)")
+      _T("   VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,record_id $SQL:INT64 not null,UNIQUE(record_id))')\n")
+      _T("INSERT INTO metadata (var_name,var_value)")
+	   _T("   VALUES ('TDataTableCreationCommand_1','CREATE TABLE tdata_records_%d (record_id $SQL:INT64 not null,row_id $SQL:INT64 not null,instance varchar(255) null,PRIMARY KEY(row_id),FOREIGN KEY (record_id) REFERENCES tdata_%d(record_id) ON DELETE CASCADE)')\n")
+      _T("INSERT INTO metadata (var_name,var_value)")
+	   _T("   VALUES ('TDataTableCreationCommand_2','CREATE TABLE tdata_rows_%d (row_id $SQL:INT64 not null,column_id integer not null,value varchar(255) null,PRIMARY KEY(row_id,column_id),FOREIGN KEY (row_id) REFERENCES tdata_records_%d(row_id) ON DELETE CASCADE)')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   RecreateTData(_T("nodes"), true);
+   RecreateTData(_T("clusters"), true);
+   RecreateTData(_T("mobile_devices"), true);
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='294' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -563,9 +594,9 @@ static BOOL H_UpgradeFromV280(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   RecreateTData(_T("nodes"));
-   RecreateTData(_T("clusters"));
-   RecreateTData(_T("mobile_devices"));
+   RecreateTData(_T("nodes"), false);
+   RecreateTData(_T("clusters"), false);
+   RecreateTData(_T("mobile_devices"), false);
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='281' WHERE var_name='SchemaVersion'")));
    return TRUE;
@@ -7185,6 +7216,7 @@ static struct
    { 290, 291, H_UpgradeFromV290 },
    { 291, 292, H_UpgradeFromV291 },
    { 292, 293, H_UpgradeFromV292 },
+   { 293, 294, H_UpgradeFromV293 },
    { 0, 0, NULL }
 };
 
