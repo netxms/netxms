@@ -42,10 +42,10 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
-import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
-import org.eclipse.gef4.zest.core.widgets.GraphConnection;
-import org.eclipse.gef4.zest.core.widgets.GraphNode;
+import org.eclipse.zest.core.viewers.IFigureProvider;
+import org.eclipse.zest.core.viewers.ISelfStyleProvider;
+import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.GraphNode;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
@@ -237,7 +237,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.eclipse.gef4.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
+	 * org.eclipse.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
 	 */
 	@Override
 	public IFigure getFigure(Object element)
@@ -392,8 +392,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java
-	 * .lang.Object, org.eclipse.gef4.zest.core.widgets.GraphConnection)
+	 * org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java
+	 * .lang.Object, org.eclipse.zest.core.widgets.GraphConnection)
 	 */
 	@Override
 	public void selfStyleConnection(Object element, GraphConnection connection)
@@ -544,7 +544,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang.Object, org.eclipse.gef4.zest.core.widgets.GraphNode)
+	 * @see org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang.Object, org.eclipse.zest.core.widgets.GraphNode)
 	 */
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)

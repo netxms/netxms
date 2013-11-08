@@ -21,9 +21,9 @@ package org.netxms.ui.eclipse.networkmaps.algorithms;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.interfaces.EntityLayout;
-import org.eclipse.gef4.zest.layouts.interfaces.LayoutContext;
+import org.eclipse.zest.layouts.LayoutAlgorithm;
+import org.eclipse.zest.layouts.interfaces.EntityLayout;
+import org.eclipse.zest.layouts.interfaces.LayoutContext;
 
 /**
  * Sparse tree (prevent node overlapping) after TreeLayout
@@ -37,7 +37,7 @@ public class SparseTree implements LayoutAlgorithm
 	private LayoutContext context;
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.layouts.LayoutAlgorithm#setLayoutContext(org.eclipse.gef4.zest.layouts.interfaces.LayoutContext)
+	 * @see org.eclipse.zest.layouts.LayoutAlgorithm#setLayoutContext(org.eclipse.zest.layouts.interfaces.LayoutContext)
 	 */
 	@Override
 	public void setLayoutContext(LayoutContext context)
@@ -46,7 +46,7 @@ public class SparseTree implements LayoutAlgorithm
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.layouts.LayoutAlgorithm#applyLayout(boolean)
+	 * @see org.eclipse.zest.layouts.LayoutAlgorithm#applyLayout(boolean)
 	 */
 	@Override
 	public void applyLayout(boolean clean)

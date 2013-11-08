@@ -27,8 +27,8 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.gef4.zest.core.viewers.GraphViewer;
-import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
+import org.eclipse.zest.core.viewers.GraphViewer;
+import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.netxms.ui.eclipse.serviceview.Activator;
 
 /**
@@ -91,7 +91,7 @@ public class ServiceTreeLabelProvider extends LabelProvider implements IFigurePr
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
+	 * @see org.eclipse.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
 	 */
 	@Override
 	public IFigure getFigure(Object element)
