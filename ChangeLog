@@ -7,7 +7,7 @@
 	- Implemented post-increment and post-decrement for array elements
 - Management console:
 	- New command line option -fullscreen
-- Fixed issues: #226, #378, #150, #364
+- Fixed issues: #226, #378, #150
 
 
 *
