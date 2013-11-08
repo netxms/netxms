@@ -19,8 +19,8 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.zest.core.widgets.zooming.ZoomListener;
-import org.eclipse.zest.core.widgets.zooming.ZoomManager;
+import org.eclipse.gef4.zest.core.widgets.zooming.ZoomListener;
+import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 
 /**
  * Zoom action
@@ -45,7 +45,7 @@ public class ZoomAction extends Action implements ZoomListener
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.internal.ZoomListener#zoomChanged(double)
+	 * @see org.eclipse.gef4.zest.core.viewers.internal.ZoomListener#zoomChanged(double)
 	 */
 	@Override
 	public void zoomChanged(double zoom)

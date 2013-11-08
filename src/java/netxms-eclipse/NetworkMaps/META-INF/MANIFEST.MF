@@ -12,10 +12,10 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.netxms.ui.eclipse.imagelibrary;bundle-version="1.2.10",
  org.netxms.ui.eclipse.osm;bundle-version="1.2.7",
  org.netxms.ui.eclipse.charts;bundle-version="1.2.9",
- org.eclipse.draw2d;bundle-version="3.9.0",
- org.eclipse.zest.core;bundle-version="2.0.0",
- org.eclipse.zest.jface;bundle-version="2.0.0",
- org.eclipse.zest.layouts;bundle-version="2.0.0",
+ org.eclipse.draw2d;bundle-version="3.9.0",  
+ org.eclipse.gef4.zest.core,
+ org.eclipse.gef4.zest.jface,
+ org.eclipse.gef4.zest.layouts,
  org.netxms.ui.eclipse.nxsl;bundle-version="1.2.7"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
