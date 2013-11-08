@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.gef4.zest.core.viewers.IGraphEntityRelationshipContentProvider;
+import org.eclipse.zest.core.viewers.IGraphEntityRelationshipContentProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.NetworkMapLink;
@@ -161,7 +161,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.core.viewers.IGraphEntityRelationshipContentProvider#getRelationships(java.lang.Object, java.lang.Object)
+	 * @see org.eclipse.zest.core.viewers.IGraphEntityRelationshipContentProvider#getRelationships(java.lang.Object, java.lang.Object)
 	 */
 	@Override
 	public Object[] getRelationships(Object source, Object dest)
