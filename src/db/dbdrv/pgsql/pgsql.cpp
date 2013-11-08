@@ -177,21 +177,21 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost,	const char *sz
 															 const char *szDatabase, const char *schema, WCHAR *errorText)
 {
 	PG_CONN *pConn;	
-	char *szPort = NULL;
+   char *szPort = NULL;
 
 	if (szDatabase == NULL || *szDatabase == 0)
 	{
 		wcscpy(errorText, L"Database name is empty");
 		return NULL;
 	}
-	if((szPort = (char *)strchr(szHost, ':'))!=NULL)
-	{
-		szPort[0]=0;
-		szPort++;
-	}
-	
+   if((szPort = (char *)strchr(szHost, ':')) != NULL)
+   {
+      szPort[0] = 0;
+      szPort++;
+   }
+
 	pConn = (PG_CONN *)malloc(sizeof(PG_CONN));
-	
+
 	if (pConn != NULL)
 	{
 		// should be replaced with PQconnectdb();
