@@ -22,8 +22,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.zest.core.viewers.GraphViewer;
-import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
+import org.eclipse.gef4.zest.core.viewers.GraphViewer;
+import org.eclipse.gef4.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.IServiceFigureListener;
@@ -74,7 +74,9 @@ public class ServiceTree extends Composite implements IServiceFigureListener
 		});
 		*/
 		//viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { mainLayoutAlgorithm, new SparseTree() }));
-		viewer.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm(SpaceTreeLayoutAlgorithm.TOP_DOWN));
+		
+		//viewer.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm(SpaceTreeLayoutAlgorithm.TOP_DOWN)); 
+		//FIXME No more setLayoutAlgorithm in zest. 
 		
 		model = new ServiceTreeModel(rootObject);
 		viewer.setInput(model);

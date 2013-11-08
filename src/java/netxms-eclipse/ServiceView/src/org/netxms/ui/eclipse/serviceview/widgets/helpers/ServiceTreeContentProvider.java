@@ -19,7 +19,7 @@
 package org.netxms.ui.eclipse.serviceview.widgets.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
+import org.eclipse.gef4.zest.core.viewers.IGraphEntityContentProvider;
 
 /**
  * Content provider for service tree
@@ -28,7 +28,7 @@ import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
 public class ServiceTreeContentProvider implements IGraphEntityContentProvider
 {
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.IGraphEntityContentProvider#getConnectedTo(java.lang.Object)
+	 * @see org.eclipse.gef4.zest.core.viewers.IGraphEntityContentProvider#getConnectedTo(java.lang.Object)
 	 */
 	@Override
 	public Object[] getConnectedTo(Object entity)
@@ -37,7 +37,7 @@ public class ServiceTreeContentProvider implements IGraphEntityContentProvider
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.IGraphEntityContentProvider#getElements(java.lang.Object)
+	 * @see org.eclipse.gef4.zest.core.viewers.IGraphEntityContentProvider#getElements(java.lang.Object)
 	 */
 	@Override
 	public Object[] getElements(Object inputElement)
