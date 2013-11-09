@@ -465,11 +465,11 @@ public class AgentConnectorService extends Service implements LocationListener
 				try
 				{
 					session.connect();
-					Log.d(TAG, "PushDataTask.doInBackground: connected");
+					Log.v(TAG, "PushDataTask.doInBackground: connected");
 					statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
 					if (sendDeviceSystemInfo)
 					{
-						Log.d(TAG, "PushDataTask.doInBackground: sending DeviceSystemInfo");
+						Log.v(TAG, "PushDataTask.doInBackground: sending DeviceSystemInfo");
 						session.reportDeviceSystemInfo(DeviceInfoHelper.getManufacturer(), DeviceInfoHelper.getModel(),
 								DeviceInfoHelper.getOSName(), DeviceInfoHelper.getRelease(), DeviceInfoHelper.getSerial(),
 								DeviceInfoHelper.getUser(getApplicationContext()));
@@ -478,7 +478,7 @@ public class AgentConnectorService extends Service implements LocationListener
 					session.reportDeviceStatus(NetHelper.getInetAddress(), getGeoLocation(), getFlags(),
 							DeviceInfoHelper.getBatteryLevel(getApplicationContext()));
 					session.disconnect();
-					Log.d(TAG, "PushDataTask.doInBackground: data transfer completed");
+					Log.v(TAG, "PushDataTask.doInBackground: data transfer completed");
 					connMsg = getString(R.string.notify_connected, server + ":" + port);
 					return true;
 				}
@@ -511,7 +511,7 @@ public class AgentConnectorService extends Service implements LocationListener
 			}
 			else
 			{
-				Log.e(TAG, "PushDataTask.onPostExecute: error: " + connMsg);
+				Log.d(TAG, "PushDataTask.onPostExecute: error: " + connMsg);
 				statusNotification(ConnectionStatus.CS_ERROR, connMsg);
 			}
 			Editor e = sp.edit();
@@ -641,7 +641,7 @@ public class AgentConnectorService extends Service implements LocationListener
 				locationManager.removeUpdates(AgentConnectorService.this);
 				locationHandler.postDelayed(locationTask, getNextSchedule(locationInterval));
 				String locStatus = getString(R.string.info_location_timeout, allowedProviders);
-				Log.d(TAG, locStatus);
+				Log.i(TAG, locStatus);
 				updateLocationStatus(locStatus);
 				refreshHomeScreen();
 			}
@@ -664,7 +664,7 @@ public class AgentConnectorService extends Service implements LocationListener
 				}
 				else
 					locationHandler.postDelayed(locationTask, getNextSchedule(locationInterval));
-				Log.d(TAG, locStatus);
+				Log.i(TAG, locStatus);
 				updateLocationStatus(locStatus);
 				refreshHomeScreen();
 			}
@@ -682,7 +682,7 @@ public class AgentConnectorService extends Service implements LocationListener
 				Float.toString((float)location.getLatitude()),
 				Float.toString((float)location.getLongitude()),
 				Float.toString(location.getAccuracy()));
-		Log.d(TAG, locStatus);
+		Log.i(TAG, locStatus);
 		updateLocationStatus(locStatus);
 		locationManager.removeUpdates(AgentConnectorService.this);
 		gettingNewLocation = false;
