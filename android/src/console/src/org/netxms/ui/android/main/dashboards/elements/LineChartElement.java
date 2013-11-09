@@ -75,7 +75,7 @@ public class LineChartElement extends AbstractDashboardElement
 	public void refresh()
 	{
 		final ChartDciConfig[] items = config.getDciList();
-		Log.d(TAG, "refresh(): " + items.length + " items to load");
+		Log.v(TAG, "refresh(): " + items.length + " items to load");
 		if (items.length == 0)
 			return;
 
@@ -89,7 +89,7 @@ public class LineChartElement extends AbstractDashboardElement
 			{
 				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, new Date(startTime), new Date(endTime), 0);
 			}
-			Log.d(TAG, "refresh(): data retrieved from server");
+			Log.v(TAG, "refresh(): data retrieved from server");
 
 			post(new Runnable()
 			{
@@ -112,7 +112,7 @@ public class LineChartElement extends AbstractDashboardElement
 						graphView.addOrReplaceSeries(i, series);
 					}
 					graphView.setViewPort(startTime, endTime - startTime + 1);
-					Log.d(TAG, "refresh(): " + dciData.length + " series added; viewport set to " + startTime + "/" + (endTime - startTime + 1));
+					Log.v(TAG, "refresh(): " + dciData.length + " series added; viewport set to " + startTime + "/" + (endTime - startTime + 1));
 
 					if (getChildCount() == 0)
 						addView(graphView);

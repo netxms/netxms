@@ -93,13 +93,13 @@ public class ConnectTask extends Thread
 						}
 						catch (NXCException e)
 						{
-							Log.d(TAG, "NXCException in checking connection", e);
+							Log.e(TAG, "NXCException in checking connection", e);
 							service.onError(e.getLocalizedMessage());
 							session = null;
 						}
 						catch (IOException e)
 						{
-							Log.d(TAG, "IOException in checking connection", e);
+							Log.e(TAG, "IOException in checking connection", e);
 							service.onError(e.getLocalizedMessage());
 							session = null;
 						}
@@ -125,20 +125,20 @@ public class ConnectTask extends Thread
 					}
 					catch (Exception e)
 					{
-						Log.d(TAG, "Exception on connect attempt", e);
+						Log.e(TAG, "Exception on connect attempt", e);
 						service.onError(e.getLocalizedMessage());
 					}
 				}
 			}
 			else
 			{
-				Log.d(TAG, "No internet connection");
+				Log.w(TAG, "No internet connection");
 				service.setConnectionStatus(ConnectionStatus.CS_NOCONNECTION, "");
 			}
 		}
 		else
 		{
-			Log.d(TAG, "Service unavailable");
+			Log.w(TAG, "Service unavailable");
 		}
 	}
 

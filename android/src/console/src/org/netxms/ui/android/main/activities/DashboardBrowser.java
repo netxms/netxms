@@ -286,6 +286,27 @@ public class DashboardBrowser extends AbstractClientActivity
 	}
 
 	/**
+	 * Update dashboard list, force refresh as necessary
+	 */
+	public void updateDashboardList()
+	{
+		if (adapter != null)
+		{
+			if (currentParent != null)
+			{
+				AbstractObject[] list = currentParent.getChildsAsArray();
+				if (list != null)
+				{
+					adapter.setNodes(list);
+					adapter.notifyDataSetChanged();
+					return;
+				}
+			}
+			refreshList();
+		}
+	}
+
+	/**
 	 * Internal task for synching missing objects
 	 */
 	private class SyncMissingObjectsTask extends AsyncTask<Object, Void, Exception>
@@ -315,7 +336,7 @@ public class DashboardBrowser extends AbstractClientActivity
 			}
 			catch (Exception e)
 			{
-				Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects", e);
+				Log.e(TAG, "Exception while executing service.getSession().syncMissingObjects", e);
 				return e;
 			}
 			return null;

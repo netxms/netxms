@@ -61,7 +61,7 @@ public class DciValueLoader extends AsyncTaskLoader<DciValue[]>
 		}
 		catch (Exception e)
 		{
-			Log.w(TAG, "Exception while executing loadInBackground", e);
+			Log.e(TAG, "Exception while executing loadInBackground", e);
 		}
 		return dciValues;
 	}

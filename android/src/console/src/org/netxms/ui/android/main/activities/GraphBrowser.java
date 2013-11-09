@@ -114,7 +114,7 @@ public class GraphBrowser extends AbstractClientActivity
 			}
 			catch (Exception e)
 			{
-				Log.w(TAG, "ChartConfig.createFromXml", e);
+				Log.e(TAG, "ChartConfig.createFromXml", e);
 				config = new ChartConfig();
 			}
 
@@ -212,12 +212,12 @@ public class GraphBrowser extends AbstractClientActivity
 			}
 			catch (NXCException e)
 			{
-				Log.d(TAG, "NXCException while executing LoadDataTask.doInBackground", e);
+				Log.e(TAG, "NXCException while executing LoadDataTask.doInBackground", e);
 				e.printStackTrace();
 			}
 			catch (IOException e)
 			{
-				Log.d(TAG, "IOException while executing LoadDataTask.doInBackground", e);
+				Log.e(TAG, "IOException while executing LoadDataTask.doInBackground", e);
 				e.printStackTrace();
 			}
 			return graphs;

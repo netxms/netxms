@@ -350,16 +350,16 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 					}
 					catch (MacAddressFormatException e)
 					{
-						Log.d(TAG, "MacAddressFormatException while executing searchMacAddress", e);
+						Log.e(TAG, "MacAddressFormatException while executing searchMacAddress", e);
 						string = r.getString(R.string.connection_point_invalid, macAddress);
 					}
 					catch (NXCException e)
 					{
-						Log.d(TAG, "NXCException while executing syncMissingObjects", e);
+						Log.e(TAG, "NXCException while executing syncMissingObjects", e);
 					}
 					catch (IOException e)
 					{
-						Log.d(TAG, "IOException while executing syncMissingObjects", e);
+						Log.e(TAG, "IOException while executing syncMissingObjects", e);
 					}
 
 					if ((bridge != null) && (iface != null))

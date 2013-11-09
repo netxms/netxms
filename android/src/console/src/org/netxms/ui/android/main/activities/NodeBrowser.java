@@ -336,7 +336,7 @@ public class NodeBrowser extends AbstractClientActivity
 	}
 
 	/**
-	 * Refresh node list
+	 * Refresh node list, force reload from server
 	 */
 	public void refreshList()
 	{
@@ -430,6 +430,27 @@ public class NodeBrowser extends AbstractClientActivity
 	}
 
 	/**
+	 * Update node list, force refresh as necessary
+	 */
+	public void updateNodeList()
+	{
+		if (adapter != null)
+		{
+			if (currentParent != null)
+			{
+				AbstractObject[] list = currentParent.getChildsAsArray();
+				if (list != null)
+				{
+					adapter.setNodes(list);
+					adapter.notifyDataSetChanged();
+					return;
+				}
+			}
+			refreshList();
+		}
+	}
+
+	/**
 	 * @param nodeIdList
 	 */
 	private void viewAlarms(ArrayList<Integer> nodeIdList)
@@ -470,7 +491,7 @@ public class NodeBrowser extends AbstractClientActivity
 			}
 			catch (Exception e)
 			{
-				Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingObjectsTask", e);
+				Log.e(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingObjectsTask", e);
 			}
 			return null;
 		}
@@ -524,7 +545,7 @@ public class NodeBrowser extends AbstractClientActivity
 					}
 					catch (Exception e)
 					{
-						Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingChildsTask", e);
+						Log.e(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingChildsTask", e);
 					}
 				}
 			}

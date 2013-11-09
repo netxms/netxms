@@ -6,7 +6,9 @@ package org.netxms.ui.android.main.dashboards.elements;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
 import org.netxms.ui.android.service.ClientConnectorService;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -20,20 +22,20 @@ import android.widget.FrameLayout;
 public abstract class AbstractDashboardElement extends FrameLayout
 {
 	private static final String TAG = "nxclient/AbstractDashboardElement";
-	
+
 	protected static final int MAX_CHART_ITEMS = 16;
 	protected static final int GRID_COLOR = 0xFFE8E8E8;
 	protected static final int BACKGROUND_COLOR = 0xFFF0F0F0;
 	protected static final int LABEL_COLOR = 0xFF000000;
 	protected static final Integer[] DEFAULT_ITEM_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
-                                                            0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
+			0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
 
 	protected ClientConnectorService service;
 	protected ScheduledExecutorService scheduleTaskExecutor;
 
-	private Paint paint;
+	private final Paint paint;
 	private ScheduledFuture<?> task = null;
-	
+
 	/**
 	 * @param context
 	 * @param xmlConfig
@@ -49,7 +51,7 @@ public abstract class AbstractDashboardElement extends FrameLayout
 		paint.setStyle(Style.STROKE);
 		paint.setColor(0xFFABADB3);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see android.view.View#onDraw(android.graphics.Canvas)
 	 */
@@ -66,7 +68,7 @@ public abstract class AbstractDashboardElement extends FrameLayout
 	public void refresh()
 	{
 	}
-	
+
 	/**
 	 * Start element auto refresh at given interval
 	 * 
@@ -76,17 +78,18 @@ public abstract class AbstractDashboardElement extends FrameLayout
 	{
 		if (task != null)
 		{
-			Log.d(TAG, "startRefreshTask: timer already exist");
+			Log.w(TAG, "startRefreshTask: timer already exist");
 			return;
 		}
 
 		if (scheduleTaskExecutor == null)
 		{
-			Log.d(TAG, "startRefreshTask: executor service not available");
+			Log.w(TAG, "startRefreshTask: executor service not available");
 			return;
 		}
 
-		task = scheduleTaskExecutor.scheduleWithFixedDelay(new Runnable() {
+		task = scheduleTaskExecutor.scheduleWithFixedDelay(new Runnable()
+		{
 			@Override
 			public void run()
 			{

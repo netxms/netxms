@@ -75,7 +75,7 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<AbstractObj
 		}
 		catch (Exception e)
 		{
-			Log.w(TAG, "Exception while executing loadInBackground", e);
+			Log.e(TAG, "Exception while executing loadInBackground", e);
 		}
 		return children;
 	}

@@ -18,7 +18,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
@@ -689,7 +688,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				}
 				catch (Exception e)
 				{
-					Log.d(TAG, "Exception in doBackgroundObjectSync", e);
+					Log.e(TAG, "Exception in doBackgroundObjectSync", e);
 				}
 			}
 		}.start();
@@ -739,17 +738,10 @@ public class ClientConnectorService extends Service implements SessionListener
 				alarmNotification(unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
 				unknownAlarm = null;
 			}
-			//	Force refresh only when receiving an update from a root object
-			switch ((int)object.getObjectId())
-			{
-				case GenericObject.DASHBOARDROOT:
-				case GenericObject.SERVICEROOT:
-					refreshHomeScreen();
-					refreshAlarmBrowser();
-					refreshNodeBrowser();
-					refreshDashboardBrowser();
-					break;
-			}
+			refreshHomeScreen();
+			refreshAlarmBrowser();
+			refreshNodeBrowser();
+			refreshDashboardBrowser();
 		}
 	}
 
@@ -803,7 +795,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				@Override
 				public void run()
 				{
-					nodeBrowser.refreshList();
+					nodeBrowser.updateNodeList();
 				}
 			});
 		}
@@ -827,7 +819,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				@Override
 				public void run()
 				{
-					dashboardBrowser.refreshList();
+					dashboardBrowser.updateDashboardList();
 				}
 			});
 		}
@@ -927,7 +919,6 @@ public class ClientConnectorService extends Service implements SessionListener
 			case NXCNotification.OBJECT_CHANGED:
 			case NXCNotification.OBJECT_SYNC_COMPLETED:
 				processObjectUpdate((AbstractObject)n.getObject());
-//				Log.v(TAG, "NXCNotification.OBJECT_CHANGED/SYNC_COMPLETED: ID=" + ((AbstractObject)n.getObject()).getObjectId());
 				break;
 			case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
 				processGraphUpdate();
@@ -967,7 +958,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch (Exception e)
 		{
-			Log.d(TAG, "Exception while executing session.acknowledgeAlarm", e);
+			Log.e(TAG, "Exception while executing session.acknowledgeAlarm", e);
 		}
 	}
 
@@ -983,7 +974,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch (Exception e)
 		{
-			Log.d(TAG, "Exception while executing session.resolveAlarm", e);
+			Log.e(TAG, "Exception while executing session.resolveAlarm", e);
 		}
 	}
 
@@ -999,7 +990,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch (Exception e)
 		{
-			Log.d(TAG, "Exception while executing session.terminateAlarm", e);
+			Log.e(TAG, "Exception while executing session.terminateAlarm", e);
 		}
 	}
 
@@ -1015,7 +1006,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch (Exception e)
 		{
-			Log.d(TAG, "Exception while executing session.setObjectManaged", e);
+			Log.e(TAG, "Exception while executing session.setObjectManaged", e);
 		}
 	}
 

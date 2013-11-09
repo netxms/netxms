@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -264,7 +265,7 @@ public class BarcodeScannerIntegrator
 		{
 			// set the desired barcode types
 			StringBuilder joinedByComma = new StringBuilder();
-			for(String format : desiredBarcodeFormats)
+			for (String format : desiredBarcodeFormats)
 			{
 				if (joinedByComma.length() > 0)
 				{
@@ -310,7 +311,7 @@ public class BarcodeScannerIntegrator
 		List<ResolveInfo> availableApps = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
 		if (availableApps != null)
 		{
-			for(ResolveInfo availableApp : availableApps)
+			for (ResolveInfo availableApp : availableApps)
 			{
 				String packageName = availableApp.activityInfo.packageName;
 				if (targetApplications.contains(packageName))
@@ -327,7 +328,8 @@ public class BarcodeScannerIntegrator
 		AlertDialog.Builder downloadDialog = new AlertDialog.Builder(activity);
 		downloadDialog.setTitle(title);
 		downloadDialog.setMessage(message);
-		downloadDialog.setPositiveButton(buttonYes, new DialogInterface.OnClickListener() {
+		downloadDialog.setPositiveButton(buttonYes, new DialogInterface.OnClickListener()
+		{
 			@Override
 			public void onClick(DialogInterface dialogInterface, int i)
 			{
@@ -337,14 +339,15 @@ public class BarcodeScannerIntegrator
 				{
 					activity.startActivity(intent);
 				}
-				catch(ActivityNotFoundException anfe)
+				catch (ActivityNotFoundException anfe)
 				{
 					// Hmm, market is not installed
-					Log.w(TAG, "Android Market is not installed; cannot install Barcode Scanner");
+					Log.e(TAG, "Android Market is not installed; cannot install Barcode Scanner");
 				}
 			}
 		});
-		downloadDialog.setNegativeButton(buttonNo, new DialogInterface.OnClickListener() {
+		downloadDialog.setNegativeButton(buttonNo, new DialogInterface.OnClickListener()
+		{
 			@Override
 			public void onClick(DialogInterface dialogInterface, int i)
 			{

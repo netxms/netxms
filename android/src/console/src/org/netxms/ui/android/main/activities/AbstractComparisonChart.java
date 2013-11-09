@@ -152,7 +152,7 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 			}
 			catch (Exception e)
 			{
-				Log.d(TAG, "Exception while executing LoadDataTask.doInBackground", e);
+				Log.e(TAG, "Exception while executing LoadDataTask.doInBackground", e);
 				dciData = null;
 			}
 			return dciData;
