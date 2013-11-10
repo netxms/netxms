@@ -39,7 +39,10 @@ target
 .idea
 
 /aclocal.m4
+/android/src/agent/bin
+/android/src/agent/gen
 /android/src/agent/libs/*.jar
+/android/src/agent/res/values/build_number.xml
 /android/src/console/bin
 /android/src/console/gen
 /android/src/console/libs/*.jar
@@ -175,6 +178,8 @@ target
 # Eclipse CDT
 .project
 .cproject
+.metadata
 
 # Dolphin browser
 .directory
+
