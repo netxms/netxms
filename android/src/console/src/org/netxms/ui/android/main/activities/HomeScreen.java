@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -163,6 +164,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 					startActivity(new Intent(this, DashboardBrowser.class));
 					break;
 				case ACTIVITY_TEST:
+					Log.d(TAG, "ACTIVITY_TEST");
 					Intent newIntent = new Intent(this, NodeInfoFragment.class);
 					newIntent.putExtra("objectId", (long)345);
 					startActivity(newIntent);
@@ -203,7 +205,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public void refreshActivityStatus()
 	{
 		refreshPendingAlarms();
-//		new SyncTopNodes().execute(new Long[] { (long)GenericObject.SERVICEROOT, (long)GenericObject.DASHBOARDROOT });
 		ArrayList<AbstractObject> objList = new ArrayList<AbstractObject>();
 		objList.add(service.findObjectById(GenericObject.SERVICEROOT));
 		objList.add(service.findObjectById(GenericObject.DASHBOARDROOT));
@@ -211,39 +212,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		adapter.notifyDataSetChanged();
 	}
 
-//	/**
-//	 * Internal task for synching missing objects
-//	 */
-//	private class SyncTopNodes extends AsyncTask<Long, Void, ArrayList<AbstractObject>>
-//	{
-//		protected SyncTopNodes()
-//		{
-//		}
-//
-//		@Override
-//		protected ArrayList<AbstractObject> doInBackground(Long... params)
-//		{
-//			ArrayList<AbstractObject> objList = new ArrayList<AbstractObject>();
-//			try
-//			{
-//				for (int i = 0; i < params.length; i++)
-//					objList.add(service.findObjectById(params[i].longValue()));
-//			}
-//			catch (Exception e)
-//			{
-//				Log.d(TAG, "Exception while executing service.findObjectById()", e);
-//			}
-//			return objList;
-//		}
-//
-//		@Override
-//		protected void onPostExecute(ArrayList<AbstractObject> objList)
-//		{
-//			adapter.setTopNodes(objList);
-//			adapter.notifyDataSetChanged();
-//		}
-//	}
-//
 	/**
 	 * Set a flag to inform about an intentional exit to avoid
 	 * automatic reconnection on change connectivity status
