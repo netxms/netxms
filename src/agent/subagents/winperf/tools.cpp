@@ -63,6 +63,9 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
  */
 void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
 {
+   if (dwError == PDH_NO_DATA)
+      return;
+
    TCHAR szBuffer[1024];
 
    AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("%s: PDH Error %08X in call to %s (%s)"), 
