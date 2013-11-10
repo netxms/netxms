@@ -168,11 +168,9 @@ void BusinessService::CreateMessage(CSCPMessage *pMsg)
    ServiceContainer::CreateMessage(pMsg);
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 UINT32 BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
@@ -181,31 +179,25 @@ UINT32 BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLo
    return ServiceContainer::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Check if service is ready for poll
-//
-
+/**
+ * Check if service is ready for poll
+ */
 bool BusinessService::isReadyForPolling()
 {
-	return time(NULL) - m_lastPollTime > g_dwSlmPollingInterval && !m_busy;
+	return (time(NULL) - m_lastPollTime > g_slmPollingInterval) && !m_busy;
 }
 
-
-//
-// Lock service for polling
-//
-
+/**
+ * Lock service for polling
+ */
 void BusinessService::lockForPolling()
 {
 	m_busy = true;
 }
 
-
-//
-// A callback for poller threads
-//
-
+/**
+ * A callback for poller threads
+ */
 void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 {
 	DbgPrintf(5, _T("Started polling of business service %s [%d]"), m_szName, (int)m_dwId);

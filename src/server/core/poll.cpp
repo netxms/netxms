@@ -630,7 +630,7 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
 
    for(dwAddr = dwFrom; dwAddr <= dwTo; dwAddr++)
    {
-      if (IcmpPing(htonl(dwAddr), 3, 2000, NULL, g_dwPingSize) == ICMP_SUCCESS)
+      if (IcmpPing(htonl(dwAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
       {
          DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"),
                    IpToStr(dwAddr, szIpAddr1));

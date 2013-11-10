@@ -118,9 +118,10 @@ UINT32 g_dwConfigurationPollingInterval;
 UINT32 g_dwRoutingTableUpdateInterval;
 UINT32 g_dwTopologyPollingInterval;
 UINT32 g_dwConditionPollingInterval;
-UINT32 g_dwPingSize;
-UINT32 g_dwAuditFlags;
-UINT32 g_dwSlmPollingInterval;
+UINT32 g_icmpPingSize;
+UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
+UINT32 g_auditFlags;
+UINT32 g_slmPollingInterval;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
 TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
 TCHAR g_szJavaLibDir[MAX_PATH] = DEFAULT_JAVA_LIBDIR;
@@ -129,11 +130,11 @@ int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
 UINT32 NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
-time_t g_tServerStartTime = 0;
-UINT32 g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
-UINT32 g_dwAgentCommandTimeout = 4000;  // Default timeout for requests to agent
-UINT32 g_dwThresholdRepeatInterval = 0;	// Disabled by default
-int g_nRequiredPolls = 1;
+time_t g_serverStartTime = 0;
+UINT32 g_lockTimeout = 60000;   // Default timeout for acquiring mutex
+UINT32 g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
+UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
+int g_requiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
 
 /**
@@ -285,7 +286,7 @@ static void LoadGlobalConfig()
 	g_dwRoutingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
 	g_dwTopologyPollingInterval = ConfigReadInt(_T("TopologyPollingInterval"), 1800);
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
-	g_dwSlmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
+	g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
 	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
 		g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
 	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))
@@ -337,12 +338,13 @@ static void LoadGlobalConfig()
 		DbgPrintf(1, _T("Using data directory %s"), g_szDataDir);
 	}
 
-	g_dwPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
-	g_dwLockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
+   g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
+	g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
+	g_lockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
 	g_dwSNMPTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
-	g_dwAgentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
-	g_dwThresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
-	g_nRequiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
+	g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
+	g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
+	g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
 }
 
 /**
@@ -520,8 +522,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	UINT32 dwAddr;
 	TCHAR szInfo[256];
 
-	g_tServerStartTime = time(NULL);
-	srand((unsigned int)g_tServerStartTime);
+	g_serverStartTime = time(NULL);
+	srand((unsigned int)g_serverStartTime);
 
 	if (!(g_dwFlags & AF_USE_SYSLOG))
 	{

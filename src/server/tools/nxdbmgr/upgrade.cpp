@@ -361,6 +361,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V294 to V295
+ */
+static BOOL H_UpgradeFromV294(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateConfigParam(_T("IcmpPingTimeout"), _T("1500"), 1, 1));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='295' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V293 to V294
  */
 static BOOL H_UpgradeFromV293(int currVersion, int newVersion)
@@ -7217,6 +7227,7 @@ static struct
    { 291, 292, H_UpgradeFromV291 },
    { 292, 293, H_UpgradeFromV292 },
    { 293, 294, H_UpgradeFromV293 },
+   { 294, 295, H_UpgradeFromV294 },
    { 0, 0, NULL }
 };
 

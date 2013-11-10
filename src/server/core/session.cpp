@@ -7236,7 +7236,7 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 
    // Server version, etc.
    msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
-   msg.SetVariable(VID_SERVER_UPTIME, (UINT32)(time(NULL) - g_tServerStartTime));
+   msg.SetVariable(VID_SERVER_UPTIME, (UINT32)(time(NULL) - g_serverStartTime));
 
    // Number of objects and DCIs
 	UINT32 dciCount = 0;

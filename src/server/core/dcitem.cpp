@@ -458,7 +458,7 @@ void DCItem::checkThresholds(ItemValue &value)
          case ALREADY_ACTIVE:
 				// Check if we need to re-sent threshold violation event
 				if (t->getRepeatInterval() == -1)
-					dwInterval = g_dwThresholdRepeatInterval;
+					dwInterval = g_thresholdRepeatInterval;
 				else
 					dwInterval = (UINT32)t->getRepeatInterval();
 				if ((dwInterval != 0) && (t->getLastEventTimestamp() + (time_t)dwInterval < now))

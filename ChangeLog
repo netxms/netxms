@@ -6,9 +6,10 @@
 - NXSL:
 	- Implemented post-increment and post-decrement for array elements
 	- New functions: GetDCIValues
+- Server's ICMP ping timeout can be configured
 - Management console:
 	- New command line option -fullscreen
-- Fixed issues: #150, #226, #378, #401, #410, #384
+- Fixed issues: #150, #226, #378, #384, #401, #410, #419
 
 
 *

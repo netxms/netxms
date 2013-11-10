@@ -331,7 +331,7 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
 	}
 	else	// not using ICMP proxy
 	{
-		if (IcmpPing(htonl(ipAddr), 3, 1500, NULL, g_dwPingSize) == ICMP_SUCCESS)
+		if (IcmpPing(htonl(ipAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
 			reachable = true;
 	}
 

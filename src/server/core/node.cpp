@@ -1027,7 +1027,7 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
    Queue *pQueue = new Queue;     // Delayed event queue
    SetPollerInfo(nPoller, _T("wait for lock"));
    pollerLock();
-   m_pPollRequestor = pSession;
+   m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
    DbgPrintf(5, _T("Starting status poll for node %s (ID: %d)"), m_szName, m_dwId);
 
@@ -1184,13 +1184,13 @@ restart_agent_check:
       {
          case OBJECT_INTERFACE:
 			   DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
-            ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId, pQueue,
+            ((Interface *)ppPollList[i])->statusPoll(pSession, dwRqId, pQueue,
 					(pCluster != NULL) ? pCluster->isSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
 					pTransport);
             break;
          case OBJECT_NETWORKSERVICE:
 			   DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
-            ((NetworkService *)ppPollList[i])->StatusPoll(pSession, dwRqId,
+            ((NetworkService *)ppPollList[i])->statusPoll(pSession, dwRqId,
                                                           (Node *)pPollerNode, pQueue);
             break;
          default:
@@ -1333,7 +1333,7 @@ restart_agent_check:
    m_tLastStatusPoll = time(NULL);
    sendPollerMsg(dwRqId, _T("Finished status poll for node %s\r\n"), m_szName);
    sendPollerMsg(dwRqId, _T("Node status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
-   m_pPollRequestor = NULL;
+   m_pollRequestor = NULL;
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
    pollerUnlock();
@@ -1595,7 +1595,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 
    SetPollerInfo(nPoller, _T("wait for lock"));
    pollerLock();
-   m_pPollRequestor = pSession;
+   m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_szName);
    DbgPrintf(4, _T("Starting configuration poll for node %s (ID: %d)"), m_szName, m_dwId);
 
@@ -2913,7 +2913,7 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
    bRet = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
    if (bRet)
 	{
-		m_pAgentConnection->setCommandTimeout(g_dwAgentCommandTimeout);
+		m_pAgentConnection->setCommandTimeout(g_agentCommandTimeout);
       m_pAgentConnection->enableTraps();
 	}
    return bRet;
@@ -4831,7 +4831,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	}
 
 	pollerLock();
-   m_pPollRequestor = pSession;
+   m_pollRequestor = pSession;
 
    sendPollerMsg(dwRqId, _T("Starting topology poll for node %s\r\n"), m_szName);
 	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_szName, m_dwId);
@@ -5326,7 +5326,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId)
 	int j;
 	
    pollerLock();
-   m_pPollRequestor = pSession;
+   m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting interface names poll for node %s\r\n"), m_szName);
    DbgPrintf(4, _T("Starting interface names poll for node %s (ID: %d)"), m_szName, m_dwId);
 

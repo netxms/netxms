@@ -327,7 +327,7 @@ protected:
    RWLOCK m_rwlockChildList;  // Lock for child list
    UINT32 m_dwIpAddr;          // Every object should have an IP address
 	GeoLocation m_geoLocation;
-   ClientSession *m_pPollRequestor;
+   ClientSession *m_pollRequestor;
 	UINT32 m_submapId;				// Map object which should be open on drill-down request
 
    UINT32 m_dwChildCount;      // Number of child objects
@@ -601,10 +601,10 @@ protected:
 	WORD m_operState;					// interface operational state
 	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
 	WORD m_dot1xBackendAuthState;	// 802.1x backend auth state
-   QWORD m_qwLastDownEventId;
-	int m_iPendingStatus;
-	int m_iPollCount;
-	int m_iRequiredPollCount;
+   QWORD m_lastDownEventId;
+	int m_pendingStatus;
+	int m_pollCount;
+	int m_requiredPollCount;
    UINT32 m_zoneId;
 
 	void paeStatusPoll(ClientSession *pSession, UINT32 dwRqId, SNMP_Transport *pTransport, Node *node);
@@ -651,8 +651,8 @@ public:
                           (!_tcscmp(m_szName, _T("lan0")) || !_tcscmp(m_szName, _T("unknown"))) &&
                           (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
 
-   QWORD getLastDownEventId() { return m_qwLastDownEventId; }
-   void setLastDownEventId(QWORD qwId) { m_qwLastDownEventId = qwId; }
+   QWORD getLastDownEventId() { return m_lastDownEventId; }
+   void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
    void setMacAddr(const BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
    void setIpAddr(UINT32 dwNewAddr);
@@ -667,8 +667,7 @@ public:
 
 	void updateZoneId();
 
-   void StatusPoll(ClientSession *pSession, UINT32 dwRqId, Queue *pEventQueue,
-	                BOOL bClusterSync, SNMP_Transport *pTransport);
+   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, bool clusterSync, SNMP_Transport *snmpTransport);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -683,17 +682,17 @@ public:
 class NetworkService : public NetObj
 {
 protected:
-   int m_iServiceType;   // SSH, POP3, etc.
-   Node *m_pHostNode;    // Pointer to node object which hosts this service
-   UINT32 m_dwPollerNode; // ID of node object which is used for polling
+   int m_serviceType;   // SSH, POP3, etc.
+   Node *m_hostNode;    // Pointer to node object which hosts this service
+   UINT32 m_pollerNode; // ID of node object which is used for polling
                          // If 0, m_pHostNode->m_dwPollerNode will be used
-   WORD m_wProto;        // Protocol (TCP, UDP, etc.)
-   WORD m_wPort;         // TCP or UDP port number
-   TCHAR *m_pszRequest;  // Service-specific request
-   TCHAR *m_pszResponse; // Service-specific expected response
-	int m_iPendingStatus;
-	int m_iPollCount;
-	int m_iRequiredPollCount;
+   WORD m_proto;        // Protocol (TCP, UDP, etc.)
+   WORD m_port;         // TCP or UDP port number
+   TCHAR *m_request;  // Service-specific request
+   TCHAR *m_response; // Service-specific expected response
+	int m_pendingStatus;
+	int m_pollCount;
+	int m_requiredPollCount;
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
@@ -710,7 +709,7 @@ public:
    virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(UINT32 dwId);
 
-   void StatusPoll(ClientSession *pSession, UINT32 dwRqId, Node *pPollerNode, Queue *pEventQueue);
+   void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);

@@ -51,7 +51,7 @@ NetObj::NetObj()
    m_bInheritAccessRights = TRUE;
 	m_dwNumTrustedNodes = 0;
 	m_pdwTrustedNodes = NULL;
-   m_pPollRequestor = NULL;
+   m_pollRequestor = NULL;
    m_iStatusCalcAlg = SA_CALCULATE_DEFAULT;
    m_iStatusPropAlg = SA_PROPAGATE_DEFAULT;
    m_iFixedStatus = STATUS_WARNING;
@@ -1150,7 +1150,7 @@ bool NetObj::isChild(UINT32 id)
  */
 void NetObj::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...)
 {
-   if (m_pPollRequestor != NULL)
+   if (m_pollRequestor != NULL)
    {
       va_list args;
       TCHAR szBuffer[1024];
@@ -1158,7 +1158,7 @@ void NetObj::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...)
       va_start(args, pszFormat);
       _vsntprintf(szBuffer, 1024, pszFormat, args);
       va_end(args);
-      m_pPollRequestor->sendPollerMsg(dwRqId, szBuffer);
+      m_pollRequestor->sendPollerMsg(dwRqId, szBuffer);
    }
 }
 

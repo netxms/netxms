@@ -405,11 +405,9 @@ BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TC
    return bSuccess;
 }
 
-
-//
-// Read integer value from configuration table
-//
-
+/**
+ * Read integer value from configuration table
+ */
 int ConfigReadInt(const TCHAR *pszVar, int iDefault)
 {
    TCHAR szBuffer[64];
@@ -420,11 +418,9 @@ int ConfigReadInt(const TCHAR *pszVar, int iDefault)
       return iDefault;
 }
 
-
-//
-// Read unsigned long value from configuration table
-//
-
+/**
+ * Read unsigned long value from configuration table
+ */
 DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault)
 {
    TCHAR szBuffer[64];
@@ -435,11 +431,9 @@ DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault)
       return dwDefault;
 }
 
-
-//
-// Check that database has correct schema version and is not locked
-//
-
+/**
+ * Check that database has correct schema version and is not locked
+ */
 BOOL ValidateDatabase()
 {
 	DB_RESULT hResult;
@@ -497,11 +491,9 @@ BOOL ValidateDatabase()
 	return TRUE;
 }
 
-
-//
-// Startup
-//
-
+/**
+ * Startup
+ */
 int main(int argc, char *argv[])
 {
    BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE, bReplaceValue = TRUE;
@@ -621,7 +613,7 @@ int main(int argc, char *argv[])
       return 1;
 
 	if (!bQuiet)
-		_tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T("\n\n"));
+		_tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n\n"));
 
    // Check parameter correctness
    if (argc - optind == 0)
