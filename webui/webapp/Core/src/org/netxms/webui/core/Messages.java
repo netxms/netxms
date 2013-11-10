@@ -13,8 +13,7 @@ public class Messages extends NLS
 	public String ApplicationActionBarAdvisor_About;
 	public String ApplicationActionBarAdvisor_AboutActionName;
 	public String ApplicationActionBarAdvisor_AboutProductName;
-	public String ApplicationActionBarAdvisor_AboutText1;
-	public String ApplicationActionBarAdvisor_AboutText2;
+	public String ApplicationActionBarAdvisor_AboutText;
 	public String ApplicationActionBarAdvisor_Config;
 	public String ApplicationActionBarAdvisor_File;
 	public String ApplicationActionBarAdvisor_Help;

@@ -106,6 +106,13 @@ target
 /src/client/nxsms/nxsms
 /src/flow_analyzer/nxflowd/MSG00001.bin
 /src/flow_analyzer/nxflowd/messages.h
+/src/install/windows/Output
+/src/java/build/*.gz
+/src/java/build/*.zip
+/src/java/build/linux.*
+/src/java/build/macosx.*
+/src/java/build/solaris.*
+/src/java/build/win32.*
 /src/java/certificate-manager/.classpath
 /src/java/certificate-manager/.project
 /src/java/certificate-manager/.settings

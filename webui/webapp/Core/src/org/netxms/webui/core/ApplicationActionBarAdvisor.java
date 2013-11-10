@@ -24,6 +24,7 @@ import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
@@ -84,7 +85,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				}
 				else
 				{
-					MessageDialog.openInformation(window.getShell(), Messages.get().ApplicationActionBarAdvisor_About, Messages.get().ApplicationActionBarAdvisor_AboutText1 + NXCommon.VERSION + Messages.get().ApplicationActionBarAdvisor_AboutText2);
+					MessageDialog.openInformation(window.getShell(), 
+							Messages.get().ApplicationActionBarAdvisor_About, 
+							String.format(Messages.get().ApplicationActionBarAdvisor_AboutText, NXCommon.VERSION + " (" + BuildNumber.TEXT +")"));
 				}
 			}
 		};

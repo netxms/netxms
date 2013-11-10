@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
+import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -242,7 +243,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		});
 		
 		Label version = new Label(parent, SWT.NONE);
-		version.setText(Messages.get().LoginForm_Version + NXCommon.VERSION);
+		version.setText(String.format(Messages.get().LoginForm_Version, NXCommon.VERSION + " (" + BuildNumber.TEXT + ")"));
 		version.setBackground(parent.getBackground());
 		version.setForeground(colors.create(255, 255, 255));
 		gd = new GridData();

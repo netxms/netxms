@@ -33,3 +33,11 @@ copy("../android/src/console/res/values/build_number.xml","../android/src/agent/
 open my $outcmd, '>', "../src/java/build/set_build_number.cmd" or die "cannot open set_build_number.cmd";
 print $outcmd "set build_number=$build\n";
 close $outcmd;
+
+open my $outjava, '>', "../src/java/netxms-base/src/main/java/org/netxms/base/BuildNumber.java" or die "cannot open BuildNumber.java";
+print $outjava "package org.netxms.base;\n";
+print $outjava "public final class BuildNumber {\n";
+print $outjava "   public static final String TEXT = \"$build\";\n";
+print $outjava "   public static final int NUMBER = $build;\n";
+print $outjava "}\n";
+close $outjava;

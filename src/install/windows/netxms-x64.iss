@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x64
 
 #include "setup.iss"
-OutputBaseFilename=netxms-1.2.9-x64
+OutputBaseFilename=netxms-1.2.10-M3-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
@@ -175,18 +175,18 @@ Source: "..\..\..\x64\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\..\..\x64\Release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\x64\Release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 ; Third party files
-Source: "Files-x64\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "Files-x64\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "Files-x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
-Source: "Files-x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files-x64\libintl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files-x64\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
-Source: "Files-x64\oraociei11.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
-Source: "Files-x64\jre\*"; DestDir: "{app}\bin\jre"; Flags: ignoreversion recursesubdirs; Components: jre
+Source: "..\files\windows\x64\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "..\files\windows\x64\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "..\files\windows\x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
+Source: "..\files\windows\x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "..\files\windows\x64\libintl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "..\files\windows\x64\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
+Source: "..\files\windows\x64\oraociei11.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
+Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\bin\jre"; Flags: ignoreversion recursesubdirs; Components: jre
 ; Install-time files
-Source: "Files-x64\vcredist_x64.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
-Source: "Files\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
-Source: "Files-x64\sqlncli.msi"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\mssql
+Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
+Source: "..\files\windows\x86\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
+Source: "..\files\windows\x64\sqlncli.msi"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\mssql
 
 #include "icons.iss"
 #include "run-full.iss"
