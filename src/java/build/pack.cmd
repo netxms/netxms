@@ -1,5 +1,6 @@
 @echo off
-set version=1.2.10-M1-cortex
+call set_build_number.cmd
+set version=1.2.10-M2-%build_number%
 
 cd win32.win32.x86
 zip -r nxmc-%version%-win32-x86.zip nxmc

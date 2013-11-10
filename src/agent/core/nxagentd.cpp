@@ -1218,7 +1218,7 @@ int main(int argc, char *argv[])
             iAction = ACTION_CHECK_CONFIG;
             break;
          case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T("\n"));
+            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n"));
             iAction = ACTION_NONE;
             break;
          case 'M':

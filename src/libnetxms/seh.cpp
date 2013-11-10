@@ -26,11 +26,9 @@
 
 #pragma warning(disable : 4482)
 
-
-//
-// Customized StackWalker class
-//
-
+/**
+ * Customized StackWalker class
+ */
 class NxStackWalker : public StackWalker
 {
 protected:
@@ -280,7 +278,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 
 		// NetXMS and OS version
 		GetWindowsVersionString(szWindowsVersion, 256);
-		_ftprintf(m_pExInfoFile, _T("\nNetXMS Version: ") NETXMS_VERSION_STRING _T("\n")
+		_ftprintf(m_pExInfoFile, _T("\nNetXMS Version: ") NETXMS_VERSION_STRING _T(".") NETXMS_VERSION_BUILD_STRING _T("\n")
 		                         _T("OS Version: %s\n"), szWindowsVersion);
 
 		// Processor architecture
