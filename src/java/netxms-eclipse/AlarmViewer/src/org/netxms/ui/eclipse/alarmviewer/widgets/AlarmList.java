@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,9 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseTrackAdapter;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -64,6 +67,7 @@ import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
+import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmToolTip;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -95,6 +99,8 @@ public class AlarmList extends Composite
 	private NXCListener clientListener = null;
 	private SortableTableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
+	private Point toolTipLocation;
+	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
 	private Action actionCopy;
 	private Action actionCopyMessage;
@@ -145,6 +151,31 @@ public class AlarmList extends Composite
 			{
 				actionShowAlarmDetails.run();
 			}
+		});
+		
+		final Runnable toolTipTimer = new Runnable() {
+         @Override
+         public void run()
+         {
+            AlarmToolTip t = new AlarmToolTip(alarmViewer.getTable(), toolTipObject);
+            t.show(toolTipLocation);
+         }
+      };
+		
+		alarmViewer.getTable().addMouseTrackListener(new MouseTrackAdapter() {
+         @Override
+         public void mouseHover(MouseEvent e)
+         {
+            Point p = new Point(e.x, e.y);
+            TableItem item = alarmViewer.getTable().getItem(p);
+            if (item == null)
+               return;
+            toolTipObject = (Alarm)item.getData();
+            p.x += 3;
+            p.y += 3;
+            toolTipLocation = p;
+            getDisplay().timerExec(300, toolTipTimer);
+         }
 		});
 		
 		createActions();
