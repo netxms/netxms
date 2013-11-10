@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,9 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 
 	@Element(required = false)
 	private String title = ""; //$NON-NLS-1$
+	
+	@Element(required = false)
+	private boolean fullColorRange = false;
 
 	/**
 	 * Create status indicator settings object from XML document
@@ -125,4 +128,20 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 	{
 		this.title = title;
 	}
+
+   /**
+    * @return the fullColorRange
+    */
+   public boolean isFullColorRange()
+   {
+      return fullColorRange;
+   }
+
+   /**
+    * @param fullColorRange the fullColorRange to set
+    */
+   public void setFullColorRange(boolean fullColorRange)
+   {
+      this.fullColorRange = fullColorRange;
+   }
 }

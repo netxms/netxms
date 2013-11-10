@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -35,6 +34,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -47,7 +47,7 @@ public class StatusIndicatorElement extends ElementWidget
 	private Canvas canvas;
 	private Runnable refreshTimer;
 	private Font font;
-	private boolean greenState = false;
+	private int status = Severity.UNKNOWN;
 	private int xSize;
 	private int ySize;
 
@@ -76,7 +76,7 @@ public class StatusIndicatorElement extends ElementWidget
 		final FillLayout layout = new FillLayout();
 		setLayout(layout);
 
-		canvas = new Canvas(this, SWT.NONE);
+		canvas = new Canvas(this, SWT.DOUBLE_BUFFERED);
 		canvas.setBackground(colors.create(240, 240, 240));
 		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE); //$NON-NLS-1$
 
@@ -123,11 +123,11 @@ public class StatusIndicatorElement extends ElementWidget
 		final AbstractObject object = session.findObjectById(config.getObjectId());
 		if (object != null)
 		{
-			greenState = (object.getStatus() == Severity.NORMAL);
+			status = object.getStatus();
 		}
 		else
 		{
-			greenState = false;
+			status = Severity.UNKNOWN;
 		}
 		canvas.redraw();
 	}
@@ -162,43 +162,16 @@ public class StatusIndicatorElement extends ElementWidget
 	{
 		e.gc.setAntialias(SWT.ON);
 
-		final Color bgColor = canvas.getBackground();
-
-		final Color redColors[] = { colors.create(134, 0, 0), colors.create(192, 0, 0) };
-		final Color greenColors[] = { colors.create(0, 134, 0), colors.create(0, 192, 0) };
-
-		if (greenState)
-		{
-			drawElement(e, MARGIN_X, MARGIN_Y, CIRCLE_SIZE, bgColor, greenColors, config.getTitle());
-		}
+		if (config.isFullColorRange())
+		   e.gc.setBackground(StatusDisplayInfo.getStatusColor(status));
 		else
-		{
-			drawElement(e, MARGIN_X, MARGIN_Y, CIRCLE_SIZE, bgColor, redColors, config.getTitle());
-		}
-	}
+         e.gc.setBackground((status == Severity.NORMAL) ? StatusDisplayInfo.getStatusColor(Severity.NORMAL) : StatusDisplayInfo.getStatusColor(Severity.CRITICAL));
+      e.gc.fillOval(MARGIN_X, MARGIN_Y, CIRCLE_SIZE, CIRCLE_SIZE);
 
-	/**
-	 * @param e
-	 * @param xMargin
-	 * @param yOffset
-	 * @param size
-	 * @param bgColor
-	 * @param circleColors
-	 * @param label
-	 */
-	private void drawElement(PaintEvent e, int xMargin, int yOffset, int size, final Color bgColor, final Color[] circleColors,
-			final String label)
-	{
-		e.gc.setBackground(circleColors[0]);
-		e.gc.fillOval(xMargin, yOffset, size, size);
-
-		e.gc.setBackground(circleColors[1]);
-		e.gc.fillOval(xMargin + 2, yOffset + 2, size - 4, size - 4);
-
-		e.gc.setBackground(bgColor);
-		e.gc.setFont(font);
-		final Point textExtent = e.gc.textExtent(label);
-		e.gc.drawText(label, (xMargin * 2) + size, yOffset + (size / 2) - (textExtent.y / 2));
+      e.gc.setBackground(canvas.getBackground());
+      e.gc.setFont(font);
+      final Point textExtent = e.gc.textExtent(config.getTitle());
+      e.gc.drawText(config.getTitle(), (MARGIN_X * 2) + CIRCLE_SIZE, MARGIN_Y + (CIRCLE_SIZE / 2) - (textExtent.y / 2));
 	}
 
 	/* (non-Javadoc)

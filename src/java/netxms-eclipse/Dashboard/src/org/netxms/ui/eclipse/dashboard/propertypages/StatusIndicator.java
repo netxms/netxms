@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
@@ -38,6 +39,7 @@ public class StatusIndicator extends PropertyPage
 	private StatusIndicatorConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;
+	private Button checkFullColors;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -69,6 +71,10 @@ public class StatusIndicator extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		title.setLayoutData(gd);
 		
+		checkFullColors = new Button(dialogArea, SWT.CHECK);
+		checkFullColors.setText("Use &full status color range");
+		checkFullColors.setSelection(config.isFullColorRange());
+		
 		return dialogArea;
 	}
 
@@ -80,6 +86,7 @@ public class StatusIndicator extends PropertyPage
 	{
 		config.setObjectId(objectSelector.getObjectId());
 		config.setTitle(title.getText());
+		config.setFullColorRange(checkFullColors.getSelection());
 		return true;
 	}
 }
