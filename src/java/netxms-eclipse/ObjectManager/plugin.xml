@@ -172,6 +172,9 @@
                  <instanceof
                        value="org.netxms.client.objects.NetworkMap">
                  </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.ServiceContainer">
+                 </instanceof>
               </or>
            </enabledWhen>
         </page>

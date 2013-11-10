@@ -62,4 +62,13 @@ public abstract class ServiceContainer extends GenericObject
 	{
 		return uptimeForMonth;
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+    */
+   @Override
+   public boolean isAllowedOnMap()
+   {
+      return true;
+   }
 }
