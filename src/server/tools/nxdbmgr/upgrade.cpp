@@ -361,6 +361,21 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V295 to V296
+ */
+static BOOL H_UpgradeFromV295(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE nodes ADD boot_time integer\n")
+      _T("UPDATE nodes SET boot_time=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='296' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V294 to V295
  */
 static BOOL H_UpgradeFromV294(int currVersion, int newVersion)
@@ -7228,6 +7243,7 @@ static struct
    { 292, 293, H_UpgradeFromV292 },
    { 293, 294, H_UpgradeFromV293 },
    { 294, 295, H_UpgradeFromV294 },
+   { 295, 296, H_UpgradeFromV295 },
    { 0, 0, NULL }
 };
 

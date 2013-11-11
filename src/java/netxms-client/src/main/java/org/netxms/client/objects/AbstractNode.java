@@ -18,6 +18,7 @@
  */
 package org.netxms.client.objects;
 
+import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
@@ -114,6 +115,7 @@ public abstract class AbstractNode extends GenericObject
 	protected long zoneId;
 	protected MacAddress bridgeBaseAddress;
 	protected int ifXTablePolicy;
+	protected Date bootTime;
 
 	/**
 	 * Create new node object.
@@ -167,6 +169,9 @@ public abstract class AbstractNode extends GenericObject
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 		bridgeBaseAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
 		ifXTablePolicy = msg.getVariableAsInteger(NXCPCodes.VID_USE_IFXTABLE);
+		
+		long bootTimeSeconds = msg.getVariableAsInt64(NXCPCodes.VID_BOOT_TIME);
+		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
 	}
 
 	/**
@@ -529,4 +534,12 @@ public abstract class AbstractNode extends GenericObject
 		}
 		return null;
 	}
+
+   /**
+    * @return the bootTime
+    */
+   public Date getBootTime()
+   {
+      return bootTime;
+   }
 }

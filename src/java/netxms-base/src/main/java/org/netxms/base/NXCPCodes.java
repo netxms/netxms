@@ -770,6 +770,7 @@ public class NXCPCodes
 	public static final long VID_READ_ONLY = 451;
 	public static final long VID_CLIENT_ADDRESS = 452;
    public static final long VID_SHORT_TIME_FORMAT = 453;
+   public static final long VID_BOOT_TIME = 454;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

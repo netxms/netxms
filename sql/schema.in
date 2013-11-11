@@ -274,6 +274,7 @@ CREATE TABLE nodes
 	snmp_sys_name varchar(127) null,
 	bridge_base_addr varchar(15) null,
 	down_since integer not null,
+   boot_time integer not null,
 	driver_name varchar(32) null,
 	rack_image varchar(36) null,
 	rack_position integer not null,

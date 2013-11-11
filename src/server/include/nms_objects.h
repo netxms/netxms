@@ -952,6 +952,7 @@ protected:
    time_t m_failTimeSNMP;
    time_t m_failTimeAgent;
 	time_t m_downSince;
+   time_t m_bootTime;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1065,6 +1066,7 @@ public:
    const TCHAR *getObjectId() { return m_szObjectId; }
 	const TCHAR *getSysName() { return CHECK_NULL_EX(m_sysName); }
 	const TCHAR *getSysDescription() { return CHECK_NULL_EX(m_sysDescription); }
+   time_t getBootTime() { return m_bootTime; }
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
 	const TCHAR *getDriverName() { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
 	WORD getAgentPort() { return m_wAgentPort; }

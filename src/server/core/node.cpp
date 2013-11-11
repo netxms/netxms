@@ -57,6 +57,7 @@ Node::Node() : DataCollectionTarget()
 	m_lastTopologyPoll = 0;
    m_lastRTUpdate = 0;
 	m_downSince = 0;
+   m_bootTime = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_hSmclpAccessMutex = MutexCreate();
@@ -131,6 +132,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy
 	m_lastTopologyPoll = 0;
    m_lastRTUpdate = 0;
 	m_downSince = 0;
+   m_bootTime = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_hSmclpAccessMutex = MutexCreate();
@@ -239,7 +241,7 @@ BOOL Node::CreateFromDB(UINT32 dwId)
       _T("proxy_node,snmp_proxy,required_polls,uname,")
 		_T("use_ifxtable,snmp_port,community,usm_auth_password,")
 		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
-      _T("runtime_flags,down_since,driver_name FROM nodes WHERE id=?"));
+      _T("runtime_flags,down_since,boot_time,driver_name FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 
@@ -300,10 +302,11 @@ BOOL Node::CreateFromDB(UINT32 dwId)
 	m_dwDynamicFlags &= NDF_PERSISTENT;	// Clear out all non-persistent runtime flags
 
 	m_downSince = DBGetFieldLong(hResult, 0, 26);
+   m_bootTime = DBGetFieldLong(hResult, 0, 27);
 
 	// Setup driver
 	TCHAR driverName[34];
-	DBGetField(hResult, 0, 27, driverName, 34);
+	DBGetField(hResult, 0, 28, driverName, 34);
 	StrStrip(driverName);
 	if (driverName[0] != 0)
 		m_driver = FindDriverByName(driverName);
@@ -396,7 +399,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
          _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
 			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,required_polls=?,")
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
-			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_id=? WHERE id=?"));
+			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_id=?,boot_time=? WHERE id=?"));
 	}
    else
 	{
@@ -404,8 +407,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 		  _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,node_flags,snmp_version,community,status_poll_type,")
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_id,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_id,boot_time,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -455,7 +458,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, _T("00000000-0000-0000-0000-000000000000"), DB_BIND_STATIC);	// rack image
 	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, (LONG)0);	// rack position
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)0);	// rack ID
-	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
+	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_dwId);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1109,8 +1113,7 @@ restart_agent_check:
          sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
-            if ((tNow > m_failTimeAgent + tExpire) &&
-                (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
+            if ((tNow > m_failTimeAgent + tExpire) && !(m_dwDynamicFlags & NDF_UNREACHABLE))
             {
                m_dwFlags &= ~NF_IS_NATIVE_AGENT;
                m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
@@ -1295,6 +1298,30 @@ restart_agent_check:
 		   }
 		}
 	}
+
+   // Get uptime and update boot time
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   {
+      TCHAR buffer[MAX_RESULT_LENGTH];
+      if (getItemFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      {
+         m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %d from agent"), m_szName, m_dwId, m_bootTime);
+      }
+      else if (getItemFromSNMP(m_wSNMPPort, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+      {
+         m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0) / 100;   // sysUpTime is in hundredths of a second
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %d from SNMP"), m_szName, m_dwId, m_bootTime);
+      }
+      else
+      {
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get system uptime"), m_szName, m_dwId);
+      }
+   }
+   else
+   {
+      m_bootTime = 0;
+   }
 
    // Send delayed events and destroy delayed event queue
 	if (pQueue != NULL)
@@ -3649,6 +3676,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 	pMsg->SetVariable(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
 	pMsg->SetVariable(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
+   pMsg->SetVariable(VID_BOOT_TIME, (UINT32)m_bootTime);
 	pMsg->SetVariable(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
 	if (m_lldpNodeId != NULL)
 		pMsg->SetVariable(VID_LLDP_NODE_ID, m_lldpNodeId);

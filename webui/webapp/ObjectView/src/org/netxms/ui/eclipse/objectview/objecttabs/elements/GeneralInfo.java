@@ -106,6 +106,8 @@ public class GeneralInfo extends TableElement
 				if ((node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0)
 					addPair("Bridge Base Address", node.getBridgeBaseAddress().toString());
 				addPair("Driver", node.getDriverName(), false);
+            if (node.getBootTime() != null)
+               addPair("Boot Time", RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
 				break;
 			case AbstractObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;

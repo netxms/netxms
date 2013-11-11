@@ -102,6 +102,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(pNode->getAgentVersion());
    }
+   else if (!_tcscmp(pszAttr, _T("bootTime")))
+   {
+      pValue = new NXSL_Value((INT64)pNode->getBootTime());
+   }
    else if (!_tcscmp(pszAttr, _T("comments")))
    {
       pValue = new NXSL_Value(pNode->getComments());
