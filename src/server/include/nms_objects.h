@@ -944,14 +944,14 @@ protected:
 	void *m_driverData;
    ObjectArray<AgentParameterDefinition> *m_paramList; // List of supported parameters
    ObjectArray<AgentTableDefinition> *m_tableList; // List of supported tables
-   time_t m_tLastDiscoveryPoll;
-   time_t m_tLastStatusPoll;
-   time_t m_tLastConfigurationPoll;
-	time_t m_tLastTopologyPoll;
-   time_t m_tLastRTUpdate;
-   time_t m_tFailTimeSNMP;
-   time_t m_tFailTimeAgent;
-	time_t m_tDownSince;
+   time_t m_lastDiscoveryPoll;
+   time_t m_lastStatusPoll;
+   time_t m_lastConfigurationPoll;
+	time_t m_lastTopologyPoll;
+   time_t m_lastRTUpdate;
+   time_t m_failTimeSNMP;
+   time_t m_failTimeAgent;
+	time_t m_downSince;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1072,7 +1072,7 @@ public:
 	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
 
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
-	time_t getDownTime() const { return m_tDownSince; }
+	time_t getDownTime() const { return m_downSince; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    Interface *createNewInterface(UINT32 dwAddr, UINT32 dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
@@ -1200,7 +1200,7 @@ public:
  */
 inline void Node::setDiscoveryPollTimeStamp()
 {
-   m_tLastDiscoveryPoll = time(NULL);
+   m_lastDiscoveryPoll = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
 }
 
@@ -1220,7 +1220,7 @@ inline bool Node::isReadyForStatusPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
 			 (getMyCluster() == NULL) &&
-          ((UINT32)time(NULL) - (UINT32)m_tLastStatusPoll > g_dwStatusPollingInterval);
+          ((UINT32)time(NULL) - (UINT32)m_lastStatusPoll > g_dwStatusPollingInterval);
 }
 
 inline bool Node::isReadyForConfigurationPoll()
@@ -1236,7 +1236,7 @@ inline bool Node::isReadyForConfigurationPoll()
 	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
-          ((UINT32)time(NULL) - (UINT32)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval);
+          ((UINT32)time(NULL) - (UINT32)m_lastConfigurationPoll > g_dwConfigurationPollingInterval);
 }
 
 inline bool Node::isReadyForDiscoveryPoll()
@@ -1249,7 +1249,7 @@ inline bool Node::isReadyForDiscoveryPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval);
+          ((UINT32)time(NULL) - (UINT32)m_lastDiscoveryPoll > g_dwDiscoveryPollingInterval);
 }
 
 inline bool Node::isReadyForRoutePoll()
@@ -1261,7 +1261,7 @@ inline bool Node::isReadyForRoutePoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval);
+          ((UINT32)time(NULL) - (UINT32)m_lastRTUpdate > g_dwRoutingTableUpdateInterval);
 }
 
 inline bool Node::isReadyForTopologyPoll()
@@ -1273,7 +1273,7 @@ inline bool Node::isReadyForTopologyPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_tLastTopologyPoll > g_dwTopologyPollingInterval);
+          ((UINT32)time(NULL) - (UINT32)m_lastTopologyPoll > g_dwTopologyPollingInterval);
 }
 
 inline void Node::lockForStatusPoll()

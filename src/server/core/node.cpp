@@ -51,12 +51,12 @@ Node::Node() : DataCollectionTarget()
    ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
 	m_snmpSecurity = new SNMP_SecurityContext(community);
    m_szObjectId[0] = 0;
-   m_tLastDiscoveryPoll = 0;
-   m_tLastStatusPoll = 0;
-   m_tLastConfigurationPoll = 0;
-	m_tLastTopologyPoll = 0;
-   m_tLastRTUpdate = 0;
-	m_tDownSince = 0;
+   m_lastDiscoveryPoll = 0;
+   m_lastStatusPoll = 0;
+   m_lastConfigurationPoll = 0;
+	m_lastTopologyPoll = 0;
+   m_lastRTUpdate = 0;
+	m_downSince = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_hSmclpAccessMutex = MutexCreate();
@@ -78,11 +78,11 @@ Node::Node() : DataCollectionTarget()
 	m_dwSNMPProxy = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_pRoutingTable = NULL;
-   m_tFailTimeSNMP = 0;
-   m_tFailTimeAgent = 0;
+   m_failTimeSNMP = 0;
+   m_failTimeAgent = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
-	m_tLastTopologyPoll = 0;
+	m_lastTopologyPoll = 0;
 	m_pTopology = NULL;
 	m_topologyRebuildTimestamp = 0;
 	m_iPendingStatus = -1;
@@ -125,12 +125,12 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy
 	m_snmpSecurity = new SNMP_SecurityContext(community);
    IpToStr(dwAddr, m_szName);    // Make default name from IP address
    m_szObjectId[0] = 0;
-   m_tLastDiscoveryPoll = 0;
-   m_tLastStatusPoll = 0;
-   m_tLastConfigurationPoll = 0;
-	m_tLastTopologyPoll = 0;
-   m_tLastRTUpdate = 0;
-	m_tDownSince = 0;
+   m_lastDiscoveryPoll = 0;
+   m_lastStatusPoll = 0;
+   m_lastConfigurationPoll = 0;
+	m_lastTopologyPoll = 0;
+   m_lastRTUpdate = 0;
+	m_downSince = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_hSmclpAccessMutex = MutexCreate();
@@ -153,11 +153,11 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_isHidden = true;
    m_pRoutingTable = NULL;
-   m_tFailTimeSNMP = 0;
-   m_tFailTimeAgent = 0;
+   m_failTimeSNMP = 0;
+   m_failTimeAgent = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
-	m_tLastTopologyPoll = 0;
+	m_lastTopologyPoll = 0;
 	m_pTopology = NULL;
 	m_topologyRebuildTimestamp = 0;
 	m_iPendingStatus = -1;
@@ -299,7 +299,7 @@ BOOL Node::CreateFromDB(UINT32 dwId)
 	m_dwDynamicFlags = DBGetFieldULong(hResult, 0, 25);
 	m_dwDynamicFlags &= NDF_PERSISTENT;	// Clear out all non-persistent runtime flags
 
-	m_tDownSince = DBGetFieldLong(hResult, 0, 26);
+	m_downSince = DBGetFieldLong(hResult, 0, 26);
 
 	// Setup driver
 	TCHAR driverName[34];
@@ -450,7 +450,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC);
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_dwDynamicFlags);
-	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_tDownSince);
+	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
 	DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
 	DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, _T("00000000-0000-0000-0000-000000000000"), DB_BIND_STATIC);	// rack image
 	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, (LONG)0);	// rack position
@@ -1064,7 +1064,7 @@ restart_agent_check:
          sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
          if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
          {
-            if ((tNow > m_tFailTimeSNMP + tExpire) &&
+            if ((tNow > m_failTimeSNMP + tExpire) &&
                 (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
             {
                m_dwFlags &= ~NF_IS_SNMP;
@@ -1077,7 +1077,7 @@ restart_agent_check:
          {
             m_dwDynamicFlags |= NDF_SNMP_UNREACHABLE;
             PostEventEx(pQueue, EVENT_SNMP_FAIL, m_dwId, NULL);
-            m_tFailTimeSNMP = tNow;
+            m_failTimeSNMP = tNow;
          }
       }
 		delete pTransport;
@@ -1109,7 +1109,7 @@ restart_agent_check:
          sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
-            if ((tNow > m_tFailTimeAgent + tExpire) &&
+            if ((tNow > m_failTimeAgent + tExpire) &&
                 (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
             {
                m_dwFlags &= ~NF_IS_NATIVE_AGENT;
@@ -1123,7 +1123,7 @@ restart_agent_check:
          {
             m_dwDynamicFlags |= NDF_AGENT_UNREACHABLE;
             PostEventEx(pQueue, EVENT_AGENT_FAIL, m_dwId, NULL);
-            m_tFailTimeAgent = tNow;
+            m_failTimeAgent = tNow;
          }
       }
 		agentUnlock();
@@ -1240,7 +1240,7 @@ restart_agent_check:
 		   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
 		   {
 		      m_dwDynamicFlags |= NDF_UNREACHABLE;
-				m_tDownSince = time(NULL);
+				m_downSince = time(NULL);
 			   SetPollerInfo(nPoller, _T("check network path"));
 				if (checkNetworkPath(dwRqId))
 				{
@@ -1281,7 +1281,7 @@ restart_agent_check:
 		}
 		else
 		{
-			m_tDownSince = 0;
+			m_downSince = 0;
 		   if (m_dwDynamicFlags & NDF_UNREACHABLE)
 		   {
 		      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM);
@@ -1330,7 +1330,7 @@ restart_agent_check:
    }
 
    calculateCompoundStatus();
-   m_tLastStatusPoll = time(NULL);
+   m_lastStatusPoll = time(NULL);
    sendPollerMsg(dwRqId, _T("Finished status poll for node %s\r\n"), m_szName);
    sendPollerMsg(dwRqId, _T("Node status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
    m_pollRequestor = NULL;
@@ -1364,7 +1364,7 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
 		sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->Name());
 		return true;
 	}
-	if (node->m_tLastStatusPoll < time(NULL) - 1)
+	if (node->m_lastStatusPoll < time(NULL) - 1)
 	{
 		DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): forced status poll on node %s [%d]"),
 					 m_szName, m_dwId, node->Name(), node->Id());
@@ -1460,7 +1460,7 @@ restart:
 
 		DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): checking upstream node %s [%d]"),
 		          m_szName, m_dwId, hop->object->Name(), hop->object->Id());
-      if (secondPass && !((Node *)hop->object)->isDown() && (((Node *)hop->object)->m_tLastStatusPoll < now - 1))
+      if (secondPass && !((Node *)hop->object)->isDown() && (((Node *)hop->object)->m_lastStatusPoll < now - 1))
 		{
 			DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
 			          m_szName, m_dwId, hop->object->Name(), hop->object->Id());
@@ -1621,7 +1621,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
    {
       sendPollerMsg(dwRqId, POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
       DbgPrintf(4, _T("Node is marked as unreachable, configuration poll aborted"));
-      m_tLastConfigurationPoll = time(NULL);
+      m_lastConfigurationPoll = time(NULL);
    }
    else
    {
@@ -1667,7 +1667,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 		if (updateInterfaceConfiguration(dwRqId, dwNetMask))
 			hasChanges = true;
 
-      m_tLastConfigurationPoll = time(NULL);
+      m_lastConfigurationPoll = time(NULL);
 
 		// Check node name
 		sendPollerMsg(dwRqId, _T("Checking node name\r\n"));
@@ -4164,7 +4164,7 @@ void Node::changeZone(UINT32 newZone)
 
    m_zoneId = newZone;
    m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
-	m_tLastConfigurationPoll = 0;
+	m_lastConfigurationPoll = 0;
 
 	// Remove from subnets
 	LockParentList(FALSE);
@@ -4348,7 +4348,7 @@ void Node::updateRoutingTable()
       routingTableUnlock();
 		DbgPrintf(5, _T("Routing table updated for node %s [%d]"), m_szName, m_dwId);
    }
-   m_tLastRTUpdate = time(NULL);
+   m_lastRTUpdate = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
 }
 
@@ -5031,7 +5031,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 
    sendPollerMsg(dwRqId, _T("Finished topology poll for node %s\r\n"), m_szName);
 
-	m_tLastTopologyPoll = time(NULL);
+	m_lastTopologyPoll = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
 	pollerUnlock();
 
