@@ -92,7 +92,7 @@ CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DTRE_WCHAR=1"
 #--------------------------------------------------------------------
 
 AC_ARG_WITH(runtime-prefix,
-[AS_HELP_STRING(--with-runtime-prifix=prefix,installation prefix to be used at run time)],
+[AS_HELP_STRING(--with-runtime-prefix=prefix,installation prefix to be used at run time)],
 [
    RUNTIME_PREFIX="$withval"
 ])

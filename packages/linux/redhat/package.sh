@@ -46,11 +46,17 @@ function check_ver {
     [[ "$($1 --version)" =~ ([0-9].[0-9]*.[0-9]*) ]] && \
         ver="${BASH_REMATCH[1]}" || return 1
         
-    (IFS='.'; ver=($ver); req_ver=($2)
+    compare_ver "$ver" "$2"
+    return $?
+}
+
+function compare_ver {
+    (IFS='.'; ver=($1); req_ver=($2)
     ver_length="${#ver[@]}"
     for (( i=0; i < ver_length; i++ ))
     do
-        [ "${ver[$i]}" -ge "${req_ver[$i]}" ] || return 1
+        [ "${ver[$i]}" -gt "${req_ver[$i]}" ] && return 0
+        [ "${ver[$i]}" -eq "${req_ver[$i]}" ] || return 1
     done)
 }
 
@@ -83,7 +89,6 @@ do
 done
 
 [ -z "$ver" ] && echo "No version provided!" && exit 1
-#[ "$verbose" ] && output=1 || output=/dev/null
 
 if [ -z "$artifacts" ]
 then
@@ -113,7 +118,7 @@ source_dir="$top_dir/$DIR_SOURCE"
 spec_dir="$top_dir/$DIR_SPEC"
 rpm_dir="$top_dir/$DIR_RPMS"
 build_root_dir="$top_dir/$DIR_BUILDROOT"
-build_root="$build_root_dir/netxms-$ver"
+build_root="$build_root_dir/$source"
 build_dir="$top_dir/$DIR_BUILD"
 
 if [ -e "$source_archive" ]
@@ -157,20 +162,23 @@ else
     echo "OK."
 fi
 
-# Directory hacks
-find "$build_dir" -name nxsrvapi.h -exec \
-    sed -i -e 's;#ifndef LIBDIR;#undef LIBDIR\n#ifndef LIBDIR;' \
-    -e 's;#ifndef DATADIR;#undef DATADIR\n#ifndef DATADIR;' \
-    -e 's;#define DEFAULT_DATA_DIR.*;#define DEFAULT_DATA_DIR _T("/usr/share/netxms");' \
-    -e 's;#ifndef PKGLIBDIR;#undef PKGLIBDIR\n#ifndef PKGLIBDIR;' {} \;    
-find "$build_dir" -name libnxdb.h -exec \
-    sed -i -e 's;#include <nxdbapi.h>;#include <nxdbapi.h>\n#define PKGLIBDIR _T("/usr/lib/netxms");' {} \;
+cd "$build_dir/$source"
 
-cd "$build_dir/netxms-$ver"
+if [ !$(compare_ver "$ver" 1.2.10) ]
+then
+    #Macro hacks
+    sed -i \
+        -e 's;-DPREFIX=\(L\?\)["\${}a-zA-Z_]*;-DPREFIX=\1\\\\\\"/usr\\\\\\";' \
+        -e 's;-DDATADIR=\(L\?\)["\${}a-zA-Z_]*;-DDATADIR=\1\\\\\\"/usr/share/netxms\\\\\\";' \
+        -e 's;-DBINDIR=\(L\?\)["\${}a-zA-Z_]*;-DBINDIR=\1\\\\\\"/usr/bin\\\\\\";' \
+        -e 's;-DLIBDIR=\(L\?\)["\${}a-zA-Z_]*;-DLIBDIR=\1\\\\\\"/usr/lib\\\\\\";' \
+        -e 's;-DPKGLIBDIR=\(L\?\)["\${}a-zA-Z_]*;-DPKGLIBDIR=\1\\\\\\"/usr/lib/netxms\\\\\\"";' \
+        configure.ac
+fi
 
 echo -n "Configuring sources..."
-[ -e "./configure" ] || ./reconf &> /dev/null
-./configure --prefix="$build_root/usr" --enable-unicode --with-server \
+./reconf &> /dev/null
+./configure --with-runtime-prefix=/usr --prefix="$build_root/usr" --enable-unicode --with-server \
     --with-odbc --with-sqlite --with-pgsql --with-mysql --with-agent &> /dev/null
 if [ $? -ne 0 ]
 then
@@ -212,8 +220,6 @@ cp "$build_dir/$source/contrib/startup/redhat/netxmsd" "$build_root/etc/init.d"
 cp "$build_dir/$source/contrib/startup/redhat/nxagentd" "$build_root/etc/init.d"
 
 find "$build_root" -name *.la -exec rm -f {} \;
-#find "$build_root" -name *.la \
-#    -exec sed -i -e "s;libdir='.*';libdir='/usr/lib';" {} \;
 
 cd "$build_root/usr/lib"
 for nsm in netxms/*.nsm
