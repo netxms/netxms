@@ -384,7 +384,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 /**
  * Acknowledge alarm with given ID
  */
-UINT32 AlarmManager::ackById(UINT32 dwAlarmId, UINT32 dwUserId, bool sticky)
+UINT32 AlarmManager::ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky)
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
@@ -394,10 +394,14 @@ UINT32 AlarmManager::ackById(UINT32 dwAlarmId, UINT32 dwUserId, bool sticky)
       {
          if ((m_pAlarmList[i].nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING)
          {
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject, 
+               _T("Acknowledged alarm %d (%s) on object %s"), dwAlarmId, m_pAlarmList[i].szMessage, 
+               GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
+
             m_pAlarmList[i].nState = ALARM_STATE_ACKNOWLEDGED;
 				if (sticky)
 	            m_pAlarmList[i].nState |= ALARM_STATE_STICKY;
-            m_pAlarmList[i].dwAckByUser = dwUserId;
+            m_pAlarmList[i].dwAckByUser = session->getUserId();
             m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
             dwObject = m_pAlarmList[i].dwSourceObject;
             notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
@@ -421,7 +425,7 @@ UINT32 AlarmManager::ackById(UINT32 dwAlarmId, UINT32 dwUserId, bool sticky)
  * Resolve and possibly terminate alarm with given ID
  * Should return RCC which can be sent to client
  */
-UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, UINT32 dwUserId, bool terminate)
+UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, ClientSession *session, bool terminate)
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
@@ -433,10 +437,14 @@ UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, UINT32 dwUserId, bool termina
          if (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_OPEN)
          {
             dwObject = m_pAlarmList[i].dwSourceObject;
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), dwObject, 
+               _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"), 
+               dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(dwObject, _T("")));
+
 				if (terminate)
-					m_pAlarmList[i].dwTermByUser = dwUserId;
+               m_pAlarmList[i].dwTermByUser = session->getUserId();
 				else
-					m_pAlarmList[i].dwResolvedByUser = dwUserId;
+               m_pAlarmList[i].dwResolvedByUser = session->getUserId();
             m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
 				m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
 				notifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);

@@ -856,6 +856,15 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
 }
 
 /**
+ * Get object name by ID
+ */
+const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName)
+{
+	NetObj *object = g_idxObjectById.get(id);
+   return (object != NULL) ? object->Name() : defaultName;
+}
+
+/**
  * Callback data for FindObjectByName
  */
 struct __find_object_data

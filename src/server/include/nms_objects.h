@@ -2098,6 +2098,7 @@ ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
+const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, UINT32 ipAddr);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);

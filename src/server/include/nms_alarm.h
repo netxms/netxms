@@ -55,8 +55,8 @@ public:
    BOOL init();
    void newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 	              int iSeverity, UINT32 dwTimeout, UINT32 dwTimeoutEvent, Event *pEvent);
-   UINT32 ackById(UINT32 dwAlarmId, UINT32 dwUserId, bool sticky);
-   UINT32 resolveById(UINT32 dwAlarmId, UINT32 dwUserId, bool terminate);
+   UINT32 ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky);
+   UINT32 resolveById(UINT32 dwAlarmId, ClientSession *session, bool terminate);
    void resolveByKey(const TCHAR *key, bool useRegexp, bool terminate);
    void deleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
    bool deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
