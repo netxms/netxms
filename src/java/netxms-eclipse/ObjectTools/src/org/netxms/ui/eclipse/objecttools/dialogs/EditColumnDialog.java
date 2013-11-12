@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objecttools.ObjectToolTableColumn;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.MibSelectionDialog;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -29,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditColumnDialog extends Dialog
 {
-	private static final String[] formatNames = { "String", "Integer", "Float", "IP Address", "MAC Address", "Interface Index" };
+	private static final String[] formatNames = { Messages.EditColumnDialog_FmtString, Messages.EditColumnDialog_FmtInt, Messages.EditColumnDialog_FmtFloat, Messages.EditColumnDialog_FmtIpAddr, Messages.EditColumnDialog_FmtMacAddr, Messages.EditColumnDialog_FmtIfIndex };
 
 	private boolean create;
 	private boolean snmpColumn;
@@ -60,7 +61,7 @@ public class EditColumnDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(create ? "Create Column" : "Edit Column");
+		newShell.setText(create ? Messages.EditColumnDialog_CreateColumn : Messages.EditColumnDialog_EditColumn);
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +79,7 @@ public class EditColumnDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel("Name");
+		name.setLabel(Messages.EditColumnDialog_Name);
 		name.setText(columnObject.getName());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -86,7 +87,7 @@ public class EditColumnDialog extends Dialog
 		gd.widthHint = 350;
 		name.setLayoutData(gd);
 		
-		format = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Format", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		format = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.EditColumnDialog_Format, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		for(int i = 0; i < formatNames.length; i++)
 			format.add(formatNames[i]);
 		format.select(columnObject.getFormat());
@@ -110,12 +111,12 @@ public class EditColumnDialog extends Dialog
 		data = new LabeledText(snmpColumn ? dataGroup : dialogArea, SWT.NONE);
 		if (snmpColumn)
 		{
-			data.setLabel("SNMP Object Identifier (OID)");
+			data.setLabel(Messages.EditColumnDialog_SNMP_OID);
 			data.setText(columnObject.getSnmpOid());
 		}
 		else
 		{
-			data.setLabel("Substring index (starting from 1)");
+			data.setLabel(Messages.EditColumnDialog_SubstrIndex);
 			data.setText(Integer.toString(columnObject.getSubstringIndex()));
 		}
 		gd = new GridData();
@@ -127,7 +128,7 @@ public class EditColumnDialog extends Dialog
 		if (snmpColumn)
 		{
 			selectButton = new Button(dataGroup, SWT.PUSH);
-			selectButton.setText("...");
+			selectButton.setText("..."); //$NON-NLS-1$
 			gd = new GridData();
 			gd.verticalAlignment = SWT.BOTTOM;
 			selectButton.setLayoutData(gd);
@@ -182,7 +183,7 @@ public class EditColumnDialog extends Dialog
 			}
 			catch(NumberFormatException e)
 			{
-				MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid substring number");
+				MessageDialogHelper.openWarning(getShell(), Messages.EditColumnDialog_Warning, Messages.EditColumnDialog_EnterValidIndex);
 				return;
 			}
 		}

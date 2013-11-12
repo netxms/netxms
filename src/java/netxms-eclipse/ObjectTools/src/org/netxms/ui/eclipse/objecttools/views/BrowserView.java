@@ -30,6 +30,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
@@ -37,7 +38,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class BrowserView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.BrowserView";
+	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.BrowserView"; //$NON-NLS-1$
 	
 	private Browser browser;
 	private Action actionBack;
@@ -56,14 +57,14 @@ public class BrowserView extends ViewPart
 			@Override
 			public void changing(LocationEvent event)
 			{
-				setPartName("Web Browser - [" + event.location + "]");
+				setPartName(String.format(Messages.BrowserView_PartName_Changing, event.location));
 				actionStop.setEnabled(true);
 			}
 			
 			@Override
 			public void changed(LocationEvent event)
 			{
-				setPartName("Web Browser - " + event.location);
+				setPartName(String.format(Messages.BrowserView_PartName_Changed, event.location));
 				actionStop.setEnabled(false);
 			}
 		});
@@ -77,7 +78,7 @@ public class BrowserView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionBack = new Action("&Back", SharedIcons.NAV_BACKWARD) {
+		actionBack = new Action(Messages.BrowserView_Back, SharedIcons.NAV_BACKWARD) {
 			@Override
 			public void run()
 			{
@@ -85,7 +86,7 @@ public class BrowserView extends ViewPart
 			}
 		};
 
-		actionForward = new Action("&Forward", SharedIcons.NAV_FORWARD) {
+		actionForward = new Action(Messages.BrowserView_Forward, SharedIcons.NAV_FORWARD) {
 			@Override
 			public void run()
 			{
@@ -93,7 +94,7 @@ public class BrowserView extends ViewPart
 			}
 		};
 
-		actionStop = new Action("&Stop", Activator.getImageDescriptor("icons/stop.png")) {
+		actionStop = new Action(Messages.BrowserView_Stop, Activator.getImageDescriptor("icons/stop.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{

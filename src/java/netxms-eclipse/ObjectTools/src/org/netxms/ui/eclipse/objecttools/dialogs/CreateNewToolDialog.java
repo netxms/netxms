@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -66,14 +67,14 @@ public class CreateNewToolDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		textName = new LabeledText(dialogArea, SWT.NONE);
-		textName.setLabel("Name");
+		textName.setLabel(Messages.CreateNewToolDialog_Name);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
 		textName.setLayoutData(gd);
 		
-		comboType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Tool type", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		comboType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.CreateNewToolDialog_ToolType, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		for(String s : ObjectToolsLabelProvider.getAllToolTypes())
 			comboType.add(s);
 		comboType.select(0);

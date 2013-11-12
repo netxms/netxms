@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -70,15 +71,15 @@ public class Filter extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		checkAgent = new Button(dialogArea, SWT.CHECK);
-		checkAgent.setText("NetXMS agent should be available");
+		checkAgent.setText(Messages.Filter_AgentNeeded);
 		checkAgent.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_AGENT) != 0);
 		
 		checkSNMP = new Button(dialogArea, SWT.CHECK);
-		checkSNMP.setText("Node should support SNMP");
+		checkSNMP.setText(Messages.Filter_SNMPNeeded);
 		checkSNMP.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_SNMP) != 0);
 		
 		checkMatchOID = new Button(dialogArea, SWT.CHECK);
-		checkMatchOID.setText("Node SNMP OID should match with the following template:");
+		checkMatchOID.setText(Messages.Filter_OIDShouldMatch);
 		checkMatchOID.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_OID_MATCH) != 0);
 		checkMatchOID.addSelectionListener(new SelectionListener() {
 			@Override

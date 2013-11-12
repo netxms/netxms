@@ -32,6 +32,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -39,7 +40,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class FileViewer extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.FileViewer";
+	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.FileViewer"; //$NON-NLS-1$
 	
 	private long nodeId;
 	private String remoteFileName;
@@ -55,25 +56,25 @@ public class FileViewer extends ViewPart
 		super.init(site);
 		
 		// Secondary ID must by in form nodeId&remoteFileName
-		String[] parts = site.getSecondaryId().split("&");
+		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length != 2)
-			throw new PartInitException("Internal error");
+			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		nodeId = Long.parseLong(parts[0]);
 		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
 		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
-			throw new PartInitException("Invalid object ID");
+			throw new PartInitException(Messages.FileViewer_InvalidObjectID);
 		
 		try
 		{
-			remoteFileName = URLDecoder.decode(parts[1], "UTF-8");
+			remoteFileName = URLDecoder.decode(parts[1], "UTF-8"); //$NON-NLS-1$
 		}
 		catch(UnsupportedEncodingException e)
 		{
-			throw new PartInitException("Internal error", e);
+			throw new PartInitException("Internal error", e); //$NON-NLS-1$
 		}
 		
-		setPartName(object.getObjectName() + ": " + remoteFileName);
+		setPartName(object.getObjectName() + ": " + remoteFileName); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

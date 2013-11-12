@@ -47,6 +47,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.ObjectToolsCache;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -82,9 +83,9 @@ public class LocalCommandResults extends ViewPart
 		super.init(site);
 
 		// Secondary ID must be in form toolId&nodeId
-		String[] parts = site.getSecondaryId().split("&");
+		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length != 2)
-			throw new PartInitException("Internal error");
+			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		try
 		{
@@ -93,11 +94,11 @@ public class LocalCommandResults extends ViewPart
 			
 			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			AbstractObject object = session.findObjectById(nodeId);
-			setPartName(object.getObjectName() + " - " + ObjectToolsCache.findTool(toolId).getDisplayName());
+			setPartName(object.getObjectName() + " - " + ObjectToolsCache.findTool(toolId).getDisplayName()); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
-			throw new PartInitException("Unexpected initialization failure", e);
+			throw new PartInitException("Unexpected initialization failure", e); //$NON-NLS-1$
 		}
 	}
 
@@ -107,7 +108,7 @@ public class LocalCommandResults extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		console = new IOConsole("Console", Activator.getImageDescriptor("icons/console.png"));
+		console = new IOConsole("Console", Activator.getImageDescriptor("icons/console.png")); //$NON-NLS-1$ //$NON-NLS-2$
 		viewer = new TextConsoleViewer(parent, console);
 		viewer.setEditable(false);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -133,7 +134,7 @@ public class LocalCommandResults extends ViewPart
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
 		if (contextService != null)
 		{
-			contextService.activateContext("org.netxms.ui.eclipse.objecttools.context.LocalCommandResults");
+			contextService.activateContext("org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"); //$NON-NLS-1$
 		}
 	}
 
@@ -144,7 +145,7 @@ public class LocalCommandResults extends ViewPart
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
-		actionClear = new Action("C&lear console", SharedIcons.CLEAR_LOG) {
+		actionClear = new Action(Messages.LocalCommandResults_ClearConsole, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
@@ -152,7 +153,7 @@ public class LocalCommandResults extends ViewPart
 			}
 		};
 
-		actionScrollLock = new Action("&Scroll lock", Action.AS_CHECK_BOX) {
+		actionScrollLock = new Action(Messages.LocalCommandResults_ScrollLock, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -161,7 +162,7 @@ public class LocalCommandResults extends ViewPart
 		actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
 		actionScrollLock.setChecked(false);
 		
-		actionTerminate = new Action("&Terminate", SharedIcons.TERMINATE) {
+		actionTerminate = new Action(Messages.LocalCommandResults_Terminate, SharedIcons.TERMINATE) {
 			@Override
 			public void run()
 			{
@@ -175,10 +176,10 @@ public class LocalCommandResults extends ViewPart
 			}
 		};
 		actionTerminate.setEnabled(false);
-      actionTerminate.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.terminate_process");
+      actionTerminate.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.terminate_process"); //$NON-NLS-1$
 		handlerService.activateHandler(actionTerminate.getActionDefinitionId(), new ActionHandler(actionTerminate));
 		
-		actionRestart = new Action("&Restart", SharedIcons.RESTART) {
+		actionRestart = new Action(Messages.LocalCommandResults_Restart, SharedIcons.RESTART) {
 			@Override
 			public void run()
 			{
@@ -187,7 +188,7 @@ public class LocalCommandResults extends ViewPart
 		};
 		actionRestart.setEnabled(false);
 
-		actionCopy = new Action("&Copy") {
+		actionCopy = new Action(Messages.LocalCommandResults_Copy) {
 			@Override
 			public void run()
 			{
@@ -196,10 +197,10 @@ public class LocalCommandResults extends ViewPart
 			}
 		};
 		actionCopy.setEnabled(false);
-      actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.copy");
+      actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.copy"); //$NON-NLS-1$
 		handlerService.activateHandler(actionCopy.getActionDefinitionId(), new ActionHandler(actionCopy));
 		
-		actionSelectAll = new Action("Select &all") {
+		actionSelectAll = new Action(Messages.LocalCommandResults_SelectAll) {
 			@Override
 			public void run()
 			{
@@ -207,7 +208,7 @@ public class LocalCommandResults extends ViewPart
 					viewer.doOperation(TextConsoleViewer.SELECT_ALL);
 			}
 		};
-      actionSelectAll.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.select_all");
+      actionSelectAll.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.select_all"); //$NON-NLS-1$
 		handlerService.activateHandler(actionSelectAll.getActionDefinitionId(), new ActionHandler(actionSelectAll));
 	}
 	
@@ -326,11 +327,11 @@ public class LocalCommandResults extends ViewPart
 		}
 		
 		final IOConsoleOutputStream out = console.newOutputStream();
-		ConsoleJob job = new ConsoleJob("Execute external command", this, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.LocalCommandResults_JobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot execute external command";
+				return Messages.LocalCommandResults_JobError;
 			}
 
 			@Override
@@ -354,12 +355,12 @@ public class LocalCommandResults extends ViewPart
 						// (like ping, tracert, etc.) generates output with lines
 						// ending in 0x0D 0x0D 0x0A
 						if (isWindows)
-							out.write(s.replace("\r\r\n", " \r\n"));
+							out.write(s.replace("\r\r\n", " \r\n")); //$NON-NLS-1$ //$NON-NLS-2$
 						else
 							out.write(s);
 					}
 					
-					out.write("\n\n*** TERMINATED ***\n");
+					out.write(Messages.LocalCommandResults_Terminated);
 				}
 				catch(IOException e)
 				{

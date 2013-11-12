@@ -47,6 +47,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.objecttools.ObjectToolTableColumn;
 import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.dialogs.EditColumnDialog;
 import org.netxms.ui.eclipse.objecttools.propertypages.helpers.ToolColumnLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -131,7 +132,7 @@ public class Columns extends PropertyPage
       buttons.setLayoutData(gd);
 
       buttonAdd = new Button(buttons, SWT.PUSH);
-      buttonAdd.setText("&Add...");
+      buttonAdd.setText(Messages.Columns_Add);
       buttonAdd.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -150,7 +151,7 @@ public class Columns extends PropertyPage
       buttonAdd.setLayoutData(rd);
 		
       buttonEdit = new Button(buttons, SWT.PUSH);
-      buttonEdit.setText("&Edit...");
+      buttonEdit.setText(Messages.Columns_Edit);
       buttonEdit.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -169,7 +170,7 @@ public class Columns extends PropertyPage
       buttonEdit.setLayoutData(rd);
 
       buttonRemove = new Button(buttons, SWT.PUSH);
-      buttonRemove.setText("&Delete");
+      buttonRemove.setText(Messages.Columns_Delete);
       buttonRemove.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -196,20 +197,20 @@ public class Columns extends PropertyPage
 	private void setupTableColumns()
 	{
 		TableColumn column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText("Name");
+		column.setText(Messages.Columns_Name);
 		column.setWidth(200);
 		
 		column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText("Format");
+		column.setText(Messages.Columns_Format);
 		column.setWidth(90);
 		
 		column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText(objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP ? "OID" : "Index");
+		column.setText(objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP ? Messages.Columns_OID : Messages.Columns_Index);
 		column.setWidth(200);
 		
 		viewer.getTable().setHeaderVisible(true);
 		
-		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage");
+		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage"); //$NON-NLS-1$
 	}
 
 	/**
@@ -217,7 +218,7 @@ public class Columns extends PropertyPage
 	 */
 	private void addColumn()
 	{
-		ObjectToolTableColumn tc = new ObjectToolTableColumn("Column " + Integer.toString(columns.size() + 1));
+		ObjectToolTableColumn tc = new ObjectToolTableColumn(Messages.Columns_DefName + Integer.toString(columns.size() + 1));
 		EditColumnDialog dlg = new EditColumnDialog(getShell(), true, objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP, tc);
 		if (dlg.open() == Window.OK)
 		{
@@ -283,7 +284,7 @@ public class Columns extends PropertyPage
 	public boolean performOk()
 	{
 		applyChanges(false);
-		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage");
+		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage"); //$NON-NLS-1$
 		return true;
 	}
 
@@ -293,7 +294,7 @@ public class Columns extends PropertyPage
 	@Override
 	public boolean performCancel()
 	{
-		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage");
+		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage"); //$NON-NLS-1$
 		return super.performCancel();
 	}
 }
