@@ -88,7 +88,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 	{
 		List<Port> ports = new ArrayList<Port>(Arrays.asList(vlan.getPorts()));
 		if (ports.size() == 0)
-			return "";
+			return ""; //$NON-NLS-1$
 		
 		StringBuilder sb = new StringBuilder();
 

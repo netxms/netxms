@@ -29,6 +29,7 @@ import org.netxms.client.MacAddress;
 import org.netxms.client.MacAddressFormatException;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -65,7 +66,7 @@ public class EnterMacAddressDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		textMac = new LabeledText(dialogArea, SWT.NONE);
-		textMac.setLabel("MAC address");
+		textMac.setLabel(Messages.EnterMacAddressDlg_MacAddress);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -88,7 +89,7 @@ public class EnterMacAddressDlg extends Dialog
 		}
 		catch(MacAddressFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), "Error", "MAC address entered is incorrect. Please enter correct MAC address.");
+			MessageDialogHelper.openError(getShell(), Messages.EnterMacAddressDlg_Error, Messages.EnterMacAddressDlg_IncorrectMacAddress);
 		}
 	}
 
@@ -106,7 +107,7 @@ public class EnterMacAddressDlg extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText("Enter MAC Address");
+		newShell.setText(Messages.EnterMacAddressDlg_Title);
 		super.configureShell(newShell);
 	}
 }

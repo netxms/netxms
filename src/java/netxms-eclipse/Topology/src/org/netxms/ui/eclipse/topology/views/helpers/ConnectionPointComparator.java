@@ -57,7 +57,7 @@ public class ConnectionPointComparator extends ViewerComparator
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		int result;
-		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		switch(column)
 		{
 			case HostSearchResults.COLUMN_SEQUENCE:

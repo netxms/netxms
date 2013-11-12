@@ -33,6 +33,7 @@ import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 
 /**
@@ -51,7 +52,7 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	public void run(IAction action)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Find connection point for object " + objectId, wbPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.FindConnectionPoint_JobTitle, objectId), wbPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -68,7 +69,7 @@ public class FindConnectionPoint implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get conection point information";
+				return Messages.FindConnectionPoint_JobError;
 			}
 		}.start();
 	}

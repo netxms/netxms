@@ -29,6 +29,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.RadioInterfaces;
 
 /**
@@ -51,7 +52,7 @@ public class ShowRadioInterfaces implements IObjectActionDelegate
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(window.getShell(), "Error", "Cannot open view: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(window.getShell(), Messages.ShowRadioInterfaces_Error, Messages.ShowRadioInterfaces_CannotOpenView + e.getLocalizedMessage());
 		}
 	}
 	

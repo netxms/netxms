@@ -38,6 +38,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
@@ -123,7 +124,7 @@ public class DeviceView extends DashboardComposite
 			SlotView sv = slots.get(slot);
 			if (sv == null)
 			{
-				sv = new SlotView(this, SWT.NONE, "Slot " + Integer.toString(slot));
+				sv = new SlotView(this, SWT.NONE, String.format(Messages.DeviceView_SlotName, slot));
 				sv.setPortStatusVisible(portStatusVisible);
 				slots.put(slot, sv);
 			}

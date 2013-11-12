@@ -51,6 +51,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.ConnectionPointComparator;
 import org.netxms.ui.eclipse.topology.views.helpers.ConnectionPointLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -61,7 +62,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class HostSearchResults extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.topology.views.HostSearchResults";
+	public static final String ID = "org.netxms.ui.eclipse.topology.views.HostSearchResults"; //$NON-NLS-1$
 	
 	public static final int COLUMN_SEQUENCE = 0;
 	public static final int COLUMN_NODE = 1;
@@ -72,7 +73,7 @@ public class HostSearchResults extends ViewPart
 	public static final int COLUMN_PORT = 6;
 	public static final int COLUMN_TYPE = 7;
 	
-	private static final String TABLE_CONFIG_PREFIX = "HostSearchResults";
+	private static final String TABLE_CONFIG_PREFIX = "HostSearchResults"; //$NON-NLS-1$
 	
 	private SortableTableViewer viewer;
 	private List<ConnectionPoint> results = new ArrayList<ConnectionPoint>();
@@ -87,7 +88,7 @@ public class HostSearchResults extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Seq.", "Node", "Interface", "MAC", "IP", "Switch", "Port", "Type" };
+		final String[] names = { Messages.HostSearchResults_ColSeq, Messages.HostSearchResults_ColNode, Messages.HostSearchResults_ColIface, Messages.HostSearchResults_ColMac, Messages.HostSearchResults_ColIp, Messages.HostSearchResults_ColSwitch, Messages.HostSearchResults_ColPort, Messages.HostSearchResults_ColType };
 		final int[] widths = { 70, 120, 120, 90, 90, 120, 120, 60 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_SEQUENCE, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -114,7 +115,7 @@ public class HostSearchResults extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionClearLog = new Action("Clear search log") {
+		actionClearLog = new Action(Messages.HostSearchResults_ClearLog) {
 			@Override
 			public void run()
 			{
@@ -124,7 +125,7 @@ public class HostSearchResults extends ViewPart
 		};
 		actionClearLog.setImageDescriptor(SharedIcons.CLEAR_LOG);
 		
-		actionCopyIP = new Action("Copy IP address to clipboard") {
+		actionCopyIP = new Action(Messages.HostSearchResults_CopyIp) {
 			@Override
 			public void run()
 			{
@@ -132,7 +133,7 @@ public class HostSearchResults extends ViewPart
 			}
 		};
 		
-		actionCopyMAC = new Action("Copy MAC address to clipboard") {
+		actionCopyMAC = new Action(Messages.HostSearchResults_CopyMac) {
 			@Override
 			public void run()
 			{
@@ -140,7 +141,7 @@ public class HostSearchResults extends ViewPart
 			}
 		};
 		
-		actionCopyRecord = new Action("&Copy to clipboard", SharedIcons.COPY) {
+		actionCopyRecord = new Action(Messages.HostSearchResults_Copy, SharedIcons.COPY) {
 			@Override
 			public void run()
 			{
@@ -252,7 +253,7 @@ public class HostSearchResults extends ViewPart
 		
 		if (cp == null)
 		{
-			MessageDialogHelper.openWarning(shell, "Warning", "Connection point information cannot be found");
+			MessageDialogHelper.openWarning(shell, Messages.HostSearchResults_Warning, Messages.HostSearchResults_NotFound);
 			return;
 		}
 		
@@ -267,12 +268,29 @@ public class HostSearchResults extends ViewPart
 			{
 				if (host != null)
 				{
-					MessageDialogHelper.openInformation(shell, "Connection Point", "Node " + host.getObjectName() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+					MessageDialogHelper.openInformation(shell, Messages.HostSearchResults_ConnectionPoint, 
+					      String.format(Messages.HostSearchResults_NodeConnected,
+					            host.getObjectName(), cp.isDirectlyConnected() ? Messages.HostSearchResults_ModeDirectly : Messages.HostSearchResults_ModeIndirectly,
+					            bridge.getObjectName(), iface.getObjectName()));
 				}
 				else
 				{
-					String ipAddress = (cp.getLocalIpAddress() != null) ? "IP address " + cp.getLocalIpAddress().getHostAddress() + " and " : "";
-					MessageDialogHelper.openInformation(shell, "Connection Point", "Node with " + ipAddress + "MAC address " + cp.getLocalMacAddress() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+				   if (cp.getLocalIpAddress() != null)
+				   {
+	               MessageDialogHelper.openInformation(shell, Messages.HostSearchResults_ConnectionPoint, 
+	                     String.format(Messages.HostSearchResults_NodeIpMacConnected,
+	                           cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
+	                           cp.isDirectlyConnected() ? Messages.HostSearchResults_ModeDirectly : Messages.HostSearchResults_ModeIndirectly,
+	                           bridge.getObjectName(), iface.getObjectName()));
+				   }
+				   else
+				   {
+                  MessageDialogHelper.openInformation(shell, Messages.HostSearchResults_ConnectionPoint, 
+                        String.format(Messages.HostSearchResults_NodeMacConnected,
+                              cp.getLocalMacAddress(),
+                              cp.isDirectlyConnected() ? Messages.HostSearchResults_ModeDirectly : Messages.HostSearchResults_ModeIndirectly,
+                              bridge.getObjectName(), iface.getObjectName()));
+				   }
 				}
 				
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
@@ -281,12 +299,12 @@ public class HostSearchResults extends ViewPart
 			}
 			else
 			{
-				MessageDialogHelper.openWarning(shell, "Warning", "Connection point information cannot be found");
+				MessageDialogHelper.openWarning(shell, Messages.HostSearchResults_Warning, Messages.HostSearchResults_NotFound);
 			}
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openWarning(shell, "Warning", "Connection point information cannot be shown: " + e.getMessage());
+			MessageDialogHelper.openWarning(shell, Messages.HostSearchResults_Warning, String.format(Messages.HostSearchResults_ShowError, e.getLocalizedMessage()));
 		}
 	}
 

@@ -32,6 +32,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 
 /**
@@ -66,13 +67,13 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	private String getObjectName(long id)
 	{
 		if (id == 0)
-			return "";
+			return ""; //$NON-NLS-1$
 		
 		String name = cachedObjectNames.get(id);
 		if (name == null)
 		{
 			AbstractObject object = session.findObjectById(id);
-			name = (object != null) ? object.getObjectName() : "<unknown>";
+			name = (object != null) ? object.getObjectName() : Messages.ConnectionPointLabelProvider_Unknown;
 			cachedObjectNames.put(id, name);
 		}
 		return name;
@@ -100,13 +101,13 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 				if (addr != null)
 					return addr.getHostAddress();
 				Interface iface = (Interface)session.findObjectById(cp.getLocalInterfaceId(), Interface.class);
-				return (iface != null) ? iface.getPrimaryIP().getHostAddress() : "";
+				return (iface != null) ? iface.getPrimaryIP().getHostAddress() : ""; //$NON-NLS-1$
 			case HostSearchResults.COLUMN_SWITCH:
 				return getObjectName(cp.getNodeId());
 			case HostSearchResults.COLUMN_PORT:
 				return getObjectName(cp.getInterfaceId());
 			case HostSearchResults.COLUMN_TYPE:
-				return cp.isDirectlyConnected() ? "direct" : "indirect";
+				return cp.isDirectlyConnected() ? Messages.ConnectionPointLabelProvider_Direct : Messages.ConnectionPointLabelProvider_Indirect;
 		}
 		return null;
 	}

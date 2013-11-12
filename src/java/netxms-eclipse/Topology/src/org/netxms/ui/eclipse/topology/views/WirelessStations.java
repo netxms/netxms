@@ -31,6 +31,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.WirelessStationComparator;
 import org.netxms.ui.eclipse.topology.views.helpers.WirelessStationLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -74,7 +75,7 @@ public class WirelessStations extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		setPartName("Wireless Stations - " + session.getObjectName(rootObject));
+		setPartName(String.format(Messages.WirelessStations_PartName, session.getObjectName(rootObject)));
 	}
 
 	/* (non-Javadoc)
@@ -83,19 +84,19 @@ public class WirelessStations extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "MAC Address", "IP Address", "Node", "AP", "Radio", "SSID" };
+		final String[] names = { Messages.WirelessStations_ColMacAddr, Messages.WirelessStations_ColIpAddr, Messages.WirelessStations_ColNode, Messages.WirelessStations_ColAp, Messages.WirelessStations_ColRadio, Messages.WirelessStations_ColSSID };
 		final int[] widths = { 120, 90, 180, 180, 100, 100 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new WirelessStationLabelProvider());
 		viewer.setComparator(new WirelessStationComparator());
 		
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WirelessStations");
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WirelessStations"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WirelessStations");
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WirelessStations"); //$NON-NLS-1$
 			}
 		});
 
@@ -205,7 +206,7 @@ public class WirelessStations extends ViewPart
 	 */
 	private void refresh()
 	{
-		new ConsoleJob("Get list of wireless stations", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.WirelessStations_JobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -222,7 +223,7 @@ public class WirelessStations extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get list of wireless stations";
+				return Messages.WirelessStations_JobError;
 			}
 		}.start();
 	}

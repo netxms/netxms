@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.VlanView;
 
 /**
@@ -66,7 +67,7 @@ public class ShowVlans implements IObjectActionDelegate
 		else
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Reading VLAN list from node", null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.ShowVlans_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -82,7 +83,7 @@ public class ShowVlans implements IObjectActionDelegate
 							}
 							catch(PartInitException e)
 							{
-								MessageDialogHelper.openError(window.getShell(), "Error", "Cannot open VLAN view: " + e.getLocalizedMessage());
+								MessageDialogHelper.openError(window.getShell(), Messages.ShowVlans_Error, Messages.ShowVlans_CannotOpenView + e.getLocalizedMessage());
 							}
 						}
 					});
@@ -91,7 +92,7 @@ public class ShowVlans implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot get VLAN list from node";
+					return Messages.ShowVlans_JobError;
 				}
 			}.start();
 		}
