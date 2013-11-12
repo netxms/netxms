@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ public class ObjectToolsComparator extends ViewerComparator
 	{
 		ObjectTool tool1 = (ObjectTool)e1;
 		ObjectTool tool2 = (ObjectTool)e2;
-		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
+		final int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 
 		int result;
 		switch(column)
@@ -51,7 +51,8 @@ public class ObjectToolsComparator extends ViewerComparator
 				result = tool1.getName().compareToIgnoreCase(tool2.getName());
 				break;
 			case ObjectToolsEditor.COLUMN_TYPE:
-				result = ObjectToolsLabelProvider.getToolTypeName(tool1).compareTo(ObjectToolsLabelProvider.getToolTypeName(tool2));
+				final ObjectToolsLabelProvider labelProvider = (ObjectToolsLabelProvider)((SortableTableViewer)viewer).getLabelProvider();
+				result = labelProvider.getToolTypeName(tool1).compareTo(labelProvider.getToolTypeName(tool2));
 				break;
 			case ObjectToolsEditor.COLUMN_DESCRIPTION:
 				result = tool1.getDescription().compareToIgnoreCase(tool2.getDescription());

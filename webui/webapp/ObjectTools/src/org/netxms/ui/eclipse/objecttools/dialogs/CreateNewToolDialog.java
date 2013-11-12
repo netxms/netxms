@@ -75,9 +75,11 @@ public class CreateNewToolDialog extends Dialog
 		textName.setLayoutData(gd);
 		
 		comboType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.CreateNewToolDialog_ToolType, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		for(String s : ObjectToolsLabelProvider.getAllToolTypes())
+		ObjectToolsLabelProvider lp = new ObjectToolsLabelProvider();
+		for(String s : lp.getAllToolTypes())
 			comboType.add(s);
 		comboType.select(0);
+		lp.dispose();
 		
 		return dialogArea;
 	}

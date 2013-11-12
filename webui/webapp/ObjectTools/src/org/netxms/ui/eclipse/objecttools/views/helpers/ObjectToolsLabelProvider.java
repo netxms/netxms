@@ -123,7 +123,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 	 * @param tool object tool
 	 * @return tool type's name
 	 */
-	public static String getToolTypeName(ObjectTool tool)
+	public String getToolTypeName(ObjectTool tool)
 	{
 		try
 		{
@@ -139,7 +139,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 	 * Get names of all tool types.
 	 * @return
 	 */
-	public static String[] getAllToolTypes()
+	public String[] getAllToolTypes()
 	{
 		return toolTypes;
 	}
