@@ -30,6 +30,7 @@ import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.dialogs.EnterMacAddressDlg;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 
@@ -53,7 +54,7 @@ public class FindMacAddress implements IWorkbenchWindowActionDelegate
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final MacAddress macAddr = dlg.getMacAddress();
-		new ConsoleJob("Searching for MAC address " + macAddr + " in the network", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.FindMacAddress_JobTitle, macAddr) , null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -70,7 +71,7 @@ public class FindMacAddress implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Search for MAC address " + macAddr + " failed";
+				return String.format(Messages.FindMacAddress_JobError, macAddr);
 			}
 		}.start();
 	}

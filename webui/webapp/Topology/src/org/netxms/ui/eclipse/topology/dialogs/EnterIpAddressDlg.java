@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -66,7 +67,7 @@ public class EnterIpAddressDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Enter IP Address");
+		newShell.setText(Messages.EnterIpAddressDlg_Title);
 	}
 	
 	/* (non-Javadoc)
@@ -83,7 +84,7 @@ public class EnterIpAddressDlg extends Dialog
       dialogArea.setLayout(layout);
       
       ipAddressText = new LabeledText(dialogArea, SWT.NONE);
-      ipAddressText.setLabel("IP Address");
+      ipAddressText.setLabel(Messages.EnterIpAddressDlg_IpAddress);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -93,7 +94,7 @@ public class EnterIpAddressDlg extends Dialog
       if (zoningEnabled)
       {
 	      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-	      objectSelector.setLabel("Zone");
+	      objectSelector.setLabel(Messages.EnterIpAddressDlg_Zone);
 	      objectSelector.setObjectClass(Zone.class);
 	      objectSelector.setClassFilter(ObjectSelectionDialog.createZoneSelectionFilter());
 	      gd = new GridData();
@@ -118,7 +119,7 @@ public class EnterIpAddressDlg extends Dialog
 		}
 		catch(UnknownHostException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid IP address!");
+			MessageDialogHelper.openWarning(getShell(), Messages.EnterIpAddressDlg_Warning, Messages.EnterIpAddressDlg_EnterValidAddress);
 			return;
 		}
 		
@@ -127,13 +128,13 @@ public class EnterIpAddressDlg extends Dialog
 			long objectId = objectSelector.getObjectId();
 			if (objectId == 0)
 			{
-				MessageDialogHelper.openWarning(getShell(), "Warning", "Please select zone object!");
+				MessageDialogHelper.openWarning(getShell(), Messages.EnterIpAddressDlg_Warning, Messages.EnterIpAddressDlg_SelectZone);
 				return;
 			}
 			AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
 			if ((object == null) || !(object instanceof Zone))
 			{
-				MessageDialogHelper.openWarning(getShell(), "Warning", "Please select zone object!");
+				MessageDialogHelper.openWarning(getShell(), Messages.EnterIpAddressDlg_Warning, Messages.EnterIpAddressDlg_SelectZone);
 				return;
 			}
 			zoneId = ((Zone)object).getZoneId();

@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor;
 
 /**
@@ -31,15 +32,15 @@ import org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor;
  */
 public class ObjectToolsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] toolTypes = { 
-		"Internal", 
-		"Action", 
-		"SNMP Table", 
-		"Agent Table", 
-		"URL",
-		"Local Command",
-		"Server Command",
-		"Download File"
+	private final String[] toolTypes = { 
+		Messages.ObjectToolsLabelProvider_TypeInternal, 
+		Messages.ObjectToolsLabelProvider_TypeAction, 
+		Messages.ObjectToolsLabelProvider_TypeSNMPTable, 
+		Messages.ObjectToolsLabelProvider_TypeAgentTable, 
+		Messages.ObjectToolsLabelProvider_TypeURL,
+		Messages.ObjectToolsLabelProvider_TypeLocalCmd,
+		Messages.ObjectToolsLabelProvider_TypeServerCmd,
+		Messages.ObjectToolsLabelProvider_TypeDownloadFile
 	};
 	
 	private Image[] toolTypeImages = new Image[toolTypes.length];
@@ -49,14 +50,14 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 	 */
 	public ObjectToolsLabelProvider()
 	{
-		toolTypeImages[0] = Activator.getImageDescriptor("icons/internal_tool.gif").createImage();
-		toolTypeImages[1] = Activator.getImageDescriptor("icons/agent_action.gif").createImage();
-		toolTypeImages[2] = Activator.getImageDescriptor("icons/table.gif").createImage();
-		toolTypeImages[3] = Activator.getImageDescriptor("icons/table.gif").createImage();
-		toolTypeImages[4] = Activator.getImageDescriptor("icons/url.gif").createImage();
-		toolTypeImages[5] = Activator.getImageDescriptor("icons/console.png").createImage();
-		toolTypeImages[6] = Activator.getImageDescriptor("icons/console.png").createImage();
-		toolTypeImages[7] = Activator.getImageDescriptor("icons/file_download.png").createImage();
+		toolTypeImages[0] = Activator.getImageDescriptor("icons/internal_tool.gif").createImage(); //$NON-NLS-1$
+		toolTypeImages[1] = Activator.getImageDescriptor("icons/agent_action.gif").createImage(); //$NON-NLS-1$
+		toolTypeImages[2] = Activator.getImageDescriptor("icons/table.gif").createImage(); //$NON-NLS-1$
+		toolTypeImages[3] = Activator.getImageDescriptor("icons/table.gif").createImage(); //$NON-NLS-1$
+		toolTypeImages[4] = Activator.getImageDescriptor("icons/url.gif").createImage(); //$NON-NLS-1$
+		toolTypeImages[5] = Activator.getImageDescriptor("icons/console.png").createImage(); //$NON-NLS-1$
+		toolTypeImages[6] = Activator.getImageDescriptor("icons/console.png").createImage(); //$NON-NLS-1$
+		toolTypeImages[7] = Activator.getImageDescriptor("icons/file_download.png").createImage(); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -98,7 +99,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
-					return "?unknown?";
+					return "?unknown?"; //$NON-NLS-1$
 				}
 			case ObjectToolsEditor.COLUMN_DESCRIPTION:
 				return tool.getDescription();
@@ -130,7 +131,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
-			return "?unknown?";
+			return "?unknown?"; //$NON-NLS-1$
 		}
 	}
 	

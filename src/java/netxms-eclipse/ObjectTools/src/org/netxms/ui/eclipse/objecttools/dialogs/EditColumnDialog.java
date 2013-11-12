@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditColumnDialog extends Dialog
 {
-	private static final String[] formatNames = { Messages.EditColumnDialog_FmtString, Messages.EditColumnDialog_FmtInt, Messages.EditColumnDialog_FmtFloat, Messages.EditColumnDialog_FmtIpAddr, Messages.EditColumnDialog_FmtMacAddr, Messages.EditColumnDialog_FmtIfIndex };
+	private final String[] formatNames = { Messages.EditColumnDialog_FmtString, Messages.EditColumnDialog_FmtInt, Messages.EditColumnDialog_FmtFloat, Messages.EditColumnDialog_FmtIpAddr, Messages.EditColumnDialog_FmtMacAddr, Messages.EditColumnDialog_FmtIfIndex };
 
 	private boolean create;
 	private boolean snmpColumn;

@@ -33,6 +33,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.RadioInterfaceComparator;
 import org.netxms.ui.eclipse.topology.views.helpers.RadioInterfaceLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -80,7 +81,7 @@ public class RadioInterfaces extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		setPartName("Radio Interfaces - " + session.getObjectName(rootObject));
+		setPartName(String.format(Messages.RadioInterfaces_PartName, session.getObjectName(rootObject)));
 	}
 
 	/* (non-Javadoc)
@@ -89,19 +90,19 @@ public class RadioInterfaces extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "AP Name", "AP MAC Address", "AP Vendor", "AP Model", "AP Serial", "Radio Index", "Radio Name", "Radio MAC Address", "Channel", "Tx Power dBm", "Tx Power mW" };
+		final String[] names = { Messages.RadioInterfaces_ColApName, Messages.RadioInterfaces_ColApMac, Messages.RadioInterfaces_ColApVendor, Messages.RadioInterfaces_ColApModel, Messages.RadioInterfaces_ColApSerial, Messages.RadioInterfaces_ColRadioIndex, Messages.RadioInterfaces_ColRadioName, Messages.RadioInterfaces_ColRadioMac, Messages.RadioInterfaces_ColChannel, Messages.RadioInterfaces_ColTxPowerDbm, Messages.RadioInterfaces_ColTxPowerMw };
 		final int[] widths = { 120, 100, 140, 140, 100, 90, 120, 100, 90, 90, 90 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new RadioInterfaceLabelProvider());
 		viewer.setComparator(new RadioInterfaceComparator());
 		
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RadioInterfaces");
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RadioInterfaces"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RadioInterfaces");
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RadioInterfaces"); //$NON-NLS-1$
 			}
 		});
 

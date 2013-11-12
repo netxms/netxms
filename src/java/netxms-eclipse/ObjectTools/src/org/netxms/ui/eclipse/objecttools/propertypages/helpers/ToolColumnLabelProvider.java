@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.objecttools.Messages;
  */
 public class ToolColumnLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] formatName = { Messages.ToolColumnLabelProvider_FmtString, Messages.ToolColumnLabelProvider_FmtInteger, Messages.ToolColumnLabelProvider_FmtFloat, Messages.ToolColumnLabelProvider_FmtIpAddr, Messages.ToolColumnLabelProvider_FmtMacAddr, Messages.ToolColumnLabelProvider_FmtIfIndex };
+	private final String[] formatName = { Messages.ToolColumnLabelProvider_FmtString, Messages.ToolColumnLabelProvider_FmtInteger, Messages.ToolColumnLabelProvider_FmtFloat, Messages.ToolColumnLabelProvider_FmtIpAddr, Messages.ToolColumnLabelProvider_FmtMacAddr, Messages.ToolColumnLabelProvider_FmtIfIndex };
 	
 	private boolean snmpTable;
 	

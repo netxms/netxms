@@ -61,6 +61,7 @@ import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.ObjectToolsAdapterFactory;
 import org.netxms.ui.eclipse.objecttools.dialogs.CreateNewToolDialog;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsComparator;
@@ -77,9 +78,9 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 @SuppressWarnings("restriction")
 public class ObjectToolsEditor extends ViewPart implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor";
+	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"; //$NON-NLS-1$
 
-	private static final String TABLE_CONFIG_PREFIX = "ObjectToolsEditor";
+	private static final String TABLE_CONFIG_PREFIX = "ObjectToolsEditor"; //$NON-NLS-1$
 	
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
@@ -105,7 +106,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		// Initiate loading of required plugins if they was not loaded yet
 		try
 		{
-			Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
@@ -113,7 +114,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { "ID", "Name", "Type", "Description" };
+		final String[] columnNames = { Messages.ObjectToolsEditor_ColId, Messages.ObjectToolsEditor_ColName, Messages.ObjectToolsEditor_ColType, Messages.ObjectToolsEditor_ColDescr };
 		final int[] columnWidths = { 90, 200, 100, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -170,7 +171,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		};
 		
-		actionNew = new Action("&New...") {
+		actionNew = new Action(Messages.ObjectToolsEditor_New) {
 			@Override
 			public void run()
 			{
@@ -204,7 +205,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
-		actionDelete = new Action("&Delete") {
+		actionDelete = new Action(Messages.ObjectToolsEditor_Delete) {
 			@Override
 			public void run()
 			{
@@ -297,7 +298,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void refreshToolList()
 	{
-		new ConsoleJob("Get object tools configuration", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.ObjectToolsEditor_JobGetConfig, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -317,7 +318,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get object tools configuration";
+				return Messages.ObjectToolsEditor_JobGetConfigError;
 			}
 		}.start();
 	}
@@ -330,7 +331,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		final CreateNewToolDialog dlg = new CreateNewToolDialog(getSite().getShell());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Generate new object tool ID", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.ObjectToolsEditor_JobNewId, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -352,7 +353,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot generate object tool ID";
+					return Messages.ObjectToolsEditor_JobNewIdError;
 				}
 			}.start();
 		}
@@ -367,15 +368,15 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		if (selection.isEmpty())
 			return;
 		
-		if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Confirmation", "Do you really want to delete selected tools?"))
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.ObjectToolsEditor_Confirmation, Messages.ObjectToolsEditor_DeleteConfirmation))
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob("Delete objecttools", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.ObjectToolsEditor_JobDelete, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete object tool";
+				return Messages.ObjectToolsEditor_JobDeleteError;
 			}
 
 			@Override
@@ -396,7 +397,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void saveObjectTool(final ObjectToolDetails details)
 	{
-		new ConsoleJob("Save object tool", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.ObjectToolsEditor_JobSave, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -407,7 +408,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save object tool configuration";
+				return Messages.ObjectToolsEditor_JobSaveError;
 			}
 
 			@Override
@@ -446,7 +447,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				refreshToolList();
 				break;
 			case NXCNotification.OBJECT_TOOL_DELETED:
-				new UIJob(getSite().getShell().getDisplay(), "Delete object tool from list") {
+				new UIJob(getSite().getShell().getDisplay(), "Delete object tool from list") { //$NON-NLS-1$
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{

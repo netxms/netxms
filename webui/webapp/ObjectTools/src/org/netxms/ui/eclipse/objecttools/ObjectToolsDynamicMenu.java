@@ -112,7 +112,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			@Override
 			public int compare(ObjectTool arg0, ObjectTool arg1)
 			{
-				return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", ""));
+				return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			}
 		});
 		
@@ -124,12 +124,12 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			
 			if (allowed && isToolApplicable(tools[i], nodes))
 			{
-				String[] path = tools[i].getName().split("\\-\\>");
+				String[] path = tools[i].getName().split("\\-\\>"); //$NON-NLS-1$
 			
 				Menu rootMenu = toolsMenu;
 				for(int j = 0; j < path.length - 1; j++)
 				{
-					String key = path[j].replace("&", "");
+					String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
 					Menu currMenu = menus.get(key);
 					if (currMenu == null)
 					{
@@ -160,7 +160,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		if (added > 0)
 		{
 			MenuItem toolsMenuItem = new MenuItem(menu, SWT.CASCADE, index);
-			toolsMenuItem.setText("&Tools");
+			toolsMenuItem.setText(Messages.ObjectToolsDynamicMenu_TopLevelLabel);
 			toolsMenuItem.setMenu(toolsMenu);
 		}
 		else
@@ -254,18 +254,18 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			if (nodes.size() == 1)
 			{
 				AbstractNode node = nodes.iterator().next();
-				message = message.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
-				message = message.replace("%OBJECT_NAME%", node.getObjectName());
-				message = message.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+				message = message.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress()); //$NON-NLS-1$
+				message = message.replace("%OBJECT_NAME%", node.getObjectName()); //$NON-NLS-1$
+				message = message.replace("%OBJECT_ID%", Long.toString(node.getObjectId())); //$NON-NLS-1$
 			}
 			else
 			{
-				message = message.replace("%OBJECT_IP_ADDR%", "<multiple nodes>");
-				message = message.replace("%OBJECT_NAME%", "<multiple nodes>");
-				message = message.replace("%OBJECT_ID%", "<multiple nodes>");
+				message = message.replace("%OBJECT_IP_ADDR%", Messages.ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
+				message = message.replace("%OBJECT_NAME%", Messages.ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
+				message = message.replace("%OBJECT_ID%", Messages.ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
 			}
 			if (!MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
-					"Confirm Tool Execution", message))
+					Messages.ObjectToolsDynamicMenu_ConfirmExec, message))
 				return;
 		}
 		
@@ -322,12 +322,12 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		{
 			final IWorkbenchPage page = window.getActivePage();
 			final TableToolResults view = (TableToolResults)page.showView(TableToolResults.ID,
-					Long.toString(tool.getId()) + "&" + Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+					Long.toString(tool.getId()) + "&" + Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
 			view.refreshTable();
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+			MessageDialogHelper.openError(window.getShell(), Messages.ObjectToolsDynamicMenu_Error, String.format(Messages.ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
 		}
 	}
 
@@ -339,11 +339,11 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final String action = substituteMacros(tool.getData(), node);
-		new ConsoleJob(String.format("Execute action on node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.ObjectToolsDynamicMenu_ExecuteOnNode, node.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot execute action on node %s", node.getObjectName());
+				return String.format(Messages.ObjectToolsDynamicMenu_CannotExecuteOnNode, node.getObjectName());
 			}
 
 			@Override
@@ -354,7 +354,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					public void run()
 					{
-						MessageDialogHelper.openInformation(null, "Tool Execution", String.format("Action %s executed successfully on node %s", action, node.getObjectName()));
+						MessageDialogHelper.openInformation(null, Messages.ObjectToolsDynamicMenu_ToolExecution, String.format(Messages.ObjectToolsDynamicMenu_ExecSuccess, action, node.getObjectName()));
 					}
 				});
 			}
@@ -370,7 +370,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	private void executeServerCommand(final AbstractNode node, final ObjectTool tool)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Execute server command", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ObjectToolsDynamicMenu_ExecuteServerCmd, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -379,7 +379,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					public void run()
 					{
-						MessageDialogHelper.openInformation(null, "Information", "Server command executed successfully");
+						MessageDialogHelper.openInformation(null, Messages.ObjectToolsDynamicMenu_Information, Messages.ObjectToolsDynamicMenu_ServerCommandExecuted);
 					}
 				});
 			}
@@ -387,7 +387,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Canot execute command on server";
+				return Messages.ObjectToolsDynamicMenu_ServerCmdExecError;
 			}
 		}.start();
 	}
@@ -401,11 +401,11 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final String fileName = substituteMacros(tool.getData(), node);
 		
-		ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot download file %s from node %s", fileName, node.getObjectName());
+				return String.format(Messages.ObjectToolsDynamicMenu_DownloadError, fileName, node.getObjectName());
 			}
 
 			@Override
@@ -419,13 +419,13 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 						final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 						try
 						{
-							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8");
+							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
 							FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
 							view.showFile(file);
 						}
 						catch(Exception e)
 						{
-							MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+							MessageDialogHelper.openError(window.getShell(), Messages.ObjectToolsDynamicMenu_Error, String.format(Messages.ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
 						}
 					}
 				});
@@ -447,7 +447,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		}
 		else
 		{
-			MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot execute object tool: handler not defined");
+			MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.ObjectToolsDynamicMenu_Error, Messages.ObjectToolsDynamicMenu_HandlerNotDefined);
 		}
 	}
 
@@ -489,15 +489,15 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				else
 				{
 					String name = p.toString();
-					if (name.equals("OBJECT_IP_ADDR"))
+					if (name.equals("OBJECT_IP_ADDR")) //$NON-NLS-1$
 					{
 						sb.append(node.getPrimaryIP().getHostAddress());
 					}
-					else if (name.equals("OBJECT_NAME"))
+					else if (name.equals("OBJECT_NAME")) //$NON-NLS-1$
 					{
 						sb.append(node.getObjectName());
 					}
-					else if (name.equals("OBJECT_ID"))
+					else if (name.equals("OBJECT_ID")) //$NON-NLS-1$
 					{
 						sb.append(node.getObjectId());
 					}

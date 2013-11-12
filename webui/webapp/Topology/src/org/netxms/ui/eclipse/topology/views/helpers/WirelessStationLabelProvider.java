@@ -55,11 +55,11 @@ public class WirelessStationLabelProvider extends LabelProvider implements ITabl
 				return ws.getMacAddress().toString();
 			case WirelessStations.COLUMN_IP_ADDRESS:
 				if ((ws.getIpAddress() == null) || ws.getIpAddress().isAnyLocalAddress())
-					return "";
+					return ""; //$NON-NLS-1$
 				return ws.getIpAddress().getHostAddress();
 			case WirelessStations.COLUMN_NODE_NAME:
 				if (ws.getNodeObjectId() == 0)
-					return "";
+					return ""; //$NON-NLS-1$
 				return session.getObjectName(ws.getNodeObjectId());
 			case WirelessStations.COLUMN_ACCESS_POINT:
 				return session.getObjectName(ws.getAccessPointId());

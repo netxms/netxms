@@ -77,13 +77,13 @@ public class ObjectToolsCache
 	{
 		// Read all registered extensions and create tabs
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objecttools.toolhandlers");
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objecttools.toolhandlers"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			try
 			{
-				final ObjectToolHandler handler = (ObjectToolHandler)elements[i].createExecutableExtension("class");
-				handlers.put(elements[i].getAttribute("id"), handler);
+				final ObjectToolHandler handler = (ObjectToolHandler)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
+				handlers.put(elements[i].getAttribute("id"), handler); //$NON-NLS-1$
 			}
 			catch(CoreException e)
 			{

@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -78,7 +79,7 @@ public class General extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		textName = new LabeledText(dialogArea, SWT.NONE);
-		textName.setLabel("Name");
+		textName.setLabel(Messages.General_Name);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -86,7 +87,7 @@ public class General extends PropertyPage
 		textName.setText(objectTool.getName());
 		
 		textDescription = new LabeledText(dialogArea, SWT.NONE);
-		textDescription.setLabel("Description");
+		textDescription.setLabel(Messages.General_Description);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -103,28 +104,28 @@ public class General extends PropertyPage
 		switch(objectTool.getType())
 		{
 			case ObjectTool.TYPE_INTERNAL:
-				textData.setLabel("Operation");
+				textData.setLabel(Messages.General_Operation);
 				break;
 			case ObjectTool.TYPE_LOCAL_COMMAND:
 			case ObjectTool.TYPE_SERVER_COMMAND:
-				textData.setLabel("Command");
+				textData.setLabel(Messages.General_Command);
 				createOutputGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_ACTION:
-				textData.setLabel("Agent's action");
+				textData.setLabel(Messages.General_AgentAction);
 				createOutputGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_URL:
-				textData.setLabel("URL");
+				textData.setLabel(Messages.General_URL);
 				break;
 			case ObjectTool.TYPE_FILE_DOWNLOAD:
-				textData.setLabel("Remote file name");
+				textData.setLabel(Messages.General_RemoteFileName);
 				break;
 			case ObjectTool.TYPE_TABLE_SNMP:
-				textData.setLabel("Title");
+				textData.setLabel(Messages.General_Title);
 				
 				Group snmpOptGroup = new Group(dialogArea, SWT.NONE);
-				snmpOptGroup.setText("SNMP Table Options");
+				snmpOptGroup.setText(Messages.General_SNMPTableOptions);
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
@@ -132,43 +133,43 @@ public class General extends PropertyPage
 				layout = new GridLayout();
 				snmpOptGroup.setLayout(layout);
 				
-				new Label(snmpOptGroup, SWT.NONE).setText("Use as index for second and subsequent columns:");
+				new Label(snmpOptGroup, SWT.NONE).setText(Messages.General_UseAsIndex);
 				
 				radioIndexOID = new Button(snmpOptGroup, SWT.RADIO);
-				radioIndexOID.setText("&OID suffix of first column");
+				radioIndexOID.setText(Messages.General_OIDSuffix);
 				radioIndexOID.setSelection((objectTool.getFlags() & ObjectTool.SNMP_INDEXED_BY_VALUE) == 0);
 				
 				radioIndexValue = new Button(snmpOptGroup, SWT.RADIO);
-				radioIndexValue.setText("&Value of first column");
+				radioIndexValue.setText(Messages.General_FirstColumnValue);
 				radioIndexValue.setSelection(!radioIndexOID.getSelection());
 
 				break;
 			case ObjectTool.TYPE_TABLE_AGENT:
-				textData.setLabel("Title");
+				textData.setLabel(Messages.General_Title);
 				
-				String[] parts = objectTool.getData().split("\u007F");
-				textData.setText((parts.length > 0) ? parts[0] : "");
+				String[] parts = objectTool.getData().split("\u007F"); //$NON-NLS-1$
+				textData.setText((parts.length > 0) ? parts[0] : ""); //$NON-NLS-1$
 
 				textParameter = new LabeledText(dialogArea, SWT.NONE);
-				textParameter.setLabel("Parameter");
+				textParameter.setLabel(Messages.General_Parameter);
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
 				textParameter.setLayoutData(gd);
-				textParameter.setText((parts.length > 1) ? parts[1] : "");
+				textParameter.setText((parts.length > 1) ? parts[1] : ""); //$NON-NLS-1$
 
 				textRegexp = new LabeledText(dialogArea, SWT.NONE);
-				textRegexp.setLabel("Regular expression");
+				textRegexp.setLabel(Messages.General_RegExp);
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
 				textRegexp.setLayoutData(gd);
-				textRegexp.setText((parts.length > 2) ? parts[2] : "");
+				textRegexp.setText((parts.length > 2) ? parts[2] : ""); //$NON-NLS-1$
 				break;
 		}
 		
 		Group confirmationGroup = new Group(dialogArea, SWT.NONE);
-		confirmationGroup.setText("Confirmation");
+		confirmationGroup.setText(Messages.General_Confirmation);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -177,7 +178,7 @@ public class General extends PropertyPage
 		confirmationGroup.setLayout(layout);
 		
 		checkConfirmation = new Button(confirmationGroup, SWT.CHECK);
-		checkConfirmation.setText("This tool requires confirmation before execution");
+		checkConfirmation.setText(Messages.General_RequiresConfirmation);
 		checkConfirmation.setSelection((objectTool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0);
 		checkConfirmation.addSelectionListener(new SelectionListener()	{
 			@Override
@@ -196,7 +197,7 @@ public class General extends PropertyPage
 		});
 		
 		textConfirmation = new LabeledText(confirmationGroup, SWT.NONE);
-		textConfirmation.setLabel("Confirmation message");
+		textConfirmation.setLabel(Messages.General_ConfirmationMessage);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -213,7 +214,7 @@ public class General extends PropertyPage
 	private void createOutputGroup(Composite parent)
 	{
 		Group outputGroup = new Group(parent, SWT.NONE);
-		outputGroup.setText("Execution options");
+		outputGroup.setText(Messages.General_ExecOptions);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -221,7 +222,7 @@ public class General extends PropertyPage
 		outputGroup.setLayout(new GridLayout());
 		
 		checkOutput = new Button(outputGroup, SWT.CHECK);
-		checkOutput.setText("Command generates output");
+		checkOutput.setText(Messages.General_GeneratesOutput);
 		checkOutput.setSelection((objectTool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0);
 	}
 
@@ -236,7 +237,7 @@ public class General extends PropertyPage
 		objectTool.setDescription(textDescription.getText());
 		if (objectTool.getType() == ObjectTool.TYPE_TABLE_AGENT)
 		{
-			objectTool.setData(textData.getText() + "\u007F" + textParameter.getText() + "\u007F" + textRegexp.getText());
+			objectTool.setData(textData.getText() + "\u007F" + textParameter.getText() + "\u007F" + textRegexp.getText()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else
 		{

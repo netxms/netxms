@@ -29,6 +29,7 @@ import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.dialogs.EnterIpAddressDlg;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 
@@ -51,7 +52,7 @@ public class FindIpAddress implements IWorkbenchWindowActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Searching for IP address " + dlg.getIpAddress().getHostAddress() + " in the network", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.FindIpAddress_JobTitle, dlg.getIpAddress().getHostAddress()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -68,7 +69,7 @@ public class FindIpAddress implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Search for IP address " + dlg.getIpAddress().getHostAddress() + " failed";
+				return String.format(Messages.FindIpAddress_JobError, dlg.getIpAddress().getHostAddress());
 			}
 		}.start();
 	}

@@ -47,7 +47,7 @@
             class="org.netxms.ui.eclipse.objecttools.views.TableToolResults"
             icon="icons/table.gif"
             id="org.netxms.ui.eclipse.objecttools.views.TableToolResults"
-            name="Table Tool Results"
+            name="%view.name.TableResults"
             restorable="true">
       </view>
       <view
@@ -56,7 +56,7 @@
             class="org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"
             icon="icons/tools.png"
             id="org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"
-            name="Object Tools"
+            name="%view.name.ObjectTools"
             restorable="true">
       </view>
       <view
@@ -64,45 +64,45 @@
             class="org.netxms.ui.eclipse.objecttools.views.FileViewer"
             icon="icons/file_download.png"
             id="org.netxms.ui.eclipse.objecttools.views.FileViewer"
-            name="File Viewer"
+            name="%view.name.FileViewer"
             restorable="true">
       </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Open object tools editor"
+            description="%command.description.ObjectTools"
             id="org.netxms.ui.eclipse.objecttools.commands.open_objecttools_editor"
-            name="Object Tools">
+            name="%command.name.ObjectTools">
       </command>
       <command
-            description="Terminate running external command"
+            description="%command.description.Terminate"
             id="org.netxms.ui.eclipse.objecttools.commands.terminate_process"
-            name="Terminate">
+            name="%command.name.Terminate">
       </command>
       <command
-            description="Select all"
+            description="%command.description.SelectAll"
             id="org.netxms.ui.eclipse.objecttools.commands.select_all"
-            name="Select all">
+            name="%command.name.SelectAll">
       </command>
       <command
-            description="Copy"
+            description="%command.description.Copy"
             id="org.netxms.ui.eclipse.objecttools.commands.copy"
-            name="Copy">
+            name="%command.name.Copy">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.object_tools"
-            label="Object Tools Configuration"
+            label="%actionSet.label.ObjectTools"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.objecttools.actions.OpenObjectToolsEditor"
                definitionId="org.netxms.ui.eclipse.objecttools.commands.open_objecttools_editor"
                icon="icons/tools.png"
                id="org.netxms.ui.eclipse.objecttools.actions.open_editor"
-               label="Object Tools"
+               label="%action.label.ObjectTools"
                menubarPath="config/additions">
          </action>
       </actionSet>
@@ -125,7 +125,7 @@
       <page
             class="org.netxms.ui.eclipse.objecttools.propertypages.General"
             id="org.netxms.ui.eclipse.objecttools.propertypages.General#1"
-            name="General">
+            name="%page.name.General">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objecttools.ObjectTool">
@@ -135,7 +135,7 @@
       <page
             class="org.netxms.ui.eclipse.objecttools.propertypages.AccessControl"
             id="org.netxms.ui.eclipse.objecttools.propertypages.AccessControl#2"
-            name="Access Control">
+            name="%page.name.AccessControl">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objecttools.ObjectTool">
@@ -145,7 +145,7 @@
       <page
             class="org.netxms.ui.eclipse.objecttools.propertypages.Filter"
             id="org.netxms.ui.eclipse.objecttools.propertypages.Filter#3"
-            name="Filter">
+            name="%page.name.Filter">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objecttools.ObjectTool">
@@ -155,7 +155,7 @@
       <page
             class="org.netxms.ui.eclipse.objecttools.propertypages.Columns"
             id="org.netxms.ui.eclipse.objecttools.propertypages.Columns#4"
-            name="Columns">
+            name="%page.name.Columns">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objecttools.ObjectTool">

@@ -11,7 +11,7 @@
                class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
                enablesFor="1"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Node"
-               label="Find &amp;switch port"
+               label="%action.label.FindSwitchPort"
                menubarPath="topology"
                style="push">
          </action>
@@ -20,7 +20,7 @@
                enablesFor="1"
                icon="icons/vlanview.gif"
                id="org.netxms.ui.eclipse.topology.popupActions.VlanView"
-               label="Show VLANs"
+               label="%action.label.ShowVlans"
                menubarPath="topology"
                style="push">
          </action>
@@ -29,7 +29,7 @@
                enablesFor="1"
                icon="icons/wireless_stations.png"
                id="org.netxms.ui.eclipse.topology.popupActions.WirelessStations"
-               label="Wireless Stations"
+               label="%action.label.WirelessStations"
                menubarPath="topology"
                style="push">
          </action>
@@ -38,7 +38,7 @@
                enablesFor="1"
                icon="icons/radio_interfaces.png"
                id="org.netxms.ui.eclipse.topology.popupActions.RadioInterfaces"
-               label="Radio Interfaces"
+               label="%action.label.RadioIfs"
                menubarPath="topology"
                style="push">
          </action>
@@ -51,7 +51,7 @@
                class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
                enablesFor="1"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Interface"
-               label="Find &amp;switch port"
+               label="%action.label.FindSwitchPort"
                menubarPath="topology"
                style="push">
          </action>
@@ -64,7 +64,7 @@
                class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
                enablesFor="1"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#AccessPoint"
-               label="Find &amp;switch port"
+               label="%action.label.FindSwitchPort"
                menubarPath="topology"
                style="push">
          </action>
@@ -74,40 +74,40 @@
          point="org.eclipse.ui.commands">
       <command
             categoryId="org.netxms.ui.eclipse.console.category.tools"
-            description="Find MAC address location in the network"
+            description="%command.description.FindMAC"
             id="org.netxms.ui.eclipse.topology.commands.find_mac_address"
-            name="Find &amp;MAC address...">
+            name="%command.name.FindMAC">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.tools"
-            description="Find IP address location in the network"
+            description="%command.description.FindIP"
             id="org.netxms.ui.eclipse.topology.commands.find_ip_address"
-            name="Find &amp;IP address...">
+            name="%command.name.FindIP">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.find_connection_point"
-            label="Find connection point"
+            label="%actionSet.label.FindConnPoint"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.topology.actions.FindMacAddress"
                definitionId="org.netxms.ui.eclipse.topology.commands.find_mac_address"
                id="org.netxms.ui.eclipse.topology.actions.find_mac_address"
-               label="Find &amp;MAC address..."
+               label="%action.label.FindMAC"
                menubarPath="tools/additions"
                style="push"
-               tooltip="Find MAC address location in the network">
+               tooltip="%action.tooltip.FindMAC">
          </action>
          <action
                class="org.netxms.ui.eclipse.topology.actions.FindIpAddress"
                definitionId="org.netxms.ui.eclipse.topology.commands.find_ip_address"
                id="org.netxms.ui.eclipse.topology.actions.find_ip_address"
-               label="Find &amp;IP address..."
+               label="%action.label.FindIP"
                menubarPath="tools/additions"
                style="push"
-               tooltip="Find IP address location in the network">
+               tooltip="%action.tooltip.FindIP">
          </action>
       </actionSet>
    </extension>
@@ -118,7 +118,7 @@
             class="org.netxms.ui.eclipse.topology.views.HostSearchResults"
             icon="icons/search_history.png"
             id="org.netxms.ui.eclipse.topology.views.HostSearchResults"
-            name="Connection Search"
+            name="%view.name.ConnSearch"
             restorable="true">
       </view>
       <view
@@ -127,7 +127,7 @@
             class="org.netxms.ui.eclipse.topology.views.VlanView"
             icon="icons/vlanview.gif"
             id="org.netxms.ui.eclipse.topology.views.VlanView"
-            name="VLAN View"
+            name="%view.name.VlanView"
             restorable="true">
       </view>
       <view
@@ -136,7 +136,7 @@
             class="org.netxms.ui.eclipse.topology.views.WirelessStations"
             icon="icons/wireless_stations.png"
             id="org.netxms.ui.eclipse.topology.views.WirelessStations"
-            name="Wireless Stations"
+            name="%view.name.WirelessStations"
             restorable="true">
       </view>
       <view
@@ -145,7 +145,7 @@
             class="org.netxms.ui.eclipse.topology.views.RadioInterfaces"
             icon="icons/radio_interfaces.png"
             id="org.netxms.ui.eclipse.topology.views.RadioInterfaces"
-            name="Radio Interfaces"
+            name="%view.name.RadioIfs"
             restorable="true">
       </view>
    </extension>
@@ -168,7 +168,7 @@
             class="org.netxms.ui.eclipse.topology.objecttabs.Ports"
             icon="icons/ports.gif"
             id="org.netxms.ui.eclipse.topology.objecttabs.Ports"
-            name="Ports"
+            name="%tab.name.Ports"
             order="70">
       </tab>
    </extension>

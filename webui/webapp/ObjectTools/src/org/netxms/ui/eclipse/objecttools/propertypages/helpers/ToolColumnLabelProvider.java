@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.objecttools.ObjectToolTableColumn;
+import org.netxms.ui.eclipse.objecttools.Messages;
 
 /**
  * Label provider for ObjectToolTableColumn objects
@@ -29,7 +30,7 @@ import org.netxms.client.objecttools.ObjectToolTableColumn;
  */
 public class ToolColumnLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] formatName = { "String", "Integer", "Float", "IP Address", "MAC Address", "IfIndex" };
+	private final String[] formatName = { Messages.ToolColumnLabelProvider_FmtString, Messages.ToolColumnLabelProvider_FmtInteger, Messages.ToolColumnLabelProvider_FmtFloat, Messages.ToolColumnLabelProvider_FmtIpAddr, Messages.ToolColumnLabelProvider_FmtMacAddr, Messages.ToolColumnLabelProvider_FmtIfIndex };
 	
 	private boolean snmpTable;
 	

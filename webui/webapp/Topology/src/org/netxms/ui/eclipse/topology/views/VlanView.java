@@ -58,6 +58,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.VlanLabelProvider;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -67,7 +68,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class VlanView extends ViewPart implements ISelectionChangedListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.topology.views.VlanView";
+	public static final String ID = "org.netxms.ui.eclipse.topology.views.VlanView"; //$NON-NLS-1$
 	
 	public static final int COLUMN_VLAN_ID = 0;
 	public static final int COLUMN_NAME = 1;
@@ -96,7 +97,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		nodeId = Long.parseLong(site.getSecondaryId());
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject object = session.findObjectById(nodeId);
-		setPartName("VLAN View - " + ((object != null) ? object.getObjectName() : "<" + site.getSecondaryId() + ">"));
+		setPartName(String.format(Messages.VlanView_PartName, (object != null) ? object.getObjectName() : "<" + site.getSecondaryId() + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -121,7 +122,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		layout.marginWidth = 0;
 		parent.setLayout(layout);
 		
-		final String[] names = { "ID", "Name", "Ports" };
+		final String[] names = { Messages.VlanView_ColumnID, Messages.VlanView_ColumnName, Messages.VlanView_ColumnPorts };
 		final int[] widths = { 80, 180, 400 };
 		vlanList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		vlanList.setContentProvider(new ArrayContentProvider());
@@ -158,8 +159,6 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		//scroller.getVerticalBar().setIncrement(20);
 		//scroller.getHorizontalBar().setIncrement(20);
 		scroller.addControlListener(new ControlAdapter() {
-			private static final long serialVersionUID = 1L;
-
 			public void controlResized(ControlEvent e)
 			{
 				scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
@@ -180,8 +179,6 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -189,9 +186,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 			}
 		};
 		
-		actionShowVlanMap = new Action("Show VLAN map") {
-			private static final long serialVersionUID = 1L;
-
+		actionShowVlanMap = new Action(Messages.VlanView_ShowVlanMap) {
 			@Override
 			public void run()
 			{
@@ -244,8 +239,6 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -322,11 +315,11 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 			final VlanInfo vlan = (VlanInfo)o;
 			try
 			{
-				page.showView("org.netxms.ui.eclipse.networkmaps.views.VlanMap", Long.toString(nodeId) + "&" + Integer.toString(vlan.getVlanId()), IWorkbenchPage.VIEW_ACTIVATE);
+				page.showView("org.netxms.ui.eclipse.networkmaps.views.VlanMap", Long.toString(nodeId) + "&" + Integer.toString(vlan.getVlanId()), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot open VLAN map view for VLAN " + vlan.getVlanId() + ": " + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getSite().getShell(), Messages.VlanView_Error, String.format(Messages.VlanView_OpenMapError, vlan.getVlanId(), e.getLocalizedMessage()));
 			}
 		}
 	}
@@ -336,7 +329,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	 */
 	private void refreshVlanList()
 	{
-		new ConsoleJob("Reading VLAN list from node", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.VlanView_JobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -353,7 +346,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get VLAN list from node";
+				return Messages.VlanView_JobError;
 			}
 		}.start();
 	}

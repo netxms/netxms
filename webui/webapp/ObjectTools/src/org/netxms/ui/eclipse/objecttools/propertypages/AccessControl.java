@@ -44,6 +44,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -96,7 +97,7 @@ public class AccessControl extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText("Users allowed to use this tool");
+		label.setText(Messages.AccessControl_Label);
 		
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -124,7 +125,7 @@ public class AccessControl extends PropertyPage
       buttons.setLayoutData(gd);
 
       buttonAdd = new Button(buttons, SWT.PUSH);
-      buttonAdd.setText("Add...");
+      buttonAdd.setText(Messages.AccessControl_Add);
       buttonAdd.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -143,7 +144,7 @@ public class AccessControl extends PropertyPage
       buttonAdd.setLayoutData(rd);
 		
       buttonRemove = new Button(buttons, SWT.PUSH);
-      buttonRemove.setText("Delete");
+      buttonRemove.setText(Messages.AccessControl_Delete);
       buttonRemove.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

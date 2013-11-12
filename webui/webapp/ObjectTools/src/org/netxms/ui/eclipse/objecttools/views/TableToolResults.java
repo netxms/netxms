@@ -43,6 +43,7 @@ import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.ObjectToolsCache;
 import org.netxms.ui.eclipse.objecttools.views.helpers.TableContentProvider;
 import org.netxms.ui.eclipse.objecttools.views.helpers.TableItemComparator;
@@ -56,7 +57,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class TableToolResults extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.TableToolResults";
+	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.TableToolResults"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private ObjectTool tool;
@@ -77,20 +78,20 @@ public class TableToolResults extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		// Secondary ID must by in form nodeId&pollType
-		String[] parts = site.getSecondaryId().split("&");
+		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length != 2)
-			throw new PartInitException("Internal error");
+			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		tool = ObjectToolsCache.findTool(Long.parseLong(parts[0]));
 		if (tool == null)
-			throw new PartInitException("Invalid tool ID");
+			throw new PartInitException(Messages.TableToolResults_InvalidToolID);
 		
 		nodeId = Long.parseLong(parts[1]);
 		AbstractObject object = session.findObjectById(nodeId);
 		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
-			throw new PartInitException("Invalid object ID");
+			throw new PartInitException(Messages.TableToolResults_InvalidObjectID);
 		
-		setPartName(object.getObjectName() + ": " + tool.getDisplayName());
+		setPartName(object.getObjectName() + ": " + tool.getDisplayName()); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -204,7 +205,7 @@ public class TableToolResults extends ViewPart
 	public void refreshTable()
 	{
 		viewer.setInput(null);
-		new ConsoleJob("Load data for table tool " + tool.getName(), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.TableToolResults_JobTitle, tool.getName()), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -221,7 +222,7 @@ public class TableToolResults extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get data for table tool " + tool.getName();
+				return String.format(Messages.TableToolResults_JobError, tool.getName());
 			}
 		}.start();
 	}
@@ -239,12 +240,12 @@ public class TableToolResults extends ViewPart
 			final int[] widths = new int[names.length];
 			Arrays.fill(widths, 100);
 			viewer.createColumns(names, widths, 0, SWT.UP);
-			WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableToolResults." + Long.toString(tool.getId()));
+			WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableToolResults." + Long.toString(tool.getId())); //$NON-NLS-1$
 			viewer.getTable().addDisposeListener(new DisposeListener() {
 				@Override
 				public void widgetDisposed(DisposeEvent e)
 				{
-					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableToolResults." + Long.toString(tool.getId()));
+					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableToolResults." + Long.toString(tool.getId())); //$NON-NLS-1$
 				}
 			});
 			viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
