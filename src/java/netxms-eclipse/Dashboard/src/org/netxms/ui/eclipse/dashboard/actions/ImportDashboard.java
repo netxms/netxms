@@ -173,7 +173,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ImportDashboard_ErrorPrefix + dlg.getObjectName() + Messages.ImportDashboard_ErrorSuffix;
+            return String.format(Messages.ImportDashboard_Error, dlg.getObjectName());
 			}
 		}.start();
 	}

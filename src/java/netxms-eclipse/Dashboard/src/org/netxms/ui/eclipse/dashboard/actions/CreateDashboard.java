@@ -79,7 +79,7 @@ public class CreateDashboard implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.CreateDashboard_ErrorPrefix + dlg.getObjectName() + Messages.CreateDashboard_ErrorSuffix;
+            return String.format(Messages.CreateDashboard_Error, dlg.getObjectName());
 			}
 		}.start();
 	}

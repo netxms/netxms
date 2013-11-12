@@ -59,14 +59,12 @@ public class Messages extends NLS
 	public static String AvailabilityChartElement_Up;
 	public static String AvailabilityChartElement_Uptime;
 	public static String CloneDashboard_Dashboard;
-	public static String CloneDashboard_ErrorPrefix;
-	public static String CloneDashboard_ErrorSuffix;
+	public static String CloneDashboard_Error;
 	public static String CloneDashboard_JobTitle;
 	public static String ComparisonChartElement_JobError;
 	public static String ComparisonChartElement_JobTitle;
 	public static String CreateDashboard_Dashboard;
-	public static String CreateDashboard_ErrorPrefix;
-	public static String CreateDashboard_ErrorSuffix;
+	public static String CreateDashboard_Error;
 	public static String CreateDashboard_JobTitle;
 	public static String CustomWidget_ClassName;
 	public static String DashboardControl_InternalError;
@@ -138,12 +136,6 @@ public class Messages extends NLS
 	public static String DashboardView_PartNamePrefix;
 	public static String DashboardView_Refresh;
 	public static String DashboardView_Save;
-	public static String DataSourceEditDlg_AutoColor;
-	public static String DataSourceEditDlg_Color;
-	public static String DataSourceEditDlg_CustColor;
-	public static String DataSourceEditDlg_DCI;
-	public static String DataSourceEditDlg_DisplayName;
-	public static String DataSourceEditDlg_Title;
 	public static String DataSources_Add;
 	public static String DataSources_Color;
 	public static String DataSources_Delete;
@@ -209,8 +201,7 @@ public class Messages extends NLS
 	public static String IdMatchingDialog_Title;
 	public static String IdMatchingDialog_Warning;
 	public static String IdMatchingLabelProvider_NoMatch;
-	public static String ImportDashboard_ErrorPrefix;
-	public static String ImportDashboard_ErrorSuffix;
+	public static String ImportDashboard_Error;
 	public static String ImportDashboard_InvalidFile;
 	public static String ImportDashboard_JobTitle;
 	public static String ImportDashboardDialog_AllFiles;
@@ -239,7 +230,6 @@ public class Messages extends NLS
 	public static String Layout_VSpan;
 	public static String Layout_WHint;
 	public static String LineChartElement_JobError;
-   public static String LineChartElement_JobErrorPrefix;
 	public static String LineChartElement_JobTitle;
 	public static String NetworkMap_NetworkMap;
 	public static String NetworkMap_Title;

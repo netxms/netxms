@@ -54,7 +54,7 @@ public class CloneDashboard implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.CloneDashboard_ErrorPrefix + dlg.getObjectName() + Messages.CloneDashboard_ErrorSuffix;
+					return String.format(Messages.CloneDashboard_Error, dlg.getObjectName());
 				}
 			}.start();
 		}

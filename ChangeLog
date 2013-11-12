@@ -7,6 +7,7 @@
 	- Implemented post-increment and post-decrement for array elements
 	- New functions: GetDCIValues
 - Server's ICMP ping timeout can be configured
+- DB/2 monitoring subagent
 - Management console:
 	- New command line option -fullscreen
 - Fixed issues: #150, #226, #366, #378, #384, #401, #410, #416, #419
