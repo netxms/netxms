@@ -82,8 +82,7 @@ public class Messages extends NLS
 	public static String RuleEditor_UpdateSituation;
 	public static String RuleEditor_UseRegexpForResolve;
 	public static String RuleEditor_UserRegexpForTerminate;
-	public static String RuleEditor_WithKeyPrefix;
-	public static String RuleEditor_WithKeySuffix;
+	public static String RuleEditor_WithKey;
 	public static String RuleEvents_Add;
 	public static String RuleEvents_Delete;
 	public static String RuleEvents_Event;

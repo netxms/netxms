@@ -653,20 +653,20 @@ public class RuleEditor extends Composite
 				
 				if ((rule.getAlarmKey() != null) && !rule.getAlarmKey().isEmpty())
 				{
-					createLabel(clientArea, 1, false, Messages.RuleEditor_WithKeyPrefix + rule.getAlarmKey() + Messages.RuleEditor_WithKeySuffix, null);
+					createLabel(clientArea, 1, false, String.format(Messages.RuleEditor_WithKey, rule.getAlarmKey()), null);
 				}
 			}
 			else if (rule.getAlarmSeverity() == Severity.UNMANAGED)
 			{
 				addActionGroupLabel(clientArea, Messages.RuleEditor_TerminateAlarms, editor.getImageTerminate(), listener);
-				createLabel(clientArea, 1, false, Messages.RuleEditor_WithKeyPrefix + rule.getAlarmKey() + Messages.RuleEditor_WithKeySuffix, listener);
+				createLabel(clientArea, 1, false, String.format(Messages.RuleEditor_WithKey, rule.getAlarmKey()), listener);
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
 					createLabel(clientArea, 1, false, Messages.RuleEditor_UserRegexpForTerminate, listener);
 			}
 			else if (rule.getAlarmSeverity() == Severity.DISABLED)
 			{
 				addActionGroupLabel(clientArea, Messages.RuleEditor_ResolveAlarms, editor.getImageTerminate(), listener);
-				createLabel(clientArea, 1, false, Messages.RuleEditor_WithKeyPrefix + rule.getAlarmKey() + Messages.RuleEditor_WithKeySuffix, listener);
+				createLabel(clientArea, 1, false, String.format(Messages.RuleEditor_WithKey, rule.getAlarmKey()), listener);
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
 					createLabel(clientArea, 1, false, Messages.RuleEditor_UseRegexpForResolve, listener);
 			}
