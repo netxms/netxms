@@ -92,7 +92,7 @@ public class Dot1xStatusView extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		setPartName(Messages.Dot1xStatusView_PartNamePrefix + session.getObjectName(rootObject));
+		setPartName(String.format(Messages.Dot1xStatusView_PartName, session.getObjectName(rootObject)));
 	}
 
 	/* (non-Javadoc)

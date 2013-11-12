@@ -10,7 +10,7 @@ public class Messages extends NLS
 	public static String Dot1xStatusView_ColInterface;
 	public static String Dot1xStatusView_ColPAE;
 	public static String Dot1xStatusView_ColSlotPort;
-	public static String Dot1xStatusView_PartNamePrefix;
+	public static String Dot1xStatusView_PartName;
 	public static String OpenDot1xStateView_Error;
 	public static String OpenDot1xStateView_ErrorText;
 	static
