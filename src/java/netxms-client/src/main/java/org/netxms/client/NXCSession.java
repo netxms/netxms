@@ -1340,11 +1340,10 @@ public class NXCSession
          sendMessage(request);
          NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 
-         if ((response
-            .getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION) && !ignoreProtocolVersion)
+         if ((response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION) && !ignoreProtocolVersion)
          {
-            Logger.warning("NXCSession.connect", "connection failed, server protocol version is " + response
-               .getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION));
+            Logger.warning("NXCSession.connect", "connection failed, server protocol version is " + 
+               response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION));
             throw new NXCException(RCC.BAD_PROTOCOL);
          }
 

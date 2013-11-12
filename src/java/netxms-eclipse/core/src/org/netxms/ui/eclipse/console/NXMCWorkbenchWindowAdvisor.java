@@ -152,6 +152,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       boolean success = false;
       boolean autoConnect = false;
+      boolean ignoreProtocolVersion = false;
       String password = ""; //$NON-NLS-1$
 
       CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
@@ -177,6 +178,10 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          {
             autoConnect = true;
          }
+         else if (s.equals("-ignore-protocol-version"))
+         {
+            ignoreProtocolVersion = true;
+         }
       }
 
       boolean encrypt = true;
@@ -198,7 +203,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          LoginJob job = new LoginJob(display, 
          		settings.get("Connect.Server"), //$NON-NLS-1$ 
                settings.get("Connect.Login"), //$NON-NLS-1$
-               encrypt);
+               encrypt, ignoreProtocolVersion);
 
          int authMethod;
          try

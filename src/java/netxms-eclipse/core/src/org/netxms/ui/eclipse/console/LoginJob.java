@@ -61,6 +61,7 @@ public class LoginJob implements IRunnableWithProgress
    private String server;
    private String loginName;
    private boolean encryptSession;
+   private boolean ignoreProtocolVersion;
    private int authMethod;
    private String password;
    private Signature signature;
@@ -71,12 +72,13 @@ public class LoginJob implements IRunnableWithProgress
     * @param loginName
     * @param encryptSession
     */
-   public LoginJob(Display display, String server, String loginName, boolean encryptSession)
+   public LoginJob(Display display, String server, String loginName, boolean encryptSession, boolean ignoreProtocolVersion)
    {
       this.display = display;
       this.server = server;
       this.loginName = loginName;
       this.encryptSession = encryptSession;
+      this.ignoreProtocolVersion = ignoreProtocolVersion;
       authMethod = NXCSession.AUTH_TYPE_PASSWORD;
    }
 
@@ -113,6 +115,7 @@ public class LoginJob implements IRunnableWithProgress
 
          NXCSession session = createSession(hostName, port);
          session.setConnClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
+         session.setIgnoreProtocolVersion(ignoreProtocolVersion);
          monitor.worked(1);
 
          session.connect();
