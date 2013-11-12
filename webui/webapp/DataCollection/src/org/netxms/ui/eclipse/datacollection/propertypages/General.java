@@ -62,14 +62,14 @@ public class General extends PropertyPage
 {
 	private static final String[] snmpRawTypes = 
 	{ 
-		Messages.General_SNMP_DT_None, 
-		Messages.General_SNMP_DT_int32, 
-		Messages.General_SNMP_DT_uint32,
-		Messages.General_SNMP_DT_int64, 
-		Messages.General_SNMP_DT_uint64,
-		Messages.General_SNMP_DT_float, 
-		Messages.General_SNMP_DT_ipAddr,
-		Messages.General_SNMP_DT_macAddr
+		Messages.get().General_SNMP_DT_None, 
+		Messages.get().General_SNMP_DT_int32, 
+		Messages.get().General_SNMP_DT_uint32,
+		Messages.get().General_SNMP_DT_int64, 
+		Messages.get().General_SNMP_DT_uint64,
+		Messages.get().General_SNMP_DT_float, 
+		Messages.get().General_SNMP_DT_ipAddr,
+		Messages.get().General_SNMP_DT_macAddr
 	};
 	
 	private DataCollectionObjectEditor editor;
@@ -112,7 +112,7 @@ public class General extends PropertyPage
       
       /** description area **/
       Group groupDescription = new Group(dialogArea, SWT.NONE);
-      groupDescription.setText(Messages.General_Description);
+      groupDescription.setText(Messages.get().General_Description);
       FillLayout descriptionLayout = new FillLayout();
       descriptionLayout.marginWidth = WidgetHelper.OUTER_SPACING;
       descriptionLayout.marginHeight = WidgetHelper.OUTER_SPACING;
@@ -128,7 +128,7 @@ public class General extends PropertyPage
       
       /** data area **/
       Group groupData = new Group(dialogArea, SWT.NONE);
-      groupData.setText(Messages.General_Data);
+      groupData.setText(Messages.get().General_Data);
       FormLayout dataLayout = new FormLayout();
       dataLayout.marginHeight = WidgetHelper.OUTER_SPACING;
       dataLayout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -140,12 +140,12 @@ public class General extends PropertyPage
       groupData.setLayoutData(gd);
       
       parameter = new LabeledText(groupData, SWT.NONE);
-      parameter.setLabel(Messages.General_Parameter);
+      parameter.setLabel(Messages.get().General_Parameter);
       parameter.getTextControl().setTextLimit(255);
       parameter.setText(dci.getName());
       
       selectButton = new Button(groupData, SWT.PUSH);
-      selectButton.setText(Messages.General_Select);
+      selectButton.setText(Messages.get().General_Select);
       selectButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -176,14 +176,14 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
-      origin = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.General_Origin, fd);
-      origin.add(Messages.General_SourceInternal);
-      origin.add(Messages.General_SourceAgent);
-      origin.add(Messages.General_SourceSNMP);
-      origin.add(Messages.General_SourceCPSNMP);
-      origin.add(Messages.General_SourcePush);
-      origin.add(Messages.General_WinPerf);
-      origin.add(Messages.General_SMCLP);
+      origin = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().General_Origin, fd);
+      origin.add(Messages.get().General_SourceInternal);
+      origin.add(Messages.get().General_SourceAgent);
+      origin.add(Messages.get().General_SourceSNMP);
+      origin.add(Messages.get().General_SourceCPSNMP);
+      origin.add(Messages.get().General_SourcePush);
+      origin.add(Messages.get().General_WinPerf);
+      origin.add(Messages.get().General_SMCLP);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
@@ -203,17 +203,17 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
-      dataType = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.General_DataType, fd);
-      dataType.add(Messages.General_DT_int32);
-      dataType.add(Messages.General_DT_uint32);
-      dataType.add(Messages.General_DT_int64);
-      dataType.add(Messages.General_DT_uint64);
-      dataType.add(Messages.General_DT_string);
-      dataType.add(Messages.General_DT_float);
+      dataType = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().General_DataType, fd);
+      dataType.add(Messages.get().General_DT_int32);
+      dataType.add(Messages.get().General_DT_uint32);
+      dataType.add(Messages.get().General_DT_int64);
+      dataType.add(Messages.get().General_DT_uint64);
+      dataType.add(Messages.get().General_DT_string);
+      dataType.add(Messages.get().General_DT_float);
       dataType.select(dci.getDataType());
 
       checkInterpretRawSnmpValue = new Button(groupData, SWT.CHECK);
-      checkInterpretRawSnmpValue.setText(Messages.General_InterpretRawValue);
+      checkInterpretRawSnmpValue.setText(Messages.get().General_InterpretRawValue);
       checkInterpretRawSnmpValue.setSelection(dci.isSnmpRawValueInOctetString());
       checkInterpretRawSnmpValue.addSelectionListener(new SelectionListener() {
 			@Override
@@ -246,7 +246,7 @@ public class General extends PropertyPage
       snmpRawType.setLayoutData(fd);
       
       checkUseCustomSnmpPort = new Button(groupData, SWT.CHECK);
-      checkUseCustomSnmpPort.setText(Messages.General_UseCustomPort);
+      checkUseCustomSnmpPort.setText(Messages.get().General_UseCustomPort);
       checkUseCustomSnmpPort.setSelection(dci.getSnmpPort() != 0);
       checkUseCustomSnmpPort.addSelectionListener(new SelectionListener() {
 			@Override
@@ -290,12 +290,12 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
-      sampleCount = WidgetHelper.createLabeledSpinner(groupData, SWT.BORDER, Messages.General_SampleCountForAvg, 0, 65535, fd);
+      sampleCount = WidgetHelper.createLabeledSpinner(groupData, SWT.BORDER, Messages.get().General_SampleCountForAvg, 0, 65535, fd);
       sampleCount.setSelection(dci.getSampleCount());
 		sampleCount.setEnabled(dci.getOrigin() == DataCollectionItem.WINPERF);
       
       proxyNode = new ObjectSelector(groupData, SWT.NONE, true);
-      proxyNode.setLabel(Messages.General_ProxyNode);
+      proxyNode.setLabel(Messages.get().General_ProxyNode);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(sampleCount.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
@@ -307,7 +307,7 @@ public class General extends PropertyPage
       
       /** polling area **/
       Group groupPolling = new Group(dialogArea, SWT.NONE);
-      groupPolling.setText(Messages.General_Polling);
+      groupPolling.setText(Messages.get().General_Polling);
       FormLayout pollingLayout = new FormLayout();
       pollingLayout.marginHeight = WidgetHelper.OUTER_SPACING;
       pollingLayout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -322,9 +322,9 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
       fd.top = new FormAttachment(0, 0);
-      schedulingMode = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.General_PollingMode, fd);
-      schedulingMode.add(Messages.General_FixedIntervals);
-      schedulingMode.add(Messages.General_CustomSchedule);
+      schedulingMode = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.get().General_PollingMode, fd);
+      schedulingMode.add(Messages.get().General_FixedIntervals);
+      schedulingMode.add(Messages.get().General_CustomSchedule);
       schedulingMode.select(dci.isUseAdvancedSchedule() ? 1 : 0);
       schedulingMode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
@@ -345,13 +345,13 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(0, 0);
-      pollingInterval = WidgetHelper.createLabeledSpinner(groupPolling, SWT.BORDER, Messages.General_PollingInterval, 1, 99999, fd);
+      pollingInterval = WidgetHelper.createLabeledSpinner(groupPolling, SWT.BORDER, Messages.get().General_PollingInterval, 1, 99999, fd);
       pollingInterval.setSelection(dci.getPollingInterval());
       pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
       
       /** status **/
       Group groupStatus = new Group(dialogArea, SWT.NONE);
-      groupStatus.setText(Messages.General_Status);
+      groupStatus.setText(Messages.get().General_Status);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -361,20 +361,20 @@ public class General extends PropertyPage
       groupStatus.setLayout(statusLayout);
       
       statusActive = new Button(groupStatus, SWT.RADIO);
-      statusActive.setText(Messages.General_Active);
+      statusActive.setText(Messages.get().General_Active);
       statusActive.setSelection(dci.getStatus() == DataCollectionItem.ACTIVE);
       
       statusDisabled = new Button(groupStatus, SWT.RADIO);
-      statusDisabled.setText(Messages.General_Disabled);
+      statusDisabled.setText(Messages.get().General_Disabled);
       statusDisabled.setSelection(dci.getStatus() == DataCollectionItem.DISABLED);
       
       statusUnsupported = new Button(groupStatus, SWT.RADIO);
-      statusUnsupported.setText(Messages.General_NotSupported);
+      statusUnsupported.setText(Messages.get().General_NotSupported);
       statusUnsupported.setSelection(dci.getStatus() == DataCollectionItem.NOT_SUPPORTED);
       
       /** storage **/
       Group groupStorage = new Group(dialogArea, SWT.NONE);
-      groupStorage.setText(Messages.General_Storage);
+      groupStorage.setText(Messages.get().General_Storage);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -385,7 +385,7 @@ public class General extends PropertyPage
       storageLayout.marginHeight = WidgetHelper.OUTER_SPACING;
       groupStorage.setLayout(storageLayout);
       
-      retentionTime = WidgetHelper.createLabeledSpinner(groupStorage, SWT.BORDER, Messages.General_RetentionTime, 1, 99999, null);
+      retentionTime = WidgetHelper.createLabeledSpinner(groupStorage, SWT.BORDER, Messages.get().General_RetentionTime, 1, 99999, null);
       retentionTime.setSelection(dci.getRetentionTime());
       
       return dialogArea;

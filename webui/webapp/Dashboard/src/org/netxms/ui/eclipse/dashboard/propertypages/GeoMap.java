@@ -59,7 +59,7 @@ public class GeoMap extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-		title.setLabel(Messages.GeoMap_Title);
+		title.setLabel(Messages.get().GeoMap_Title);
 		title.setText(config.getTitle());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -68,7 +68,7 @@ public class GeoMap extends PropertyPage
 		title.setLayoutData(gd);
 		
 		latitude = new LabeledText(dialogArea, SWT.NONE);
-		latitude.setLabel(Messages.GeoMap_Latitude);
+		latitude.setLabel(Messages.get().GeoMap_Latitude);
 		latitude.setText(GeoLocation.latitudeToString(config.getLatitude()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -76,14 +76,14 @@ public class GeoMap extends PropertyPage
 		latitude.setLayoutData(gd);
 		
 		longitude = new LabeledText(dialogArea, SWT.NONE);
-		longitude.setLabel(Messages.GeoMap_Longitude);
+		longitude.setLabel(Messages.get().GeoMap_Longitude);
 		longitude.setText(GeoLocation.longitudeToString(config.getLongitude()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		longitude.setLayoutData(gd);
 		
-		zoom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.GeoMap_Zoom, 0, 18, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		zoom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().GeoMap_Zoom, 0, 18, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		zoom.setSelection(config.getZoom());
 		
 		return dialogArea;
@@ -103,7 +103,7 @@ public class GeoMap extends PropertyPage
 		}
 		catch(GeoLocationFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.GeoMap_Error, Messages.GeoMap_ErrorText);
+			MessageDialogHelper.openError(getShell(), Messages.get().GeoMap_Error, Messages.get().GeoMap_ErrorText);
 		}
 		config.setTitle(title.getText());
 		config.setZoom(zoom.getSelection());

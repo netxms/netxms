@@ -125,7 +125,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Display display = Display.getCurrent();
 		
-		new ConsoleJob(Messages.ImportDashboard_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ImportDashboard_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -135,7 +135,7 @@ public class ImportDashboard implements IObjectActionDelegate
 				
 				Element root = dom.getDocumentElement();
 				if (!root.getNodeName().equals("dashboard")) //$NON-NLS-1$
-					throw new Exception(Messages.ImportDashboard_InvalidFile);
+					throw new Exception(Messages.get().ImportDashboard_InvalidFile);
 				
 				root.normalize();
 				
@@ -173,7 +173,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ImportDashboard_ErrorPrefix + dlg.getObjectName() + Messages.ImportDashboard_ErrorSuffix;
+				return Messages.get().ImportDashboard_ErrorPrefix + dlg.getObjectName() + Messages.get().ImportDashboard_ErrorSuffix;
 			}
 		}.start();
 	}

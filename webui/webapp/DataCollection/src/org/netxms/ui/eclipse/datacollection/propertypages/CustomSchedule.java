@@ -78,7 +78,7 @@ public class CustomSchedule extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.CustomSchedule_Schedule };
+      final String[] columnNames = { Messages.get().CustomSchedule_Schedule };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -125,7 +125,7 @@ public class CustomSchedule extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.CustomSchedule_Add);
+      addButton.setText(Messages.get().CustomSchedule_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -144,7 +144,7 @@ public class CustomSchedule extends PropertyPage
       });
 		
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText(Messages.CustomSchedule_Edit);
+      editButton.setText(Messages.get().CustomSchedule_Edit);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -163,7 +163,7 @@ public class CustomSchedule extends PropertyPage
       });
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.CustomSchedule_Delete);
+      deleteButton.setText(Messages.get().CustomSchedule_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);

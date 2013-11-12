@@ -34,7 +34,7 @@ public class NetworkMapOpenHandler implements ObjectOpenHandler
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(window.getShell(), Messages.NetworkMapOpenHandler_Error, String.format(Messages.NetworkMapOpenHandler_ErrorText, e.getLocalizedMessage()));
+			MessageDialogHelper.openError(window.getShell(), Messages.get().NetworkMapOpenHandler_Error, String.format(Messages.get().NetworkMapOpenHandler_ErrorText, e.getLocalizedMessage()));
 		}
 		return true;
 	}

@@ -428,7 +428,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		final Rectangle controlSize = graph.getClientArea();
 		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
 		final Point mapSize = new Point(Math.min(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
-		ConsoleJob job = new ConsoleJob(Messages.ExtendedGraphViewer_DownloadTilesJob, null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().ExtendedGraphViewer_DownloadTilesJob, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -459,7 +459,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ExtendedGraphViewer_DownloadTilesError;
+				return Messages.get().ExtendedGraphViewer_DownloadTilesError;
 			}
 		};
 		job.setUser(false);

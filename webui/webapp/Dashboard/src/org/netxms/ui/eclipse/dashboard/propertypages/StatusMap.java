@@ -60,7 +60,7 @@ public class StatusMap extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-		objectSelector.setLabel(Messages.AlarmViewer_RootObject);
+		objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
 		GridData gd = new GridData();
@@ -69,7 +69,7 @@ public class StatusMap extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.AlarmViewer_Title);
+		title.setLabel(Messages.get().AlarmViewer_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

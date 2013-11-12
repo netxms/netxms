@@ -109,7 +109,7 @@ public class RuleSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.ActionSelectionDialog_Filter);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().ActionSelectionDialog_Filter);
 		
 		filterText = new Text(dialogArea, SWT.NONE);
 		GridData gd = new GridData();

@@ -1,129 +1,132 @@
 package org.netxms.ui.eclipse.objecttools;
 
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.swt.widgets.Display;
+
 
 public class Messages extends NLS
 {
    private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.objecttools.messages"; //$NON-NLS-1$
-   public static String AccessControl_Add;
-   public static String AccessControl_Delete;
-   public static String AccessControl_Label;
-   public static String BrowserView_Back;
-   public static String BrowserView_Forward;
-   public static String BrowserView_PartName_Changed;
-   public static String BrowserView_PartName_Changing;
-   public static String BrowserView_Stop;
-   public static String Columns_Add;
-   public static String Columns_DefName;
-   public static String Columns_Delete;
-   public static String Columns_Edit;
-   public static String Columns_Format;
-   public static String Columns_Index;
-   public static String Columns_Name;
-   public static String Columns_OID;
-   public static String CreateNewToolDialog_Name;
-   public static String CreateNewToolDialog_ToolType;
-   public static String EditColumnDialog_CreateColumn;
-   public static String EditColumnDialog_EditColumn;
-   public static String EditColumnDialog_EnterValidIndex;
-   public static String EditColumnDialog_FmtFloat;
-   public static String EditColumnDialog_FmtIfIndex;
-   public static String EditColumnDialog_FmtInt;
-   public static String EditColumnDialog_FmtIpAddr;
-   public static String EditColumnDialog_FmtMacAddr;
-   public static String EditColumnDialog_FmtString;
-   public static String EditColumnDialog_Format;
-   public static String EditColumnDialog_Name;
-   public static String EditColumnDialog_SNMP_OID;
-   public static String EditColumnDialog_SubstrIndex;
-   public static String EditColumnDialog_Warning;
-   public static String FileViewer_InvalidObjectID;
-   public static String Filter_AgentNeeded;
-   public static String Filter_OIDShouldMatch;
-   public static String Filter_SNMPNeeded;
-   public static String General_AgentAction;
-   public static String General_Command;
-   public static String General_Confirmation;
-   public static String General_ConfirmationMessage;
-   public static String General_Description;
-   public static String General_ExecOptions;
-   public static String General_FirstColumnValue;
-   public static String General_GeneratesOutput;
-   public static String General_Name;
-   public static String General_OIDSuffix;
-   public static String General_Operation;
-   public static String General_Parameter;
-   public static String General_RegExp;
-   public static String General_RemoteFileName;
-   public static String General_RequiresConfirmation;
-   public static String General_SNMPTableOptions;
-   public static String General_Title;
-   public static String General_URL;
-   public static String General_UseAsIndex;
-   public static String LocalCommandResults_ClearConsole;
-   public static String LocalCommandResults_Copy;
-   public static String LocalCommandResults_JobError;
-   public static String LocalCommandResults_JobTitle;
-   public static String LocalCommandResults_Restart;
-   public static String LocalCommandResults_ScrollLock;
-   public static String LocalCommandResults_SelectAll;
-   public static String LocalCommandResults_Terminate;
-   public static String LocalCommandResults_Terminated;
-   public static String ObjectToolsAdapterFactory_Error;
-   public static String ObjectToolsAdapterFactory_LoaderErrorText;
-   public static String ObjectToolsDynamicMenu_CannotExecuteOnNode;
-   public static String ObjectToolsDynamicMenu_CannotOpenWebBrowser;
-   public static String ObjectToolsDynamicMenu_ConfirmExec;
-   public static String ObjectToolsDynamicMenu_DownloadError;
-   public static String ObjectToolsDynamicMenu_DownloadFromAgent;
-   public static String ObjectToolsDynamicMenu_Error;
-   public static String ObjectToolsDynamicMenu_ErrorOpeningView;
-   public static String ObjectToolsDynamicMenu_ExecSuccess;
-   public static String ObjectToolsDynamicMenu_ExecuteOnNode;
-   public static String ObjectToolsDynamicMenu_ExecuteServerCmd;
-   public static String ObjectToolsDynamicMenu_HandlerNotDefined;
-   public static String ObjectToolsDynamicMenu_Information;
-   public static String ObjectToolsDynamicMenu_MultipleNodes;
-   public static String ObjectToolsDynamicMenu_ServerCmdExecError;
-   public static String ObjectToolsDynamicMenu_ServerCommandExecuted;
-   public static String ObjectToolsDynamicMenu_ToolExecution;
-   public static String ObjectToolsDynamicMenu_TopLevelLabel;
-   public static String ObjectToolsEditor_ColDescr;
-   public static String ObjectToolsEditor_ColId;
-   public static String ObjectToolsEditor_ColName;
-   public static String ObjectToolsEditor_ColType;
-   public static String ObjectToolsEditor_Confirmation;
-   public static String ObjectToolsEditor_Delete;
-   public static String ObjectToolsEditor_DeleteConfirmation;
-   public static String ObjectToolsEditor_JobDelete;
-   public static String ObjectToolsEditor_JobDeleteError;
-   public static String ObjectToolsEditor_JobGetConfig;
-   public static String ObjectToolsEditor_JobGetConfigError;
-   public static String ObjectToolsEditor_JobNewId;
-   public static String ObjectToolsEditor_JobNewIdError;
-   public static String ObjectToolsEditor_JobSave;
-   public static String ObjectToolsEditor_JobSaveError;
-   public static String ObjectToolsEditor_New;
-   public static String ObjectToolsLabelProvider_TypeAction;
-   public static String ObjectToolsLabelProvider_TypeAgentTable;
-   public static String ObjectToolsLabelProvider_TypeDownloadFile;
-   public static String ObjectToolsLabelProvider_TypeInternal;
-   public static String ObjectToolsLabelProvider_TypeLocalCmd;
-   public static String ObjectToolsLabelProvider_TypeServerCmd;
-   public static String ObjectToolsLabelProvider_TypeSNMPTable;
-   public static String ObjectToolsLabelProvider_TypeURL;
-   public static String OpenObjectToolsEditor_Error;
-   public static String OpenObjectToolsEditor_ErrorOpenView;
-   public static String TableToolResults_InvalidObjectID;
-   public static String TableToolResults_InvalidToolID;
-   public static String TableToolResults_JobError;
-   public static String TableToolResults_JobTitle;
-   public static String ToolColumnLabelProvider_FmtFloat;
-   public static String ToolColumnLabelProvider_FmtIfIndex;
-   public static String ToolColumnLabelProvider_FmtInteger;
-   public static String ToolColumnLabelProvider_FmtIpAddr;
-   public static String ToolColumnLabelProvider_FmtMacAddr;
-   public static String ToolColumnLabelProvider_FmtString;
+   public String AccessControl_Add;
+   public String AccessControl_Delete;
+   public String AccessControl_Label;
+   public String BrowserView_Back;
+   public String BrowserView_Forward;
+   public String BrowserView_PartName_Changed;
+   public String BrowserView_PartName_Changing;
+   public String BrowserView_Stop;
+   public String Columns_Add;
+   public String Columns_DefName;
+   public String Columns_Delete;
+   public String Columns_Edit;
+   public String Columns_Format;
+   public String Columns_Index;
+   public String Columns_Name;
+   public String Columns_OID;
+   public String CreateNewToolDialog_Name;
+   public String CreateNewToolDialog_ToolType;
+   public String EditColumnDialog_CreateColumn;
+   public String EditColumnDialog_EditColumn;
+   public String EditColumnDialog_EnterValidIndex;
+   public String EditColumnDialog_FmtFloat;
+   public String EditColumnDialog_FmtIfIndex;
+   public String EditColumnDialog_FmtInt;
+   public String EditColumnDialog_FmtIpAddr;
+   public String EditColumnDialog_FmtMacAddr;
+   public String EditColumnDialog_FmtString;
+   public String EditColumnDialog_Format;
+   public String EditColumnDialog_Name;
+   public String EditColumnDialog_SNMP_OID;
+   public String EditColumnDialog_SubstrIndex;
+   public String EditColumnDialog_Warning;
+   public String FileViewer_InvalidObjectID;
+   public String Filter_AgentNeeded;
+   public String Filter_OIDShouldMatch;
+   public String Filter_SNMPNeeded;
+   public String General_AgentAction;
+   public String General_Command;
+   public String General_Confirmation;
+   public String General_ConfirmationMessage;
+   public String General_Description;
+   public String General_ExecOptions;
+   public String General_FirstColumnValue;
+   public String General_GeneratesOutput;
+   public String General_Name;
+   public String General_OIDSuffix;
+   public String General_Operation;
+   public String General_Parameter;
+   public String General_RegExp;
+   public String General_RemoteFileName;
+   public String General_RequiresConfirmation;
+   public String General_SNMPTableOptions;
+   public String General_Title;
+   public String General_URL;
+   public String General_UseAsIndex;
+   public String LocalCommandResults_ClearConsole;
+   public String LocalCommandResults_Copy;
+   public String LocalCommandResults_JobError;
+   public String LocalCommandResults_JobTitle;
+   public String LocalCommandResults_Restart;
+   public String LocalCommandResults_ScrollLock;
+   public String LocalCommandResults_SelectAll;
+   public String LocalCommandResults_Terminate;
+   public String LocalCommandResults_Terminated;
+   public String ObjectToolsAdapterFactory_Error;
+   public String ObjectToolsAdapterFactory_LoaderErrorText;
+   public String ObjectToolsDynamicMenu_CannotExecuteOnNode;
+   public String ObjectToolsDynamicMenu_CannotOpenWebBrowser;
+   public String ObjectToolsDynamicMenu_ConfirmExec;
+   public String ObjectToolsDynamicMenu_DownloadError;
+   public String ObjectToolsDynamicMenu_DownloadFromAgent;
+   public String ObjectToolsDynamicMenu_Error;
+   public String ObjectToolsDynamicMenu_ErrorOpeningView;
+   public String ObjectToolsDynamicMenu_ExecSuccess;
+   public String ObjectToolsDynamicMenu_ExecuteOnNode;
+   public String ObjectToolsDynamicMenu_ExecuteServerCmd;
+   public String ObjectToolsDynamicMenu_HandlerNotDefined;
+   public String ObjectToolsDynamicMenu_Information;
+   public String ObjectToolsDynamicMenu_MultipleNodes;
+   public String ObjectToolsDynamicMenu_ServerCmdExecError;
+   public String ObjectToolsDynamicMenu_ServerCommandExecuted;
+   public String ObjectToolsDynamicMenu_ToolExecution;
+   public String ObjectToolsDynamicMenu_TopLevelLabel;
+   public String ObjectToolsEditor_ColDescr;
+   public String ObjectToolsEditor_ColId;
+   public String ObjectToolsEditor_ColName;
+   public String ObjectToolsEditor_ColType;
+   public String ObjectToolsEditor_Confirmation;
+   public String ObjectToolsEditor_Delete;
+   public String ObjectToolsEditor_DeleteConfirmation;
+   public String ObjectToolsEditor_JobDelete;
+   public String ObjectToolsEditor_JobDeleteError;
+   public String ObjectToolsEditor_JobGetConfig;
+   public String ObjectToolsEditor_JobGetConfigError;
+   public String ObjectToolsEditor_JobNewId;
+   public String ObjectToolsEditor_JobNewIdError;
+   public String ObjectToolsEditor_JobSave;
+   public String ObjectToolsEditor_JobSaveError;
+   public String ObjectToolsEditor_New;
+   public String ObjectToolsLabelProvider_TypeAction;
+   public String ObjectToolsLabelProvider_TypeAgentTable;
+   public String ObjectToolsLabelProvider_TypeDownloadFile;
+   public String ObjectToolsLabelProvider_TypeInternal;
+   public String ObjectToolsLabelProvider_TypeLocalCmd;
+   public String ObjectToolsLabelProvider_TypeServerCmd;
+   public String ObjectToolsLabelProvider_TypeSNMPTable;
+   public String ObjectToolsLabelProvider_TypeURL;
+   public String OpenObjectToolsEditor_Error;
+   public String OpenObjectToolsEditor_ErrorOpenView;
+   public String TableToolResults_InvalidObjectID;
+   public String TableToolResults_InvalidToolID;
+   public String TableToolResults_JobError;
+   public String TableToolResults_JobTitle;
+   public String ToolColumnLabelProvider_FmtFloat;
+   public String ToolColumnLabelProvider_FmtIfIndex;
+   public String ToolColumnLabelProvider_FmtInteger;
+   public String ToolColumnLabelProvider_FmtIpAddr;
+   public String ToolColumnLabelProvider_FmtMacAddr;
+   public String ToolColumnLabelProvider_FmtString;
    static
    {
       // initialize resource bundle
@@ -133,4 +136,43 @@ public class Messages extends NLS
    private Messages()
    {
    }
+
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get()
+	{
+		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+	}
+
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get(Display display)
+	{
+		CallHelper r = new CallHelper();
+		display.syncExec(r);
+		return r.messages;
+	}
+	
+	/**
+	 * Helper class to call RWT.NLS.getISO8859_1Encoded from non-UI thread
+	 */
+	private static class CallHelper implements Runnable
+	{
+		Messages messages;
+		
+		@Override
+		public void run()
+		{
+			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+		}
+	}
 }
+

@@ -43,8 +43,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class EventConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.EventConditionEditor_Is, Messages.EventConditionEditor_IsNot };
-	private static final String EMPTY_SELECTION_TEXT = Messages.EventConditionEditor_None;
+	private static final String[] OPERATIONS = { Messages.get().EventConditionEditor_Is, Messages.get().EventConditionEditor_IsNot };
+	private static final String EMPTY_SELECTION_TEXT = Messages.get().EventConditionEditor_None;
 	
 	private WorkbenchLabelProvider labelProvider;
 	private long eventCode = 0;

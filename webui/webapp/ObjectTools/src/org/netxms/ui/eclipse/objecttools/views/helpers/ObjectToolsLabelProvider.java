@@ -33,14 +33,14 @@ import org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor;
 public class ObjectToolsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private final String[] toolTypes = { 
-		Messages.ObjectToolsLabelProvider_TypeInternal, 
-		Messages.ObjectToolsLabelProvider_TypeAction, 
-		Messages.ObjectToolsLabelProvider_TypeSNMPTable, 
-		Messages.ObjectToolsLabelProvider_TypeAgentTable, 
-		Messages.ObjectToolsLabelProvider_TypeURL,
-		Messages.ObjectToolsLabelProvider_TypeLocalCmd,
-		Messages.ObjectToolsLabelProvider_TypeServerCmd,
-		Messages.ObjectToolsLabelProvider_TypeDownloadFile
+		Messages.get().ObjectToolsLabelProvider_TypeInternal, 
+		Messages.get().ObjectToolsLabelProvider_TypeAction, 
+		Messages.get().ObjectToolsLabelProvider_TypeSNMPTable, 
+		Messages.get().ObjectToolsLabelProvider_TypeAgentTable, 
+		Messages.get().ObjectToolsLabelProvider_TypeURL,
+		Messages.get().ObjectToolsLabelProvider_TypeLocalCmd,
+		Messages.get().ObjectToolsLabelProvider_TypeServerCmd,
+		Messages.get().ObjectToolsLabelProvider_TypeDownloadFile
 	};
 	
 	private Image[] toolTypeImages = new Image[toolTypes.length];

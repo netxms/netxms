@@ -64,11 +64,11 @@ public class ApplyTemplate implements IObjectActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.ApplyTemplate_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().ApplyTemplate_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ApplyTemplate_JobError;
+					return Messages.get().ApplyTemplate_JobError;
 				}
 
 				@Override

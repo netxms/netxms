@@ -68,7 +68,7 @@ public class SnmpTrapLabelProvider implements ITableLabelProvider
 				return trap.getObjectId().toString();
 			case SnmpTrapEditor.COLUMN_EVENT:
 				EventTemplate evt = session.findEventTemplateByCode(trap.getEventCode());
-				return (evt != null) ? evt.getName() : Messages.SnmpTrapLabelProvider_Unknown;
+				return (evt != null) ? evt.getName() : Messages.get().SnmpTrapLabelProvider_Unknown;
 			case SnmpTrapEditor.COLUMN_DESCRIPTION:
 				return trap.getDescription();
 		}

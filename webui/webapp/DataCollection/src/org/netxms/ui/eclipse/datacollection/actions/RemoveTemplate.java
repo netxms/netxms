@@ -68,11 +68,11 @@ public class RemoveTemplate implements IObjectActionDelegate
 			if (dlg2.open() == Window.OK)
 			{
 				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				new ConsoleJob(Messages.RemoveTemplate_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(Messages.get().RemoveTemplate_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 					@Override
 					protected String getErrorMessage()
 					{
-						return Messages.RemoveTemplate_JobError;
+						return Messages.get().RemoveTemplate_JobError;
 					}
 	
 					@Override

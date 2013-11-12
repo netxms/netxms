@@ -56,7 +56,7 @@ public class CreateBusinessServiceDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.CreateBusinessServiceDialog_Title);
+		newShell.setText(Messages.get().CreateBusinessServiceDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -74,7 +74,7 @@ public class CreateBusinessServiceDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel(Messages.CreateBusinessServiceDialog_Name);
+		nameField.setLabel(Messages.get().CreateBusinessServiceDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -94,7 +94,7 @@ public class CreateBusinessServiceDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), Messages.CreateBusinessServiceDialog_Warning, Messages.CreateBusinessServiceDialog_WarningText);
+			MessageDialog.openWarning(getShell(), Messages.get().CreateBusinessServiceDialog_Warning, Messages.get().CreateBusinessServiceDialog_WarningText);
 			return;
 		}
 		

@@ -66,7 +66,7 @@ public class EnterMacAddressDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		textMac = new LabeledText(dialogArea, SWT.NONE);
-		textMac.setLabel(Messages.EnterMacAddressDlg_MacAddress);
+		textMac.setLabel(Messages.get().EnterMacAddressDlg_MacAddress);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -89,7 +89,7 @@ public class EnterMacAddressDlg extends Dialog
 		}
 		catch(MacAddressFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.EnterMacAddressDlg_Error, Messages.EnterMacAddressDlg_IncorrectMacAddress);
+			MessageDialogHelper.openError(getShell(), Messages.get().EnterMacAddressDlg_Error, Messages.get().EnterMacAddressDlg_IncorrectMacAddress);
 		}
 	}
 
@@ -107,7 +107,7 @@ public class EnterMacAddressDlg extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText(Messages.EnterMacAddressDlg_Title);
+		newShell.setText(Messages.get().EnterMacAddressDlg_Title);
 		super.configureShell(newShell);
 	}
 }

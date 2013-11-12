@@ -98,7 +98,7 @@ public class UserManagementView extends ViewPart
 		session = ConsoleSharedData.getSession();
 		userManager = (UserManager)ConsoleSharedData.getSession();
 
-		final String[] names = { Messages.UserManagementView_Name, Messages.UserManagementView_Type, Messages.UserManagementView_FullName, Messages.UserManagementView_Description, Messages.UserManagementView_GUID };
+		final String[] names = { Messages.get().UserManagementView_Name, Messages.get().UserManagementView_Type, Messages.get().UserManagementView_FullName, Messages.get().UserManagementView_Description, Messages.get().UserManagementView_GUID };
 		final int[] widths = { 100, 80, 180, 250, 250 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -155,7 +155,7 @@ public class UserManagementView extends ViewPart
 		};
 
 		// Request server to lock user database, and on success refresh view
-		new ConsoleJob(Messages.UserManagementView_OpenJobName, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().UserManagementView_OpenJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -186,7 +186,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.UserManagementView_OpenJobError;
+				return Messages.get().UserManagementView_OpenJobError;
 			}
 		}.start();
 	}
@@ -262,7 +262,7 @@ public class UserManagementView extends ViewPart
 				addUser();
 			}
 		};
-		actionAddUser.setText(Messages.UserManagementView_CreateNewUser);
+		actionAddUser.setText(Messages.get().UserManagementView_CreateNewUser);
 		actionAddUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_add.png")); //$NON-NLS-1$
 
 		actionAddGroup = new Action()
@@ -276,11 +276,11 @@ public class UserManagementView extends ViewPart
 				addGroup();
 			}
 		};
-		actionAddGroup.setText(Messages.UserManagementView_CreateNewGroup);
+		actionAddGroup.setText(Messages.get().UserManagementView_CreateNewGroup);
 		actionAddGroup.setImageDescriptor(Activator.getImageDescriptor("icons/group_add.png")); //$NON-NLS-1$
 
 		actionEditUser = new PropertyDialogAction(getSite(), viewer);
-		actionEditUser.setText(Messages.UserManagementView_Properties);
+		actionEditUser.setText(Messages.get().UserManagementView_Properties);
 		actionEditUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_edit.png")); //$NON-NLS-1$
 		actionEditUser.setEnabled(false);
 
@@ -295,7 +295,7 @@ public class UserManagementView extends ViewPart
 				deleteUser();
 			}
 		};
-		actionDeleteUser.setText(Messages.UserManagementView_Delete);
+		actionDeleteUser.setText(Messages.get().UserManagementView_Delete);
 		actionDeleteUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_delete.png")); //$NON-NLS-1$
 		actionDeleteUser.setEnabled(false);
 
@@ -318,13 +318,13 @@ public class UserManagementView extends ViewPart
 						}
 						catch(Exception e)
 						{
-							MessageDialogHelper.openError(getSite().getShell(), Messages.UserManagementView_CannotChangePassword, e.getMessage());
+							MessageDialogHelper.openError(getSite().getShell(), Messages.get().UserManagementView_CannotChangePassword, e.getMessage());
 						}
 					}
 				}
 			}
 		};
-		actionChangePassword.setText(Messages.UserManagementView_ChangePassword);
+		actionChangePassword.setText(Messages.get().UserManagementView_ChangePassword);
 		actionChangePassword.setImageDescriptor(Activator.getImageDescriptor("icons/change_password.png")); //$NON-NLS-1$
 		actionChangePassword.setEnabled(false);
 	}
@@ -396,7 +396,7 @@ public class UserManagementView extends ViewPart
 			session.removeListener(sessionListener);
 		if (databaseLocked)
 		{
-			new ConsoleJob(Messages.UserManagementView_UnlockJobName, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().UserManagementView_UnlockJobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -406,7 +406,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.UserManagementView_UnlockJobError;
+					return Messages.get().UserManagementView_UnlockJobError;
 				}
 			}.start();
 		}
@@ -421,7 +421,7 @@ public class UserManagementView extends ViewPart
 		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), true);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.UserManagementView_CreateUserJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+			new ConsoleJob(Messages.get().UserManagementView_CreateUserJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -432,7 +432,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.UserManagementView_CreateUserJobError;
+					return Messages.get().UserManagementView_CreateUserJobError;
 				}
 			}.start();
 		}
@@ -446,7 +446,7 @@ public class UserManagementView extends ViewPart
 		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.UserManagementView_CreateGroupJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+			new ConsoleJob(Messages.get().UserManagementView_CreateGroupJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -457,7 +457,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.UserManagementView_CreateGroupJobError;
+					return Messages.get().UserManagementView_CreateGroupJobError;
 				}
 			}.start();
 		}
@@ -470,14 +470,14 @@ public class UserManagementView extends ViewPart
 	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-		final String message = (selection.size() == 1) ? Messages.UserManagementView_ConfirmDeleteSingular : Messages.UserManagementView_ConfirmDeletePlural;
+		final String message = (selection.size() == 1) ? Messages.get().UserManagementView_ConfirmDeleteSingular : Messages.get().UserManagementView_ConfirmDeletePlural;
 		final Shell shell = getViewSite().getShell();
-		if (!MessageDialogHelper.openQuestion(shell, Messages.UserManagementView_ConfirmDeleteTitle, message))
+		if (!MessageDialogHelper.openQuestion(shell, Messages.get().UserManagementView_ConfirmDeleteTitle, message))
 		{
 			return;
 		}
 
-		new ConsoleJob(Messages.UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+		new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -490,7 +490,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.UserManagementView_DeleteJobError;
+				return Messages.get().UserManagementView_DeleteJobError;
 			}
 		}.start();
 	}

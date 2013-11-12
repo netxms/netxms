@@ -63,7 +63,7 @@ public class CreateObjectDialog extends Dialog
 		dialogArea.setLayout(layout);
 
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText(Messages.CreateObjectDialog_LoginName);
+		label.setText(Messages.get().CreateObjectDialog_LoginName);
 
 		textLogin = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
 		textLogin.setTextLimit(63);
@@ -74,7 +74,7 @@ public class CreateObjectDialog extends Dialog
 		label.setText(""); //$NON-NLS-1$
 
 		checkEdit = new Button(dialogArea, SWT.CHECK);
-		checkEdit.setText(Messages.CreateObjectDialog_DefAddProp);
+		checkEdit.setText(Messages.get().CreateObjectDialog_DefAddProp);
 		checkEdit.setSelection(true);
 
 		return dialogArea;
@@ -87,7 +87,7 @@ public class CreateObjectDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(isUser ? Messages.CreateObjectDialog_NewUser : Messages.CreateObjectDialog_NewGroup);
+		newShell.setText(isUser ? Messages.get().CreateObjectDialog_NewUser : Messages.get().CreateObjectDialog_NewGroup);
 	}
 
 	/**

@@ -71,7 +71,7 @@ public class SelectServerFileDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SelectServerFileDialog_Title);
+		newShell.setText(Messages.get().SelectServerFileDialog_Title);
 	}
 	
 	/* (non-Javadoc)
@@ -87,7 +87,7 @@ public class SelectServerFileDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		final String[] names = { Messages.SelectServerFileDialog_ColName, Messages.SelectServerFileDialog_ColSize, Messages.SelectServerFileDialog_ColModTime };
+		final String[] names = { Messages.get().SelectServerFileDialog_ColName, Messages.get().SelectServerFileDialog_ColSize, Messages.get().SelectServerFileDialog_ColModTime };
 		final int[] widths = { 200, 100, 150 };
 		viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.BORDER);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -109,7 +109,7 @@ public class SelectServerFileDialog extends Dialog
 		});
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -126,7 +126,7 @@ public class SelectServerFileDialog extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SelectServerFileDialog_JobError;
+				return Messages.get().SelectServerFileDialog_JobError;
 			}
 		}.start();
 		
@@ -143,7 +143,7 @@ public class SelectServerFileDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), Messages.SelectServerFileDialog_Warning, Messages.SelectServerFileDialog_WarningText);
+			MessageDialog.openWarning(getShell(), Messages.get().SelectServerFileDialog_Warning, Messages.get().SelectServerFileDialog_WarningText);
 			return;
 		}
 		

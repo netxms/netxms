@@ -132,7 +132,7 @@ public class Columns extends PropertyPage
       buttons.setLayoutData(gd);
 
       buttonAdd = new Button(buttons, SWT.PUSH);
-      buttonAdd.setText(Messages.Columns_Add);
+      buttonAdd.setText(Messages.get().Columns_Add);
       buttonAdd.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -151,7 +151,7 @@ public class Columns extends PropertyPage
       buttonAdd.setLayoutData(rd);
 		
       buttonEdit = new Button(buttons, SWT.PUSH);
-      buttonEdit.setText(Messages.Columns_Edit);
+      buttonEdit.setText(Messages.get().Columns_Edit);
       buttonEdit.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -170,7 +170,7 @@ public class Columns extends PropertyPage
       buttonEdit.setLayoutData(rd);
 
       buttonRemove = new Button(buttons, SWT.PUSH);
-      buttonRemove.setText(Messages.Columns_Delete);
+      buttonRemove.setText(Messages.get().Columns_Delete);
       buttonRemove.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -197,15 +197,15 @@ public class Columns extends PropertyPage
 	private void setupTableColumns()
 	{
 		TableColumn column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText(Messages.Columns_Name);
+		column.setText(Messages.get().Columns_Name);
 		column.setWidth(200);
 		
 		column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText(Messages.Columns_Format);
+		column.setText(Messages.get().Columns_Format);
 		column.setWidth(90);
 		
 		column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText(objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP ? Messages.Columns_OID : Messages.Columns_Index);
+		column.setText(objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP ? Messages.get().Columns_OID : Messages.get().Columns_Index);
 		column.setWidth(200);
 		
 		viewer.getTable().setHeaderVisible(true);
@@ -218,7 +218,7 @@ public class Columns extends PropertyPage
 	 */
 	private void addColumn()
 	{
-		ObjectToolTableColumn tc = new ObjectToolTableColumn(Messages.Columns_DefName + Integer.toString(columns.size() + 1));
+		ObjectToolTableColumn tc = new ObjectToolTableColumn(Messages.get().Columns_DefName + Integer.toString(columns.size() + 1));
 		EditColumnDialog dlg = new EditColumnDialog(getShell(), true, objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP, tc);
 		if (dlg.open() == Window.OK)
 		{

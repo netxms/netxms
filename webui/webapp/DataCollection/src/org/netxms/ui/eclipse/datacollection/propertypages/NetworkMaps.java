@@ -57,7 +57,7 @@ public class NetworkMaps extends PropertyPage
       dialogArea.setLayout(layout);
 
       checkShowOnTooltip = new Button(dialogArea, SWT.CHECK);
-      checkShowOnTooltip.setText(Messages.NetworkMaps_ShowInTooltips);
+      checkShowOnTooltip.setText(Messages.get().NetworkMaps_ShowInTooltips);
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
       
 		return dialogArea;

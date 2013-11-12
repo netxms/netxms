@@ -95,7 +95,7 @@ public class ColumnFilterEditor extends DashboardComposite
 		gd.grabExcessHorizontalSpace = true;
 		buttons.setLayoutData(gd);
 
-		final Button radioAnd = toolkit.createButton(buttons, Messages.ColumnFilterEditor_AndCondition, SWT.RADIO);
+		final Button radioAnd = toolkit.createButton(buttons, Messages.get().ColumnFilterEditor_AndCondition, SWT.RADIO);
 		radioAnd.setSelection(booleanOperation == ColumnFilter.AND);
 		radioAnd.addSelectionListener(new SelectionListener() {
 			@Override
@@ -111,7 +111,7 @@ public class ColumnFilterEditor extends DashboardComposite
 			}
 		});
 		
-		final Button radioOr = toolkit.createButton(buttons, Messages.ColumnFilterEditor_OrCondition, SWT.RADIO);
+		final Button radioOr = toolkit.createButton(buttons, Messages.get().ColumnFilterEditor_OrCondition, SWT.RADIO);
 		radioOr.setSelection(booleanOperation == ColumnFilter.OR);
 		radioOr.addSelectionListener(new SelectionListener() {
 			@Override
@@ -155,7 +155,7 @@ public class ColumnFilterEditor extends DashboardComposite
 	private void setBooleanOperation(int op)
 	{
 		booleanOperation = op;
-		final String opName = (op == ColumnFilter.AND) ? Messages.ColumnFilterEditor_And : Messages.ColumnFilterEditor_Or;
+		final String opName = (op == ColumnFilter.AND) ? Messages.get().ColumnFilterEditor_And : Messages.get().ColumnFilterEditor_Or;
 		for(int i = 1; i < conditions.size(); i++)
 		{
 			conditions.get(i).setLogicalOperation(opName);
@@ -185,7 +185,7 @@ public class ColumnFilterEditor extends DashboardComposite
 		ce.setLayoutData(gd);
 		conditions.add(ce);
 		if (conditions.size() > 1)
-			ce.setLogicalOperation((booleanOperation == ColumnFilter.AND) ? Messages.ColumnFilterEditor_And : Messages.ColumnFilterEditor_Or);
+			ce.setLogicalOperation((booleanOperation == ColumnFilter.AND) ? Messages.get().ColumnFilterEditor_And : Messages.get().ColumnFilterEditor_Or);
 
 		filterBuilder.updateLayout();
 	}

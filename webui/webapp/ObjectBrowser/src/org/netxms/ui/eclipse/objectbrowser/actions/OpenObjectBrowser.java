@@ -46,7 +46,7 @@ public class OpenObjectBrowser implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenObjectBrowser_Error, Messages.OpenObjectBrowser_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenObjectBrowser_Error, Messages.get().OpenObjectBrowser_ErrorText + e.getMessage());
 			}
 		}
 	}

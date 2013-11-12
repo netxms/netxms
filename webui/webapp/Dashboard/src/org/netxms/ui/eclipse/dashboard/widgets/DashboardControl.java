@@ -363,12 +363,12 @@ public class DashboardControl extends Composite
 			}
 			catch(Exception e)
 			{
-				MessageDialogHelper.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorPrefix + e.getMessage());
+				MessageDialogHelper.openError(getShell(), Messages.get().DashboardControl_InternalError, Messages.get().DashboardControl_InternalErrorPrefix + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialogHelper.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorText1);
+			MessageDialogHelper.openError(getShell(), Messages.get().DashboardControl_InternalError, Messages.get().DashboardControl_InternalErrorText1);
 		}
 	}
 
@@ -428,12 +428,12 @@ public class DashboardControl extends Composite
 			}
 			catch(Exception e)
 			{
-				MessageDialogHelper.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorPrefix + e.getMessage());
+				MessageDialogHelper.openError(getShell(), Messages.get().DashboardControl_InternalError, Messages.get().DashboardControl_InternalErrorPrefix + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialogHelper.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorText2);
+			MessageDialogHelper.openError(getShell(), Messages.get().DashboardControl_InternalError, Messages.get().DashboardControl_InternalErrorText2);
 		}
 	}
 	
@@ -528,7 +528,7 @@ public class DashboardControl extends Composite
 		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
 		md.setDashboardElements(new ArrayList<DashboardElement>(elements));
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.DashboardControl_SaveLayout, viewPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DashboardControl_SaveLayout, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -550,7 +550,7 @@ public class DashboardControl extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DashboardControl_SaveError + dashboard.getObjectName();
+				return Messages.get().DashboardControl_SaveError + dashboard.getObjectName();
 			}
 		}.start();
 	}

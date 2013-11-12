@@ -81,7 +81,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 	 */
 	private void createActions()
 	{
-		actionEdit = new Action(Messages.EditPaneWidget_Edit) {
+		actionEdit = new Action(Messages.get().EditPaneWidget_Edit) {
 			@Override
 			public void run()
 			{
@@ -90,7 +90,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
-		actionEditXml = new Action(Messages.EditPaneWidget_EditXML) {
+		actionEditXml = new Action(Messages.get().EditPaneWidget_EditXML) {
 			@Override
 			public void run()
 			{
@@ -99,7 +99,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		};
 		actionEditXml.setImageDescriptor(SharedIcons.XML);
 		
-		actionDelete = new Action(Messages.EditPaneWidget_Delete) {
+		actionDelete = new Action(Messages.get().EditPaneWidget_Delete) {
 			@Override
 			public void run()
 			{

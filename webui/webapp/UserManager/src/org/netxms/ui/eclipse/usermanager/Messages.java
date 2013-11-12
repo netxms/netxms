@@ -1,110 +1,113 @@
 package org.netxms.ui.eclipse.usermanager;
 
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.swt.widgets.Display;
+
 
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.usermanager.messages"; //$NON-NLS-1$
-	public static String Authentication_AccountDisabled;
-	public static String Authentication_AccountOptions;
-	public static String Authentication_AuthMethod_Group;
-	public static String Authentication_AuthMethod_Label;
-	public static String Authentication_CannotChangePassword;
-	public static String Authentication_Certificate;
-	public static String Authentication_CertificateOrPassword;
-	public static String Authentication_CertificateOrRADIUS;
-	public static String Authentication_CertMapping;
-	public static String Authentication_JobError;
-	public static String Authentication_JobTitle;
-	public static String Authentication_MappingData;
-	public static String Authentication_MustChangePassword;
-	public static String Authentication_Password;
-	public static String Authentication_PublicKey;
-	public static String Authentication_RADIUS;
-	public static String Authentication_Subject;
-	public static String ChangePassword_Error;
-	public static String ChangePassword_Information;
-	public static String ChangePassword_JobTitle;
-	public static String ChangePassword_SuccessMessage;
-	public static String ChangePasswordDialog_ConfirmNewPassword;
-	public static String ChangePasswordDialog_NewPassword;
-	public static String ChangePasswordDialog_OldPassword;
-	public static String ChangePasswordDialog_Title;
-	public static String CreateObjectDialog_DefAddProp;
-	public static String CreateObjectDialog_LoginName;
-	public static String CreateObjectDialog_NewGroup;
-	public static String CreateObjectDialog_NewUser;
-	public static String General_Description;
-	public static String General_FullName;
-	public static String General_JobError;
-	public static String General_JobTitle;
-	public static String General_LoginName;
-	public static String General_ObjectID;
-	public static String Members_Add;
-	public static String Members_Delete;
-	public static String Members_JobError;
-	public static String Members_JobTitle;
-	public static String Members_LoginName;
-	public static String OpenUserManager_Error;
-	public static String OpenUserManager_ErrorText;
-	public static String SelectUserDialog_AvailableUsers;
-	public static String SelectUserDialog_LoginName;
-	public static String SelectUserDialog_Title;
-	public static String SelectUserDialog_Warning;
-	public static String SelectUserDialog_WarningText;
-	public static String SystemRights_AccessConsole;
-	public static String SystemRights_ConfigureActions;
-	public static String SystemRights_ConfigureEvents;
-	public static String SystemRights_ConfigureObjTools;
-	public static String SystemRights_ConfigureSituations;
-	public static String SystemRights_ConfigureTraps;
-	public static String SystemRights_ControlSessions;
-	public static String SystemRights_DeleteAlarms;
-	public static String SystemRights_EditEPP;
-	public static String SystemRights_EditServerConfig;
-	public static String SystemRights_JobError;
-	public static String SystemRights_JobTitle;
-	public static String SystemRights_LoginAsMobile;
-	public static String SystemRights_ManageAgents;
-	public static String SystemRights_ManageFiles;
-	public static String SystemRights_ManageMappingTables;
-	public static String SystemRights_ManagePackages;
-	public static String SystemRights_ManageScripts;
-	public static String SystemRights_ManageUsers;
-	public static String SystemRights_ReadFiles;
-	public static String SystemRights_RegisterAgents;
-	public static String SystemRights_SendSMS;
-	public static String SystemRights_ViewAuditLog;
-	public static String SystemRights_ViewEventConfig;
-	public static String SystemRights_ViewEventLog;
-	public static String SystemRights_ViewTrapLog;
-	public static String UserLabelProvider_Group;
-	public static String UserLabelProvider_User;
-	public static String UserManagementView_7;
-	public static String UserManagementView_CannotChangePassword;
-	public static String UserManagementView_ChangePassword;
-	public static String UserManagementView_ConfirmDeletePlural;
-	public static String UserManagementView_ConfirmDeleteSingular;
-	public static String UserManagementView_ConfirmDeleteTitle;
-	public static String UserManagementView_CreateGroupJobError;
-	public static String UserManagementView_CreateGroupJobName;
-	public static String UserManagementView_CreateNewGroup;
-	public static String UserManagementView_CreateNewUser;
-	public static String UserManagementView_CreateUserJobError;
-	public static String UserManagementView_CreateUserJobName;
-	public static String UserManagementView_Delete;
-	public static String UserManagementView_DeleteJobError;
-	public static String UserManagementView_DeleteJobName;
-	public static String UserManagementView_Description;
-	public static String UserManagementView_FullName;
-	public static String UserManagementView_GUID;
-	public static String UserManagementView_Name;
-	public static String UserManagementView_OpenJobError;
-	public static String UserManagementView_OpenJobName;
-	public static String UserManagementView_Properties;
-	public static String UserManagementView_Type;
-	public static String UserManagementView_UnlockJobError;
-	public static String UserManagementView_UnlockJobName;
+	public String Authentication_AccountDisabled;
+	public String Authentication_AccountOptions;
+	public String Authentication_AuthMethod_Group;
+	public String Authentication_AuthMethod_Label;
+	public String Authentication_CannotChangePassword;
+	public String Authentication_Certificate;
+	public String Authentication_CertificateOrPassword;
+	public String Authentication_CertificateOrRADIUS;
+	public String Authentication_CertMapping;
+	public String Authentication_JobError;
+	public String Authentication_JobTitle;
+	public String Authentication_MappingData;
+	public String Authentication_MustChangePassword;
+	public String Authentication_Password;
+	public String Authentication_PublicKey;
+	public String Authentication_RADIUS;
+	public String Authentication_Subject;
+	public String ChangePassword_Error;
+	public String ChangePassword_Information;
+	public String ChangePassword_JobTitle;
+	public String ChangePassword_SuccessMessage;
+	public String ChangePasswordDialog_ConfirmNewPassword;
+	public String ChangePasswordDialog_NewPassword;
+	public String ChangePasswordDialog_OldPassword;
+	public String ChangePasswordDialog_Title;
+	public String CreateObjectDialog_DefAddProp;
+	public String CreateObjectDialog_LoginName;
+	public String CreateObjectDialog_NewGroup;
+	public String CreateObjectDialog_NewUser;
+	public String General_Description;
+	public String General_FullName;
+	public String General_JobError;
+	public String General_JobTitle;
+	public String General_LoginName;
+	public String General_ObjectID;
+	public String Members_Add;
+	public String Members_Delete;
+	public String Members_JobError;
+	public String Members_JobTitle;
+	public String Members_LoginName;
+	public String OpenUserManager_Error;
+	public String OpenUserManager_ErrorText;
+	public String SelectUserDialog_AvailableUsers;
+	public String SelectUserDialog_LoginName;
+	public String SelectUserDialog_Title;
+	public String SelectUserDialog_Warning;
+	public String SelectUserDialog_WarningText;
+	public String SystemRights_AccessConsole;
+	public String SystemRights_ConfigureActions;
+	public String SystemRights_ConfigureEvents;
+	public String SystemRights_ConfigureObjTools;
+	public String SystemRights_ConfigureSituations;
+	public String SystemRights_ConfigureTraps;
+	public String SystemRights_ControlSessions;
+	public String SystemRights_DeleteAlarms;
+	public String SystemRights_EditEPP;
+	public String SystemRights_EditServerConfig;
+	public String SystemRights_JobError;
+	public String SystemRights_JobTitle;
+	public String SystemRights_LoginAsMobile;
+	public String SystemRights_ManageAgents;
+	public String SystemRights_ManageFiles;
+	public String SystemRights_ManageMappingTables;
+	public String SystemRights_ManagePackages;
+	public String SystemRights_ManageScripts;
+	public String SystemRights_ManageUsers;
+	public String SystemRights_ReadFiles;
+	public String SystemRights_RegisterAgents;
+	public String SystemRights_SendSMS;
+	public String SystemRights_ViewAuditLog;
+	public String SystemRights_ViewEventConfig;
+	public String SystemRights_ViewEventLog;
+	public String SystemRights_ViewTrapLog;
+	public String UserLabelProvider_Group;
+	public String UserLabelProvider_User;
+	public String UserManagementView_7;
+	public String UserManagementView_CannotChangePassword;
+	public String UserManagementView_ChangePassword;
+	public String UserManagementView_ConfirmDeletePlural;
+	public String UserManagementView_ConfirmDeleteSingular;
+	public String UserManagementView_ConfirmDeleteTitle;
+	public String UserManagementView_CreateGroupJobError;
+	public String UserManagementView_CreateGroupJobName;
+	public String UserManagementView_CreateNewGroup;
+	public String UserManagementView_CreateNewUser;
+	public String UserManagementView_CreateUserJobError;
+	public String UserManagementView_CreateUserJobName;
+	public String UserManagementView_Delete;
+	public String UserManagementView_DeleteJobError;
+	public String UserManagementView_DeleteJobName;
+	public String UserManagementView_Description;
+	public String UserManagementView_FullName;
+	public String UserManagementView_GUID;
+	public String UserManagementView_Name;
+	public String UserManagementView_OpenJobError;
+	public String UserManagementView_OpenJobName;
+	public String UserManagementView_Properties;
+	public String UserManagementView_Type;
+	public String UserManagementView_UnlockJobError;
+	public String UserManagementView_UnlockJobName;
 	static
 	{
 		// initialize resource bundle
@@ -114,4 +117,43 @@ public class Messages extends NLS
 	private Messages()
 	{
 	}
+
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get()
+	{
+		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+	}
+
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get(Display display)
+	{
+		CallHelper r = new CallHelper();
+		display.syncExec(r);
+		return r.messages;
+	}
+	
+	/**
+	 * Helper class to call RWT.NLS.getISO8859_1Encoded from non-UI thread
+	 */
+	private static class CallHelper implements Runnable
+	{
+		Messages messages;
+		
+		@Override
+		public void run()
+		{
+			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+		}
+	}
 }
+

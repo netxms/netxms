@@ -54,7 +54,7 @@ public class FindMacAddress implements IWorkbenchWindowActionDelegate
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final MacAddress macAddr = dlg.getMacAddress();
-		new ConsoleJob(String.format(Messages.FindMacAddress_JobTitle, macAddr) , null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().FindMacAddress_JobTitle, macAddr) , null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -71,7 +71,7 @@ public class FindMacAddress implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.FindMacAddress_JobError, macAddr);
+				return String.format(Messages.get().FindMacAddress_JobError, macAddr);
 			}
 		}.start();
 	}

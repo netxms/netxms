@@ -37,7 +37,7 @@ public class ObjectSelector extends AbstractSelector
 	private long objectId = 0;
 	private Class<? extends AbstractObject> objectClass = Node.class;
 	private Set<Integer> classFilter = null;
-	private String emptySelectionName = Messages.ObjectSelector_None;
+	private String emptySelectionName = Messages.get().ObjectSelector_None;
 	
 	/**
 	 * @param parent

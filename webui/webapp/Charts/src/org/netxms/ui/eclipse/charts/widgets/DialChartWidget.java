@@ -275,27 +275,27 @@ public class DialChartWidget extends GaugeWidget
 		double absValue = Math.abs(value);
 		if (absValue >= 10000000000L)
 		{
-			return Long.toString(Math.round(value / 1000000000)) + Messages.DialChartWidget_G;
+			return Long.toString(Math.round(value / 1000000000)) + Messages.get().DialChartWidget_G;
 		}
 		else if (absValue >= 1000000000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000000000) + Messages.DialChartWidget_G; //$NON-NLS-1$
+			return new DecimalFormat("#.#").format(value / 1000000000) + Messages.get().DialChartWidget_G; //$NON-NLS-1$
 		}
 		else if (absValue >= 10000000)
 		{
-			return Long.toString(Math.round(value / 1000000)) + Messages.DialChartWidget_M;
+			return Long.toString(Math.round(value / 1000000)) + Messages.get().DialChartWidget_M;
 		}
 		else if (absValue >= 1000000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000000) + Messages.DialChartWidget_M; //$NON-NLS-1$
+			return new DecimalFormat("#.#").format(value / 1000000) + Messages.get().DialChartWidget_M; //$NON-NLS-1$
 		}
 		else if (absValue >= 10000)
 		{
-			return Long.toString(Math.round(value / 1000)) + Messages.DialChartWidget_K;
+			return Long.toString(Math.round(value / 1000)) + Messages.get().DialChartWidget_K;
 		}
 		else if (absValue >= 1000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000) + Messages.DialChartWidget_K; //$NON-NLS-1$
+			return new DecimalFormat("#.#").format(value / 1000) + Messages.get().DialChartWidget_K; //$NON-NLS-1$
 		}
 		else if ((absValue >= 1) && (step >= 1))
 		{

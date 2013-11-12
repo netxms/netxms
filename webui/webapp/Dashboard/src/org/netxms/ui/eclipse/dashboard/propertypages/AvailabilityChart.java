@@ -58,7 +58,7 @@ public class AvailabilityChart extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-		objectSelector.setLabel(Messages.AvailabilityChart_Object);
+		objectSelector.setLabel(Messages.get().AvailabilityChart_Object);
 		objectSelector.setObjectClass(ServiceContainer.class);
 		objectSelector.setObjectId(config.getObjectId());
 		GridData gd = new GridData();
@@ -67,7 +67,7 @@ public class AvailabilityChart extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.AvailabilityChart_Title);
+		title.setLabel(Messages.get().AvailabilityChart_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -75,19 +75,19 @@ public class AvailabilityChart extends PropertyPage
 		title.setLayoutData(gd);
 		
 		checkShowTitle = new Button(dialogArea, SWT.CHECK);
-		checkShowTitle.setText(Messages.AvailabilityChart_ShowTitle);
+		checkShowTitle.setText(Messages.get().AvailabilityChart_ShowTitle);
 		checkShowTitle.setSelection(config.isShowTitle());
 		
 		checkShowLegend = new Button(dialogArea, SWT.CHECK);
-		checkShowLegend.setText(Messages.AvailabilityChart_ShowLegend);
+		checkShowLegend.setText(Messages.get().AvailabilityChart_ShowLegend);
 		checkShowLegend.setSelection(config.isShowLegend());
 		
 		checkShow3D = new Button(dialogArea, SWT.CHECK);
-		checkShow3D.setText(Messages.AvailabilityChart_3DView);
+		checkShow3D.setText(Messages.get().AvailabilityChart_3DView);
 		checkShow3D.setSelection(config.isShowIn3D());
 		
 		checkTranslucent = new Button(dialogArea, SWT.CHECK);
-		checkTranslucent.setText(Messages.AvailabilityChart_Translucent);
+		checkTranslucent.setText(Messages.get().AvailabilityChart_Translucent);
 		checkTranslucent.setSelection(config.isTranslucent());
 		
 		return dialogArea;

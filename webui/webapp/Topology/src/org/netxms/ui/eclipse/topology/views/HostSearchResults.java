@@ -83,7 +83,7 @@ public class HostSearchResults extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.HostSearchResults_ColSeq, Messages.HostSearchResults_ColNode, Messages.HostSearchResults_ColIface, Messages.HostSearchResults_ColMac, Messages.HostSearchResults_ColIp, Messages.HostSearchResults_ColSwitch, Messages.HostSearchResults_ColPort, Messages.HostSearchResults_ColType };
+		final String[] names = { Messages.get().HostSearchResults_ColSeq, Messages.get().HostSearchResults_ColNode, Messages.get().HostSearchResults_ColIface, Messages.get().HostSearchResults_ColMac, Messages.get().HostSearchResults_ColIp, Messages.get().HostSearchResults_ColSwitch, Messages.get().HostSearchResults_ColPort, Messages.get().HostSearchResults_ColType };
 		final int[] widths = { 70, 120, 120, 90, 90, 120, 120, 60 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_SEQUENCE, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -110,7 +110,7 @@ public class HostSearchResults extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionClearLog = new Action(Messages.HostSearchResults_ClearLog) {
+		actionClearLog = new Action(Messages.get().HostSearchResults_ClearLog) {
 			@Override
 			public void run()
 			{
@@ -230,7 +230,7 @@ public class HostSearchResults extends ViewPart
 		
 		if (cp == null)
 		{
-			MessageDialogHelper.openWarning(shell, Messages.HostSearchResults_Warning, Messages.HostSearchResults_NotFound);
+			MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, Messages.get().HostSearchResults_NotFound);
 			return;
 		}
 		
@@ -245,27 +245,27 @@ public class HostSearchResults extends ViewPart
 			{
 				if (host != null)
 				{
-					MessageDialogHelper.openInformation(shell, Messages.HostSearchResults_ConnectionPoint, 
-					      String.format(Messages.HostSearchResults_NodeConnected,
-					            host.getObjectName(), cp.isDirectlyConnected() ? Messages.HostSearchResults_ModeDirectly : Messages.HostSearchResults_ModeIndirectly,
+					MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
+					      String.format(Messages.get().HostSearchResults_NodeConnected,
+					            host.getObjectName(), cp.isDirectlyConnected() ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
 					            bridge.getObjectName(), iface.getObjectName()));
 				}
 				else
 				{
 				   if (cp.getLocalIpAddress() != null)
 				   {
-	               MessageDialogHelper.openInformation(shell, Messages.HostSearchResults_ConnectionPoint, 
-	                     String.format(Messages.HostSearchResults_NodeIpMacConnected,
+	               MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
+	                     String.format(Messages.get().HostSearchResults_NodeIpMacConnected,
 	                           cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
-	                           cp.isDirectlyConnected() ? Messages.HostSearchResults_ModeDirectly : Messages.HostSearchResults_ModeIndirectly,
+	                           cp.isDirectlyConnected() ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
 	                           bridge.getObjectName(), iface.getObjectName()));
 				   }
 				   else
 				   {
-                  MessageDialogHelper.openInformation(shell, Messages.HostSearchResults_ConnectionPoint, 
-                        String.format(Messages.HostSearchResults_NodeMacConnected,
+                  MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
+                        String.format(Messages.get().HostSearchResults_NodeMacConnected,
                               cp.getLocalMacAddress(),
-                              cp.isDirectlyConnected() ? Messages.HostSearchResults_ModeDirectly : Messages.HostSearchResults_ModeIndirectly,
+                              cp.isDirectlyConnected() ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
                               bridge.getObjectName(), iface.getObjectName()));
 				   }
 				}
@@ -276,12 +276,12 @@ public class HostSearchResults extends ViewPart
 			}
 			else
 			{
-				MessageDialogHelper.openWarning(shell, Messages.HostSearchResults_Warning, Messages.HostSearchResults_NotFound);
+				MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, Messages.get().HostSearchResults_NotFound);
 			}
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openWarning(shell, Messages.HostSearchResults_Warning, String.format(Messages.HostSearchResults_ShowError, e.getLocalizedMessage()));
+			MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, String.format(Messages.get().HostSearchResults_ShowError, e.getLocalizedMessage()));
 		}
 	}
 

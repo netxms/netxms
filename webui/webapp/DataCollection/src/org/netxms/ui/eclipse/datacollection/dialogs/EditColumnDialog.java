@@ -65,7 +65,7 @@ public class EditColumnDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.EditColumnDialog_ColumnDefinition + column.getName());
+		newShell.setText(Messages.get().EditColumnDialog_ColumnDefinition + column.getName());
 	}
 
 	/* (non-Javadoc)
@@ -94,19 +94,19 @@ public class EditColumnDialog extends Dialog
 		displayName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		
 		dataType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Data type", new GridData(SWT.FILL, SWT.CENTER, true, false));
-		dataType.add(Messages.TableColumnLabelProvider_in32);
-		dataType.add(Messages.TableColumnLabelProvider_uint32);
-		dataType.add(Messages.TableColumnLabelProvider_int64);
-		dataType.add(Messages.TableColumnLabelProvider_uint64);
-		dataType.add(Messages.TableColumnLabelProvider_string);
-		dataType.add(Messages.TableColumnLabelProvider_float);
+		dataType.add(Messages.get().TableColumnLabelProvider_in32);
+		dataType.add(Messages.get().TableColumnLabelProvider_uint32);
+		dataType.add(Messages.get().TableColumnLabelProvider_int64);
+		dataType.add(Messages.get().TableColumnLabelProvider_uint64);
+		dataType.add(Messages.get().TableColumnLabelProvider_string);
+		dataType.add(Messages.get().TableColumnLabelProvider_float);
 		dataType.select(column.getDataType());
 		
 		aggregationFunction = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Aggregation function", new GridData(SWT.FILL, SWT.CENTER, true, false));
-		aggregationFunction.add(Messages.TableColumnLabelProvider_SUM);
-		aggregationFunction.add(Messages.TableColumnLabelProvider_AVG);
-		aggregationFunction.add(Messages.TableColumnLabelProvider_MIN);
-		aggregationFunction.add(Messages.TableColumnLabelProvider_MAX);
+		aggregationFunction.add(Messages.get().TableColumnLabelProvider_SUM);
+		aggregationFunction.add(Messages.get().TableColumnLabelProvider_AVG);
+		aggregationFunction.add(Messages.get().TableColumnLabelProvider_MIN);
+		aggregationFunction.add(Messages.get().TableColumnLabelProvider_MAX);
 		aggregationFunction.select(column.getAggregationFunction());
 		
 		checkInstanceColumn = new Button(dialogArea, SWT.CHECK);

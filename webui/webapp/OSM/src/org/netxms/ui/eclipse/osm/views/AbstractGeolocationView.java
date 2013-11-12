@@ -130,7 +130,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	 */
 	protected void createActions()
 	{
-		actionZoomIn = new Action(Messages.AbstractGeolocationView_ZoomIn) {
+		actionZoomIn = new Action(Messages.get().AbstractGeolocationView_ZoomIn) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -141,7 +141,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 		};
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 	
-		actionZoomOut = new Action(Messages.AbstractGeolocationView_ZoomOut) {
+		actionZoomOut = new Action(Messages.get().AbstractGeolocationView_ZoomOut) {
 			private static final long serialVersionUID = 1L;
 
 			@Override

@@ -70,7 +70,7 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 				return ((IdMatchingData)element).getSourceName();
 			case IdMatchingDialog.COLUMN_DESTINATION_ID:
 				long id = ((IdMatchingData)element).getDestinationId();
-				return (id > 0) ? Long.toString(id) : Messages.IdMatchingLabelProvider_NoMatch;
+				return (id > 0) ? Long.toString(id) : Messages.get().IdMatchingLabelProvider_NoMatch;
 			case IdMatchingDialog.COLUMN_DESTINATION_NAME:
 				return ((IdMatchingData)element).getDestinationName();
 		}

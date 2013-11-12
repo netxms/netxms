@@ -73,11 +73,11 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 	@Override
 	protected void setupViewer(TableViewer viewer)
 	{
-		addColumn(Messages.SnmpTrapMonitor_ColTime, 150);
-		addColumn(Messages.SnmpTrapMonitor_ColSourceIP, 120);
-		addColumn(Messages.SnmpTrapMonitor_ColSourceNode, 200);
-		addColumn(Messages.SnmpTrapMonitor_ColOID, 200);
-		addColumn(Messages.SnmpTrapMonitor_ColVarbinds, 600);
+		addColumn(Messages.get().SnmpTrapMonitor_ColTime, 150);
+		addColumn(Messages.get().SnmpTrapMonitor_ColSourceIP, 120);
+		addColumn(Messages.get().SnmpTrapMonitor_ColSourceNode, 200);
+		addColumn(Messages.get().SnmpTrapMonitor_ColOID, 200);
+		addColumn(Messages.get().SnmpTrapMonitor_ColVarbinds, 600);
 		
 		viewer.setLabelProvider(new SnmpTrapMonitorLabelProvider());
 		setFilter(new SnmpTrapMonitorFilter());

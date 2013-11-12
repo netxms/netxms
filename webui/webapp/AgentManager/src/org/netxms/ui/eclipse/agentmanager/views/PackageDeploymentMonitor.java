@@ -50,7 +50,7 @@ public class PackageDeploymentMonitor extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.PackageDeploymentMonitor_ColumnNode, Messages.PackageDeploymentMonitor_ColumnStatus, Messages.PackageDeploymentMonitor_ColumnMessage };
+		final String[] names = { Messages.get().PackageDeploymentMonitor_ColumnNode, Messages.get().PackageDeploymentMonitor_ColumnStatus, Messages.get().PackageDeploymentMonitor_ColumnMessage };
 		final int[] widths = { 200, 110, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NODE, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());

@@ -38,7 +38,7 @@ public class DciSelector extends AbstractSelector
 {
 	private long nodeId = 0;
 	private long dciId = 0;
-	private String emptySelectionName = Messages.DciSelector_None;
+	private String emptySelectionName = Messages.get().DciSelector_None;
 	private NXCSession session;
 	private int dcObjectType = -1;
 	private String dciName = null;
@@ -92,7 +92,7 @@ public class DciSelector extends AbstractSelector
 			return;
 		}
 		
-		new ConsoleJob(Messages.DciSelector_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DciSelector_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -137,7 +137,7 @@ public class DciSelector extends AbstractSelector
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DciSelector_JobError;
+				return Messages.get().DciSelector_JobError;
 			}
 		}.start();
 	}

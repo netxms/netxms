@@ -74,7 +74,7 @@ public class WirelessStations extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		setPartName(String.format(Messages.WirelessStations_PartName, session.getObjectName(rootObject)));
+		setPartName(String.format(Messages.get().WirelessStations_PartName, session.getObjectName(rootObject)));
 	}
 
 	/* (non-Javadoc)
@@ -83,7 +83,7 @@ public class WirelessStations extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.WirelessStations_ColMacAddr, Messages.WirelessStations_ColIpAddr, Messages.WirelessStations_ColNode, Messages.WirelessStations_ColAp, Messages.WirelessStations_ColRadio, Messages.WirelessStations_ColSSID };
+		final String[] names = { Messages.get().WirelessStations_ColMacAddr, Messages.get().WirelessStations_ColIpAddr, Messages.get().WirelessStations_ColNode, Messages.get().WirelessStations_ColAp, Messages.get().WirelessStations_ColRadio, Messages.get().WirelessStations_ColSSID };
 		final int[] widths = { 120, 90, 180, 180, 100, 100 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -205,7 +205,7 @@ public class WirelessStations extends ViewPart
 	 */
 	private void refresh()
 	{
-		new ConsoleJob(Messages.WirelessStations_JobTitle, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().WirelessStations_JobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -222,7 +222,7 @@ public class WirelessStations extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.WirelessStations_JobError;
+				return Messages.get().WirelessStations_JobError;
 			}
 		}.start();
 	}

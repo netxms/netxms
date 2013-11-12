@@ -73,7 +73,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		if (name == null)
 		{
 			AbstractObject object = session.findObjectById(id);
-			name = (object != null) ? object.getObjectName() : Messages.ConnectionPointLabelProvider_Unknown;
+			name = (object != null) ? object.getObjectName() : Messages.get().ConnectionPointLabelProvider_Unknown;
 			cachedObjectNames.put(id, name);
 		}
 		return name;
@@ -107,7 +107,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 			case HostSearchResults.COLUMN_PORT:
 				return getObjectName(cp.getInterfaceId());
 			case HostSearchResults.COLUMN_TYPE:
-				return cp.isDirectlyConnected() ? Messages.ConnectionPointLabelProvider_Direct : Messages.ConnectionPointLabelProvider_Indirect;
+				return cp.isDirectlyConnected() ? Messages.get().ConnectionPointLabelProvider_Direct : Messages.get().ConnectionPointLabelProvider_Indirect;
 		}
 		return null;
 	}

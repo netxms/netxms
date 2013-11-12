@@ -73,7 +73,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		nodeId = Long.parseLong(site.getSecondaryId());
 		
 		AbstractObject object = session.findObjectById(nodeId);
-		setPartName(Messages.AgentConfigEditorView_PartName + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
+		setPartName(Messages.get().AgentConfigEditorView_PartName + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
 	}
 
 	/* (non-Javadoc)
@@ -145,7 +145,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 			{
 			}
 		};
-		actionSave.setText(Messages.AgentConfigEditorView_Save);
+		actionSave.setText(Messages.get().AgentConfigEditorView_Save);
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
 	}
 
@@ -197,7 +197,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(getViewSite().getShell(), Messages.AgentConfigEditorView_Error, Messages.AgentConfigEditorView_SaveError + e.getMessage());
+			MessageDialogHelper.openError(getViewSite().getShell(), Messages.get().AgentConfigEditorView_Error, Messages.get().AgentConfigEditorView_SaveError + e.getMessage());
 		}
 	}
 

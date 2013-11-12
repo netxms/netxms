@@ -107,7 +107,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	 */
 	private void createActions()
 	{
-		actionShowIcons = new Action(Messages.ObjectStatusIndicator_ShowIcons, Action.AS_CHECK_BOX) {
+		actionShowIcons = new Action(Messages.get().ObjectStatusIndicator_ShowIcons, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -117,7 +117,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		};
 		actionShowIcons.setChecked(showIcons);
 
-		actionHideDisabled = new Action(Messages.ObjectStatusIndicator_HideDisabled, Action.AS_CHECK_BOX) {
+		actionHideDisabled = new Action(Messages.get().ObjectStatusIndicator_HideDisabled, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -127,7 +127,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		};
 		actionHideDisabled.setChecked(hideDisabled);
 
-		actionHideNormal = new Action(Messages.ObjectStatusIndicator_HideNormal, Action.AS_CHECK_BOX) {
+		actionHideNormal = new Action(Messages.get().ObjectStatusIndicator_HideNormal, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -137,7 +137,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		};
 		actionHideNormal.setChecked(hideNormal);
 
-		actionHideUnknown = new Action(Messages.ObjectStatusIndicator_HideUnknown, Action.AS_CHECK_BOX) {
+		actionHideUnknown = new Action(Messages.get().ObjectStatusIndicator_HideUnknown, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -147,7 +147,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		};
 		actionHideUnknown.setChecked(hideUnknown);
 
-		actionHideUnmanaged = new Action(Messages.ObjectStatusIndicator_HideUnmanaged, Action.AS_CHECK_BOX) {
+		actionHideUnmanaged = new Action(Messages.get().ObjectStatusIndicator_HideUnmanaged, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

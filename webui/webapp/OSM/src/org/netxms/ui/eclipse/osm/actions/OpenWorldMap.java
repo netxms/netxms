@@ -65,7 +65,7 @@ public class OpenWorldMap implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenWorldMap_Error, Messages.OpenWorldMap_ErrorText + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.get().OpenWorldMap_Error, Messages.get().OpenWorldMap_ErrorText + e.getMessage());
 			}
 		}
 	}

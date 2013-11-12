@@ -156,7 +156,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 		if (added > 0)
 		{
 			MenuItem tablesMenuItem = new MenuItem(menu, SWT.CASCADE, index);
-			tablesMenuItem.setText(Messages.SummaryTablesDynamicMenu_MenuName);
+			tablesMenuItem.setText(Messages.get().SummaryTablesDynamicMenu_MenuName);
 			tablesMenuItem.setMenu(tablesMenu);
 		}
 		else
@@ -174,7 +174,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 	private void queryTable(final long baseObjectId, final int tableId)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SummaryTablesDynamicMenu_QueryTableJob, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SummaryTablesDynamicMenu_QueryTableJob, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -192,7 +192,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 						}
 						catch(PartInitException e)
 						{
-							MessageDialogHelper.openError(window.getShell(), Messages.SummaryTablesDynamicMenu_Error, String.format(Messages.SummaryTablesDynamicMenu_CannotOpenView, e.getLocalizedMessage()));
+							MessageDialogHelper.openError(window.getShell(), Messages.get().SummaryTablesDynamicMenu_Error, String.format(Messages.get().SummaryTablesDynamicMenu_CannotOpenView, e.getLocalizedMessage()));
 						}
 					}
 				});
@@ -201,7 +201,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SummaryTablesDynamicMenu_CannotReadData;
+				return Messages.get().SummaryTablesDynamicMenu_CannotReadData;
 			}
 		}.start();
 	}

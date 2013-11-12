@@ -93,7 +93,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob(Messages.ComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().ComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -127,7 +127,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ComparisonChartElement_JobError;
+				return Messages.get().ComparisonChartElement_JobError;
 			}
 	
 			@Override

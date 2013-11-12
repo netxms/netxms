@@ -66,7 +66,7 @@ public class OpenMibExplorer implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenMibExplorer_Error, Messages.OpenMibExplorer_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenMibExplorer_Error, Messages.get().OpenMibExplorer_ErrorText + e.getMessage());
 			}
 		}
 	}

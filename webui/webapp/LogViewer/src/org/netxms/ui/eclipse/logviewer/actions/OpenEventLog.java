@@ -66,7 +66,7 @@ public class OpenEventLog implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenEventLog_Error, Messages.OpenEventLog_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenEventLog_Error, Messages.get().OpenEventLog_ErrorText + e.getMessage());
 			}
 		}
 	}

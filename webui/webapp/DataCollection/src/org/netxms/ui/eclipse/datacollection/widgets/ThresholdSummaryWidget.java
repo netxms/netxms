@@ -69,7 +69,7 @@ public class ThresholdSummaryWidget extends Composite
 		this.viewPart = viewPart;
 		setLayout(new FillLayout());
 
-		final String[] names = { Messages.ThresholdSummaryWidget_Node,  Messages.ThresholdSummaryWidget_Status, Messages.ThresholdSummaryWidget_Parameter, Messages.ThresholdSummaryWidget_Value, Messages.ThresholdSummaryWidget_Condition, Messages.ThresholdSummaryWidget_Since };
+		final String[] names = { Messages.get().ThresholdSummaryWidget_Node,  Messages.get().ThresholdSummaryWidget_Status, Messages.get().ThresholdSummaryWidget_Parameter, Messages.get().ThresholdSummaryWidget_Value, Messages.get().ThresholdSummaryWidget_Condition, Messages.get().ThresholdSummaryWidget_Since };
 		final int[] widths = { 200, 100, 250, 100, 100, 140 };
 		viewer = new SortableTreeViewer(this, names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ThresholdTreeContentProvider());
@@ -125,7 +125,7 @@ public class ThresholdSummaryWidget extends Composite
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final long rootId = object.getObjectId();
-		ConsoleJob job = new ConsoleJob(Messages.ThresholdSummaryWidget_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().ThresholdSummaryWidget_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -145,7 +145,7 @@ public class ThresholdSummaryWidget extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ThresholdSummaryWidget_JobError;
+				return Messages.get().ThresholdSummaryWidget_JobError;
 			}
 		};
 		job.setUser(false);

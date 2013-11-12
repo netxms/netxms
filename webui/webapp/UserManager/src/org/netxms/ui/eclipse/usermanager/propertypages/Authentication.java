@@ -78,7 +78,7 @@ public class Authentication extends PropertyPage
       dialogArea.setLayout(layout);
 
       Group groupFlags = new Group(dialogArea, SWT.NONE);
-      groupFlags.setText(Messages.Authentication_AccountOptions);
+      groupFlags.setText(Messages.get().Authentication_AccountOptions);
       GridLayout groupFlagsLayout = new GridLayout();
       groupFlags.setLayout(groupFlagsLayout);
 		GridData gridData = new GridData();
@@ -87,19 +87,19 @@ public class Authentication extends PropertyPage
 		groupFlags.setLayoutData(gridData);
 		
       checkDisabled = new Button(groupFlags, SWT.CHECK);
-      checkDisabled.setText(Messages.Authentication_AccountDisabled);
+      checkDisabled.setText(Messages.get().Authentication_AccountDisabled);
       checkDisabled.setSelection(object.isDisabled());
 		
       checkChangePassword = new Button(groupFlags, SWT.CHECK);
-      checkChangePassword.setText(Messages.Authentication_MustChangePassword);
+      checkChangePassword.setText(Messages.get().Authentication_MustChangePassword);
       checkChangePassword.setSelection(object.isPasswordChangeNeeded());
 		
       checkFixedPassword = new Button(groupFlags, SWT.CHECK);
-      checkFixedPassword.setText(Messages.Authentication_CannotChangePassword);
+      checkFixedPassword.setText(Messages.get().Authentication_CannotChangePassword);
       checkFixedPassword.setSelection(object.isPasswordChangeForbidden());
 		
       Group groupMethod = new Group(dialogArea, SWT.NONE);
-      groupMethod.setText(Messages.Authentication_AuthMethod_Group);
+      groupMethod.setText(Messages.get().Authentication_AuthMethod_Group);
       GridLayout groupMethodLayout = new GridLayout();
       groupMethodLayout.numColumns = 2;
       groupMethod.setLayout(groupMethodLayout);
@@ -109,13 +109,13 @@ public class Authentication extends PropertyPage
 		groupMethod.setLayoutData(gridData);
 		
 		Label label = new Label(groupMethod, SWT.NONE);
-		label.setText(Messages.Authentication_AuthMethod_Label);
+		label.setText(Messages.get().Authentication_AuthMethod_Label);
 		comboAuthMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
-		comboAuthMethod.add(Messages.Authentication_Password);
-		comboAuthMethod.add(Messages.Authentication_RADIUS);
-		comboAuthMethod.add(Messages.Authentication_Certificate);
-		comboAuthMethod.add(Messages.Authentication_CertificateOrPassword);
-		comboAuthMethod.add(Messages.Authentication_CertificateOrRADIUS);
+		comboAuthMethod.add(Messages.get().Authentication_Password);
+		comboAuthMethod.add(Messages.get().Authentication_RADIUS);
+		comboAuthMethod.add(Messages.get().Authentication_Certificate);
+		comboAuthMethod.add(Messages.get().Authentication_CertificateOrPassword);
+		comboAuthMethod.add(Messages.get().Authentication_CertificateOrRADIUS);
 		comboAuthMethod.select(object.getAuthMethod());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
@@ -123,10 +123,10 @@ public class Authentication extends PropertyPage
 		comboAuthMethod.setLayoutData(gridData);
 		
 		label = new Label(groupMethod, SWT.NONE);
-		label.setText(Messages.Authentication_CertMapping);
+		label.setText(Messages.get().Authentication_CertMapping);
 		comboMappingMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
-		comboMappingMethod.add(Messages.Authentication_Subject);
-		comboMappingMethod.add(Messages.Authentication_PublicKey);
+		comboMappingMethod.add(Messages.get().Authentication_Subject);
+		comboMappingMethod.add(Messages.get().Authentication_PublicKey);
 		comboMappingMethod.select(object.getCertMappingMethod());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
@@ -138,7 +138,7 @@ public class Authentication extends PropertyPage
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalSpan = 2;
 		gridData.widthHint = 300;
-      textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.Authentication_MappingData,
+      textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().Authentication_MappingData,
                                                        object.getCertMappingData(), gridData);
 		
 		return dialogArea;
@@ -169,7 +169,7 @@ public class Authentication extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new ConsoleJob(Messages.Authentication_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().Authentication_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -194,7 +194,7 @@ public class Authentication extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.Authentication_JobError;
+				return Messages.get().Authentication_JobError;
 			}
 		}.start();
 	}

@@ -66,7 +66,7 @@ public class ShowServiceDependency implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowServiceDependency_Error, String.format(Messages.ShowServiceDependency_ErrorText, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowServiceDependency_Error, String.format(Messages.get().ShowServiceDependency_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

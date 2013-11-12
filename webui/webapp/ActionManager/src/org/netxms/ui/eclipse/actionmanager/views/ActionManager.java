@@ -100,7 +100,7 @@ public class ActionManager extends ViewPart implements SessionListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { Messages.ActionManager_ColumnName, Messages.ActionManager_ColumnType, Messages.ActionManager_ColumnRcpt, Messages.ActionManager_ColumnSubj, Messages.ActionManager_ColumnData };
+		final String[] columnNames = { Messages.get().ActionManager_ColumnName, Messages.get().ActionManager_ColumnType, Messages.get().ActionManager_ColumnRcpt, Messages.get().ActionManager_ColumnSubj, Messages.get().ActionManager_ColumnData };
 		final int[] columnWidths = { 150, 90, 100, 120, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -168,11 +168,11 @@ public class ActionManager extends ViewPart implements SessionListener
 	 */
 	private void refreshActionList()
 	{
-		new ConsoleJob(Messages.ActionManager_LoadJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ActionManager_LoadJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ActionManager_LoadJobError;
+				return Messages.get().ActionManager_LoadJobError;
 			}
 
 			@Override
@@ -259,7 +259,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				createAction();
 			}
 		};
-		actionNew.setText(Messages.ActionManager_ActionNew);
+		actionNew.setText(Messages.get().ActionManager_ActionNew);
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 		
 		actionEdit = new Action() {
@@ -272,7 +272,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				editAction();
 			}
 		};
-		actionEdit.setText(Messages.ActionManager_ActionProperties);
+		actionEdit.setText(Messages.get().ActionManager_ActionProperties);
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
 		actionDelete = new Action() {
@@ -285,7 +285,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				deleteActions();
 			}
 		};
-		actionDelete.setText(Messages.ActionManager_ActionDelete);
+		actionDelete.setText(Messages.get().ActionManager_ActionDelete);
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 	}
 	
@@ -337,11 +337,11 @@ public class ActionManager extends ViewPart implements SessionListener
 		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, true);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.ActionManager_CreateJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.get().ActionManager_CreateJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ActionManager_CreateJobError;
+					return Messages.get().ActionManager_CreateJobError;
 				}
 
 				@Override
@@ -368,11 +368,11 @@ public class ActionManager extends ViewPart implements SessionListener
 		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.ActionManager_UpdateJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.get().ActionManager_UpdateJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ActionManager_UodateJobError;
+					return Messages.get().ActionManager_UodateJobError;
 				}
 
 				@Override
@@ -393,15 +393,15 @@ public class ActionManager extends ViewPart implements SessionListener
 		if (selection.isEmpty())
 			return;
 		
-		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.ActionManager_Confirmation, Messages.ActionManager_ConfirmDelete))
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ActionManager_Confirmation, Messages.get().ActionManager_ConfirmDelete))
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob(Messages.ActionManager_DeleteJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ActionManager_DeleteJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ActionManager_DeleteJobError;
+				return Messages.get().ActionManager_DeleteJobError;
 			}
 
 			@Override
@@ -420,7 +420,7 @@ public class ActionManager extends ViewPart implements SessionListener
 	 */
 	private void updateActionsList()
 	{
-		new UIJob(viewer.getControl().getDisplay(), Messages.ActionManager_UiUpdateJobName) {
+		new UIJob(viewer.getControl().getDisplay(), Messages.get().ActionManager_UiUpdateJobName) {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{

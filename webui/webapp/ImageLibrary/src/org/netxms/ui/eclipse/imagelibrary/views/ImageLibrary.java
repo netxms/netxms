@@ -148,7 +148,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void createActions()
 	{
-		actionNew = new Action(Messages.ImageLibrary_ActionUpload) {
+		actionNew = new Action(Messages.get().ImageLibrary_ActionUpload) {
 			@Override
 			public void run()
 			{
@@ -168,7 +168,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		};
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-		actionEdit = new Action(Messages.ImageLibrary_ActionEdit) {
+		actionEdit = new Action(Messages.get().ImageLibrary_ActionEdit) {
 			@Override
 			public void run()
 			{
@@ -188,7 +188,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 
-		actionDelete = new Action(Messages.ImageLibrary_ActionDelete) {
+		actionDelete = new Action(Messages.get().ImageLibrary_ActionDelete) {
 			@Override
 			public void run()
 			{
@@ -213,7 +213,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			}
 		};
 
-		actionZoomIn = new Action(Messages.ImageLibrary_ActionZoomIn) {
+		actionZoomIn = new Action(Messages.get().ImageLibrary_ActionZoomIn) {
 			@Override
 			public void run()
 			{
@@ -227,7 +227,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			}
 		};
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
-		actionZoomOut = new Action(Messages.ImageLibrary_ActionZoomOut) {
+		actionZoomOut = new Action(Messages.get().ImageLibrary_ActionZoomOut) {
 			@Override
 			public void run()
 			{
@@ -253,7 +253,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	{
 		final LibraryImage image = (LibraryImage)galleryItem.getData();
 
-		new ConsoleJob(Messages.ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -287,7 +287,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask(Messages.ImageLibrary_UpdateImage, (int)workTotal);
+						monitor.beginTask(Messages.get().ImageLibrary_UpdateImage, (int)workTotal);
 					}
 					
 					@Override
@@ -307,7 +307,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ImageLibrary_UpdateError;
+				return Messages.get().ImageLibrary_UpdateError;
 			}
 		}.start();
 	}
@@ -319,7 +319,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-		new ConsoleJob(Messages.ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -349,7 +349,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask(Messages.ImageLibrary_UploadImage, (int)workTotal);
+						monitor.beginTask(Messages.get().ImageLibrary_UploadImage, (int)workTotal);
 					}
 					
 					@Override
@@ -370,7 +370,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ImageLibrary_UploadError;
+				return Messages.get().ImageLibrary_UploadError;
 			}
 		}.start();
 	}
@@ -476,7 +476,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		new ConsoleJob(Messages.ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null, display) {
+		new ConsoleJob(Messages.get().ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null, display) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -509,7 +509,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ImageLibrary_LoadError;
+				return Messages.get().ImageLibrary_LoadError;
 			}
 
 		}.start();

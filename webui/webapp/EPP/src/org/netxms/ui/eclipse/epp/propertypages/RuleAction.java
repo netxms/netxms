@@ -54,7 +54,7 @@ public class RuleAction extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkStopProcessing = new Button(dialogArea, SWT.CHECK);
-      checkStopProcessing.setText(Messages.RuleAction_StopProcessing);
+      checkStopProcessing.setText(Messages.get().RuleAction_StopProcessing);
       checkStopProcessing.setSelection((rule.getFlags() & EventProcessingPolicyRule.STOP_PROCESSING) != 0);
       
 		return dialogArea;

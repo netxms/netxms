@@ -65,7 +65,7 @@ public class OpenEventMonitor implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenEventMonitor_Error, Messages.OpenEventMonitor_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenEventMonitor_Error, Messages.get().OpenEventMonitor_ErrorText + e.getMessage());
 			}
 		}
 	}

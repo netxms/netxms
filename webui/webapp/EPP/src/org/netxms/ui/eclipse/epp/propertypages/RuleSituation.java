@@ -86,7 +86,7 @@ public class RuleSituation extends PropertyPage
       final int vInd = WidgetHelper.OUTER_SPACING - WidgetHelper.INNER_SPACING;
       
       situation = new SituationSelector(dialogArea, SWT.NONE);
-      situation.setLabel(Messages.RuleSituation_SituationObject);
+      situation.setLabel(Messages.get().RuleSituation_SituationObject);
       situation.setSituationId(rule.getSituationId());
       GridData gd = new GridData();
       gd.horizontalAlignment = GridData.FILL;
@@ -94,7 +94,7 @@ public class RuleSituation extends PropertyPage
       situation.setLayoutData(gd);
       
       instance = new LabeledText(dialogArea, SWT.NONE);
-      instance.setLabel(Messages.RuleSituation_Instance);
+      instance.setLabel(Messages.get().RuleSituation_Instance);
       instance.setText(rule.getSituationInstance());
       gd = new GridData();
       gd.horizontalAlignment = GridData.FILL;
@@ -103,12 +103,12 @@ public class RuleSituation extends PropertyPage
       instance.setLayoutData(gd);
       
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.RuleSituation_Attributes);
+      label.setText(Messages.get().RuleSituation_Attributes);
       gd = new GridData();
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
       
-      final String[] columnNames = { Messages.RuleSituation_Name, Messages.RuleSituation_Value };
+      final String[] columnNames = { Messages.get().RuleSituation_Name, Messages.get().RuleSituation_Value };
       final int[] columnWidths = { 150, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -144,7 +144,7 @@ public class RuleSituation extends PropertyPage
       buttons.setLayoutData(gd);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.RuleSituation_Add);
+      addButton.setText(Messages.get().RuleSituation_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -163,7 +163,7 @@ public class RuleSituation extends PropertyPage
       addButton.setLayoutData(rd);
 		
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText(Messages.RuleSituation_Edit);
+      editButton.setText(Messages.get().RuleSituation_Edit);
       editButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -183,7 +183,7 @@ public class RuleSituation extends PropertyPage
       editButton.setEnabled(false);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.RuleSituation_Delete);
+      deleteButton.setText(Messages.get().RuleSituation_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

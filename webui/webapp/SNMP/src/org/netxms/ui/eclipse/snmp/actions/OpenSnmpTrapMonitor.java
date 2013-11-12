@@ -66,7 +66,7 @@ public class OpenSnmpTrapMonitor implements IWorkbenchWindowActionDelegate
 			return;
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.OpenSnmpTrapMonitor_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().OpenSnmpTrapMonitor_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -81,7 +81,7 @@ public class OpenSnmpTrapMonitor implements IWorkbenchWindowActionDelegate
 						} 
 						catch (PartInitException e) 
 						{
-							MessageDialogHelper.openError(window.getShell(), Messages.OpenSnmpTrapMonitor_Error, Messages.OpenSnmpTrapMonitor_ErrorText + e.getMessage());
+							MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSnmpTrapMonitor_Error, Messages.get().OpenSnmpTrapMonitor_ErrorText + e.getMessage());
 						}
 					}
 				});
@@ -90,7 +90,7 @@ public class OpenSnmpTrapMonitor implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.OpenSnmpTrapMonitor_JobError;
+				return Messages.get().OpenSnmpTrapMonitor_JobError;
 			}
 		}.start();
 	}

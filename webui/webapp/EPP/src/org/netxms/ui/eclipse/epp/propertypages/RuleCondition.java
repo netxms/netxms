@@ -54,7 +54,7 @@ public class RuleCondition extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkDisabled = new Button(dialogArea, SWT.CHECK);
-      checkDisabled.setText(Messages.RuleCondition_RuleDisabled);
+      checkDisabled.setText(Messages.get().RuleCondition_RuleDisabled);
       checkDisabled.setSelection((rule.getFlags() & EventProcessingPolicyRule.DISABLED) != 0);
       
 		return dialogArea;

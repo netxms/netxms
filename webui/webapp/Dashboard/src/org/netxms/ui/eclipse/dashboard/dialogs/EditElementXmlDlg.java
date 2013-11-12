@@ -55,7 +55,7 @@ public class EditElementXmlDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.EditElementXmlDlg_DialogTitle);
+		newShell.setText(Messages.get().EditElementXmlDlg_DialogTitle);
 	}
 
 	/* (non-Javadoc)
@@ -70,7 +70,7 @@ public class EditElementXmlDlg extends Dialog
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		
 		final Label label = new Label(dialogArea, SWT.NONE);
-		label.setText(Messages.EditElementXmlDlg_EditorTitle);
+		label.setText(Messages.get().EditElementXmlDlg_EditorTitle);
 	
 		text = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		GridData gd = new GridData();

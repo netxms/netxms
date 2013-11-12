@@ -62,30 +62,30 @@ public class SystemRights extends PropertyPage
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 		
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, Messages.SystemRights_DeleteAlarms);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.SystemRights_ConfigureActions);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.SystemRights_ConfigureEvents);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.SystemRights_ViewEventConfig);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SITUATIONS, Messages.SystemRights_ConfigureSituations);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EPP, Messages.SystemRights_EditEPP);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, Messages.SystemRights_ManageScripts);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, Messages.SystemRights_ConfigureObjTools);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, Messages.SystemRights_ConfigureTraps);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, Messages.SystemRights_ManageAgents);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, Messages.SystemRights_ManagePackages);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, Messages.SystemRights_ViewEventLog);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, Messages.SystemRights_ViewAuditLog);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.SystemRights_ViewTrapLog);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, Messages.SystemRights_ManageMappingTables);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, Messages.SystemRights_EditServerConfig);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, Messages.SystemRights_ReadFiles);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_FILES, Messages.SystemRights_ManageFiles);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, Messages.SystemRights_AccessConsole);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, Messages.SystemRights_ControlSessions);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, Messages.SystemRights_ManageUsers);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SEND_SMS, Messages.SystemRights_SendSMS);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, Messages.SystemRights_RegisterAgents);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.SystemRights_LoginAsMobile);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, Messages.get().SystemRights_DeleteAlarms);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.get().SystemRights_ConfigureActions);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.get().SystemRights_ViewEventConfig);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SITUATIONS, Messages.get().SystemRights_ConfigureSituations);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EPP, Messages.get().SystemRights_EditEPP);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, Messages.get().SystemRights_ManageScripts);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, Messages.get().SystemRights_ConfigureObjTools);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, Messages.get().SystemRights_ConfigureTraps);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, Messages.get().SystemRights_ManageAgents);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, Messages.get().SystemRights_ManagePackages);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, Messages.get().SystemRights_ViewEventLog);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, Messages.get().SystemRights_ViewAuditLog);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.get().SystemRights_ViewTrapLog);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, Messages.get().SystemRights_ManageMappingTables);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, Messages.get().SystemRights_EditServerConfig);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, Messages.get().SystemRights_ReadFiles);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_FILES, Messages.get().SystemRights_ManageFiles);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, Messages.get().SystemRights_AccessConsole);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, Messages.get().SystemRights_ControlSessions);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, Messages.get().SystemRights_ManageUsers);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SEND_SMS, Messages.get().SystemRights_SendSMS);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, Messages.get().SystemRights_RegisterAgents);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.get().SystemRights_LoginAsMobile);
 		
 		return dialogArea;
 	}
@@ -122,7 +122,7 @@ public class SystemRights extends PropertyPage
 		
 		object.setSystemRights(systemRights);
 		
-		new ConsoleJob(Messages.SystemRights_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SystemRights_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -132,7 +132,7 @@ public class SystemRights extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SystemRights_JobError;
+				return Messages.get().SystemRights_JobError;
 			}
 
 			@Override

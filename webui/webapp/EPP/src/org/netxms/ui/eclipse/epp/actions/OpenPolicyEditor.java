@@ -62,7 +62,7 @@ public class OpenPolicyEditor implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenPolicyEditor_Error, Messages.OpenPolicyEditor_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenPolicyEditor_Error, Messages.get().OpenPolicyEditor_ErrorText + e.getMessage());
 			}
 		}
 	}

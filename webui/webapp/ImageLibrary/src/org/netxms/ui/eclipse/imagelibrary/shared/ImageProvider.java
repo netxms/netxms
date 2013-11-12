@@ -164,7 +164,7 @@ public class ImageProvider
 			cache.put(guid, image);
 			if (libraryIndex.containsKey(guid))
 			{
-				new ConsoleJob(Messages.ImageProvider_JobName, null, Activator.PLUGIN_ID, null) {		
+				new ConsoleJob(Messages.get().ImageProvider_JobName, null, Activator.PLUGIN_ID, null) {		
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{

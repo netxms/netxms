@@ -108,18 +108,18 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			}
 			
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.CreateInterfraceDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().CreateInterfraceDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.CreateInterfraceDci_JobError;
+					return Messages.get().CreateInterfraceDci_JobError;
 				}
 
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					InterfaceDciInfo[] dciInfo = dlg.getDciInfo();
-					monitor.beginTask(Messages.CreateInterfraceDci_TaskName, ifaces.size() * dciInfo.length);
+					monitor.beginTask(Messages.get().CreateInterfraceDci_TaskName, ifaces.size() * dciInfo.length);
 					for(int i = 0; i < ifaces.size(); i++)
 					{
 						for(int j = 0; j < dciInfo.length; j++)

@@ -50,7 +50,7 @@ public class CustomWidget extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		className = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-		className.setLabel(Messages.CustomWidget_ClassName);
+		className.setLabel(Messages.get().CustomWidget_ClassName);
 		className.setText(config.getClassName());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

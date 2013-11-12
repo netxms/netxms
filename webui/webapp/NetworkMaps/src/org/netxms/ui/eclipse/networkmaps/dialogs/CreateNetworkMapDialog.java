@@ -62,7 +62,7 @@ public class CreateNetworkMapDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.CreateNetworkMapDialog_Title);
+		newShell.setText(Messages.get().CreateNetworkMapDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -78,14 +78,14 @@ public class CreateNetworkMapDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.CreateNetworkMapDialog_Name, "", //$NON-NLS-2$ //$NON-NLS-1$
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateNetworkMapDialog_Name, "", //$NON-NLS-2$ //$NON-NLS-1$
                                                 WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
       
-      mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.CreateNetworkMapDialog_MapType, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      mapType.add(Messages.CreateNetworkMapDialog_Custom);
-      mapType.add(Messages.CreateNetworkMapDialog_L2Topology);
-      mapType.add(Messages.CreateNetworkMapDialog_IpTopology);
+      mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().CreateNetworkMapDialog_MapType, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      mapType.add(Messages.get().CreateNetworkMapDialog_Custom);
+      mapType.add(Messages.get().CreateNetworkMapDialog_L2Topology);
+      mapType.add(Messages.get().CreateNetworkMapDialog_IpTopology);
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -106,7 +106,7 @@ public class CreateNetworkMapDialog extends Dialog
       });
       
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      seedObjectSelector.setLabel(Messages.CreateNetworkMapDialog_SeedNode);
+      seedObjectSelector.setLabel(Messages.get().CreateNetworkMapDialog_SeedNode);
       seedObjectSelector.setObjectClass(Node.class);
       seedObjectSelector.setEnabled(false);
       gd = new GridData();
@@ -126,7 +126,7 @@ public class CreateNetworkMapDialog extends Dialog
 		name = textName.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.CreateNetworkMapDialog_Warning, Messages.CreateNetworkMapDialog_PleaseEnterName);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkMapDialog_Warning, Messages.get().CreateNetworkMapDialog_PleaseEnterName);
 			return;
 		}
 		
@@ -136,7 +136,7 @@ public class CreateNetworkMapDialog extends Dialog
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.CreateNetworkMapDialog_Warning, Messages.CreateNetworkMapDialog_PleaseSelectSeed);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkMapDialog_Warning, Messages.get().CreateNetworkMapDialog_PleaseSelectSeed);
 				return;
 			}
 		}

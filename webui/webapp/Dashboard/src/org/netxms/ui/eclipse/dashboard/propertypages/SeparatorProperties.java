@@ -77,7 +77,7 @@ public class SeparatorProperties extends PropertyPage
 		areaLayout.marginLeft = 0;
 		areaLayout.marginRight = 0;
 		fgArea.setLayout(areaLayout);
-		new Label(fgArea, SWT.NONE).setText(Messages.LabelProperties_TextColor);
+		new Label(fgArea, SWT.NONE).setText(Messages.get().LabelProperties_TextColor);
 		foreground = new ColorSelector(fgArea);
 		foreground.setColorValue(ColorConverter.rgbFromInt(config.getForegroundColorAsInt()));
 		
@@ -93,7 +93,7 @@ public class SeparatorProperties extends PropertyPage
 		areaLayout.marginLeft = 0;
 		areaLayout.marginRight = 0;
 		bgArea.setLayout(areaLayout);
-		new Label(bgArea, SWT.NONE).setText(Messages.LabelProperties_BgColor);
+		new Label(bgArea, SWT.NONE).setText(Messages.get().LabelProperties_BgColor);
 		background = new ColorSelector(bgArea);
 		background.setColorValue(ColorConverter.rgbFromInt(config.getBackgroundColorAsInt()));
 		
@@ -112,7 +112,7 @@ public class SeparatorProperties extends PropertyPage
       lineWidthGroup.setLayoutData(gd);
       
       Label label = new Label(lineWidthGroup, SWT.NONE);
-      label.setText(Messages.SeparatorProperties_LineWidth);
+      label.setText(Messages.get().SeparatorProperties_LineWidth);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;
@@ -158,16 +158,16 @@ public class SeparatorProperties extends PropertyPage
 			}
 		});
       
-      marginLeft = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.SeparatorProperties_LeftMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      marginLeft = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().SeparatorProperties_LeftMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
       marginLeft.setSelection(config.getLeftMargin());
 		
-      marginRight = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.SeparatorProperties_RightMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      marginRight = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().SeparatorProperties_RightMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
       marginRight.setSelection(config.getRightMargin());
 		
-      marginTop = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.SeparatorProperties_TopMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      marginTop = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().SeparatorProperties_TopMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
       marginTop.setSelection(config.getTopMargin());
 		
-      marginBottom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.SeparatorProperties_BottomMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      marginBottom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().SeparatorProperties_BottomMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
       marginBottom.setSelection(config.getBottomMargin());
 		
 		return dialogArea;

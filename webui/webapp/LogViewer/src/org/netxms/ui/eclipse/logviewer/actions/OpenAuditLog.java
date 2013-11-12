@@ -66,7 +66,7 @@ public class OpenAuditLog implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenAuditLog_Error, Messages.OpenAuditLog_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenAuditLog_Error, Messages.get().OpenAuditLog_ErrorText + e.getMessage());
 			}
 		}
 	}

@@ -41,7 +41,7 @@ public class SituationSelector extends AbstractSelector
 	public SituationSelector(Composite parent, int style)
 	{
 		super(parent, style, USE_TEXT | SHOW_CLEAR_BUTTON);
-		setText(Messages.SituationSelector_None);
+		setText(Messages.get().SituationSelector_None);
 	}
 
 	/* (non-Javadoc)
@@ -64,7 +64,7 @@ public class SituationSelector extends AbstractSelector
 			else
 			{
 				situationId = 0;
-				setText(Messages.SituationSelector_None);
+				setText(Messages.get().SituationSelector_None);
 				getTextControl().setToolTipText(null);
 			}
 		}
@@ -77,7 +77,7 @@ public class SituationSelector extends AbstractSelector
 	protected void clearButtonHandler()
 	{
 		situationId = 0;
-		setText(Messages.SituationSelector_None);
+		setText(Messages.get().SituationSelector_None);
 		getTextControl().setToolTipText(null);
 	}
 
@@ -98,13 +98,13 @@ public class SituationSelector extends AbstractSelector
 			}
 			else
 			{
-				setText(Messages.SituationSelector_Unknown);
+				setText(Messages.get().SituationSelector_Unknown);
 				getTextControl().setToolTipText(null);
 			}
 		}
 		else
 		{
-			setText(Messages.SituationSelector_None);
+			setText(Messages.get().SituationSelector_None);
 			getTextControl().setToolTipText(null);
 		}
 	}
@@ -115,7 +115,7 @@ public class SituationSelector extends AbstractSelector
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
-		return Messages.SituationSelector_Tooltip;
+		return Messages.get().SituationSelector_Tooltip;
 	}
 
 	/**

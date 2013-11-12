@@ -72,11 +72,11 @@ public class UploadFileToAgent implements IObjectActionDelegate
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			final Long[] nodeIdList = nodes.toArray(new Long[nodes.size()]);
-			new ConsoleJob(Messages.UploadFileToAgent_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().UploadFileToAgent_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.UploadFileToAgent_JobError;
+					return Messages.get().UploadFileToAgent_JobError;
 				}
 
 				@Override

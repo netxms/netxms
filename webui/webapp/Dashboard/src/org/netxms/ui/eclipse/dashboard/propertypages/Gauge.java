@@ -84,7 +84,7 @@ public class Gauge extends PropertyPage
 		fontName.setLayoutData(gd);
 		
 		minValue = new LabeledText(dialogArea, SWT.NONE);
-		minValue.setLabel(Messages.DialChart_MinVal);
+		minValue.setLabel(Messages.get().DialChart_MinVal);
 		minValue.setText(Double.toString(config.getMinValue()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -92,7 +92,7 @@ public class Gauge extends PropertyPage
 		minValue.setLayoutData(gd);
 		
 		maxValue = new LabeledText(dialogArea, SWT.NONE);
-		maxValue.setLabel(Messages.DialChart_MaxVal);
+		maxValue.setLabel(Messages.get().DialChart_MaxVal);
 		maxValue.setText(Double.toString(config.getMaxValue()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -100,7 +100,7 @@ public class Gauge extends PropertyPage
 		maxValue.setLayoutData(gd);
 		
 		leftRedZone = new LabeledText(dialogArea, SWT.NONE);
-		leftRedZone.setLabel(Messages.DialChart_LeftRed);
+		leftRedZone.setLabel(Messages.get().DialChart_LeftRed);
 		leftRedZone.setText(Double.toString(config.getLeftRedZone()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -108,7 +108,7 @@ public class Gauge extends PropertyPage
 		leftRedZone.setLayoutData(gd);
 		
 		leftYellowZone = new LabeledText(dialogArea, SWT.NONE);
-		leftYellowZone.setLabel(Messages.DialChart_LeftYellow);
+		leftYellowZone.setLabel(Messages.get().DialChart_LeftYellow);
 		leftYellowZone.setText(Double.toString(config.getLeftYellowZone()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -116,7 +116,7 @@ public class Gauge extends PropertyPage
 		leftYellowZone.setLayoutData(gd);
 		
 		rightYellowZone = new LabeledText(dialogArea, SWT.NONE);
-		rightYellowZone.setLabel(Messages.DialChart_RightYellow);
+		rightYellowZone.setLabel(Messages.get().DialChart_RightYellow);
 		rightYellowZone.setText(Double.toString(config.getRightYellowZone()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -124,7 +124,7 @@ public class Gauge extends PropertyPage
 		rightYellowZone.setLayoutData(gd);
 		
 		rightRedZone = new LabeledText(dialogArea, SWT.NONE);
-		rightRedZone.setLabel(Messages.DialChart_RightRed);
+		rightRedZone.setLabel(Messages.get().DialChart_RightRed);
 		rightRedZone.setText(Double.toString(config.getRightRedZone()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -132,7 +132,7 @@ public class Gauge extends PropertyPage
 		rightRedZone.setLayoutData(gd);
 		
 		checkLegendInside = new Button(dialogArea, SWT.CHECK);
-		checkLegendInside.setText(Messages.DialChart_LegendInside);
+		checkLegendInside.setText(Messages.get().DialChart_LegendInside);
 		checkLegendInside.setSelection(config.isLegendInside());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -170,7 +170,7 @@ public class Gauge extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.DialChart_Warning, Messages.DialChart_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().DialChart_Warning, Messages.get().DialChart_WarningText);
 			return false;
 		}
 		

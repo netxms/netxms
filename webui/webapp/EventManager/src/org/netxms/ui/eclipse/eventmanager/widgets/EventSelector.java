@@ -43,7 +43,7 @@ public class EventSelector extends AbstractSelector
 	public EventSelector(Composite parent, int style)
 	{
 		super(parent, style, 0);
-		setText(Messages.EventSelector_None);
+		setText(Messages.get().EventSelector_None);
 	}
 
 	/**
@@ -53,7 +53,7 @@ public class EventSelector extends AbstractSelector
 	public EventSelector(Composite parent, int style, boolean useHyperlink)
 	{
 		super(parent, style, (useHyperlink ? USE_HYPERLINK : 0) | SHOW_CLEAR_BUTTON);
-		setText(Messages.EventSelector_None);
+		setText(Messages.get().EventSelector_None);
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +78,7 @@ public class EventSelector extends AbstractSelector
 			else
 			{
 				eventCode = 0;
-				setText(Messages.EventSelector_None);
+				setText(Messages.get().EventSelector_None);
 				setImage(null);
 				getTextControl().setToolTipText(null);
 			}
@@ -97,7 +97,7 @@ public class EventSelector extends AbstractSelector
 			return;
 		
 		eventCode = 0;
-		setText(Messages.EventSelector_None);
+		setText(Messages.get().EventSelector_None);
 		setImage(null);
 		getTextControl().setToolTipText(null);
 		fireModifyListeners();
@@ -134,14 +134,14 @@ public class EventSelector extends AbstractSelector
 			}
 			else
 			{
-				setText(Messages.EventSelector_Unknown);
+				setText(Messages.get().EventSelector_Unknown);
 				setImage(null);
 				getTextControl().setToolTipText(null);
 			}
 		}
 		else
 		{
-			setText(Messages.EventSelector_None);
+			setText(Messages.get().EventSelector_None);
 			setImage(null);
 			getTextControl().setToolTipText(null);
 		}
@@ -158,7 +158,7 @@ public class EventSelector extends AbstractSelector
 		StringBuilder sb = new StringBuilder(event.getName());
 		sb.append(" ["); //$NON-NLS-1$
 		sb.append(event.getCode());
-		sb.append(Messages.EventSelector_Severity);
+		sb.append(Messages.get().EventSelector_Severity);
 		sb.append(StatusDisplayInfo.getStatusText(event.getSeverity()));
 		sb.append("\n\n"); //$NON-NLS-1$
 		sb.append(event.getMessage());
@@ -173,6 +173,6 @@ public class EventSelector extends AbstractSelector
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
-		return Messages.EventSelector_Tooltip;
+		return Messages.get().EventSelector_Tooltip;
 	}
 }

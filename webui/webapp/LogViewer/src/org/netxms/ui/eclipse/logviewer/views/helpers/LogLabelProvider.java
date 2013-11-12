@@ -43,8 +43,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LogLabelProvider implements ITableLabelProvider
 {
-	public static final String[] ALARM_STATE_TEXTS = { Messages.LogLabelProvider_Outstanding, Messages.LogLabelProvider_Acknowledged, Messages.LogLabelProvider_Resolved, Messages.LogLabelProvider_Terminated };
-	public static final String[] ALARM_HD_STATE_TEXTS = { Messages.LogLabelProvider_Ignored, Messages.LogLabelProvider_Open, Messages.LogLabelProvider_Closed };
+	public static final String[] ALARM_STATE_TEXTS = { Messages.get().LogLabelProvider_Outstanding, Messages.get().LogLabelProvider_Acknowledged, Messages.get().LogLabelProvider_Resolved, Messages.get().LogLabelProvider_Terminated };
+	public static final String[] ALARM_HD_STATE_TEXTS = { Messages.get().LogLabelProvider_Ignored, Messages.get().LogLabelProvider_Open, Messages.get().LogLabelProvider_Closed };
 	
 	private LogColumn[] columns;
 	private NXCSession session;
@@ -145,7 +145,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(NumberFormatException e)
 				{
-					return Messages.LogLabelProvider_Error;
+					return Messages.get().LogLabelProvider_Error;
 				}
 			case LogColumn.LC_OBJECT_ID:
 				try
@@ -158,7 +158,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(NumberFormatException e)
 				{
-					return Messages.LogLabelProvider_Error;
+					return Messages.get().LogLabelProvider_Error;
 				}
 			case LogColumn.LC_SEVERITY:
 				try
@@ -168,7 +168,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(NumberFormatException e)
 				{
-					return Messages.LogLabelProvider_Error;
+					return Messages.get().LogLabelProvider_Error;
 				}
 			case LogColumn.LC_USER_ID:
 				try
@@ -200,7 +200,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(Exception e)
 				{
-					return Messages.LogLabelProvider_Error;
+					return Messages.get().LogLabelProvider_Error;
 				}
 			case LogColumn.LC_ALARM_HD_STATE:
 				try
@@ -210,7 +210,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				}
 				catch(Exception e)
 				{
-					return Messages.LogLabelProvider_Error;
+					return Messages.get().LogLabelProvider_Error;
 				}
 			default:
 				return value;

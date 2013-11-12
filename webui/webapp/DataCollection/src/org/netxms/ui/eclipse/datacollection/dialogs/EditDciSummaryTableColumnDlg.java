@@ -66,7 +66,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       dialogArea.setLayout(layout);
 		
       name = new LabeledText(dialogArea, SWT.NONE);
-      name.setLabel(Messages.EditDciSummaryTableColumnDlg_Name);
+      name.setLabel(Messages.get().EditDciSummaryTableColumnDlg_Name);
       name.getTextControl().setTextLimit(127);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -76,7 +76,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       name.setText(column.getName());
       
       dciName = new LabeledText(dialogArea, SWT.NONE);
-      dciName.setLabel(Messages.EditDciSummaryTableColumnDlg_DciName);
+      dciName.setLabel(Messages.get().EditDciSummaryTableColumnDlg_DciName);
       dciName.getTextControl().setTextLimit(255);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -98,7 +98,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.EditDciSummaryTableColumnDlg_EditColumn);
+		newShell.setText(Messages.get().EditDciSummaryTableColumnDlg_EditColumn);
 	}
 	
 	/* (non-Javadoc)

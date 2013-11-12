@@ -241,14 +241,14 @@ public class TableConditionsEditor extends Composite
 			operation = new CCombo(parent, SWT.BORDER | SWT.READ_ONLY);
 			toolkit.adapt(operation);
 			operation.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-			operation.add(Messages.EditThresholdDialog_LT);
-			operation.add(Messages.EditThresholdDialog_LE);
-			operation.add(Messages.EditThresholdDialog_EQ);
-			operation.add(Messages.EditThresholdDialog_GE);
-			operation.add(Messages.EditThresholdDialog_GT);
-			operation.add(Messages.EditThresholdDialog_NE);
-			operation.add(Messages.EditThresholdDialog_LIKE);
-			operation.add(Messages.EditThresholdDialog_NOTLIKE);
+			operation.add(Messages.get().EditThresholdDialog_LT);
+			operation.add(Messages.get().EditThresholdDialog_LE);
+			operation.add(Messages.get().EditThresholdDialog_EQ);
+			operation.add(Messages.get().EditThresholdDialog_GE);
+			operation.add(Messages.get().EditThresholdDialog_GT);
+			operation.add(Messages.get().EditThresholdDialog_NE);
+			operation.add(Messages.get().EditThresholdDialog_LIKE);
+			operation.add(Messages.get().EditThresholdDialog_NOTLIKE);
 			
 			value = toolkit.createText(parent, "");
 			value.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));

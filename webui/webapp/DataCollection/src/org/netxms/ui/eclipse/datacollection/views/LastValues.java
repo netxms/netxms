@@ -71,7 +71,7 @@ public class LastValues extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		dcTarget = ((obj != null) && ((obj instanceof AbstractNode) || (obj instanceof MobileDevice) || (obj instanceof Cluster))) ? obj : null;
-		setPartName(Messages.LastValues_PartNamePrefix + ((dcTarget != null) ? dcTarget.getObjectName() : Messages.LastValues_Error));
+		setPartName(Messages.get().LastValues_PartNamePrefix + ((dcTarget != null) ? dcTarget.getObjectName() : Messages.get().LastValues_Error));
 	}
 
 	/* (non-Javadoc)
@@ -135,7 +135,7 @@ public class LastValues extends ViewPart
 			}
 		};
 		
-		actionAutoUpdate = new Action(Messages.LastValues_AutoRefresh, Action.AS_CHECK_BOX) {
+		actionAutoUpdate = new Action(Messages.get().LastValues_AutoRefresh, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -144,7 +144,7 @@ public class LastValues extends ViewPart
 		};
 		actionAutoUpdate.setChecked(dataView.isAutoRefreshEnabled());
 		
-		actionUseMultipliers = new Action(Messages.LastValues_UseMultipliers, Action.AS_CHECK_BOX) {
+		actionUseMultipliers = new Action(Messages.get().LastValues_UseMultipliers, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -153,7 +153,7 @@ public class LastValues extends ViewPart
 		};
 		actionUseMultipliers.setChecked(dataView.areMultipliersUsed());
 
-		actionShowFilter = new Action(Messages.LastValues_ShowFilter, Action.AS_CHECK_BOX) {
+		actionShowFilter = new Action(Messages.get().LastValues_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

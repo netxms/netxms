@@ -31,11 +31,11 @@ public class CloneDashboard implements IObjectActionDelegate
 	{
 		final long parentId = sourceObject.getParentIdList()[0];
 
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CloneDashboard_Dashboard);
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CloneDashboard_Dashboard);
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.CloneDashboard_JobTitle, part, Activator.PLUGIN_ID, null)
+			new ConsoleJob(Messages.get().CloneDashboard_JobTitle, part, Activator.PLUGIN_ID, null)
 			{
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -54,7 +54,7 @@ public class CloneDashboard implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.CloneDashboard_ErrorPrefix + dlg.getObjectName() + Messages.CloneDashboard_ErrorSuffix;
+					return Messages.get().CloneDashboard_ErrorPrefix + dlg.getObjectName() + Messages.get().CloneDashboard_ErrorSuffix;
 				}
 			}.start();
 		}

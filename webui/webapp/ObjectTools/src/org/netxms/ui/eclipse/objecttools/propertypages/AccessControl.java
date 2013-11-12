@@ -97,7 +97,7 @@ public class AccessControl extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText(Messages.AccessControl_Label);
+		label.setText(Messages.get().AccessControl_Label);
 		
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -125,7 +125,7 @@ public class AccessControl extends PropertyPage
       buttons.setLayoutData(gd);
 
       buttonAdd = new Button(buttons, SWT.PUSH);
-      buttonAdd.setText(Messages.AccessControl_Add);
+      buttonAdd.setText(Messages.get().AccessControl_Add);
       buttonAdd.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -144,7 +144,7 @@ public class AccessControl extends PropertyPage
       buttonAdd.setLayoutData(rd);
 		
       buttonRemove = new Button(buttons, SWT.PUSH);
-      buttonRemove.setText(Messages.AccessControl_Delete);
+      buttonRemove.setText(Messages.get().AccessControl_Delete);
       buttonRemove.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

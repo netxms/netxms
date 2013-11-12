@@ -59,7 +59,7 @@ public class ImportDashboardDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ImportDashboardDialog_Title);
+		newShell.setText(Messages.get().ImportDashboardDialog_Title);
 	}
 	
 	/* (non-Javadoc)
@@ -76,7 +76,7 @@ public class ImportDashboardDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel(Messages.ImportDashboardDialog_ObjectName);
+      textName.setLabel(Messages.get().ImportDashboardDialog_ObjectName);
       textName.getTextControl().setTextLimit(63);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -85,9 +85,9 @@ public class ImportDashboardDialog extends Dialog
       textName.setLayoutData(gd);
       
       importFileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false, SWT.OPEN);
-      importFileSelector.setLabel(Messages.ImportDashboardDialog_ImportFile);
+      importFileSelector.setLabel(Messages.get().ImportDashboardDialog_ImportFile);
       importFileSelector.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-      importFileSelector.setFilterNames(new String[] { Messages.ImportDashboardDialog_XMLFiles, Messages.ImportDashboardDialog_AllFiles });
+      importFileSelector.setFilterNames(new String[] { Messages.get().ImportDashboardDialog_XMLFiles, Messages.get().ImportDashboardDialog_AllFiles });
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -106,13 +106,13 @@ public class ImportDashboardDialog extends Dialog
 		objectName = textName.getText().trim();
 		if (objectName.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.ImportDashboardDialog_Warning, Messages.ImportDashboardDialog_WarningValidName);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().ImportDashboardDialog_Warning, Messages.get().ImportDashboardDialog_WarningValidName);
 			return;
 		}
 		importFile = importFileSelector.getFile();
 		if (importFile == null)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.ImportDashboardDialog_Warning, Messages.ImportDashboardDialog_WarningSelectFile);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().ImportDashboardDialog_Warning, Messages.get().ImportDashboardDialog_WarningSelectFile);
 			return;
 		}
 		super.okPressed();

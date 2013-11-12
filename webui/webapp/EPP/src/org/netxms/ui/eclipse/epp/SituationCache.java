@@ -65,11 +65,11 @@ public class SituationCache
 			if ((e instanceof NXCException) && (((NXCException)e).getErrorCode() == RCC.ACCESS_DENIED))
 				return;
 			
-			new UIJob(display, Messages.SituationCache_JobTitle) {
+			new UIJob(display, Messages.get().SituationCache_JobTitle) {
 				@Override
 				public IStatus runInUIThread(IProgressMonitor monitor)
 				{
-					MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.SituationCache_Error, Messages.SituationCache_ErrorText + e.getLocalizedMessage());
+					MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.get().SituationCache_Error, Messages.get().SituationCache_ErrorText + e.getLocalizedMessage());
 					return Status.OK_STATUS;
 				}
 			}.schedule();

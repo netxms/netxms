@@ -244,7 +244,7 @@ public class ObjectTree extends Composite
 				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) || (n.getCode() == NXCNotification.OBJECT_DELETED))
 				{
 					changeCount++;
-					new UIJob(getDisplay(), Messages.ObjectTree_JobTitle) {
+					new UIJob(getDisplay(), Messages.get().ObjectTree_JobTitle) {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{

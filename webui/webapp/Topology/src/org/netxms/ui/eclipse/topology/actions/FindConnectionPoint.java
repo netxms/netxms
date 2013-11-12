@@ -52,7 +52,7 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	public void run(IAction action)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format(Messages.FindConnectionPoint_JobTitle, objectId), wbPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().FindConnectionPoint_JobTitle, objectId), wbPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -69,7 +69,7 @@ public class FindConnectionPoint implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.FindConnectionPoint_JobError;
+				return Messages.get().FindConnectionPoint_JobError;
 			}
 		}.start();
 	}

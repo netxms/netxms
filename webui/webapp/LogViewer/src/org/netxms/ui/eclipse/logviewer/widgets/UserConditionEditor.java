@@ -43,8 +43,8 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
  */
 public class UserConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.UserConditionEditor_Is, Messages.UserConditionEditor_IsNot };
-	private static final String EMPTY_SELECTION_TEXT = Messages.UserConditionEditor_None;
+	private static final String[] OPERATIONS = { Messages.get().UserConditionEditor_Is, Messages.get().UserConditionEditor_IsNot };
+	private static final String EMPTY_SELECTION_TEXT = Messages.get().UserConditionEditor_None;
 	
 	private WorkbenchLabelProvider labelProvider;
 	private long userId = 0;

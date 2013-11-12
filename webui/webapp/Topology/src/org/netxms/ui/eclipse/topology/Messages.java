@@ -1,89 +1,92 @@
 package org.netxms.ui.eclipse.topology;
 
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.swt.widgets.Display;
+
 
 public class Messages extends NLS
 {
    private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.topology.messages"; //$NON-NLS-1$
-   public static String ConnectionPointLabelProvider_Direct;
-   public static String ConnectionPointLabelProvider_Indirect;
-   public static String ConnectionPointLabelProvider_Unknown;
-   public static String DeviceView_SlotName;
-   public static String EnterIpAddressDlg_EnterValidAddress;
-   public static String EnterIpAddressDlg_IpAddress;
-   public static String EnterIpAddressDlg_SelectZone;
-   public static String EnterIpAddressDlg_Title;
-   public static String EnterIpAddressDlg_Warning;
-   public static String EnterIpAddressDlg_Zone;
-   public static String EnterMacAddressDlg_Error;
-   public static String EnterMacAddressDlg_IncorrectMacAddress;
-   public static String EnterMacAddressDlg_MacAddress;
-   public static String EnterMacAddressDlg_Title;
-   public static String FindConnectionPoint_JobError;
-   public static String FindConnectionPoint_JobTitle;
-   public static String FindIpAddress_JobError;
-   public static String FindIpAddress_JobTitle;
-   public static String FindMacAddress_JobError;
-   public static String FindMacAddress_JobTitle;
-   public static String HostSearchResults_ClearLog;
-   public static String HostSearchResults_ColIface;
-   public static String HostSearchResults_ColIp;
-   public static String HostSearchResults_ColMac;
-   public static String HostSearchResults_ColNode;
-   public static String HostSearchResults_ColPort;
-   public static String HostSearchResults_ColSeq;
-   public static String HostSearchResults_ColSwitch;
-   public static String HostSearchResults_ColType;
-   public static String HostSearchResults_ConnectionPoint;
-   public static String HostSearchResults_Copy;
-   public static String HostSearchResults_CopyIp;
-   public static String HostSearchResults_CopyMac;
-   public static String HostSearchResults_ModeDirectly;
-   public static String HostSearchResults_ModeIndirectly;
-   public static String HostSearchResults_NodeConnected;
-   public static String HostSearchResults_NodeIpMacConnected;
-   public static String HostSearchResults_NodeMacConnected;
-   public static String HostSearchResults_NotFound;
-   public static String HostSearchResults_ShowError;
-   public static String HostSearchResults_Warning;
-   public static String RadioInterfaces_ColApMac;
-   public static String RadioInterfaces_ColApModel;
-   public static String RadioInterfaces_ColApName;
-   public static String RadioInterfaces_ColApSerial;
-   public static String RadioInterfaces_ColApVendor;
-   public static String RadioInterfaces_ColChannel;
-   public static String RadioInterfaces_ColRadioIndex;
-   public static String RadioInterfaces_ColRadioMac;
-   public static String RadioInterfaces_ColRadioName;
-   public static String RadioInterfaces_ColTxPowerDbm;
-   public static String RadioInterfaces_ColTxPowerMw;
-   public static String RadioInterfaces_PartName;
-   public static String ShowRadioInterfaces_CannotOpenView;
-   public static String ShowRadioInterfaces_Error;
-   public static String ShowVlans_CannotOpenView;
-   public static String ShowVlans_Error;
-   public static String ShowVlans_JobError;
-   public static String ShowVlans_JobTitle;
-   public static String ShowWirelessStations_CannotOpenView;
-   public static String ShowWirelessStations_Error;
-   public static String VlanView_ColumnID;
-   public static String VlanView_ColumnName;
-   public static String VlanView_ColumnPorts;
-   public static String VlanView_Error;
-   public static String VlanView_JobError;
-   public static String VlanView_JobTitle;
-   public static String VlanView_OpenMapError;
-   public static String VlanView_PartName;
-   public static String VlanView_ShowVlanMap;
-   public static String WirelessStations_ColAp;
-   public static String WirelessStations_ColIpAddr;
-   public static String WirelessStations_ColMacAddr;
-   public static String WirelessStations_ColNode;
-   public static String WirelessStations_ColRadio;
-   public static String WirelessStations_ColSSID;
-   public static String WirelessStations_JobError;
-   public static String WirelessStations_JobTitle;
-   public static String WirelessStations_PartName;
+   public String ConnectionPointLabelProvider_Direct;
+   public String ConnectionPointLabelProvider_Indirect;
+   public String ConnectionPointLabelProvider_Unknown;
+   public String DeviceView_SlotName;
+   public String EnterIpAddressDlg_EnterValidAddress;
+   public String EnterIpAddressDlg_IpAddress;
+   public String EnterIpAddressDlg_SelectZone;
+   public String EnterIpAddressDlg_Title;
+   public String EnterIpAddressDlg_Warning;
+   public String EnterIpAddressDlg_Zone;
+   public String EnterMacAddressDlg_Error;
+   public String EnterMacAddressDlg_IncorrectMacAddress;
+   public String EnterMacAddressDlg_MacAddress;
+   public String EnterMacAddressDlg_Title;
+   public String FindConnectionPoint_JobError;
+   public String FindConnectionPoint_JobTitle;
+   public String FindIpAddress_JobError;
+   public String FindIpAddress_JobTitle;
+   public String FindMacAddress_JobError;
+   public String FindMacAddress_JobTitle;
+   public String HostSearchResults_ClearLog;
+   public String HostSearchResults_ColIface;
+   public String HostSearchResults_ColIp;
+   public String HostSearchResults_ColMac;
+   public String HostSearchResults_ColNode;
+   public String HostSearchResults_ColPort;
+   public String HostSearchResults_ColSeq;
+   public String HostSearchResults_ColSwitch;
+   public String HostSearchResults_ColType;
+   public String HostSearchResults_ConnectionPoint;
+   public String HostSearchResults_Copy;
+   public String HostSearchResults_CopyIp;
+   public String HostSearchResults_CopyMac;
+   public String HostSearchResults_ModeDirectly;
+   public String HostSearchResults_ModeIndirectly;
+   public String HostSearchResults_NodeConnected;
+   public String HostSearchResults_NodeIpMacConnected;
+   public String HostSearchResults_NodeMacConnected;
+   public String HostSearchResults_NotFound;
+   public String HostSearchResults_ShowError;
+   public String HostSearchResults_Warning;
+   public String RadioInterfaces_ColApMac;
+   public String RadioInterfaces_ColApModel;
+   public String RadioInterfaces_ColApName;
+   public String RadioInterfaces_ColApSerial;
+   public String RadioInterfaces_ColApVendor;
+   public String RadioInterfaces_ColChannel;
+   public String RadioInterfaces_ColRadioIndex;
+   public String RadioInterfaces_ColRadioMac;
+   public String RadioInterfaces_ColRadioName;
+   public String RadioInterfaces_ColTxPowerDbm;
+   public String RadioInterfaces_ColTxPowerMw;
+   public String RadioInterfaces_PartName;
+   public String ShowRadioInterfaces_CannotOpenView;
+   public String ShowRadioInterfaces_Error;
+   public String ShowVlans_CannotOpenView;
+   public String ShowVlans_Error;
+   public String ShowVlans_JobError;
+   public String ShowVlans_JobTitle;
+   public String ShowWirelessStations_CannotOpenView;
+   public String ShowWirelessStations_Error;
+   public String VlanView_ColumnID;
+   public String VlanView_ColumnName;
+   public String VlanView_ColumnPorts;
+   public String VlanView_Error;
+   public String VlanView_JobError;
+   public String VlanView_JobTitle;
+   public String VlanView_OpenMapError;
+   public String VlanView_PartName;
+   public String VlanView_ShowVlanMap;
+   public String WirelessStations_ColAp;
+   public String WirelessStations_ColIpAddr;
+   public String WirelessStations_ColMacAddr;
+   public String WirelessStations_ColNode;
+   public String WirelessStations_ColRadio;
+   public String WirelessStations_ColSSID;
+   public String WirelessStations_JobError;
+   public String WirelessStations_JobTitle;
+   public String WirelessStations_PartName;
    static
    {
       // initialize resource bundle
@@ -93,4 +96,43 @@ public class Messages extends NLS
    private Messages()
    {
    }
+
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get()
+	{
+		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+	}
+
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get(Display display)
+	{
+		CallHelper r = new CallHelper();
+		display.syncExec(r);
+		return r.messages;
+	}
+	
+	/**
+	 * Helper class to call RWT.NLS.getISO8859_1Encoded from non-UI thread
+	 */
+	private static class CallHelper implements Runnable
+	{
+		Messages messages;
+		
+		@Override
+		public void run()
+		{
+			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+		}
+	}
 }
+

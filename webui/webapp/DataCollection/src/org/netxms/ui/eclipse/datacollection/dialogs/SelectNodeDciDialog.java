@@ -64,7 +64,7 @@ public class SelectNodeDciDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SelectNodeDciDialog_Title);
+		newShell.setText(Messages.get().SelectNodeDciDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -132,7 +132,7 @@ public class SelectNodeDciDialog extends Dialog
 		selection = dciList.getSelection();
 		if (selection == null)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.SelectNodeDciDialog_Warning, Messages.SelectNodeDciDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectNodeDciDialog_Warning, Messages.get().SelectNodeDciDialog_WarningText);
 			return;
 		}
 		saveSettings();

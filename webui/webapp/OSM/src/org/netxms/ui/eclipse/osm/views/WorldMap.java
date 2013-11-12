@@ -105,7 +105,7 @@ public class WorldMap extends AbstractGeolocationView
 	{
 		super.createActions();
 		
-		actionPlaceObject = new Action(Messages.WorldMap_PlaceObject) {
+		actionPlaceObject = new Action(Messages.get().WorldMap_PlaceObject) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -138,7 +138,7 @@ public class WorldMap extends AbstractGeolocationView
 			final NXCObjectModificationData md = new NXCObjectModificationData(dlg.getSelectedObjects().get(0).getObjectId());
 			md.setGeolocation(map.getLocationAtPoint(map.getCurrentPoint()));
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.WorldMap_JobTitle, this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().WorldMap_JobTitle, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -148,7 +148,7 @@ public class WorldMap extends AbstractGeolocationView
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.WorldMap_JobError;
+					return Messages.get().WorldMap_JobError;
 				}
 			}.start();
 		}

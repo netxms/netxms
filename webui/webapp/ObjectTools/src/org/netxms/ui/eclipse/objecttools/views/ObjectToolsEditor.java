@@ -114,7 +114,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { Messages.ObjectToolsEditor_ColId, Messages.ObjectToolsEditor_ColName, Messages.ObjectToolsEditor_ColType, Messages.ObjectToolsEditor_ColDescr };
+		final String[] columnNames = { Messages.get().ObjectToolsEditor_ColId, Messages.get().ObjectToolsEditor_ColName, Messages.get().ObjectToolsEditor_ColType, Messages.get().ObjectToolsEditor_ColDescr };
 		final int[] columnWidths = { 90, 200, 100, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -171,7 +171,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		};
 		
-		actionNew = new Action(Messages.ObjectToolsEditor_New) {
+		actionNew = new Action(Messages.get().ObjectToolsEditor_New) {
 			@Override
 			public void run()
 			{
@@ -205,7 +205,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
-		actionDelete = new Action(Messages.ObjectToolsEditor_Delete) {
+		actionDelete = new Action(Messages.get().ObjectToolsEditor_Delete) {
 			@Override
 			public void run()
 			{
@@ -298,7 +298,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void refreshToolList()
 	{
-		new ConsoleJob(Messages.ObjectToolsEditor_JobGetConfig, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ObjectToolsEditor_JobGetConfig, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -318,7 +318,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ObjectToolsEditor_JobGetConfigError;
+				return Messages.get().ObjectToolsEditor_JobGetConfigError;
 			}
 		}.start();
 	}
@@ -331,7 +331,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		final CreateNewToolDialog dlg = new CreateNewToolDialog(getSite().getShell());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.ObjectToolsEditor_JobNewId, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.get().ObjectToolsEditor_JobNewId, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -353,7 +353,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ObjectToolsEditor_JobNewIdError;
+					return Messages.get().ObjectToolsEditor_JobNewIdError;
 				}
 			}.start();
 		}
@@ -368,15 +368,15 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		if (selection.isEmpty())
 			return;
 		
-		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.ObjectToolsEditor_Confirmation, Messages.ObjectToolsEditor_DeleteConfirmation))
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ObjectToolsEditor_Confirmation, Messages.get().ObjectToolsEditor_DeleteConfirmation))
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob(Messages.ObjectToolsEditor_JobDelete, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ObjectToolsEditor_JobDelete, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ObjectToolsEditor_JobDeleteError;
+				return Messages.get().ObjectToolsEditor_JobDeleteError;
 			}
 
 			@Override
@@ -397,7 +397,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void saveObjectTool(final ObjectToolDetails details)
 	{
-		new ConsoleJob(Messages.ObjectToolsEditor_JobSave, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ObjectToolsEditor_JobSave, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -408,7 +408,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ObjectToolsEditor_JobSaveError;
+				return Messages.get().ObjectToolsEditor_JobSaveError;
 			}
 
 			@Override

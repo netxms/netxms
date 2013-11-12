@@ -62,7 +62,7 @@ public class OpenActionManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenActionManager_Error, Messages.OpenActionManager_ErrorOpeningView + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenActionManager_Error, Messages.get().OpenActionManager_ErrorOpeningView + e.getMessage());
 			}
 		}
 	}

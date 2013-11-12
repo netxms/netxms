@@ -106,7 +106,7 @@ public class Thresholds extends PropertyPage
 		dialogArea.setLayout(layout);
 
 		instance = new LabeledText(dialogArea, SWT.NONE);
-		instance.setLabel(Messages.Thresholds_Instance);
+		instance.setLabel(Messages.get().Thresholds_Instance);
 		instance.setText(dci.getInstance());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -116,7 +116,7 @@ public class Thresholds extends PropertyPage
 			instance.getTextControl().setEditable(false);
 
 		checkAllThresholds = new Button(dialogArea, SWT.CHECK);
-		checkAllThresholds.setText(Messages.Thresholds_ProcessAll);
+		checkAllThresholds.setText(Messages.get().Thresholds_ProcessAll);
 		checkAllThresholds.setSelection(dci.isProcessAllThresholds());
 
 		Composite thresholdArea = new Composite(dialogArea, SWT.NONE);
@@ -134,7 +134,7 @@ public class Thresholds extends PropertyPage
 		layout.numColumns = 2;
 		thresholdArea.setLayout(layout);
 
-		new Label(thresholdArea, SWT.NONE).setText(Messages.Thresholds_Thresholds);
+		new Label(thresholdArea, SWT.NONE).setText(Messages.get().Thresholds_Thresholds);
 
 		thresholdList = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		gd = new GridData();
@@ -162,7 +162,7 @@ public class Thresholds extends PropertyPage
 		leftButtons.setLayout(buttonsLayout);
 
 		upButton = new Button(leftButtons, SWT.PUSH);
-		upButton.setText(Messages.Thresholds_Up);
+		upButton.setText(Messages.get().Thresholds_Up);
 		upButton.setEnabled(false);
 		upButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -179,7 +179,7 @@ public class Thresholds extends PropertyPage
 		});
 
 		downButton = new Button(leftButtons, SWT.PUSH);
-		downButton.setText(Messages.Thresholds_Down);
+		downButton.setText(Messages.get().Thresholds_Down);
 		downButton.setEnabled(false);
 		downButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -210,7 +210,7 @@ public class Thresholds extends PropertyPage
 		buttons.setLayout(buttonsLayout);
 
 		addButton = new Button(buttons, SWT.PUSH);
-		addButton.setText(Messages.Thresholds_Add);
+		addButton.setText(Messages.get().Thresholds_Add);
 		RowData rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		addButton.setLayoutData(rd);
@@ -229,7 +229,7 @@ public class Thresholds extends PropertyPage
 		});
 
 		modifyButton = new Button(buttons, SWT.PUSH);
-		modifyButton.setText(Messages.Thresholds_Edit);
+		modifyButton.setText(Messages.get().Thresholds_Edit);
 		rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		modifyButton.setLayoutData(rd);
@@ -249,7 +249,7 @@ public class Thresholds extends PropertyPage
 		});
 
 		deleteButton = new Button(buttons, SWT.PUSH);
-		deleteButton.setText(Messages.Thresholds_Delete);
+		deleteButton.setText(Messages.get().Thresholds_Delete);
 		rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		deleteButton.setLayoutData(rd);
@@ -393,11 +393,11 @@ public class Thresholds extends PropertyPage
 		table.setHeaderVisible(true);
 
 		TableColumn column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.Thresholds_Expression);
+		column.setText(Messages.get().Thresholds_Expression);
 		column.setWidth(200);
 
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.Thresholds_Event);
+		column.setText(Messages.get().Thresholds_Event);
 		column.setWidth(150);
 
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);

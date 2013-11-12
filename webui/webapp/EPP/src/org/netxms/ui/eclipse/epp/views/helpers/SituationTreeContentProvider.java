@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.epp.Messages;
  */
 public class SituationTreeContentProvider implements ITreeContentProvider
 {
-	private static final String ROOT = Messages.SituationTreeContentProvider_Root;
+	private static final String ROOT = Messages.get().SituationTreeContentProvider_Root;
 	
 	private Map<Long, Situation> situations;
 	

@@ -114,7 +114,7 @@ public class ChildObjectListDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ChildObjectListDialog_SelectSubordinate);
+		newShell.setText(Messages.get().ChildObjectListDialog_SelectSubordinate);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -154,7 +154,7 @@ public class ChildObjectListDialog extends Dialog
 		filterArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		Label filterLabel = new Label(filterArea, SWT.NONE);
-		filterLabel.setText(Messages.ChildObjectListDialog_Filter);
+		filterLabel.setText(Messages.get().ChildObjectListDialog_Filter);
 		
 		filterText = new Text(filterArea, SWT.BORDER);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -176,7 +176,7 @@ public class ChildObjectListDialog extends Dialog
 		// Create object list
 		objectList = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		TableColumn tc = new TableColumn(objectList.getTable(), SWT.LEFT); 
-		tc.setText(Messages.ChildObjectListDialog_Name);
+		tc.setText(Messages.get().ChildObjectListDialog_Name);
 		tc.setWidth(280);
 		objectList.getTable().setHeaderVisible(false);
 		objectList.setContentProvider(new ArrayContentProvider());

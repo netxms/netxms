@@ -132,7 +132,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			}
 		});
 		
-		final String[] names = { Messages.SituationsManager_ColAttribute, Messages.SituationsManager_ColValue };
+		final String[] names = { Messages.get().SituationsManager_ColAttribute, Messages.get().SituationsManager_ColValue };
 		final int[] widths = { 150, 150 };
 		details = new SortableTableViewer(splitter, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
 		details.setContentProvider(new ArrayContentProvider());
@@ -198,7 +198,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 	 */
 	private void refresh(final boolean hideOnFailure)
 	{
-		new ConsoleJob(Messages.SituationsManager_LoadJob_Title, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SituationsManager_LoadJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -217,7 +217,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SituationsManager_LoadJob_Error;
+				return Messages.get().SituationsManager_LoadJob_Error;
 			}
 
 			@Override
@@ -248,7 +248,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			}
 		};
 		
-		actionCreate = new Action(Messages.SituationsManager_Create) {
+		actionCreate = new Action(Messages.get().SituationsManager_Create) {
 			@Override
 			public void run()
 			{
@@ -256,7 +256,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			}
 		};
 		
-		actionDelete = new Action(Messages.SituationsManager_Delete) {
+		actionDelete = new Action(Messages.get().SituationsManager_Delete) {
 			@Override
 			public void run()
 			{
@@ -356,19 +356,19 @@ public class SituationsManager extends ViewPart implements SessionListener
 	 */
 	private void createSituation()
 	{
-		InputDialog dlg = new InputDialog(getSite().getShell(), Messages.SituationsManager_CreateDlg_Title, Messages.SituationsManager_CreateDlg_Text, "", new IInputValidator()	{ //$NON-NLS-1$
+		InputDialog dlg = new InputDialog(getSite().getShell(), Messages.get().SituationsManager_CreateDlg_Title, Messages.get().SituationsManager_CreateDlg_Text, "", new IInputValidator()	{ //$NON-NLS-1$
 			@Override
 			public String isValid(String newText)
 			{
 				if (newText.trim().isEmpty())
-					return Messages.SituationsManager_EmptyNameError;
+					return Messages.get().SituationsManager_EmptyNameError;
 				return null;
 			}
 		});
 		if (dlg.open() == Window.OK)
 		{
 			final String name = dlg.getValue().trim();
-			new ConsoleJob(Messages.SituationsManager_CreateJob_Title, this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().SituationsManager_CreateJob_Title, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -378,7 +378,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.SituationsManager_CreateJob_Error;
+					return Messages.get().SituationsManager_CreateJob_Error;
 				}
 			}.start();
 		}
@@ -391,7 +391,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 	{
 		IStructuredSelection selection = (IStructuredSelection)situationTree.getSelection();
 		final Object[] elements = selection.toArray();
-		new ConsoleJob(Messages.SituationsManager_DeleteJob_Title, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SituationsManager_DeleteJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -411,7 +411,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SituationsManager_DeleteJob_Error;
+				return Messages.get().SituationsManager_DeleteJob_Error;
 			}
 		}.start();
 	}

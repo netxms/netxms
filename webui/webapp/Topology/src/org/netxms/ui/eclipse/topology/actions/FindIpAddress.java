@@ -52,7 +52,7 @@ public class FindIpAddress implements IWorkbenchWindowActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format(Messages.FindIpAddress_JobTitle, dlg.getIpAddress().getHostAddress()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().FindIpAddress_JobTitle, dlg.getIpAddress().getHostAddress()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -69,7 +69,7 @@ public class FindIpAddress implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.FindIpAddress_JobError, dlg.getIpAddress().getHostAddress());
+				return String.format(Messages.get().FindIpAddress_JobError, dlg.getIpAddress().getHostAddress());
 			}
 		}.start();
 	}

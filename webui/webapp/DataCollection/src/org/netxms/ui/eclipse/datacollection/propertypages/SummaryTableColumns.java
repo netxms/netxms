@@ -101,7 +101,7 @@ public class SummaryTableColumns extends PropertyPage
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 
-		new Label(dialogArea, SWT.NONE).setText(Messages.SummaryTableColumns_Columns);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().SummaryTableColumns_Columns);
 
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
@@ -129,7 +129,7 @@ public class SummaryTableColumns extends PropertyPage
 		leftButtons.setLayout(buttonsLayout);
 
 		upButton = new Button(leftButtons, SWT.PUSH);
-		upButton.setText(Messages.Thresholds_Up);
+		upButton.setText(Messages.get().Thresholds_Up);
 		upButton.setEnabled(false);
 		upButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -146,7 +146,7 @@ public class SummaryTableColumns extends PropertyPage
 		});
 
 		downButton = new Button(leftButtons, SWT.PUSH);
-		downButton.setText(Messages.Thresholds_Down);
+		downButton.setText(Messages.get().Thresholds_Down);
 		downButton.setEnabled(false);
 		downButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -177,7 +177,7 @@ public class SummaryTableColumns extends PropertyPage
 		buttons.setLayout(buttonsLayout);
 
 		importButton = new Button(buttons, SWT.PUSH);
-		importButton.setText(Messages.SummaryTableColumns_Import);
+		importButton.setText(Messages.get().SummaryTableColumns_Import);
 		RowData rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		importButton.setLayoutData(rd);
@@ -198,7 +198,7 @@ public class SummaryTableColumns extends PropertyPage
 		});
 
 		addButton = new Button(buttons, SWT.PUSH);
-		addButton.setText(Messages.Thresholds_Add);
+		addButton.setText(Messages.get().Thresholds_Add);
 		rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		addButton.setLayoutData(rd);
@@ -217,7 +217,7 @@ public class SummaryTableColumns extends PropertyPage
 		});
 
 		modifyButton = new Button(buttons, SWT.PUSH);
-		modifyButton.setText(Messages.Thresholds_Edit);
+		modifyButton.setText(Messages.get().Thresholds_Edit);
 		rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		modifyButton.setLayoutData(rd);
@@ -237,7 +237,7 @@ public class SummaryTableColumns extends PropertyPage
 		});
 
 		deleteButton = new Button(buttons, SWT.PUSH);
-		deleteButton.setText(Messages.Thresholds_Delete);
+		deleteButton.setText(Messages.get().Thresholds_Delete);
 		rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		deleteButton.setLayoutData(rd);
@@ -291,11 +291,11 @@ public class SummaryTableColumns extends PropertyPage
 		table.setHeaderVisible(true);
 
 		TableColumn column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.SummaryTableColumns_Name);
+		column.setText(Messages.get().SummaryTableColumns_Name);
 		column.setWidth(150);
 
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.SummaryTableColumns_DciName);
+		column.setText(Messages.get().SummaryTableColumns_DciName);
 		column.setWidth(250);
 
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
@@ -315,7 +315,7 @@ public class SummaryTableColumns extends PropertyPage
 			setValid(false);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SummaryTableColumns_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SummaryTableColumns_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -331,7 +331,7 @@ public class SummaryTableColumns extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SummaryTableColumns_JobError;
+				return Messages.get().SummaryTableColumns_JobError;
 			}
 
 			/*

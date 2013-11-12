@@ -77,7 +77,7 @@ public class ActionSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ActionSelectionDialog_Title);
+		newShell.setText(Messages.get().ActionSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -104,7 +104,7 @@ public class ActionSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.ActionSelectionDialog_Filter);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().ActionSelectionDialog_Filter);
 		
 		filterText = new Text(dialogArea, SWT.NONE);
 		GridData gd = new GridData();

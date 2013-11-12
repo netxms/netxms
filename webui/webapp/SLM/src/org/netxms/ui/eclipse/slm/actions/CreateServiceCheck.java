@@ -67,7 +67,7 @@ public class CreateServiceCheck implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateServiceCheck_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateServiceCheck_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -79,7 +79,7 @@ public class CreateServiceCheck implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.CreateServiceCheck_JobErrorPrefix + dlg.getName() + Messages.CreateServiceCheck_JobErrorSuffix;
+				return Messages.get().CreateServiceCheck_JobErrorPrefix + dlg.getName() + Messages.get().CreateServiceCheck_JobErrorSuffix;
 			}
 		}.start();
 	}

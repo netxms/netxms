@@ -63,7 +63,7 @@ public class ShowIPNeighbors implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowIPNeighbors_Error, String.format(Messages.ShowIPNeighbors_ErrorText, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowIPNeighbors_Error, String.format(Messages.get().ShowIPNeighbors_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

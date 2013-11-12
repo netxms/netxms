@@ -61,7 +61,7 @@ public class EditScheduleDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textSchedule = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.EditScheduleDialog_Schedule, schedule,
+      textSchedule = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().EditScheduleDialog_Schedule, schedule,
                                                     WidgetHelper.DEFAULT_LAYOUT_DATA);
       textSchedule.getShell().setMinimumSize(300, 0);
       
@@ -93,6 +93,6 @@ public class EditScheduleDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.EditScheduleDialog_Title);
+		newShell.setText(Messages.get().EditScheduleDialog_Title);
 	}
 }

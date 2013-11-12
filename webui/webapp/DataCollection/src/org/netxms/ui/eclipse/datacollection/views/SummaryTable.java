@@ -195,7 +195,7 @@ public class SummaryTable extends ViewPart
 	public void refreshTable()
 	{
 		viewer.setInput(null);
-		new ConsoleJob(Messages.SummaryTable_JobName, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SummaryTable_JobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -212,7 +212,7 @@ public class SummaryTable extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SummaryTable_JobError;
+				return Messages.get().SummaryTable_JobError;
 			}
 		}.start();
 	}

@@ -58,7 +58,7 @@ public class CreateObjectDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.CreateObjectDialog_TitlePrefix + objectClassName);
+		newShell.setText(Messages.get().CreateObjectDialog_TitlePrefix + objectClassName);
 	}
 	
 	/* (non-Javadoc)
@@ -75,7 +75,7 @@ public class CreateObjectDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-      		Messages.CreateObjectDialog_ObjectName, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+      		Messages.get().CreateObjectDialog_ObjectName, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
       textName.getShell().setMinimumSize(300, 0);
       textName.setTextLimit(63);
       textName.setFocus();
@@ -92,7 +92,7 @@ public class CreateObjectDialog extends Dialog
 		objectName = textName.getText().trim();
 		if (objectName.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.CreateObjectDialog_Warning, Messages.CreateObjectDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateObjectDialog_Warning, Messages.get().CreateObjectDialog_WarningText);
 			return;
 		}
 		super.okPressed();

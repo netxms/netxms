@@ -60,11 +60,11 @@ public class ServiceAvailability extends ViewPart
 		}
 		catch(Exception e)
 		{
-			throw new PartInitException(Messages.ServiceAvailability_InternalError, e);
+			throw new PartInitException(Messages.get().ServiceAvailability_InternalError, e);
 		}
 		if (object == null)
-			throw new PartInitException(Messages.ServiceAvailability_InitErrorPart1 + site.getSecondaryId() + Messages.ServiceAvailability_InitErrorPart2);
-		setPartName(Messages.ServiceAvailability_PartNamePrefix + object.getObjectName());
+			throw new PartInitException(Messages.get().ServiceAvailability_InitErrorPart1 + site.getSecondaryId() + Messages.get().ServiceAvailability_InitErrorPart2);
+		setPartName(Messages.get().ServiceAvailability_PartNamePrefix + object.getObjectName());
 	}
 
 	/* (non-Javadoc)
@@ -80,9 +80,9 @@ public class ServiceAvailability extends ViewPart
 		layout.numColumns = 4;
 		clientArea.setLayout(layout);
 		
-		dayChart = createChart(clientArea, Messages.ServiceAvailability_Today);
-		weekChart = createChart(clientArea, Messages.ServiceAvailability_ThisWeek);
-		monthChart = createChart(clientArea, Messages.ServiceAvailability_ThisMonth);
+		dayChart = createChart(clientArea, Messages.get().ServiceAvailability_Today);
+		weekChart = createChart(clientArea, Messages.get().ServiceAvailability_ThisWeek);
+		monthChart = createChart(clientArea, Messages.get().ServiceAvailability_ThisMonth);
 		
 		Canvas legend = new Canvas(clientArea, SWT.NONE);
 		legend.addPaintListener(new PaintListener() {
@@ -136,8 +136,8 @@ public class ServiceAvailability extends ViewPart
 		chart.setLabelsVisible(true);
 		chart.setRotation(225.0);
 		
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.ServiceAvailability_Up, Messages.ServiceAvailability_Up), 100);
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.ServiceAvailability_Down, Messages.ServiceAvailability_Down), 0);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().ServiceAvailability_Up, Messages.get().ServiceAvailability_Up), 100);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().ServiceAvailability_Down, Messages.get().ServiceAvailability_Down), 0);
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();
@@ -158,7 +158,7 @@ public class ServiceAvailability extends ViewPart
 	 */
 	private void paintLegend(GC gc)
 	{
-		final int th = gc.textExtent(Messages.ServiceAvailability_UptimeDowntime).y;
+		final int th = gc.textExtent(Messages.get().ServiceAvailability_UptimeDowntime).y;
 		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, Display.getCurrent());
 		
 		gc.setBackground(colors.create(127, 154, 72));
@@ -172,8 +172,8 @@ public class ServiceAvailability extends ViewPart
 		gc.drawRectangle(5, 40, th, th);
 
 		gc.setForeground(fg);
-		gc.drawText(Messages.ServiceAvailability_Uptime, 10 + th, 10, true);
-		gc.drawText(Messages.ServiceAvailability_Downtime, 10 + th, 40, true);
+		gc.drawText(Messages.get().ServiceAvailability_Uptime, 10 + th, 10, true);
+		gc.drawText(Messages.get().ServiceAvailability_Downtime, 10 + th, 40, true);
 	}
 
 	/* (non-Javadoc)

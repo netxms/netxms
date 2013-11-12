@@ -58,7 +58,7 @@ public class TableDataSource extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		dci = new DciSelector(dialogArea, SWT.NONE, false);
-		dci.setLabel(Messages.TableDataSource_Object);
+		dci.setLabel(Messages.get().TableDataSource_Object);
 		dci.setDciId(config.getNodeId(), config.getDciId());
 		dci.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);
 		GridData gd = new GridData();
@@ -67,7 +67,7 @@ public class TableDataSource extends PropertyPage
 		dci.setLayoutData(gd);
 		
 		instanceColumn = new LabeledText(dialogArea, SWT.NONE);
-		instanceColumn.setLabel(Messages.TableDataSource_InstanceColumn);
+		instanceColumn.setLabel(Messages.get().TableDataSource_InstanceColumn);
 		instanceColumn.setText(config.getInstanceColumn());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -75,7 +75,7 @@ public class TableDataSource extends PropertyPage
 		instanceColumn.setLayoutData(gd);
 
 		dataColumn = new LabeledText(dialogArea, SWT.NONE);
-		dataColumn.setLabel(Messages.TableDataSource_DataColumn);
+		dataColumn.setLabel(Messages.get().TableDataSource_DataColumn);
 		dataColumn.setText(config.getDataColumn());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -83,7 +83,7 @@ public class TableDataSource extends PropertyPage
 		dataColumn.setLayoutData(gd);
 		
 		checkIgnoreZeroValues = new Button(dialogArea, SWT.CHECK);
-		checkIgnoreZeroValues.setText(Messages.TableDataSource_IgnoreZero);
+		checkIgnoreZeroValues.setText(Messages.get().TableDataSource_IgnoreZero);
 		checkIgnoreZeroValues.setSelection(config.isIgnoreZeroValues());
 
 		return dialogArea;

@@ -67,7 +67,7 @@ public class CreateNodeLink implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateNodeLink_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateNodeLink_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -79,7 +79,7 @@ public class CreateNodeLink implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.CreateNodeLink_JobErrorPrefix + dlg.getName() + Messages.CreateNodeLink_JobErrorSuffix;
+				return Messages.get().CreateNodeLink_JobErrorPrefix + dlg.getName() + Messages.get().CreateNodeLink_JobErrorSuffix;
 			}
 		}.start();
 	}

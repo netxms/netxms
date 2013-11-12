@@ -63,7 +63,7 @@ public class OpenLocationMap implements IObjectActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenLocationMap_Error, Messages.OpenLocationMap_ErrorText + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.get().OpenLocationMap_Error, Messages.get().OpenLocationMap_ErrorText + e.getMessage());
 			}
 		}
 	}

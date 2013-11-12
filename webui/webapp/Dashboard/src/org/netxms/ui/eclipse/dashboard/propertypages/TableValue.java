@@ -65,7 +65,7 @@ public class TableValue extends PropertyPage
 		dciSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.AlarmViewer_Title);
+		title.setLabel(Messages.get().AlarmViewer_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -76,7 +76,7 @@ public class TableValue extends PropertyPage
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.AbstractChart_RefreshInterval, 1, 10000, gd);
+		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().AbstractChart_RefreshInterval, 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
 
 		return dialogArea;

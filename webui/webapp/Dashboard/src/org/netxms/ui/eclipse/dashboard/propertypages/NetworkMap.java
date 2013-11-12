@@ -60,7 +60,7 @@ public class NetworkMap extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-		objectSelector.setLabel(Messages.NetworkMap_NetworkMap);
+		objectSelector.setLabel(Messages.get().NetworkMap_NetworkMap);
 		objectSelector.setObjectClass(org.netxms.client.objects.NetworkMap.class);
 		objectSelector.setObjectId(config.getObjectId());
 		GridData gd = new GridData();
@@ -70,7 +70,7 @@ public class NetworkMap extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.NetworkMap_Title);
+		title.setLabel(Messages.get().NetworkMap_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

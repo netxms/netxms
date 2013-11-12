@@ -33,7 +33,7 @@ public class LocalFileSelector extends AbstractSelector
 
 	private File file = null;
 	private String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
-	private String[] filterNames = { Messages.LocalFileSelector_AllFiles };
+	private String[] filterNames = { Messages.get().LocalFileSelector_AllFiles };
 
 	private int selectorType;
 	
@@ -48,7 +48,7 @@ public class LocalFileSelector extends AbstractSelector
 		
 		this.selectorType = selectorType;
 
-		setText(Messages.LocalFileSelector_None);
+		setText(Messages.get().LocalFileSelector_None);
 	}
 
 	/* (non-Javadoc)
@@ -58,7 +58,7 @@ public class LocalFileSelector extends AbstractSelector
 	protected void selectionButtonHandler()
 	{
 		FileDialog fd = new FileDialog(getShell(), selectorType);
-		fd.setText(Messages.LocalFileSelector_SelectFile);
+		fd.setText(Messages.get().LocalFileSelector_SelectFile);
 		fd.setFilterExtensions(filterExtensions);
 		fd.setFilterNames(filterNames);
 		String selected = fd.open();
@@ -74,7 +74,7 @@ public class LocalFileSelector extends AbstractSelector
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
-		return Messages.LocalFileSelector_Tooltip;
+		return Messages.get().LocalFileSelector_Tooltip;
 	}
 
 	/**
@@ -97,7 +97,7 @@ public class LocalFileSelector extends AbstractSelector
 		}
 		else
 		{
-			setText(Messages.LocalFileSelector_None);
+			setText(Messages.get().LocalFileSelector_None);
 		}
 	}
 

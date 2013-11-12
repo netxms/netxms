@@ -50,7 +50,7 @@ public class SnmpTrapMonitor extends AbstractTraceView
 		if (memento != null)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.SnmpTrapMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().SnmpTrapMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -60,7 +60,7 @@ public class SnmpTrapMonitor extends AbstractTraceView
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.SnmpTrapMonitor_SubscribeJob_Error;
+					return Messages.get().SnmpTrapMonitor_SubscribeJob_Error;
 				}
 			}.start();
 		}
@@ -73,7 +73,7 @@ public class SnmpTrapMonitor extends AbstractTraceView
 	public void dispose()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SnmpTrapMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SnmpTrapMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -83,7 +83,7 @@ public class SnmpTrapMonitor extends AbstractTraceView
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SnmpTrapMonitor_UnsubscribeJob_Error;
+				return Messages.get().SnmpTrapMonitor_UnsubscribeJob_Error;
 			}
 		}.start();
 		super.dispose();

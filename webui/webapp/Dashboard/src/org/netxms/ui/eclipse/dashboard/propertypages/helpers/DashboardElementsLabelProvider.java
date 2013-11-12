@@ -32,39 +32,39 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 public class DashboardElementsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private static final String[] ELEMENT_TYPES = { 
-		Messages.DashboardElementsLabelProvider_TypeLabel, 
-		Messages.DashboardElementsLabelProvider_TypeLineChart, 
-		Messages.DashboardElementsLabelProvider_TypeBarChart, 
-		Messages.DashboardElementsLabelProvider_TypePieChart, 
-		Messages.DashboardElementsLabelProvider_TypeTubeChart, 
-		Messages.DashboardElementsLabelProvider_TypeStatusChart, 
-		Messages.DashboardElementsLabelProvider_TypeStatusIndicator, 
-		Messages.DashboardElementsLabelProvider_TypeDashboard, 
-		Messages.DashboardElementsLabelProvider_TypeNetworkMap, 
-		Messages.DashboardElementsLabelProvider_TypeCustom, 
-		Messages.DashboardElementsLabelProvider_TypeGeoMap, 
-		Messages.DashboardElementsLabelProvider_TypeAlarmViewer, 
-		Messages.DashboardElementsLabelProvider_TypeAvailChart, 
-		Messages.DashboardElementsLabelProvider_TypeGaugeChart, 
-		Messages.DashboardElementsLabelProvider_TypeWebPage, 
-		Messages.DashboardElementsLabelProvider_TypeTableBarChart,
-		Messages.DashboardElementsLabelProvider_TypeTablePieChart, 
-		Messages.DashboardElementsLabelProvider_TypeTableTubeChart, 
-		Messages.DashboardElementsLabelProvider_TypeSeparator, 
+		Messages.get().DashboardElementsLabelProvider_TypeLabel, 
+		Messages.get().DashboardElementsLabelProvider_TypeLineChart, 
+		Messages.get().DashboardElementsLabelProvider_TypeBarChart, 
+		Messages.get().DashboardElementsLabelProvider_TypePieChart, 
+		Messages.get().DashboardElementsLabelProvider_TypeTubeChart, 
+		Messages.get().DashboardElementsLabelProvider_TypeStatusChart, 
+		Messages.get().DashboardElementsLabelProvider_TypeStatusIndicator, 
+		Messages.get().DashboardElementsLabelProvider_TypeDashboard, 
+		Messages.get().DashboardElementsLabelProvider_TypeNetworkMap, 
+		Messages.get().DashboardElementsLabelProvider_TypeCustom, 
+		Messages.get().DashboardElementsLabelProvider_TypeGeoMap, 
+		Messages.get().DashboardElementsLabelProvider_TypeAlarmViewer, 
+		Messages.get().DashboardElementsLabelProvider_TypeAvailChart, 
+		Messages.get().DashboardElementsLabelProvider_TypeGaugeChart, 
+		Messages.get().DashboardElementsLabelProvider_TypeWebPage, 
+		Messages.get().DashboardElementsLabelProvider_TypeTableBarChart,
+		Messages.get().DashboardElementsLabelProvider_TypeTablePieChart, 
+		Messages.get().DashboardElementsLabelProvider_TypeTableTubeChart, 
+		Messages.get().DashboardElementsLabelProvider_TypeSeparator, 
 		"Table Value", 
 		"Status Map"
 	};
 	private static final String[] H_ALIGH = { 
-		Messages.DashboardElementsLabelProvider_Fill, 
-		Messages.DashboardElementsLabelProvider_Center, 
-		Messages.DashboardElementsLabelProvider_Left, 
-		Messages.DashboardElementsLabelProvider_Right 
+		Messages.get().DashboardElementsLabelProvider_Fill, 
+		Messages.get().DashboardElementsLabelProvider_Center, 
+		Messages.get().DashboardElementsLabelProvider_Left, 
+		Messages.get().DashboardElementsLabelProvider_Right 
 	};
 	private static final String[] V_ALIGH = { 
-		Messages.DashboardElementsLabelProvider_Fill, 
-		Messages.DashboardElementsLabelProvider_Center, 
-		Messages.DashboardElementsLabelProvider_Top, 
-		Messages.DashboardElementsLabelProvider_Bottom 
+		Messages.get().DashboardElementsLabelProvider_Fill, 
+		Messages.get().DashboardElementsLabelProvider_Center, 
+		Messages.get().DashboardElementsLabelProvider_Top, 
+		Messages.get().DashboardElementsLabelProvider_Bottom 
 	};
 	
 	/* (non-Javadoc)
@@ -92,7 +92,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
-					return Messages.DashboardElementsLabelProvider_Unknown;
+					return Messages.get().DashboardElementsLabelProvider_Unknown;
 				}
 			case DashboardElements.COLUMN_SPAN:
 				try
@@ -114,12 +114,12 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 					}
 					catch(ArrayIndexOutOfBoundsException e)
 					{
-						return Messages.DashboardElementsLabelProvider_Unknown;
+						return Messages.get().DashboardElementsLabelProvider_Unknown;
 					}
 				}
 				catch(Exception e)
 				{
-					return Messages.DashboardElementsLabelProvider_FillFill;
+					return Messages.get().DashboardElementsLabelProvider_FillFill;
 				}
 		}
 		return null;

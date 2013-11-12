@@ -65,7 +65,7 @@ public class AttributeEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel(Messages.AttributeEditDialog_Name);
+      textName.setLabel(Messages.get().AttributeEditDialog_Name);
       textName.getTextControl().setTextLimit(63);
       if (attrName != null)
       {
@@ -79,7 +79,7 @@ public class AttributeEditDialog extends Dialog
       textName.setLayoutData(gd);
       
       textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel(Messages.AttributeEditDialog_Value);
+      textValue.setLabel(Messages.get().AttributeEditDialog_Value);
       if (attrValue != null)
       	textValue.setText(attrValue);
       gd = new GridData();
@@ -100,7 +100,7 @@ public class AttributeEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((attrName == null) ? Messages.AttributeEditDialog_TitleAdd : Messages.AttributeEditDialog_TitleEdit);
+		newShell.setText((attrName == null) ? Messages.get().AttributeEditDialog_TitleAdd : Messages.get().AttributeEditDialog_TitleEdit);
 	}
 	
 	/**

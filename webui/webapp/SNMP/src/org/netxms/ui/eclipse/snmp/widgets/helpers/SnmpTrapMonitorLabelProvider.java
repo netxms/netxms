@@ -60,7 +60,7 @@ public class SnmpTrapMonitorLabelProvider extends LabelProvider implements ITabl
 				return record.getSourceAddress().getHostAddress();
 			case SnmpTrapTraceWidget.COLUMN_SOURCE_NODE:
 				final AbstractObject object = session.findObjectById(record.getSourceNode());
-				return (object != null) ? object.getObjectName() : Messages.SnmpTrapMonitorLabelProvider_Unknown;
+				return (object != null) ? object.getObjectName() : Messages.get().SnmpTrapMonitorLabelProvider_Unknown;
 			case SnmpTrapTraceWidget.COLUMN_OID:
 				return record.getTrapObjectId();
 			case SnmpTrapTraceWidget.COLUMN_VARBINDS:

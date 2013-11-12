@@ -71,15 +71,15 @@ public class Filter extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		checkAgent = new Button(dialogArea, SWT.CHECK);
-		checkAgent.setText(Messages.Filter_AgentNeeded);
+		checkAgent.setText(Messages.get().Filter_AgentNeeded);
 		checkAgent.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_AGENT) != 0);
 		
 		checkSNMP = new Button(dialogArea, SWT.CHECK);
-		checkSNMP.setText(Messages.Filter_SNMPNeeded);
+		checkSNMP.setText(Messages.get().Filter_SNMPNeeded);
 		checkSNMP.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_SNMP) != 0);
 		
 		checkMatchOID = new Button(dialogArea, SWT.CHECK);
-		checkMatchOID.setText(Messages.Filter_OIDShouldMatch);
+		checkMatchOID.setText(Messages.get().Filter_OIDShouldMatch);
 		checkMatchOID.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_OID_MATCH) != 0);
 		checkMatchOID.addSelectionListener(new SelectionListener() {
 			@Override
