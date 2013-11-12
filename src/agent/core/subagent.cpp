@@ -134,15 +134,13 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
       }
       else
       {
-         nxlog_write(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
-                     "s", pszModuleName);
+         nxlog_write(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE, "s", pszModuleName);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_SUBAGENT_REGISTRATION_FAILED, EVENTLOG_ERROR_TYPE,
-                  "s", pszModuleName);
+      nxlog_write(MSG_SUBAGENT_REGISTRATION_FAILED, EVENTLOG_ERROR_TYPE, "s", pszModuleName);
       DLClose(hModule);
    }
 

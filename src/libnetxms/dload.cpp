@@ -66,11 +66,9 @@ static char *m_pszErrorText[] =
 
 #endif
 
-
-//
-// Load DLL/shared library
-//
-
+/**
+ * Load DLL/shared library
+ */
 HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText)
 {
    HMODULE hModule;
