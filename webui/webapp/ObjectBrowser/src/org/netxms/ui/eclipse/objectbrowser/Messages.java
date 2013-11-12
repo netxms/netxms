@@ -1,46 +1,52 @@
 package org.netxms.ui.eclipse.objectbrowser;
 
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.swt.widgets.Display;
+
 
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.objectbrowser.messages"; //$NON-NLS-1$
-	public static String ChildObjectListDialog_Filter;
-	public static String ChildObjectListDialog_Name;
-	public static String ChildObjectListDialog_SelectSubordinate;
-	public static String CreateObjectDialog_ObjectName;
-	public static String CreateObjectDialog_TitlePrefix;
-	public static String CreateObjectDialog_Warning;
-	public static String CreateObjectDialog_WarningText;
-	public static String IPAddressSelectionDialog_Interface;
-	public static String IPAddressSelectionDialog_IPAddress;
-	public static String IPAddressSelectionDialog_Title;
-	public static String IPAddressSelectionDialog_Warning;
-	public static String IPAddressSelectionDialog_WarningText;
-	public static String IPAddressSelector_None;
-	public static String ObjectBrowser_HideCheckTemplates;
-	public static String ObjectBrowser_HideUnmanaged;
-	public static String ObjectBrowser_MoveJob_Error;
-	public static String ObjectBrowser_MoveJob_Title;
-	public static String ObjectBrowser_MoveObject;
-	public static String ObjectBrowser_MoveService;
-	public static String ObjectBrowser_MoveTemplate;
-	public static String ObjectBrowser_ShowFilter;
-	public static String ObjectBrowser_ShowStatusIndicator;
-	public static String ObjectList_Filter;
-	public static String ObjectList_JobTitle;
-	public static String ObjectSelectionDialog_Title;
-	public static String ObjectSelectionDialog_Warning;
-	public static String ObjectSelectionDialog_WarningText;
-	public static String ObjectSelector_None;
-	public static String ObjectStatusIndicator_HideDisabled;
-	public static String ObjectStatusIndicator_HideNormal;
-	public static String ObjectStatusIndicator_HideUnknown;
-	public static String ObjectStatusIndicator_HideUnmanaged;
-	public static String ObjectStatusIndicator_ShowIcons;
-	public static String ObjectTree_JobTitle;
-	public static String OpenObjectBrowser_Error;
-	public static String OpenObjectBrowser_ErrorText;
+	public String ChildObjectListDialog_Filter;
+	public String ChildObjectListDialog_Name;
+	public String ChildObjectListDialog_SelectSubordinate;
+	public String CreateObjectDialog_ObjectName;
+	public String CreateObjectDialog_TitlePrefix;
+	public String CreateObjectDialog_Warning;
+	public String CreateObjectDialog_WarningText;
+	public String IPAddressSelectionDialog_Interface;
+	public String IPAddressSelectionDialog_IPAddress;
+	public String IPAddressSelectionDialog_Title;
+	public String IPAddressSelectionDialog_Warning;
+	public String IPAddressSelectionDialog_WarningText;
+	public String IPAddressSelector_None;
+	public String ObjectBrowser_HideCheckTemplates;
+	public String ObjectBrowser_HideUnmanaged;
+	public String ObjectBrowser_MoveJob_Error;
+	public String ObjectBrowser_MoveJob_Title;
+	public String ObjectBrowser_MoveObject;
+	public String ObjectBrowser_MoveService;
+	public String ObjectBrowser_MoveTemplate;
+	public String ObjectBrowser_ShowFilter;
+	public String ObjectBrowser_ShowStatusIndicator;
+	public String ObjectList_Filter;
+	public String ObjectList_JobTitle;
+	public String ObjectSelectionDialog_Title;
+	public String ObjectSelectionDialog_Warning;
+	public String ObjectSelectionDialog_WarningText;
+	public String ObjectSelector_None;
+	public String ObjectStatusIndicator_HideDisabled;
+	public String ObjectStatusIndicator_HideNormal;
+	public String ObjectStatusIndicator_HideUnknown;
+	public String ObjectStatusIndicator_HideUnmanaged;
+	public String ObjectStatusIndicator_ShowIcons;
+	public String ObjectTree_JobTitle;
+	public String OpenObjectBrowser_Error;
+	public String OpenObjectBrowser_ErrorText;
+   public String ObjectBrowser_MoveDashboard;
+   public String ObjectBrowser_MoveMap;
+   public String ObjectBrowser_MovePolicy;
 	static
 	{
 		// initialize resource bundle
@@ -50,4 +56,43 @@ public class Messages extends NLS
 	private Messages()
 	{
 	}
+
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get()
+	{
+		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+	}
+
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get(Display display)
+	{
+		CallHelper r = new CallHelper();
+		display.syncExec(r);
+		return r.messages;
+	}
+	
+	/**
+	 * Helper class to call RWT.NLS.getISO8859_1Encoded from non-UI thread
+	 */
+	private static class CallHelper implements Runnable
+	{
+		Messages messages;
+		
+		@Override
+		public void run()
+		{
+			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+		}
+	}
 }
+

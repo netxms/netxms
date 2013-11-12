@@ -64,6 +64,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
@@ -74,6 +76,12 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
+import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.objects.NetworkMapGroup;
+import org.netxms.client.objects.NetworkMapRoot;
+import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.objects.PolicyGroup;
+import org.netxms.client.objects.PolicyRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.tools.CommandBridge;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -103,6 +111,9 @@ public class ObjectBrowser extends ViewPart
 	private Action actionMoveObject;
 	private Action actionMoveTemplate;
 	private Action actionMoveBusinessService;
+	private Action actionMoveDashboard;
+	private Action actionMoveMap;
+	private Action actionMovePolicy;
 	private Action actionRefresh;
 	private Action actionProperties;
 	private boolean initHideUnmanaged = false;
@@ -353,6 +364,30 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
+		actionMoveDashboard = new Action(Messages.ObjectBrowser_MoveDashboard) { 
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.DASHBOARDS);
+         }
+      };
+      
+      actionMoveMap = new Action(Messages.ObjectBrowser_MoveMap) { 
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.MAPS);
+         }
+      };
+      
+      actionMovePolicy = new Action(Messages.ObjectBrowser_MovePolicy) { 
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.POLICIES);
+         }
+      };
+		
       actionHideUnmanaged = new Action(Messages.ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -463,11 +498,17 @@ public class ObjectBrowser extends ViewPart
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
 		if (isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
-			manager.add(actionMoveObject);
-		if (isValidSelectionForMove(SubtreeType.TEMPLATES))
-			manager.add(actionMoveTemplate);
-		if (isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
-			manager.add(actionMoveBusinessService);
+         manager.add(actionMoveObject);
+      if (isValidSelectionForMove(SubtreeType.TEMPLATES))
+         manager.add(actionMoveTemplate);
+      if (isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
+         manager.add(actionMoveBusinessService);
+      if (isValidSelectionForMove(SubtreeType.DASHBOARDS))
+         manager.add(actionMoveDashboard);
+      if (isValidSelectionForMove(SubtreeType.MAPS))
+         manager.add(actionMoveMap);
+      if (isValidSelectionForMove(SubtreeType.POLICIES))
+         manager.add(actionMovePolicy);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
@@ -549,6 +590,15 @@ public class ObjectBrowser extends ViewPart
 			case BUSINESS_SERVICES:
 				filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
 				break;
+			case DASHBOARDS:
+			   filter = ObjectSelectionDialog.createDashboardSelectionFilter();
+			   break;
+			case MAPS:
+			   filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
+			   break;
+			case POLICIES:
+			   filter = ObjectSelectionDialog.createPolicySelectionFilter();
+			   break;
 			default:
 				filter = null;
 				break;
@@ -686,6 +736,20 @@ public class ObjectBrowser extends ViewPart
 						return (currentObject instanceof BusinessService) &&
 						       ((parentObject instanceof BusinessService) ||
 								  (parentObject instanceof BusinessServiceRoot)) ? APPROVE : REJECT;
+					case MAPS:
+					   return ((currentObject instanceof NetworkMap) ||
+					         (currentObject instanceof NetworkMapGroup)) &&
+					         ((parentObject instanceof NetworkMapGroup) ||
+                        (parentObject instanceof NetworkMapRoot)) ? APPROVE : REJECT;
+					case DASHBOARDS:
+					   return (currentObject instanceof Dashboard) &&
+                         ((parentObject instanceof Dashboard) ||
+                         (parentObject instanceof DashboardRoot)) ? APPROVE : REJECT;
+					case POLICIES:
+					   return ((currentObject instanceof AgentPolicy) ||
+					         (currentObject instanceof PolicyGroup))&&
+					         ((parentObject instanceof PolicyGroup) ||
+					         (parentObject instanceof PolicyRoot)) ? APPROVE : REJECT;
 					default:
 						return REJECT;
 				}

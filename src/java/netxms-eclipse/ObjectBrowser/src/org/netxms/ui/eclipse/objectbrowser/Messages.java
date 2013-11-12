@@ -41,6 +41,9 @@ public class Messages extends NLS
 	public static String ObjectTree_JobTitle;
 	public static String OpenObjectBrowser_Error;
 	public static String OpenObjectBrowser_ErrorText;
+   public static String ObjectBrowser_MoveDashboard;
+   public static String ObjectBrowser_MoveMap;
+   public static String ObjectBrowser_MovePolicy;
 	static
 	{
 		// initialize resource bundle

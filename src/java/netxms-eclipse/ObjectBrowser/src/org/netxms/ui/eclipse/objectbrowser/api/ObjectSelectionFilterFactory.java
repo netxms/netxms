@@ -109,6 +109,45 @@ public class ObjectSelectionFilterFactory
 		classFilter.add(AbstractObject.OBJECT_NETWORKMAP);
 		return classFilter;
 	}
+	
+	/**
+    * Create filter for network map group selection.
+    * 
+    * @return Class filter for network map group selection
+    */
+   public Set<Integer> createNetworkMapGroupsSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(3);
+      classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
+      classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
+      return classFilter;
+   }
+	
+   /**
+    * Create filter for policies group selection.
+    * 
+    * @return Class filter for policies group selection
+    */
+   public Set<Integer> createPolicySelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(3);
+      classFilter.add(AbstractObject.OBJECT_POLICYROOT);
+      classFilter.add(AbstractObject.OBJECT_POLICYGROUP);      
+      return classFilter;
+   }
+	
+   /**
+    * Create filter for dashboard selection.
+    * 
+    * @return Class filter for dashboard selection
+    */
+   public Set<Integer> createDashboardSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(3);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARD);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+      return classFilter;
+   }
 
 	/**
 	 * Create filter for template selection - it allows template objects and possible

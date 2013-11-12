@@ -73,16 +73,46 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		return ObjectSelectionFilterFactory.getInstance().createZoneSelectionFilter();
 	}
-
+	
 	/**
-	 * Create filter for network map selection.
+    * Create filter for network map selection.
+    * 
+    * @return Class filter for network map selection
+    */
+   public static Set<Integer> createNetworkMapSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createNetworkMapSelectionFilter();
+   }
+
+   /**
+	 * Create filter for network map groups selection.
 	 * 
-	 * @return Class filter for network map selection
+	 * @return Class filter for network map groups selection
 	 */
-	public static Set<Integer> createNetworkMapSelectionFilter()
+	public static Set<Integer> createNetworkMapGroupsSelectionFilter()
 	{
-		return ObjectSelectionFilterFactory.getInstance().createNetworkMapSelectionFilter();
+		return ObjectSelectionFilterFactory.getInstance().createNetworkMapGroupsSelectionFilter();
 	}
+	
+	/**
+    * Create filter for policy selection.
+    * 
+    * @return Class filter for policy selection
+    */
+   public static Set<Integer> createPolicySelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createPolicySelectionFilter();
+   }
+	
+   /**
+    * Create filter for dashboard selection.
+    * 
+    * @return Class filter for dashboard selection
+    */
+   public static Set<Integer> createDashboardSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createDashboardSelectionFilter();
+   }
 
 	/**
 	 * Create filter for template selection - it allows template objects and possible
