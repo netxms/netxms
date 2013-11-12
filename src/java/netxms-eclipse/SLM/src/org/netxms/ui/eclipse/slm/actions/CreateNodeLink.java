@@ -79,7 +79,7 @@ public class CreateNodeLink implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.CreateNodeLink_JobErrorPrefix + dlg.getName() + Messages.CreateNodeLink_JobErrorSuffix;
+				return String.format(Messages.CreateNodeLink_JobError, dlg.getName());
 			}
 		}.start();
 	}

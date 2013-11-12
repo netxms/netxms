@@ -63,8 +63,8 @@ public class ServiceAvailability extends ViewPart
 			throw new PartInitException(Messages.ServiceAvailability_InternalError, e);
 		}
 		if (object == null)
-			throw new PartInitException(Messages.ServiceAvailability_InitErrorPart1 + site.getSecondaryId() + Messages.ServiceAvailability_InitErrorPart2);
-		setPartName(Messages.ServiceAvailability_PartNamePrefix + object.getObjectName());
+			throw new PartInitException(String.format(Messages.ServiceAvailability_InitError, site.getSecondaryId()));
+		setPartName(String.format(Messages.ServiceAvailability_PartName, object.getObjectName()));
 	}
 
 	/* (non-Javadoc)

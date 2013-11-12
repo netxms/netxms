@@ -79,7 +79,7 @@ public class CreateServiceCheck implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.CreateServiceCheck_JobErrorPrefix + dlg.getName() + Messages.CreateServiceCheck_JobErrorSuffix;
+				return String.format(Messages.CreateServiceCheck_JobError, dlg.getName());
 			}
 		}.start();
 	}

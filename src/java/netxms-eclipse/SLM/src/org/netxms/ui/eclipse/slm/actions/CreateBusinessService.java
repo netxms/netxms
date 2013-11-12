@@ -77,7 +77,7 @@ public class CreateBusinessService implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.CreateBusinessService_JobErrorPrefix + dlg.getName() + Messages.CreateBusinessService_JobErrorSuffix;
+				return String.format(Messages.CreateBusinessService_JobError, dlg.getName());
 			}
 		}.start();
 	}
