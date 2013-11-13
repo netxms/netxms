@@ -27,6 +27,11 @@
 
 #include "netsvc.h"
 
+#ifndef CURL_MAX_HTTP_HEADER
+// workaround for older cURL versions
+#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
+#endif
+
 UINT32 g_flags = NETSVC_AF_VERIFYPEER;
 char g_certBundle[1024] = {0};
 UINT32 g_timeout = 30;
