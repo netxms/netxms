@@ -34,6 +34,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class AddClusterNode implements IObjectActionDelegate
@@ -61,11 +62,11 @@ public class AddClusterNode implements IObjectActionDelegate
 		if (dlg.getReturnCode() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Add node to cluster", wbPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.AddClusterNode_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot add node to cluster";
+					return Messages.AddClusterNode_JobError;
 				}
 
 				@Override

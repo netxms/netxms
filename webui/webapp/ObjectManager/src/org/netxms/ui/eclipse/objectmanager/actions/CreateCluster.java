@@ -34,6 +34,7 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -61,12 +62,12 @@ public class CreateCluster implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Cluster");
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateCluster_Cluster);
 		if (dlg.open() != Window.OK)
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create new cluster", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateCluster_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -77,7 +78,7 @@ public class CreateCluster implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create cluster object \"" + dlg.getObjectName() + "\"";
+				return String.format(Messages.CreateCluster_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

@@ -34,6 +34,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.CreateNodeDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -67,7 +68,7 @@ public class CreateNode implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create new node", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateNode_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -85,7 +86,7 @@ public class CreateNode implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot create node object \"%s\"", dlg.getObjectName());
+				return String.format(Messages.CreateNode_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

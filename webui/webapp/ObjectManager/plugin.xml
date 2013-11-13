@@ -6,7 +6,7 @@
      point = "org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.General#0"
-           name="General"
+           name="%page.name.General"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.General">
           <enabledWhen>
              <instanceof
@@ -17,7 +17,7 @@
 
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes"
-           name="Custom Attributes"
+           name="%page.name.CustomAttrs"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes">
           <enabledWhen>
              <instanceof
@@ -28,7 +28,7 @@
 
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.Comments"
-           name="Comments"
+           name="%page.name.Comments"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Comments">
           <enabledWhen>
              <instanceof
@@ -39,7 +39,7 @@
 
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.AccessControl"
-           name="Access Control"
+           name="%page.name.AccessControl"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AccessControl">
           <enabledWhen>
              <instanceof
@@ -50,7 +50,7 @@
 
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoApply"
-           name="Automatic Apply Rules"
+           name="%page.name.AutoApply"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoApply">
           <enabledWhen>
              <instanceof
@@ -61,7 +61,7 @@
 
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoBind"
-           name="Automatic Bind Rules"
+           name="%page.name.AutoBind"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoBind">
           <enabledWhen>
              <instanceof
@@ -72,7 +72,7 @@
 
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"
-           name="Communication"
+           name="%page.name.Communications"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Communication">
           <enabledWhen>
              <instanceof
@@ -83,7 +83,7 @@
 
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes"
-           name="Trusted Nodes"
+           name="%page.name.TrustedNodes"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes">
           <enabledWhen>
              <instanceof
@@ -94,7 +94,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.Location"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.Location"
-              name="Location">
+              name="%page.name.Location">
            <enabledWhen>
               <or>
                  <instanceof
@@ -112,7 +112,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.ZoneCommunications"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.ZoneCommunications#10"
-              name="Communications">
+              name="%page.name.Communications">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Zone">
@@ -122,7 +122,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionScript"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionScript#30"
-              name="Script">
+              name="%page.name.Script">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Condition">
@@ -132,7 +132,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionData"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionData#20"
-              name="Data">
+              name="%page.name.Data">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Condition">
@@ -142,7 +142,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionEvents"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionEvents#10"
-              name="Events and Status">
+              name="%page.name.EventsStatus">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Condition">
@@ -151,7 +151,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.MapAppearance"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.MapAppearance"
-              name="Map Appearance">
+              name="%page.name.MapAppearance">
            <enabledWhen>
               <or>
                  <instanceof
@@ -181,7 +181,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.NetworkServicePolling"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.NetworkServicePolling#10"
-              name="Network Service">
+              name="%page.name.NetSrv">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.NetworkService">
@@ -191,7 +191,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.NodePolling"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.NodePolling#20"
-              name="Polling">
+              name="%page.name.Polling">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Node">
@@ -201,7 +201,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.ClusterResources"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.ClusterResources#10"
-              name="Cluster Resources">
+              name="%page.name.ClusterRes">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Cluster">
@@ -211,7 +211,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.StatusCalculation"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.StatusCalculation"
-              name="Status Calculation">
+              name="%page.name.StatusCalc">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.GenericObject">
@@ -221,7 +221,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.ClusterNetworks"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.ClusterNetworks#15"
-              name="Cluster Networks">
+              name="%page.name.ClusterNet">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Cluster">
@@ -231,7 +231,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.InterfacePolling"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.InterfacePolling#20"
-              name="Polling">
+              name="%page.name.Polling">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Interface">
@@ -249,7 +249,7 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.DeleteObject"
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
-               label="Delete"
+               label="%action.label.Delete"
                icon="icons/delete.png"
                menubarPath="objectmgmt">
          </action>
@@ -257,14 +257,14 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.Unmanage"
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
-               label="Unmanage"
+               label="%action.label.Unmanage"
                menubarPath="objectmgmt">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.Manage"
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
-               label="Manage"
+               label="%action.label.Manage"
                menubarPath="objectmgmt">
          </action>
       </objectContribution>
@@ -276,56 +276,56 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.UnbindObject"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject_Container"
-               label="Unbind..."
+               label="%action.label.Unbind"
                menubarPath="objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject_Container"
-               label="Bind..."
+               label="%action.label.Bind"
                menubarPath="objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCluster"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_Container"
-               label="Create cl&amp;uster..."
+               label="%action.label.CreateCluster"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNode_Container"
-               label="Create &amp;node..."
+               label="%action.label.CreateNode"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateMobileDevice"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createMobileDevice_Container"
-               label="Create &amp;mobile device..."
+               label="%action.label.CreateMobile"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_Container"
-               label="Create &amp;container..."
+               label="%action.label.CreateContainer"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_Container"
-               label="Create &amp;rack..."
+               label="%action.label.CreateRack"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_Container"
-               label="Create con&amp;dition..."
+               label="%action.label.CreateCond"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -337,56 +337,56 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.UnbindObject"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject_ServiceRoot"
-               label="Unbind..."
+               label="%action.label.Unbind"
                menubarPath="objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject_ServiceRoot"
-               label="Bind..."
+               label="%action.label.Bind"
                menubarPath="objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCluster"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_ServiceRoot"
-               label="Create cl&amp;uster..."
+               label="%action.label.CreateCluster"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNode_ServiceRoot"
-               label="Create &amp;node..."
+               label="%action.label.CreateNode"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateMobileDevice"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createMobileDevice_ServiceRoot"
-               label="Create &amp;mobile device..."
+               label="%action.label.CreateMobile"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_ServiceRoot"
-               label="Create &amp;container..."
+               label="%action.label.CreateContainer"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_ServiceRoot"
-               label="Create &amp;rack..."
+               label="%action.label.CreateRack"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_ServiceRoot"
-               label="Create con&amp;dition..."
+               label="%action.label.CreateCond"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -400,19 +400,19 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeZone"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeZone_Node"
-               label="Change zone..."
+               label="%action.label.CreateZone"
                menubarPath="objectmgmt">
          </action>
          <menu
                id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
-               label="&amp;Poll"
+               label="%menu.label.Poll"
                path="objectmgmt">
          </menu>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.TopologyPoll"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.TopologyPoll"
-               label="&amp;Topology"
+               label="%action.label.TopologyPoll"
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
@@ -420,7 +420,7 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.InterfacePoll"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.InterfacePoll"
-               label="&amp;Interface names"
+               label="%action.label.IfNamesPoll"
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
@@ -428,7 +428,7 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.ConfigurationPoll"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ConfigurationPoll"
-               label="&amp;Configuration"
+               label="%action.label.ConfPoll"
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
@@ -436,7 +436,7 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.StatusPoll"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.StatusPoll"
-               label="&amp;Status"
+               label="%action.label.StatusPoll"
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
@@ -444,14 +444,14 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNetworkService"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNetworkService_Node"
-               label="Create network &amp;service..."
+               label="%action.label.CreateNetSrv"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateInterface"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createInterface_Node"
-               label="Create &amp;interface..."
+               label="%action.label.CreateIface"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -465,21 +465,21 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNode_Cluster"
-               label="Create &amp;node..."
+               label="%action.label.CreateNode"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.RemoveClusterNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.removeClusterNode"
-               label="&amp;Remove node..."
+               label="%action.label.RemoveNode"
                menubarPath="objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.AddClusterNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.addClusterNode"
-               label="&amp;Add node..."
+               label="%action.label.AddNode"
                menubarPath="objectbinding">
          </action>
       </objectContribution>
@@ -490,7 +490,7 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateZone"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createZone"
-               label="Create &amp;zone..."
+               label="%action.label.CreateZone"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -501,7 +501,7 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeInterfaceExpectedState"
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.changeInterfaceExpectedState"
-               label="Change interface e&amp;xpected state..."
+               label="%action.label.ChangeExpState"
                menubarPath="objectmgmt">
          </action>
       </objectContribution>
@@ -513,7 +513,7 @@
             class="org.netxms.ui.eclipse.objectmanager.views.NodePollerView"
             icon="icons/poller_view.png"
             id="org.netxms.ui.eclipse.objectmanager.views.NodePollerView"
-            name="Node Poll"
+            name="%view.name.NodePoll"
             restorable="true">
       </view>
    </extension>

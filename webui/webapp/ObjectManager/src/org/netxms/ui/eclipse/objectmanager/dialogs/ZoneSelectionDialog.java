@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -59,7 +60,7 @@ public class ZoneSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Zone");
+		newShell.setText(Messages.ZoneSelectionDialog_Title);
 	}
 	
 	/* (non-Javadoc)
@@ -76,7 +77,7 @@ public class ZoneSelectionDialog extends Dialog
       dialogArea.setLayout(layout);
 
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-      objectSelector.setLabel("Zone object");
+      objectSelector.setLabel(Messages.ZoneSelectionDialog_ZoneObject);
       objectSelector.setObjectClass(Zone.class);
       objectSelector.setClassFilter(ObjectSelectionDialog.createZoneSelectionFilter());
       GridData gd = new GridData();
@@ -97,13 +98,13 @@ public class ZoneSelectionDialog extends Dialog
 		long objectId = objectSelector.getObjectId();
 		if (objectId == 0)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please select zone object!");
+			MessageDialogHelper.openWarning(getShell(), Messages.ZoneSelectionDialog_Warning, Messages.ZoneSelectionDialog_EmptySelectionWarning);
 			return;
 		}
 		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
 		if ((object == null) || !(object instanceof Zone))
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please select zone object!");
+			MessageDialogHelper.openWarning(getShell(), Messages.ZoneSelectionDialog_Warning, Messages.ZoneSelectionDialog_EmptySelectionWarning);
 			return;
 		}
 		zoneId = ((Zone)object).getZoneId();

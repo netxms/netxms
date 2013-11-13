@@ -32,6 +32,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.CreateNetworkServiceDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -65,7 +66,7 @@ public class CreateNetworkService implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create new network service", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateNetworkService_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -81,7 +82,7 @@ public class CreateNetworkService implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot create network service object \"%s\"", dlg.getName());
+				return String.format(Messages.CreateNetworkService_JobError, dlg.getName());
 			}
 		}.start();
 	}

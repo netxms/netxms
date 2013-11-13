@@ -32,6 +32,7 @@ import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.CreateZoneDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -65,7 +66,7 @@ public class CreateZone implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create new zone", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateZone_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -77,7 +78,7 @@ public class CreateZone implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot create zone object \"%s\"", dlg.getName());
+				return String.format(Messages.CreateZone_JobError, dlg.getName());
 			}
 		}.start();
 	}
