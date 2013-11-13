@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
  */
 public class DashboardElementsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] ELEMENT_TYPES = { 
+	private final String[] ELEMENT_TYPES = { 
 		Messages.get().DashboardElementsLabelProvider_TypeLabel, 
 		Messages.get().DashboardElementsLabelProvider_TypeLineChart, 
 		Messages.get().DashboardElementsLabelProvider_TypeBarChart, 
@@ -51,16 +51,16 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 		Messages.get().DashboardElementsLabelProvider_TypeTablePieChart, 
 		Messages.get().DashboardElementsLabelProvider_TypeTableTubeChart, 
 		Messages.get().DashboardElementsLabelProvider_TypeSeparator, 
-		"Table Value", 
-		"Status Map"
+		Messages.get().DashboardElementsLabelProvider_TableValue, 
+		Messages.get().DashboardElementsLabelProvider_StatusMap
 	};
-	private static final String[] H_ALIGH = { 
+	private final String[] H_ALIGH = { 
 		Messages.get().DashboardElementsLabelProvider_Fill, 
 		Messages.get().DashboardElementsLabelProvider_Center, 
 		Messages.get().DashboardElementsLabelProvider_Left, 
 		Messages.get().DashboardElementsLabelProvider_Right 
 	};
-	private static final String[] V_ALIGH = { 
+	private final String[] V_ALIGH = { 
 		Messages.get().DashboardElementsLabelProvider_Fill, 
 		Messages.get().DashboardElementsLabelProvider_Center, 
 		Messages.get().DashboardElementsLabelProvider_Top, 

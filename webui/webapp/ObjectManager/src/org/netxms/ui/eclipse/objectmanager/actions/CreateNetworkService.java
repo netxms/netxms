@@ -66,7 +66,7 @@ public class CreateNetworkService implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateNetworkService_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateNetworkService_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -82,7 +82,7 @@ public class CreateNetworkService implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.CreateNetworkService_JobError, dlg.getName());
+				return String.format(Messages.get().CreateNetworkService_JobError, dlg.getName());
 			}
 		}.start();
 	}

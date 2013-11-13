@@ -66,7 +66,7 @@ public class CreateInterface implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateInterface_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateInterface_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -83,7 +83,7 @@ public class CreateInterface implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.CreateInterface_JobError, dlg.getName());
+				return String.format(Messages.get().CreateInterface_JobError, dlg.getName());
 			}
 		}.start();
 	}

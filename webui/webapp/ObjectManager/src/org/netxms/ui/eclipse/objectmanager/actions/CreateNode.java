@@ -68,7 +68,7 @@ public class CreateNode implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateNode_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateNode_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -86,7 +86,7 @@ public class CreateNode implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.CreateNode_JobError, dlg.getObjectName());
+				return String.format(Messages.get().CreateNode_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

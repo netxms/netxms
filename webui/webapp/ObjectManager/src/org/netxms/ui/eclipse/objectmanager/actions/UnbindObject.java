@@ -67,11 +67,11 @@ public class UnbindObject implements IObjectActionDelegate
 		if (dlg.getReturnCode() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.UnbindObject_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().UnbindObject_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.UnbindObject_JobError;
+					return Messages.get().UnbindObject_JobError;
 				}
 
 				@Override

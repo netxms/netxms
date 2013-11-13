@@ -65,11 +65,11 @@ public class BindObject implements IObjectActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.BindObject_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().BindObject_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.BindObject_JobError;
+					return Messages.get().BindObject_JobError;
 				}
 
 				@Override

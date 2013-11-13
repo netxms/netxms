@@ -60,7 +60,7 @@ public class ZoneSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ZoneSelectionDialog_Title);
+		newShell.setText(Messages.get().ZoneSelectionDialog_Title);
 	}
 	
 	/* (non-Javadoc)
@@ -77,7 +77,7 @@ public class ZoneSelectionDialog extends Dialog
       dialogArea.setLayout(layout);
 
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-      objectSelector.setLabel(Messages.ZoneSelectionDialog_ZoneObject);
+      objectSelector.setLabel(Messages.get().ZoneSelectionDialog_ZoneObject);
       objectSelector.setObjectClass(Zone.class);
       objectSelector.setClassFilter(ObjectSelectionDialog.createZoneSelectionFilter());
       GridData gd = new GridData();
@@ -98,13 +98,13 @@ public class ZoneSelectionDialog extends Dialog
 		long objectId = objectSelector.getObjectId();
 		if (objectId == 0)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.ZoneSelectionDialog_Warning, Messages.ZoneSelectionDialog_EmptySelectionWarning);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().ZoneSelectionDialog_Warning, Messages.get().ZoneSelectionDialog_EmptySelectionWarning);
 			return;
 		}
 		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
 		if ((object == null) || !(object instanceof Zone))
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.ZoneSelectionDialog_Warning, Messages.ZoneSelectionDialog_EmptySelectionWarning);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().ZoneSelectionDialog_Warning, Messages.get().ZoneSelectionDialog_EmptySelectionWarning);
 			return;
 		}
 		zoneId = ((Zone)object).getZoneId();

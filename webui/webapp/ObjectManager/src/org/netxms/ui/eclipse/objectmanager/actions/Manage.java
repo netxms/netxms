@@ -43,7 +43,7 @@ public class Manage extends MultipleObjectAction
 	@Override
 	protected String formatJobDescription(AbstractObject object)
 	{
-		return String.format(Messages.Manage_JobDescription, object.getObjectName(), object.getObjectId());
+		return String.format(Messages.get().Manage_JobDescription, object.getObjectName(), object.getObjectId());
 	}
 
 	/* (non-Javadoc)
@@ -52,6 +52,6 @@ public class Manage extends MultipleObjectAction
 	@Override
 	protected String formatErrorMessage(AbstractObject object, Display display)
 	{
-		return String.format(Messages.Manage_JobError, object.getObjectName(), object.getObjectId());
+		return String.format(Messages.get().Manage_JobError, object.getObjectName(), object.getObjectId());
 	}
 }

@@ -73,7 +73,7 @@ public class ChangeZone implements IObjectActionDelegate
 			return;
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format(Messages.ChangeZone_JobTitle, node.getObjectName(), node.getObjectId()), part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().ChangeZone_JobTitle, node.getObjectName(), node.getObjectId()), part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -83,7 +83,7 @@ public class ChangeZone implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.ChangeZone_JobError, node.getObjectName(), node.getObjectId());
+				return String.format(Messages.get().ChangeZone_JobError, node.getObjectName(), node.getObjectId());
 			}
 		}.start();
 	}
