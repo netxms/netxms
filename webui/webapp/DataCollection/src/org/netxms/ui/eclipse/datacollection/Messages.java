@@ -4,9 +4,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.swt.widgets.Display;
-
 
 public class Messages extends NLS
 {
@@ -171,13 +168,27 @@ public class Messages extends NLS
 	public String DciSelector_JobError;
 	public String DciSelector_JobTitle;
 	public String DciSelector_None;
-	public String EditColumnDialog_ColumnDefinition;
-	public String EditDciSummaryTableColumnDlg_DciName;
+	public String EditColumnDialog_AggFunc;
+   public String EditColumnDialog_ColumnDefinition;
+	public String EditColumnDialog_DataType;
+   public String EditColumnDialog_DispName;
+   public String EditColumnDialog_InstanceCol;
+   public String EditColumnDialog_InstanceLabelCol;
+   public String EditColumnDialog_InvalidOID;
+   public String EditColumnDialog_Name;
+   public String EditColumnDialog_SNMP_OID;
+   public String EditColumnDialog_Warning;
+   public String EditDciSummaryTableColumnDlg_DciName;
 	public String EditDciSummaryTableColumnDlg_EditColumn;
 	public String EditDciSummaryTableColumnDlg_Name;
+   public String EditDciSummaryTableColumnDlg_UseRegExp;
 	public String EditScheduleDialog_Schedule;
 	public String EditScheduleDialog_Title;
-	public String EditThresholdDialog_ActEvent;
+	public String EditTableThresholdDialog_ActivationEvent;
+   public String EditTableThresholdDialog_Conditions;
+   public String EditTableThresholdDialog_DeactivationEvent;
+   public String EditTableThresholdDialog_Title;
+   public String EditThresholdDialog_ActEvent;
 	public String EditThresholdDialog_AvgValue;
 	public String EditThresholdDialog_Condition;
 	public String EditThresholdDialog_DCError;
@@ -310,7 +321,8 @@ public class Messages extends NLS
 	public String LastValuesWidget_ColValue;
 	public String LastValuesWidget_JobError;
 	public String LastValuesWidget_JobTitle;
-	public String LastValuesWidget_ShowErrors;
+	public String LastValuesWidget_ShowDisabled;
+   public String LastValuesWidget_ShowErrors;
 	public String LastValuesWidget_ShowUnsupported;
 	public String LastValuesWidget_UseMultipliers;
 	public String NetworkMaps_ShowInTooltips;
@@ -334,7 +346,8 @@ public class Messages extends NLS
 	public String SelectDciDialog_Title;
 	public String SelectDciDialog_Warning;
 	public String SelectDciDialog_WarningMessage;
-	public String SelectInternalParamDlg_DCI_AgentStatus;
+	public String SelectInternalParamDlg_AdoptedAPs;
+   public String SelectInternalParamDlg_DCI_AgentStatus;
 	public String SelectInternalParamDlg_DCI_AvgConfPollerQueue;
 	public String SelectInternalParamDlg_DCI_AvgDBWriterQueue;
 	public String SelectInternalParamDlg_DCI_AvgDCIQueueTime;
@@ -354,6 +367,8 @@ public class Messages extends NLS
 	public String SelectInternalParamDlg_DCI_Status;
 	public String SelectInternalParamDlg_DCI_UserID;
 	public String SelectInternalParamDlg_DCI_Vendor;
+   public String SelectInternalParamDlg_TotalAPs;
+   public String SelectInternalParamDlg_UnadoptedAPs;
 	public String SelectNodeDciDialog_Title;
 	public String SelectNodeDciDialog_Warning;
 	public String SelectNodeDciDialog_WarningText;
@@ -407,12 +422,15 @@ public class Messages extends NLS
 	public String TableColumnLabelProvider_uint64;
 	public String TableColumnLabelProvider_Yes;
 	public String TableColumns_Add;
+   public String TableColumns_Aggregation;
 	public String TableColumns_ColumnName;
 	public String TableColumns_Columns;
 	public String TableColumns_Delete;
 	public String TableColumns_DisplayName;
+   public String TableColumns_Down;
 	public String TableColumns_Edit;
-	public String TableColumns_InstanceColumn;
+	public String TableColumns_Instance;
+   public String TableColumns_InstanceColumn;
 	public String TableColumns_JobError;
 	public String TableColumns_JobName;
 	public String TableColumns_JobTitle;
@@ -420,8 +438,33 @@ public class Messages extends NLS
 	public String TableColumns_NewColumn;
 	public String TableColumns_OID;
 	public String TableColumns_Type;
+   public String TableColumns_Up;
 	public String TableColumns_WarningText;
-	public String Thresholds_Add;
+   public String TableConditionsEditor_Add;
+	public String TableConditionsEditor_AddCond;
+   public String TableConditionsEditor_AddCondGroup;
+   public String TableConditionsEditor_DeleteCond;
+   public String TableConditionsEditor_DeleteCondGroup;
+   public String TableThresholds_ActivationEvent;
+   public String TableThresholds_Add;
+   public String TableThresholds_Condition;
+   public String TableThresholds_DeactivationEvent;
+   public String TableThresholds_Delete;
+   public String TableThresholds_Down;
+   public String TableThresholds_Edit;
+   public String TableThresholds_Thresholds;
+   public String TableThresholds_Up;
+   public String TestTransformationDlg_Close;
+   public String TestTransformationDlg_Failure;
+   public String TestTransformationDlg_Idle;
+   public String TestTransformationDlg_Input;
+   public String TestTransformationDlg_JobError;
+   public String TestTransformationDlg_JobTitle;
+   public String TestTransformationDlg_Result;
+   public String TestTransformationDlg_Run;
+   public String TestTransformationDlg_Running;
+   public String TestTransformationDlg_Success;
+   public String Thresholds_Add;
 	public String Thresholds_Delete;
 	public String Thresholds_Down;
 	public String Thresholds_Edit;
@@ -506,44 +549,5 @@ public class Messages extends NLS
 			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
 		}
 	}
-
-	
-	/**
-	 * Get message class for current locale
-	 * 
-	 * @return
-	 */
-	public static Messages get()
-	{
-		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
-	}
-
-	
-	/**
-	 * Get message class for current locale
-	 * 
-	 * @return
-	 */
-	public static Messages get(Display display)
-	{
-		CallHelper r = new CallHelper();
-		display.syncExec(r);
-		return r.messages;
-	}
-	
-	/**
-	 * Helper class to call RWT.NLS.getISO8859_1Encoded from non-UI thread
-	 */
-	private static class CallHelper implements Runnable
-	{
-		Messages messages;
-		
-		@Override
-		public void run()
-		{
-			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
-		}
-	}
 }
-
 

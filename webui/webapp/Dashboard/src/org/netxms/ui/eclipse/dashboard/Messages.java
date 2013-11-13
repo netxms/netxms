@@ -43,10 +43,13 @@ public class Messages extends NLS
 	public String AddDashboardElementDlg_Separator;
 	public String AddDashboardElementDlg_StatusChart;
 	public String AddDashboardElementDlg_StatusIndicator;
-	public String AddDashboardElementDlg_TubeChart;
+   public String AddDashboardElementDlg_StatusMap;
+	public String AddDashboardElementDlg_TableValue;
+   public String AddDashboardElementDlg_TubeChart;
 	public String AddDashboardElementDlg_TubeChartForTable;
 	public String AddDashboardElementDlg_WebPage;
 	public String AlarmViewer_RootObject;
+   public String AlarmViewer_SeverityFilter;
 	public String AlarmViewer_Title;
 	public String AvailabilityChart_3DView;
 	public String AvailabilityChart_Object;
@@ -59,14 +62,12 @@ public class Messages extends NLS
 	public String AvailabilityChartElement_Up;
 	public String AvailabilityChartElement_Uptime;
 	public String CloneDashboard_Dashboard;
-	public String CloneDashboard_ErrorPrefix;
-	public String CloneDashboard_ErrorSuffix;
+	public String CloneDashboard_Error;
 	public String CloneDashboard_JobTitle;
 	public String ComparisonChartElement_JobError;
 	public String ComparisonChartElement_JobTitle;
 	public String CreateDashboard_Dashboard;
-	public String CreateDashboard_ErrorPrefix;
-	public String CreateDashboard_ErrorSuffix;
+	public String CreateDashboard_Error;
 	public String CreateDashboard_JobTitle;
 	public String CustomWidget_ClassName;
 	public String DashboardControl_InternalError;
@@ -100,7 +101,9 @@ public class Messages extends NLS
 	public String DashboardElementsLabelProvider_FillFill;
 	public String DashboardElementsLabelProvider_Left;
 	public String DashboardElementsLabelProvider_Right;
-	public String DashboardElementsLabelProvider_Top;
+   public String DashboardElementsLabelProvider_StatusMap;
+	public String DashboardElementsLabelProvider_TableValue;
+   public String DashboardElementsLabelProvider_Top;
 	public String DashboardElementsLabelProvider_TypeAlarmViewer;
 	public String DashboardElementsLabelProvider_TypeAvailChart;
 	public String DashboardElementsLabelProvider_TypeBarChart;
@@ -136,12 +139,6 @@ public class Messages extends NLS
 	public String DashboardView_PartNamePrefix;
 	public String DashboardView_Refresh;
 	public String DashboardView_Save;
-	public String DataSourceEditDlg_AutoColor;
-	public String DataSourceEditDlg_Color;
-	public String DataSourceEditDlg_CustColor;
-	public String DataSourceEditDlg_DCI;
-	public String DataSourceEditDlg_DisplayName;
-	public String DataSourceEditDlg_Title;
 	public String DataSources_Add;
 	public String DataSources_Color;
 	public String DataSources_Delete;
@@ -181,7 +178,13 @@ public class Messages extends NLS
 	public String ExportDashboard_JobTitle;
 	public String ExportDashboard_SelectFile;
 	public String ExportDashboard_XMLFiles;
-	public String GeoMap_Error;
+	public String Gauge_Bar;
+   public String Gauge_Dial;
+   public String Gauge_FontName;
+   public String Gauge_Text;
+   public String Gauge_Type;
+   public String Gauge_Vertical;
+   public String GeoMap_Error;
 	public String GeoMap_ErrorText;
 	public String GeoMap_Latitude;
 	public String GeoMap_Longitude;
@@ -201,8 +204,7 @@ public class Messages extends NLS
 	public String IdMatchingDialog_Title;
 	public String IdMatchingDialog_Warning;
 	public String IdMatchingLabelProvider_NoMatch;
-	public String ImportDashboard_ErrorPrefix;
-	public String ImportDashboard_ErrorSuffix;
+	public String ImportDashboard_Error;
 	public String ImportDashboard_InvalidFile;
 	public String ImportDashboard_JobTitle;
 	public String ImportDashboardDialog_AllFiles;
@@ -219,6 +221,8 @@ public class Messages extends NLS
 	public String Layout_Bottom;
 	public String Layout_Center;
 	public String Layout_Fill;
+   public String Layout_GrapExtraH;
+   public String Layout_GrapExtraV;
 	public String Layout_HAlign;
 	public String Layout_HHint;
 	public String Layout_HSpan;
@@ -228,10 +232,11 @@ public class Messages extends NLS
 	public String Layout_VAlign;
 	public String Layout_VSpan;
 	public String Layout_WHint;
-	public String LineChartElement_JobErrorPrefix;
+	public String LineChartElement_JobError;
 	public String LineChartElement_JobTitle;
 	public String NetworkMap_NetworkMap;
 	public String NetworkMap_Title;
+   public String NetworkMap_ZoomLevel;
 	public String ObjectStatusChart_3DView;
 	public String ObjectStatusChart_Options;
 	public String ObjectStatusChart_RefreshInterval;
@@ -249,7 +254,11 @@ public class Messages extends NLS
 	public String SeparatorProperties_TopMargin;
 	public String StatusIndicator_Object;
 	public String StatusIndicator_Title;
-	public String TableComparisonChart_3DView;
+	public String StatusMap_DisplayMode;
+   public String StatusMap_Group;
+   public String StatusMap_NoGroup;
+   public String StatusMap_SeverityFilter;
+   public String TableComparisonChart_3DView;
 	public String TableComparisonChart_Bottom;
 	public String TableComparisonChart_Left;
 	public String TableComparisonChart_LegendPosition;
@@ -268,6 +277,7 @@ public class Messages extends NLS
 	public String TableDataSource_IgnoreZero;
 	public String TableDataSource_InstanceColumn;
 	public String TableDataSource_Object;
+   public String TableValue_Table;
 	public String WebPage_Title;
 	public String WebPage_URL;
 	static
@@ -318,3 +328,4 @@ public class Messages extends NLS
 		}
 	}
 }
+

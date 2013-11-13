@@ -4,9 +4,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.swt.widgets.Display;
-
 
 public class Messages extends NLS
 {
@@ -18,7 +15,8 @@ public class Messages extends NLS
 	public String MibExplorer_CopyType;
 	public String MibExplorer_CopyValue;
 	public String MibExplorer_OID;
-	public String MibExplorer_SetNodeObject;
+	public String MibExplorer_SelectInTree;
+   public String MibExplorer_SetNodeObject;
 	public String MibExplorer_Type;
 	public String MibExplorer_Value;
 	public String MibExplorer_Walk;
@@ -27,13 +25,20 @@ public class Messages extends NLS
 	public String MibObjectDetails_8;
 	public String MibObjectDetails_Access;
 	public String MibObjectDetails_OID;
+   public String MibObjectDetails_OIDAsText;
 	public String MibObjectDetails_Status;
-	public String MibObjectDetails_Type;
-	public String MibSelectionDialog_MIBTree;
+	public String MibObjectDetails_TextualConv;
+   public String MibObjectDetails_Type;
+	public String MibSelectionDialog_EnterValidOID;
+   public String MibSelectionDialog_Error;
+   public String MibSelectionDialog_MIBTree;
 	public String MibSelectionDialog_OID;
+   public String MibSelectionDialog_OIDParseError;
 	public String MibSelectionDialog_Title;
-	public String MibSelectionDialog_Warning;
+	public String MibSelectionDialog_Walk;
+   public String MibSelectionDialog_Warning;
 	public String MibSelectionDialog_WarningText;
+   public String MibWalkDialog_Title;
 	public String OpenMibExplorer_Error;
 	public String OpenMibExplorer_ErrorText;
 	public String OpenMibExplorerForNode_Error;
@@ -146,44 +151,5 @@ public class Messages extends NLS
 			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
 		}
 	}
-
-	
-	/**
-	 * Get message class for current locale
-	 * 
-	 * @return
-	 */
-	public static Messages get()
-	{
-		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
-	}
-
-	
-	/**
-	 * Get message class for current locale
-	 * 
-	 * @return
-	 */
-	public static Messages get(Display display)
-	{
-		CallHelper r = new CallHelper();
-		display.syncExec(r);
-		return r.messages;
-	}
-	
-	/**
-	 * Helper class to call RWT.NLS.getISO8859_1Encoded from non-UI thread
-	 */
-	private static class CallHelper implements Runnable
-	{
-		Messages messages;
-		
-		@Override
-		public void run()
-		{
-			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
-		}
-	}
 }
-
 
