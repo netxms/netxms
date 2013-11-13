@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -122,6 +123,8 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				String name = dciNameCache.get(new NodeItemPair(dci.getNodeId(), dci.getDciId()));
 				return (name != null) ? name : "<unresolved>";
 			case ConditionData.COLUMN_FUNCTION:
+			   if (dci.getType() == DataCollectionObject.DCO_TYPE_TABLE)
+			      return "";
 				int f = dci.getFunction();
 				StringBuilder text = new StringBuilder(functions[f]);
 				if ((f != Threshold.F_DIFF) && (f != Threshold.F_LAST))

@@ -1557,18 +1557,18 @@ public:
 class NXCORE_EXPORTABLE Condition : public NetObj
 {
 protected:
-   UINT32 m_dwDCICount;
-   INPUT_DCI *m_pDCIList;
-   TCHAR *m_pszScript;
-   NXSL_Program *m_pCompiledScript;
-   UINT32 m_dwActivationEventCode;
-   UINT32 m_dwDeactivationEventCode;
-   UINT32 m_dwSourceObject;
-   int m_nActiveStatus;
-   int m_nInactiveStatus;
-   BOOL m_bIsActive;
-   time_t m_tmLastPoll;
-   BOOL m_bQueuedForPolling;
+   UINT32 m_dciCount;
+   INPUT_DCI *m_dciList;
+   TCHAR *m_scriptSource;
+   NXSL_Program *m_script;
+   UINT32 m_activationEventCode;
+   UINT32 m_deactivationEventCode;
+   UINT32 m_sourceObject;
+   int m_activeStatus;
+   int m_inactiveStatus;
+   bool m_isActive;
+   time_t m_lastPoll;
+   bool m_queuedForPolling;
 
 public:
    Condition();
@@ -1586,18 +1586,17 @@ public:
 
    void check();
 
-   void LockForPoll(void);
-   void EndPoll(void);
+   void lockForPoll();
+   void endPoll();
 
-   BOOL ReadyForPoll(void)
+   bool isReadyForPoll()
    {
       return ((m_iStatus != STATUS_UNMANAGED) &&
-              (!m_bQueuedForPolling) && (!m_isDeleted) &&
-              ((UINT32)time(NULL) - (UINT32)m_tmLastPoll > g_dwConditionPollingInterval))
-                  ? TRUE : FALSE;
+              (!m_queuedForPolling) && (!m_isDeleted) &&
+              ((UINT32)time(NULL) - (UINT32)m_lastPoll > g_dwConditionPollingInterval));
    }
 
-   int getCacheSizeForDCI(UINT32 dwItemId, BOOL bNoLock);
+   int getCacheSizeForDCI(UINT32 itemId, bool noLock);
 };
 
 /**

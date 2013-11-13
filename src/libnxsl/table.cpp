@@ -161,7 +161,7 @@ NXSL_TableClass::~NXSL_TableClass()
  */
 void NXSL_TableClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (Table *)object->getData();
+   ((Table *)object->getData())->decRefCount();
 }
 
 /**

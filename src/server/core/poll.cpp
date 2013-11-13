@@ -539,7 +539,7 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pCond->Name(), pCond->Id());
       SetPollerState((long)arg, szBuffer);
       pCond->check();
-      pCond->EndPoll();
+      pCond->endPoll();
    }
    SetPollerState((long)arg, _T("finished"));
    return THREAD_OK;
@@ -767,9 +767,9 @@ static void QueueForPolling(NetObj *object, void *data)
 		case OBJECT_CONDITION:
 			{
 				Condition *cond = (Condition *)object;
-				if (cond->ReadyForPoll())
+				if (cond->isReadyForPoll())
 				{
-					cond->LockForPoll();
+					cond->lockForPoll();
 					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->Id(), object->Name());
 					g_conditionPollerQueue.Put(cond);
 				}

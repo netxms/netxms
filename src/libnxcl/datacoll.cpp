@@ -773,8 +773,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, UINT32 dwNumD
    pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI * 2);
    for(i = 0, j = dwNumDCI; i < dwNumDCI; i++, j++)
    {
-      pdwList[i] = pDCIList[i].dwNodeId;
-      pdwList[j] = pDCIList[i].dwId;
+      pdwList[i] = pDCIList[i].nodeId;
+      pdwList[j] = pDCIList[i].id;
    }
    msg.SetVariableToInt32Array(VID_NODE_LIST, dwNumDCI, pdwList);
    msg.SetVariableToInt32Array(VID_DCI_LIST, dwNumDCI, &pdwList[dwNumDCI]);

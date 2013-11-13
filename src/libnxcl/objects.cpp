@@ -365,10 +365,10 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->cond.pDCIList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * pObject->cond.dwNumDCI);
          for(i = 0, dwId1 = VID_DCI_LIST_BASE; i < pObject->cond.dwNumDCI; i++)
          {
-            pObject->cond.pDCIList[i].dwId = pMsg->GetVariableLong(dwId1++);
-            pObject->cond.pDCIList[i].dwNodeId = pMsg->GetVariableLong(dwId1++);
-            pObject->cond.pDCIList[i].nFunction = pMsg->GetVariableShort(dwId1++);
-            pObject->cond.pDCIList[i].nPolls = pMsg->GetVariableShort(dwId1++);
+            pObject->cond.pDCIList[i].id = pMsg->GetVariableLong(dwId1++);
+            pObject->cond.pDCIList[i].nodeId = pMsg->GetVariableLong(dwId1++);
+            pObject->cond.pDCIList[i].function = pMsg->GetVariableShort(dwId1++);
+            pObject->cond.pDCIList[i].polls = pMsg->GetVariableShort(dwId1++);
             dwId1 += 6;
          }
          break;
@@ -984,10 +984,10 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDAT
       msg.SetVariable(VID_NUM_ITEMS, pUpdate->dwNumDCI);
       for(i = 0, dwId1 = VID_DCI_LIST_BASE; i < pUpdate->dwNumDCI; i++)
       {
-         msg.SetVariable(dwId1++, pUpdate->pDCIList[i].dwId);
-         msg.SetVariable(dwId1++, pUpdate->pDCIList[i].dwNodeId);
-         msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].nFunction);
-         msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].nPolls);
+         msg.SetVariable(dwId1++, pUpdate->pDCIList[i].id);
+         msg.SetVariable(dwId1++, pUpdate->pDCIList[i].nodeId);
+         msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].function);
+         msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].polls);
          dwId1 += 6;
       }
    }

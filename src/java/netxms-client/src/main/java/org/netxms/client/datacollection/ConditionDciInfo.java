@@ -28,6 +28,7 @@ public class ConditionDciInfo
 {
 	private long nodeId;
 	private long dciId;
+	private int type;
 	private int function;
 	private int polls;
 	
@@ -37,10 +38,11 @@ public class ConditionDciInfo
 	 * @param function
 	 * @param polls
 	 */
-	public ConditionDciInfo(long nodeId, long dciId, int function, int polls)
+	public ConditionDciInfo(long nodeId, long dciId, int type, int function, int polls)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
+		this.type = type;
 		this.function = function;
 		this.polls = polls;
 	}
@@ -57,6 +59,7 @@ public class ConditionDciInfo
 		nodeId = msg.getVariableAsInt64(baseId + 1);
 		function = msg.getVariableAsInteger(baseId + 2);
 		polls = msg.getVariableAsInteger(baseId + 3);
+		type = msg.getVariableAsInteger(baseId + 4);
 	}
 	
 	/**
@@ -70,6 +73,7 @@ public class ConditionDciInfo
 		nodeId = src.nodeId;
 		function = src.function;
 		polls = src.polls;
+		type = src.type;
 	}
 
 	/**
@@ -89,6 +93,14 @@ public class ConditionDciInfo
 	}
 
 	/**
+    * @return the type
+    */
+   public int getType()
+   {
+      return type;
+   }
+
+   /**
 	 * @return the function
 	 */
 	public int getFunction()

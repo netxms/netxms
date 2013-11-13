@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,14 +30,14 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * @author Victor
- *
+ * Dialog for editing condition DCI mapping
  */
 public class ConditionDciEditDialog extends Dialog
 {
@@ -47,6 +47,12 @@ public class ConditionDciEditDialog extends Dialog
 	private Combo function;
 	private Spinner polls;
 	
+	/**
+	 * @param parentShell
+	 * @param dci
+	 * @param nodeName
+	 * @param dciName
+	 */
 	public ConditionDciEditDialog(Shell parentShell, ConditionDciInfo dci, String nodeName, String dciName)
 	{
 		super(parentShell);
@@ -84,7 +90,7 @@ public class ConditionDciEditDialog extends Dialog
 		gd.horizontalSpan = 2;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.widthHint = 300;
+		gd.widthHint = 400;
 		node.setLayoutData(gd);
 		
 		LabeledText parameter = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
@@ -96,45 +102,47 @@ public class ConditionDciEditDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		parameter.setLayoutData(gd);
 		
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		function = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, "Function", gd);
-		function.add("Last");
-		function.add("Average");
-		function.add("Deviation");
-		function.add("Diff");
-		function.add("Error");
-		function.add("Sum");
-		function.select(dci.getFunction());
-		function.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				polls.setEnabled(isFunctionWithArgs());
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		final WidgetFactory factory = new WidgetFactory() {
-			@Override
-			public Control createControl(Composite parent, int style)
-			{
-				Spinner spinner = new Spinner(parent, style);
-				spinner.setMinimum(1);
-				spinner.setMaximum(255);
-				return spinner;
-			}
-		};
-		polls = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, "Polls", gd);
-		polls.setSelection(dci.getPolls());
-		polls.setEnabled(isFunctionWithArgs());
-		
+		if (dci.getType() != DataCollectionObject.DCO_TYPE_TABLE)
+		{
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.FILL;
+   		gd.grabExcessHorizontalSpace = true;
+   		function = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, "Function", gd);
+   		function.add("Last");
+   		function.add("Average");
+   		function.add("Deviation");
+   		function.add("Diff");
+   		function.add("Error");
+   		function.add("Sum");
+   		function.select(dci.getFunction());
+   		function.addSelectionListener(new SelectionListener() {
+   			@Override
+   			public void widgetSelected(SelectionEvent e)
+   			{
+   				polls.setEnabled(isFunctionWithArgs());
+   			}
+   			
+   			@Override
+   			public void widgetDefaultSelected(SelectionEvent e)
+   			{
+   				widgetSelected(e);
+   			}
+   		});
+   		
+   		final WidgetFactory factory = new WidgetFactory() {
+   			@Override
+   			public Control createControl(Composite parent, int style)
+   			{
+   				Spinner spinner = new Spinner(parent, style);
+   				spinner.setMinimum(1);
+   				spinner.setMaximum(255);
+   				return spinner;
+   			}
+   		};
+   		polls = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, "Polls", gd);
+   		polls.setSelection(dci.getPolls());
+   		polls.setEnabled(isFunctionWithArgs());
+		}		
 		return dialogArea;
 	}
 
@@ -155,8 +163,11 @@ public class ConditionDciEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		dci.setFunction(function.getSelectionIndex());
-		dci.setPolls(polls.getSelection());
+      if (dci.getType() != DataCollectionObject.DCO_TYPE_TABLE)
+      {
+   		dci.setFunction(function.getSelectionIndex());
+   		dci.setPolls(polls.getSelection());
+      }
 		super.okPressed();
 	}
 }

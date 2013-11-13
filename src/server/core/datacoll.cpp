@@ -504,3 +504,20 @@ void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		}
 	}
 }
+
+/**
+ * Get type of data collection object
+ */
+int GetDCObjectType(UINT32 nodeId, UINT32 dciId)
+{
+   Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+   if (node != NULL)
+   {
+      DCObject *dco = node->getDCObjectById(dciId);
+      if (dco != NULL)
+      {
+         return dco->getType();
+      }
+   }
+   return DCO_TYPE_ITEM;   // default
+}

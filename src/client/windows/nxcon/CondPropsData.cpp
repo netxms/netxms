@@ -119,10 +119,10 @@ int CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName)
    {
       m_wndListCtrl.SetItemData(iItem, nPos);
 
-      _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), pItem->dwId);
+      _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), pItem->id);
       m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
 
-      pObject = NXCFindObjectById(g_hSession, pItem->dwNodeId);
+      pObject = NXCFindObjectById(g_hSession, pItem->nodeId);
       if (pObject != NULL)
       {
          m_wndListCtrl.SetItemText(iItem, 2, pObject->szName);
@@ -134,17 +134,17 @@ int CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName)
 
       m_wndListCtrl.SetItemText(iItem, 3, pszName);
 
-      if ((pItem->nFunction == F_AVERAGE) ||
-          (pItem->nFunction == F_DEVIATION) ||
-          (pItem->nFunction == F_ERROR))
+      if ((pItem->function == F_AVERAGE) ||
+          (pItem->function == F_DEVIATION) ||
+          (pItem->function == F_ERROR))
       {
          _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%s(%d)"),
-                      g_pszThresholdFunction[pItem->nFunction], pItem->nPolls);
+                      g_pszThresholdFunction[pItem->function], pItem->polls);
          m_wndListCtrl.SetItemText(iItem, 4, szBuffer);
       }
       else
       {
-         m_wndListCtrl.SetItemText(iItem, 4, g_pszThresholdFunction[pItem->nFunction]);
+         m_wndListCtrl.SetItemText(iItem, 4, g_pszThresholdFunction[pItem->function]);
       }
    }
    return iItem;
@@ -164,10 +164,10 @@ void CCondPropsData::OnButtonAdd()
    {
       m_pDCIList = (INPUT_DCI *)realloc(m_pDCIList, sizeof(INPUT_DCI) * (m_dwNumDCI + 1));
       
-      m_pDCIList[m_dwNumDCI].dwId = dlg.m_dwItemId;
-      m_pDCIList[m_dwNumDCI].dwNodeId = dlg.m_dwNodeId;
-      m_pDCIList[m_dwNumDCI].nFunction = F_LAST;
-      m_pDCIList[m_dwNumDCI].nPolls = 1;
+      m_pDCIList[m_dwNumDCI].id = dlg.m_dwItemId;
+      m_pDCIList[m_dwNumDCI].nodeId = dlg.m_dwNodeId;
+      m_pDCIList[m_dwNumDCI].function = F_LAST;
+      m_pDCIList[m_dwNumDCI].polls = 1;
 
       iItem = AddListItem(m_dwNumDCI, &m_pDCIList[m_dwNumDCI], (TCHAR *)((LPCTSTR)dlg.m_strItemName));
       m_dwNumDCI++;
@@ -249,30 +249,30 @@ void CCondPropsData::OnButtonEdit()
    if (iItem != -1)
    {
       nIndex = (int)m_wndListCtrl.GetItemData(iItem);
-      dlg.m_nFunction = m_pDCIList[nIndex].nFunction;
-      dlg.m_nPolls = m_pDCIList[nIndex].nPolls;
+      dlg.m_nFunction = m_pDCIList[nIndex].function;
+      dlg.m_nPolls = m_pDCIList[nIndex].polls;
       dlg.m_strNode = m_wndListCtrl.GetItemText(iItem, 2);
       dlg.m_strItem = m_wndListCtrl.GetItemText(iItem, 3);
       if (dlg.DoModal() == IDOK)
       {
-         m_pDCIList[nIndex].nFunction = dlg.m_nFunction;
-         m_pDCIList[nIndex].nPolls = dlg.m_nPolls;
+         m_pDCIList[nIndex].function = dlg.m_nFunction;
+         m_pDCIList[nIndex].polls = dlg.m_nPolls;
 
          // Update text in list control
-         if ((m_pDCIList[nIndex].nFunction == F_AVERAGE) ||
-             (m_pDCIList[nIndex].nFunction == F_DEVIATION) ||
-             (m_pDCIList[nIndex].nFunction == F_ERROR))
+         if ((m_pDCIList[nIndex].function == F_AVERAGE) ||
+             (m_pDCIList[nIndex].function == F_DEVIATION) ||
+             (m_pDCIList[nIndex].function == F_ERROR))
          {
             TCHAR szBuffer[64];
 
             _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%s(%d)"),
-                         g_pszThresholdFunction[m_pDCIList[nIndex].nFunction],
-                         m_pDCIList[nIndex].nPolls);
+                         g_pszThresholdFunction[m_pDCIList[nIndex].function],
+                         m_pDCIList[nIndex].polls);
             m_wndListCtrl.SetItemText(iItem, 4, szBuffer);
          }
          else
          {
-            m_wndListCtrl.SetItemText(iItem, 4, g_pszThresholdFunction[m_pDCIList[nIndex].nFunction]);
+            m_wndListCtrl.SetItemText(iItem, 4, g_pszThresholdFunction[m_pDCIList[nIndex].function]);
          }
 
          Modify();

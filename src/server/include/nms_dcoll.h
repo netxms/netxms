@@ -587,6 +587,7 @@ public:
 BOOL InitDataCollector();
 void DeleteAllItemsForNode(UINT32 dwNodeId);
 void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags);
+int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
 
 void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1, ItemValue &value2);
 void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);

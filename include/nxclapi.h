@@ -1054,24 +1054,20 @@ typedef struct
 	TCHAR szUserTag[MAX_USERTAG_LENGTH];
 } NXC_TRAP_CFG_ENTRY;
 
-
-//
-// Condition's input DCI definition
-//
-
+/**
+ * Condition's input DCI definition
+ */
 typedef struct
 {
-   UINT32 dwId;
-   UINT32 dwNodeId;
-   int nFunction;    // Average, last, diff
-   int nPolls;       // Number of polls used for average
+   UINT32 id;
+   UINT32 nodeId;
+   int function;    // Average, last, diff
+   int polls;       // Number of polls used for average
 } INPUT_DCI;
 
-
-//
-// Cluster resource
-//
-
+/**
+ * Cluster resource
+ */
 typedef struct
 {
 	UINT32 dwId;
