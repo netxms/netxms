@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.jobs;
 
 import java.lang.reflect.InvocationTargetException;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -152,15 +151,39 @@ public abstract class ConsoleJob extends Job
 	 */
 	protected abstract String getErrorMessage();
 	
+
+	/**
+	 * Helper class to call from non-UI thread
+	 */
+	private static class CallHelper implements Runnable
+	{
+		ConsoleJob job;
+		String message;
+		
+		public CallHelper(ConsoleJob job)
+		{
+			this.job = job;
+		}
+
+		@Override
+		public void run()
+		{
+			message = job.getErrorMessage();
+		}
+	}
+
 	/**
 	 * Called from within Job.run() if job has failed to create failure status. Subclasses may override
 	 * and return IStatus.OK_STATUS to avoid standard job failure message to pop up.
 	 */
-	protected IStatus createFailureStatus(Exception e)
-	{		
+	protected IStatus createFailureStatus(final Exception e)
+	{
+		CallHelper ch = new CallHelper(this);
+		display.syncExec(ch);
+		
 		return new Status(Status.ERROR, pluginId, 
             (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-            getErrorMessage() + ": " + e.getMessage(), passException ? e : null); //$NON-NLS-1$
+            ch.message + ": " + e.getLocalizedMessage(), passException ? e : null); //$NON-NLS-1$
 	}
 
 	/**
