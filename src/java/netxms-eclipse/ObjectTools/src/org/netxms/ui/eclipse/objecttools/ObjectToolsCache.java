@@ -34,40 +34,22 @@ import org.netxms.ui.eclipse.objecttools.api.ObjectToolHandler;
 
 /**
  * Cache for object tools
- *
  */
 public class ObjectToolsCache
 {
-	private static Map<Long, ObjectTool> objectTools = new HashMap<Long, ObjectTool>();
-	private static Map<String, ObjectToolHandler> handlers = new HashMap<String, ObjectToolHandler>();
-	private static NXCSession session = null;
+   private static Map<String, ObjectToolHandler> handlers = new HashMap<String, ObjectToolHandler>();
+   private static ObjectToolsCache instance = null;
+   
+   private Map<Long, ObjectTool> objectTools = new HashMap<Long, ObjectTool>();
+	private NXCSession session = null;
 	
 	/**
 	 * Initialize object tools cache. Should be called when connection with
 	 * the server already established.
 	 */
-	public static void init(NXCSession session)
+	public static void init()
 	{
-		ObjectToolsCache.session = session;
-		
 		registerHandlers();
-		reload();
-		
-		session.addListener(new NXCListener() {
-			@Override
-			public void notificationHandler(SessionNotification n)
-			{
-				switch(n.getCode())
-				{
-					case NXCNotification.OBJECT_TOOLS_CHANGED:
-						onObjectToolChange(n.getSubCode());
-						break;
-					case NXCNotification.OBJECT_TOOL_DELETED:
-						onObjectToolDelete(n.getSubCode());
-						break;
-				}
-			}
-		});
 	}
 	
 	/**
@@ -92,11 +74,57 @@ public class ObjectToolsCache
 			}
 		}
 	}
+	
+	/**
+	 * @param session
+	 */
+	private ObjectToolsCache(NXCSession session)
+	{
+	   this.session = session;
 
+	   reload();
+	   
+      session.addListener(new NXCListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            switch(n.getCode())
+            {
+               case NXCNotification.OBJECT_TOOLS_CHANGED:
+                  onObjectToolChange(n.getSubCode());
+                  break;
+               case NXCNotification.OBJECT_TOOL_DELETED:
+                  onObjectToolDelete(n.getSubCode());
+                  break;
+            }
+         }
+      });
+	}
+	
+	/**
+	 * Get cache instance
+	 * 
+	 * @return
+	 */
+	public static ObjectToolsCache getInstance()
+	{
+	   return instance;
+	}
+
+   /**
+    * Attach session to cache
+    * 
+    * @param session
+    */
+   public static void attachSession(NXCSession session)
+   {
+      instance = new ObjectToolsCache(session);
+   }
+		
 	/**
 	 * Reload object tools from server
 	 */
-	private static void reload()
+	private void reload()
 	{
 		try
 		{
@@ -122,7 +150,7 @@ public class ObjectToolsCache
 	 * 
 	 * @param toolId ID of changed tool
 	 */
-	private static void onObjectToolChange(final long toolId)
+	private void onObjectToolChange(final long toolId)
 	{
 		new Thread() {
 			@Override
@@ -138,7 +166,7 @@ public class ObjectToolsCache
 	 * 
 	 * @param toolId ID of deleted tool
 	 */
-	private static void onObjectToolDelete(final long toolId)
+	private void onObjectToolDelete(final long toolId)
 	{
 		synchronized(objectTools)
 		{
@@ -152,7 +180,7 @@ public class ObjectToolsCache
 	 * 
 	 * @return current set of object tools
 	 */
-	public static ObjectTool[] getTools()
+	public ObjectTool[] getTools()
 	{
 		ObjectTool[] tools = null;
 		synchronized(objectTools)
@@ -168,7 +196,7 @@ public class ObjectToolsCache
 	 * @param toolId tool id
 	 * @return tool object or null if not found
 	 */
-	public static ObjectTool findTool(long toolId)
+	public ObjectTool findTool(long toolId)
 	{
 		ObjectTool tool;
 		synchronized(objectTools)

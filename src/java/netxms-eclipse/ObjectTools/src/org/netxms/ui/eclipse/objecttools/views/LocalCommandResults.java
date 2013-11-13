@@ -94,7 +94,7 @@ public class LocalCommandResults extends ViewPart
 			
 			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			AbstractObject object = session.findObjectById(nodeId);
-			setPartName(object.getObjectName() + " - " + ObjectToolsCache.findTool(toolId).getDisplayName()); //$NON-NLS-1$
+			setPartName(object.getObjectName() + " - " + ObjectToolsCache.getInstance().findTool(toolId).getDisplayName()); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{

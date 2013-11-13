@@ -107,7 +107,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		final Set<AbstractNode> nodes = buildNodeSet((IStructuredSelection)selection);
 		final Menu toolsMenu = new Menu(menu);
 		
-		ObjectTool[] tools = ObjectToolsCache.getTools();
+		ObjectTool[] tools = ObjectToolsCache.getInstance().getTools();
 		Arrays.sort(tools, new Comparator<ObjectTool>() {
 			@Override
 			public int compare(ObjectTool arg0, ObjectTool arg1)

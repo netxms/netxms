@@ -82,7 +82,7 @@ public class TableToolResults extends ViewPart
 		if (parts.length != 2)
 			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
-		tool = ObjectToolsCache.findTool(Long.parseLong(parts[0]));
+		tool = ObjectToolsCache.getInstance().findTool(Long.parseLong(parts[0]));
 		if (tool == null)
 			throw new PartInitException(Messages.TableToolResults_InvalidToolID);
 		
