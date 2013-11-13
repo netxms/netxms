@@ -44,6 +44,8 @@ import org.netxms.ui.eclipse.snmp.Messages;
  */
 public final class MibCache implements ConsoleLoginListener
 {	
+	private static final Object MUTEX = new Object();
+	
 	private static MibTree mibTree = new MibTree();
 
 	/* (non-Javadoc)
@@ -108,7 +110,10 @@ public final class MibCache implements ConsoleLoginListener
 						}
 					}
 					
-					MibCache.mibTree = new MibTree(mibFile);
+					synchronized(MUTEX)
+					{
+						MibCache.mibTree = new MibTree(mibFile);
+					}
 				}
 			}
 
@@ -127,7 +132,10 @@ public final class MibCache implements ConsoleLoginListener
 	 */
 	public static MibTree getMibTree()
 	{
-		return mibTree;
+		synchronized(MUTEX)
+		{
+			return mibTree;
+		}
 	}
 	
 	/**
@@ -151,6 +159,9 @@ public final class MibCache implements ConsoleLoginListener
 		{
 			return null;
 		}
-		return mibTree.findObject(id, exactMatch);
+		synchronized(MUTEX)
+		{
+			return mibTree.findObject(id, exactMatch);
+		}
 	}
 }
