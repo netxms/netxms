@@ -124,6 +124,16 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		return ObjectSelectionFilterFactory.getInstance().createTemplateSelectionFilter();
 	}
+	
+	/**
+    * Create filter for template group selection - it template groups.   
+    * 
+    * @return Class filter for node selection
+    */
+   public static Set<Integer> createTemplateGroupSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createTemplateGroupSelectionFilter();
+   }
 
 	/**
 	 * Create filter for node selection - it allows node objects and possible

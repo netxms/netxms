@@ -117,7 +117,7 @@ public class ObjectSelectionFilterFactory
     */
    public Set<Integer> createNetworkMapGroupsSelectionFilter()
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(3);
+      HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
       return classFilter;
@@ -130,7 +130,7 @@ public class ObjectSelectionFilterFactory
     */
    public Set<Integer> createPolicySelectionFilter()
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(3);
+      HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_POLICYROOT);
       classFilter.add(AbstractObject.OBJECT_POLICYGROUP);      
       return classFilter;
@@ -143,7 +143,7 @@ public class ObjectSelectionFilterFactory
     */
    public Set<Integer> createDashboardSelectionFilter()
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(3);
+      HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_DASHBOARD);
       classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
       return classFilter;
@@ -163,6 +163,19 @@ public class ObjectSelectionFilterFactory
 		classFilter.add(AbstractObject.OBJECT_TEMPLATE);
 		return classFilter;
 	}
+	
+	/**
+    * Create filter for template group selection - it allows template groups.
+    * 
+    * @return Class filter for node selection
+    */
+   public Set<Integer> createTemplateGroupSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(2);
+      classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
+      classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
+      return classFilter;
+   }
 
 	/**
 	 * Create filter for node selection - it allows node objects and possible

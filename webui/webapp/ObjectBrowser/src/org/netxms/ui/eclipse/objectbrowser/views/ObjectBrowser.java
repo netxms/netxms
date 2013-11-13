@@ -62,6 +62,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Dashboard;
@@ -69,7 +70,14 @@ import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.objects.NetworkMapGroup;
+import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.PolicyGroup;
+import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -212,6 +220,7 @@ public class ObjectBrowser extends ViewPart
 		createToolBar();
 		createPopupMenu();
 		
+      objectTree.enableDropSupport(this);
 		objectTree.enableDragSupport();
 		getSite().setSelectionProvider(objectTree.getTreeViewer());
 		
@@ -342,7 +351,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveObject = new Action(Messages.get().ObjectBrowser_MoveObject) {
+		actionMoveObject = new Action(Messages.get().get().ObjectBrowser_MoveObject) {
 			@Override
 			public void run()
 			{
@@ -350,7 +359,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveTemplate = new Action(Messages.get().ObjectBrowser_MoveTemplate) {
+		actionMoveTemplate = new Action(Messages.get().get().ObjectBrowser_MoveTemplate) {
 			@Override
 			public void run()
 			{
@@ -358,7 +367,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveBusinessService = new Action(Messages.get().ObjectBrowser_MoveService) {
+		actionMoveBusinessService = new Action(Messages.get().get().ObjectBrowser_MoveService) {
 			@Override
 			public void run()
 			{
@@ -366,7 +375,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveDashboard = new Action(Messages.get().ObjectBrowser_MoveDashboard) { 
+		actionMoveDashboard = new Action(Messages.get().get().ObjectBrowser_MoveDashboard) { 
          @Override
          public void run()
          {
@@ -374,7 +383,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
       
-      actionMoveMap = new Action(Messages.get().ObjectBrowser_MoveMap) { 
+      actionMoveMap = new Action(Messages.get().get().ObjectBrowser_MoveMap) { 
          @Override
          public void run()
          {
@@ -382,7 +391,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
       
-      actionMovePolicy = new Action(Messages.get().ObjectBrowser_MovePolicy) { 
+      actionMovePolicy = new Action(Messages.get().get().ObjectBrowser_MovePolicy) { 
          @Override
          public void run()
          {
@@ -390,7 +399,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
 		
-      actionHideUnmanaged = new Action(Messages.get().ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
+      actionHideUnmanaged = new Action(Messages.get().get().ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -400,7 +409,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 
-      actionHideTemplateChecks = new Action(Messages.get().ObjectBrowser_HideCheckTemplates, Action.AS_CHECK_BOX) {
+      actionHideTemplateChecks = new Action(Messages.get().get().ObjectBrowser_HideCheckTemplates, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -410,7 +419,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
-      actionShowFilter = new Action(Messages.get().ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.get().get().ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -423,7 +432,7 @@ public class ObjectBrowser extends ViewPart
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
       
-      actionShowStatusIndicator = new Action(Messages.get().ObjectBrowser_ShowStatusIndicator, Action.AS_CHECK_BOX) {
+      actionShowStatusIndicator = new Action(Messages.get().get().ObjectBrowser_ShowStatusIndicator, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -545,7 +554,7 @@ public class ObjectBrowser extends ViewPart
 	 * 
 	 * @return true if current selection is valid for moving object
 	 */
-	private boolean isValidSelectionForMove(SubtreeType subtree)
+	public boolean isValidSelectionForMove(SubtreeType subtree)
 	{
 		TreeItem[] selection = objectTree.getTreeControl().getSelection();
 		if (selection.length != 1)
@@ -587,7 +596,7 @@ public class ObjectBrowser extends ViewPart
 				filter = ObjectSelectionDialog.createContainerSelectionFilter();
 				break;
 			case TEMPLATES:
-				filter = ObjectSelectionDialog.createTemplateSelectionFilter();
+				filter = ObjectSelectionDialog.createTemplateGroupSelectionFilter();
 				break;
 			case BUSINESS_SERVICES:
 				filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
@@ -609,27 +618,32 @@ public class ObjectBrowser extends ViewPart
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			final AbstractObject target = dlg.getSelectedObjects().get(0);
-			if (target.getObjectId() != ((AbstractObject)parentObject).getObjectId())
-			{
-				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				new ConsoleJob(Messages.get().ObjectBrowser_MoveJob_Title + ((AbstractObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
-					@Override
-					protected void runInternal(IProgressMonitor monitor) throws Exception
-					{
-						long objectId = ((AbstractObject)currentObject).getObjectId();
-						session.bindObject(target.getObjectId(), objectId);
-						session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
-					}
-		
-					@Override
-					protected String getErrorMessage()
-					{
-						return Messages.get().ObjectBrowser_MoveJob_Error + ((AbstractObject)currentObject).getObjectName();
-					}
-				}.start();
-			}
+	      final AbstractObject target = dlg.getSelectedObjects().get(0);
+		   performObjectMove(target, parentObject, currentObject);
 		}
+	}
+	
+	public void performObjectMove(final AbstractObject target, final Object parentObject, final Object currentObject){
+      if (target.getObjectId() != ((AbstractObject)parentObject).getObjectId())
+      {
+         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         
+         new ConsoleJob(Messages.get().ObjectBrowser_MoveJob_Title + ((AbstractObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               long objectId = ((AbstractObject)currentObject).getObjectId();
+               session.bindObject(target.getObjectId(), objectId);
+               session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
+            }
+   
+            @Override
+            protected String getErrorMessage()
+            {
+               return Messages.get().ObjectBrowser_MoveJob_Error + ((AbstractObject)currentObject).getObjectName();
+            }
+         }.start();
+      }
 	}
 	
 	/**

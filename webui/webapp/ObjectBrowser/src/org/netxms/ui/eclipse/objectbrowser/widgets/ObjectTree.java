@@ -31,12 +31,16 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreePath;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceAdapter;
 import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -60,8 +64,12 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
+import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectFilter;
@@ -244,7 +252,7 @@ public class ObjectTree extends Composite
 				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) || (n.getCode() == NXCNotification.OBJECT_DELETED))
 				{
 					changeCount++;
-					new UIJob(getDisplay(), Messages.get().ObjectTree_JobTitle) {
+					new UIJob(getDisplay(), Messages.get(getDisplay()).ObjectTree_JobTitle) {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
@@ -674,4 +682,86 @@ public class ObjectTree extends Composite
 				return true;
 		return false;
 	}
+	
+	/**
+    * Enable drop support in object tree
+    */
+   public void enableDropSupport(final ObjectBrowser obj)//SubtreeType infrastructure
+   {      
+      final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+      objectTree.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(objectTree) {
+         
+         @Override
+         public boolean performDrop(Object data) 
+         {
+            AbstractObject movableObject = (AbstractObject)((TreeSelection)data).getFirstElement();
+            obj.performObjectMove((AbstractObject)getCurrentTarget(), movableObject.getParentsAsArray()[movableObject.getParentsAsArray().length-1], movableObject);
+            return true;
+         }
+
+         @Override
+         public boolean validateDrop(Object target, int operation, TransferData transferType)
+         {
+            if (!LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
+               return false;
+
+            IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
+            Iterator it = selection.iterator();
+            Object object = it.next();
+            SubtreeType subtree = null;
+            if ((object instanceof AbstractObject)) {
+               if(obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
+                 subtree = SubtreeType.INFRASTRUCTURE;
+               if(obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
+                  subtree = SubtreeType.TEMPLATES;
+               if(obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
+                  subtree = SubtreeType.BUSINESS_SERVICES;
+               if(obj.isValidSelectionForMove(SubtreeType.DASHBOARDS))
+                  subtree = SubtreeType.DASHBOARDS;
+               if(obj.isValidSelectionForMove(SubtreeType.MAPS))
+                  subtree = SubtreeType.MAPS;
+               if(obj.isValidSelectionForMove(SubtreeType.POLICIES))
+                  subtree = SubtreeType.POLICIES;
+               
+            }
+            Set<Integer> filter;
+            
+            if (subtree==null){
+            	return false;
+            }
+            
+            switch(subtree)
+            {
+               case INFRASTRUCTURE:
+                  filter = ObjectSelectionDialog.createContainerSelectionFilter();
+                  break;
+               case TEMPLATES:
+                  filter = ObjectSelectionDialog.createTemplateGroupSelectionFilter();
+                  break;
+               case BUSINESS_SERVICES:
+                  filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
+                  break;
+               case DASHBOARDS:
+                  filter = ObjectSelectionDialog.createDashboardSelectionFilter();
+                  break;
+               case MAPS:
+                  filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
+                  break;
+               case POLICIES:
+                  filter = ObjectSelectionDialog.createPolicySelectionFilter();
+                  break;
+               default:
+                  filter = null;
+                  break;
+            }
+            
+            if(filter.contains(((AbstractObject)target).getObjectClass()) && !target.equals(object)){
+               return true;
+            }else{
+               return false;   
+            }         
+         }
+
+      });
+   }
 }

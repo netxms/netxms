@@ -124,6 +124,16 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		return ObjectSelectionFilterFactory.getInstance().createTemplateSelectionFilter();
 	}
+	
+	/**
+    * Create filter for template group selection - it template groups.   
+    * 
+    * @return Class filter for node selection
+    */
+   public static Set<Integer> createTemplateGroupSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createTemplateGroupSelectionFilter();
+   }
 
 	/**
 	 * Create filter for node selection - it allows node objects and possible
@@ -183,7 +193,7 @@ public class ObjectSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().ObjectSelectionDialog_Title);
+		newShell.setText(Messages.get().get().ObjectSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -259,7 +269,7 @@ public class ObjectSelectionDialog extends Dialog
 			}
 			else
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.get().ObjectSelectionDialog_Warning, Messages.get().ObjectSelectionDialog_WarningText);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().get().ObjectSelectionDialog_Warning, Messages.get().get().ObjectSelectionDialog_WarningText);
 				return;
 			}
 		}
