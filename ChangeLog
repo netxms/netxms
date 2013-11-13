@@ -11,7 +11,8 @@
 - Table DCIs can be used in condition objects
 - Management console:
 	- New command line option -fullscreen
-- Fixed issues: #150, #226, #366, #378, #384, #401, #410, #416, #419
+- Fixed issues: #150, #226, #366, #378, #384, #401, #410, #416, #419, #414, 
+                #364
 
 
 *
