@@ -134,7 +134,7 @@ protected:
 
 public:
 	Config();
-	~Config();
+   virtual ~Config();
 
 	void lock() { MutexLock(m_mutex); }
 	void unlock() { MutexUnlock(m_mutex); }
