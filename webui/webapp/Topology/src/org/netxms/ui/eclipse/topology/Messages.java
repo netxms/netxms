@@ -97,10 +97,10 @@ public class Messages extends NLS
    {
    }
 
-	
+
 	/**
 	 * Get message class for current locale
-	 * 
+	 *
 	 * @return
 	 */
 	public static Messages get()
@@ -108,10 +108,9 @@ public class Messages extends NLS
 		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
 	}
 
-	
 	/**
 	 * Get message class for current locale
-	 * 
+	 *
 	 * @return
 	 */
 	public static Messages get(Display display)
@@ -120,14 +119,14 @@ public class Messages extends NLS
 		display.syncExec(r);
 		return r.messages;
 	}
-	
+
 	/**
 	 * Helper class to call RWT.NLS.getISO8859_1Encoded from non-UI thread
 	 */
 	private static class CallHelper implements Runnable
 	{
 		Messages messages;
-		
+
 		@Override
 		public void run()
 		{
