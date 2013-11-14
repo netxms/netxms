@@ -72,8 +72,6 @@ public class Messages extends NLS
 	public String CustomSchedule_Add;
 	public String CustomSchedule_Delete;
 	public String CustomSchedule_Edit;
-	public String CustomSchedule_JobError;
-	public String CustomSchedule_JobTitle;
 	public String CustomSchedule_Schedule;
 	public String DataCollectionEditor_ActionEdit;
 	public String DataCollectionEditor_Activate;
@@ -511,6 +509,8 @@ public class Messages extends NLS
 	private Messages()
 	{
 	}
+	
+	
 
 
 	/**

@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Event Processing Policy"
+            name="%view.name.EPP"
             icon="icons/epp.png"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor"
@@ -16,39 +16,35 @@
             class="org.netxms.ui.eclipse.epp.views.SituationsManager"
             icon="icons/situation.gif"
             id="org.netxms.ui.eclipse.epp.views.SituationsManager"
-            name="Situations"
+            name="%view.name.Situations"
             restorable="true">
       </view>
    </extension>
 
    <extension
          point="org.eclipse.ui.commands">
-      <category
-            name="Views"
-            id="org.netxms.ui.eclipse.console.category.views">
-      </category>
       <command
-            name="Event Processing Policy"
-            description="Open event processing policy editor"
+            name="%command.name.OpenEPP"
+            description="%command.description.OpenEPP"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.epp.commands.open_policy_editor">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open situations manager"
+            description="%command.description.OpenSituations"
             id="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
-            name="Situations Manager">
+            name="%command.name.OpenSituations">
       </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.action_set.event_processing_policy"
-	   	   label="Event Processing Policy"
+	   	   label="%actionSet.label.EPP"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.epp.actions.open_policy_editor"
 			   menubarPath="config/additions"
-			   label="Event Processing Policy"
-			   tooltip="Open event processing policy editor"
+			   label="%action.label.EPP"
+			   tooltip="%action.tooltip.EPP"
 			   icon="icons/epp.png"
 			   class="org.netxms.ui.eclipse.epp.actions.OpenPolicyEditor"
 			   definitionId="org.netxms.ui.eclipse.epp.commands.open_policy_editor">
@@ -56,16 +52,16 @@
 	   </actionSet>
     <actionSet
           id="org.netxms.ui.eclipse.action_set.situations_manager"
-          label="Situations Manager"
+          label="%actionSet.label.Situations"
           visible="true">
        <action
              class="org.netxms.ui.eclipse.epp.actions.OpenSituationsManager"
              definitionId="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
              icon="icons/situation.gif"
              id="org.netxms.ui.eclipse.epp.actions.open_situations_manager"
-             label="Situations Manager"
+             label="%action.label.Situations"
              menubarPath="config/additions"
-             tooltip="Open situations manager">
+             tooltip="%action.tooltip.Situations">
        </action>
     </actionSet>
    </extension>
@@ -83,7 +79,7 @@
             category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleEvents"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10"
-            name="Events">
+            name="%page.name.Events">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -94,7 +90,7 @@
             category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"
-            name="Source Objects">
+            name="%page.name.Sources">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -105,7 +101,7 @@
             category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter#20"
-            name="Severity Filter">
+            name="%page.name.Severity">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -116,7 +112,7 @@
             category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30"
-            name="Filtering Script">
+            name="%page.name.Script">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -127,7 +123,7 @@
             category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleServerActions"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleServerActions#30"
-            name="Server Actions">
+            name="%page.name.ServerActions">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -137,7 +133,7 @@
       <page
             class="org.netxms.ui.eclipse.epp.propertypages.RuleCondition"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
-            name="Condition">
+            name="%page.name.Condition">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -147,7 +143,7 @@
       <page
             class="org.netxms.ui.eclipse.epp.propertypages.RuleAction"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
-            name="Action">
+            name="%page.name.Action">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -158,7 +154,7 @@
             category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleAlarm"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleAlarm#10"
-            name="Alarm">
+            name="%page.name.Alarm">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -168,7 +164,7 @@
       <page
             class="org.netxms.ui.eclipse.epp.propertypages.RuleComments"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleComments#2"
-            name="Comments">
+            name="%page.name.Comments">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
@@ -179,7 +175,7 @@
             category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleSituation"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleSituation#20"
-            name="Situation">
+            name="%page.name.Situation">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">

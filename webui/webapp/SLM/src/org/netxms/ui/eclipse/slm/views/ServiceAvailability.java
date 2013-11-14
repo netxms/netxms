@@ -63,8 +63,8 @@ public class ServiceAvailability extends ViewPart
 			throw new PartInitException(Messages.get().ServiceAvailability_InternalError, e);
 		}
 		if (object == null)
-			throw new PartInitException(Messages.get().ServiceAvailability_InitErrorPart1 + site.getSecondaryId() + Messages.get().ServiceAvailability_InitErrorPart2);
-		setPartName(Messages.get().ServiceAvailability_PartNamePrefix + object.getObjectName());
+			throw new PartInitException(String.format(Messages.get().ServiceAvailability_InitError, site.getSecondaryId()));
+		setPartName(String.format(Messages.get().ServiceAvailability_PartName, object.getObjectName()));
 	}
 
 	/* (non-Javadoc)
@@ -86,8 +86,6 @@ public class ServiceAvailability extends ViewPart
 		
 		Canvas legend = new Canvas(clientArea, SWT.NONE);
 		legend.addPaintListener(new PaintListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void paintControl(PaintEvent e)
 			{

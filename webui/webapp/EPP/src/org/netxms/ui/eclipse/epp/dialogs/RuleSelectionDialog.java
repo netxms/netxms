@@ -82,7 +82,7 @@ public class RuleSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Rule");
+		newShell.setText(Messages.get().RuleSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -159,7 +159,7 @@ public class RuleSelectionDialog extends Dialog
 			viewer.getTable().setEnabled(false);
 			getButton(IDialogConstants.OK_ID).setEnabled(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			ConsoleJob job = new ConsoleJob("Get event processing rules", null, Activator.PLUGIN_ID, null) {
+			ConsoleJob job = new ConsoleJob(Messages.get().RuleSelectionDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -178,7 +178,7 @@ public class RuleSelectionDialog extends Dialog
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot get event processing rules from server";
+					return Messages.get().RuleSelectionDialog_JobError;
 				}
 			};
 			job.setUser(false);

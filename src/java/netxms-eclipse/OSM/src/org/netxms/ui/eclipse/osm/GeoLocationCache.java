@@ -273,7 +273,7 @@ public class GeoLocationCache implements SessionListener
 				bottomRight = displayToCoordinates(new Point(bp.x, bp.y), zoom);
 				break;
 			default:
-				throw new IllegalArgumentException("pointLocation=" + pointLocation);
+				throw new IllegalArgumentException("pointLocation=" + pointLocation); //$NON-NLS-1$
 		}
 		return new Area(topLeft.getLatitude(), topLeft.getLongitude(), bottomRight.getLatitude(), bottomRight.getLongitude());
 	}

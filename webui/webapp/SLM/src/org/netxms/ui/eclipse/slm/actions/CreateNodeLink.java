@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ public class CreateNodeLink implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().CreateNodeLink_JobErrorPrefix + dlg.getName() + Messages.get().CreateNodeLink_JobErrorSuffix;
+				return String.format(Messages.get().CreateNodeLink_JobError, dlg.getName());
 			}
 		}.start();
 	}

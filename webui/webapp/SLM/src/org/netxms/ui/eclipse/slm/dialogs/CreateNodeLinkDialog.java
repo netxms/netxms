@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.slm.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -29,6 +28,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.slm.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateNodeLinkDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabeledText nameField;
 	private ObjectSelector nodeField;
 	
@@ -108,7 +106,7 @@ public class CreateNodeLinkDialog extends Dialog
 		nodeId = nodeField.getObjectId();
 		if (nodeId == 0)
 		{
-			MessageDialog.openWarning(getShell(), Messages.get().CreateNodeLinkDialog_Warning, Messages.get().CreateNodeLinkDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNodeLinkDialog_Warning, Messages.get().CreateNodeLinkDialog_WarningText);
 			return;
 		}
 		

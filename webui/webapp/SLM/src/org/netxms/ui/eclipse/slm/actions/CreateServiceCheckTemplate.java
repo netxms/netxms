@@ -78,7 +78,7 @@ public class CreateServiceCheckTemplate implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().CreateServiceCheckTemplate_JobErrorPrefix + dlg.getName() + Messages.get().CreateServiceCheckTemplate_JobErrorSuffix;
+				return String.format(Messages.get().CreateServiceCheckTemplate_JobError, dlg.getName());
 			}
 		}.start();
 	}
