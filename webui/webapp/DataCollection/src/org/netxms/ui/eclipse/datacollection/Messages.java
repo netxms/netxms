@@ -216,7 +216,6 @@ public class Messages extends NLS
 	public String EditThresholdDialog_Value;
 	public String General_Active;
 	public String General_ClRes;
-	public String General_CustomPort;
 	public String General_CustomSchedule;
 	public String General_Data;
 	public String General_DataType;
@@ -230,8 +229,6 @@ public class Messages extends NLS
 	public String General_DT_uint64;
 	public String General_FixedIntervals;
 	public String General_InterpretRawValue;
-	public String General_JobError;
-	public String General_JobTitle;
 	public String General_None;
 	public String General_NotSupported;
 	public String General_Origin;
@@ -257,7 +254,6 @@ public class Messages extends NLS
 	public String General_SourceInternal;
 	public String General_SourcePush;
 	public String General_SourceSNMP;
-	public String General_SourceILO;
 	public String General_Status;
 	public String General_Storage;
 	public String General_UseCustomPort;
@@ -270,8 +266,6 @@ public class Messages extends NLS
 	public String GeneralTable_Description;
 	public String GeneralTable_Disabled;
 	public String GeneralTable_FixedIntervals;
-	public String GeneralTable_JobError;
-	public String GeneralTable_JobTitle;
 	public String GeneralTable_None;
 	public String GeneralTable_NotSupported;
 	public String GeneralTable_Origin;
@@ -428,10 +422,7 @@ public class Messages extends NLS
    public String TableColumns_Down;
 	public String TableColumns_Edit;
 	public String TableColumns_Instance;
-   public String TableColumns_InstanceColumn;
-	public String TableColumns_JobError;
 	public String TableColumns_JobName;
-	public String TableColumns_JobTitle;
 	public String TableColumns_Name;
 	public String TableColumns_NewColumn;
 	public String TableColumns_OID;
@@ -469,8 +460,6 @@ public class Messages extends NLS
 	public String Thresholds_Event;
 	public String Thresholds_Expression;
 	public String Thresholds_Instance;
-	public String Thresholds_JobError;
-	public String Thresholds_JobTitle;
 	public String Thresholds_ProcessAll;
 	public String Thresholds_Thresholds;
 	public String Thresholds_Up;
@@ -486,8 +475,6 @@ public class Messages extends NLS
 	public String Transformation_DeltaAvgPerSec;
 	public String Transformation_DeltaNone;
 	public String Transformation_DeltaSimple;
-	public String Transformation_JobError;
-	public String Transformation_JobTitle;
 	public String Transformation_Script;
 	public String Transformation_Step1;
 	public String Transformation_Step2;
@@ -510,7 +497,12 @@ public class Messages extends NLS
 	{
 	}
 	
+	private static Messages instance = new Messages();
 	
+	public Messages get()
+	{
+	   return instance;
+	}
 
 
 	/**
