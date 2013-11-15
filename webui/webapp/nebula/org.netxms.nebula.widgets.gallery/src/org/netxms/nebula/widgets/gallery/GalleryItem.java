@@ -37,8 +37,6 @@ import org.eclipse.swt.widgets.Item;
 
 public class GalleryItem extends Item {
 
-	private static final long serialVersionUID = 1L;
-
 	private static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
 	private String[] text = { EMPTY_STRING, EMPTY_STRING, EMPTY_STRING };

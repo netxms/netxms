@@ -82,7 +82,6 @@ public class AlphaEffect extends AbstractEffect {
 		};
 
 		shell.addShellListener(new ShellListener() {
-			private static final long serialVersionUID = 1L;
 
 			public void shellDeactivated(ShellEvent e) {
 				// Do nothing

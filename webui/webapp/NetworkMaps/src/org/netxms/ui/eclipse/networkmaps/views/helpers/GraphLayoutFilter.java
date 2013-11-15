@@ -18,9 +18,9 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
-import org.eclipse.zest.core.widgets.GraphItem;
-import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.core.widgets.LayoutFilter;
+import org.eclipse.gef4.zest.core.widgets.GraphItem;
+import org.eclipse.gef4.zest.core.widgets.GraphNode;
+import org.eclipse.gef4.zest.core.widgets.LayoutFilter;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 
 /**
@@ -45,7 +45,7 @@ public class GraphLayoutFilter implements LayoutFilter
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.widgets.LayoutFilter#isObjectFiltered(org.eclipse.zest.core.widgets.GraphItem)
+	 * @see org.eclipse.gef4.zest.core.widgets.LayoutFilter#isObjectFiltered(org.eclipse.gef4.zest.core.widgets.GraphItem)
 	 */
 	@Override
 	public boolean isObjectFiltered(GraphItem item)

@@ -47,12 +47,12 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.zest.core.viewers.GraphViewer;
-import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
-import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
-import org.eclipse.zest.core.widgets.GraphConnection;
-import org.eclipse.zest.core.widgets.custom.CGraphNode;
-import org.eclipse.zest.core.widgets.zooming.ZoomManager;
+import org.eclipse.gef4.zest.core.viewers.GraphViewer;
+import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
+import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
+import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
+import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -131,7 +131,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		getZoomManager().setZoomLevels(zoomLevels);
 		
 		for(Object f : rootLayer.getChildren())
-			if (f.getClass().getName().equals("org.eclipse.zest.core.widgets.internal.ZestRootLayer")) //$NON-NLS-1$
+			if (f.getClass().getName().equals("org.eclipse.gef4.zest.core.widgets.internal.ZestRootLayer")) //$NON-NLS-1$
 				zestRootLayer = (IFigure)f;
 
 		final Runnable timer = new Runnable() {
@@ -259,7 +259,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.GraphViewer#inputChanged(java.lang.Object, java.lang.Object)
+	 * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#inputChanged(java.lang.Object, java.lang.Object)
 	 */
 	@Override
 	protected void inputChanged(Object input, Object oldInput)
@@ -333,7 +333,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.GraphViewer#setSelectionToWidget(java.util.List, boolean)
+	 * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#setSelectionToWidget(java.util.List, boolean)
 	 */
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -358,7 +358,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer#getSelectionFromWidget()
+	 * @see org.eclipse.gef4.zest.core.viewers.AbstractStructuredGraphViewer#getSelectionFromWidget()
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
@@ -680,7 +680,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.GraphViewer#getFactory()
+	 * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#getFactory()
 	 */
 	@Override
 	protected IStylingGraphModelFactory getFactory()

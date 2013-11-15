@@ -204,7 +204,7 @@ public class LoginJob implements IRunnableWithProgress
 			}
 		}
 		
-		return new NXCSession(hostName, port, (loginName != null) ? loginName : "?", password, true);
+		return new NXCSession(hostName, port, (loginName != null) ? loginName : "?", password, false); //Do not commit!!! Just for local purposes
 	}
 	
 	/**
