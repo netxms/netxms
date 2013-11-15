@@ -33,7 +33,7 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.GraphConnection;
 import org.netxms.client.maps.NetworkMapLink;
 
 /**

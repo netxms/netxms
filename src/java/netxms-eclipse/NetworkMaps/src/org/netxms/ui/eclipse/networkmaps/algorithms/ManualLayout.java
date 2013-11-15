@@ -19,9 +19,9 @@
 package org.netxms.ui.eclipse.networkmaps.algorithms;
 
 import org.eclipse.swt.widgets.Item;
-import org.eclipse.zest.layouts.LayoutAlgorithm;
-import org.eclipse.zest.layouts.interfaces.EntityLayout;
-import org.eclipse.zest.layouts.interfaces.LayoutContext;
+import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.interfaces.EntityLayout;
+import org.eclipse.gef4.zest.layouts.interfaces.LayoutContext;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
@@ -33,7 +33,7 @@ public class ManualLayout implements LayoutAlgorithm
 	private LayoutContext context;
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.LayoutAlgorithm#setLayoutContext(org.eclipse.zest.layouts.interfaces.LayoutContext)
+	 * @see org.eclipse.gef4.zest.layouts.LayoutAlgorithm#setLayoutContext(org.eclipse.gef4.zest.layouts.interfaces.LayoutContext)
 	 */
 	@Override
 	public void setLayoutContext(LayoutContext context)
@@ -42,7 +42,7 @@ public class ManualLayout implements LayoutAlgorithm
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.LayoutAlgorithm#applyLayout(boolean)
+	 * @see org.eclipse.gef4.zest.layouts.LayoutAlgorithm#applyLayout(boolean)
 	 */
 	@Override
 	public void applyLayout(boolean clean)
