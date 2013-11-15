@@ -497,14 +497,6 @@ public class Messages extends NLS
 	{
 	}
 	
-	private static Messages instance = new Messages();
-	
-	public Messages get()
-	{
-	   return instance;
-	}
-
-
 	/**
 	 * Get message class for current locale
 	 *

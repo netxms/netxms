@@ -4,9 +4,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.swt.widgets.Display;
-
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.webui.core.messages"; //$NON-NLS-1$
