@@ -84,10 +84,10 @@ public class RuleEvents extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText(Messages.RuleEvents_InvertedRule);
+      checkInverted.setText(Messages.get().RuleEvents_InvertedRule);
       checkInverted.setSelection(rule.isEventsInverted());
       
-      final String[] columnNames = { Messages.RuleEvents_Event };
+      final String[] columnNames = { Messages.get().RuleEvents_Event };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -126,7 +126,7 @@ public class RuleEvents extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.RuleEvents_Add);
+      addButton.setText(Messages.get().RuleEvents_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -145,7 +145,7 @@ public class RuleEvents extends PropertyPage
       addButton.setLayoutData(rd);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.RuleEvents_Delete);
+      deleteButton.setText(Messages.get().RuleEvents_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

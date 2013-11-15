@@ -59,36 +59,36 @@ public class ChartColors extends FieldEditorPreferencePage implements IWorkbench
 	@Override
 	protected void createFieldEditors()
 	{
-		addField(new ColorFieldEditor("Chart.Colors.Background", Messages.ChartColors_Background, getFieldEditorParent())); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.PlotArea", Messages.ChartColors_PlotArea, getFieldEditorParent())); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Title", Messages.ChartColors_Title, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Background", Messages.get().ChartColors_Background, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.PlotArea", Messages.get().ChartColors_PlotArea, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Title", Messages.get().ChartColors_Title, getFieldEditorParent())); //$NON-NLS-1$
 		
 		filler = new Label(getFieldEditorParent(), SWT.NONE);
 
-		addField(new ColorFieldEditor("Chart.Axis.X.Color", Messages.ChartColors_TickX, getFieldEditorParent())); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Axis.Y.Color", Messages.ChartColors_TickY, getFieldEditorParent())); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Grid.X.Color", Messages.ChartColors_GridX, getFieldEditorParent())); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Grid.Y.Color", Messages.ChartColors_GridY, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Axis.X.Color", Messages.get().ChartColors_TickX, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Axis.Y.Color", Messages.get().ChartColors_TickY, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Grid.X.Color", Messages.get().ChartColors_GridX, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Grid.Y.Color", Messages.get().ChartColors_GridY, getFieldEditorParent())); //$NON-NLS-1$
 
 		lineColors = new Group(getFieldEditorParent(), SWT.NONE);
-		lineColors.setText(Messages.ChartColors_LineColors);
+		lineColors.setText(Messages.get().ChartColors_LineColors);
 			
-		addField(new ColorFieldEditor("Chart.Colors.Data.0", Messages.ChartColors_1st, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.1", Messages.ChartColors_2nd, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.2", Messages.ChartColors_3rd, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.3", Messages.ChartColors_4th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.4", Messages.ChartColors_5th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.5", Messages.ChartColors_6th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.6", Messages.ChartColors_7th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.7", Messages.ChartColors_8th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.8", Messages.ChartColors_9th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.9", Messages.ChartColors_10th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.10", Messages.ChartColors_11th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.11", Messages.ChartColors_12th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.12", Messages.ChartColors_13th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.13", Messages.ChartColors_14th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.14", Messages.ChartColors_15th, lineColors)); //$NON-NLS-1$
-		addField(new ColorFieldEditor("Chart.Colors.Data.15", Messages.ChartColors_16th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.0", Messages.get().ChartColors_1st, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.1", Messages.get().ChartColors_2nd, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.2", Messages.get().ChartColors_3rd, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.3", Messages.get().ChartColors_4th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.4", Messages.get().ChartColors_5th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.5", Messages.get().ChartColors_6th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.6", Messages.get().ChartColors_7th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.7", Messages.get().ChartColors_8th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.8", Messages.get().ChartColors_9th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.9", Messages.get().ChartColors_10th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.10", Messages.get().ChartColors_11th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.11", Messages.get().ChartColors_12th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.12", Messages.get().ChartColors_13th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.13", Messages.get().ChartColors_14th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.14", Messages.get().ChartColors_15th, lineColors)); //$NON-NLS-1$
+		addField(new ColorFieldEditor("Chart.Colors.Data.15", Messages.get().ChartColors_16th, lineColors)); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

@@ -117,7 +117,7 @@ public class TableColumns extends PropertyPage
 		layout.numColumns = 2;
       columnListArea.setLayout(layout);
 	
-      new Label(columnListArea, SWT.NONE).setText(Messages.TableColumns_Columns);
+      new Label(columnListArea, SWT.NONE).setText(Messages.get().TableColumns_Columns);
       
       columnList = new TableViewer(columnListArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
@@ -145,7 +145,7 @@ public class TableColumns extends PropertyPage
       leftButtons.setLayout(buttonsLayout);
 
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText(Messages.TableColumns_Up);
+      upButton.setText(Messages.get().TableColumns_Up);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
@@ -164,7 +164,7 @@ public class TableColumns extends PropertyPage
 		});
 
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText(Messages.TableColumns_Down);
+      downButton.setText(Messages.get().TableColumns_Down);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
@@ -197,7 +197,7 @@ public class TableColumns extends PropertyPage
       buttons.setLayout(buttonsLayout);
       
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.TableColumns_Add);
+      addButton.setText(Messages.get().TableColumns_Add);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -216,7 +216,7 @@ public class TableColumns extends PropertyPage
 		});
       
       modifyButton = new Button(buttons, SWT.PUSH);
-      modifyButton.setText(Messages.TableColumns_Edit);
+      modifyButton.setText(Messages.get().TableColumns_Edit);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       modifyButton.setLayoutData(rd);
@@ -236,7 +236,7 @@ public class TableColumns extends PropertyPage
       });
       
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.TableColumns_Delete);
+      deleteButton.setText(Messages.get().TableColumns_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -320,27 +320,27 @@ public class TableColumns extends PropertyPage
 		table.setHeaderVisible(true);
 		
 		TableColumn column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.TableColumns_Name);
+		column.setText(Messages.get().TableColumns_Name);
 		column.setWidth(150);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.TableColumns_DisplayName);
+		column.setText(Messages.get().TableColumns_DisplayName);
 		column.setWidth(150);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.TableColumns_Type);
+		column.setText(Messages.get().TableColumns_Type);
 		column.setWidth(80);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.TableColumns_Instance);
+		column.setText(Messages.get().TableColumns_Instance);
 		column.setWidth(50);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.TableColumns_Aggregation);
+		column.setText(Messages.get().TableColumns_Aggregation);
 		column.setWidth(80);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.TableColumns_OID);
+		column.setText(Messages.get().TableColumns_OID);
 		column.setWidth(200);
 		
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
@@ -389,12 +389,12 @@ public class TableColumns extends PropertyPage
 	 */
 	private void addColumn()
 	{
-		final InputDialog idlg = new InputDialog(getShell(), Messages.TableColumns_NewColumn, Messages.TableColumns_ColumnName, "", new IInputValidator() { //$NON-NLS-1$
+		final InputDialog idlg = new InputDialog(getShell(), Messages.get().TableColumns_NewColumn, Messages.get().TableColumns_ColumnName, "", new IInputValidator() { //$NON-NLS-1$
 			@Override
 			public String isValid(String newText)
 			{
 				if (newText.trim().isEmpty())
-					return Messages.TableColumns_WarningText;
+					return Messages.get().TableColumns_WarningText;
 				return null;
 			}
 		});
@@ -506,7 +506,7 @@ public class TableColumns extends PropertyPage
 	private void updateColumnsFromAgent(final String name)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		ConsoleJob job = new ConsoleJob(Messages.TableColumns_JobName, null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().TableColumns_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

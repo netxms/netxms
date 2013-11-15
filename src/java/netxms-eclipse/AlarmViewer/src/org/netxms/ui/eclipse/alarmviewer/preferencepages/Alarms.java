@@ -45,8 +45,8 @@ public class Alarms extends FieldEditorPreferencePage implements IWorkbenchPrefe
 	@Override
 	protected void createFieldEditors()
 	{
-		addField(new BooleanFieldEditor("BLINK_OUTSTANDING_ALARMS", Messages.Alarms_Blinking, getFieldEditorParent())); //$NON-NLS-1$
-		addField(new BooleanFieldEditor("SHOW_TRAY_POPUPS", Messages.Alarms_ShowPopup, getFieldEditorParent())); //$NON-NLS-1$
-		addField(new BooleanFieldEditor("OUTSTANDING_ALARMS_REMINDER", Messages.Alarms_ShowReminder, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("BLINK_OUTSTANDING_ALARMS", Messages.get().Alarms_Blinking, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("SHOW_TRAY_POPUPS", Messages.get().Alarms_ShowPopup, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("OUTSTANDING_ALARMS_REMINDER", Messages.get().Alarms_ShowReminder, getFieldEditorParent())); //$NON-NLS-1$
 	}
 }

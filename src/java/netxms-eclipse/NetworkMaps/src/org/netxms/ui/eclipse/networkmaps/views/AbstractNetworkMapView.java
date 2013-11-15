@@ -111,13 +111,13 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected static final int LAYOUT_SPARSE_VTREE = 4;
 
 	private static final String[] layoutAlgorithmNames = { 
-	   Messages.AbstractNetworkMapView_LayoutSpring,
-	   Messages.AbstractNetworkMapView_LayoutRadial,
-	   Messages.AbstractNetworkMapView_LayoutHorzTree, 
-	   Messages.AbstractNetworkMapView_LayoutVertTree,
-	   Messages.AbstractNetworkMapView_LayoutSparseVertTree 
+	   Messages.get().AbstractNetworkMapView_LayoutSpring,
+	   Messages.get().AbstractNetworkMapView_LayoutRadial,
+	   Messages.get().AbstractNetworkMapView_LayoutHorzTree, 
+	   Messages.get().AbstractNetworkMapView_LayoutVertTree,
+	   Messages.get().AbstractNetworkMapView_LayoutSparseVertTree 
 	};
-	private static final String[] connectionRouterNames = { Messages.AbstractNetworkMapView_RouterDirect, Messages.AbstractNetworkMapView_RouterManhattan };
+	private static final String[] connectionRouterNames = { Messages.get().AbstractNetworkMapView_RouterDirect, Messages.get().AbstractNetworkMapView_RouterManhattan };
 
 	private static final int SELECTION_EMPTY = 0;
 	private static final int SELECTION_MIXED = 1;
@@ -176,7 +176,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		rootObject = session.findObjectById(Long.parseLong((parts.length > 0) ? parts[0] : site.getSecondaryId()));
 		if (rootObject == null)
-			throw new PartInitException(Messages.AbstractNetworkMapView_RootObjectNotFound);
+			throw new PartInitException(Messages.get().AbstractNetworkMapView_RootObjectNotFound);
 
 		viewId = site.getId() + "."; //$NON-NLS-1$
 		viewId += (parts.length > 0) ? parts[0] : site.getSecondaryId();
@@ -528,7 +528,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 
-		actionShowStatusBackground = new Action(Messages.AbstractNetworkMapView_ShowStatusBkgnd, Action.AS_CHECK_BOX) {
+		actionShowStatusBackground = new Action(Messages.get().AbstractNetworkMapView_ShowStatusBkgnd, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -542,7 +542,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
 		actionShowStatusBackground.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 
-		actionShowStatusIcon = new Action(Messages.AbstractNetworkMapView_ShowStatusIcon, Action.AS_CHECK_BOX) {
+		actionShowStatusIcon = new Action(Messages.get().AbstractNetworkMapView_ShowStatusIcon, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -556,7 +556,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
 		actionShowStatusIcon.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 
-		actionShowStatusFrame = new Action(Messages.AbstractNetworkMapView_ShowStatusFrame, Action.AS_CHECK_BOX) {
+		actionShowStatusFrame = new Action(Messages.get().AbstractNetworkMapView_ShowStatusFrame, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -570,7 +570,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 
-		actionZoomIn = new Action(Messages.AbstractNetworkMapView_ZoomIn) {
+		actionZoomIn = new Action(Messages.get().AbstractNetworkMapView_ZoomIn) {
 			@Override
 			public void run()
 			{
@@ -579,7 +579,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
-		actionZoomOut = new Action(Messages.AbstractNetworkMapView_ZoomOut) {
+		actionZoomOut = new Action(Messages.get().AbstractNetworkMapView_ZoomOut) {
 			@Override
 			public void run()
 			{
@@ -620,7 +620,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			actionSetRouter[i].setChecked(routingAlgorithm == alg);
 		}
 
-		actionEnableAutomaticLayout = new Action(Messages.AbstractNetworkMapView_EnableAutoLayout, Action.AS_CHECK_BOX) {
+		actionEnableAutomaticLayout = new Action(Messages.get().AbstractNetworkMapView_EnableAutoLayout, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -637,7 +637,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
 
-		actionSaveLayout = new Action(Messages.AbstractNetworkMapView_SaveLayout) {
+		actionSaveLayout = new Action(Messages.get().AbstractNetworkMapView_SaveLayout) {
 			@Override
 			public void run()
 			{
@@ -648,7 +648,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionSaveLayout.setImageDescriptor(SharedIcons.SAVE);
 		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
 
-		actionOpenSubmap = new Action(Messages.AbstractNetworkMapView_OpenSubmap) {
+		actionOpenSubmap = new Action(Messages.get().AbstractNetworkMapView_OpenSubmap) {
 			@Override
 			public void run()
 			{
@@ -657,7 +657,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionOpenSubmap.setEnabled(false);
 
-		actionFiguresIcons = new Action(Messages.AbstractNetworkMapView_Icons, Action.AS_RADIO_BUTTON) {
+		actionFiguresIcons = new Action(Messages.get().AbstractNetworkMapView_Icons, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -672,7 +672,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 
-		actionFiguresSmallLabels = new Action(Messages.AbstractNetworkMapView_SmallLabels, Action.AS_RADIO_BUTTON) {
+		actionFiguresSmallLabels = new Action(Messages.get().AbstractNetworkMapView_SmallLabels, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -687,7 +687,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.SMALL_LABEL);
 
-		actionFiguresLargeLabels = new Action(Messages.AbstractNetworkMapView_LargeLabels, Action.AS_RADIO_BUTTON) {
+		actionFiguresLargeLabels = new Action(Messages.get().AbstractNetworkMapView_LargeLabels, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -702,7 +702,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
 
-		actionShowGrid = new Action(Messages.AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
+		actionShowGrid = new Action(Messages.get().AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -712,7 +712,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowGrid.setImageDescriptor(Activator.getImageDescriptor("icons/grid.png")); //$NON-NLS-1$
 		actionShowGrid.setChecked(viewer.isGridVisible());
 
-		actionSnapToGrid = new Action(Messages.AbstractNetworkMapView_SnapToGrid, Action.AS_CHECK_BOX) {
+		actionSnapToGrid = new Action(Messages.get().AbstractNetworkMapView_SnapToGrid, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -722,7 +722,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionSnapToGrid.setImageDescriptor(Activator.getImageDescriptor("icons/snap_to_grid.png")); //$NON-NLS-1$
 		actionSnapToGrid.setChecked(viewer.isSnapToGrid());
 
-		actionAlignToGrid = new Action(Messages.AbstractNetworkMapView_AlignToGrid, Activator.getImageDescriptor("icons/align_to_grid.gif")) { //$NON-NLS-1$
+		actionAlignToGrid = new Action(Messages.get().AbstractNetworkMapView_AlignToGrid, Activator.getImageDescriptor("icons/align_to_grid.gif")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -731,7 +731,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 
-		actionShowObjectDetails = new Action(Messages.AbstractNetworkMapView_ShowObjDetails) {
+		actionShowObjectDetails = new Action(Messages.get().AbstractNetworkMapView_ShowObjDetails) {
 			@Override
 			public void run()
 			{
@@ -747,7 +747,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	 */
 	protected IContributionItem createLayoutSubmenu()
 	{
-		MenuManager layout = new MenuManager(Messages.AbstractNetworkMapView_Layout);
+		MenuManager layout = new MenuManager(Messages.get().AbstractNetworkMapView_Layout);
 		if (allowManualLayout)
 		{
 			layout.add(actionEnableAutomaticLayout);
@@ -770,7 +770,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	 */
 	protected IContributionItem createRoutingSubmenu()
 	{
-		MenuManager submenu = new MenuManager(Messages.AbstractNetworkMapView_Routing);
+		MenuManager submenu = new MenuManager(Messages.get().AbstractNetworkMapView_Routing);
 		for(int i = 0; i < actionSetRouter.length; i++)
 			submenu.add(actionSetRouter[i]);
 		return submenu;
@@ -793,11 +793,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	 */
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
-		MenuManager zoom = new MenuManager(Messages.AbstractNetworkMapView_Zoom);
+		MenuManager zoom = new MenuManager(Messages.get().AbstractNetworkMapView_Zoom);
 		for(int i = 0; i < actionZoomTo.length; i++)
 			zoom.add(actionZoomTo[i]);
 
-		MenuManager figureType = new MenuManager(Messages.AbstractNetworkMapView_DisplayObjectAs);
+		MenuManager figureType = new MenuManager(Messages.get().AbstractNetworkMapView_DisplayObjectAs);
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
@@ -934,11 +934,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	 */
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
-		MenuManager zoom = new MenuManager(Messages.AbstractNetworkMapView_Zoom);
+		MenuManager zoom = new MenuManager(Messages.get().AbstractNetworkMapView_Zoom);
 		for(int i = 0; i < actionZoomTo.length; i++)
 			zoom.add(actionZoomTo[i]);
 
-		MenuManager figureType = new MenuManager(Messages.AbstractNetworkMapView_DisplayObjectAs);
+		MenuManager figureType = new MenuManager(Messages.get().AbstractNetworkMapView_DisplayObjectAs);
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
@@ -1194,7 +1194,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				}
 				catch(PartInitException e)
 				{
-					MessageDialogHelper.openError(getSite().getShell(), Messages.AbstractNetworkMapView_Error, String.format(Messages.AbstractNetworkMapView_OpenSubmapError, e.getMessage()));
+					MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format(Messages.get().AbstractNetworkMapView_OpenSubmapError, e.getMessage()));
 				}
 			}
 		}
@@ -1255,8 +1255,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(getSite().getShell(), Messages.AbstractNetworkMapView_Error,
-						String.format(Messages.AbstractNetworkMapView_OpenObjDetailsError, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error,
+						String.format(Messages.get().AbstractNetworkMapView_OpenObjDetailsError, e.getLocalizedMessage()));
 			}
 		}
 	}

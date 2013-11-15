@@ -66,7 +66,7 @@ public class CreateZone implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateZone_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateZone_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +78,7 @@ public class CreateZone implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.CreateZone_JobError, dlg.getName());
+				return String.format(Messages.get().CreateZone_JobError, dlg.getName());
 			}
 		}.start();
 	}

@@ -392,6 +392,7 @@ private:
 	int m_size;
 	int m_allocated;
 	int m_grow;
+   int m_elementSize;
 	void **m_data;
 	bool m_objectOwner;
 
@@ -469,15 +470,19 @@ public:
 template <class T> class StructArray
 {
 private:
-	int m_count;
+   int m_size;
+	int m_allocated;
+	int m_grow;
 	T *m_data;
 
 public:
-	StructArray(T *data, int count) { m_data = data; m_count = count; }
+	StructArray(T *data, int size) { m_data = data; m_size = size; }
 	~StructArray() { safe_free(m_data); }
 
-	int size() { return m_count; }
+	int size() { return m_size; }
+
 	T *get(int index) { return ((index >= 0) && (index < m_count)) ? &m_data[index] : NULL; }
+   void replace(int index, T *value) { if ((index >= 0) && (index < m_count)) memcpy(&m_data[index], value, sizeof(T)); }
 };
 
 /**

@@ -57,14 +57,14 @@ public class BrowserView extends ViewPart
 			@Override
 			public void changing(LocationEvent event)
 			{
-				setPartName(String.format(Messages.BrowserView_PartName_Changing, event.location));
+				setPartName(String.format(Messages.get().BrowserView_PartName_Changing, event.location));
 				actionStop.setEnabled(true);
 			}
 			
 			@Override
 			public void changed(LocationEvent event)
 			{
-				setPartName(String.format(Messages.BrowserView_PartName_Changed, event.location));
+				setPartName(String.format(Messages.get().BrowserView_PartName_Changed, event.location));
 				actionStop.setEnabled(false);
 			}
 		});
@@ -78,7 +78,7 @@ public class BrowserView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionBack = new Action(Messages.BrowserView_Back, SharedIcons.NAV_BACKWARD) {
+		actionBack = new Action(Messages.get().BrowserView_Back, SharedIcons.NAV_BACKWARD) {
 			@Override
 			public void run()
 			{
@@ -86,7 +86,7 @@ public class BrowserView extends ViewPart
 			}
 		};
 
-		actionForward = new Action(Messages.BrowserView_Forward, SharedIcons.NAV_FORWARD) {
+		actionForward = new Action(Messages.get().BrowserView_Forward, SharedIcons.NAV_FORWARD) {
 			@Override
 			public void run()
 			{
@@ -94,7 +94,7 @@ public class BrowserView extends ViewPart
 			}
 		};
 
-		actionStop = new Action(Messages.BrowserView_Stop, Activator.getImageDescriptor("icons/stop.png")) { //$NON-NLS-1$
+		actionStop = new Action(Messages.get().BrowserView_Stop, Activator.getImageDescriptor("icons/stop.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{

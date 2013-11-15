@@ -83,7 +83,7 @@ public class MibSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.MibSelectionDialog_Title);
+		newShell.setText(Messages.get().MibSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -126,7 +126,7 @@ public class MibSelectionDialog extends Dialog
 		mibTreeGroup.setLayoutData(gd);
 		
 		Label label = new Label(mibTreeGroup, SWT.NONE);
-		label.setText(Messages.MibSelectionDialog_MIBTree);
+		label.setText(Messages.get().MibSelectionDialog_MIBTree);
 		
 		mibTree = new MibBrowser(mibTreeGroup, SWT.BORDER);
 		gd = new GridData();
@@ -145,7 +145,7 @@ public class MibSelectionDialog extends Dialog
 			}
 		});
 
-		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, Messages.MibSelectionDialog_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, Messages.get().MibSelectionDialog_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		oid.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
@@ -157,7 +157,7 @@ public class MibSelectionDialog extends Dialog
 		if (nodeId != 0)
 		{
 			Button button = new Button(dialogArea, SWT.PUSH);
-			button.setText(Messages.MibSelectionDialog_Walk);
+			button.setText(Messages.get().MibSelectionDialog_Walk);
 			gd = new GridData();
 			gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 			gd.verticalAlignment = SWT.BOTTOM;
@@ -224,7 +224,7 @@ public class MibSelectionDialog extends Dialog
 		}
 		catch(SnmpObjectIdFormatException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.MibSelectionDialog_Warning, Messages.MibSelectionDialog_EnterValidOID);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().MibSelectionDialog_Warning, Messages.get().MibSelectionDialog_EnterValidOID);
 			return;
 		}
 		
@@ -234,7 +234,7 @@ public class MibSelectionDialog extends Dialog
 			selectedObject = MibCache.getMibTree().findObject(selectedObjectId, false);
 			if (selectedObject == null)
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.MibSelectionDialog_Warning, Messages.MibSelectionDialog_WarningText);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().MibSelectionDialog_Warning, Messages.get().MibSelectionDialog_WarningText);
 				return;
 			}
 		}
@@ -306,7 +306,7 @@ public class MibSelectionDialog extends Dialog
 		}
 		catch(SnmpObjectIdFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.MibSelectionDialog_Error, Messages.MibSelectionDialog_OIDParseError);
+			MessageDialogHelper.openError(getShell(), Messages.get().MibSelectionDialog_Error, Messages.get().MibSelectionDialog_OIDParseError);
 		}
 	}
 

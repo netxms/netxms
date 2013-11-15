@@ -70,7 +70,7 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 				if (window.getActivePage().findView(ServerConsole.ID) == null)
 				{
 					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					new ConsoleJob(Messages.OpenServerConsole_JobTitle, null, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
+					new ConsoleJob(Messages.get().OpenServerConsole_JobTitle, null, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
@@ -85,7 +85,7 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 									}
 									catch(PartInitException e)
 									{
-										MessageDialogHelper.openError(window.getShell(), Messages.OpenServerConsole_Error, Messages.OpenServerConsole_ViewErrorMessage + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+										MessageDialogHelper.openError(window.getShell(), Messages.get().OpenServerConsole_Error, Messages.get().OpenServerConsole_ViewErrorMessage + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
 									}
 								}
 							});
@@ -94,7 +94,7 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 						@Override
 						protected String getErrorMessage()
 						{
-							return Messages.OpenServerConsole_OpenErrorMessage; //$NON-NLS-1$
+							return Messages.get().OpenServerConsole_OpenErrorMessage; //$NON-NLS-1$
 						}
 					}.start();
 				}
@@ -105,7 +105,7 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenServerConsole_Error, Messages.OpenServerConsole_ViewErrorMessage + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.get().OpenServerConsole_Error, Messages.get().OpenServerConsole_ViewErrorMessage + e.getMessage());
 			}
 		}
 	}

@@ -86,7 +86,7 @@ public class SummaryTableManager extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.SummaryTableManager_ID, Messages.SummaryTableManager_MenuPath, Messages.SummaryTableManager_Title };
+		final String[] names = { Messages.get().SummaryTableManager_ID, Messages.get().SummaryTableManager_MenuPath, Messages.get().SummaryTableManager_Title };
 		final int[] widths = { 90, 250, 200 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MENU_PATH, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -182,7 +182,7 @@ public class SummaryTableManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SummaryTableManager_JobError;
+				return Messages.get().SummaryTableManager_JobError;
 			}
 		}.start();
 	}
@@ -202,7 +202,7 @@ public class SummaryTableManager extends ViewPart
 		};
 
 		// create add action
-		actionCreate = new Action(Messages.SummaryTableManager_ActionNew, SharedIcons.ADD_OBJECT) {
+		actionCreate = new Action(Messages.get().SummaryTableManager_ActionNew, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -211,7 +211,7 @@ public class SummaryTableManager extends ViewPart
 		};
 
 		// create edit action
-		actionEdit = new Action(Messages.SummaryTableManager_ActionEdit, SharedIcons.EDIT) {
+		actionEdit = new Action(Messages.get().SummaryTableManager_ActionEdit, SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
@@ -221,7 +221,7 @@ public class SummaryTableManager extends ViewPart
 		actionEdit.setEnabled(false);
 
 		// create delete action
-		actionDelete = new Action(Messages.SummaryTableManager_ActionDelete, SharedIcons.DELETE_OBJECT) {
+		actionDelete = new Action(Messages.get().SummaryTableManager_ActionDelete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -299,7 +299,7 @@ public class SummaryTableManager extends ViewPart
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, t);
 		if (dlg != null)
 		{
-			dlg.getShell().setText(Messages.SummaryTableManager_TitleCreate);
+			dlg.getShell().setText(Messages.get().SummaryTableManager_TitleCreate);
 			dlg.open();
 			if (t.getId() != 0)
 			{
@@ -322,7 +322,7 @@ public class SummaryTableManager extends ViewPart
 			return;
 		
 		final DciSummaryTableDescriptor d = (DciSummaryTableDescriptor)selection.getFirstElement();
-		new ConsoleJob(Messages.SummaryTableManager_ReadJobName, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SummaryTableManager_ReadJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -332,7 +332,7 @@ public class SummaryTableManager extends ViewPart
 					public void run()
 					{
 						PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, t);
-						dlg.getShell().setText(Messages.SummaryTableManager_TitleEdit);
+						dlg.getShell().setText(Messages.get().SummaryTableManager_TitleEdit);
 						dlg.open();
 						d.updateFromTable(t);
 						viewer.update(d, null);
@@ -343,7 +343,7 @@ public class SummaryTableManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SummaryTableManager_ReadJobError;
+				return Messages.get().SummaryTableManager_ReadJobError;
 			}
 		}.start();
 	}
@@ -357,7 +357,7 @@ public class SummaryTableManager extends ViewPart
 		if (selection.size() == 0)
 			return;
 		
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.SummaryTableManager_ConfirmDelete, Messages.SummaryTableManager_Confirmation))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().SummaryTableManager_ConfirmDelete, Messages.get().SummaryTableManager_Confirmation))
 			return;
 	
 		final int[] idList = new int[selection.size()];
@@ -365,7 +365,7 @@ public class SummaryTableManager extends ViewPart
 		for(Object o : selection.toList())
 			idList[i++] = ((DciSummaryTableDescriptor)o).getId();
 		
-		new ConsoleJob(Messages.SummaryTableManager_DeleteJobName, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SummaryTableManager_DeleteJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -385,7 +385,7 @@ public class SummaryTableManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SummaryTableManager_DeleteJobError;
+				return Messages.get().SummaryTableManager_DeleteJobError;
 			}
 		}.start();
 	}

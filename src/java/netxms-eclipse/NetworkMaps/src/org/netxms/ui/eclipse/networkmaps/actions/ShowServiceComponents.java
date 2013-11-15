@@ -65,7 +65,7 @@ public class ShowServiceComponents implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowServiceComponents_Error, String.format(Messages.ShowServiceComponents_ErrorText, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowServiceComponents_Error, String.format(Messages.get().ShowServiceComponents_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

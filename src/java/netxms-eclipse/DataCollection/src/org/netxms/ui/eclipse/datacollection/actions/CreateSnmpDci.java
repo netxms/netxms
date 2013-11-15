@@ -112,17 +112,17 @@ public class CreateSnmpDci implements IObjectActionDelegate
 			lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
 		}
 		
-		new ConsoleJob(Messages.CreateSnmpDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateSnmpDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.CreateSnmpDci_ErrorMessage;
+				return Messages.get().CreateSnmpDci_ErrorMessage;
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.CreateSnmpDci_TaskTitle, values.size());
+				monitor.beginTask(Messages.get().CreateSnmpDci_TaskTitle, values.size());
 				for(SnmpValue v : values)
 				{
 					final String description = dlg.getDescription().replaceAll("@@instance@@", Long.toString(v.getObjectId().getIdFromPos(v.getObjectId().getLength() - 1))); //$NON-NLS-1$

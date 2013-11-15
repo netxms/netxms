@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.logviewer.Messages;
  */
 public class TimestampConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.TimestampConditionEditor_Between, Messages.TimestampConditionEditor_Before, Messages.TimestampConditionEditor_After };
+	private static final String[] OPERATIONS = { Messages.get().TimestampConditionEditor_Between, Messages.get().TimestampConditionEditor_Before, Messages.get().TimestampConditionEditor_After };
 	
 	private DateTime datePicker1;
 	private DateTime timePicker1;
@@ -91,7 +91,7 @@ public class TimestampConditionEditor extends ConditionEditor
 		timePicker1 = new DateTime(group, SWT.TIME);
 		timePicker1.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
 		
-		andLabel = toolkit.createLabel(group, Messages.TimestampConditionEditor_And);
+		andLabel = toolkit.createLabel(group, Messages.get().TimestampConditionEditor_And);
 
 		datePicker2 = new DateTime(group, SWT.DATE | SWT.DROP_DOWN);
 		datePicker2.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));

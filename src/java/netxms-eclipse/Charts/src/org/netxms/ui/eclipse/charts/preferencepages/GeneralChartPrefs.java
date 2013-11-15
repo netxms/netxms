@@ -48,18 +48,18 @@ public class GeneralChartPrefs extends FieldEditorPreferencePage implements IWor
 	@Override
 	protected void createFieldEditors()
 	{
-		addField(new BooleanFieldEditor("Chart.ShowTitle", Messages.GeneralChartPrefs_ShowTitle, getFieldEditorParent())); //$NON-NLS-1$
-		addField(new BooleanFieldEditor("Chart.ShowToolTips", Messages.GeneralChartPrefs_ShowTooltips, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("Chart.ShowTitle", Messages.get().GeneralChartPrefs_ShowTitle, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("Chart.ShowToolTips", Messages.get().GeneralChartPrefs_ShowTooltips, getFieldEditorParent())); //$NON-NLS-1$
 
 		final String[][] gridStyles =	new String[][] { 
-				{ Messages.GeneralChartPrefs_None, LineStyle.NONE.label },
-				{ Messages.GeneralChartPrefs_Solid, LineStyle.SOLID.label },
-				{ Messages.GeneralChartPrefs_Dash, LineStyle.DASH.label },
-				{ Messages.GeneralChartPrefs_Dot, LineStyle.DOT.label },
-				{ Messages.GeneralChartPrefs_DashDot, LineStyle.DASHDOT.label },
-				{ Messages.GeneralChartPrefs_DashDotDot, LineStyle.DASHDOTDOT.label },
+				{ Messages.get().GeneralChartPrefs_None, LineStyle.NONE.label },
+				{ Messages.get().GeneralChartPrefs_Solid, LineStyle.SOLID.label },
+				{ Messages.get().GeneralChartPrefs_Dash, LineStyle.DASH.label },
+				{ Messages.get().GeneralChartPrefs_Dot, LineStyle.DOT.label },
+				{ Messages.get().GeneralChartPrefs_DashDot, LineStyle.DASHDOT.label },
+				{ Messages.get().GeneralChartPrefs_DashDotDot, LineStyle.DASHDOTDOT.label },
 			};
-		addField(new RadioGroupFieldEditor("Chart.Grid.X.Style", Messages.GeneralChartPrefs_XStyle, 3, gridStyles, getFieldEditorParent(), true)); //$NON-NLS-1$
-		addField(new RadioGroupFieldEditor("Chart.Grid.Y.Style", Messages.GeneralChartPrefs_YStyle, 3, gridStyles, getFieldEditorParent(), true)); //$NON-NLS-1$
+		addField(new RadioGroupFieldEditor("Chart.Grid.X.Style", Messages.get().GeneralChartPrefs_XStyle, 3, gridStyles, getFieldEditorParent(), true)); //$NON-NLS-1$
+		addField(new RadioGroupFieldEditor("Chart.Grid.Y.Style", Messages.get().GeneralChartPrefs_YStyle, 3, gridStyles, getFieldEditorParent(), true)); //$NON-NLS-1$
 	}
 }

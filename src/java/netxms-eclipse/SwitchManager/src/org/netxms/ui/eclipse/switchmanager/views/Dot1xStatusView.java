@@ -92,7 +92,7 @@ public class Dot1xStatusView extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		setPartName(String.format(Messages.Dot1xStatusView_PartName, session.getObjectName(rootObject)));
+		setPartName(String.format(Messages.get().Dot1xStatusView_PartName, session.getObjectName(rootObject)));
 	}
 
 	/* (non-Javadoc)
@@ -101,7 +101,7 @@ public class Dot1xStatusView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.Dot1xStatusView_ColDevice, Messages.Dot1xStatusView_ColSlotPort, Messages.Dot1xStatusView_ColInterface, Messages.Dot1xStatusView_ColPAE, Messages.Dot1xStatusView_ColBackend };
+		final String[] names = { Messages.get().Dot1xStatusView_ColDevice, Messages.get().Dot1xStatusView_ColSlotPort, Messages.get().Dot1xStatusView_ColInterface, Messages.get().Dot1xStatusView_ColPAE, Messages.get().Dot1xStatusView_ColBackend };
 		final int[] widths = { 250, 60, 180, 150, 150 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());

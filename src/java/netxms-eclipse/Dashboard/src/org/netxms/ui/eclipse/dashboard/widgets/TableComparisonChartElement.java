@@ -100,7 +100,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob(Messages.TableComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().TableComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -119,7 +119,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.TableComparisonChartElement_JobError;
+				return Messages.get().TableComparisonChartElement_JobError;
 			}
 	
 			@Override

@@ -65,7 +65,7 @@ public class EditColumnDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.EditColumnDialog_ColumnDefinition + column.getName());
+		newShell.setText(Messages.get().EditColumnDialog_ColumnDefinition + column.getName());
 	}
 
 	/* (non-Javadoc)
@@ -84,43 +84,43 @@ public class EditColumnDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel(Messages.EditColumnDialog_Name);
+		name.setLabel(Messages.get().EditColumnDialog_Name);
 		name.setText(column.getName());
 		name.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		
 		displayName = new LabeledText(dialogArea, SWT.NONE);
-		displayName.setLabel(Messages.EditColumnDialog_DispName);
+		displayName.setLabel(Messages.get().EditColumnDialog_DispName);
 		displayName.setText(column.getDisplayName());
 		displayName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		
-		dataType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.EditColumnDialog_DataType, new GridData(SWT.FILL, SWT.CENTER, true, false));
-		dataType.add(Messages.TableColumnLabelProvider_in32);
-		dataType.add(Messages.TableColumnLabelProvider_uint32);
-		dataType.add(Messages.TableColumnLabelProvider_int64);
-		dataType.add(Messages.TableColumnLabelProvider_uint64);
-		dataType.add(Messages.TableColumnLabelProvider_string);
-		dataType.add(Messages.TableColumnLabelProvider_float);
+		dataType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().EditColumnDialog_DataType, new GridData(SWT.FILL, SWT.CENTER, true, false));
+		dataType.add(Messages.get().TableColumnLabelProvider_in32);
+		dataType.add(Messages.get().TableColumnLabelProvider_uint32);
+		dataType.add(Messages.get().TableColumnLabelProvider_int64);
+		dataType.add(Messages.get().TableColumnLabelProvider_uint64);
+		dataType.add(Messages.get().TableColumnLabelProvider_string);
+		dataType.add(Messages.get().TableColumnLabelProvider_float);
 		dataType.select(column.getDataType());
 		
-		aggregationFunction = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.EditColumnDialog_AggFunc, new GridData(SWT.FILL, SWT.CENTER, true, false));
-		aggregationFunction.add(Messages.TableColumnLabelProvider_SUM);
-		aggregationFunction.add(Messages.TableColumnLabelProvider_AVG);
-		aggregationFunction.add(Messages.TableColumnLabelProvider_MIN);
-		aggregationFunction.add(Messages.TableColumnLabelProvider_MAX);
+		aggregationFunction = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().EditColumnDialog_AggFunc, new GridData(SWT.FILL, SWT.CENTER, true, false));
+		aggregationFunction.add(Messages.get().TableColumnLabelProvider_SUM);
+		aggregationFunction.add(Messages.get().TableColumnLabelProvider_AVG);
+		aggregationFunction.add(Messages.get().TableColumnLabelProvider_MIN);
+		aggregationFunction.add(Messages.get().TableColumnLabelProvider_MAX);
 		aggregationFunction.select(column.getAggregationFunction());
 		
 		checkInstanceColumn = new Button(dialogArea, SWT.CHECK);
-		checkInstanceColumn.setText(Messages.EditColumnDialog_InstanceCol);
+		checkInstanceColumn.setText(Messages.get().EditColumnDialog_InstanceCol);
 		checkInstanceColumn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		checkInstanceColumn.setSelection(column.isInstanceColumn());
 		
 		checkInstanceLabelColumn = new Button(dialogArea, SWT.CHECK);
-		checkInstanceLabelColumn.setText(Messages.EditColumnDialog_InstanceLabelCol);
+		checkInstanceLabelColumn.setText(Messages.get().EditColumnDialog_InstanceLabelCol);
 		checkInstanceLabelColumn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		checkInstanceLabelColumn.setSelection(column.isInstanceLabelColumn());
 		
 		snmpOid = new LabeledText(dialogArea, SWT.NONE);
-		snmpOid.setLabel(Messages.EditColumnDialog_SNMP_OID);
+		snmpOid.setLabel(Messages.get().EditColumnDialog_SNMP_OID);
 		snmpOid.setText((column.getSnmpObjectId() != null) ? column.getSnmpObjectId().toString() : "");  //$NON-NLS-1$
 		snmpOid.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		
@@ -143,7 +143,7 @@ public class EditColumnDialog extends Dialog
 			}
 			catch(SnmpObjectIdFormatException e)
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.EditColumnDialog_Warning, Messages.EditColumnDialog_InvalidOID);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().EditColumnDialog_Warning, Messages.get().EditColumnDialog_InvalidOID);
 				return;
 			}
 		}

@@ -125,15 +125,15 @@ public class ObjectTooltip extends Figure
 
 			for(RadioInterface rif : ((AccessPoint)object).getRadios())
 			{
-				sb.append(Messages.ObjectTooltip_Radio);
+				sb.append(Messages.get().ObjectTooltip_Radio);
 				sb.append(rif.getIndex());
 				sb.append(" ("); //$NON-NLS-1$
 				sb.append(rif.getMacAddress().toString());
-				sb.append(Messages.ObjectTooltip_Channel);
+				sb.append(Messages.get().ObjectTooltip_Channel);
 				sb.append(rif.getChannel());
-				sb.append(Messages.ObjectTooltip_TXPower);
+				sb.append(Messages.get().ObjectTooltip_TXPower);
 				sb.append(rif.getPowerMW());
-				sb.append(Messages.ObjectTooltip_mW);
+				sb.append(Messages.get().ObjectTooltip_mW);
 			}
 
 			Label info = new Label();
@@ -177,7 +177,7 @@ public class ObjectTooltip extends Figure
 		collectData(objectCount, object);
 
 		chart.setTitleVisible(true);
-		chart.setChartTitle(Messages.ObjectTooltip_ChartTitle);
+		chart.setChartTitle(Messages.get().ObjectTooltip_ChartTitle);
 		chart.setLegendPosition(GraphSettings.POSITION_RIGHT);
 		chart.setLegendVisible(true);
 		chart.set3DModeEnabled(true);

@@ -49,7 +49,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName(Messages.IPRouteMap_PartTitle + " - [" + rootObject.getObjectName() + " - " + targetObject.getObjectName() + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		setPartName(Messages.get().IPRouteMap_PartTitle + " - [" + rootObject.getObjectName() + " - " + targetObject.getObjectName() + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/* (non-Javadoc)
@@ -65,7 +65,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 		
 		targetObject = session.findObjectById(Long.parseLong(parts[1]));
 		if (targetObject == null)
-			throw new PartInitException(Messages.IPRouteMap_TargetObjectNotExist);
+			throw new PartInitException(Messages.get().IPRouteMap_TargetObjectNotExist);
 	}
 
 	/* (non-Javadoc)
@@ -87,7 +87,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 		if (mapPage == null)
 			mapPage = new NetworkMapPage();
 		
-		new ConsoleJob(String.format(Messages.IPRouteMap_JobTitle, rootObject.getObjectName(), targetObject.getObjectName()),
+		new ConsoleJob(String.format(Messages.get().IPRouteMap_JobTitle, rootObject.getObjectName(), targetObject.getObjectName()),
 				this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -107,7 +107,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.IPRouteMap_JobError, rootObject.getObjectName(), targetObject.getObjectName());
+				return String.format(Messages.get().IPRouteMap_JobError, rootObject.getObjectName(), targetObject.getObjectName());
 			}
 		}.start();
 	}

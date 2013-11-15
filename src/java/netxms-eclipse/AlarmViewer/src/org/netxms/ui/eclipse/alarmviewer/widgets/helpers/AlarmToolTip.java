@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 public class AlarmToolTip extends ToolTip
 {
    private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/resolved.png", "icons/terminated.png", "icons/acknowledged_sticky.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-   private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Resolved, Messages.AlarmListLabelProvider_AlarmState_Terminated };
+   private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
    
    private Alarm alarm;
    private WorkbenchLabelProvider wbLabelProvider;

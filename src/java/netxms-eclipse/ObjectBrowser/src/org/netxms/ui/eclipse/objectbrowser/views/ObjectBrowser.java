@@ -341,7 +341,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveObject = new Action(Messages.ObjectBrowser_MoveObject) {
+		actionMoveObject = new Action(Messages.get().ObjectBrowser_MoveObject) {
 			@Override
 			public void run()
 			{
@@ -349,7 +349,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveTemplate = new Action(Messages.ObjectBrowser_MoveTemplate) {
+		actionMoveTemplate = new Action(Messages.get().ObjectBrowser_MoveTemplate) {
 			@Override
 			public void run()
 			{
@@ -357,7 +357,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveBusinessService = new Action(Messages.ObjectBrowser_MoveService) {
+		actionMoveBusinessService = new Action(Messages.get().ObjectBrowser_MoveService) {
 			@Override
 			public void run()
 			{
@@ -365,7 +365,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveDashboard = new Action(Messages.ObjectBrowser_MoveDashboard) { 
+		actionMoveDashboard = new Action(Messages.get().ObjectBrowser_MoveDashboard) { 
          @Override
          public void run()
          {
@@ -373,7 +373,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
       
-      actionMoveMap = new Action(Messages.ObjectBrowser_MoveMap) { 
+      actionMoveMap = new Action(Messages.get().ObjectBrowser_MoveMap) { 
          @Override
          public void run()
          {
@@ -381,7 +381,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
       
-      actionMovePolicy = new Action(Messages.ObjectBrowser_MovePolicy) { 
+      actionMovePolicy = new Action(Messages.get().ObjectBrowser_MovePolicy) { 
          @Override
          public void run()
          {
@@ -389,7 +389,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
 		
-      actionHideUnmanaged = new Action(Messages.ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
+      actionHideUnmanaged = new Action(Messages.get().ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -399,7 +399,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 
-      actionHideTemplateChecks = new Action(Messages.ObjectBrowser_HideCheckTemplates, Action.AS_CHECK_BOX) {
+      actionHideTemplateChecks = new Action(Messages.get().ObjectBrowser_HideCheckTemplates, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -409,7 +409,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
-      actionShowFilter = new Action(Messages.ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.get().ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -422,7 +422,7 @@ public class ObjectBrowser extends ViewPart
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
       
-      actionShowStatusIndicator = new Action(Messages.ObjectBrowser_ShowStatusIndicator, Action.AS_CHECK_BOX) {
+      actionShowStatusIndicator = new Action(Messages.get().ObjectBrowser_ShowStatusIndicator, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -618,7 +618,7 @@ public class ObjectBrowser extends ViewPart
       {
          final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
          
-         new ConsoleJob(Messages.ObjectBrowser_MoveJob_Title + ((AbstractObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
+         new ConsoleJob(Messages.get().ObjectBrowser_MoveJob_Title + ((AbstractObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -630,7 +630,7 @@ public class ObjectBrowser extends ViewPart
             @Override
             protected String getErrorMessage()
             {
-               return Messages.ObjectBrowser_MoveJob_Error + ((AbstractObject)currentObject).getObjectName();
+               return Messages.get().ObjectBrowser_MoveJob_Error + ((AbstractObject)currentObject).getObjectName();
             }
          }.start();
       }

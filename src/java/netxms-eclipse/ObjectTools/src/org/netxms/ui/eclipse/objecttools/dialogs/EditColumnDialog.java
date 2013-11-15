@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditColumnDialog extends Dialog
 {
-	private final String[] formatNames = { Messages.EditColumnDialog_FmtString, Messages.EditColumnDialog_FmtInt, Messages.EditColumnDialog_FmtFloat, Messages.EditColumnDialog_FmtIpAddr, Messages.EditColumnDialog_FmtMacAddr, Messages.EditColumnDialog_FmtIfIndex };
+	private final String[] formatNames = { Messages.get().EditColumnDialog_FmtString, Messages.get().EditColumnDialog_FmtInt, Messages.get().EditColumnDialog_FmtFloat, Messages.get().EditColumnDialog_FmtIpAddr, Messages.get().EditColumnDialog_FmtMacAddr, Messages.get().EditColumnDialog_FmtIfIndex };
 
 	private boolean create;
 	private boolean snmpColumn;
@@ -61,7 +61,7 @@ public class EditColumnDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(create ? Messages.EditColumnDialog_CreateColumn : Messages.EditColumnDialog_EditColumn);
+		newShell.setText(create ? Messages.get().EditColumnDialog_CreateColumn : Messages.get().EditColumnDialog_EditColumn);
 	}
 
 	/* (non-Javadoc)
@@ -79,7 +79,7 @@ public class EditColumnDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel(Messages.EditColumnDialog_Name);
+		name.setLabel(Messages.get().EditColumnDialog_Name);
 		name.setText(columnObject.getName());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -87,7 +87,7 @@ public class EditColumnDialog extends Dialog
 		gd.widthHint = 350;
 		name.setLayoutData(gd);
 		
-		format = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.EditColumnDialog_Format, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		format = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().EditColumnDialog_Format, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		for(int i = 0; i < formatNames.length; i++)
 			format.add(formatNames[i]);
 		format.select(columnObject.getFormat());
@@ -111,12 +111,12 @@ public class EditColumnDialog extends Dialog
 		data = new LabeledText(snmpColumn ? dataGroup : dialogArea, SWT.NONE);
 		if (snmpColumn)
 		{
-			data.setLabel(Messages.EditColumnDialog_SNMP_OID);
+			data.setLabel(Messages.get().EditColumnDialog_SNMP_OID);
 			data.setText(columnObject.getSnmpOid());
 		}
 		else
 		{
-			data.setLabel(Messages.EditColumnDialog_SubstrIndex);
+			data.setLabel(Messages.get().EditColumnDialog_SubstrIndex);
 			data.setText(Integer.toString(columnObject.getSubstringIndex()));
 		}
 		gd = new GridData();
@@ -183,7 +183,7 @@ public class EditColumnDialog extends Dialog
 			}
 			catch(NumberFormatException e)
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.EditColumnDialog_Warning, Messages.EditColumnDialog_EnterValidIndex);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().EditColumnDialog_Warning, Messages.get().EditColumnDialog_EnterValidIndex);
 				return;
 			}
 		}

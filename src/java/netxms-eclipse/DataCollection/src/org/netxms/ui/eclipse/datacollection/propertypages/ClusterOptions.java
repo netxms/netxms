@@ -90,13 +90,13 @@ public class ClusterOptions extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      clusterResource = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.General_ClRes, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      clusterResource = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().General_ClRes, WidgetHelper.DEFAULT_LAYOUT_DATA);
       if (cluster != null)
       {
       	clusterResourceMap = new HashMap<Integer, Long>();
       	clusterResourceMap.put(0, 0L);
       	
-	      clusterResource.add(Messages.General_None);
+	      clusterResource.add(Messages.get().General_None);
 	      if (editor.getObject().getResourceId() == 0)
 	      	clusterResource.select(0);
 	      
@@ -112,13 +112,13 @@ public class ClusterOptions extends PropertyPage
       }
       else
       {
-	      clusterResource.add(Messages.General_None);
+	      clusterResource.add(Messages.get().General_None);
 	      clusterResource.select(0);
 	      clusterResource.setEnabled(false);
       }
       
    	Group aggregationGroup = new Group(dialogArea, SWT.NONE);
-   	aggregationGroup.setText(Messages.ClusterOptions_DataAggregation);
+   	aggregationGroup.setText(Messages.get().ClusterOptions_DataAggregation);
    	aggregationGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
    	
    	layout = new GridLayout();
@@ -127,7 +127,7 @@ public class ClusterOptions extends PropertyPage
 		aggregationGroup.setLayout(layout);
    	
    	checkAggregate = new Button(aggregationGroup, SWT.CHECK);
-   	checkAggregate.setText(Messages.ClusterOptions_AggregateFromNodes);
+   	checkAggregate.setText(Messages.get().ClusterOptions_AggregateFromNodes);
    	checkAggregate.setSelection(editor.getObject().isAggregateOnCluster());
       	
       if (editor.getObject() instanceof DataCollectionItem)
@@ -146,11 +146,11 @@ public class ClusterOptions extends PropertyPage
    			}
    		});
       	
-      	aggregationFunction = WidgetHelper.createLabeledCombo(aggregationGroup, SWT.BORDER | SWT.READ_ONLY, Messages.ClusterOptions_AggrFunction, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      	aggregationFunction.add(Messages.ClusterOptions_Total);
-      	aggregationFunction.add(Messages.ClusterOptions_Average);
-      	aggregationFunction.add(Messages.ClusterOptions_Min);
-      	aggregationFunction.add(Messages.ClusterOptions_Max);
+      	aggregationFunction = WidgetHelper.createLabeledCombo(aggregationGroup, SWT.BORDER | SWT.READ_ONLY, Messages.get().ClusterOptions_AggrFunction, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      	aggregationFunction.add(Messages.get().ClusterOptions_Total);
+      	aggregationFunction.add(Messages.get().ClusterOptions_Average);
+      	aggregationFunction.add(Messages.get().ClusterOptions_Min);
+      	aggregationFunction.add(Messages.get().ClusterOptions_Max);
       	aggregationFunction.select(editor.getObjectAsItem().getAggregationFunction());
       	aggregationFunction.setEnabled(editor.getObjectAsItem().isAggregateOnCluster());
       }

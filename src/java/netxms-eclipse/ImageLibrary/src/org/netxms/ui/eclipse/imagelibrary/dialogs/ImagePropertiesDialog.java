@@ -80,8 +80,8 @@ public class ImagePropertiesDialog extends Dialog
 					public void widgetSelected(SelectionEvent e)
 					{
 						FileDialog dialog = new FileDialog(shell, SWT.OPEN);
-						dialog.setText(Messages.ImagePropertiesDialog_Title);
-						dialog.setFilterNames(new String[] { Messages.ImagePropertiesDialog_ImageFiles, Messages.ImagePropertiesDialog_AllFiles });
+						dialog.setText(Messages.get().ImagePropertiesDialog_Title);
+						dialog.setFilterNames(new String[] { Messages.get().ImagePropertiesDialog_ImageFiles, Messages.get().ImagePropertiesDialog_AllFiles });
 						dialog.setFilterExtensions(new String[] { "*.jpg;*.jpeg;*.png;*.bmp", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
 						final String selectedFile = dialog.open();
 						if (selectedFile != null)
@@ -111,13 +111,13 @@ public class ImagePropertiesDialog extends Dialog
 				button.setText("..."); //$NON-NLS-1$
 				return composite;
 			}
-		}, Messages.ImagePropertiesDialog_ImageFile, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		}, Messages.get().ImagePropertiesDialog_ImageFile, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
-		nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.ImagePropertiesDialog_ImageName,
+		nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().ImagePropertiesDialog_ImageName,
 				name == null ? "" : name, WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		nameInputField.getShell().setMinimumSize(300, 0);
 
-		categoryCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.BORDER, Messages.ImagePropertiesDialog_Category,
+		categoryCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.BORDER, Messages.get().ImagePropertiesDialog_Category,
 				WidgetHelper.DEFAULT_LAYOUT_DATA);
 		categoryCombo.getShell().setMinimumSize(300, 0);
 
@@ -154,7 +154,7 @@ public class ImagePropertiesDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ImagePropertiesDialog_Upload);
+		newShell.setText(Messages.get().ImagePropertiesDialog_Upload);
 	}
 
 	public void setDefaultCategory(String category)

@@ -152,7 +152,7 @@ public class RuleEditor extends Composite
 		
 		createPopupMenu(new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
 		
-		condition = new CGroup(mainArea, Messages.RuleEditor_Filter) {
+		condition = new CGroup(mainArea, Messages.get().RuleEditor_Filter) {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -169,10 +169,10 @@ public class RuleEditor extends Composite
 				editRule("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"); //$NON-NLS-1$
 			}
 		};
-		condition.addButton(new DashboardElementButton(Messages.RuleEditor_EditCondition, editor.getImageEdit(), editRuleCondition));
+		condition.addButton(new DashboardElementButton(Messages.get().RuleEditor_EditCondition, editor.getImageEdit(), editRuleCondition));
 		condition.setDoubleClickAction(editRuleCondition);
 
-		action = new CGroup(mainArea, Messages.RuleEditor_Action) {
+		action = new CGroup(mainArea, Messages.get().RuleEditor_Action) {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -189,7 +189,7 @@ public class RuleEditor extends Composite
 				editRule("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"); //$NON-NLS-1$
 			}
 		};
-		action.addButton(new DashboardElementButton(Messages.RuleEditor_EditActions, editor.getImageEdit(), editRuleAction));
+		action.addButton(new DashboardElementButton(Messages.get().RuleEditor_EditActions, editor.getImageEdit(), editRuleAction));
 		action.setDoubleClickAction(editRuleAction);
 	}
 	
@@ -295,7 +295,7 @@ public class RuleEditor extends Composite
 		
 		headerLabel = new Label(header, SWT.NONE);
 		if (rule.isDisabled())
-			headerLabel.setText(rule.getComments() + Messages.RuleEditor_DisabledSuffix);
+			headerLabel.setText(rule.getComments() + Messages.get().RuleEditor_DisabledSuffix);
 		else
 			headerLabel.setText(rule.getComments());
 		headerLabel.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
@@ -330,7 +330,7 @@ public class RuleEditor extends Composite
 		editButton.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
 		editButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		editButton.setImage(editor.getImageEdit());
-		editButton.setToolTipText(Messages.RuleEditor_Tooltip_EditRule);
+		editButton.setToolTipText(Messages.get().RuleEditor_Tooltip_EditRule);
 		editButton.addMouseListener(new MouseListener() {
 			private boolean doAction = false;
 			
@@ -360,7 +360,7 @@ public class RuleEditor extends Composite
 		expandButton.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
 		expandButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
-		expandButton.setToolTipText(collapsed ? Messages.RuleEditor_Tooltip_ExpandRule : Messages.RuleEditor_Tooltip_CollapseRule);
+		expandButton.setToolTipText(collapsed ? Messages.get().RuleEditor_Tooltip_ExpandRule : Messages.get().RuleEditor_Tooltip_CollapseRule);
 		expandButton.addMouseListener(new MouseListener() {
 			private boolean doAction = false;
 			
@@ -447,15 +447,15 @@ public class RuleEditor extends Composite
 		boolean needAnd = false;
 		if (((rule.getSources().size() > 0) && rule.isSourceInverted()) ||
 			 ((rule.getSources().size() == 0) && (rule.getEvents().size() > 0) && rule.isEventsInverted()))
-			createLabel(clientArea, 0, true, Messages.RuleEditor_IF_NOT, null);
+			createLabel(clientArea, 0, true, Messages.get().RuleEditor_IF_NOT, null);
 		else
-			createLabel(clientArea, 0, true, Messages.RuleEditor_IF, null);
+			createLabel(clientArea, 0, true, Messages.get().RuleEditor_IF, null);
 		
 		/* source */
 		if (rule.getSources().size() > 0)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"); //$NON-NLS-1$
-			addConditionGroupLabel(clientArea, Messages.RuleEditor_SourceIs, needAnd, rule.isSourceInverted(), listener);
+			addConditionGroupLabel(clientArea, Messages.get().RuleEditor_SourceIs, needAnd, rule.isSourceInverted(), listener);
 			
 			for(Long id : rule.getSources())
 			{
@@ -481,7 +481,7 @@ public class RuleEditor extends Composite
 		if (rule.getEvents().size() > 0)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10"); //$NON-NLS-1$
-			addConditionGroupLabel(clientArea, Messages.RuleEditor_EventIs, needAnd, rule.isEventsInverted(), listener);
+			addConditionGroupLabel(clientArea, Messages.get().RuleEditor_EventIs, needAnd, rule.isEventsInverted(), listener);
 			
 			for(Long code : rule.getEvents())
 			{
@@ -507,7 +507,7 @@ public class RuleEditor extends Composite
 		if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_ANY) != EventProcessingPolicyRule.SEVERITY_ANY)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter#20"); //$NON-NLS-1$
-			addConditionGroupLabel(clientArea, Messages.RuleEditor_SeverityIs, needAnd, false, listener);
+			addConditionGroupLabel(clientArea, Messages.get().RuleEditor_SeverityIs, needAnd, false, listener);
 			
 			if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_NORMAL) != 0)
 				addSeverityLabel(clientArea, Severity.NORMAL, listener);
@@ -531,7 +531,7 @@ public class RuleEditor extends Composite
 		if ((rule.getScript() != null) && !rule.getScript().isEmpty())
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30"); //$NON-NLS-1$
-			addConditionGroupLabel(clientArea, Messages.RuleEditor_ScriptIs, needAnd, false, listener);
+			addConditionGroupLabel(clientArea, Messages.get().RuleEditor_ScriptIs, needAnd, false, listener);
 			
 			ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE);
 			GridData gd = new GridData();
@@ -604,7 +604,7 @@ public class RuleEditor extends Composite
 	private void addConditionGroupLabel(Composite parent, String title, boolean needAnd, boolean inverted, MouseListener mouseListener)
 	{
 		if (needAnd)
-			createLabel(parent, 0, true, inverted ? Messages.RuleEditor_AND_NOT : Messages.RuleEditor_AND, null);
+			createLabel(parent, 0, true, inverted ? Messages.get().RuleEditor_AND_NOT : Messages.get().RuleEditor_AND, null);
 		createLabel(parent, 1, false, title, mouseListener);
 	}
 	
@@ -644,7 +644,7 @@ public class RuleEditor extends Composite
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleAlarm#10"); //$NON-NLS-1$
 			if (rule.getAlarmSeverity() < Severity.UNMANAGED)
 			{
-				addActionGroupLabel(clientArea, Messages.RuleEditor_GenerateAlarm, editor.getImageAlarm(), listener);
+				addActionGroupLabel(clientArea, Messages.get().RuleEditor_GenerateAlarm, editor.getImageAlarm(), listener);
 				
 				CLabel clabel = createCLabel(clientArea, 1, false);
 				clabel.setImage(StatusDisplayInfo.getStatusImage(rule.getAlarmSeverity()));
@@ -653,22 +653,22 @@ public class RuleEditor extends Composite
 				
 				if ((rule.getAlarmKey() != null) && !rule.getAlarmKey().isEmpty())
 				{
-					createLabel(clientArea, 1, false, String.format(Messages.RuleEditor_WithKey, rule.getAlarmKey()), null);
+					createLabel(clientArea, 1, false, String.format(Messages.get().RuleEditor_WithKey, rule.getAlarmKey()), null);
 				}
 			}
 			else if (rule.getAlarmSeverity() == Severity.UNMANAGED)
 			{
-				addActionGroupLabel(clientArea, Messages.RuleEditor_TerminateAlarms, editor.getImageTerminate(), listener);
-				createLabel(clientArea, 1, false, String.format(Messages.RuleEditor_WithKey, rule.getAlarmKey()), listener);
+				addActionGroupLabel(clientArea, Messages.get().RuleEditor_TerminateAlarms, editor.getImageTerminate(), listener);
+				createLabel(clientArea, 1, false, String.format(Messages.get().RuleEditor_WithKey, rule.getAlarmKey()), listener);
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
-					createLabel(clientArea, 1, false, Messages.RuleEditor_UserRegexpForTerminate, listener);
+					createLabel(clientArea, 1, false, Messages.get().RuleEditor_UserRegexpForTerminate, listener);
 			}
 			else if (rule.getAlarmSeverity() == Severity.DISABLED)
 			{
-				addActionGroupLabel(clientArea, Messages.RuleEditor_ResolveAlarms, editor.getImageTerminate(), listener);
-				createLabel(clientArea, 1, false, String.format(Messages.RuleEditor_WithKey, rule.getAlarmKey()), listener);
+				addActionGroupLabel(clientArea, Messages.get().RuleEditor_ResolveAlarms, editor.getImageTerminate(), listener);
+				createLabel(clientArea, 1, false, String.format(Messages.get().RuleEditor_WithKey, rule.getAlarmKey()), listener);
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
-					createLabel(clientArea, 1, false, Messages.RuleEditor_UseRegexpForResolve, listener);
+					createLabel(clientArea, 1, false, Messages.get().RuleEditor_UseRegexpForResolve, listener);
 			}
 		}
 		
@@ -676,10 +676,10 @@ public class RuleEditor extends Composite
 		if (rule.getSituationId() != 0)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSituation#20"); //$NON-NLS-1$
-			addActionGroupLabel(clientArea, Messages.RuleEditor_UpdateSituation, editor.getImageSituation(), listener);
+			addActionGroupLabel(clientArea, Messages.get().RuleEditor_UpdateSituation, editor.getImageSituation(), listener);
 			Situation s = SituationCache.findSituation(rule.getSituationId());
-			createLabel(clientArea, 1, false, "\"" + ((s != null) ? s.getName() : Messages.RuleEditor_Unknown) + Messages.RuleEditor_Instance + rule.getSituationInstance() + "\"", listener); //$NON-NLS-1$ //$NON-NLS-2$
-			createLabel(clientArea, 1, false, Messages.RuleEditor_Attributes, listener);
+			createLabel(clientArea, 1, false, "\"" + ((s != null) ? s.getName() : Messages.get().RuleEditor_Unknown) + Messages.get().RuleEditor_Instance + rule.getSituationInstance() + "\"", listener); //$NON-NLS-1$ //$NON-NLS-2$
+			createLabel(clientArea, 1, false, Messages.get().RuleEditor_Attributes, listener);
 			for(Entry<String, String> e : rule.getSituationAttributes().entrySet())
 			{
 				createLabel(clientArea, 2, false, e.getKey() + " = \"" + e.getValue() + "\"", listener); //$NON-NLS-1$ //$NON-NLS-2$
@@ -690,7 +690,7 @@ public class RuleEditor extends Composite
 		if (rule.getActions().size() > 0)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleServerActions#30"); //$NON-NLS-1$
-			addActionGroupLabel(clientArea, Messages.RuleEditor_ExecuteActions, editor.getImageExecute(), listener);
+			addActionGroupLabel(clientArea, Messages.get().RuleEditor_ExecuteActions, editor.getImageExecute(), listener);
 			for(Long id : rule.getActions())
 			{
 				CLabel clabel = createCLabel(clientArea, 1, false);
@@ -712,7 +712,7 @@ public class RuleEditor extends Composite
 		if ((rule.getFlags() & EventProcessingPolicyRule.STOP_PROCESSING) != 0)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"); //$NON-NLS-1$
-			addActionGroupLabel(clientArea, Messages.RuleEditor_StopProcessing, editor.getImageStop(), listener);
+			addActionGroupLabel(clientArea, Messages.get().RuleEditor_StopProcessing, editor.getImageStop(), listener);
 		}
 		
 		return clientArea;
@@ -793,7 +793,7 @@ public class RuleEditor extends Composite
 	{
 		this.collapsed = collapsed;
 		expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
-		expandButton.setToolTipText(collapsed ? Messages.RuleEditor_Tooltip_ExpandRule : Messages.RuleEditor_Tooltip_CollapseRule);
+		expandButton.setToolTipText(collapsed ? Messages.get().RuleEditor_Tooltip_ExpandRule : Messages.get().RuleEditor_Tooltip_CollapseRule);
 		mainArea.setVisible(!collapsed);
 		((GridData)mainArea.getLayoutData()).exclude = collapsed;
 		((GridData)leftPanel.getLayoutData()).verticalSpan = collapsed ? 1 : 2;
@@ -863,7 +863,7 @@ public class RuleEditor extends Composite
 	 */
 	private void editRule(String pageId)
 	{
-		PropertyDialog dlg = createDialogOn(editor.getSite().getShell(), pageId, this, Messages.RuleEditor_Rule + ruleNumber);
+		PropertyDialog dlg = createDialogOn(editor.getSite().getShell(), pageId, this, Messages.get().RuleEditor_Rule + ruleNumber);
 		if (dlg != null)
 		{
 			modified = false;
@@ -871,7 +871,7 @@ public class RuleEditor extends Composite
 			if (modified)
 			{
 				if (rule.isDisabled())
-					headerLabel.setText(rule.getComments() + Messages.RuleEditor_DisabledSuffix);
+					headerLabel.setText(rule.getComments() + Messages.get().RuleEditor_DisabledSuffix);
 				else
 					headerLabel.setText(rule.getComments());
 				
@@ -989,7 +989,7 @@ public class RuleEditor extends Composite
 		else
 		{
 			rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.DISABLED);
-			headerLabel.setText(rule.getComments() + Messages.RuleEditor_DisabledSuffix);
+			headerLabel.setText(rule.getComments() + Messages.get().RuleEditor_DisabledSuffix);
 		}
 		
 		modified = true;

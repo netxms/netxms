@@ -59,7 +59,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	{
 		super(parentShell, nodeId, selectTables);
 		
-		actionQuery = new Action(Messages.SelectAgentParamDlg_Query) {
+		actionQuery = new Action(Messages.get().SelectAgentParamDlg_Query) {
 			@Override
 			public void run()
 			{
@@ -79,7 +79,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			((GridLayout)parent.getLayout()).numColumns++;
 			
 			queryButton = new Button(parent, SWT.PUSH);
-			queryButton.setText(Messages.SelectAgentParamDlg_Query);
+			queryButton.setText(Messages.get().SelectAgentParamDlg_Query);
 			GridData gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
@@ -119,11 +119,11 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	protected void fillParameterList()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SelectAgentParamDlg_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SelectAgentParamDlg_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SelectAgentParamDlg_JobError;
+				return Messages.get().SelectAgentParamDlg_JobError;
 			}
 
 			@Override
@@ -168,7 +168,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		String n;
 		if (p.getName().contains("(*)")) //$NON-NLS-1$
 		{
-			InputDialog dlg = new InputDialog(getShell(), Messages.SelectAgentParamDlg_InstanceTitle, Messages.SelectAgentParamDlg_InstanceMessage, "", null); //$NON-NLS-1$
+			InputDialog dlg = new InputDialog(getShell(), Messages.get().SelectAgentParamDlg_InstanceTitle, Messages.get().SelectAgentParamDlg_InstanceMessage, "", null); //$NON-NLS-1$
 			if (dlg.open() != Window.OK)
 				return;
 			
@@ -181,7 +181,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final String name = n;
-		new ConsoleJob(Messages.SelectAgentParamDlg_QueryJobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SelectAgentParamDlg_QueryJobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -190,7 +190,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 					@Override
 					public void run()
 					{
-						MessageDialogHelper.openInformation(getShell(), Messages.SelectAgentParamDlg_CurrentValueTitle, Messages.SelectAgentParamDlg_CurrentValuePrefix + value + Messages.SelectAgentParamDlg_CurrentValueSuffix);
+						MessageDialogHelper.openInformation(getShell(), Messages.get().SelectAgentParamDlg_CurrentValueTitle, Messages.get().SelectAgentParamDlg_CurrentValuePrefix + value + Messages.get().SelectAgentParamDlg_CurrentValueSuffix);
 					}
 				});
 			}
@@ -198,7 +198,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SelectAgentParamDlg_QueryError;
+				return Messages.get().SelectAgentParamDlg_QueryError;
 			}
 		}.start();
 	}

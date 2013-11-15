@@ -137,7 +137,7 @@ public class DataCollectionEditor extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		object = ((obj != null) && ((obj instanceof AbstractNode) || (obj instanceof Template) || (obj instanceof Cluster) || (obj instanceof MobileDevice))) ? obj : null;
-		setPartName(Messages.DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.DataCollectionEditor_Error));
+		setPartName(Messages.get().DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.get().DataCollectionEditor_Error));
 	}
 
 	/* (non-Javadoc)
@@ -166,7 +166,7 @@ public class DataCollectionEditor extends ViewPart
 			}
 		});
 		
-		final String[] names = { Messages.DataCollectionEditor_ColID, Messages.DataCollectionEditor_ColOrigin, Messages.DataCollectionEditor_ColDescription, Messages.DataCollectionEditor_ColParameter, Messages.DataCollectionEditor_ColDataType, Messages.DataCollectionEditor_ColPollingInterval, Messages.DataCollectionEditor_ColRetentionTime, Messages.DataCollectionEditor_ColStatus, Messages.DataCollectionEditor_ColTemplate };
+		final String[] names = { Messages.get().DataCollectionEditor_ColID, Messages.get().DataCollectionEditor_ColOrigin, Messages.get().DataCollectionEditor_ColDescription, Messages.get().DataCollectionEditor_ColParameter, Messages.get().DataCollectionEditor_ColDataType, Messages.get().DataCollectionEditor_ColPollingInterval, Messages.get().DataCollectionEditor_ColRetentionTime, Messages.get().DataCollectionEditor_ColStatus, Messages.get().DataCollectionEditor_ColTemplate };
 		final int[] widths = { 60, 100, 250, 200, 90, 90, 90, 100, 150 };
 		viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -243,7 +243,7 @@ public class DataCollectionEditor extends ViewPart
 		filterText.setCloseAction(actionShowFilter);
 
 		// Request server to open data collection configuration
-		new ConsoleJob(Messages.DataCollectionEditor_OpenJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionEditor_OpenJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -273,7 +273,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionEditor_OpenJob_Error + object.getObjectName();
+				return Messages.get().DataCollectionEditor_OpenJob_Error + object.getObjectName();
 			}
 		}.start();
 		
@@ -391,7 +391,7 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionCreateItem = new Action(Messages.DataCollectionEditor_NewParam, Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
+		actionCreateItem = new Action(Messages.get().DataCollectionEditor_NewParam, Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -399,7 +399,7 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionCreateTable = new Action(Messages.DataCollectionEditor_NewTable) {
+		actionCreateTable = new Action(Messages.get().DataCollectionEditor_NewTable) {
 			@Override
 			public void run()
 			{
@@ -407,18 +407,18 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionEdit = new Action(Messages.DataCollectionEditor_ActionEdit, SharedIcons.EDIT) {
+		actionEdit = new Action(Messages.get().DataCollectionEditor_ActionEdit, SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
 				editSelectedObject();
 			}
 		};
-		actionEdit.setText(Messages.DataCollectionEditor_Edit);
+		actionEdit.setText(Messages.get().DataCollectionEditor_Edit);
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		actionEdit.setEnabled(false);
 
-		actionDelete = new Action(Messages.DataCollectionEditor_Delete, Activator.getImageDescriptor("icons/delete.png")) { //$NON-NLS-1$
+		actionDelete = new Action(Messages.get().DataCollectionEditor_Delete, Activator.getImageDescriptor("icons/delete.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -427,7 +427,7 @@ public class DataCollectionEditor extends ViewPart
 		};
 		actionDelete.setEnabled(false);
 
-		actionCopy = new Action(Messages.DataCollectionEditor_Copy) {
+		actionCopy = new Action(Messages.get().DataCollectionEditor_Copy) {
 			@Override
 			public void run()
 			{
@@ -436,7 +436,7 @@ public class DataCollectionEditor extends ViewPart
 		};
 		actionCopy.setEnabled(false);
 
-		actionMove = new Action(Messages.DataCollectionEditor_Move) {
+		actionMove = new Action(Messages.get().DataCollectionEditor_Move) {
 			@Override
 			public void run()
 			{
@@ -445,7 +445,7 @@ public class DataCollectionEditor extends ViewPart
 		};
 		actionMove.setEnabled(false);
 
-		actionConvert = new Action(Messages.DataCollectionEditor_Convert) {
+		actionConvert = new Action(Messages.get().DataCollectionEditor_Convert) {
 			@Override
 			public void run()
 			{
@@ -454,7 +454,7 @@ public class DataCollectionEditor extends ViewPart
 		};
 		actionConvert.setEnabled(false);
 
-		actionDuplicate = new Action(Messages.DataCollectionEditor_Duplicate) {
+		actionDuplicate = new Action(Messages.get().DataCollectionEditor_Duplicate) {
 			@Override
 			public void run()
 			{
@@ -463,7 +463,7 @@ public class DataCollectionEditor extends ViewPart
 		};
 		actionDuplicate.setEnabled(false);
 
-		actionActivate = new Action(Messages.DataCollectionEditor_Activate, Activator.getImageDescriptor("icons/active.gif")) { //$NON-NLS-1$
+		actionActivate = new Action(Messages.get().DataCollectionEditor_Activate, Activator.getImageDescriptor("icons/active.gif")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -472,7 +472,7 @@ public class DataCollectionEditor extends ViewPart
 		};
 		actionActivate.setEnabled(false);
 
-		actionDisable = new Action(Messages.DataCollectionEditor_Disable, Activator.getImageDescriptor("icons/disabled.gif")) { //$NON-NLS-1$
+		actionDisable = new Action(Messages.get().DataCollectionEditor_Disable, Activator.getImageDescriptor("icons/disabled.gif")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -481,7 +481,7 @@ public class DataCollectionEditor extends ViewPart
 		};
 		actionDisable.setEnabled(false);
 
-		actionShowFilter = new Action(Messages.DataCollectionEditor_ShowFilter, Action.AS_CHECK_BOX) {
+		actionShowFilter = new Action(Messages.get().DataCollectionEditor_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -539,7 +539,7 @@ public class DataCollectionEditor extends ViewPart
 	{
 		if (dciConfig != null)
 		{
-			new ConsoleJob(Messages.DataCollectionEditor_UnlockJob_Title + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().DataCollectionEditor_UnlockJob_Title + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -550,7 +550,7 @@ public class DataCollectionEditor extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.DataCollectionEditor_UnlockJob_Error + object.getObjectName();
+					return Messages.get().DataCollectionEditor_UnlockJob_Error + object.getObjectName();
 				}
 			}.start();
 		}
@@ -568,7 +568,7 @@ public class DataCollectionEditor extends ViewPart
 		if (selection.size() <= 0)
 			return;
 		
-		new ConsoleJob(Messages.DataCollectionEditor_ChStatusJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionEditor_ChStatusJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -595,7 +595,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionEditor_ChStatusJob_Error + object.getObjectName();
+				return Messages.get().DataCollectionEditor_ChStatusJob_Error + object.getObjectName();
 			}
 		}.start();
 	}
@@ -609,11 +609,11 @@ public class DataCollectionEditor extends ViewPart
 		if (selection.size() <= 0)
 			return;
 		
-		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.DataCollectionEditor_DeleteConfirmTitle,
-		                               Messages.DataCollectionEditor_DeleteConfirmText))
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().DataCollectionEditor_DeleteConfirmTitle,
+		                               Messages.get().DataCollectionEditor_DeleteConfirmText))
 			return;
 		
-		new ConsoleJob(Messages.DataCollectionEditor_DeleteJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionEditor_DeleteJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -633,7 +633,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionEditor_DeleteJob_Error + object.getObjectName();
+				return Messages.get().DataCollectionEditor_DeleteJob_Error + object.getObjectName();
 			}
 		}.start();
 	}
@@ -643,7 +643,7 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void createItem()
 	{
-		new ConsoleJob(Messages.DataCollectionEditor_CreateJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionEditor_CreateJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -663,7 +663,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionEditor_CreateJob_Error + object.getObjectName();
+				return Messages.get().DataCollectionEditor_CreateJob_Error + object.getObjectName();
 			}
 		}.start();
 	}
@@ -673,7 +673,7 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void createTable()
 	{
-		new ConsoleJob(Messages.DataCollectionEditor_TableCreateJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionEditor_TableCreateJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -693,7 +693,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionEditor_TableCreateJob_Error + object.getObjectName();
+				return Messages.get().DataCollectionEditor_TableCreateJob_Error + object.getObjectName();
 			}
 		}.start();
 	}
@@ -724,7 +724,7 @@ public class DataCollectionEditor extends ViewPart
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = it.next().getId();
 		
-		new ConsoleJob(Messages.DataCollectionEditor_DupJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionEditor_DupJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -743,7 +743,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionEditor_DupJob_Error + object.getObjectName();
+				return Messages.get().DataCollectionEditor_DupJob_Error + object.getObjectName();
 			}
 		}.start();
 	}
@@ -764,7 +764,7 @@ public class DataCollectionEditor extends ViewPart
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = it.next().getId();
 		
-		new ConsoleJob(Messages.DataCollectionEditor_CopyJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionEditor_CopyJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -793,7 +793,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionEditor_CopyJob_Error + object.getObjectName();
+				return Messages.get().DataCollectionEditor_CopyJob_Error + object.getObjectName();
 			}
 		}.start();
 	}
@@ -819,11 +819,11 @@ public class DataCollectionEditor extends ViewPart
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = it.next().getId();
 		
-		new ConsoleJob(Messages.DataCollectionEditor_ConvertJob_TitlePrefix + object.getObjectName() + Messages.DataCollectionEditor_ConvertJob_TitleSuffix, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionEditor_ConvertJob_TitlePrefix + object.getObjectName() + Messages.get().DataCollectionEditor_ConvertJob_TitleSuffix, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.DataCollectionEditor_ConvertJob_TaskName, 4);
+				monitor.beginTask(Messages.get().DataCollectionEditor_ConvertJob_TaskName, 4);
 				
 				boolean needApply = true;
 				for(long id : template.getChildIdList())
@@ -895,7 +895,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionEditor_ConvertJob_ErrorPrefix + object.getObjectName() + Messages.DataCollectionEditor_ConvertJob_ErrorSuffix;
+				return Messages.get().DataCollectionEditor_ConvertJob_ErrorPrefix + object.getObjectName() + Messages.get().DataCollectionEditor_ConvertJob_ErrorSuffix;
 			}
 		}.start();
 	}

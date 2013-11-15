@@ -82,7 +82,7 @@ public class PasswordRequestDialog extends Dialog
       lblMessage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
       
 		textPassword = new LabeledText(container, SWT.NONE, SWT.BORDER | SWT.PASSWORD);
-		textPassword.setLabel(Messages.LoginDialog_Passwd);
+		textPassword.setLabel(Messages.get().LoginDialog_Passwd);
 		textPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
 		
 		return container;

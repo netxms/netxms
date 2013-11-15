@@ -47,7 +47,7 @@ public class ServiceComponents extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName(Messages.ServiceComponents_PartName + ((rootObject != null) ? rootObject.getObjectName() : Messages.ServiceComponents_Error));
+		setPartName(Messages.get().ServiceComponents_PartName + ((rootObject != null) ? rootObject.getObjectName() : Messages.get().ServiceComponents_Error));
 	}
 
 	/* (non-Javadoc)

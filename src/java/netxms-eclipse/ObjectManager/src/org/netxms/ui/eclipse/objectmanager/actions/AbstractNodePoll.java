@@ -54,7 +54,7 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.AbstractNodePoll_Error, String.format(Messages.AbstractNodePoll_ErrorText, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().AbstractNodePoll_Error, String.format(Messages.get().AbstractNodePoll_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

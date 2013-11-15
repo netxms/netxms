@@ -56,7 +56,7 @@ public class CreateServiceCheckDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.CreateServiceCheckDialog_Title);
+		newShell.setText(Messages.get().CreateServiceCheckDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -74,7 +74,7 @@ public class CreateServiceCheckDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel(Messages.CreateServiceCheckDialog_Name);
+		nameField.setLabel(Messages.get().CreateServiceCheckDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -94,7 +94,7 @@ public class CreateServiceCheckDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.CreateServiceCheckDialog_Warning, Messages.CreateServiceCheckDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateServiceCheckDialog_Warning, Messages.get().CreateServiceCheckDialog_WarningText);
 			return;
 		}
 		

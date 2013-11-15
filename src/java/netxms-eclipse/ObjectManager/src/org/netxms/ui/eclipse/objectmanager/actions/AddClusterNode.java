@@ -62,11 +62,11 @@ public class AddClusterNode implements IObjectActionDelegate
 		if (dlg.getReturnCode() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.AddClusterNode_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().AddClusterNode_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.AddClusterNode_JobError;
+					return Messages.get().AddClusterNode_JobError;
 				}
 
 				@Override

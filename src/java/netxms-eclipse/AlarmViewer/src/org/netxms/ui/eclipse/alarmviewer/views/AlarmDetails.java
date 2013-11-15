@@ -86,7 +86,7 @@ public class AlarmDetails extends ViewPart
 	public static final int EV_COLUMN_TIMESTAMP = 4;
 	
 	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/resolved.png", "icons/terminated.png", "icons/acknowledged_sticky.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Resolved, Messages.AlarmListLabelProvider_AlarmState_Terminated };
+	private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
 	
 	private NXCSession session;
 	private long alarmId;
@@ -124,7 +124,7 @@ public class AlarmDetails extends ViewPart
 		}
 		catch(NumberFormatException e)
 		{
-			throw new PartInitException(Messages.AlarmComments_InternalError, e);
+			throw new PartInitException(Messages.get().AlarmComments_InternalError, e);
 		}
 		
 		setPartName(getPartName() + " [" + Long.toString(alarmId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -236,7 +236,7 @@ public class AlarmDetails extends ViewPart
 	private void createAlarmDetailsSection()
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.AlarmDetails_Overview);
+		section.setText(Messages.get().AlarmDetails_Overview);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -323,7 +323,7 @@ public class AlarmDetails extends ViewPart
 	private void createCommentsSection()
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.AlarmComments_Comments);
+		section.setText(Messages.get().AlarmComments_Comments);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
@@ -338,7 +338,7 @@ public class AlarmDetails extends ViewPart
 		
 		linkAddComment = toolkit.createImageHyperlink(editorsArea, SWT.NONE);
 		linkAddComment.setImage(imageCache.add(Activator.getImageDescriptor("icons/new_comment.png"))); //$NON-NLS-1$
-		linkAddComment.setText(Messages.AlarmComments_AddCommentLink);
+		linkAddComment.setText(Messages.get().AlarmComments_AddCommentLink);
 		linkAddComment.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -354,7 +354,7 @@ public class AlarmDetails extends ViewPart
 	private void createEventsSection()
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.AlarmDetails_RelatedEvents);
+		section.setText(Messages.get().AlarmDetails_RelatedEvents);
 		final GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -374,7 +374,7 @@ public class AlarmDetails extends ViewPart
 			}
 		});
 		
-		final String[] names = { Messages.AlarmDetails_Column_Severity, Messages.AlarmDetails_Column_Source, Messages.AlarmDetails_Column_Name, Messages.AlarmDetails_Column_Message, Messages.AlarmDetails_Column_Timestamp };
+		final String[] names = { Messages.get().AlarmDetails_Column_Severity, Messages.get().AlarmDetails_Column_Source, Messages.get().AlarmDetails_Column_Name, Messages.get().AlarmDetails_Column_Message, Messages.get().AlarmDetails_Column_Timestamp };
 		final int[] widths = { 130, 160, 160, 400, 120 };
 		eventViewer = new SortableTreeViewer(section, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
 		section.setClient(eventViewer.getControl());
@@ -388,7 +388,7 @@ public class AlarmDetails extends ViewPart
 	private void createDataSection()
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.AlarmDetails_LastValues);
+		section.setText(Messages.get().AlarmDetails_LastValues);
 		final GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -427,7 +427,7 @@ public class AlarmDetails extends ViewPart
 	 */
 	private void refresh()
 	{
-		new ConsoleJob(Messages.AlarmDetails_RefreshJobTitle, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().AlarmDetails_RefreshJobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -467,7 +467,7 @@ public class AlarmDetails extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AlarmDetails_RefreshJobError;
+				return Messages.get().AlarmDetails_RefreshJobError;
 			}
 		}.start();
 	}
@@ -511,7 +511,7 @@ public class AlarmDetails extends ViewPart
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob(Messages.AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -528,7 +528,7 @@ public class AlarmDetails extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AlarmComments_AddError;
+				return Messages.get().AlarmComments_AddError;
 			}
 		}.start();
 	}

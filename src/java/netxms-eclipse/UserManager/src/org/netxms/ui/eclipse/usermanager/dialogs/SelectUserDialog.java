@@ -81,7 +81,7 @@ public class SelectUserDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText(Messages.SelectUserDialog_Title);
+		newShell.setText(Messages.get().SelectUserDialog_Title);
 		super.configureShell(newShell);
 	}
 
@@ -99,9 +99,9 @@ public class SelectUserDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.SelectUserDialog_AvailableUsers);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().SelectUserDialog_AvailableUsers);
 		
-      final String[] columnNames = { Messages.SelectUserDialog_LoginName };
+      final String[] columnNames = { Messages.get().SelectUserDialog_LoginName };
       final int[] columnWidths = { 250 };
       userList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                          SWT.BORDER | (multiSelection ? SWT.MULTI : 0) | SWT.FULL_SELECTION);
@@ -145,7 +145,7 @@ public class SelectUserDialog extends Dialog
 		IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
 		if (sel.size() == 0)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.SelectUserDialog_Warning, Messages.SelectUserDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectUserDialog_Warning, Messages.get().SelectUserDialog_WarningText);
 			return;
 		}
 		selection = new AbstractUserObject[sel.size()];

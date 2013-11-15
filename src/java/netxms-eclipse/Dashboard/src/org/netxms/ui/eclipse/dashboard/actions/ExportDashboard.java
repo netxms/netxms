@@ -71,9 +71,9 @@ public class ExportDashboard implements IObjectActionDelegate
 			return;
 		
 		FileDialog dlg = new FileDialog(wbPart.getSite().getShell(), SWT.SAVE);
-		dlg.setText(Messages.ExportDashboard_SelectFile);
+		dlg.setText(Messages.get().ExportDashboard_SelectFile);
 		dlg.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-		dlg.setFilterNames(new String[] { Messages.ExportDashboard_XMLFiles, Messages.ExportDashboard_AllFiles });
+		dlg.setFilterNames(new String[] { Messages.get().ExportDashboard_XMLFiles, Messages.get().ExportDashboard_AllFiles });
 		final String fileName = dlg.open();
 		if (fileName == null)
 			return;
@@ -108,7 +108,7 @@ public class ExportDashboard implements IObjectActionDelegate
 		xml.append("\t</elements>\n"); //$NON-NLS-1$
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.ExportDashboard_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ExportDashboard_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -167,7 +167,7 @@ public class ExportDashboard implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ExportDashboard_ErrorText;
+				return Messages.get().ExportDashboard_ErrorText;
 			}
 		}.start();
 	}

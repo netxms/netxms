@@ -98,7 +98,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		final String[] names = { Messages.EventConfigurator_ColCode, Messages.EventConfigurator_ColName, Messages.EventConfigurator_ColSeverity, Messages.EventConfigurator_ColFlags, Messages.EventConfigurator_ColMessage, Messages.EventConfigurator_ColDescription };
+		final String[] names = { Messages.get().EventConfigurator_ColCode, Messages.get().EventConfigurator_ColName, Messages.get().EventConfigurator_ColSeverity, Messages.get().EventConfigurator_ColFlags, Messages.get().EventConfigurator_ColMessage, Messages.get().EventConfigurator_ColDescription };
 		final int[] widths = { 70, 200, 90, 50, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -146,12 +146,12 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	 */
 	private void refreshView()
 	{
-		new ConsoleJob(Messages.EventConfigurator_OpenJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY)
+		new ConsoleJob(Messages.get().EventConfigurator_OpenJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY)
 		{
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.EventConfigurator_OpenJob_Error;
+				return Messages.get().EventConfigurator_OpenJob_Error;
 			}
 
 			@Override
@@ -274,7 +274,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				createNewEventTemplate();
 			}
 		};
-		actionNew.setText(Messages.EventConfigurator_NewEvent);
+		actionNew.setText(Messages.get().EventConfigurator_NewEvent);
 		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png")); //$NON-NLS-1$
 
 		actionEdit = new Action() {
@@ -284,7 +284,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				editEventTemplate();
 			}
 		};
-		actionEdit.setText(Messages.EventConfigurator_Properties);
+		actionEdit.setText(Messages.get().EventConfigurator_Properties);
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		actionEdit.setEnabled(false);
 
@@ -295,7 +295,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				deleteEventTemplate();
 			}
 		};
-		actionDelete.setText(Messages.EventConfigurator_Delete);
+		actionDelete.setText(Messages.get().EventConfigurator_Delete);
 		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png")); //$NON-NLS-1$
 		actionDelete.setEnabled(false);
 	}
@@ -355,11 +355,11 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), etmpl, false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.EventConfigurator_CreateJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.get().EventConfigurator_CreateJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.EventConfigurator_CreateJob_Error;
+					return Messages.get().EventConfigurator_CreateJob_Error;
 				}
 	
 				@Override
@@ -395,11 +395,11 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), etmpl, false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.EventConfigurator_UpdateJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.get().EventConfigurator_UpdateJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.EventConfigurator_UpdateJob_Error;
+					return Messages.get().EventConfigurator_UpdateJob_Error;
 				}
 
 				@Override
@@ -427,18 +427,18 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-		final String message = ((selection.size() > 1) ? Messages.EventConfigurator_DeleteConfirmation_Plural : Messages.EventConfigurator_DeleteConfirmation_Singular);
+		final String message = ((selection.size() > 1) ? Messages.get().EventConfigurator_DeleteConfirmation_Plural : Messages.get().EventConfigurator_DeleteConfirmation_Singular);
 		final Shell shell = getViewSite().getShell();
-		if (!MessageDialogHelper.openQuestion(shell, Messages.EventConfigurator_DeleteConfirmationTitle, message))
+		if (!MessageDialogHelper.openQuestion(shell, Messages.get().EventConfigurator_DeleteConfirmationTitle, message))
 		{
 			return;
 		}
 		
-		new ConsoleJob(Messages.EventConfigurator_DeleteJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().EventConfigurator_DeleteJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.EventConfigurator_DeleteJob_Error;
+				return Messages.get().EventConfigurator_DeleteJob_Error;
 			}
 
 			@SuppressWarnings("unchecked")

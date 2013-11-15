@@ -83,7 +83,7 @@ public class DciList extends Composite
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 		
 		// Setup table columns
-		final String[] names = { Messages.DciList_ColID, Messages.DciList_ColParam, Messages.DciList_ColDescr };
+		final String[] names = { Messages.get().DciList_ColID, Messages.get().DciList_ColParam, Messages.get().DciList_ColDescr };
 		final int[] widths = { 70, 150, 250 };
 		viewer = new SortableTableViewer(this, names, widths, 2, SWT.DOWN, SWT.SINGLE | SWT.FULL_SELECTION);
 	
@@ -121,11 +121,11 @@ public class DciList extends Composite
 			return;
 		}
 
-		ConsoleJob job = new ConsoleJob(Messages.DciList_JobTitle + node.getObjectName(), viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().DciList_JobTitle + node.getObjectName(), viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DciList_JobError + node.getObjectName();
+				return Messages.get().DciList_JobError + node.getObjectName();
 			}
 
 			@Override

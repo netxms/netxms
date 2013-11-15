@@ -74,7 +74,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 			}
 			else
 			{
-				setText(Messages.ImageSelector_Default);
+				setText(Messages.get().ImageSelector_Default);
 				setImage(null);
 				imageGuid = NXCommon.EMPTY_GUID;
 			}
@@ -88,7 +88,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	@Override
 	protected void clearButtonHandler()
 	{
-		setText(Messages.ImageSelector_Default);
+		setText(Messages.get().ImageSelector_Default);
 		setImage(null);
 		imageGuid = NXCommon.EMPTY_GUID;
 		getParent().layout();
@@ -100,7 +100,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
-		return Messages.ImageSelector_SelectImage;
+		return Messages.get().ImageSelector_SelectImage;
 	}
 
 	/**
@@ -122,7 +122,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		this.imageGuid = imageGuid;
 		if (imageGuid.equals(NXCommon.EMPTY_GUID))
 		{
-			setText(Messages.ImageSelector_Default);
+			setText(Messages.get().ImageSelector_Default);
 			setImage(null);
 		}
 		else

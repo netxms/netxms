@@ -70,8 +70,8 @@ public class SnmpTrapComparator extends ViewerComparator
 			case SnmpTrapEditor.COLUMN_EVENT:
 				EventTemplate evt1 = session.findEventTemplateByCode(trap1.getEventCode());
 				EventTemplate evt2 = session.findEventTemplateByCode(trap2.getEventCode());
-				String name1 = (evt1 != null) ? evt1.getName() : Messages.SnmpTrapComparator_Unknown;
-				String name2 = (evt2 != null) ? evt2.getName() : Messages.SnmpTrapComparator_Unknown;
+				String name1 = (evt1 != null) ? evt1.getName() : Messages.get().SnmpTrapComparator_Unknown;
+				String name2 = (evt2 != null) ? evt2.getName() : Messages.get().SnmpTrapComparator_Unknown;
 				rc = name1.compareToIgnoreCase(name2);
 				break;
 			case SnmpTrapEditor.COLUMN_DESCRIPTION:

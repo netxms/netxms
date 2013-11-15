@@ -58,7 +58,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.StartClientToServerFileUploadDialog_Title);
+		newShell.setText(Messages.get().StartClientToServerFileUploadDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -76,7 +76,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		fileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false, SWT.OPEN);
-		fileSelector.setLabel(Messages.StartClientToServerFileUploadDialog_LocalFile);
+		fileSelector.setLabel(Messages.get().StartClientToServerFileUploadDialog_LocalFile);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -84,7 +84,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		fileSelector.setLayoutData(gd);
 		
 		textRemoteFile = new LabeledText(dialogArea, SWT.NONE);
-		textRemoteFile.setLabel(Messages.StartClientToServerFileUploadDialog_RemoteFileName);
+		textRemoteFile.setLabel(Messages.get().StartClientToServerFileUploadDialog_RemoteFileName);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -102,7 +102,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		localFile = fileSelector.getFile();
 		if (localFile == null)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.StartClientToServerFileUploadDialog_Warning, Messages.StartClientToServerFileUploadDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().StartClientToServerFileUploadDialog_Warning, Messages.get().StartClientToServerFileUploadDialog_WarningText);
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();

@@ -82,7 +82,7 @@ public class RuleSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.RuleSelectionDialog_Title);
+		newShell.setText(Messages.get().RuleSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -109,7 +109,7 @@ public class RuleSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.ActionSelectionDialog_Filter);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().ActionSelectionDialog_Filter);
 		
 		filterText = new Text(dialogArea, SWT.NONE);
 		GridData gd = new GridData();
@@ -159,7 +159,7 @@ public class RuleSelectionDialog extends Dialog
 			viewer.getTable().setEnabled(false);
 			getButton(IDialogConstants.OK_ID).setEnabled(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			ConsoleJob job = new ConsoleJob(Messages.RuleSelectionDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+			ConsoleJob job = new ConsoleJob(Messages.get().RuleSelectionDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -178,7 +178,7 @@ public class RuleSelectionDialog extends Dialog
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.RuleSelectionDialog_JobError;
+					return Messages.get().RuleSelectionDialog_JobError;
 				}
 			};
 			job.setUser(false);

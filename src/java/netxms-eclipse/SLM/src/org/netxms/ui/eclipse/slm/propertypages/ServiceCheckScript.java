@@ -69,7 +69,7 @@ public class ServiceCheckScript extends PropertyPage
       
       // Script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.ServiceCheckScript_CheckScript);
+      label.setText(Messages.get().ServiceCheckScript_CheckScript);
 
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(object.getScript());
@@ -101,7 +101,7 @@ public class ServiceCheckScript extends PropertyPage
 		
 		final String newScript = filterSource.getText();
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.ServiceCheckScript_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ServiceCheckScript_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -114,7 +114,7 @@ public class ServiceCheckScript extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ServiceCheckScript_JobError;
+				return Messages.get().ServiceCheckScript_JobError;
 			}
 
 			@Override

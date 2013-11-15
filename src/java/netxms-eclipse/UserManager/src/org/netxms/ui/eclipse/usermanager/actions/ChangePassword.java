@@ -68,11 +68,11 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final Session session = ConsoleSharedData.getSession();
-			ConsoleJob job = new ConsoleJob(Messages.ChangePassword_JobTitle, null, Activator.PLUGIN_ID, null) {
+			ConsoleJob job = new ConsoleJob(Messages.get().ChangePassword_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ChangePassword_Error;
+					return Messages.get().ChangePassword_Error;
 				}
 
 				@Override
@@ -83,7 +83,7 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 						@Override
 						public void run()
 						{
-							MessageDialogHelper.openInformation(window.getShell(), Messages.ChangePassword_Information, Messages.ChangePassword_SuccessMessage);
+							MessageDialogHelper.openInformation(window.getShell(), Messages.get().ChangePassword_Information, Messages.get().ChangePassword_SuccessMessage);
 						}
 					});
 				}

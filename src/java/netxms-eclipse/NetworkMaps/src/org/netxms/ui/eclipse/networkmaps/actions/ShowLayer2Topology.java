@@ -63,7 +63,7 @@ public class ShowLayer2Topology implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowLayer2Topology_Error, String.format(Messages.ShowLayer2Topology_ErrorText, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowLayer2Topology_Error, String.format(Messages.get().ShowLayer2Topology_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

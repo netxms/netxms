@@ -62,7 +62,7 @@ public class OpenAlarmBrowser implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenAlarmBrowser_Error, Messages.OpenAlarmBrowser_ErrorOpeningView + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenAlarmBrowser_Error, Messages.get().OpenAlarmBrowser_ErrorOpeningView + e.getMessage());
 			}
 		}
 	}

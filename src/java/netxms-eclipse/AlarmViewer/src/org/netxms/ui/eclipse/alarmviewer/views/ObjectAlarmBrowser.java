@@ -62,7 +62,7 @@ public class ObjectAlarmBrowser extends ViewPart
 		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		objectId = Long.parseLong(site.getSecondaryId());
 		AbstractObject object = session.findObjectById(objectId);
-		setPartName(Messages.ObjectAlarmBrowser_TitlePrefix + ((object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]")));  //$NON-NLS-1$//$NON-NLS-2$
+		setPartName(Messages.get().ObjectAlarmBrowser_TitlePrefix + ((object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]")));  //$NON-NLS-1$//$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)

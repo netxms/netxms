@@ -51,7 +51,7 @@ public class WebPage extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		url = new LabeledText(dialogArea, SWT.NONE);
-		url.setLabel(Messages.WebPage_URL);
+		url.setLabel(Messages.get().WebPage_URL);
 		url.setText(config.getUrl());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -59,7 +59,7 @@ public class WebPage extends PropertyPage
 		url.setLayoutData(gd);
 
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.WebPage_Title);
+		title.setLabel(Messages.get().WebPage_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

@@ -73,7 +73,7 @@ public class SummaryTableFilter extends PropertyPage
 				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL);
 			}
       };
-      filter = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, Messages.SummaryTableFilter_FilterScript, gd);
+      filter = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, Messages.get().SummaryTableFilter_FilterScript, gd);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -98,7 +98,7 @@ public class SummaryTableFilter extends PropertyPage
 		table.setNodeFilter(filter.getText());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SummaryTableFilter_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SummaryTableFilter_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -112,7 +112,7 @@ public class SummaryTableFilter extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SummaryTableFilter_JobError;
+				return Messages.get().SummaryTableFilter_JobError;
 			}
 
 			/* (non-Javadoc)

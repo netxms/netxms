@@ -86,11 +86,11 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		labelProvider.setShowColor(ps.getBoolean("EventMonitor.showColor")); //$NON-NLS-1$
 		labelProvider.setShowIcons(ps.getBoolean("EventMonitor.showIcons")); //$NON-NLS-1$
 		
-		addColumn(Messages.EventMonitor_ColTimestamp, 150);
-		addColumn(Messages.EventMonitor_ColSource, 200);
-		addColumn(Messages.EventMonitor_ColSeverity, 90);
-		addColumn(Messages.EventMonitor_ColEvent, 200);
-		addColumn(Messages.EventMonitor_ColMessage, 600);
+		addColumn(Messages.get().EventMonitor_ColTimestamp, 150);
+		addColumn(Messages.get().EventMonitor_ColSource, 200);
+		addColumn(Messages.get().EventMonitor_ColSeverity, 90);
+		addColumn(Messages.get().EventMonitor_ColEvent, 200);
+		addColumn(Messages.get().EventMonitor_ColMessage, 600);
 		
 		setFilter(new EventMonitorFilter());
 	}
@@ -134,7 +134,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	{
 		super.createActions();
 		
-		actionShowColor = new Action(Messages.EventMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
+		actionShowColor = new Action(Messages.get().EventMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -144,7 +144,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		};
 		actionShowColor.setChecked(labelProvider.isShowColor());
 		
-		actionShowIcons = new Action(Messages.EventMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
+		actionShowIcons = new Action(Messages.get().EventMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

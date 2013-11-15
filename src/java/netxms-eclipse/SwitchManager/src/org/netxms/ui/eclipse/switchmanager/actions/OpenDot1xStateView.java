@@ -62,7 +62,7 @@ public class OpenDot1xStateView implements IObjectActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenDot1xStateView_Error, Messages.OpenDot1xStateView_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenDot1xStateView_Error, Messages.get().OpenDot1xStateView_ErrorText + e.getMessage());
 			}
 		}
 	}

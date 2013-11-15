@@ -55,7 +55,7 @@ public class StatusIndicator extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-		objectSelector.setLabel(Messages.StatusIndicator_Object);
+		objectSelector.setLabel(Messages.get().StatusIndicator_Object);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
 		GridData gd = new GridData();
@@ -64,7 +64,7 @@ public class StatusIndicator extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.StatusIndicator_Title);
+		title.setLabel(Messages.get().StatusIndicator_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

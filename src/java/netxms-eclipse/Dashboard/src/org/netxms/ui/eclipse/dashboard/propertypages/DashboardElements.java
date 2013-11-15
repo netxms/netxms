@@ -104,7 +104,7 @@ public class DashboardElements extends PropertyPage
       dialogArea.setLayout(layout);
       
       columnCount = new LabeledText(dialogArea, SWT.NONE);
-      columnCount.setLabel(Messages.DashboardElements_NumColumns);
+      columnCount.setLabel(Messages.get().DashboardElements_NumColumns);
       columnCount.setText(Integer.toString(object.getNumColumns()));
       GridData gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -113,14 +113,14 @@ public class DashboardElements extends PropertyPage
       columnCount.setLayoutData(gridData);
       
       checkEqualWidth = new Button(dialogArea, SWT.CHECK);
-      checkEqualWidth.setText(Messages.DashboardElements_EqualWidth);
+      checkEqualWidth.setText(Messages.get().DashboardElements_EqualWidth);
       checkEqualWidth.setSelection((object.getOptions() & Dashboard.EQUAL_WIDTH_COLUMNS) != 0);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       checkEqualWidth.setLayoutData(gridData);
       
-      final String[] columnNames = { Messages.DashboardElements_Type, Messages.DashboardElements_Span, Messages.DashboardElements_Alignment };
+      final String[] columnNames = { Messages.get().DashboardElements_Type, Messages.get().DashboardElements_Span, Messages.get().DashboardElements_Alignment };
       final int[] columnWidths = { 150, 60, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -151,7 +151,7 @@ public class DashboardElements extends PropertyPage
       leftButtons.setLayoutData(gridData);
 
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText(Messages.DashboardElements_Up);
+      upButton.setText(Messages.get().DashboardElements_Up);
       upButton.setEnabled(false);
       upButton.addSelectionListener(new SelectionListener() {
 		@Override
@@ -168,7 +168,7 @@ public class DashboardElements extends PropertyPage
       });
       
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText(Messages.DashboardElements_Down);
+      downButton.setText(Messages.get().DashboardElements_Down);
       downButton.setEnabled(false);
       downButton.addSelectionListener(new SelectionListener() {
    		@Override
@@ -196,7 +196,7 @@ public class DashboardElements extends PropertyPage
       rightButtons.setLayoutData(gridData);
 
       addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText(Messages.DashboardElements_Add);
+      addButton.setText(Messages.get().DashboardElements_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -212,7 +212,7 @@ public class DashboardElements extends PropertyPage
 		});
 
       editButton = new Button(rightButtons, SWT.PUSH);
-      editButton.setText(Messages.DashboardElements_Edit);
+      editButton.setText(Messages.get().DashboardElements_Edit);
       editButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -228,7 +228,7 @@ public class DashboardElements extends PropertyPage
 		});
 
       editXmlButton = new Button(rightButtons, SWT.PUSH);
-      editXmlButton.setText(Messages.DashboardElements_EditXML);
+      editXmlButton.setText(Messages.get().DashboardElements_EditXML);
       editXmlButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -244,7 +244,7 @@ public class DashboardElements extends PropertyPage
 		});
 
       deleteButton = new Button(rightButtons, SWT.PUSH);
-      deleteButton.setText(Messages.DashboardElements_Delete);
+      deleteButton.setText(Messages.get().DashboardElements_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -311,7 +311,7 @@ public class DashboardElements extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.DashboardElements_Error, Messages.DashboardElements_ErrorText);
+			MessageDialogHelper.openError(getShell(), Messages.get().DashboardElements_Error, Messages.get().DashboardElements_ErrorText);
 			return false;
 		}
 		
@@ -328,7 +328,7 @@ public class DashboardElements extends PropertyPage
 			setValid(false);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.DashboardElements_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DashboardElements_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -338,7 +338,7 @@ public class DashboardElements extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DashboardElements_JobError;
+				return Messages.get().DashboardElements_JobError;
 			}
 
 			/* (non-Javadoc)
@@ -470,12 +470,12 @@ public class DashboardElements extends PropertyPage
 			}
 			catch(Exception e)
 			{
-				MessageDialogHelper.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText + e.getMessage());
+				MessageDialogHelper.openError(getShell(), Messages.get().DashboardElements_InternalErrorTitle, Messages.get().DashboardElements_InternalErrorText + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialogHelper.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText2);
+			MessageDialogHelper.openError(getShell(), Messages.get().DashboardElements_InternalErrorTitle, Messages.get().DashboardElements_InternalErrorText2);
 		}
 	}
 	

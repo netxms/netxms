@@ -594,7 +594,7 @@ public class WidgetHelper
 	{
 		if (!readOnly)
 		{
-			final Action cut = new Action(Messages.WidgetHelper_Action_Cut) {
+			final Action cut = new Action(Messages.get().WidgetHelper_Action_Cut) {
 				@Override
 				public void run()
 				{
@@ -605,7 +605,7 @@ public class WidgetHelper
 			manager.add(cut);
 		}
 		
-		final Action copy = new Action(Messages.WidgetHelper_Action_Copy) {
+		final Action copy = new Action(Messages.get().WidgetHelper_Action_Copy) {
 			@Override
 			public void run()
 			{
@@ -617,7 +617,7 @@ public class WidgetHelper
 
 		if (!readOnly)
 		{
-			final Action paste = new Action(Messages.WidgetHelper_Action_Paste) {
+			final Action paste = new Action(Messages.get().WidgetHelper_Action_Paste) {
 				@Override
 				public void run()
 				{
@@ -627,7 +627,7 @@ public class WidgetHelper
 			paste.setImageDescriptor(SharedIcons.PASTE);
 			manager.add(paste);
 			
-			final Action delete = new Action(Messages.WidgetHelper_Action_Delete) {
+			final Action delete = new Action(Messages.get().WidgetHelper_Action_Delete) {
 				@Override
 				public void run()
 				{
@@ -639,7 +639,7 @@ public class WidgetHelper
 			manager.add(new Separator());
 		}
 		
-		final Action selectAll = new Action(Messages.WidgetHelper_Action_SelectAll) {
+		final Action selectAll = new Action(Messages.get().WidgetHelper_Action_SelectAll) {
 			@Override
 			public void run()
 			{
@@ -729,7 +729,7 @@ public class WidgetHelper
 			if (page != null)
 				page.setErrorMessage(validator.getErrorMessage(text, label));
 			else	
-				MessageDialogHelper.openError(control.getShell(), Messages.WidgetHelper_InputValidationError, validator.getErrorMessage(text, label));
+				MessageDialogHelper.openError(control.getShell(), Messages.get().WidgetHelper_InputValidationError, validator.getErrorMessage(text, label));
 		}
 		return ok;
 	}

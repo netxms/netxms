@@ -95,8 +95,16 @@ public class Messages extends NLS
 
 	private Messages()
 	{
-	}
+ }
 
+
+	private static Messages instance = new Messages();
+
+	public static Messages get()
+	{
+		return instance;
+	}
+//start
 	/**
 	 * This is intentional mix between old and new approach. getString
 	 * used to read log display name based on log name. 
@@ -112,4 +120,5 @@ public class Messages extends NLS
 			return '!' + key + '!';
 		}
 	}
+	//end
 }

@@ -48,9 +48,9 @@ public class TableConditionsEditor extends Composite
 		form.getBody().setLayout(new GridLayout());
 		
 		addColumnLink = toolkit.createImageHyperlink(form.getBody(), SWT.NONE);
-		addColumnLink.setText(Messages.TableConditionsEditor_Add);
+		addColumnLink.setText(Messages.get().TableConditionsEditor_Add);
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
-		addColumnLink.setToolTipText(Messages.TableConditionsEditor_AddCondGroup);
+		addColumnLink.setToolTipText(Messages.get().TableConditionsEditor_AddCondGroup);
 		addColumnLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -155,7 +155,7 @@ public class TableConditionsEditor extends Composite
 
 			ImageHyperlink link = toolkit.createImageHyperlink(buttons, SWT.NONE);
 			link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-			link.setToolTipText(Messages.TableConditionsEditor_DeleteCondGroup);
+			link.setToolTipText(Messages.get().TableConditionsEditor_DeleteCondGroup);
 			link.addHyperlinkListener(new HyperlinkAdapter() {
 				@Override
 				public void linkActivated(HyperlinkEvent e)
@@ -166,8 +166,8 @@ public class TableConditionsEditor extends Composite
 
 			link = toolkit.createImageHyperlink(this, SWT.NONE);
 			link.setImage(SharedIcons.IMG_ADD_OBJECT);
-			link.setText(Messages.TableConditionsEditor_Add);
-			link.setToolTipText(Messages.TableConditionsEditor_AddCond);
+			link.setText(Messages.get().TableConditionsEditor_Add);
+			link.setToolTipText(Messages.get().TableConditionsEditor_AddCond);
 			link.addHyperlinkListener(new HyperlinkAdapter() {
 				@Override
 				public void linkActivated(HyperlinkEvent e)
@@ -241,21 +241,21 @@ public class TableConditionsEditor extends Composite
 			operation = new CCombo(parent, SWT.BORDER | SWT.READ_ONLY);
 			toolkit.adapt(operation);
 			operation.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-			operation.add(Messages.EditThresholdDialog_LT);
-			operation.add(Messages.EditThresholdDialog_LE);
-			operation.add(Messages.EditThresholdDialog_EQ);
-			operation.add(Messages.EditThresholdDialog_GE);
-			operation.add(Messages.EditThresholdDialog_GT);
-			operation.add(Messages.EditThresholdDialog_NE);
-			operation.add(Messages.EditThresholdDialog_LIKE);
-			operation.add(Messages.EditThresholdDialog_NOTLIKE);
+			operation.add(Messages.get().EditThresholdDialog_LT);
+			operation.add(Messages.get().EditThresholdDialog_LE);
+			operation.add(Messages.get().EditThresholdDialog_EQ);
+			operation.add(Messages.get().EditThresholdDialog_GE);
+			operation.add(Messages.get().EditThresholdDialog_GT);
+			operation.add(Messages.get().EditThresholdDialog_NE);
+			operation.add(Messages.get().EditThresholdDialog_LIKE);
+			operation.add(Messages.get().EditThresholdDialog_NOTLIKE);
 			
 			value = toolkit.createText(parent, ""); //$NON-NLS-1$
 			value.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			
 			ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);
 			link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-			link.setToolTipText(Messages.TableConditionsEditor_DeleteCond);
+			link.setToolTipText(Messages.get().TableConditionsEditor_DeleteCond);
 			link.addHyperlinkListener(new HyperlinkAdapter() {
 				@Override
 				public void linkActivated(HyperlinkEvent e)

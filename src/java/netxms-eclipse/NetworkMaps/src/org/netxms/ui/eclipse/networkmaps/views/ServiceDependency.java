@@ -46,7 +46,7 @@ public class ServiceDependency extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName(Messages.ServiceDependency_PartTitle + ((rootObject != null) ? rootObject.getObjectName() : Messages.ServiceDependency_Error));
+		setPartName(Messages.get().ServiceDependency_PartTitle + ((rootObject != null) ? rootObject.getObjectName() : Messages.get().ServiceDependency_Error));
 	}
 
 	/* (non-Javadoc)

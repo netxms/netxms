@@ -62,7 +62,7 @@ public class ShowAvailabilityChart implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowAvailabilityChart_Error, Messages.ShowAvailabilityChart_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowAvailabilityChart_Error, Messages.get().ShowAvailabilityChart_ErrorText + e.getMessage());
 			}
 		}
 	}

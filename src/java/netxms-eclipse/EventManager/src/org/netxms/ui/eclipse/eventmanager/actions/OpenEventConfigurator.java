@@ -62,7 +62,7 @@ public class OpenEventConfigurator implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenEventConfigurator_Error, Messages.OpenEventConfigurator_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenEventConfigurator_Error, Messages.get().OpenEventConfigurator_ErrorText + e.getMessage());
 			}
 		}
 	}

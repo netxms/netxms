@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
  */
 public class ActionLabelProvider implements ITableLabelProvider
 {
-	private static final String[] ACTION_TYPE = { Messages.ActionLabelProvider_ActionTypeExecute, Messages.ActionLabelProvider_ActionTypeRemoteExec, Messages.ActionLabelProvider_ActionTypeMail, Messages.ActionLabelProvider_ActionTypeSMS, Messages.ActionLabelProvider_ActionTypeForward };
+	private static final String[] ACTION_TYPE = { Messages.get().ActionLabelProvider_ActionTypeExecute, Messages.get().ActionLabelProvider_ActionTypeRemoteExec, Messages.get().ActionLabelProvider_ActionTypeMail, Messages.get().ActionLabelProvider_ActionTypeSMS, Messages.get().ActionLabelProvider_ActionTypeForward };
 	
 	private ILabelProvider workbenchLabelProvider;
 	
@@ -74,7 +74,7 @@ public class ActionLabelProvider implements ITableLabelProvider
 				}
 				catch(IndexOutOfBoundsException e)
 				{
-					return Messages.ActionLabelProvider_Unknown;
+					return Messages.get().ActionLabelProvider_Unknown;
 				}
 			case ActionManager.COLUMN_RCPT:
 				return action.getRecipientAddress();

@@ -43,7 +43,7 @@ public class Unmanage extends MultipleObjectAction
 	@Override
 	protected String formatJobDescription(AbstractObject object)
 	{
-		return String.format(Messages.Unmanage_JobDescription, object.getObjectName(), object.getObjectId());
+		return String.format(Messages.get().Unmanage_JobDescription, object.getObjectName(), object.getObjectId());
 	}
 
 	/* (non-Javadoc)
@@ -52,6 +52,6 @@ public class Unmanage extends MultipleObjectAction
 	@Override
 	protected String formatErrorMessage(AbstractObject object, Display display)
 	{
-		return String.format(Messages.Unmanage_JobError, object.getObjectName(), object.getObjectId());
+		return String.format(Messages.get().Unmanage_JobError, object.getObjectName(), object.getObjectId());
 	}
 }

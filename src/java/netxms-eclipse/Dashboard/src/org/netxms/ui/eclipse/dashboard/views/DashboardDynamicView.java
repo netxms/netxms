@@ -156,7 +156,7 @@ public class DashboardDynamicView extends ViewPart
 		dashboard = object;
 		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 		parentComposite.layout();
-		setPartName(Messages.DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
+		setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
 	}
 	
 	/**
@@ -174,7 +174,7 @@ public class DashboardDynamicView extends ViewPart
 		{
 			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 			parentComposite.layout();
-			setPartName(Messages.DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
+			setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
 		}
 		else
 		{

@@ -92,7 +92,7 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 				return RegionalSettings.getDateTimeFormat().format(event.getTimeStamp());
 			case EventTraceWidget.COLUMN_SOURCE:
 				final AbstractObject object = session.findObjectById(event.getSourceId());
-				return (object != null) ? object.getObjectName() : Messages.EventLabelProvider_Unknown;
+				return (object != null) ? object.getObjectName() : Messages.get().EventLabelProvider_Unknown;
 			case EventTraceWidget.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(event.getSeverity());
 			case EventTraceWidget.COLUMN_EVENT:

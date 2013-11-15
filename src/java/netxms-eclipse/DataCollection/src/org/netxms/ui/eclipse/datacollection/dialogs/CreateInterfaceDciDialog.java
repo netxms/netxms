@@ -44,21 +44,21 @@ public class CreateInterfaceDciDialog extends Dialog
 {
 	private static final String[] names = 
 		{ 
-			Messages.CreateInterfaceDciDialog_InBytes, 
-			Messages.CreateInterfaceDciDialog_OutBytes,
-			Messages.CreateInterfaceDciDialog_InPackets, 
-			Messages.CreateInterfaceDciDialog_OutPackets,
-			Messages.CreateInterfaceDciDialog_InErrors,
-			Messages.CreateInterfaceDciDialog_OutErrors
+			Messages.get().CreateInterfaceDciDialog_InBytes, 
+			Messages.get().CreateInterfaceDciDialog_OutBytes,
+			Messages.get().CreateInterfaceDciDialog_InPackets, 
+			Messages.get().CreateInterfaceDciDialog_OutPackets,
+			Messages.get().CreateInterfaceDciDialog_InErrors,
+			Messages.get().CreateInterfaceDciDialog_OutErrors
 		};
 	private static final String[] descriptions = 
 		{ 
-			Messages.CreateInterfaceDciDialog_InBytesDescr, 
-			Messages.CreateInterfaceDciDialog_OutBytesDescr,
-			Messages.CreateInterfaceDciDialog_InPacketsDescr, 
-			Messages.CreateInterfaceDciDialog_OutPacketsDescr,
-			Messages.CreateInterfaceDciDialog_InErrorsDescr,
-			Messages.CreateInterfaceDciDialog_OutErrorsDescr
+			Messages.get().CreateInterfaceDciDialog_InBytesDescr, 
+			Messages.get().CreateInterfaceDciDialog_OutBytesDescr,
+			Messages.get().CreateInterfaceDciDialog_InPacketsDescr, 
+			Messages.get().CreateInterfaceDciDialog_OutPacketsDescr,
+			Messages.get().CreateInterfaceDciDialog_InErrorsDescr,
+			Messages.get().CreateInterfaceDciDialog_OutErrorsDescr
 		};
 	private static final boolean[] defaultEnabled = { true, true, false, false, false, false };
 	
@@ -92,7 +92,7 @@ public class CreateInterfaceDciDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		Group dataGroup = new Group(dialogArea, SWT.NONE);
-		dataGroup.setText(Messages.CreateInterfaceDciDialog_Data);
+		dataGroup.setText(Messages.get().CreateInterfaceDciDialog_Data);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -111,7 +111,7 @@ public class CreateInterfaceDciDialog extends Dialog
 		}
 		
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText(Messages.CreateInterfaceDciDialog_Options);
+		optionsGroup.setText(Messages.get().CreateInterfaceDciDialog_Options);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -122,12 +122,12 @@ public class CreateInterfaceDciDialog extends Dialog
 		optionsGroup.setLayout(layout);
 		
 		textInterval = new LabeledText(optionsGroup, SWT.NONE);
-		textInterval.setLabel(Messages.CreateInterfaceDciDialog_PollingInterval);
+		textInterval.setLabel(Messages.get().CreateInterfaceDciDialog_PollingInterval);
 		textInterval.setText("60"); //$NON-NLS-1$
 		textInterval.getTextControl().setTextLimit(5);
 		
 		textRetention = new LabeledText(optionsGroup, SWT.NONE);
-		textRetention.setLabel(Messages.CreateInterfaceDciDialog_RetentionTime);
+		textRetention.setLabel(Messages.get().CreateInterfaceDciDialog_RetentionTime);
 		textRetention.setText("30"); //$NON-NLS-1$
 		textRetention.getTextControl().setTextLimit(5);
 		
@@ -148,7 +148,7 @@ public class CreateInterfaceDciDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.CreateInterfaceDciDialog_Error, Messages.CreateInterfaceDciDialog_BadPollingInterval);
+			MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDciDialog_Error, Messages.get().CreateInterfaceDciDialog_BadPollingInterval);
 		}
 		
 		try
@@ -159,7 +159,7 @@ public class CreateInterfaceDciDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.CreateInterfaceDciDialog_Error, Messages.CreateInterfaceDciDialog_BadRetentionTime);
+			MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDciDialog_Error, Messages.get().CreateInterfaceDciDialog_BadRetentionTime);
 		}
 		
 		dciInfo = new InterfaceDciInfo[forms.length];
@@ -228,7 +228,7 @@ public class CreateInterfaceDciDialog extends Dialog
 			checkEnable.setSelection(enabled);
 			
 			checkDelta = new Button(buttonRow, SWT.CHECK);
-			checkDelta.setText(Messages.CreateInterfaceDciDialog_Delta);
+			checkDelta.setText(Messages.get().CreateInterfaceDciDialog_Delta);
 			checkDelta.setSelection(true);
 			checkDelta.setEnabled(enabled);
 			gd = new GridData();
@@ -246,7 +246,7 @@ public class CreateInterfaceDciDialog extends Dialog
 			gd.grabExcessHorizontalSpace = true;
 			textRow.setLayoutData(gd);
 			
-			new Label(textRow, SWT.NONE).setText(Messages.CreateInterfaceDciDialog_Description);
+			new Label(textRow, SWT.NONE).setText(Messages.get().CreateInterfaceDciDialog_Description);
 			
 			description = new Text(textRow, SWT.BORDER);
 			description.setText(defaultDescription);

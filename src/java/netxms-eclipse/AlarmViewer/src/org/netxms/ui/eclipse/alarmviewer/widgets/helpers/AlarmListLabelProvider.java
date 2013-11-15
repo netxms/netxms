@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class AlarmListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Resolved, Messages.AlarmListLabelProvider_AlarmState_Terminated };
+	private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
 	
 	private NXCSession session;
 	private Image[] stateImages = new Image[5];

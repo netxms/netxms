@@ -66,7 +66,7 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.UploadFileToServer_JobTitle, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().UploadFileToServer_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(final IProgressMonitor monitor) throws Exception
 				{
@@ -76,7 +76,7 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 						@Override
 						public void setTotalWorkAmount(long workTotal)
 						{
-							monitor.beginTask(Messages.UploadFileToServer_TaskNamePrefix + dlg.getLocalFile().getAbsolutePath(), (int)workTotal);
+							monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + dlg.getLocalFile().getAbsolutePath(), (int)workTotal);
 						}
 						
 						@Override
@@ -92,7 +92,7 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.UploadFileToServer_JobError;
+					return Messages.get().UploadFileToServer_JobError;
 				}
 			}.start();
 		}

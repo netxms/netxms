@@ -60,7 +60,7 @@ public class StatusMap extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-		objectSelector.setLabel(Messages.AlarmViewer_RootObject);
+		objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
 		GridData gd = new GridData();
@@ -69,7 +69,7 @@ public class StatusMap extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.AlarmViewer_Title);
+		title.setLabel(Messages.get().AlarmViewer_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -77,7 +77,7 @@ public class StatusMap extends PropertyPage
 		title.setLayoutData(gd);
 		
 		Group severityGroup = new Group(dialogArea, SWT.NONE);
-		severityGroup.setText(Messages.StatusMap_SeverityFilter);
+		severityGroup.setText(Messages.get().StatusMap_SeverityFilter);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -96,9 +96,9 @@ public class StatusMap extends PropertyPage
 			checkSeverity[severity].setSelection((config.getSeverityFilter() & (1 << severity)) != 0);
 		}
 		
-		displayMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.BORDER, Messages.StatusMap_DisplayMode, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		displayMode.add(Messages.StatusMap_NoGroup);
-		displayMode.add(Messages.StatusMap_Group);
+		displayMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.BORDER, Messages.get().StatusMap_DisplayMode, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		displayMode.add(Messages.get().StatusMap_NoGroup);
+		displayMode.add(Messages.get().StatusMap_Group);
 		displayMode.select(config.isGroupObjects() ? 1 : 0);
 
 		return dialogArea;

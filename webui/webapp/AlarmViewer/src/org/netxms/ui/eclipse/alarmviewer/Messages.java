@@ -89,7 +89,7 @@ public class Messages extends NLS
 
 	private Messages()
 	{
-	}
+ }
 
 
 	/**
@@ -127,5 +127,5 @@ public class Messages extends NLS
 			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
 		}
 	}
-}
 
+}

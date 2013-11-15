@@ -75,8 +75,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		dashboard = (Dashboard)session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		if (dashboard == null)
-			throw new PartInitException(Messages.DashboardView_InitError);
-		setPartName(Messages.DashboardView_PartNamePrefix + dashboard.getObjectName());
+			throw new PartInitException(Messages.get().DashboardView_InitError);
+		setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 	}
 
 	/* (non-Javadoc)
@@ -119,15 +119,15 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			{
 				if (dbc.isModified())
 				{
-					if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.DashboardView_Refresh, 
-							Messages.DashboardView_Confirmation))
+					if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().DashboardView_Refresh, 
+							Messages.get().DashboardView_Confirmation))
 						return;
 				}
 				rebuildDashboard(true);
 			}
 		};
 		
-		actionSave = new Action(Messages.DashboardView_Save) {
+		actionSave = new Action(Messages.get().DashboardView_Save) {
 			@Override
 			public void run()
 			{
@@ -137,7 +137,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
 		actionSave.setEnabled(false);
 		
-		actionEditMode = new Action(Messages.DashboardView_EditMode, Action.AS_CHECK_BOX) {
+		actionEditMode = new Action(Messages.get().DashboardView_EditMode, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -150,7 +150,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
 		actionEditMode.setChecked(dbc.isEditMode());
 		
-		actionAddAlarmBrowser = new Action(Messages.DashboardView_AddAlarmBrowser) {
+		actionAddAlarmBrowser = new Action(Messages.get().DashboardView_AddAlarmBrowser) {
 			@Override
 			public void run()
 			{
@@ -158,7 +158,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionAddLabel = new Action(Messages.DashboardView_AddLabel) {
+		actionAddLabel = new Action(Messages.get().DashboardView_AddLabel) {
 			@Override
 			public void run()
 			{
@@ -166,7 +166,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionAddBarChart = new Action(Messages.DashboardView_AddBarChart) {
+		actionAddBarChart = new Action(Messages.get().DashboardView_AddBarChart) {
 			@Override
 			public void run()
 			{
@@ -174,7 +174,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddPieChart = new Action(Messages.DashboardView_AddPieChart) {
+		actionAddPieChart = new Action(Messages.get().DashboardView_AddPieChart) {
 			@Override
 			public void run()
 			{
@@ -182,7 +182,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddTubeChart = new Action(Messages.DashboardView_AddTubeChart) {
+		actionAddTubeChart = new Action(Messages.get().DashboardView_AddTubeChart) {
 			@Override
 			public void run()
 			{
@@ -190,7 +190,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddLineChart = new Action(Messages.DashboardView_AddLineChart) {
+		actionAddLineChart = new Action(Messages.get().DashboardView_AddLineChart) {
 			@Override
 			public void run()
 			{
@@ -198,7 +198,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddAvailabilityChart = new Action(Messages.DashboardView_AddAvailChart) {
+		actionAddAvailabilityChart = new Action(Messages.get().DashboardView_AddAvailChart) {
 			@Override
 			public void run()
 			{
@@ -206,7 +206,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddDashboard = new Action(Messages.DashboardView_AddDashboard) {
+		actionAddDashboard = new Action(Messages.get().DashboardView_AddDashboard) {
 			@Override
 			public void run()
 			{
@@ -214,7 +214,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddStatusIndicator = new Action(Messages.DashboardView_AddStatusIndicator) {
+		actionAddStatusIndicator = new Action(Messages.get().DashboardView_AddStatusIndicator) {
 			@Override
 			public void run()
 			{
@@ -345,7 +345,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			{
 				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 				parentComposite.layout(true, true);
-				setPartName(Messages.DashboardView_PartNamePrefix + dashboard.getObjectName());
+				setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 				dbc.setModifyListener(dbcModifyListener);
 			}
 			else

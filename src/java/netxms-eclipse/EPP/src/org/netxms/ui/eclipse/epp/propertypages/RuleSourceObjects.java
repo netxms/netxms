@@ -84,10 +84,10 @@ public class RuleSourceObjects extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText(Messages.RuleSourceObjects_InvertRule);
+      checkInverted.setText(Messages.get().RuleSourceObjects_InvertRule);
       checkInverted.setSelection(rule.isSourceInverted());
       
-      final String[] columnNames = { Messages.RuleSourceObjects_Object };
+      final String[] columnNames = { Messages.get().RuleSourceObjects_Object };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -126,7 +126,7 @@ public class RuleSourceObjects extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.RuleSourceObjects_Add);
+      addButton.setText(Messages.get().RuleSourceObjects_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -145,7 +145,7 @@ public class RuleSourceObjects extends PropertyPage
       addButton.setLayoutData(rd);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.RuleSourceObjects_Delete);
+      deleteButton.setText(Messages.get().RuleSourceObjects_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

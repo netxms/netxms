@@ -47,14 +47,14 @@ public class LocationMap extends AbstractGeolocationView
 		{
 			long id = Long.parseLong(site.getSecondaryId());
 			object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(id);
-			setPartName(Messages.LocationMap_PartNamePrefix + object.getObjectName());
+			setPartName(Messages.get().LocationMap_PartNamePrefix + object.getObjectName());
 		}
 		catch(Exception e)
 		{
-			throw new PartInitException(Messages.LocationMap_InitError1, e);
+			throw new PartInitException(Messages.get().LocationMap_InitError1, e);
 		}
 		if (object == null)
-			throw new PartInitException(Messages.LocationMap_InitError2);
+			throw new PartInitException(Messages.get().LocationMap_InitError2);
 	}
 
 	/* (non-Javadoc)

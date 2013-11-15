@@ -46,11 +46,11 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 	private static final int[] severityMap = 
 		{ Severity.CRITICAL, Severity.CRITICAL, Severity.MAJOR, Severity.MINOR, Severity.WARNING, Severity.WARNING, Severity.NORMAL, Severity.NORMAL };  
 	private static final String[] severityText = 
-		{ Messages.SyslogLabelProvider_SevEmergency, Messages.SyslogLabelProvider_SevAlert, Messages.SyslogLabelProvider_SevCritical, Messages.SyslogLabelProvider_SevError, Messages.SyslogLabelProvider_SevWarning, Messages.SyslogLabelProvider_SevNotice, Messages.SyslogLabelProvider_SevInfo, Messages.SyslogLabelProvider_SevDebug };
+		{ Messages.get().SyslogLabelProvider_SevEmergency, Messages.get().SyslogLabelProvider_SevAlert, Messages.get().SyslogLabelProvider_SevCritical, Messages.get().SyslogLabelProvider_SevError, Messages.get().SyslogLabelProvider_SevWarning, Messages.get().SyslogLabelProvider_SevNotice, Messages.get().SyslogLabelProvider_SevInfo, Messages.get().SyslogLabelProvider_SevDebug };
 	private static final String[] facilityText =
-		{ Messages.SyslogLabelProvider_FacKernel, Messages.SyslogLabelProvider_FacUser, Messages.SyslogLabelProvider_FacMail, Messages.SyslogLabelProvider_FacSystem, Messages.SyslogLabelProvider_FacAuth, Messages.SyslogLabelProvider_FacSyslog, Messages.SyslogLabelProvider_FacLpr, Messages.SyslogLabelProvider_FacNews, Messages.SyslogLabelProvider_FacUUCP, Messages.SyslogLabelProvider_FacCron, Messages.SyslogLabelProvider_FacSecurity,
-		  Messages.SyslogLabelProvider_FacFTPD, Messages.SyslogLabelProvider_FacNTP, Messages.SyslogLabelProvider_FacLogAudit, Messages.SyslogLabelProvider_FacLogAlert, Messages.SyslogLabelProvider_FacClock, Messages.SyslogLabelProvider_FacLocal0, Messages.SyslogLabelProvider_FacLocal1, Messages.SyslogLabelProvider_FacLocal2, Messages.SyslogLabelProvider_FacLocal3, Messages.SyslogLabelProvider_FacLocal4,
-		  Messages.SyslogLabelProvider_FacLocal5, Messages.SyslogLabelProvider_FacLocal6, Messages.SyslogLabelProvider_FacLocal7
+		{ Messages.get().SyslogLabelProvider_FacKernel, Messages.get().SyslogLabelProvider_FacUser, Messages.get().SyslogLabelProvider_FacMail, Messages.get().SyslogLabelProvider_FacSystem, Messages.get().SyslogLabelProvider_FacAuth, Messages.get().SyslogLabelProvider_FacSyslog, Messages.get().SyslogLabelProvider_FacLpr, Messages.get().SyslogLabelProvider_FacNews, Messages.get().SyslogLabelProvider_FacUUCP, Messages.get().SyslogLabelProvider_FacCron, Messages.get().SyslogLabelProvider_FacSecurity,
+		  Messages.get().SyslogLabelProvider_FacFTPD, Messages.get().SyslogLabelProvider_FacNTP, Messages.get().SyslogLabelProvider_FacLogAudit, Messages.get().SyslogLabelProvider_FacLogAlert, Messages.get().SyslogLabelProvider_FacClock, Messages.get().SyslogLabelProvider_FacLocal0, Messages.get().SyslogLabelProvider_FacLocal1, Messages.get().SyslogLabelProvider_FacLocal2, Messages.get().SyslogLabelProvider_FacLocal3, Messages.get().SyslogLabelProvider_FacLocal4,
+		  Messages.get().SyslogLabelProvider_FacLocal5, Messages.get().SyslogLabelProvider_FacLocal6, Messages.get().SyslogLabelProvider_FacLocal7
 		};
 	
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -101,7 +101,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 				return RegionalSettings.getDateTimeFormat().format(record.getTimestamp());
 			case SyslogTraceWidget.COLUMN_SOURCE:
 				final AbstractObject object = session.findObjectById(record.getSourceObjectId());
-				return (object != null) ? object.getObjectName() : Messages.SyslogLabelProvider_Unknown;
+				return (object != null) ? object.getObjectName() : Messages.get().SyslogLabelProvider_Unknown;
 			case SyslogTraceWidget.COLUMN_SEVERITY:
 				try
 				{

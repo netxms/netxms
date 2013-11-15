@@ -86,10 +86,10 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 3;
-		dateTimeFormat = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.RegionalSettingsPrefPage_DateTimeFormat, gd); //$NON-NLS-1$
-		dateTimeFormat.add(Messages.RegionalSettingsPrefPage_FmtServer); //$NON-NLS-1$
-		dateTimeFormat.add(Messages.RegionalSettingsPrefPage_FmtJava); //$NON-NLS-1$
-		dateTimeFormat.add(Messages.RegionalSettingsPrefPage_FmtCustom); //$NON-NLS-1$
+		dateTimeFormat = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().RegionalSettingsPrefPage_DateTimeFormat, gd); //$NON-NLS-1$
+		dateTimeFormat.add(Messages.get().RegionalSettingsPrefPage_FmtServer); //$NON-NLS-1$
+		dateTimeFormat.add(Messages.get().RegionalSettingsPrefPage_FmtJava); //$NON-NLS-1$
+		dateTimeFormat.add(Messages.get().RegionalSettingsPrefPage_FmtCustom); //$NON-NLS-1$
 		format = getPreferenceStore().getInt("DATETIME_FORMAT"); //$NON-NLS-1$
 		dateTimeFormat.select(format);
 		dateTimeFormat.addSelectionListener(new SelectionListener() {
@@ -120,7 +120,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		};
 		
 		dateFormatString = new LabeledText(dialogArea, SWT.NONE);
-		dateFormatString.setLabel(Messages.RegionalSettingsPrefPage_DateFormatString); //$NON-NLS-1$
+		dateFormatString.setLabel(Messages.get().RegionalSettingsPrefPage_DateFormatString); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -130,7 +130,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		dateFormatString.getTextControl().addModifyListener(listener);
 		
 		timeFormatString = new LabeledText(dialogArea, SWT.NONE);
-		timeFormatString.setLabel(Messages.RegionalSettingsPrefPage_TimeFormatString); //$NON-NLS-1$
+		timeFormatString.setLabel(Messages.get().RegionalSettingsPrefPage_TimeFormatString); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -140,7 +140,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		timeFormatString.getTextControl().addModifyListener(listener);
 
       shortTimeFormatString = new LabeledText(dialogArea, SWT.NONE);
-      shortTimeFormatString.setLabel(Messages.RegionalSettingsPrefPage_ShortTimeFormatString);
+      shortTimeFormatString.setLabel(Messages.get().RegionalSettingsPrefPage_ShortTimeFormatString);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -156,7 +156,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
       });
 		
 		dateTimeExample = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
-		dateTimeExample.setLabel(Messages.RegionalSettingsPrefPage_Example); //$NON-NLS-1$
+		dateTimeExample.setLabel(Messages.get().RegionalSettingsPrefPage_Example); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -164,7 +164,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		dateTimeExample.setLayoutData(gd);
 
       shortTimeExample = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
-      shortTimeExample.setLabel(Messages.RegionalSettingsPrefPage_ShortTimeExample);
+      shortTimeExample.setLabel(Messages.get().RegionalSettingsPrefPage_ShortTimeExample);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

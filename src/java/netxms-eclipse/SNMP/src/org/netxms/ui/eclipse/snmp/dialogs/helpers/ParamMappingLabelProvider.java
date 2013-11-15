@@ -65,7 +65,7 @@ public class ParamMappingLabelProvider implements ITableLabelProvider
 			case 0:	// position
 				return Integer.toString(pmap.indexOf(pm) + 2);
 			case 1:	// OID or position in trap
-				return (pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID) ? pm.getObjectId().toString() : (Messages.ParamMappingLabelProvider_PositionPrefix + Integer.toString(pm.getPosition()));
+				return (pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID) ? pm.getObjectId().toString() : (Messages.get().ParamMappingLabelProvider_PositionPrefix + Integer.toString(pm.getPosition()));
 		}
 		return null;
 	}

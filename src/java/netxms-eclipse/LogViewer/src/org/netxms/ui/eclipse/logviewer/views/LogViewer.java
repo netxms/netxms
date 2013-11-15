@@ -174,11 +174,11 @@ public class LogViewer extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		new ConsoleJob(String.format(Messages.LogViewer_OpenLogJobName, logName), this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(String.format(Messages.get().LogViewer_OpenLogJobName, logName), this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.LogViewer_OpenLogError, logName);
+				return String.format(Messages.get().LogViewer_OpenLogError, logName);
 			}
 
 			@Override
@@ -360,7 +360,7 @@ public class LogViewer extends ViewPart
 		};
 		actionRefresh.setEnabled(false);
 
-		actionExecute = new Action(Messages.LogViewer_ActionExec, SharedIcons.EXECUTE) {
+		actionExecute = new Action(Messages.get().LogViewer_ActionExec, SharedIcons.EXECUTE) {
 			@Override
 			public void run()
 			{
@@ -370,7 +370,7 @@ public class LogViewer extends ViewPart
 		actionExecute.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.execute"); //$NON-NLS-1$
 		handlerService.activateHandler(actionExecute.getActionDefinitionId(), new ActionHandler(actionExecute));
 
-		actionClearFilter = new Action(Messages.LogViewer_ActionClearFilter, SharedIcons.CLEAR_LOG) {
+		actionClearFilter = new Action(Messages.get().LogViewer_ActionClearFilter, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
@@ -378,7 +378,7 @@ public class LogViewer extends ViewPart
 			}
 		};
 
-		actionGetMoreData = new Action(Messages.LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-1$
+		actionGetMoreData = new Action(Messages.get().LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -389,7 +389,7 @@ public class LogViewer extends ViewPart
 		actionGetMoreData.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.get_more_data"); //$NON-NLS-1$
 		handlerService.activateHandler(actionGetMoreData.getActionDefinitionId(), new ActionHandler(actionGetMoreData));
 
-		actionShowFilter = new Action(Messages.LogViewer_ActionShowFilter, Action.AS_CHECK_BOX) {
+		actionShowFilter = new Action(Messages.get().LogViewer_ActionShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -400,7 +400,7 @@ public class LogViewer extends ViewPart
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.show_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
-		actionCopyToClipboard = new Action(Messages.LogViewer_ActionCopy, SharedIcons.COPY) {
+		actionCopyToClipboard = new Action(Messages.get().LogViewer_ActionCopy, SharedIcons.COPY) {
 			@Override
 			public void run()
 			{
@@ -422,11 +422,11 @@ public class LogViewer extends ViewPart
 		actionRefresh.setEnabled(false);
 		actionGetMoreData.setEnabled(false);
 		filter = filterBuilder.createFilter();
-		new ConsoleJob(Messages.LogViewer_QueryJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().LogViewer_QueryJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LogViewer_QueryJobError + logName;
+				return Messages.get().LogViewer_QueryJobError + logName;
 			}
 
 			@Override
@@ -457,11 +457,11 @@ public class LogViewer extends ViewPart
 		if (noData)
 			return;	// we already know that there will be no more data
 		
-		new ConsoleJob(Messages.LogViewer_GetDataJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().LogViewer_GetDataJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LogViewer_QueryError + logName;
+				return Messages.get().LogViewer_QueryError + logName;
 			}
 
 			@Override
@@ -487,11 +487,11 @@ public class LogViewer extends ViewPart
 	 */
 	private void refreshData()
 	{
-		new ConsoleJob(Messages.LogViewer_RefreshJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().LogViewer_RefreshJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LogViewer_RefreshError + logName;
+				return Messages.get().LogViewer_RefreshError + logName;
 			}
 
 			@Override

@@ -37,7 +37,7 @@ public class AlarmReminderDialog extends Dialog
 	{
 		super.configureShell(newShell);
 		newShell.setSize(600, 350);
-		newShell.setText(Messages.AlarmReminderDialog_OutstandingAlarms);
+		newShell.setText(Messages.get().AlarmReminderDialog_OutstandingAlarms);
 	}
 
 	/* (non-Javadoc)
@@ -71,6 +71,6 @@ public class AlarmReminderDialog extends Dialog
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
-		createButton(parent, CANCEL, Messages.AlarmReminderDialog_Dismiss, false);
+		createButton(parent, CANCEL, Messages.get().AlarmReminderDialog_Dismiss, false);
 	}
 }

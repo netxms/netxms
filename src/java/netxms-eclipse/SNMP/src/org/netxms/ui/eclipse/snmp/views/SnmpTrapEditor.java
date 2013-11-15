@@ -94,7 +94,7 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { Messages.SnmpTrapEditor_ColID, Messages.SnmpTrapEditor_ColOID, Messages.SnmpTrapEditor_ColEvent, Messages.SnmpTrapEditor_ColDescription };
+		final String[] columnNames = { Messages.get().SnmpTrapEditor_ColID, Messages.get().SnmpTrapEditor_ColOID, Messages.get().SnmpTrapEditor_ColEvent, Messages.get().SnmpTrapEditor_ColDescription };
 		final int[] columnWidths = { 70, 200, 100, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -203,7 +203,7 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 				createTrap();
 			}
 		};
-		actionNew.setText(Messages.SnmpTrapEditor_NewMapping);
+		actionNew.setText(Messages.get().SnmpTrapEditor_NewMapping);
 		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png")); //$NON-NLS-1$
 		
 		actionEdit = new Action() {
@@ -216,7 +216,7 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 				editTrap();
 			}
 		};
-		actionEdit.setText(Messages.SnmpTrapEditor_Properties);
+		actionEdit.setText(Messages.get().SnmpTrapEditor_Properties);
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		
 		actionDelete = new Action() {
@@ -229,7 +229,7 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 				deleteTraps();
 			}
 		};
-		actionDelete.setText(Messages.SnmpTrapEditor_Delete);
+		actionDelete.setText(Messages.get().SnmpTrapEditor_Delete);
 		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png")); //$NON-NLS-1$
 	}
 	
@@ -321,11 +321,11 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	 */
 	private void refreshTrapList()
 	{
-		new ConsoleJob(Messages.SnmpTrapEditor_LoadJob_Title, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SnmpTrapEditor_LoadJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SnmpTrapEditor_LoadJob_Error;
+				return Messages.get().SnmpTrapEditor_LoadJob_Error;
 			}
 
 			@Override
@@ -369,11 +369,11 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		final Object[] objects = selection.toArray();
-		new ConsoleJob(Messages.SnmpTrapEditor_DeleteJob_Title, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SnmpTrapEditor_DeleteJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SnmpTrapEditor_DeleteJob_Error;
+				return Messages.get().SnmpTrapEditor_DeleteJob_Error;
 			}
 
 			@Override
@@ -400,11 +400,11 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.SnmpTrapEditor_ModifyJob_Title, this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().SnmpTrapEditor_ModifyJob_Title, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.SnmpTrapEditor_ModifyJob_Error;
+					return Messages.get().SnmpTrapEditor_ModifyJob_Error;
 				}
 
 				@Override
@@ -426,11 +426,11 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.SnmpTrapEditor_CreateJob_Title, this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().SnmpTrapEditor_CreateJob_Title, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.SnmpTrapEditor_CreateJob_Error;
+					return Messages.get().SnmpTrapEditor_CreateJob_Error;
 				}
 
 				@Override

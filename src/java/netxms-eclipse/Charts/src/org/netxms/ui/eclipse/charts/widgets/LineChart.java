@@ -142,7 +142,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		xAxis.setRange(new Range(timeFrom, timeTo));
 		IAxisTick xTick = xAxis.getTick();
 		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
-		DateFormat format = new SimpleDateFormat(Messages.LineChart_ShortTimeFormat);
+		DateFormat format = new SimpleDateFormat(Messages.get().LineChart_ShortTimeFormat);
 		xTick.setFormat(format);
 		xTick.setFont(Activator.getDefault().getChartFont());
 		
@@ -405,22 +405,22 @@ public class LineChart extends Chart implements HistoricalDataChart
 		int angle;
 		if (seconds <= 600)
 		{
-			formatString = Messages.LineChart_MediumTimeFormat;
+			formatString = Messages.get().LineChart_MediumTimeFormat;
 			angle = 0;
 		}
 		else if (seconds <= 86400)
 		{
-			formatString = Messages.LineChart_ShortTimeFormat;
+			formatString = Messages.get().LineChart_ShortTimeFormat;
 			angle = 0;
 		}
 		else if (seconds <= 86400 * 7)
 		{
-			formatString = Messages.LineChart_Medium2TimeFormat;
+			formatString = Messages.get().LineChart_Medium2TimeFormat;
 			angle = 0;
 		}
 		else
 		{
-			formatString = Messages.LineChart_LongTimeFormat;
+			formatString = Messages.get().LineChart_LongTimeFormat;
 			angle = 45;
 		}
 		

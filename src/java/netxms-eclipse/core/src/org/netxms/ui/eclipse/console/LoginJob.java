@@ -90,7 +90,7 @@ public class LoginJob implements IRunnableWithProgress
    @Override
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
-      monitor.setTaskName(Messages.LoginJob_connecting);
+      monitor.setTaskName(Messages.get().LoginJob_connecting);
       try
       {
          final String hostName;
@@ -121,25 +121,25 @@ public class LoginJob implements IRunnableWithProgress
          session.connect();
          monitor.worked(1);
 
-         monitor.setTaskName(Messages.LoginJob_sync_objects);
+         monitor.setTaskName(Messages.get().LoginJob_sync_objects);
          session.syncObjects();
          monitor.worked(1);
 
-         monitor.setTaskName(Messages.LoginJob_sync_users);
+         monitor.setTaskName(Messages.get().LoginJob_sync_users);
          session.syncUserDatabase();
          monitor.worked(1);
 
-         monitor.setTaskName(Messages.LoginJob_sync_event_db);
+         monitor.setTaskName(Messages.get().LoginJob_sync_event_db);
          session.syncEventTemplates();
          monitor.worked(1);
 
-         monitor.setTaskName(Messages.LoginJob_subscribe);
+         monitor.setTaskName(Messages.get().LoginJob_subscribe);
          session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
          monitor.worked(1);
 
          ConsoleSharedData.setSession(session);
 
-         monitor.setTaskName(Messages.LoginJob_init_extensions);
+         monitor.setTaskName(Messages.get().LoginJob_init_extensions);
          TweakletManager.postLogin(session);
          callLoginListeners(session);
          monitor.worked(1);

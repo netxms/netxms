@@ -59,7 +59,7 @@ public class DataCollectionObjectEditor
 	 */
 	private void doObjectModification()
 	{
-		new ConsoleJob(Messages.DataCollectionObjectEditor_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DataCollectionObjectEditor_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -81,7 +81,7 @@ public class DataCollectionObjectEditor
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataCollectionObjectEditor_JobError;
+				return Messages.get().DataCollectionObjectEditor_JobError;
 			}
 		}.start();
 	}

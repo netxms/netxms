@@ -64,7 +64,7 @@ public class OpenUserManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenUserManager_Error, Messages.OpenUserManager_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenUserManager_Error, Messages.get().OpenUserManager_ErrorText + e.getMessage());
 			}
 		}
 	}

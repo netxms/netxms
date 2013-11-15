@@ -43,7 +43,8 @@ Array::Array(int initial, int grow, bool owner)
 	m_size = 0;
 	m_grow = (grow > 0) ? grow : 16;
 	m_allocated = (initial >= 0) ? initial : 16;
-	m_data = (m_allocated > 0) ? (void **)malloc(sizeof(void *) * m_allocated) : NULL;
+   m_elementSize = sizeof(void *);
+	m_data = (m_allocated > 0) ? (void **)malloc(m_elementSize * m_allocated) : NULL;
 	m_objectOwner = owner;
 	m_objectDestructor = ObjectDestructor;
 }
@@ -62,16 +63,19 @@ Array::~Array()
 }
 
 /**
- * Add object
+ * Add pointer-sized element by value
  */
 int Array::add(void *object)
 {
 	if (m_size == m_allocated)
 	{
 		m_allocated += m_grow;
-		m_data = (void **)realloc(m_data, sizeof(void *) * m_allocated);
+		m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
 	}
-	m_data[m_size++] = object;
+   if (m_elementSize <= sizeof(void *))
+	   m_data[m_size++] = object;
+   else
+   	memcpy(&m_data[m_size++], element, m_elementSize);
 	return m_size - 1;
 }
 
@@ -96,13 +100,16 @@ void Array::set(int index, void *object)
 		if (index >= m_allocated)
 		{
 			m_allocated += m_grow * ((index - m_allocated) / m_grow + 1);
-			m_data = (void **)realloc(m_data, sizeof(void *) * m_allocated);
+			m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
 		}
-		memset(&m_data[m_size], 0, sizeof(void *) * (index - m_size));
+		memset(&m_data[m_size], 0, m_elementSize * (index - m_size));
 		m_size = index + 1;
 	}
 
-	m_data[index] = object;
+   if (m_elementSize <= sizeof(void *))
+   	m_data[index] = object;
+   else
+   	memcpy(&m_data[index], element, m_elementSize);
 }
 
 /**
@@ -117,7 +124,10 @@ void Array::replace(int index, void *object)
 	if (m_objectOwner)
 		destroyObject(m_data[index]);
 
-	m_data[index] = object;
+   if (m_elementSize <= sizeof(void *))
+   	m_data[index] = object;
+   else
+   	memcpy(&m_data[index], element, m_elementSize);
 }
 
 /**
@@ -131,7 +141,7 @@ void Array::internalRemove(int index, bool allowDestruction)
 	if (m_objectOwner && allowDestruction)
 		destroyObject(m_data[index]);
 	m_size--;
-	memmove(&m_data[index], &m_data[index + 1], sizeof(void *) * (m_size - index));
+	memmove(&m_data[index], &m_data[index + 1], m_elementSize * (m_size - index));
 }
 
 /**
@@ -148,7 +158,7 @@ void Array::clear()
 	m_size = 0;
 	if (m_allocated > m_grow)
 	{
-		m_data = (void **)realloc(m_data, sizeof(void *) * m_grow);
+		m_data = (void **)realloc(m_data, m_elementSize * m_grow);
 		m_allocated = m_grow;
 	}
 }

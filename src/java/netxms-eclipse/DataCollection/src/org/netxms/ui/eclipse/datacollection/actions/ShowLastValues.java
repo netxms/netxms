@@ -65,7 +65,7 @@ public class ShowLastValues implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowLastValues_Error, Messages.ShowLastValues_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowLastValues_Error, Messages.get().ShowLastValues_ErrorText + e.getMessage());
 			}
 		}
 	}

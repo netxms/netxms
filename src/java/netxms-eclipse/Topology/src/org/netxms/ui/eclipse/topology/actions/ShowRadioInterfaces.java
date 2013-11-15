@@ -52,7 +52,7 @@ public class ShowRadioInterfaces implements IObjectActionDelegate
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(window.getShell(), Messages.ShowRadioInterfaces_Error, Messages.ShowRadioInterfaces_CannotOpenView + e.getLocalizedMessage());
+			MessageDialogHelper.openError(window.getShell(), Messages.get().ShowRadioInterfaces_Error, Messages.get().ShowRadioInterfaces_CannotOpenView + e.getLocalizedMessage());
 		}
 	}
 	

@@ -61,7 +61,7 @@ public class ObjectNameValidator implements TextFieldValidator
 	public String getErrorMessage(String text, String label)
 	{
 		return isEmpty ? 
-		      String.format(Messages.ObjectNameValidator_ErrorMessage1, label) : 
-		         String.format(Messages.ObjectNameValidator_ErrorMessage2, label);
+		      String.format(Messages.get().ObjectNameValidator_ErrorMessage1, label) : 
+		         String.format(Messages.get().ObjectNameValidator_ErrorMessage2, label);
 	}
 }

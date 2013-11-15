@@ -66,7 +66,7 @@ public class OpenSyslogMonitor implements IWorkbenchWindowActionDelegate
 			return;
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.OpenSyslogMonitor_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().OpenSyslogMonitor_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -81,7 +81,7 @@ public class OpenSyslogMonitor implements IWorkbenchWindowActionDelegate
 						} 
 						catch (PartInitException e) 
 						{
-							MessageDialogHelper.openError(window.getShell(), Messages.OpenSyslogMonitor_Error, Messages.OpenSyslogMonitor_ErrorText + e.getMessage());
+							MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSyslogMonitor_Error, Messages.get().OpenSyslogMonitor_ErrorText + e.getMessage());
 						}
 					}
 				});
@@ -90,7 +90,7 @@ public class OpenSyslogMonitor implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.OpenSyslogMonitor_JobError;
+				return Messages.get().OpenSyslogMonitor_JobError;
 			}
 		}.start();
 	}

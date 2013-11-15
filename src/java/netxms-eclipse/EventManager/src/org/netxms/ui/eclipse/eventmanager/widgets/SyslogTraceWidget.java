@@ -84,13 +84,13 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 		labelProvider.setShowColor(ps.getBoolean("SyslogMonitor.showColor")); //$NON-NLS-1$
 		labelProvider.setShowIcons(ps.getBoolean("SyslogMonitor.showIcons")); //$NON-NLS-1$
 		
-		addColumn(Messages.SyslogMonitor_ColTimestamp, 150);
-		addColumn(Messages.SyslogMonitor_ColSource, 200);
-		addColumn(Messages.SyslogMonitor_ColSeverity, 90);
-		addColumn(Messages.SyslogMonitor_ColFacility, 90);
-		addColumn(Messages.SyslogMonitor_ColHostName, 130);
-		addColumn(Messages.SyslogMonitor_ColTag, 90);
-		addColumn(Messages.SyslogMonitor_ColMessage, 600);
+		addColumn(Messages.get().SyslogMonitor_ColTimestamp, 150);
+		addColumn(Messages.get().SyslogMonitor_ColSource, 200);
+		addColumn(Messages.get().SyslogMonitor_ColSeverity, 90);
+		addColumn(Messages.get().SyslogMonitor_ColFacility, 90);
+		addColumn(Messages.get().SyslogMonitor_ColHostName, 130);
+		addColumn(Messages.get().SyslogMonitor_ColTag, 90);
+		addColumn(Messages.get().SyslogMonitor_ColMessage, 600);
 		
 		setFilter(new SyslogMonitorFilter());
 	}
@@ -134,7 +134,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	{
 		super.createActions();
 		
-		actionShowColor = new Action(Messages.SyslogMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
+		actionShowColor = new Action(Messages.get().SyslogMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -144,7 +144,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 		};
 		actionShowColor.setChecked(labelProvider.isShowColor());
 		
-		actionShowIcons = new Action(Messages.SyslogMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
+		actionShowIcons = new Action(Messages.get().SyslogMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

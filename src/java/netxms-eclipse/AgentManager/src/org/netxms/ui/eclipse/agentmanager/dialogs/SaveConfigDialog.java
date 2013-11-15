@@ -57,7 +57,7 @@ public class SaveConfigDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SaveConfigDialog_UnsavedChanges);
+		newShell.setText(Messages.get().SaveConfigDialog_UnsavedChanges);
 	}
 
 	/* (non-Javadoc)
@@ -66,10 +66,10 @@ public class SaveConfigDialog extends Dialog
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
-		createButton(parent, SAVE_ID, Messages.SaveConfigDialog_Save, false);
-		createButton(parent, SAVE_AND_APPLY_ID, Messages.SaveConfigDialog_SaveApply, false);
-		createButton(parent, DISCARD_ID, Messages.SaveConfigDialog_Discard, false);
-		createButton(parent, IDialogConstants.CANCEL_ID, Messages.SaveConfigDialog_Cancel, false);
+		createButton(parent, SAVE_ID, Messages.get().SaveConfigDialog_Save, false);
+		createButton(parent, SAVE_AND_APPLY_ID, Messages.get().SaveConfigDialog_SaveApply, false);
+		createButton(parent, DISCARD_ID, Messages.get().SaveConfigDialog_Discard, false);
+		createButton(parent, IDialogConstants.CANCEL_ID, Messages.get().SaveConfigDialog_Cancel, false);
 	}
 
 	/* (non-Javadoc)
@@ -91,7 +91,7 @@ public class SaveConfigDialog extends Dialog
 		image.setImage(Activator.getImageDescriptor("icons/unsaved_config.png").createImage()); //$NON-NLS-1$
 		
 		final CLabel text = new CLabel(dialogArea, SWT.LEFT);
-		text.setText(Messages.SaveConfigDialog_ModifiedMessage);
+		text.setText(Messages.get().SaveConfigDialog_ModifiedMessage);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

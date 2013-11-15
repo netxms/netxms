@@ -77,7 +77,7 @@ public class EventSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.EventSelectionDialog_Title);
+		newShell.setText(Messages.get().EventSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -104,7 +104,7 @@ public class EventSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.EventSelectionDialog_Filter);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().EventSelectionDialog_Filter);
 		
 		filterText = new Text(dialogArea, SWT.NONE);
 		GridData gd = new GridData();
@@ -115,7 +115,7 @@ public class EventSelectionDialog extends Dialog
 		if (filterString != null)
 			filterText.setText(filterString);
 		
-		final String[] names = { Messages.EventSelectionDialog_Code, Messages.EventSelectionDialog_Name };
+		final String[] names = { Messages.get().EventSelectionDialog_Code, Messages.get().EventSelectionDialog_Name };
 		final int[] widths = { 80, 350 };
 		eventList = new SortableTableViewer(dialogArea, names, widths, 1, SWT.UP, 
 				SWT.BORDER | SWT.FULL_SELECTION | (multiSelection ? SWT.MULTI : SWT.SINGLE) | SWT.H_SCROLL | SWT.V_SCROLL);

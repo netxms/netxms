@@ -77,14 +77,14 @@ public class EditEventTemplateDialog extends Dialog
       dialogArea.setLayout(layout);
       
       id = new LabeledText(dialogArea, SWT.NONE);
-      id.setLabel(Messages.EditEventTemplateDialog_EventCode);
+      id.setLabel(Messages.get().EditEventTemplateDialog_EventCode);
       id.setText(Long.toString(object.getCode()));
       id.getTextControl().setEditable(false);
       
       GridData gd = new GridData();
       //gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      severity = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.EditEventTemplateDialog_Severity, gd);
+      severity = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().EditEventTemplateDialog_Severity, gd);
       severity.add(StatusDisplayInfo.getStatusText(Severity.NORMAL));
       severity.add(StatusDisplayInfo.getStatusText(Severity.WARNING));
       severity.add(StatusDisplayInfo.getStatusText(Severity.MINOR));
@@ -93,7 +93,7 @@ public class EditEventTemplateDialog extends Dialog
       severity.select(object.getSeverity());
       
       name = new LabeledText(dialogArea, SWT.NONE);
-      name.setLabel(Messages.EditEventTemplateDialog_EventName);
+      name.setLabel(Messages.get().EditEventTemplateDialog_EventName);
       name.setText(object.getName());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -101,7 +101,7 @@ public class EditEventTemplateDialog extends Dialog
       name.setLayoutData(gd);
       
       optionLog = new Button(dialogArea, SWT.CHECK);
-      optionLog.setText(Messages.EditEventTemplateDialog_WriteToLog);
+      optionLog.setText(Messages.get().EditEventTemplateDialog_WriteToLog);
       optionLog.setSelection((object.getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = false;
@@ -110,7 +110,7 @@ public class EditEventTemplateDialog extends Dialog
       optionLog.setLayoutData(gd);
       
       message = new LabeledText(dialogArea, SWT.NONE);
-      message.setLabel(Messages.EditEventTemplateDialog_Message);
+      message.setLabel(Messages.get().EditEventTemplateDialog_Message);
       message.setText(object.getMessage());
       gd = new GridData();
       gd.horizontalSpan = 2;
@@ -120,7 +120,7 @@ public class EditEventTemplateDialog extends Dialog
       message.setLayoutData(gd);
 		
       description = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP);
-      description.setLabel(Messages.EditEventTemplateDialog_Description);
+      description.setLabel(Messages.get().EditEventTemplateDialog_Description);
       description.setText(object.getDescription());
       gd = new GridData();
       gd.horizontalSpan = 2;
@@ -154,7 +154,7 @@ public class EditEventTemplateDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText(isNew ? Messages.EditEventTemplateDialog_TitleCreate : Messages.EditEventTemplateDialog_TitleEdit);
+		newShell.setText(isNew ? Messages.get().EditEventTemplateDialog_TitleCreate : Messages.get().EditEventTemplateDialog_TitleEdit);
 		super.configureShell(newShell);
 	}
 }

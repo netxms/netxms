@@ -63,7 +63,7 @@ public class OpenDashboard implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenDashboard_Error, Messages.OpenDashboard_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenDashboard_Error, Messages.get().OpenDashboard_ErrorText + e.getMessage());
 			}
 		}
 	}

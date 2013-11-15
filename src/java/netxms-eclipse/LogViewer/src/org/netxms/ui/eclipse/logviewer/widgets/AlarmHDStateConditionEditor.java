@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
  */
 public class AlarmHDStateConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.AlarmHDStateConditionEditor_Is, Messages.AlarmHDStateConditionEditor_IsNot };
+	private static final String[] OPERATIONS = { Messages.get().AlarmHDStateConditionEditor_Is, Messages.get().AlarmHDStateConditionEditor_IsNot };
 	
 	private Combo state;
 	

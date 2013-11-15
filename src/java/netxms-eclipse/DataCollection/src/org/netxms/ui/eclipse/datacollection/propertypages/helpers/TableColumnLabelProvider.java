@@ -40,17 +40,17 @@ public class TableColumnLabelProvider extends LabelProvider implements ITableLab
 	 */
 	public TableColumnLabelProvider()
 	{
-		dtTexts.put(DataCollectionItem.DT_INT, Messages.TableColumnLabelProvider_in32);
-		dtTexts.put(DataCollectionItem.DT_UINT, Messages.TableColumnLabelProvider_uint32);
-		dtTexts.put(DataCollectionItem.DT_INT64, Messages.TableColumnLabelProvider_int64);
-		dtTexts.put(DataCollectionItem.DT_UINT64, Messages.TableColumnLabelProvider_uint64);
-		dtTexts.put(DataCollectionItem.DT_FLOAT, Messages.TableColumnLabelProvider_float);
-		dtTexts.put(DataCollectionItem.DT_STRING, Messages.TableColumnLabelProvider_string);
+		dtTexts.put(DataCollectionItem.DT_INT, Messages.get().TableColumnLabelProvider_in32);
+		dtTexts.put(DataCollectionItem.DT_UINT, Messages.get().TableColumnLabelProvider_uint32);
+		dtTexts.put(DataCollectionItem.DT_INT64, Messages.get().TableColumnLabelProvider_int64);
+		dtTexts.put(DataCollectionItem.DT_UINT64, Messages.get().TableColumnLabelProvider_uint64);
+		dtTexts.put(DataCollectionItem.DT_FLOAT, Messages.get().TableColumnLabelProvider_float);
+		dtTexts.put(DataCollectionItem.DT_STRING, Messages.get().TableColumnLabelProvider_string);
 		
-		afTexts.put(DataCollectionItem.DCF_FUNCTION_AVG, Messages.TableColumnLabelProvider_AVG);
-		afTexts.put(DataCollectionItem.DCF_FUNCTION_MAX, Messages.TableColumnLabelProvider_MAX);
-		afTexts.put(DataCollectionItem.DCF_FUNCTION_MIN, Messages.TableColumnLabelProvider_MIN);
-		afTexts.put(DataCollectionItem.DCF_FUNCTION_SUM, Messages.TableColumnLabelProvider_SUM);
+		afTexts.put(DataCollectionItem.DCF_FUNCTION_AVG, Messages.get().TableColumnLabelProvider_AVG);
+		afTexts.put(DataCollectionItem.DCF_FUNCTION_MAX, Messages.get().TableColumnLabelProvider_MAX);
+		afTexts.put(DataCollectionItem.DCF_FUNCTION_MIN, Messages.get().TableColumnLabelProvider_MIN);
+		afTexts.put(DataCollectionItem.DCF_FUNCTION_SUM, Messages.get().TableColumnLabelProvider_SUM);
 	}
 	
 	/* (non-Javadoc)
@@ -77,7 +77,7 @@ public class TableColumnLabelProvider extends LabelProvider implements ITableLab
 			case 2:
 				return dtTexts.get(((ColumnDefinition)element).getDataType());
 			case 3:
-				return ((ColumnDefinition)element).isInstanceColumn() ? Messages.TableColumnLabelProvider_Yes : Messages.TableColumnLabelProvider_No;
+				return ((ColumnDefinition)element).isInstanceColumn() ? Messages.get().TableColumnLabelProvider_Yes : Messages.get().TableColumnLabelProvider_No;
 			case 4:
 				return afTexts.get(((ColumnDefinition)element).getAggregationFunction());
 			case 5:

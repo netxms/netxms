@@ -87,7 +87,7 @@ public class SplashHandler extends BasicSplashHandler
 			{
 				e.gc.setForeground(versionColor);
 				e.gc.setFont(versionFont);
-				e.gc.drawText(Messages.SplashHandler_Version + NXCommon.VERSION, 209, 181, true);
+				e.gc.drawText(Messages.get().SplashHandler_Version + NXCommon.VERSION, 209, 181, true);
 			}
 		});
 		content.addDisposeListener(new DisposeListener() {

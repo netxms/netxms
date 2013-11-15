@@ -154,7 +154,7 @@ public class LastValuesWidget extends Composite
 		});
 		
 		// Setup table columns
-		final String[] names = { Messages.LastValuesWidget_ColID, Messages.LastValuesWidget_ColDescr, Messages.LastValuesWidget_ColValue, Messages.LastValuesWidget_ColTime, Messages.LastValuesWidget_ColThreshold };
+		final String[] names = { Messages.get().LastValuesWidget_ColID, Messages.get().LastValuesWidget_ColDescr, Messages.get().LastValuesWidget_ColValue, Messages.get().LastValuesWidget_ColTime, Messages.get().LastValuesWidget_ColThreshold };
 		final int[] widths = { 70, 250, 150, 120, 150 };
 		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
@@ -242,7 +242,7 @@ public class LastValuesWidget extends Composite
 	 */
 	private void createActions()
 	{
-		actionUseMultipliers = new Action(Messages.LastValuesWidget_UseMultipliers, Action.AS_CHECK_BOX) {
+		actionUseMultipliers = new Action(Messages.get().LastValuesWidget_UseMultipliers, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -251,7 +251,7 @@ public class LastValuesWidget extends Composite
 		};
 		actionUseMultipliers.setChecked(areMultipliersUsed());
 
-		actionShowErrors = new Action(Messages.LastValuesWidget_ShowErrors, Action.AS_CHECK_BOX) {
+		actionShowErrors = new Action(Messages.get().LastValuesWidget_ShowErrors, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -260,7 +260,7 @@ public class LastValuesWidget extends Composite
 		};
 		actionShowErrors.setChecked(isShowErrors());
 
-		actionShowUnsupported = new Action(Messages.LastValuesWidget_ShowUnsupported, Action.AS_CHECK_BOX) {
+		actionShowUnsupported = new Action(Messages.get().LastValuesWidget_ShowUnsupported, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -269,7 +269,7 @@ public class LastValuesWidget extends Composite
 		};
 		actionShowUnsupported.setChecked(isShowUnsupported());
 		
-		actionShowDisabled = new Action(Messages.LastValuesWidget_ShowDisabled, Action.AS_CHECK_BOX) {
+		actionShowDisabled = new Action(Messages.get().LastValuesWidget_ShowDisabled, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -333,11 +333,11 @@ public class LastValuesWidget extends Composite
 			return;
 		}
 
-		ConsoleJob job = new ConsoleJob(Messages.LastValuesWidget_JobTitle + dcTarget.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.get().LastValuesWidget_JobTitle + dcTarget.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LastValuesWidget_JobError + dcTarget.getObjectName();
+				return Messages.get().LastValuesWidget_JobError + dcTarget.getObjectName();
 			}
 
 			@Override

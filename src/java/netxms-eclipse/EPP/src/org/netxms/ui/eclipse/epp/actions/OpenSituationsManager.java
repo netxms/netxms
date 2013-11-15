@@ -62,7 +62,7 @@ public class OpenSituationsManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenSituationsManager_Error, Messages.OpenSituationsManager_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSituationsManager_Error, Messages.get().OpenSituationsManager_ErrorText + e.getMessage());
 			}
 		}
 	}

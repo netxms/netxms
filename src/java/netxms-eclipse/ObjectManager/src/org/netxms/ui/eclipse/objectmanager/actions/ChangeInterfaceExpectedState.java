@@ -73,7 +73,7 @@ public class ChangeInterfaceExpectedState implements IObjectActionDelegate
 			idList[i] = objects.get(i).getObjectId();
 		final int newState = dlg.getExpectedState();
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.ChangeInterfaceExpectedState_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ChangeInterfaceExpectedState_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -88,7 +88,7 @@ public class ChangeInterfaceExpectedState implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ChangeInterfaceExpectedState_JobError;
+				return Messages.get().ChangeInterfaceExpectedState_JobError;
 			}
 		}.start();
 	}

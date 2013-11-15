@@ -62,7 +62,7 @@ public class OpenScriptLibrary implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenScriptLibrary_Error, Messages.OpenScriptLibrary_ErrorMsg + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenScriptLibrary_Error, Messages.get().OpenScriptLibrary_ErrorMsg + e.getMessage());
 			}
 		}
 	}

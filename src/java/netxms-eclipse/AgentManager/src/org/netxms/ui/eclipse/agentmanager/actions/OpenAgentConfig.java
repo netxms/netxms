@@ -65,7 +65,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 		else
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.OpenAgentConfig_GetConfig, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().OpenAgentConfig_GetConfig, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -81,7 +81,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 							}
 							catch(PartInitException e)
 							{
-								MessageDialogHelper.openError(window.getShell(), Messages.OpenAgentConfig_Error, Messages.OpenAgentConfig_OpenErrorPrefix + e.getLocalizedMessage());
+								MessageDialogHelper.openError(window.getShell(), Messages.get().OpenAgentConfig_Error, Messages.get().OpenAgentConfig_OpenErrorPrefix + e.getLocalizedMessage());
 							}
 						}
 					});
@@ -90,7 +90,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.OpenAgentConfig_OpenError;
+					return Messages.get().OpenAgentConfig_OpenError;
 				}
 			}.start();
 		}

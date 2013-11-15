@@ -66,7 +66,7 @@ public class MibObjectDetails extends Composite
 		
 		if (showOID)
 		{
-			oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, Messages.MibObjectDetails_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+			oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, Messages.get().MibObjectDetails_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 			oid.addModifyListener(new ModifyListener() {
 				@Override
 				public void modifyText(ModifyEvent e)
@@ -75,7 +75,7 @@ public class MibObjectDetails extends Composite
 				}
 			});
 
-			oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, Messages.MibObjectDetails_OIDAsText, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+			oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, Messages.get().MibObjectDetails_OIDAsText, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 			oidText.setEditable(false);
 		}
 		else
@@ -97,9 +97,9 @@ public class MibObjectDetails extends Composite
 		gd.grabExcessHorizontalSpace = true;
 		infoGroup.setLayoutData(gd);
 		
-		type = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.MibObjectDetails_Type, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
-		status = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.MibObjectDetails_Status, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
-		access = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.MibObjectDetails_Access, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+		type = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.get().MibObjectDetails_Type, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+		status = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.get().MibObjectDetails_Status, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+		access = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.get().MibObjectDetails_Access, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		
 		/* MIB object's description */
 		gd = new GridData();
@@ -108,7 +108,7 @@ public class MibObjectDetails extends Composite
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		description = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY,
-		                                             500, Messages.MibObjectDetails_8, "", gd); //$NON-NLS-1$
+		                                             500, Messages.get().MibObjectDetails_8, "", gd); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -124,7 +124,7 @@ public class MibObjectDetails extends Composite
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		textualConvention = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY,
-		                                                   500, Messages.MibObjectDetails_TextualConv, "", gd); //$NON-NLS-1$
+		                                                   500, Messages.get().MibObjectDetails_TextualConv, "", gd); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

@@ -202,7 +202,7 @@ public class AlarmNotifier
 					if (window != null)
 					{
 						final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
-						tip.setText(Messages.AlarmNotifier_ToolTip_Header + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")"); //$NON-NLS-1$ //$NON-NLS-1$
+						tip.setText(Messages.get().AlarmNotifier_ToolTip_Header + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")"); //$NON-NLS-1$ //$NON-NLS-1$
 						tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId())) + ": " + alarm.getMessage()); //$NON-NLS-1$
 						tip.setAutoHide(true);
 						trayIcon.setToolTip(tip);

@@ -62,11 +62,11 @@ public class CreateRack implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateRack_Rack);
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CreateRack_Rack);
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob(Messages.CreateRack_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateRack_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -79,7 +79,7 @@ public class CreateRack implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.CreateRack_JobError, dlg.getObjectName());
+				return String.format(Messages.get().CreateRack_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

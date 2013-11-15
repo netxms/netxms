@@ -93,7 +93,7 @@ public class EmbeddedDashboard extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText(Messages.EmbeddedDashboard_Dashboards);
+		label.setText(Messages.get().EmbeddedDashboard_Dashboards);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.LEFT;
 		gd.grabExcessHorizontalSpace = true;
@@ -129,7 +129,7 @@ public class EmbeddedDashboard extends PropertyPage
       leftButtons.setLayoutData(gd);
       
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText(Messages.EmbeddedDashboard_Up);
+      upButton.setText(Messages.get().EmbeddedDashboard_Up);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
@@ -149,7 +149,7 @@ public class EmbeddedDashboard extends PropertyPage
       upButton.setEnabled(false);
       
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText(Messages.EmbeddedDashboard_Down);
+      downButton.setText(Messages.get().EmbeddedDashboard_Down);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
@@ -181,7 +181,7 @@ public class EmbeddedDashboard extends PropertyPage
       rightButtons.setLayoutData(gd);
 
       addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText(Messages.EmbeddedDashboard_Add);
+      addButton.setText(Messages.get().EmbeddedDashboard_Add);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -200,7 +200,7 @@ public class EmbeddedDashboard extends PropertyPage
       });
 		
       deleteButton = new Button(rightButtons, SWT.PUSH);
-      deleteButton.setText(Messages.EmbeddedDashboard_Delete);
+      deleteButton.setText(Messages.get().EmbeddedDashboard_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -234,7 +234,7 @@ public class EmbeddedDashboard extends PropertyPage
       refreshIntervalGroup.setLayoutData(gd);
       
       label = new Label(refreshIntervalGroup, SWT.NONE);
-      label.setText(Messages.EmbeddedDashboard_DisplayTime);
+      label.setText(Messages.get().EmbeddedDashboard_DisplayTime);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;

@@ -100,7 +100,7 @@ public class LoginDialog extends Dialog
    {
       super.configureShell(newShell);
       String customTitle = BrandingManager.getInstance().getLoginTitle();
-      newShell.setText((customTitle != null) ? customTitle : Messages.LoginDialog_title); //$NON-NLS-1$
+      newShell.setText((customTitle != null) ? customTitle : Messages.get().LoginDialog_title); //$NON-NLS-1$
 
       // Center dialog on screen
       // We don't have main window at this moment, so use
@@ -179,10 +179,10 @@ public class LoginDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboServer = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN, Messages.LoginDialog_server, gd, toolkit);
+      comboServer = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN, Messages.get().LoginDialog_server, gd, toolkit);
 
       textLogin = new LabeledText(fields, SWT.NONE, SWT.SINGLE | SWT.BORDER, toolkit);
-      textLogin.setLabel(Messages.LoginDialog_login);
+      textLogin.setLabel(Messages.get().LoginDialog_login);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -192,9 +192,9 @@ public class LoginDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.LoginDialog_Auth, gd, toolkit);
-      comboAuth.add(Messages.LoginDialog_Passwd);
-      comboAuth.add(Messages.LoginDialog_Cert);
+      comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().LoginDialog_Auth, gd, toolkit);
+      comboAuth.add(Messages.get().LoginDialog_Passwd);
+      comboAuth.add(Messages.get().LoginDialog_Cert);
       comboAuth.select(authMethod);
       comboAuth.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -209,9 +209,9 @@ public class LoginDialog extends Dialog
       authEntryFields.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       textPassword = new LabeledText(authEntryFields, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, toolkit);
-      textPassword.setLabel(Messages.LoginDialog_Passwd);
+      textPassword.setLabel(Messages.get().LoginDialog_Passwd);
       
-      comboCert = WidgetHelper.createLabeledCombo(authEntryFields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.LoginDialog_Cert, null, toolkit);
+      comboCert = WidgetHelper.createLabeledCombo(authEntryFields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().LoginDialog_Cert, null, toolkit);
       comboCert.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -299,7 +299,7 @@ public class LoginDialog extends Dialog
    {
    	if ((authMethod == NXCSession.AUTH_TYPE_CERTIFICATE) && (comboCert.getSelectionIndex() == -1))
    	{
-   		MessageDialogHelper.openWarning(getShell(), Messages.LoginDialog_Warning, Messages.LoginDialog_NoCertSelected);
+   		MessageDialogHelper.openWarning(getShell(), Messages.get().LoginDialog_Warning, Messages.get().LoginDialog_NoCertSelected);
    		return;
    	}
    	
@@ -358,7 +358,7 @@ public class LoginDialog extends Dialog
       catch(KeyStoreLoaderException ksle)
       {
          Shell shell = Display.getCurrent().getActiveShell();
-         MessageDialog.openError(shell, Messages.LoginDialog_Error, Messages.LoginDialog_WrongKeyStorePasswd);
+         MessageDialog.openError(shell, Messages.get().LoginDialog_Error, Messages.get().LoginDialog_WrongKeyStorePasswd);
          return false;
       }
 

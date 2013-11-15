@@ -66,7 +66,7 @@ public class OpenTrapEditor implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenTrapEditor_Error, Messages.OpenTrapEditor_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenTrapEditor_Error, Messages.get().OpenTrapEditor_ErrorText + e.getMessage());
 			}
 		}
 	}

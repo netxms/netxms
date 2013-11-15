@@ -67,7 +67,7 @@ public class SelectScriptDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText(Messages.SelectScriptDialog_Title);
+		newShell.setText(Messages.get().SelectScriptDialog_Title);
 		super.configureShell(newShell);
 	}
 
@@ -83,7 +83,7 @@ public class SelectScriptDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.SelectScriptDialog_AvailableScripts);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().SelectScriptDialog_AvailableScripts);
 		
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -121,7 +121,7 @@ public class SelectScriptDialog extends Dialog
       viewer.getControl().setLayoutData(gd);
       
 		final ScriptLibraryManager session = (ScriptLibraryManager)ConsoleSharedData.getSession();
-      new ConsoleJob(Messages.SelectScriptDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().SelectScriptDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -138,7 +138,7 @@ public class SelectScriptDialog extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SelectScriptDialog_JobError;
+				return Messages.get().SelectScriptDialog_JobError;
 			}
 		}.start();
       
@@ -154,7 +154,7 @@ public class SelectScriptDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() == 0)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.SelectScriptDialog_Warning, Messages.SelectScriptDialog_WarningEmptySelection);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectScriptDialog_Warning, Messages.get().SelectScriptDialog_WarningEmptySelection);
 			return;
 		}
 		script = (Script)selection.getFirstElement();

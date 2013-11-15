@@ -118,7 +118,7 @@ public class Activator extends AbstractUIPlugin
 		if (tray != null)
 		{
 			TrayItem item = new TrayItem(tray, SWT.NONE);
-			item.setToolTipText(Messages.Activator_TrayTooltip);
+			item.setToolTipText(Messages.get().Activator_TrayTooltip);
 			item.setImage(getImageDescriptor("icons/launcher/16x16.png").createImage()); //$NON-NLS-1$
 			item.addSelectionListener(new SelectionListener() {
 				@Override

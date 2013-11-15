@@ -77,7 +77,7 @@ public class SecurityWarningDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SecurityWarningDialog_Title);
+		newShell.setText(Messages.get().SecurityWarningDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -163,7 +163,7 @@ public class SecurityWarningDialog extends Dialog
 		detailsText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 		
 		checkDontAskAgain = new Button(bottomArea, SWT.CHECK);
-		checkDontAskAgain.setText(Messages.SecurityWarningDialog_DontAskAgain);
+		checkDontAskAgain.setText(Messages.get().SecurityWarningDialog_DontAskAgain);
 				
 		return dialogArea;
 	}

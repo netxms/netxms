@@ -66,7 +66,7 @@ public class OpenServiceTree implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenServiceTree_Error, Messages.OpenServiceTree_OpenViewError + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenServiceTree_Error, Messages.get().OpenServiceTree_OpenViewError + e.getMessage());
 			}
 		}
 	}

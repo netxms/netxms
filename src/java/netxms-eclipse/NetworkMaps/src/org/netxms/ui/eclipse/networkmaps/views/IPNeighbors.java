@@ -45,7 +45,7 @@ public class IPNeighbors extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName(Messages.IPNeighbors_PartName + rootObject.getObjectName());
+		setPartName(Messages.get().IPNeighbors_PartName + rootObject.getObjectName());
 	}
 
 	/**

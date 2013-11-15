@@ -42,7 +42,7 @@ public class DciRemoveConfirmationDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.DciRemoveConfirmationDialog_Title);
+		newShell.setText(Messages.get().DciRemoveConfirmationDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -74,17 +74,17 @@ public class DciRemoveConfirmationDialog extends Dialog
 		});
 		
 		final Label label = new Label(dialogArea, SWT.WRAP);
-		label.setText(Messages.DciRemoveConfirmationDialog_WarningText);
+		label.setText(Messages.get().DciRemoveConfirmationDialog_WarningText);
 		gd = new GridData();
 		gd.widthHint = 300;
 		label.setLayoutData(gd);
 		
 		radioRemove = new Button(dialogArea, SWT.RADIO);
-		radioRemove.setText(Messages.DciRemoveConfirmationDialog_Remove);
+		radioRemove.setText(Messages.get().DciRemoveConfirmationDialog_Remove);
 		radioRemove.setSelection(true);
 		
 		radioUnbind = new Button(dialogArea, SWT.RADIO);
-		radioUnbind.setText(Messages.DciRemoveConfirmationDialog_Unbind);
+		radioUnbind.setText(Messages.get().DciRemoveConfirmationDialog_Unbind);
 		radioUnbind.setSelection(false);
 		
 		return dialogArea;

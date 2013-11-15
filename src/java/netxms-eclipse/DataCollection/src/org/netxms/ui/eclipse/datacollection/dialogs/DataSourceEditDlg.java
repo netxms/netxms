@@ -70,7 +70,7 @@ public class DataSourceEditDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.DataSourceEditDlg_ShellTitle);
+		newShell.setText(Messages.get().DataSourceEditDlg_ShellTitle);
 	}
 
 	/* (non-Javadoc)
@@ -88,7 +88,7 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
-		dciSelector.setLabel(Messages.DataSourceEditDlg_DCI);
+		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
 		dciSelector.setDciId(dci.nodeId, dci.dciId);
 		dciSelector.setDcObjectType(dci.type);
 		GridData gd = new GridData();
@@ -99,7 +99,7 @@ public class DataSourceEditDlg extends Dialog
 		dciSelector.setLayoutData(gd);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel(Messages.DataSourceEditDlg_DispName);
+		name.setLabel(Messages.get().DataSourceEditDlg_DispName);
 		name.setText(dci.name);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -110,7 +110,7 @@ public class DataSourceEditDlg extends Dialog
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
-			tableGroup.setText(Messages.DataSourceEditDlg_TableCell);
+			tableGroup.setText(Messages.get().DataSourceEditDlg_TableCell);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
@@ -121,7 +121,7 @@ public class DataSourceEditDlg extends Dialog
 			tableGroup.setLayout(layout);
 			
 			dataColumn = new LabeledText(tableGroup, SWT.NONE);
-			dataColumn.setLabel(Messages.DataSourceEditDlg_DataColumn);
+			dataColumn.setLabel(Messages.get().DataSourceEditDlg_DataColumn);
 			dataColumn.setText(dci.column);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -129,7 +129,7 @@ public class DataSourceEditDlg extends Dialog
 			dataColumn.setLayoutData(gd);
 			
 			instance = new LabeledText(tableGroup, SWT.NONE);
-			instance.setLabel(Messages.DataSourceEditDlg_Instance);
+			instance.setLabel(Messages.get().DataSourceEditDlg_Instance);
 			instance.setText(dci.instance);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -138,7 +138,7 @@ public class DataSourceEditDlg extends Dialog
 		}
 		
 		Group colorGroup = new Group(dialogArea, SWT.NONE);
-		colorGroup.setText(Messages.DataSourceEditDlg_Color);
+		colorGroup.setText(Messages.get().DataSourceEditDlg_Color);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -150,7 +150,7 @@ public class DataSourceEditDlg extends Dialog
 		colorGroup.setLayout(layout);
 		
 		colorAuto = new Button(colorGroup, SWT.RADIO);
-		colorAuto.setText(Messages.DataSourceEditDlg_AutoColor);
+		colorAuto.setText(Messages.get().DataSourceEditDlg_AutoColor);
 		colorAuto.setSelection(dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
 		gd = new GridData();
 		gd.horizontalSpan = 2;
@@ -170,7 +170,7 @@ public class DataSourceEditDlg extends Dialog
 		});
 		
 		colorCustom = new Button(colorGroup, SWT.RADIO);
-		colorCustom.setText(Messages.DataSourceEditDlg_CustomColor);
+		colorCustom.setText(Messages.get().DataSourceEditDlg_CustomColor);
 		colorCustom.setSelection(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
 		colorCustom.addSelectionListener(new SelectionListener() {
 			@Override
@@ -195,7 +195,7 @@ public class DataSourceEditDlg extends Dialog
 		colorSelector.setEnabled(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
 		
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText(Messages.DataSourceEditDlg_Options);
+		optionsGroup.setText(Messages.get().DataSourceEditDlg_Options);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -206,11 +206,11 @@ public class DataSourceEditDlg extends Dialog
 		optionsGroup.setLayout(layout);
 		
 		checkAreaChart = new Button(optionsGroup, SWT.CHECK);
-		checkAreaChart.setText(Messages.DataSourceEditDlg_AreaChart);
+		checkAreaChart.setText(Messages.get().DataSourceEditDlg_AreaChart);
 		checkAreaChart.setSelection(dci.area);
 		
 		checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
-		checkShowThresholds.setText(Messages.DataSourceEditDlg_ShowThresholds);
+		checkShowThresholds.setText(Messages.get().DataSourceEditDlg_ShowThresholds);
 		checkShowThresholds.setSelection(dci.showThresholds);
 		
 		return dialogArea;

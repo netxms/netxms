@@ -66,7 +66,7 @@ public class OpenAlarmLog implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenAlarmLog_Error, Messages.OpenAlarmLog_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenAlarmLog_Error, Messages.get().OpenAlarmLog_ErrorText + e.getMessage());
 			}
 		}
 	}

@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class DeploymentStatusLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] statusText = { Messages.DeploymentStatusLabelProvider_Pending, Messages.DeploymentStatusLabelProvider_Uploading, Messages.DeploymentStatusLabelProvider_Installing, Messages.DeploymentStatusLabelProvider_Completed, Messages.DeploymentStatusLabelProvider_Failed, Messages.DeploymentStatusLabelProvider_Init }; 
+	private static final String[] statusText = { Messages.get().DeploymentStatusLabelProvider_Pending, Messages.get().DeploymentStatusLabelProvider_Uploading, Messages.get().DeploymentStatusLabelProvider_Installing, Messages.get().DeploymentStatusLabelProvider_Completed, Messages.get().DeploymentStatusLabelProvider_Failed, Messages.get().DeploymentStatusLabelProvider_Init }; 
 			
 	private WorkbenchLabelProvider workbenchLabelProvider;
 	private Image imageActive;
@@ -103,7 +103,7 @@ public class DeploymentStatusLabelProvider extends LabelProvider implements ITab
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
-					return Messages.DeploymentStatusLabelProvider_Unknown;
+					return Messages.get().DeploymentStatusLabelProvider_Unknown;
 				}
 			case PackageDeploymentMonitor.COLUMN_ERROR:
 				return s.getMessage();

@@ -63,7 +63,7 @@ public class FileViewer extends ViewPart
 		nodeId = Long.parseLong(parts[0]);
 		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
 		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
-			throw new PartInitException(Messages.FileViewer_InvalidObjectID);
+			throw new PartInitException(Messages.get().FileViewer_InvalidObjectID);
 		
 		try
 		{

@@ -74,7 +74,7 @@ public class SituationSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SituationSelectionDialog_Title);
+		newShell.setText(Messages.get().SituationSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -101,7 +101,7 @@ public class SituationSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.SituationSelectionDialog_Filter);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().SituationSelectionDialog_Filter);
 		
 		filterText = new Text(dialogArea, SWT.NONE);
 		GridData gd = new GridData();

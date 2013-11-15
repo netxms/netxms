@@ -59,7 +59,7 @@ public class EditTableThresholdDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.EditTableThresholdDialog_Title);
+		newShell.setText(Messages.get().EditTableThresholdDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -75,16 +75,16 @@ public class EditTableThresholdDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		activationEvent = new EventSelector(dialogArea, SWT.NONE);
-		activationEvent.setLabel(Messages.EditTableThresholdDialog_ActivationEvent);
+		activationEvent.setLabel(Messages.get().EditTableThresholdDialog_ActivationEvent);
 		activationEvent.setEventCode(threshold.getActivationEvent());
 		activationEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
 		deactivationEvent = new EventSelector(dialogArea, SWT.NONE);
-		deactivationEvent.setLabel(Messages.EditTableThresholdDialog_DeactivationEvent);
+		deactivationEvent.setLabel(Messages.get().EditTableThresholdDialog_DeactivationEvent);
 		deactivationEvent.setEventCode(threshold.getDeactivationEvent());
 		deactivationEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.EditTableThresholdDialog_Conditions);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().EditTableThresholdDialog_Conditions);
 		
 		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER);
 		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);

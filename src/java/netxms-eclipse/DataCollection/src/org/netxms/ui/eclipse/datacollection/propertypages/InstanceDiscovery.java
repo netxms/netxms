@@ -67,13 +67,13 @@ public class InstanceDiscovery extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      discoveryMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.InstanceDiscovery_Method,
+      discoveryMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().InstanceDiscovery_Method,
                                                          WidgetHelper.DEFAULT_LAYOUT_DATA);
-      discoveryMethod.add(Messages.InstanceDiscovery_None);
-      discoveryMethod.add(Messages.InstanceDiscovery_AgentList);
-      discoveryMethod.add(Messages.InstanceDiscovery_AgentTable);
-      discoveryMethod.add(Messages.InstanceDiscovery_SnmpWalkValues);
-      discoveryMethod.add(Messages.InstanceDiscovery_SnmpWalkOids);
+      discoveryMethod.add(Messages.get().InstanceDiscovery_None);
+      discoveryMethod.add(Messages.get().InstanceDiscovery_AgentList);
+      discoveryMethod.add(Messages.get().InstanceDiscovery_AgentTable);
+      discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkValues);
+      discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkOids);
       discoveryMethod.select(dci.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
@@ -116,7 +116,7 @@ public class InstanceDiscovery extends PropertyPage
 			}
       };
       filterScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,
-                                                                             factory, Messages.InstanceDiscovery_FilterScript, gd);
+                                                                             factory, Messages.get().InstanceDiscovery_FilterScript, gd);
       filterScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       filterScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();
@@ -142,14 +142,14 @@ public class InstanceDiscovery extends PropertyPage
 		switch(method)
 		{
 			case DataCollectionItem.IDM_NONE:
-				return Messages.InstanceDiscovery_DiscoveryData;
+				return Messages.get().InstanceDiscovery_DiscoveryData;
 			case DataCollectionItem.IDM_AGENT_LIST:
-				return Messages.InstanceDiscovery_ListName;
+				return Messages.get().InstanceDiscovery_ListName;
 			case DataCollectionItem.IDM_AGENT_TABLE:
-				return Messages.InstanceDiscovery_TableName;
+				return Messages.get().InstanceDiscovery_TableName;
 			case DataCollectionItem.IDM_SNMP_WALK_VALUES:
 			case DataCollectionItem.IDM_SNMP_WALK_OIDS:
-				return Messages.InstanceDiscovery_BaseOid;
+				return Messages.get().InstanceDiscovery_BaseOid;
 		}
 		return ""; //$NON-NLS-1$
 	}

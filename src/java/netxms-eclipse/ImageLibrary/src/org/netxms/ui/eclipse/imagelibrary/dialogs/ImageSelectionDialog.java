@@ -86,7 +86,7 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ImageSelectionDialog_Title);
+		newShell.setText(Messages.get().ImageSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -197,7 +197,7 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 	{
 		if ((flags & ALLOW_DEFAULT) == ALLOW_DEFAULT)
 		{
-			createButton(parent, DEFAULT_ID, Messages.ImageSelectionDialog_Default, false);
+			createButton(parent, DEFAULT_ID, Messages.get().ImageSelectionDialog_Default, false);
 		}
 		super.createButtonsForButtonBar(parent);
 		getButton(IDialogConstants.OK_ID).setEnabled(false);

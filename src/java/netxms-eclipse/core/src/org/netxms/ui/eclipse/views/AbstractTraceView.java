@@ -83,7 +83,7 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void createActions()
 	{
-		actionClear = new Action(Messages.AbstractTraceView_Clear, SharedIcons.CLEAR_LOG) {
+		actionClear = new Action(Messages.get().AbstractTraceView_Clear, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{

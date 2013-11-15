@@ -41,15 +41,15 @@ public final class StatusDisplayInfo
 	 */
 	public static void init(Display display)
 	{
-		statusText[Severity.NORMAL] = Messages.StatusDisplayInfo_Normal;
-		statusText[Severity.WARNING] = Messages.StatusDisplayInfo_Warning;
-		statusText[Severity.MINOR] = Messages.StatusDisplayInfo_Minor;
-		statusText[Severity.MAJOR] = Messages.StatusDisplayInfo_Major;
-		statusText[Severity.CRITICAL] = Messages.StatusDisplayInfo_Critical;
-		statusText[Severity.UNKNOWN] = Messages.StatusDisplayInfo_Unknown;
-		statusText[Severity.UNMANAGED] = Messages.StatusDisplayInfo_Unmanaged;
-		statusText[Severity.DISABLED] = Messages.StatusDisplayInfo_Disabled;
-		statusText[Severity.TESTING] = Messages.StatusDisplayInfo_Testing;
+		statusText[Severity.NORMAL] = Messages.get().StatusDisplayInfo_Normal;
+		statusText[Severity.WARNING] = Messages.get().StatusDisplayInfo_Warning;
+		statusText[Severity.MINOR] = Messages.get().StatusDisplayInfo_Minor;
+		statusText[Severity.MAJOR] = Messages.get().StatusDisplayInfo_Major;
+		statusText[Severity.CRITICAL] = Messages.get().StatusDisplayInfo_Critical;
+		statusText[Severity.UNKNOWN] = Messages.get().StatusDisplayInfo_Unknown;
+		statusText[Severity.UNMANAGED] = Messages.get().StatusDisplayInfo_Unmanaged;
+		statusText[Severity.DISABLED] = Messages.get().StatusDisplayInfo_Disabled;
+		statusText[Severity.TESTING] = Messages.get().StatusDisplayInfo_Testing;
 
 		statusImageDesc[Severity.NORMAL] = Activator.getImageDescriptor("icons/status/normal.png"); //$NON-NLS-1$
 		statusImageDesc[Severity.WARNING] = Activator.getImageDescriptor("icons/status/warning.png"); //$NON-NLS-1$

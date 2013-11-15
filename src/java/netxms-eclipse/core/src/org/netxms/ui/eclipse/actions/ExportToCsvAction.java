@@ -59,7 +59,7 @@ public class ExportToCsvAction extends Action
 	 */
 	private ExportToCsvAction(IViewPart viewPart, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
-		super(selectionOnly ? Messages.ExportToCsvAction_ExportToCsv : Messages.ExportToCsvAction_ExportAllToCsv, Activator.getImageDescriptor("icons/csv.png")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		super(selectionOnly ? Messages.get().ExportToCsvAction_ExportToCsv : Messages.get().ExportToCsvAction_ExportAllToCsv, Activator.getImageDescriptor("icons/csv.png")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 		this.viewPart = viewPart;
 		this.viewer = viewer;
@@ -159,7 +159,7 @@ public class ExportToCsvAction extends Action
 			}
 		}
 		
-		new ConsoleJob(String.format(Messages.ExportToCsvAction_SaveTo, fileName), viewPart, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
+		new ConsoleJob(String.format(Messages.get().ExportToCsvAction_SaveTo, fileName), viewPart, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -182,7 +182,7 @@ public class ExportToCsvAction extends Action
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ExportToCsvAction_SaveError;
+				return Messages.get().ExportToCsvAction_SaveError;
 			}
 		}.start();
 	}

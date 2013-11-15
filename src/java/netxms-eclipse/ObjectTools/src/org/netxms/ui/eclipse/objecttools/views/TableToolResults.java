@@ -84,12 +84,12 @@ public class TableToolResults extends ViewPart
 		
 		tool = ObjectToolsCache.getInstance().findTool(Long.parseLong(parts[0]));
 		if (tool == null)
-			throw new PartInitException(Messages.TableToolResults_InvalidToolID);
+			throw new PartInitException(Messages.get().TableToolResults_InvalidToolID);
 		
 		nodeId = Long.parseLong(parts[1]);
 		AbstractObject object = session.findObjectById(nodeId);
 		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
-			throw new PartInitException(Messages.TableToolResults_InvalidObjectID);
+			throw new PartInitException(Messages.get().TableToolResults_InvalidObjectID);
 		
 		setPartName(object.getObjectName() + ": " + tool.getDisplayName()); //$NON-NLS-1$
 	}
@@ -205,7 +205,7 @@ public class TableToolResults extends ViewPart
 	public void refreshTable()
 	{
 		viewer.setInput(null);
-		new ConsoleJob(String.format(Messages.TableToolResults_JobTitle, tool.getName()), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().TableToolResults_JobTitle, tool.getName()), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -222,7 +222,7 @@ public class TableToolResults extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.TableToolResults_JobError, tool.getName());
+				return String.format(Messages.get().TableToolResults_JobError, tool.getName());
 			}
 		}.start();
 	}

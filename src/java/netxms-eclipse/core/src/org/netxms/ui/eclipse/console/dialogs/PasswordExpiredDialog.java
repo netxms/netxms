@@ -74,13 +74,13 @@ public class PasswordExpiredDialog extends Dialog
 		editArea.setLayout(editAreaLayout);
 		
 		Label msg = new Label(editArea, SWT.WRAP);
-		msg.setText(Messages.PasswordExpiredDialog_passwd_expired); //$NON-NLS-1$
+		msg.setText(Messages.get().PasswordExpiredDialog_passwd_expired); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		msg.setLayoutData(gd);
-		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.PasswordExpiredDialog_new_passwd, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$ //$NON-NLS-2$
-		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.PasswordExpiredDialog_confirm_passwd, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$ //$NON-NLS-2$
+		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().PasswordExpiredDialog_new_passwd, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$ //$NON-NLS-2$
+		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().PasswordExpiredDialog_confirm_passwd, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$ //$NON-NLS-2$
 
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -127,7 +127,7 @@ public class PasswordExpiredDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.PasswordExpiredDialog_title); //$NON-NLS-1$
+		newShell.setText(Messages.get().PasswordExpiredDialog_title); //$NON-NLS-1$
 	}
 
 	@Override

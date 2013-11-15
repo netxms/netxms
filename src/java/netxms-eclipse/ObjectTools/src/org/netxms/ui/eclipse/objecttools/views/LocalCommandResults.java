@@ -145,7 +145,7 @@ public class LocalCommandResults extends ViewPart
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
-		actionClear = new Action(Messages.LocalCommandResults_ClearConsole, SharedIcons.CLEAR_LOG) {
+		actionClear = new Action(Messages.get().LocalCommandResults_ClearConsole, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
@@ -153,7 +153,7 @@ public class LocalCommandResults extends ViewPart
 			}
 		};
 
-		actionScrollLock = new Action(Messages.LocalCommandResults_ScrollLock, Action.AS_CHECK_BOX) {
+		actionScrollLock = new Action(Messages.get().LocalCommandResults_ScrollLock, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -162,7 +162,7 @@ public class LocalCommandResults extends ViewPart
 		actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
 		actionScrollLock.setChecked(false);
 		
-		actionTerminate = new Action(Messages.LocalCommandResults_Terminate, SharedIcons.TERMINATE) {
+		actionTerminate = new Action(Messages.get().LocalCommandResults_Terminate, SharedIcons.TERMINATE) {
 			@Override
 			public void run()
 			{
@@ -179,7 +179,7 @@ public class LocalCommandResults extends ViewPart
       actionTerminate.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.terminate_process"); //$NON-NLS-1$
 		handlerService.activateHandler(actionTerminate.getActionDefinitionId(), new ActionHandler(actionTerminate));
 		
-		actionRestart = new Action(Messages.LocalCommandResults_Restart, SharedIcons.RESTART) {
+		actionRestart = new Action(Messages.get().LocalCommandResults_Restart, SharedIcons.RESTART) {
 			@Override
 			public void run()
 			{
@@ -188,7 +188,7 @@ public class LocalCommandResults extends ViewPart
 		};
 		actionRestart.setEnabled(false);
 
-		actionCopy = new Action(Messages.LocalCommandResults_Copy) {
+		actionCopy = new Action(Messages.get().LocalCommandResults_Copy) {
 			@Override
 			public void run()
 			{
@@ -200,7 +200,7 @@ public class LocalCommandResults extends ViewPart
       actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.copy"); //$NON-NLS-1$
 		handlerService.activateHandler(actionCopy.getActionDefinitionId(), new ActionHandler(actionCopy));
 		
-		actionSelectAll = new Action(Messages.LocalCommandResults_SelectAll) {
+		actionSelectAll = new Action(Messages.get().LocalCommandResults_SelectAll) {
 			@Override
 			public void run()
 			{
@@ -327,11 +327,11 @@ public class LocalCommandResults extends ViewPart
 		}
 		
 		final IOConsoleOutputStream out = console.newOutputStream();
-		ConsoleJob job = new ConsoleJob(Messages.LocalCommandResults_JobTitle, this, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().LocalCommandResults_JobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LocalCommandResults_JobError;
+				return Messages.get().LocalCommandResults_JobError;
 			}
 
 			@Override
@@ -360,7 +360,7 @@ public class LocalCommandResults extends ViewPart
 							out.write(s);
 					}
 					
-					out.write(Messages.LocalCommandResults_Terminated);
+					out.write(Messages.get().LocalCommandResults_Terminated);
 				}
 				catch(IOException e)
 				{

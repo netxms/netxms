@@ -80,7 +80,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.WinPerfCounterSelectionDialog_Title);
+		newShell.setText(Messages.get().WinPerfCounterSelectionDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -99,8 +99,8 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.WinPerfCounterSelectionDialog_ObjectsAndCounters);
-		new Label(dialogArea, SWT.NONE).setText(Messages.WinPerfCounterSelectionDialog_Instances);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().WinPerfCounterSelectionDialog_ObjectsAndCounters);
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().WinPerfCounterSelectionDialog_Instances);
 		
 		objectTree = new TreeViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
@@ -152,7 +152,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	private void fillData()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.WinPerfCounterSelectionDialog_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().WinPerfCounterSelectionDialog_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -169,7 +169,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.WinPerfCounterSelectionDialog_JobError;
+				return Messages.get().WinPerfCounterSelectionDialog_JobError;
 			}
 		}.start();
 	}
@@ -200,7 +200,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	{
 		if (selectedCounter == null)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.WinPerfCounterSelectionDialog_Warning, Messages.WinPerfCounterSelectionDialog_PleaseSelectCounter);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().WinPerfCounterSelectionDialog_Warning, Messages.get().WinPerfCounterSelectionDialog_PleaseSelectCounter);
 			return;
 		}
 		
@@ -209,7 +209,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 			IStructuredSelection selection = (IStructuredSelection)instanceList.getSelection();
 			if (selection.size() != 1)
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.WinPerfCounterSelectionDialog_Warning, Messages.WinPerfCounterSelectionDialog_PleaseSelectCounter);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().WinPerfCounterSelectionDialog_Warning, Messages.get().WinPerfCounterSelectionDialog_PleaseSelectCounter);
 				return;
 			}
 			selectedInstance = (String)selection.getFirstElement();
@@ -240,7 +240,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	{
 		if (selectedInstance == null)
 			return selectedCounter.getObject().getName() + ": " + selectedCounter.getName(); //$NON-NLS-1$
-		return selectedCounter.getObject().getName() + ": " + selectedCounter.getName() + Messages.WinPerfCounterSelectionDialog_for + selectedInstance; //$NON-NLS-1$
+		return selectedCounter.getObject().getName() + ": " + selectedCounter.getName() + Messages.get().WinPerfCounterSelectionDialog_for + selectedInstance; //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

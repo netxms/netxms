@@ -34,13 +34,13 @@ public class DataCollectionDisplayInfo
 	 */
 	public static void init()
 	{
-		dciDataTypes[DataCollectionItem.DT_INT] = Messages.DataCollectionDisplayInfo_Integer;
-		dciDataTypes[DataCollectionItem.DT_UINT] = Messages.DataCollectionDisplayInfo_UInteger;
-		dciDataTypes[DataCollectionItem.DT_INT64] = Messages.DataCollectionDisplayInfo_Integer64;
-		dciDataTypes[DataCollectionItem.DT_UINT64] = Messages.DataCollectionDisplayInfo_UInteger64;
-		dciDataTypes[DataCollectionItem.DT_FLOAT] = Messages.DataCollectionDisplayInfo_Float;
-		dciDataTypes[DataCollectionItem.DT_STRING] = Messages.DataCollectionDisplayInfo_String;
-		dciDataTypes[DataCollectionItem.DT_NULL] = Messages.DataCollectionDisplayInfo_Null;
+		dciDataTypes[DataCollectionItem.DT_INT] = Messages.get().DataCollectionDisplayInfo_Integer;
+		dciDataTypes[DataCollectionItem.DT_UINT] = Messages.get().DataCollectionDisplayInfo_UInteger;
+		dciDataTypes[DataCollectionItem.DT_INT64] = Messages.get().DataCollectionDisplayInfo_Integer64;
+		dciDataTypes[DataCollectionItem.DT_UINT64] = Messages.get().DataCollectionDisplayInfo_UInteger64;
+		dciDataTypes[DataCollectionItem.DT_FLOAT] = Messages.get().DataCollectionDisplayInfo_Float;
+		dciDataTypes[DataCollectionItem.DT_STRING] = Messages.get().DataCollectionDisplayInfo_String;
+		dciDataTypes[DataCollectionItem.DT_NULL] = Messages.get().DataCollectionDisplayInfo_Null;
 	}
 
 	/**
@@ -56,7 +56,7 @@ public class DataCollectionDisplayInfo
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
-			return Messages.DataCollectionDisplayInfo_Unknown;
+			return Messages.get().DataCollectionDisplayInfo_Unknown;
 		}
 	}
 }

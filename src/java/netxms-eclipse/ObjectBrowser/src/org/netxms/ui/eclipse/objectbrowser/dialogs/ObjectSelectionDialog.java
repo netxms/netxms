@@ -193,7 +193,7 @@ public class ObjectSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ObjectSelectionDialog_Title);
+		newShell.setText(Messages.get().ObjectSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -269,7 +269,7 @@ public class ObjectSelectionDialog extends Dialog
 			}
 			else
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.ObjectSelectionDialog_Warning, Messages.ObjectSelectionDialog_WarningText);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().ObjectSelectionDialog_Warning, Messages.get().ObjectSelectionDialog_WarningText);
 				return;
 			}
 		}

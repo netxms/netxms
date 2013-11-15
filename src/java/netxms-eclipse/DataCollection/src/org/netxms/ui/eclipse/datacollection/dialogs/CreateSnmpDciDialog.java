@@ -63,7 +63,7 @@ public class CreateSnmpDciDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.CreateSnmpDciDialog_ShellTitle);
+		newShell.setText(Messages.get().CreateSnmpDciDialog_ShellTitle);
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +78,7 @@ public class CreateSnmpDciDialog extends Dialog
 		dialogArea.setLayout(layout);
 
 		textDescription = new LabeledText(dialogArea, SWT.NONE);
-		textDescription.setLabel(Messages.CreateSnmpDciDialog_Description);
+		textDescription.setLabel(Messages.get().CreateSnmpDciDialog_Description);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -98,7 +98,7 @@ public class CreateSnmpDciDialog extends Dialog
 		optionsGroup.setLayout(layout);
 		
 		textInterval = new LabeledText(optionsGroup, SWT.NONE);
-		textInterval.setLabel(Messages.CreateInterfaceDciDialog_PollingInterval);
+		textInterval.setLabel(Messages.get().CreateInterfaceDciDialog_PollingInterval);
 		textInterval.setText("60"); //$NON-NLS-1$
 		textInterval.getTextControl().setTextLimit(5);
 		gd = new GridData();
@@ -107,7 +107,7 @@ public class CreateSnmpDciDialog extends Dialog
 		textInterval.setLayoutData(gd);
 		
 		textRetention = new LabeledText(optionsGroup, SWT.NONE);
-		textRetention.setLabel(Messages.CreateInterfaceDciDialog_RetentionTime);
+		textRetention.setLabel(Messages.get().CreateInterfaceDciDialog_RetentionTime);
 		textRetention.setText("30"); //$NON-NLS-1$
 		textRetention.getTextControl().setTextLimit(5);
 		gd = new GridData();
@@ -115,12 +115,12 @@ public class CreateSnmpDciDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		textRetention.setLayoutData(gd);
 
-      deltaCalculationSelector = WidgetHelper.createLabeledCombo(optionsGroup, SWT.BORDER | SWT.READ_ONLY, Messages.CreateSnmpDciDialog_DeltaCalculation,
+      deltaCalculationSelector = WidgetHelper.createLabeledCombo(optionsGroup, SWT.BORDER | SWT.READ_ONLY, Messages.get().CreateSnmpDciDialog_DeltaCalculation,
             WidgetHelper.DEFAULT_LAYOUT_DATA);
-      deltaCalculationSelector.add(Messages.Transformation_DeltaNone);
-      deltaCalculationSelector.add(Messages.Transformation_DeltaSimple);
-      deltaCalculationSelector.add(Messages.Transformation_DeltaAvgPerSec);
-      deltaCalculationSelector.add(Messages.Transformation_DeltaAvgPerMin);
+      deltaCalculationSelector.add(Messages.get().Transformation_DeltaNone);
+      deltaCalculationSelector.add(Messages.get().Transformation_DeltaSimple);
+      deltaCalculationSelector.add(Messages.get().Transformation_DeltaAvgPerSec);
+      deltaCalculationSelector.add(Messages.get().Transformation_DeltaAvgPerMin);
       deltaCalculationSelector.select(deltaCalculation);
 		
 		return dialogArea;
@@ -172,7 +172,7 @@ public class CreateSnmpDciDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.CreateInterfaceDciDialog_Error, Messages.CreateInterfaceDciDialog_BadPollingInterval);
+			MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDciDialog_Error, Messages.get().CreateInterfaceDciDialog_BadPollingInterval);
 		}
 		
 		try
@@ -183,7 +183,7 @@ public class CreateSnmpDciDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.CreateInterfaceDciDialog_Error, Messages.CreateInterfaceDciDialog_BadRetentionTime);
+			MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDciDialog_Error, Messages.get().CreateInterfaceDciDialog_BadRetentionTime);
 		}
 
 		description = textDescription.getText().trim();

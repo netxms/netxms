@@ -249,13 +249,13 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
             else
             {
                e.getCause().printStackTrace();
-               MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage());
+               MessageDialog.openError(null, Messages.get().NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage());
             }
          }
          catch(Exception e)
          {
             e.printStackTrace();
-            MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString()); //$NON-NLS-1$
+            MessageDialog.openError(null, Messages.get().NXMCWorkbenchWindowAdvisor_exception, e.toString()); //$NON-NLS-1$
          }
       }
 
@@ -302,8 +302,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          return SecurityWarningDialog.YES;
 
       return SecurityWarningDialog.showSecurityWarning(null,
-                  String.format(Messages.NXMCWorkbenchWindowAdvisor_NoEncryptionSupport, settings.get("Connect.Server")), //$NON-NLS-1$
-                  Messages.NXMCWorkbenchWindowAdvisor_NoEncryptionSupportDetails);
+                  String.format(Messages.get().NXMCWorkbenchWindowAdvisor_NoEncryptionSupport, settings.get("Connect.Server")), //$NON-NLS-1$
+                  Messages.get().NXMCWorkbenchWindowAdvisor_NoEncryptionSupportDetails);
    }
 
    /**
@@ -325,7 +325,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
             {
                try
                {
-                  monitor.setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
+                  monitor.setTaskName(Messages.get().NXMCWorkbenchWindowAdvisor_ChangingPassword);
                   ((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
                   monitor.setTaskName(""); //$NON-NLS-1$
                }
@@ -343,18 +343,18 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          try
          {
             ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
-            MessageDialog.openInformation(null, Messages.NXMCWorkbenchWindowAdvisor_title_information,
-                  Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
+            MessageDialog.openInformation(null, Messages.get().NXMCWorkbenchWindowAdvisor_title_information,
+                  Messages.get().NXMCWorkbenchWindowAdvisor_passwd_changed);
             return;
          }
          catch(InvocationTargetException e)
          {
-            MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_title_error,
-                  Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+            MessageDialog.openError(null, Messages.get().NXMCWorkbenchWindowAdvisor_title_error,
+                  Messages.get().NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
          }
          catch(InterruptedException e)
          {
-            MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
+            MessageDialog.openError(null, Messages.get().NXMCWorkbenchWindowAdvisor_exception, e.toString());
          }
       }
    }
@@ -368,9 +368,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       Shell shell = Display.getCurrent().getActiveShell();
 
       FileDialog dialog = new FileDialog(shell);
-      dialog.setText(Messages.NXMCWorkbenchWindowAdvisor_CertDialogTitle);
+      dialog.setText(Messages.get().NXMCWorkbenchWindowAdvisor_CertDialogTitle);
       dialog.setFilterExtensions(new String[] { "*.p12; *.pfx" }); //$NON-NLS-1$
-      dialog.setFilterNames(new String[] { Messages.NXMCWorkbenchWindowAdvisor_PkcsFiles });
+      dialog.setFilterNames(new String[] { Messages.get().NXMCWorkbenchWindowAdvisor_PkcsFiles });
 
       return dialog.open();
    }
@@ -381,8 +381,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    @Override
    public String keyStorePasswordRequested()
    {
-      return showPasswordRequestDialog(Messages.NXMCWorkbenchWindowAdvisor_CertStorePassword,
-            Messages.NXMCWorkbenchWindowAdvisor_CertStorePasswordMsg);
+      return showPasswordRequestDialog(Messages.get().NXMCWorkbenchWindowAdvisor_CertStorePassword,
+            Messages.get().NXMCWorkbenchWindowAdvisor_CertStorePasswordMsg);
    }
 
    /* (non-Javadoc)
@@ -391,8 +391,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    @Override
    public String keyStoreEntryPasswordRequested()
    {
-      return showPasswordRequestDialog(Messages.NXMCWorkbenchWindowAdvisor_CertPassword,
-            Messages.NXMCWorkbenchWindowAdvisor_CertPasswordMsg);
+      return showPasswordRequestDialog(Messages.get().NXMCWorkbenchWindowAdvisor_CertPassword,
+            Messages.get().NXMCWorkbenchWindowAdvisor_CertPasswordMsg);
    }
 
    /**

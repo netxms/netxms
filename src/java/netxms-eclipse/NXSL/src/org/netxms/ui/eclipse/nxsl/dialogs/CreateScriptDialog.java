@@ -64,7 +64,7 @@ public class CreateScriptDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.CreateScriptDialog_ScriptName, name,
+      nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateScriptDialog_ScriptName, name,
                                                       WidgetHelper.DEFAULT_LAYOUT_DATA);
       nameInputField.getShell().setMinimumSize(300, 0);
       
@@ -80,7 +80,7 @@ public class CreateScriptDialog extends Dialog
 		name = nameInputField.getText();
 		name = name.trim();
 		if (name.isEmpty())
-			MessageDialogHelper.openWarning(getShell(), Messages.CreateScriptDialog_Warning, Messages.CreateScriptDialog_WarningEmptyName);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateScriptDialog_Warning, Messages.get().CreateScriptDialog_WarningEmptyName);
 		else
 			super.okPressed();
 	}
@@ -92,7 +92,7 @@ public class CreateScriptDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(rename ? Messages.CreateScriptDialog_Rename : Messages.CreateScriptDialog_CreateNew);
+		newShell.setText(rename ? Messages.get().CreateScriptDialog_Rename : Messages.get().CreateScriptDialog_CreateNew);
 	}
 
 	/**

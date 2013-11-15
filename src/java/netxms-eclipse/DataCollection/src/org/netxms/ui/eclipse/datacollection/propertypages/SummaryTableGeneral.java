@@ -60,12 +60,12 @@ public class SummaryTableGeneral extends PropertyPage
       dialogArea.setLayout(layout);
       
       menuPath = new LabeledText(dialogArea, SWT.NONE);
-      menuPath.setLabel(Messages.SummaryTableGeneral_MenuPath);
+      menuPath.setLabel(Messages.get().SummaryTableGeneral_MenuPath);
       menuPath.setText(table.getMenuPath());
       menuPath.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
       title = new LabeledText(dialogArea, SWT.NONE);
-      title.setLabel(Messages.SummaryTableGeneral_Title);
+      title.setLabel(Messages.get().SummaryTableGeneral_Title);
       title.setText(table.getTitle());
       title.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
@@ -86,7 +86,7 @@ public class SummaryTableGeneral extends PropertyPage
 		table.setTitle(title.getText());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SummaryTableGeneral_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SummaryTableGeneral_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -100,7 +100,7 @@ public class SummaryTableGeneral extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SummaryTableGeneral_JobError;
+				return Messages.get().SummaryTableGeneral_JobError;
 			}
 
 			/* (non-Javadoc)

@@ -38,7 +38,7 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	{
 		this.min = min;
 		this.max = max;
-		range = Long.toString(min) + Messages.NumericTextFieldValidator_RangeSeparator + Long.toString(max);
+		range = Long.toString(min) + Messages.get().NumericTextFieldValidator_RangeSeparator + Long.toString(max);
 	}
 	
 	/* (non-Javadoc)
@@ -64,6 +64,6 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return String.format(Messages.NumericTextFieldValidator_ErrorMessage, range, label);
+		return String.format(Messages.get().NumericTextFieldValidator_ErrorMessage, range, label);
 	}
 }

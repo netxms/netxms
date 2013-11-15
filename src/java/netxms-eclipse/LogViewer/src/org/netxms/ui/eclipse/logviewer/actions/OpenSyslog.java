@@ -66,7 +66,7 @@ public class OpenSyslog implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenSyslog_Error, Messages.OpenSyslog_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSyslog_Error, Messages.get().OpenSyslog_ErrorText + e.getMessage());
 			}
 		}
 	}

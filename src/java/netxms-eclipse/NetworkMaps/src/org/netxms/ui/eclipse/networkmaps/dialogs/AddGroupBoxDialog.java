@@ -67,7 +67,7 @@ public class AddGroupBoxDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.AddGroupBoxDialog_DialogTitle);
+		newShell.setText(Messages.get().AddGroupBoxDialog_DialogTitle);
 	}
 
 	/* (non-Javadoc)
@@ -86,7 +86,7 @@ public class AddGroupBoxDialog extends Dialog
 		
 		/* title */
 		textTitle = new LabeledText(dialogArea, SWT.NONE);
-		textTitle.setLabel(Messages.AddGroupBoxDialog_Title);
+		textTitle.setLabel(Messages.get().AddGroupBoxDialog_Title);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -116,12 +116,12 @@ public class AddGroupBoxDialog extends Dialog
 				return spinner;
 			}
 		};
-		spinnerWidth = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, Messages.AddGroupBoxDialog_Width, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		spinnerWidth = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, Messages.get().AddGroupBoxDialog_Width, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerWidth.setSelection(250);
-		spinnerHeight = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, Messages.AddGroupBoxDialog_Height, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		spinnerHeight = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, Messages.get().AddGroupBoxDialog_Height, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerHeight.setSelection(100);
 		
-		colorSelector = WidgetHelper.createLabeledColorSelector(attrArea, Messages.AddGroupBoxDialog_Color, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		colorSelector = WidgetHelper.createLabeledColorSelector(attrArea, Messages.get().AddGroupBoxDialog_Color, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		colorSelector.setColorValue(DEFAULT_COLOR);
 		
 		return dialogArea;

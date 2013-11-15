@@ -63,7 +63,7 @@ public class OpenMapObject implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenMapObject_Error, String.format(Messages.OpenMapObject_ErrorText, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenMapObject_Error, String.format(Messages.get().OpenMapObject_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

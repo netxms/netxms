@@ -68,7 +68,7 @@ public class ShowIPRoute implements IObjectActionDelegate
 			AbstractObject[] selection = dlg.getSelectedObjects(Node.class);
 			if (selection.length == 0)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowIPRoute_Error, Messages.ShowIPRoute_InvalidTarget);
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowIPRoute_Error, Messages.get().ShowIPRoute_InvalidTarget);
 				return;
 			}
 			targetNode = (Node)selection[0];
@@ -82,7 +82,7 @@ public class ShowIPRoute implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowIPRoute_Error, String.format(Messages.ShowIPRoute_ErrorOpenView, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowIPRoute_Error, String.format(Messages.get().ShowIPRoute_ErrorOpenView, e.getLocalizedMessage()));
 			}
 		}
 	}

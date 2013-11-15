@@ -63,12 +63,12 @@ public class CreateTemplateGroup implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateTemplateGroup_TemplateGroup);
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CreateTemplateGroup_TemplateGroup);
 		if (dlg.open() != Window.OK)
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateTemplateGroup_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateTemplateGroup_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -79,7 +79,7 @@ public class CreateTemplateGroup implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.CreateTemplateGroup_JobErrorPrefix + dlg.getObjectName() + Messages.CreateTemplateGroup_JobErrorSuffix;
+				return Messages.get().CreateTemplateGroup_JobErrorPrefix + dlg.getObjectName() + Messages.get().CreateTemplateGroup_JobErrorSuffix;
 			}
 		}.start();
 	}

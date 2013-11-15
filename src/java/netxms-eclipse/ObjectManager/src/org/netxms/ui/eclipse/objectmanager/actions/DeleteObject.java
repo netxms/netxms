@@ -39,13 +39,13 @@ public class DeleteObject extends MultipleObjectAction
 		String question;
 		if (selection.size() == 1)
 		{
-			question = String.format(Messages.DeleteObject_ConfirmQuestionSingular, ((AbstractObject)selection.getFirstElement()).getObjectName());
+			question = String.format(Messages.get().DeleteObject_ConfirmQuestionSingular, ((AbstractObject)selection.getFirstElement()).getObjectName());
 		}
 		else
 		{
-			question = Messages.DeleteObject_ConfirmQuestionPlural;
+			question = Messages.get().DeleteObject_ConfirmQuestionPlural;
 		}
-		boolean confirmed = MessageDialogHelper.openConfirm(getWindow().getShell(), Messages.DeleteObject_ConfirmDelete, question);
+		boolean confirmed = MessageDialogHelper.openConfirm(getWindow().getShell(), Messages.get().DeleteObject_ConfirmDelete, question);
 		return confirmed;
 	}
 
@@ -64,7 +64,7 @@ public class DeleteObject extends MultipleObjectAction
 	@Override
 	protected String formatJobDescription(AbstractObject object)
 	{
-		return String.format(Messages.DeleteObject_JobDescription, object.getObjectName(), object.getObjectId());
+		return String.format(Messages.get().DeleteObject_JobDescription, object.getObjectName(), object.getObjectId());
 	}
 
 	/* (non-Javadoc)
@@ -73,6 +73,6 @@ public class DeleteObject extends MultipleObjectAction
 	@Override
 	protected String formatErrorMessage(AbstractObject object, Display display)
 	{
-		return String.format(Messages.DeleteObject_JobError, object.getObjectName(), object.getObjectId());
+		return String.format(Messages.get().DeleteObject_JobError, object.getObjectName(), object.getObjectId());
 	}
 }

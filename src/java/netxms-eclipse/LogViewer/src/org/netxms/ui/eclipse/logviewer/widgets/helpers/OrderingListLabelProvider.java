@@ -53,7 +53,7 @@ public class OrderingListLabelProvider implements ITableLabelProvider
 			case 0:
 				return ((OrderingColumn)element).getDescription();
 			case 1:
-				return ((OrderingColumn)element).isDescending() ? Messages.OrderingListLabelProvider_Yes : Messages.OrderingListLabelProvider_No;
+				return ((OrderingColumn)element).isDescending() ? Messages.get().OrderingListLabelProvider_Yes : Messages.get().OrderingListLabelProvider_No;
 			default:
 				return null;
 		}

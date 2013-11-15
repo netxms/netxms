@@ -103,7 +103,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	 */
 	private void connectToServer()
 	{
-		new ConsoleJob(Messages.ServerConsole_OpenServerConsole, null, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
+		new ConsoleJob(Messages.get().ServerConsole_OpenServerConsole, null, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -115,7 +115,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ServerConsole_CannotOpen; //$NON-NLS-1$
+				return Messages.get().ServerConsole_CannotOpen; //$NON-NLS-1$
 			}
 
 			@Override
@@ -217,7 +217,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	 */
 	private void createActions()
 	{
-		actionClear = new Action(Messages.ServerConsole_ClearTerminal) { //$NON-NLS-1$
+		actionClear = new Action(Messages.get().ServerConsole_ClearTerminal) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -227,7 +227,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 		};
 		actionClear.setImageDescriptor(SharedIcons.CLEAR_LOG);
 
-		actionScrollLock = new Action(Messages.ServerConsole_ScrollLock, Action.AS_CHECK_BOX) { //$NON-NLS-1$
+		actionScrollLock = new Action(Messages.get().ServerConsole_ScrollLock, Action.AS_CHECK_BOX) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{

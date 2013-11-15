@@ -56,16 +56,16 @@ public class VlanMap extends AbstractNetworkMapView
 		// This view expects secondary ID to be in form nodeId&vlanId
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length < 2)
-			throw new PartInitException(Messages.VlanMap_IncorrectSecondaryId);
+			throw new PartInitException(Messages.get().VlanMap_IncorrectSecondaryId);
 		try
 		{
 			vlanId = Integer.parseInt(parts[1]);
 		}
 		catch(NumberFormatException e)
 		{
-			throw new PartInitException(Messages.VlanMap_IncorrectSecondaryId, e);
+			throw new PartInitException(Messages.get().VlanMap_IncorrectSecondaryId, e);
 		}
-		setPartName(String.format(Messages.VlanMap_PartName, vlanId, rootObject.getObjectName()));
+		setPartName(String.format(Messages.get().VlanMap_PartName, vlanId, rootObject.getObjectName()));
 	}
 
 	/**
@@ -76,7 +76,7 @@ public class VlanMap extends AbstractNetworkMapView
 		if (mapPage == null)
 			mapPage = new NetworkMapPage();
 		
-		new ConsoleJob(String.format(Messages.VlanMap_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().VlanMap_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -97,7 +97,7 @@ public class VlanMap extends AbstractNetworkMapView
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.VlanMap_JobError, rootObject.getObjectName());
+				return String.format(Messages.get().VlanMap_JobError, rootObject.getObjectName());
 			}
 		}.start();
 	}

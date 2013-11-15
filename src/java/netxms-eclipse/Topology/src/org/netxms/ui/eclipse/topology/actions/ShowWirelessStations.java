@@ -52,7 +52,7 @@ public class ShowWirelessStations implements IObjectActionDelegate
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(window.getShell(), Messages.ShowWirelessStations_Error, Messages.ShowWirelessStations_CannotOpenView + e.getLocalizedMessage());
+			MessageDialogHelper.openError(window.getShell(), Messages.get().ShowWirelessStations_Error, Messages.get().ShowWirelessStations_CannotOpenView + e.getLocalizedMessage());
 		}
 	}
 	

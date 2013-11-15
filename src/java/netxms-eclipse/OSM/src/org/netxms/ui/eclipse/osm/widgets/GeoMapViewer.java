@@ -242,7 +242,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 
 		final Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
 		final GeoLocation centerPoint = accessor.getCenterPoint();
-		ConsoleJob job = new ConsoleJob(Messages.GeoMapViewer_DownloadJob_Title, viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().GeoMapViewer_DownloadJob_Title, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -277,7 +277,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.GeoMapViewer_DownloadError;
+				return Messages.get().GeoMapViewer_DownloadError;
 			}
 		};
 		job.setUser(false);
@@ -291,7 +291,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 */
 	private void loadMissingTiles(final TileSet tiles)
 	{
-		ConsoleJob job = new ConsoleJob(Messages.GeoMapViewer_LoadMissingJob_Title, viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().GeoMapViewer_LoadMissingJob_Title, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -312,7 +312,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.GeoMapViewer_DownloadError;
+				return Messages.get().GeoMapViewer_DownloadError;
 			}
 		};
 		job.setUser(false);

@@ -63,12 +63,12 @@ public class CreateDashboard implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateDashboard_Dashboard);
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CreateDashboard_Dashboard);
 		if (dlg.open() != Window.OK)
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateDashboard_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateDashboard_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -79,7 +79,7 @@ public class CreateDashboard implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-            return String.format(Messages.CreateDashboard_Error, dlg.getObjectName());
+            return String.format(Messages.get().CreateDashboard_Error, dlg.getObjectName());
 			}
 		}.start();
 	}

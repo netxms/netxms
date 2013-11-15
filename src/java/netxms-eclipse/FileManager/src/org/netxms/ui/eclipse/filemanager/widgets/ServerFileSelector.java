@@ -44,7 +44,7 @@ public class ServerFileSelector extends AbstractSelector
 	{
 		super(parent, style, 0);
 		labelProvider = new WorkbenchLabelProvider();
-		setText(Messages.ServerFileSelector_None);
+		setText(Messages.get().ServerFileSelector_None);
 	}
 
 	/* (non-Javadoc)
@@ -66,7 +66,7 @@ public class ServerFileSelector extends AbstractSelector
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
-		return Messages.ServerFileSelector_Tooltip;
+		return Messages.get().ServerFileSelector_Tooltip;
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class ServerFileSelector extends AbstractSelector
 		else
 		{
 			setImage(null);
-			setText(Messages.ServerFileSelector_None);
+			setText(Messages.get().ServerFileSelector_None);
 		}
 	}
 

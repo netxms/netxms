@@ -57,8 +57,8 @@ public class AlarmComparator extends ViewerComparator
 			case AlarmList.COLUMN_SOURCE:
 				AbstractObject obj1 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)e1).getSourceObjectId());
 				AbstractObject obj2 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)e2).getSourceObjectId());
-				String name1 = (obj1 != null) ? obj1.getObjectName() : Messages.AlarmComparator_Unknown;
-				String name2 = (obj2 != null) ? obj2.getObjectName() : Messages.AlarmComparator_Unknown;
+				String name1 = (obj1 != null) ? obj1.getObjectName() : Messages.get().AlarmComparator_Unknown;
+				String name2 = (obj2 != null) ? obj2.getObjectName() : Messages.get().AlarmComparator_Unknown;
 				rc = name1.compareToIgnoreCase(name2);
 				break;
 			case AlarmList.COLUMN_MESSAGE:

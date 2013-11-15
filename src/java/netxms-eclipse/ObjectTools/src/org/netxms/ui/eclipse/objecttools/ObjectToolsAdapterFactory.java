@@ -80,8 +80,8 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
                @Override
                public void run()
                {
-                  MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.ObjectToolsAdapterFactory_Error, 
-                        String.format(Messages.ObjectToolsAdapterFactory_LoaderErrorText, e.getLocalizedMessage()));
+                  MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.get().ObjectToolsAdapterFactory_Error, 
+                        String.format(Messages.get().ObjectToolsAdapterFactory_LoaderErrorText, e.getLocalizedMessage()));
                }
             });
 			}

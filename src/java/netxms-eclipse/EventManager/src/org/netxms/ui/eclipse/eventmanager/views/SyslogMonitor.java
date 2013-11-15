@@ -52,7 +52,7 @@ public class SyslogMonitor extends AbstractTraceView
 		if (memento != null)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.SyslogMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().SyslogMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -62,7 +62,7 @@ public class SyslogMonitor extends AbstractTraceView
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.SyslogMonitor_SubscribeJob_Error;
+					return Messages.get().SyslogMonitor_SubscribeJob_Error;
 				}
 			}.start();
 		}
@@ -96,7 +96,7 @@ public class SyslogMonitor extends AbstractTraceView
 	public void dispose()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SyslogMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SyslogMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -106,7 +106,7 @@ public class SyslogMonitor extends AbstractTraceView
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SyslogMonitor_UnsubscribeJob_Error;
+				return Messages.get().SyslogMonitor_UnsubscribeJob_Error;
 			}
 		}.start();
 		super.dispose();

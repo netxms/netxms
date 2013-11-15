@@ -97,7 +97,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		nodeId = Long.parseLong(site.getSecondaryId());
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject object = session.findObjectById(nodeId);
-		setPartName(String.format(Messages.VlanView_PartName, (object != null) ? object.getObjectName() : "<" + site.getSecondaryId() + ">")); //$NON-NLS-1$ //$NON-NLS-2$
+		setPartName(String.format(Messages.get().VlanView_PartName, (object != null) ? object.getObjectName() : "<" + site.getSecondaryId() + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -122,7 +122,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		layout.marginWidth = 0;
 		parent.setLayout(layout);
 		
-		final String[] names = { Messages.VlanView_ColumnID, Messages.VlanView_ColumnName, Messages.VlanView_ColumnPorts };
+		final String[] names = { Messages.get().VlanView_ColumnID, Messages.get().VlanView_ColumnName, Messages.get().VlanView_ColumnPorts };
 		final int[] widths = { 80, 180, 400 };
 		vlanList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		vlanList.setContentProvider(new ArrayContentProvider());
@@ -186,7 +186,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 			}
 		};
 		
-		actionShowVlanMap = new Action(Messages.VlanView_ShowVlanMap) {
+		actionShowVlanMap = new Action(Messages.get().VlanView_ShowVlanMap) {
 			@Override
 			public void run()
 			{
@@ -319,7 +319,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(getSite().getShell(), Messages.VlanView_Error, String.format(Messages.VlanView_OpenMapError, vlan.getVlanId(), e.getLocalizedMessage()));
+				MessageDialogHelper.openError(getSite().getShell(), Messages.get().VlanView_Error, String.format(Messages.get().VlanView_OpenMapError, vlan.getVlanId(), e.getLocalizedMessage()));
 			}
 		}
 	}
@@ -329,7 +329,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	 */
 	private void refreshVlanList()
 	{
-		new ConsoleJob(Messages.VlanView_JobTitle, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().VlanView_JobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -346,7 +346,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.VlanView_JobError;
+				return Messages.get().VlanView_JobError;
 			}
 		}.start();
 	}

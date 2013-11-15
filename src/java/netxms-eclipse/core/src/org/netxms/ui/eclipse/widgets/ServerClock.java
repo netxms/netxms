@@ -45,7 +45,7 @@ public class ServerClock extends Composite
       setLayout(new FillLayout());
       
       time = new Label(this, SWT.NONE);
-      time.setToolTipText(Messages.ServerClock_Tooltip);
+      time.setToolTipText(Messages.get().ServerClock_Tooltip);
 
       FontData fd = time.getFont().getFontData()[0];
       fd.setStyle(SWT.BOLD);
@@ -82,7 +82,7 @@ public class ServerClock extends Composite
       showText = settings.getBoolean("ServerClock.showText"); //$NON-NLS-1$
       showTimeZone = settings.getBoolean("ServerClock.showTimeZone"); //$NON-NLS-1$
       
-      final Action actionShowText = new Action(Messages.ServerClock_OptionShowText, Action.AS_CHECK_BOX) {
+      final Action actionShowText = new Action(Messages.get().ServerClock_OptionShowText, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -93,7 +93,7 @@ public class ServerClock extends Composite
       };
       actionShowText.setChecked(showText);
       
-      final Action actionShowTimeZone = new Action(Messages.ServerClock_OptionShowTimeZone, Action.AS_CHECK_BOX) {
+      final Action actionShowTimeZone = new Action(Messages.get().ServerClock_OptionShowTimeZone, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -123,7 +123,7 @@ public class ServerClock extends Composite
       StringBuilder sb = new StringBuilder();
       if (showText)
       {
-         sb.append(Messages.ServerClock_ServerTime);
+         sb.append(Messages.get().ServerClock_ServerTime);
          sb.append(' ');
       }
       sb.append(df.format(new Date(session.getServerTime())));

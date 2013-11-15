@@ -86,10 +86,10 @@ public class ChangePasswordDialog extends Dialog
 		
 		if (changeOwnPassword)
 		{
-			textOldPassword = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.ChangePasswordDialog_OldPassword, "", null); //$NON-NLS-1$
+			textOldPassword = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().ChangePasswordDialog_OldPassword, "", null); //$NON-NLS-1$
 		}
-		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.ChangePasswordDialog_NewPassword, "", null); //$NON-NLS-1$
-		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.ChangePasswordDialog_ConfirmNewPassword, "", null); //$NON-NLS-1$
+		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().ChangePasswordDialog_NewPassword, "", null); //$NON-NLS-1$
+		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().ChangePasswordDialog_ConfirmNewPassword, "", null); //$NON-NLS-1$
 
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -141,7 +141,7 @@ public class ChangePasswordDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ChangePasswordDialog_Title);
+		newShell.setText(Messages.get().ChangePasswordDialog_Title);
 	}
 
 	/* (non-Javadoc)

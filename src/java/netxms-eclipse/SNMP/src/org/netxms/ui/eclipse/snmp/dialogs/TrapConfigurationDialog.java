@@ -96,7 +96,7 @@ public class TrapConfigurationDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.TrapConfigurationDialog_Title);
+		newShell.setText(Messages.get().TrapConfigurationDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -113,7 +113,7 @@ public class TrapConfigurationDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		dialogArea.setLayout(layout);
 		
-		description = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.TrapConfigurationDialog_Description, trap.getDescription(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+		description = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.get().TrapConfigurationDialog_Description, trap.getDescription(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		Composite oidSelection = new Composite(dialogArea, SWT.NONE);
 		layout = new GridLayout();
@@ -127,11 +127,11 @@ public class TrapConfigurationDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		oidSelection.setLayoutData(gd);
 		
-		oid = WidgetHelper.createLabeledText(oidSelection, SWT.BORDER, 300, Messages.TrapConfigurationDialog_TrapOID, 
+		oid = WidgetHelper.createLabeledText(oidSelection, SWT.BORDER, 300, Messages.get().TrapConfigurationDialog_TrapOID, 
 				(trap.getObjectId() != null) ? trap.getObjectId().toString() : "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 
 		buttonSelect = new Button(oidSelection, SWT.PUSH);
-		buttonSelect.setText(Messages.TrapConfigurationDialog_Select);
+		buttonSelect.setText(Messages.get().TrapConfigurationDialog_Select);
 		gd = new GridData();
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 		gd.verticalAlignment = SWT.BOTTOM;
@@ -151,17 +151,17 @@ public class TrapConfigurationDialog extends Dialog
 		});
 		
 		event = new EventSelector(dialogArea, SWT.NONE);
-		event.setLabel(Messages.TrapConfigurationDialog_Event);
+		event.setLabel(Messages.get().TrapConfigurationDialog_Event);
 		event.setEventCode(trap.getEventCode());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		event.setLayoutData(gd);
 		
-		eventTag = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, SWT.DEFAULT, Messages.TrapConfigurationDialog_UserTag, trap.getUserTag(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+		eventTag = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, SWT.DEFAULT, Messages.get().TrapConfigurationDialog_UserTag, trap.getUserTag(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText(Messages.TrapConfigurationDialog_Parameters);
+		label.setText(Messages.get().TrapConfigurationDialog_Parameters);
 		
 		Composite paramArea = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
@@ -196,7 +196,7 @@ public class TrapConfigurationDialog extends Dialog
 		buttonArea.setLayout(btnLayout);
 		
 		buttonAdd = new Button(buttonArea, SWT.PUSH);
-		buttonAdd.setText(Messages.TrapConfigurationDialog_Add);
+		buttonAdd.setText(Messages.get().TrapConfigurationDialog_Add);
 		buttonAdd.setLayoutData(new RowData(WidgetHelper.BUTTON_WIDTH_HINT, SWT.DEFAULT));
 		buttonAdd.addSelectionListener(new SelectionListener() {
 			@Override
@@ -213,7 +213,7 @@ public class TrapConfigurationDialog extends Dialog
 		});
 		
 		buttonEdit = new Button(buttonArea, SWT.PUSH);
-		buttonEdit.setText(Messages.TrapConfigurationDialog_Edit);
+		buttonEdit.setText(Messages.get().TrapConfigurationDialog_Edit);
 		buttonEdit.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -229,7 +229,7 @@ public class TrapConfigurationDialog extends Dialog
 		});
 		
 		buttonDelete = new Button(buttonArea, SWT.PUSH);
-		buttonDelete.setText(Messages.TrapConfigurationDialog_Delete);
+		buttonDelete.setText(Messages.get().TrapConfigurationDialog_Delete);
 		buttonDelete.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -245,10 +245,10 @@ public class TrapConfigurationDialog extends Dialog
 		});
 		
 		buttonUp = new Button(buttonArea, SWT.PUSH);
-		buttonUp.setText(Messages.TrapConfigurationDialog_MoveUp);
+		buttonUp.setText(Messages.get().TrapConfigurationDialog_MoveUp);
 		
 		buttonDown = new Button(buttonArea, SWT.PUSH);
-		buttonDown.setText(Messages.TrapConfigurationDialog_MoveDown);
+		buttonDown.setText(Messages.get().TrapConfigurationDialog_MoveDown);
 		
 		return dialogArea;
 	}
@@ -333,11 +333,11 @@ public class TrapConfigurationDialog extends Dialog
 		table.setHeaderVisible(true);
 		
 		TableColumn tc = new TableColumn(table, SWT.LEFT);
-		tc.setText(Messages.TrapConfigurationDialog_Number);
+		tc.setText(Messages.get().TrapConfigurationDialog_Number);
 		tc.setWidth(90);
 		
 		tc = new TableColumn(table, SWT.LEFT);
-		tc.setText(Messages.TrapConfigurationDialog_Parameter);
+		tc.setText(Messages.get().TrapConfigurationDialog_Parameter);
 		tc.setWidth(200);
 		
 		pmap = new ArrayList<SnmpTrapParameterMapping>(trap.getParameterMapping());
@@ -387,7 +387,7 @@ public class TrapConfigurationDialog extends Dialog
 		}
 		catch(SnmpObjectIdFormatException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.TrapConfigurationDialog_Warning, Messages.TrapConfigurationDialog_WarningInvalidOID);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().TrapConfigurationDialog_Warning, Messages.get().TrapConfigurationDialog_WarningInvalidOID);
 			return;
 		}
 

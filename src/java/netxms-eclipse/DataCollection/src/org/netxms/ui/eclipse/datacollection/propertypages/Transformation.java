@@ -68,12 +68,12 @@ public class Transformation extends PropertyPage
 
       if (editor.getObject() instanceof DataCollectionItem)
       {
-	      deltaCalculation = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.Transformation_Step1,
+	      deltaCalculation = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().Transformation_Step1,
 	                                                         WidgetHelper.DEFAULT_LAYOUT_DATA);
-	      deltaCalculation.add(Messages.Transformation_DeltaNone);
-	      deltaCalculation.add(Messages.Transformation_DeltaSimple);
-	      deltaCalculation.add(Messages.Transformation_DeltaAvgPerSec);
-	      deltaCalculation.add(Messages.Transformation_DeltaAvgPerMin);
+	      deltaCalculation.add(Messages.get().Transformation_DeltaNone);
+	      deltaCalculation.add(Messages.get().Transformation_DeltaSimple);
+	      deltaCalculation.add(Messages.get().Transformation_DeltaAvgPerSec);
+	      deltaCalculation.add(Messages.get().Transformation_DeltaAvgPerMin);
 	      deltaCalculation.select(editor.getObjectAsItem().getDeltaCalculation());
       }
      
@@ -92,7 +92,7 @@ public class Transformation extends PropertyPage
 			}
       };
       transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-      		(editor.getObject() instanceof DataCollectionItem) ? Messages.Transformation_Step2 : Messages.Transformation_Script, gd);
+      		(editor.getObject() instanceof DataCollectionItem) ? Messages.get().Transformation_Step2 : Messages.get().Transformation_Script, gd);
       transformationScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       transformationScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();
@@ -106,7 +106,7 @@ public class Transformation extends PropertyPage
       if (editor.getObject() instanceof DataCollectionItem)
       {
 	      testScriptButton = new Button(transformationScript.getParent(), SWT.PUSH);
-	      testScriptButton.setText(Messages.Transformation_Test);   
+	      testScriptButton.setText(Messages.get().Transformation_Test);   
 	      gd = new GridData();
 	      gd.horizontalAlignment = SWT.RIGHT;
 	      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;

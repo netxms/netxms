@@ -25,7 +25,7 @@ public class OpenLibraryManager implements IWorkbenchWindowActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenLibraryManager_Error, String.format(Messages.OpenLibraryManager_ErrorText, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenLibraryManager_Error, String.format(Messages.get().OpenLibraryManager_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

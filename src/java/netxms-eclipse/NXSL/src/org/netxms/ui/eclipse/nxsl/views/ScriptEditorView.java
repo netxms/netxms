@@ -167,7 +167,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionSave = new Action(Messages.ScriptEditorView_Save, SharedIcons.SAVE) {
+		actionSave = new Action(Messages.get().ScriptEditorView_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
@@ -218,11 +218,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	 */
 	private void reloadScript()
 	{
-		new ConsoleJob(String.format(Messages.ScriptEditorView_LoadJobTitle, scriptId), this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().ScriptEditorView_LoadJobTitle, scriptId), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.ScriptEditorView_LoadJobError, scriptId);
+				return String.format(Messages.get().ScriptEditorView_LoadJobError, scriptId);
 			}
 
 			@Override
@@ -234,7 +234,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 					public void run()
 					{
 						scriptName = script.getName();
-						setPartName(String.format(Messages.ScriptEditorView_PartName, scriptName));
+						setPartName(String.format(Messages.get().ScriptEditorView_PartName, scriptName));
 						editor.setText(script.getSource());
 						actionSave.setEnabled(false);
 						actionFindReplace.update();
@@ -251,11 +251,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		final String source = editor.getText();
 		editor.getTextWidget().setEditable(false);
-		new ConsoleJob(Messages.ScriptEditorView_SaveJobTitle, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ScriptEditorView_SaveJobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ScriptEditorView_SaveJobError;
+				return Messages.get().ScriptEditorView_SaveJobError;
 			}
 
 			@Override
@@ -324,7 +324,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(getViewSite().getShell(), Messages.ScriptEditorView_Error, String.format(Messages.ScriptEditorView_SaveErrorMessage, e.getMessage()));
+			MessageDialogHelper.openError(getViewSite().getShell(), Messages.get().ScriptEditorView_Error, String.format(Messages.get().ScriptEditorView_SaveErrorMessage, e.getMessage()));
 		}
 	}
 

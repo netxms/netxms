@@ -64,7 +64,7 @@ public class MapOptions extends PropertyPage
 		
 		/**** status display ****/
 		Group statusDisplayGroup = new Group(dialogArea, SWT.NONE);
-		statusDisplayGroup.setText(Messages.MapOptions_DefaultDispOptions);
+		statusDisplayGroup.setText(Messages.get().MapOptions_DefaultDispOptions);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -74,20 +74,20 @@ public class MapOptions extends PropertyPage
       statusDisplayGroup.setLayout(layout);
       
       checkShowStatusIcon = new Button(statusDisplayGroup, SWT.CHECK);
-      checkShowStatusIcon.setText(Messages.MapOptions_ShowStatusIcon);
+      checkShowStatusIcon.setText(Messages.get().MapOptions_ShowStatusIcon);
       checkShowStatusIcon.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_ICON) != 0);
       
       checkShowStatusFrame = new Button(statusDisplayGroup, SWT.CHECK);
-      checkShowStatusFrame.setText(Messages.MapOptions_ShowStatusFrame);
+      checkShowStatusFrame.setText(Messages.get().MapOptions_ShowStatusFrame);
       checkShowStatusFrame.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_FRAME) != 0);
       
       checkShowStatusBkgnd = new Button(statusDisplayGroup, SWT.CHECK);
-      checkShowStatusBkgnd.setText(Messages.MapOptions_ShowStatusBkgnd);
+      checkShowStatusBkgnd.setText(Messages.get().MapOptions_ShowStatusBkgnd);
       checkShowStatusBkgnd.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
       
 		/**** default link appearance ****/
 		Group linkGroup = new Group(dialogArea, SWT.NONE);
-		linkGroup.setText(Messages.MapOptions_DefaultConnOptions);
+		linkGroup.setText(Messages.get().MapOptions_DefaultConnOptions);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -99,9 +99,9 @@ public class MapOptions extends PropertyPage
       gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		routingAlgorithm = WidgetHelper.createLabeledCombo(linkGroup, SWT.READ_ONLY, Messages.MapOptions_RoutingAlg, gd);
-		routingAlgorithm.add(Messages.MapOptions_Direct);
-		routingAlgorithm.add(Messages.MapOptions_Manhattan);
+		routingAlgorithm = WidgetHelper.createLabeledCombo(linkGroup, SWT.READ_ONLY, Messages.get().MapOptions_RoutingAlg, gd);
+		routingAlgorithm.add(Messages.get().MapOptions_Direct);
+		routingAlgorithm.add(Messages.get().MapOptions_Manhattan);
 		routingAlgorithm.select(object.getDefaultLinkRouting() - 1);
 
 		final SelectionListener listener = new SelectionListener() {
@@ -119,7 +119,7 @@ public class MapOptions extends PropertyPage
 		};
 		
 		radioColorDefault = new Button(linkGroup, SWT.RADIO);
-		radioColorDefault.setText(Messages.MapOptions_DefColor);
+		radioColorDefault.setText(Messages.get().MapOptions_DefColor);
 		radioColorDefault.setSelection(object.getDefaultLinkColor() < 0);
 		radioColorDefault.addSelectionListener(listener);
 		gd = new GridData();
@@ -127,7 +127,7 @@ public class MapOptions extends PropertyPage
 		radioColorDefault.setLayoutData(gd);
 
 		radioColorCustom = new Button(linkGroup, SWT.RADIO);
-		radioColorCustom.setText(Messages.MapOptions_CustColor);
+		radioColorCustom.setText(Messages.get().MapOptions_CustColor);
 		radioColorCustom.setSelection(object.getDefaultLinkColor() >= 0);
 		radioColorCustom.addSelectionListener(listener);
 
@@ -142,7 +142,7 @@ public class MapOptions extends PropertyPage
       if (object.getMapType() != NetworkMap.TYPE_CUSTOM)
       {
 			Group topoGroup = new Group(dialogArea, SWT.NONE);
-			topoGroup.setText(Messages.MapOptions_TopologyOptions);
+			topoGroup.setText(Messages.get().MapOptions_TopologyOptions);
 	      gd = new GridData();
 	      gd.grabExcessHorizontalSpace = true;
 	      gd.horizontalAlignment = SWT.FILL;
@@ -152,11 +152,11 @@ public class MapOptions extends PropertyPage
 	      topoGroup.setLayout(layout);
 
 	      checkIncludeEndNodes = new Button(topoGroup, SWT.CHECK);
-	      checkIncludeEndNodes.setText(Messages.MapOptions_IncludeEndNodes);
+	      checkIncludeEndNodes.setText(Messages.get().MapOptions_IncludeEndNodes);
 	      checkIncludeEndNodes.setSelection((object.getFlags() & NetworkMap.MF_SHOW_END_NODES) != 0);
 	      
 	      checkCustomRadius = new Button(topoGroup, SWT.CHECK);
-	      checkCustomRadius.setText(Messages.MapOptions_CustomDiscoRadius);
+	      checkCustomRadius.setText(Messages.get().MapOptions_CustomDiscoRadius);
 	      checkCustomRadius.setSelection(object.getDiscoveryRadius() > 0);
 	      checkCustomRadius.addSelectionListener(new SelectionListener() {
 				@Override
@@ -172,14 +172,14 @@ public class MapOptions extends PropertyPage
 				}
 			});
 	      
-	      topologyRadius = WidgetHelper.createLabeledSpinner(topoGroup, SWT.BORDER, Messages.MapOptions_TopoDiscoRadius, 1, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+	      topologyRadius = WidgetHelper.createLabeledSpinner(topoGroup, SWT.BORDER, Messages.get().MapOptions_TopoDiscoRadius, 1, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
 	      topologyRadius.setSelection(object.getDiscoveryRadius());
 	      topologyRadius.setEnabled(object.getDiscoveryRadius() > 0);
       }      
 
 		/**** advanced options ****/
 		Group advGroup = new Group(dialogArea, SWT.NONE);
-		advGroup.setText(Messages.MapOptions_AdvOptions);
+		advGroup.setText(Messages.get().MapOptions_AdvOptions);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -189,7 +189,7 @@ public class MapOptions extends PropertyPage
       advGroup.setLayout(layout);
 
       checkCalculateStatus = new Button(advGroup, SWT.CHECK);
-      checkCalculateStatus.setText(Messages.MapOptions_CalcStatusFromObjects);
+      checkCalculateStatus.setText(Messages.get().MapOptions_CalcStatusFromObjects);
       checkCalculateStatus.setSelection((object.getFlags() & NetworkMap.MF_CALCULATE_STATUS) != 0);
       
 		return dialogArea;
@@ -240,7 +240,7 @@ public class MapOptions extends PropertyPage
 			setValid(false);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.MapOptions_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MapOptions_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -250,7 +250,7 @@ public class MapOptions extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.MapOptions_JobError + object.getObjectName();
+				return Messages.get().MapOptions_JobError + object.getObjectName();
 			}
 
 			@Override

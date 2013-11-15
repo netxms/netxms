@@ -124,7 +124,7 @@ public class DeviceView extends DashboardComposite
 			SlotView sv = slots.get(slot);
 			if (sv == null)
 			{
-				sv = new SlotView(this, SWT.NONE, String.format(Messages.DeviceView_SlotName, slot));
+				sv = new SlotView(this, SWT.NONE, String.format(Messages.get().DeviceView_SlotName, slot));
 				sv.setPortStatusVisible(portStatusVisible);
 				slots.put(slot, sv);
 			}

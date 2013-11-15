@@ -80,7 +80,7 @@ public class SelectDciDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SelectDciDialog_Title);
+		newShell.setText(Messages.get().SelectDciDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -100,7 +100,7 @@ public class SelectDciDialog extends Dialog
 	{
 		if (enableEmptySelection)
 		{
-			Button button = createButton(parent, 1000, Messages.SelectDciDialog_None, false);
+			Button button = createButton(parent, 1000, Messages.get().SelectDciDialog_None, false);
 			button.addSelectionListener(new SelectionListener() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
@@ -230,7 +230,7 @@ public class SelectDciDialog extends Dialog
 		selection = dciList.getSelection();
 		if (selection == null)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.SelectDciDialog_Warning, Messages.SelectDciDialog_WarningMessage);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectDciDialog_Warning, Messages.get().SelectDciDialog_WarningMessage);
 			return;
 		}
 		saveSettings();

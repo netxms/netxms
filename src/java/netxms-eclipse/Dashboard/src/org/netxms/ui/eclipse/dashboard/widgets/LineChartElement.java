@@ -128,7 +128,7 @@ public class LineChartElement extends ElementWidget
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob(Messages.LineChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().LineChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			private ChartDciConfig currentDci;
 			
 			@Override
@@ -166,7 +166,7 @@ public class LineChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.LineChartElement_JobError, session.getObjectName(currentDci.nodeId), currentDci.name);
+				return String.format(Messages.get().LineChartElement_JobError, session.getObjectName(currentDci.nodeId), currentDci.name);
 			}
 
 			@Override

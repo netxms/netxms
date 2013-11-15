@@ -91,7 +91,7 @@ public class ScriptLibrary extends ViewPart
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] names = { Messages.ScriptLibrary_ColumnId, Messages.ScriptLibrary_ColumnName };
+		final String[] names = { Messages.get().ScriptLibrary_ColumnId, Messages.get().ScriptLibrary_ColumnName };
 		final int[] widths = { 70, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -155,7 +155,7 @@ public class ScriptLibrary extends ViewPart
 			}
 		};
 
-		actionNew = new Action(Messages.ScriptLibrary_New, Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
+		actionNew = new Action(Messages.get().ScriptLibrary_New, Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -163,7 +163,7 @@ public class ScriptLibrary extends ViewPart
 			}
 		};
 
-		actionEdit = new Action(Messages.ScriptLibrary_Edit, Activator.getImageDescriptor("icons/edit.png")) { //$NON-NLS-1$
+		actionEdit = new Action(Messages.get().ScriptLibrary_Edit, Activator.getImageDescriptor("icons/edit.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -172,7 +172,7 @@ public class ScriptLibrary extends ViewPart
 		};
 		actionEdit.setEnabled(false);
 
-		actionRename = new Action(Messages.ScriptLibrary_Rename) {
+		actionRename = new Action(Messages.get().ScriptLibrary_Rename) {
 			@Override
 			public void run()
 			{
@@ -181,7 +181,7 @@ public class ScriptLibrary extends ViewPart
 		};
 		actionRename.setEnabled(false);
 
-		actionDelete = new Action(Messages.ScriptLibrary_Delete, Activator.getImageDescriptor("icons/delete.png")) { //$NON-NLS-1$
+		actionDelete = new Action(Messages.get().ScriptLibrary_Delete, Activator.getImageDescriptor("icons/delete.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -271,11 +271,11 @@ public class ScriptLibrary extends ViewPart
 	 */
 	private void refreshScriptList()
 	{
-		new ConsoleJob(Messages.ScriptLibrary_LoadJobTitle, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ScriptLibrary_LoadJobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ScriptLibrary_LoadJobError;
+				return Messages.get().ScriptLibrary_LoadJobError;
 			}
 
 			@Override
@@ -301,7 +301,7 @@ public class ScriptLibrary extends ViewPart
 		final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), null);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.ScriptLibrary_CreateJobTitle, this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().ScriptLibrary_CreateJobTitle, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -327,7 +327,7 @@ public class ScriptLibrary extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ScriptLibrary_CreateJobError;
+					return Messages.get().ScriptLibrary_CreateJobError;
 				}
 			}.start();
 		}
@@ -346,7 +346,7 @@ public class ScriptLibrary extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(getSite().getWorkbenchWindow().getShell(), Messages.ScriptLibrary_Error, String.format(Messages.ScriptLibrary_EditScriptError, e.getMessage()));
+			MessageDialogHelper.openError(getSite().getWorkbenchWindow().getShell(), Messages.get().ScriptLibrary_Error, String.format(Messages.get().ScriptLibrary_EditScriptError, e.getMessage()));
 		}
 	}
 
@@ -360,7 +360,7 @@ public class ScriptLibrary extends ViewPart
 		final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), script.getName());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.ScriptLibrary_RenameJobTitle, this, Activator.PLUGIN_ID, null)
+			new ConsoleJob(Messages.get().ScriptLibrary_RenameJobTitle, this, Activator.PLUGIN_ID, null)
 			{
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -389,7 +389,7 @@ public class ScriptLibrary extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ScriptLibrary_RenameJobError;
+					return Messages.get().ScriptLibrary_RenameJobError;
 				}
 			}.start();
 		}
@@ -401,12 +401,12 @@ public class ScriptLibrary extends ViewPart
 	@SuppressWarnings("rawtypes")
 	private void deleteScript()
 	{
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.ScriptLibrary_Confirmation, Messages.ScriptLibrary_ConfirmationText))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().ScriptLibrary_Confirmation, Messages.get().ScriptLibrary_ConfirmationText))
 			return;
 		
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		
-		new ConsoleJob(Messages.ScriptLibrary_DeleteJobTitle, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ScriptLibrary_DeleteJobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -430,7 +430,7 @@ public class ScriptLibrary extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ScriptLibrary_DeleteJobError;
+				return Messages.get().ScriptLibrary_DeleteJobError;
 			}
 		}.start();
 	}

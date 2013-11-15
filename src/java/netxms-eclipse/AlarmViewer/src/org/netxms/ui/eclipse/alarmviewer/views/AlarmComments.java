@@ -68,7 +68,7 @@ public class AlarmComments extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.AlarmComments"; //$NON-NLS-1$
 	
 	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/terminated.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };	
+	private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };	
 	
 	private NXCSession session;
 	private long alarmId;
@@ -101,7 +101,7 @@ public class AlarmComments extends ViewPart
 		}
 		catch(NumberFormatException e)
 		{
-			throw new PartInitException(Messages.AlarmComments_InternalError, e);
+			throw new PartInitException(Messages.get().AlarmComments_InternalError, e);
 		}
 		
 		setPartName(getPartName() + " [" + Long.toString(alarmId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -184,7 +184,7 @@ public class AlarmComments extends ViewPart
 	private void createAlarmDetailsSection()
 	{
 		final Section details = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		details.setText(Messages.AlarmComments_Details);
+		details.setText(Messages.get().AlarmComments_Details);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = true;
 		twd.align = TableWrapData.FILL;
@@ -233,7 +233,7 @@ public class AlarmComments extends ViewPart
 	private void createEditorsSection()
 	{
 		final Section details = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		details.setText(Messages.AlarmComments_Comments);
+		details.setText(Messages.get().AlarmComments_Comments);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = true;
 		twd.align = TableWrapData.FILL;
@@ -246,7 +246,7 @@ public class AlarmComments extends ViewPart
 		
 		linkAddComment = toolkit.createImageHyperlink(editorsArea, SWT.NONE);
 		linkAddComment.setImage(imageCache.add(Activator.getImageDescriptor("icons/new_comment.png"))); //$NON-NLS-1$
-		linkAddComment.setText(Messages.AlarmComments_AddCommentLink);
+		linkAddComment.setText(Messages.get().AlarmComments_AddCommentLink);
 		linkAddComment.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -270,7 +270,7 @@ public class AlarmComments extends ViewPart
 	 */
 	private void refresh()
 	{
-		new ConsoleJob(Messages.AlarmComments_GetComments, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().AlarmComments_GetComments, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -296,7 +296,7 @@ public class AlarmComments extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AlarmComments_GetError;
+				return Messages.get().AlarmComments_GetError;
 			}
 		}.start();
 	}
@@ -337,7 +337,7 @@ public class AlarmComments extends ViewPart
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob(Messages.AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -354,7 +354,7 @@ public class AlarmComments extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AlarmComments_AddError;
+				return Messages.get().AlarmComments_AddError;
 			}
 		}.start();
 	}

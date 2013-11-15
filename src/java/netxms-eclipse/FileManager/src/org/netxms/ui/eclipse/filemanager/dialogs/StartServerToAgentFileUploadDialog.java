@@ -61,7 +61,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.StartServerToAgentFileUploadDialog_Title);
+		newShell.setText(Messages.get().StartServerToAgentFileUploadDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -79,7 +79,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		fileSelector = new ServerFileSelector(dialogArea, SWT.NONE);
-		fileSelector.setLabel(Messages.StartServerToAgentFileUploadDialog_ServerFile);
+		fileSelector.setLabel(Messages.get().StartServerToAgentFileUploadDialog_ServerFile);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -87,14 +87,14 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		fileSelector.setLayoutData(gd);
 		
 		textRemoteFile = new LabeledText(dialogArea, SWT.NONE);
-		textRemoteFile.setLabel(Messages.StartServerToAgentFileUploadDialog_RemoteFileName);
+		textRemoteFile.setLabel(Messages.get().StartServerToAgentFileUploadDialog_RemoteFileName);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		textRemoteFile.setLayoutData(gd);
 		
 		checkJobOnHold = new Button(dialogArea, SWT.CHECK);
-		checkJobOnHold.setText(Messages.StartServerToAgentFileUploadDialog_CreateJobOnHold);
+		checkJobOnHold.setText(Messages.get().StartServerToAgentFileUploadDialog_CreateJobOnHold);
 		
 		return dialogArea;
 	}
@@ -108,7 +108,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		serverFile = fileSelector.getFile();
 		if (serverFile == null)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.StartServerToAgentFileUploadDialog_Warning, Messages.StartServerToAgentFileUploadDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().StartServerToAgentFileUploadDialog_Warning, Messages.get().StartServerToAgentFileUploadDialog_WarningText);
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();

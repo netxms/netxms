@@ -74,19 +74,19 @@ public class General extends PropertyPage
       dialogArea.setLayout(layout);
       
       // Object ID
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.General_ObjectID,
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.get().General_ObjectID,
                                      Long.toString(object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object name
       initialName = new String(object.getName());
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.General_LoginName,
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_LoginName,
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Full name
       if (object instanceof User)
       {
 	      initialFullName = new String(((User)object).getFullName());
-	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.General_FullName,
+	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_FullName,
 	      		                                        initialFullName, WidgetHelper.DEFAULT_LAYOUT_DATA);
       }
       else
@@ -97,7 +97,7 @@ public class General extends PropertyPage
 		// Description
       initialDescription = new String(object.getDescription());
       textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-                                                       Messages.General_Description, initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
+                                                       Messages.get().General_Description, initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		return dialogArea;
 	}
@@ -121,7 +121,7 @@ public class General extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new ConsoleJob(Messages.General_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().General_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -158,7 +158,7 @@ public class General extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.General_JobError;
+				return Messages.get().General_JobError;
 			}
 		}.start();
 	}

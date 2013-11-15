@@ -65,7 +65,7 @@ public class OpenObjectToolsEditor implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenObjectToolsEditor_Error, Messages.OpenObjectToolsEditor_ErrorOpenView + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenObjectToolsEditor_Error, Messages.get().OpenObjectToolsEditor_ErrorOpenView + e.getMessage());
 			}
 		}
 	}

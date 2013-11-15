@@ -68,7 +68,7 @@ public class CreateNetworkMap implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateNetworkMap_JobName, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateNetworkMap_JobName, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -81,7 +81,7 @@ public class CreateNetworkMap implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.CreateNetworkMap_JobError, dlg.getName());
+				return String.format(Messages.get().CreateNetworkMap_JobError, dlg.getName());
 			}
 		}.start();
 	}

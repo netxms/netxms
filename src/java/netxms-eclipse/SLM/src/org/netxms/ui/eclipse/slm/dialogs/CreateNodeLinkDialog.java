@@ -60,7 +60,7 @@ public class CreateNodeLinkDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.CreateNodeLinkDialog_Title);
+		newShell.setText(Messages.get().CreateNodeLinkDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +78,7 @@ public class CreateNodeLinkDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel(Messages.CreateNodeLinkDialog_Name);
+		nameField.setLabel(Messages.get().CreateNodeLinkDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -87,7 +87,7 @@ public class CreateNodeLinkDialog extends Dialog
 		nameField.setLayoutData(gd);
 		
 		nodeField = new ObjectSelector(dialogArea, SWT.NONE, false);
-		nodeField.setLabel(Messages.CreateNodeLinkDialog_Node);
+		nodeField.setLabel(Messages.get().CreateNodeLinkDialog_Node);
 		nodeField.setObjectClass(Node.class);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -106,7 +106,7 @@ public class CreateNodeLinkDialog extends Dialog
 		nodeId = nodeField.getObjectId();
 		if (nodeId == 0)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.CreateNodeLinkDialog_Warning, Messages.CreateNodeLinkDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNodeLinkDialog_Warning, Messages.get().CreateNodeLinkDialog_WarningText);
 			return;
 		}
 		

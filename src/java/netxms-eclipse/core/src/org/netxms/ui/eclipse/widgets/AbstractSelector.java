@@ -217,7 +217,7 @@ public class AbstractSelector extends Composite
 				cb.setContents(new Object[] { AbstractSelector.this.getText() }, new Transfer[] { TextTransfer.getInstance() });
 			}
 		};
-		actionCopy.setText(Messages.AbstractSelector_CopyToClipboard);
+		actionCopy.setText(Messages.get().AbstractSelector_CopyToClipboard);
 	}
 	
 	/**
@@ -273,7 +273,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected String getSelectionButtonToolTip()
 	{
-		return Messages.AbstractSelector_Select;
+		return Messages.get().AbstractSelector_Select;
 	}
 
 	/**
@@ -282,7 +282,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected String getClearingButtonToolTip()
 	{
-		return Messages.AbstractSelector_ClearSelection;
+		return Messages.get().AbstractSelector_ClearSelection;
 	}
 
 	/**

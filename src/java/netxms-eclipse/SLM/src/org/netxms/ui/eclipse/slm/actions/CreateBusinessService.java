@@ -67,7 +67,7 @@ public class CreateBusinessService implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateBusinessService_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateBusinessService_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -77,7 +77,7 @@ public class CreateBusinessService implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.CreateBusinessService_JobError, dlg.getName());
+				return String.format(Messages.get().CreateBusinessService_JobError, dlg.getName());
 			}
 		}.start();
 	}

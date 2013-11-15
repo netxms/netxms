@@ -62,7 +62,7 @@ public class OpenMibExplorerForNode implements IObjectActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenMibExplorerForNode_Error, Messages.OpenMibExplorerForNode_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenMibExplorerForNode_Error, Messages.get().OpenMibExplorerForNode_ErrorText + e.getMessage());
 			}
 		}
 	}

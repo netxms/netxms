@@ -71,7 +71,7 @@ public class MapObjectFilter extends PropertyPage
 
       // Enable/disable check box
       checkboxEnableFilter = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableFilter.setText(Messages.MapObjectFilter_FilterObjects);
+      checkboxEnableFilter.setText(Messages.get().MapObjectFilter_FilterObjects);
       checkboxEnableFilter.setSelection(!initialFilter.isEmpty());
       checkboxEnableFilter.addSelectionListener(new SelectionListener() {
 			@Override
@@ -97,7 +97,7 @@ public class MapObjectFilter extends PropertyPage
       
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.MapObjectFilter_FilteringScript);
+      label.setText(Messages.get().MapObjectFilter_FilteringScript);
 
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
@@ -137,7 +137,7 @@ public class MapObjectFilter extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setFilter(filter);
 		
-		new ConsoleJob(Messages.MapObjectFilter_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MapObjectFilter_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -163,7 +163,7 @@ public class MapObjectFilter extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.MapObjectFilter_JobError;
+				return Messages.get().MapObjectFilter_JobError;
 			}
 		}.start();
 	}

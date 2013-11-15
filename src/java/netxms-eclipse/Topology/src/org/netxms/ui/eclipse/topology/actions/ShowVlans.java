@@ -67,7 +67,7 @@ public class ShowVlans implements IObjectActionDelegate
 		else
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.ShowVlans_JobTitle, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().ShowVlans_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -83,7 +83,7 @@ public class ShowVlans implements IObjectActionDelegate
 							}
 							catch(PartInitException e)
 							{
-								MessageDialogHelper.openError(window.getShell(), Messages.ShowVlans_Error, Messages.ShowVlans_CannotOpenView + e.getLocalizedMessage());
+								MessageDialogHelper.openError(window.getShell(), Messages.get().ShowVlans_Error, Messages.get().ShowVlans_CannotOpenView + e.getLocalizedMessage());
 							}
 						}
 					});
@@ -92,7 +92,7 @@ public class ShowVlans implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ShowVlans_JobError;
+					return Messages.get().ShowVlans_JobError;
 				}
 			}.start();
 		}

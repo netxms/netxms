@@ -60,24 +60,24 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		dialogArea.setLayout(layout);
 		
 		cbShowHeapMonitor = new Button(dialogArea, SWT.CHECK);
-		cbShowHeapMonitor.setText(Messages.WorkbenchGeneralPrefs_show_heap);
+		cbShowHeapMonitor.setText(Messages.get().WorkbenchGeneralPrefs_show_heap);
 		cbShowHeapMonitor.setSelection(getPreferenceStore().getBoolean("SHOW_MEMORY_MONITOR")); //$NON-NLS-1$
 		
 		cbShowTrayIcon = new Button(dialogArea, SWT.CHECK);
-		cbShowTrayIcon.setText(Messages.WorkbenchGeneralPrefs_show_tray_icon);
+		cbShowTrayIcon.setText(Messages.get().WorkbenchGeneralPrefs_show_tray_icon);
 		cbShowTrayIcon.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON")); //$NON-NLS-1$
 		
 		cbHideWhenMinimized = new Button(dialogArea, SWT.CHECK);
-		cbHideWhenMinimized.setText(Messages.WorkbenchGeneralPrefs_HideWhenMinimized);
+		cbHideWhenMinimized.setText(Messages.get().WorkbenchGeneralPrefs_HideWhenMinimized);
 		cbHideWhenMinimized.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED")); //$NON-NLS-1$
 		cbHideWhenMinimized.setEnabled(cbShowTrayIcon.getSelection());
 
 		cbShowHiddenAttributes = new Button(dialogArea, SWT.CHECK);
-		cbShowHiddenAttributes.setText(Messages.WorkbenchGeneralPrefs_ShowHiddenAttrs);
+		cbShowHiddenAttributes.setText(Messages.get().WorkbenchGeneralPrefs_ShowHiddenAttrs);
 		cbShowHiddenAttributes.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_HIDDEN_ATTRIBUTES")); //$NON-NLS-1$
 		
       cbShowServerClock = new Button(dialogArea, SWT.CHECK);
-      cbShowServerClock.setText(Messages.WorkbenchGeneralPrefs_ShowServerClock);
+      cbShowServerClock.setText(Messages.get().WorkbenchGeneralPrefs_ShowServerClock);
       cbShowServerClock.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_SERVER_CLOCK")); //$NON-NLS-1$
       
 		cbShowTrayIcon.addSelectionListener(new SelectionListener() {

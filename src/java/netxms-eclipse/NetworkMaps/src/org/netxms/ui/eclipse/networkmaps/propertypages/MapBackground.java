@@ -84,7 +84,7 @@ public class MapBackground extends PropertyPage
 		dialogArea.setLayout(layout);
       
 		Group typeGroup = new Group(dialogArea, SWT.NONE);
-      typeGroup.setText(Messages.MapBackground_BkgndType);
+      typeGroup.setText(Messages.get().MapBackground_BkgndType);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -107,22 +107,22 @@ public class MapBackground extends PropertyPage
 		};
       
       radioTypeNone = new Button(typeGroup, SWT.RADIO);
-      radioTypeNone.setText(Messages.MapBackground_None);
+      radioTypeNone.setText(Messages.get().MapBackground_None);
       radioTypeNone.setSelection(object.getBackground().equals(NXCommon.EMPTY_GUID));
       radioTypeNone.addSelectionListener(listener);
       
       radioTypeImage = new Button(typeGroup, SWT.RADIO);
-      radioTypeImage.setText(Messages.MapBackground_Image);
+      radioTypeImage.setText(Messages.get().MapBackground_Image);
       radioTypeImage.setSelection(!object.getBackground().equals(NXCommon.EMPTY_GUID) && !object.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND));
       radioTypeImage.addSelectionListener(listener);
 
       radioTypeGeoMap = new Button(typeGroup, SWT.RADIO);
-      radioTypeGeoMap.setText(Messages.MapBackground_GeoMap);
+      radioTypeGeoMap.setText(Messages.get().MapBackground_GeoMap);
       radioTypeGeoMap.setSelection(object.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND));
       radioTypeGeoMap.addSelectionListener(listener);
       
       image = new ImageSelector(dialogArea, SWT.NONE);
-      image.setLabel(Messages.MapBackground_BkgndImage);
+      image.setLabel(Messages.get().MapBackground_BkgndImage);
       if (radioTypeImage.getSelection())
       	image.setImageGuid(object.getBackground(), true);
       gd = new GridData();
@@ -131,7 +131,7 @@ public class MapBackground extends PropertyPage
       image.setLayoutData(gd);
       
       Group geomapGroup = new Group(dialogArea, SWT.NONE);
-      geomapGroup.setText(Messages.MapBackground_GroupGeoMap);
+      geomapGroup.setText(Messages.get().MapBackground_GroupGeoMap);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -142,7 +142,7 @@ public class MapBackground extends PropertyPage
       GeoLocation gl = object.getBackgroundLocation();
 
       latitude = new LabeledText(geomapGroup, SWT.NONE);
-      latitude.setLabel(Messages.MapBackground_Lat);
+      latitude.setLabel(Messages.get().MapBackground_Lat);
    	latitude.setText(gl.getLatitudeAsString());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -150,7 +150,7 @@ public class MapBackground extends PropertyPage
       latitude.setLayoutData(gd);
       
       longitude = new LabeledText(geomapGroup, SWT.NONE);
-      longitude.setLabel(Messages.MapBackground_Lon);
+      longitude.setLabel(Messages.get().MapBackground_Lon);
       longitude.setText(gl.getLongitudeAsString());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -171,7 +171,7 @@ public class MapBackground extends PropertyPage
       zoomGroup.setLayoutData(gd);
       
       zoomLabel = new Label(zoomGroup, SWT.NONE);
-      zoomLabel.setText(Messages.MapBackground_ZoomLevel);
+      zoomLabel.setText(Messages.get().MapBackground_ZoomLevel);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;
@@ -230,7 +230,7 @@ public class MapBackground extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       colorArea.setLayoutData(gd);
       Label label = new Label(colorArea, SWT.NONE);
-      label.setText(Messages.MapBackground_BkgndColor);
+      label.setText(Messages.get().MapBackground_BkgndColor);
       backgroundColor = new ColorSelector(colorArea);
       backgroundColor.setColorValue(ColorConverter.rgbFromInt(object.getBackgroundColor()));
 
@@ -278,7 +278,7 @@ public class MapBackground extends PropertyPage
 			}
 			catch(GeoLocationFormatException e)
 			{
-				MessageDialogHelper.openError(getShell(), Messages.MapBackground_Error, Messages.MapBackground_GeoLocFormatError);
+				MessageDialogHelper.openError(getShell(), Messages.get().MapBackground_Error, Messages.get().MapBackground_GeoLocFormatError);
 				return false;
 			}
 			md.setMapBackground(NetworkMap.GEOMAP_BACKGROUND, location, zoomSpinner.getSelection(), ColorConverter.rgbToInt(backgroundColor.getColorValue()));
@@ -288,7 +288,7 @@ public class MapBackground extends PropertyPage
 			setValid(false);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.MapBackground_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MapBackground_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -298,7 +298,7 @@ public class MapBackground extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.MapBackground_JobError + object.getObjectName();
+				return Messages.get().MapBackground_JobError + object.getObjectName();
 			}
 
 			@Override

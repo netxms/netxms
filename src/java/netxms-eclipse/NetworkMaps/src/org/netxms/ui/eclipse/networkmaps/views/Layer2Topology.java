@@ -41,7 +41,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName(Messages.Layer2Topology_PartTitle + rootObject.getObjectName());
+		setPartName(Messages.get().Layer2Topology_PartTitle + rootObject.getObjectName());
 	}
 
 	/* (non-Javadoc)
@@ -53,7 +53,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 		if (mapPage == null)
 			mapPage = new NetworkMapPage();
 		
-		new ConsoleJob(String.format(Messages.Layer2Topology_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(String.format(Messages.get().Layer2Topology_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -73,7 +73,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.Layer2Topology_JobError, rootObject.getObjectName());
+				return String.format(Messages.get().Layer2Topology_JobError, rootObject.getObjectName());
 			}
 		}.start();
 	}

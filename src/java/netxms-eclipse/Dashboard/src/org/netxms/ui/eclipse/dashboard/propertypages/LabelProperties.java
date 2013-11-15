@@ -57,7 +57,7 @@ public class LabelProperties extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-		title.setLabel(Messages.LabelProperties_Title);
+		title.setLabel(Messages.get().LabelProperties_Title);
 		title.setText(config.getTitle());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -77,7 +77,7 @@ public class LabelProperties extends PropertyPage
 		areaLayout.marginLeft = 0;
 		areaLayout.marginRight = 0;
 		fgArea.setLayout(areaLayout);
-		new Label(fgArea, SWT.NONE).setText(Messages.LabelProperties_TextColor);
+		new Label(fgArea, SWT.NONE).setText(Messages.get().LabelProperties_TextColor);
 		foreground = new ColorSelector(fgArea);
 		foreground.setColorValue(ColorConverter.rgbFromInt(config.getForegroundColorAsInt()));
 		
@@ -93,7 +93,7 @@ public class LabelProperties extends PropertyPage
 		areaLayout.marginLeft = 0;
 		areaLayout.marginRight = 0;
 		bgArea.setLayout(areaLayout);
-		new Label(bgArea, SWT.NONE).setText(Messages.LabelProperties_BgColor);
+		new Label(bgArea, SWT.NONE).setText(Messages.get().LabelProperties_BgColor);
 		background = new ColorSelector(bgArea);
 		background.setColorValue(ColorConverter.rgbFromInt(config.getBackgroundColorAsInt()));
 		

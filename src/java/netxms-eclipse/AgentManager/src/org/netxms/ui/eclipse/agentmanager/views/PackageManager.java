@@ -93,7 +93,7 @@ public class PackageManager extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.PackageManager_ColumnID, Messages.PackageManager_ColumnName, Messages.PackageManager_ColumnVersion, Messages.PackageManager_ColumnPlatform, Messages.PackageManager_ColumnFile, Messages.PackageManager_ColumnDescription };
+		final String[] names = { Messages.get().PackageManager_ColumnID, Messages.get().PackageManager_ColumnName, Messages.get().PackageManager_ColumnVersion, Messages.get().PackageManager_ColumnPlatform, Messages.get().PackageManager_ColumnFile, Messages.get().PackageManager_ColumnDescription };
 		final int[] widths = { 70, 120, 90, 120, 150, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -115,7 +115,7 @@ public class PackageManager extends ViewPart
 		});
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -141,7 +141,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.PackageManager_OpenError;
+				return Messages.get().PackageManager_OpenError;
 			}
 		}.start();
 	}
@@ -168,7 +168,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionInstall = new Action(Messages.PackageManager_InstallAction, SharedIcons.ADD_OBJECT) {
+		actionInstall = new Action(Messages.get().PackageManager_InstallAction, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -176,7 +176,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionRemove = new Action(Messages.PackageManager_RemoveAction, SharedIcons.DELETE_OBJECT) {
+		actionRemove = new Action(Messages.get().PackageManager_RemoveAction, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -184,7 +184,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionDeploy = new Action(Messages.PackageManager_DeployAction, Activator.getImageDescriptor("icons/package_deploy.gif")) { //$NON-NLS-1$
+		actionDeploy = new Action(Messages.get().PackageManager_DeployAction, Activator.getImageDescriptor("icons/package_deploy.gif")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -268,7 +268,7 @@ public class PackageManager extends ViewPart
 	private void refresh()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.PackageManager_LoadPkgList, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().PackageManager_LoadPkgList, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -286,7 +286,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.PackageManager_PkgListLoadError;
+				return Messages.get().PackageManager_PkgListLoadError;
 			}
 		}.start();
 	}
@@ -297,9 +297,9 @@ public class PackageManager extends ViewPart
 	private void installPackage()
 	{
 		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
-		fd.setText(Messages.PackageManager_SelectFile);
+		fd.setText(Messages.get().PackageManager_SelectFile);
 		fd.setFilterExtensions(new String[] { "*.npi", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-		fd.setFilterNames(new String[] { Messages.PackageManager_FileTypePackage, Messages.PackageManager_FileTypeAll });
+		fd.setFilterNames(new String[] { Messages.get().PackageManager_FileTypePackage, Messages.get().PackageManager_FileTypeAll });
 		String npiName = fd.open();
 		if (npiName != null)
 		{
@@ -308,7 +308,7 @@ public class PackageManager extends ViewPart
 				final File npiFile = new File(npiName);
 				final PackageInfo p = new PackageInfo(npiFile);
 				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				new ConsoleJob(Messages.PackageManager_InstallPackage, this, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(Messages.get().PackageManager_InstallPackage, this, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(final IProgressMonitor monitor) throws Exception
 					{
@@ -318,7 +318,7 @@ public class PackageManager extends ViewPart
 							@Override
 							public void setTotalWorkAmount(long amount)
 							{
-								monitor.beginTask(Messages.PackageManager_UploadPackage, (int)amount);
+								monitor.beginTask(Messages.get().PackageManager_UploadPackage, (int)amount);
 							}
 							
 							@Override
@@ -342,13 +342,13 @@ public class PackageManager extends ViewPart
 					@Override
 					protected String getErrorMessage()
 					{
-						return Messages.PackageManager_InstallError;
+						return Messages.get().PackageManager_InstallError;
 					}
 				}.start();
 			}
 			catch(IOException e)
 			{
-				MessageDialogHelper.openError(getSite().getShell(), Messages.PackageManager_Error, Messages.PackageManager_PkgFileOpenError + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getSite().getShell(), Messages.get().PackageManager_Error, Messages.get().PackageManager_PkgFileOpenError + e.getLocalizedMessage());
 			}
 		}
 	}
@@ -358,13 +358,13 @@ public class PackageManager extends ViewPart
 	 */
 	private void removePackage()
 	{
-		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.PackageManager_ConfirmDeleteTitle, Messages.PackageManager_ConfirmDeleteText))
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().PackageManager_ConfirmDeleteTitle, Messages.get().PackageManager_ConfirmDeleteText))
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Object[] packages = ((IStructuredSelection)viewer.getSelection()).toArray();
 		final List<Object> removedPackages = new ArrayList<Object>();
-		new ConsoleJob(Messages.PackageManager_DeletePackages, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().PackageManager_DeletePackages, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -391,7 +391,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.PackageManager_PkgDeleteError;
+				return Messages.get().PackageManager_PkgDeleteError;
 			}
 		}.start();
 	}
@@ -417,7 +417,7 @@ public class PackageManager extends ViewPart
 			objects.add(o.getObjectId());
 		}
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		ConsoleJob job = new ConsoleJob(Messages.PackageManager_DeployAgentPackage, null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().PackageManager_DeployAgentPackage, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -447,7 +447,7 @@ public class PackageManager extends ViewPart
 									}
 									catch(PartInitException e)
 									{
-										MessageDialogHelper.openError(getSite().getShell(), Messages.PackageManager_Error, Messages.PackageManager_ErrorOpenView + e.getLocalizedMessage());
+										MessageDialogHelper.openError(getSite().getShell(), Messages.get().PackageManager_Error, Messages.get().PackageManager_ErrorOpenView + e.getLocalizedMessage());
 									}
 									synchronized(sync)
 									{
@@ -473,7 +473,7 @@ public class PackageManager extends ViewPart
 							@Override
 							public void run()
 							{
-								MessageDialogHelper.openInformation(getSite().getShell(), Messages.PackageManager_Information, Messages.PackageManager_PkgDepCompleted);
+								MessageDialogHelper.openInformation(getSite().getShell(), Messages.get().PackageManager_Information, Messages.get().PackageManager_PkgDepCompleted);
 							}
 						});
 					}
@@ -483,7 +483,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.PackageManager_DepStartError;
+				return Messages.get().PackageManager_DepStartError;
 			}
 		};
 		job.setUser(false);
@@ -497,7 +497,7 @@ public class PackageManager extends ViewPart
 	public void dispose()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.PackageManager_UnlockDatabase, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().PackageManager_UnlockDatabase, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -516,7 +516,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.PackageManager_DBUnlockError;
+				return Messages.get().PackageManager_DBUnlockError;
 			}
 		}.start();
 		super.dispose();

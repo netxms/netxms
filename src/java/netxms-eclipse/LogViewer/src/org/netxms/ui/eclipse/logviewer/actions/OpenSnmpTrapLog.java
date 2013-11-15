@@ -66,7 +66,7 @@ public class OpenSnmpTrapLog implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenSnmpTrapLog_Error, Messages.OpenSnmpTrapLog_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSnmpTrapLog_Error, Messages.get().OpenSnmpTrapLog_ErrorText + e.getMessage());
 			}
 		}
 	}

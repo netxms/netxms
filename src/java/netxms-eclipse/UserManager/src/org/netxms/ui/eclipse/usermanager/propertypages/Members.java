@@ -76,7 +76,7 @@ public class Members extends PropertyPage
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 
-      final String[] columnNames = { Messages.Members_LoginName };
+      final String[] columnNames = { Messages.get().Members_LoginName };
       final int[] columnWidths = { 300 };
       userList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                          SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -101,7 +101,7 @@ public class Members extends PropertyPage
       buttons.setLayoutData(gd);
       
       final Button addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.Members_Add);
+      addButton.setText(Messages.get().Members_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -124,7 +124,7 @@ public class Members extends PropertyPage
       });
 
       final Button deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.Members_Delete);
+      deleteButton.setText(Messages.get().Members_Delete);
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -186,7 +186,7 @@ public class Members extends PropertyPage
 			memberIds[i++] = id;
 		object.setMembers(memberIds);
 		
-		new ConsoleJob(Messages.Members_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().Members_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -196,7 +196,7 @@ public class Members extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.Members_JobError;
+				return Messages.get().Members_JobError;
 			}
 
 			@Override

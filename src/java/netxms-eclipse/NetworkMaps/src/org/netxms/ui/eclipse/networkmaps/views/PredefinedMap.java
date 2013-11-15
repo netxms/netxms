@@ -249,7 +249,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		super.createActions();
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 
-		actionAddObject = new Action(Messages.PredefinedMap_AddObject) {
+		actionAddObject = new Action(Messages.get().PredefinedMap_AddObject) {
 			@Override
 			public void run()
 			{
@@ -261,7 +261,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		final ActionHandler addObjectHandler = new ActionHandler(actionAddObject);
 		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
 
-		actionAddGroupBox = new Action(Messages.PredefinedMap_GroupBox) {
+		actionAddGroupBox = new Action(Messages.get().PredefinedMap_GroupBox) {
 			@Override
 			public void run()
 			{
@@ -269,7 +269,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		};
 
-		actionAddImage = new Action(Messages.PredefinedMap_Image) {
+		actionAddImage = new Action(Messages.get().PredefinedMap_Image) {
 			@Override
 			public void run()
 			{
@@ -277,7 +277,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		};
 
-		actionLinkObjects = new Action(Messages.PredefinedMap_LinkObjects, Activator.getImageDescriptor("icons/link_add.png")) { //$NON-NLS-1$
+		actionLinkObjects = new Action(Messages.get().PredefinedMap_LinkObjects, Activator.getImageDescriptor("icons/link_add.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -289,7 +289,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		final ActionHandler linkObjectHandler = new ActionHandler(actionLinkObjects);
 		handlerService.activateHandler(actionLinkObjects.getActionDefinitionId(), linkObjectHandler);
 
-		actionRemove = new Action(Messages.PredefinedMap_RemoveFromMap, SharedIcons.DELETE_OBJECT) {
+		actionRemove = new Action(Messages.get().PredefinedMap_RemoveFromMap, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -301,7 +301,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		final ActionHandler removeHandler = new ActionHandler(actionRemove);
 		handlerService.activateHandler(actionRemove.getActionDefinitionId(), removeHandler);
 
-		actionMapProperties = new Action(Messages.PredefinedMap_MapProperties) {
+		actionMapProperties = new Action(Messages.get().PredefinedMap_MapProperties) {
 			@Override
 			public void run()
 			{
@@ -309,7 +309,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		};
 
-		actionLinkProperties = new Action(Messages.PredefinedMap_Properties) {
+		actionLinkProperties = new Action(Messages.get().PredefinedMap_Properties) {
 			@Override
 			public void run()
 			{
@@ -325,7 +325,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	 */
 	private IMenuManager createDecorationAdditionSubmenu()
 	{
-		MenuManager menu = new MenuManager(Messages.PredefinedMap_AddDecoration);
+		MenuManager menu = new MenuManager(Messages.get().PredefinedMap_AddDecoration);
 		menu.add(actionAddGroupBox);
 		menu.add(actionAddImage);
 		return menu;
@@ -508,8 +508,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.PredefinedMap_ConfirmRemoval, 
-		      (selection.size() == 1) ? Messages.PredefinedMap_RemovalConfirmationSingular : Messages.PredefinedMap_RemovalConfirmationPlural))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().PredefinedMap_ConfirmRemoval, 
+		      (selection.size() == 1) ? Messages.get().PredefinedMap_RemovalConfirmationSingular : Messages.get().PredefinedMap_RemovalConfirmationPlural))
 			return;
 
 		Object[] objects = selection.toArray();
@@ -600,7 +600,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			flags &= ~NetworkMap.MF_SHOW_STATUS_BKGND;
 		md.setObjectFlags(flags);
 
-		new ConsoleJob(String.format(Messages.PredefinedMap_SaveJobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
+		new ConsoleJob(String.format(Messages.get().PredefinedMap_SaveJobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
 		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -618,7 +618,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.PredefinedMap_SaveJobError;
+				return Messages.get().PredefinedMap_SaveJobError;
 			}
 		}.start();
 	}

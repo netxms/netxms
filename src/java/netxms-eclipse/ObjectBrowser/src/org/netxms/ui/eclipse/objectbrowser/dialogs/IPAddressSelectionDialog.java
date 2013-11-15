@@ -71,7 +71,7 @@ public class IPAddressSelectionDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText(Messages.IPAddressSelectionDialog_Title);
+		newShell.setText(Messages.get().IPAddressSelectionDialog_Title);
 		super.configureShell(newShell);
 	}
 
@@ -119,11 +119,11 @@ public class IPAddressSelectionDialog extends Dialog
 		table.setHeaderVisible(true);
 		
 		TableColumn tc = new TableColumn(table, SWT.LEFT);
-		tc.setText(Messages.IPAddressSelectionDialog_IPAddress);
+		tc.setText(Messages.get().IPAddressSelectionDialog_IPAddress);
 		tc.setWidth(90);
 		
 		tc = new TableColumn(table, SWT.LEFT);
-		tc.setText(Messages.IPAddressSelectionDialog_Interface);
+		tc.setText(Messages.get().IPAddressSelectionDialog_Interface);
 		tc.setWidth(150);
 		
 		Set<AbstractObject> addrList = new HashSet<AbstractObject>();
@@ -152,7 +152,7 @@ public class IPAddressSelectionDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.IPAddressSelectionDialog_Warning, Messages.IPAddressSelectionDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().IPAddressSelectionDialog_Warning, Messages.get().IPAddressSelectionDialog_WarningText);
 			return;
 		}
 		address = ((Interface)selection.getFirstElement()).getPrimaryIP();

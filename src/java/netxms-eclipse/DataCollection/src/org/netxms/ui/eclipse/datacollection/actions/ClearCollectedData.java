@@ -61,16 +61,16 @@ public class ClearCollectedData implements IObjectActionDelegate
 		if (objects == null)
 			return;
 		
-		if (!MessageDialogHelper.openQuestion(part.getSite().getShell(), Messages.ClearCollectedData_ConfirmDialogTitle, Messages.ClearCollectedData_ConfirmationText))
+		if (!MessageDialogHelper.openQuestion(part.getSite().getShell(), Messages.get().ClearCollectedData_ConfirmDialogTitle, Messages.get().ClearCollectedData_ConfirmationText))
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Set<DCI> dciToClear = objects;
-		new ConsoleJob(Messages.ClearCollectedData_TaskName, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ClearCollectedData_TaskName, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.ClearCollectedData_TaskName, dciToClear.size());
+				monitor.beginTask(Messages.get().ClearCollectedData_TaskName, dciToClear.size());
 				for(DCI d : dciToClear)
 				{
 					session.clearCollectedData(d.nodeId, d.dciId);
@@ -82,7 +82,7 @@ public class ClearCollectedData implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ClearCollectedData_ErrorText;
+				return Messages.get().ClearCollectedData_ErrorText;
 			}
 		}.start();
 	}

@@ -67,7 +67,7 @@ public class CreateMobileDevice implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.CreateMobileDevice_JobTitle, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateMobileDevice_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -79,7 +79,7 @@ public class CreateMobileDevice implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.CreateMobileDevice_JobError, dlg.getName());
+				return String.format(Messages.get().CreateMobileDevice_JobError, dlg.getName());
 			}
 		}.start();
 	}

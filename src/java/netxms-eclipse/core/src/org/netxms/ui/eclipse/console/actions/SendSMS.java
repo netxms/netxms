@@ -70,7 +70,7 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.SendSMS_JobTitle + dlg.getPhoneNumber(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SendSMS_JobTitle + dlg.getPhoneNumber(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -79,8 +79,8 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 					@Override
 					public void run()
 					{
-						final String message = Messages.SendSMS_DialogTextPrefix + dlg.getPhoneNumber() + Messages.SendSMS_DialogTextSuffix;
-						MessageDialogHelper.openInformation(window.getShell(), Messages.SendSMS_DialogTitle, message);
+						final String message = Messages.get().SendSMS_DialogTextPrefix + dlg.getPhoneNumber() + Messages.get().SendSMS_DialogTextSuffix;
+						MessageDialogHelper.openInformation(window.getShell(), Messages.get().SendSMS_DialogTitle, message);
 					}
 				});
 			}
@@ -88,7 +88,7 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.SendSMS_SendError + dlg.getPhoneNumber();
+				return Messages.get().SendSMS_SendError + dlg.getPhoneNumber();
 			}
 		}.start();
 	}

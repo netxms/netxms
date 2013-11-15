@@ -55,24 +55,24 @@ public class DciLabelProvider implements ITableLabelProvider
 		statusImages[DataCollectionItem.DISABLED] = Activator.getImageDescriptor("icons/disabled.gif").createImage(); //$NON-NLS-1$
 		statusImages[DataCollectionItem.NOT_SUPPORTED] = Activator.getImageDescriptor("icons/unsupported.gif").createImage(); //$NON-NLS-1$
 		
-		originTexts.put(DataCollectionItem.AGENT, Messages.DciLabelProvider_SourceAgent);
-		originTexts.put(DataCollectionItem.SNMP, Messages.DciLabelProvider_SourceSNMP);
-		originTexts.put(DataCollectionItem.CHECKPOINT_SNMP, Messages.DciLabelProvider_SourceCPSNMP);
-		originTexts.put(DataCollectionItem.INTERNAL, Messages.DciLabelProvider_SourceInternal);
-		originTexts.put(DataCollectionItem.PUSH, Messages.DciLabelProvider_SourcePush);
-		originTexts.put(DataCollectionItem.WINPERF, Messages.DciLabelProvider_SourceWinPerf);
-		originTexts.put(DataCollectionItem.ILO, Messages.DciLabelProvider_SourceILO);
+		originTexts.put(DataCollectionItem.AGENT, Messages.get().DciLabelProvider_SourceAgent);
+		originTexts.put(DataCollectionItem.SNMP, Messages.get().DciLabelProvider_SourceSNMP);
+		originTexts.put(DataCollectionItem.CHECKPOINT_SNMP, Messages.get().DciLabelProvider_SourceCPSNMP);
+		originTexts.put(DataCollectionItem.INTERNAL, Messages.get().DciLabelProvider_SourceInternal);
+		originTexts.put(DataCollectionItem.PUSH, Messages.get().DciLabelProvider_SourcePush);
+		originTexts.put(DataCollectionItem.WINPERF, Messages.get().DciLabelProvider_SourceWinPerf);
+		originTexts.put(DataCollectionItem.ILO, Messages.get().DciLabelProvider_SourceILO);
 		
-		statusTexts.put(DataCollectionItem.ACTIVE, Messages.DciLabelProvider_Active);
-		statusTexts.put(DataCollectionItem.DISABLED, Messages.DciLabelProvider_Disabled);
-		statusTexts.put(DataCollectionItem.NOT_SUPPORTED, Messages.DciLabelProvider_NotSupported);
+		statusTexts.put(DataCollectionItem.ACTIVE, Messages.get().DciLabelProvider_Active);
+		statusTexts.put(DataCollectionItem.DISABLED, Messages.get().DciLabelProvider_Disabled);
+		statusTexts.put(DataCollectionItem.NOT_SUPPORTED, Messages.get().DciLabelProvider_NotSupported);
 
-		dtTexts.put(DataCollectionItem.DT_INT, Messages.DciLabelProvider_DT_int32);
-		dtTexts.put(DataCollectionItem.DT_UINT, Messages.DciLabelProvider_DT_uint32);
-		dtTexts.put(DataCollectionItem.DT_INT64, Messages.DciLabelProvider_DT_int64);
-		dtTexts.put(DataCollectionItem.DT_UINT64, Messages.DciLabelProvider_DT_uint64);
-		dtTexts.put(DataCollectionItem.DT_FLOAT, Messages.DciLabelProvider_DT_float);
-		dtTexts.put(DataCollectionItem.DT_STRING, Messages.DciLabelProvider_DT_string);
+		dtTexts.put(DataCollectionItem.DT_INT, Messages.get().DciLabelProvider_DT_int32);
+		dtTexts.put(DataCollectionItem.DT_UINT, Messages.get().DciLabelProvider_DT_uint32);
+		dtTexts.put(DataCollectionItem.DT_INT64, Messages.get().DciLabelProvider_DT_int64);
+		dtTexts.put(DataCollectionItem.DT_UINT64, Messages.get().DciLabelProvider_DT_uint64);
+		dtTexts.put(DataCollectionItem.DT_FLOAT, Messages.get().DciLabelProvider_DT_float);
+		dtTexts.put(DataCollectionItem.DT_STRING, Messages.get().DciLabelProvider_DT_string);
 	}
 	
 	/* (non-Javadoc)
@@ -107,21 +107,21 @@ public class DciLabelProvider implements ITableLabelProvider
 			case DataCollectionEditor.COLUMN_DATATYPE:
 				if (dci instanceof DataCollectionItem)
 					return dtTexts.get(((DataCollectionItem)dci).getDataType());
-				return Messages.DciLabelProvider_Table;
+				return Messages.get().DciLabelProvider_Table;
 			case DataCollectionEditor.COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())
-					return Messages.DciLabelProvider_CustomSchedule;
+					return Messages.get().DciLabelProvider_CustomSchedule;
 				return Integer.toString(dci.getPollingInterval());
 			case DataCollectionEditor.COLUMN_RETENTION:
 				int days = dci.getRetentionTime();
-				return Integer.toString(days) + ((days == 1) ? Messages.DciLabelProvider_Day : Messages.DciLabelProvider_Days);
+				return Integer.toString(days) + ((days == 1) ? Messages.get().DciLabelProvider_Day : Messages.get().DciLabelProvider_Days);
 			case DataCollectionEditor.COLUMN_STATUS:
 				return statusTexts.get(dci.getStatus());
 			case DataCollectionEditor.COLUMN_TEMPLATE:
 				if (dci.getTemplateId() == 0)
 					return null;
 				AbstractObject object = session.findObjectById(dci.getTemplateId());
-				return (object != null) ? object.getObjectName() : Messages.DciLabelProvider_Unknown;
+				return (object != null) ? object.getObjectName() : Messages.get().DciLabelProvider_Unknown;
 		}
 		return null;
 	}

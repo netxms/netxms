@@ -66,7 +66,7 @@ public class OpenEditor implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenEditor_Error, Messages.OpenEditor_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenEditor_Error, Messages.get().OpenEditor_ErrorText + e.getMessage());
 			}
 		}
 	}

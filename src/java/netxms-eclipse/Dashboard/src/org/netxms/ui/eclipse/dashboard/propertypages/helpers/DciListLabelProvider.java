@@ -117,11 +117,11 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case DataSources.COLUMN_METRIC:
 				String name = dciNameCache.get(new NodeItemPair(dci.nodeId, dci.dciId));
-				return (name != null) ? name : Messages.DciListLabelProvider_Unresolved;
+				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
 			case DataSources.COLUMN_LABEL:
 				return dci.name;
 			case DataSources.COLUMN_COLOR:
-				return dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR) ? Messages.DciListLabelProvider_Auto : dci.color;
+				return dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR) ? Messages.get().DciListLabelProvider_Auto : dci.color;
 		}
 		return null;
 	}
@@ -133,7 +133,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void resolveDciNames(final Collection<ChartDciConfig> dciList)
 	{
-		new ConsoleJob(Messages.DciListLabelProvider_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DciListLabelProvider_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -164,7 +164,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DciListLabelProvider_JobError;
+				return Messages.get().DciListLabelProvider_JobError;
 			}
 		}.runInForeground();
 	}

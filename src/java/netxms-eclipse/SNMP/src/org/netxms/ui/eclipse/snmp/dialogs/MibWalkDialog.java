@@ -65,7 +65,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.MibWalkDialog_Title);
+		newShell.setText(Messages.get().MibWalkDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -129,15 +129,15 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 	private void setupViewerColumns()
 	{
 		TableColumn tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText(Messages.MibExplorer_OID);
+		tc.setText(Messages.get().MibExplorer_OID);
 		tc.setWidth(300);
 
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText(Messages.MibExplorer_Type);
+		tc.setText(Messages.get().MibExplorer_Type);
 		tc.setWidth(100);
 
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText(Messages.MibExplorer_Value);
+		tc.setText(Messages.get().MibExplorer_Value);
 		tc.setWidth(300);
 		
 		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "MibWalkDialog"); //$NON-NLS-1$
@@ -196,7 +196,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		getButton(IDialogConstants.OK_ID).setEnabled(false);
 		getButton(IDialogConstants.CANCEL_ID).setEnabled(false);
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.MibExplorer_WalkJob_Title, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MibExplorer_WalkJob_Title, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -206,7 +206,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.MibExplorer_WalkJob_Error;
+				return Messages.get().MibExplorer_WalkJob_Error;
 			}
 
 			@Override

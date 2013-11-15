@@ -94,8 +94,8 @@ public class FilterBuilder extends Composite
 		
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
-		form.setText(Messages.FilterBuilder_Filter);
-		form.getToolBarManager().add(new Action(Messages.FilterBuilder_Execute, SharedIcons.EXECUTE) {
+		form.setText(Messages.get().FilterBuilder_Filter);
+		form.getToolBarManager().add(new Action(Messages.get().FilterBuilder_Execute, SharedIcons.EXECUTE) {
 			@Override
 			public void run()
 			{
@@ -103,14 +103,14 @@ public class FilterBuilder extends Composite
 					actionExecute.run();
 			} 
 		});
-		form.getToolBarManager().add(new Action(Messages.FilterBuilder_ClearFilter, SharedIcons.CLEAR_LOG) {
+		form.getToolBarManager().add(new Action(Messages.get().FilterBuilder_ClearFilter, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
 				clearFilter();
 			} 
 		});
-		form.getToolBarManager().add(new Action(Messages.FilterBuilder_Close, SharedIcons.CLOSE) {
+		form.getToolBarManager().add(new Action(Messages.get().FilterBuilder_Close, SharedIcons.CLOSE) {
 			@Override
 			public void run()
 			{
@@ -155,7 +155,7 @@ public class FilterBuilder extends Composite
 	private void createConditionSection()
 	{
 		condition = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		condition.setText(Messages.FilterBuilder_Condition);
+		condition.setText(Messages.get().FilterBuilder_Condition);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = true;
 		twd.align = TableWrapData.FILL;
@@ -167,7 +167,7 @@ public class FilterBuilder extends Composite
 		condition.setClient(clientArea);
 		
 		final ImageHyperlink addColumnLink = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		addColumnLink.setText(Messages.FilterBuilder_AddColumn);
+		addColumnLink.setText(Messages.get().FilterBuilder_AddColumn);
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
 		addColumnLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -184,7 +184,7 @@ public class FilterBuilder extends Composite
 	private void createOrderingSection()
 	{
 		ordering = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		ordering.setText(Messages.FilterBuilder_Ordering);
+		ordering.setText(Messages.get().FilterBuilder_Ordering);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = false;
 		twd.align = TableWrapData.FILL;
@@ -200,11 +200,11 @@ public class FilterBuilder extends Composite
 		toolkit.adapt(orderingList.getTable());
 		
 		TableViewerColumn column = new TableViewerColumn(orderingList, SWT.LEFT);
-		column.getColumn().setText(Messages.FilterBuilder_Column);
+		column.getColumn().setText(Messages.get().FilterBuilder_Column);
 		column.getColumn().setWidth(200);
 
 		column = new TableViewerColumn(orderingList, SWT.LEFT);
-		column.getColumn().setText(Messages.FilterBuilder_Descending);
+		column.getColumn().setText(Messages.get().FilterBuilder_Descending);
 		column.getColumn().setWidth(60);
 		column.setEditingSupport(new OrderingColumnEditingSupport(orderingList));
 
@@ -222,7 +222,7 @@ public class FilterBuilder extends Composite
 		orderingList.getControl().setLayoutData(gd);
 		
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText(Messages.FilterBuilder_Add);
+		linkAdd.setText(Messages.get().FilterBuilder_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -236,7 +236,7 @@ public class FilterBuilder extends Composite
 		linkAdd.setLayoutData(gd);
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText(Messages.FilterBuilder_Remove);
+		linkRemove.setText(Messages.get().FilterBuilder_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -332,7 +332,7 @@ public class FilterBuilder extends Composite
 	public void setLogHandle(Log logHandle)
 	{
 		this.logHandle = logHandle;
-		form.setText(String.format(Messages.FilterBuilder_FormTitle, logHandle.getName()));
+		form.setText(String.format(Messages.get().FilterBuilder_FormTitle, logHandle.getName()));
 	}
 	
 	/**

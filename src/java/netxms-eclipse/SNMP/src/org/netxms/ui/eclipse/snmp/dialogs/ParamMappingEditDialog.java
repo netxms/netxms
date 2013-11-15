@@ -75,7 +75,7 @@ public class ParamMappingEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.ParamMappingEditDialog_Title);
+		newShell.setText(Messages.get().ParamMappingEditDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -92,10 +92,10 @@ public class ParamMappingEditDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		dialogArea.setLayout(layout);
 		
-		description = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.ParamMappingEditDialog_Description, pm.getDescription(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+		description = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.get().ParamMappingEditDialog_Description, pm.getDescription(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		Group varbind = new Group(dialogArea, SWT.NONE);
-		varbind.setText(Messages.ParamMappingEditDialog_Varbind);
+		varbind.setText(Messages.get().ParamMappingEditDialog_Varbind);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -105,7 +105,7 @@ public class ParamMappingEditDialog extends Dialog
 		varbind.setLayout(layout);
 		
 		radioByOid = new Button(varbind, SWT.RADIO);
-		radioByOid.setText(Messages.ParamMappingEditDialog_ByOID);
+		radioByOid.setText(Messages.get().ParamMappingEditDialog_ByOID);
 		radioByOid.setSelection(pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID);
 		radioByOid.addSelectionListener(new SelectionListener() {
 			@Override
@@ -139,7 +139,7 @@ public class ParamMappingEditDialog extends Dialog
 		objectId.setLayoutData(gd);
 		
 		buttonSelect = new Button(oidSelection, SWT.PUSH);
-		buttonSelect.setText(Messages.ParamMappingEditDialog_Select);
+		buttonSelect.setText(Messages.get().ParamMappingEditDialog_Select);
 		gd = new GridData();
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 		buttonSelect.setLayoutData(gd);
@@ -158,7 +158,7 @@ public class ParamMappingEditDialog extends Dialog
 		});
 		
 		radioByPosition = new Button(varbind, SWT.RADIO);
-		radioByPosition.setText(Messages.ParamMappingEditDialog_ByPos);
+		radioByPosition.setText(Messages.get().ParamMappingEditDialog_ByPos);
 		radioByPosition.setSelection(pm.getType() == SnmpTrapParameterMapping.BY_POSITION);
 		radioByPosition.addSelectionListener(new SelectionListener() {
 			@Override
@@ -190,10 +190,10 @@ public class ParamMappingEditDialog extends Dialog
 		gd.widthHint = 40;
 		position.setLayoutData(gd);
 		
-		new Label(positionSelection, SWT.NONE).setText(Messages.ParamMappingEditDialog_EnterVarbindPos);
+		new Label(positionSelection, SWT.NONE).setText(Messages.get().ParamMappingEditDialog_EnterVarbindPos);
 
 		final Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText(Messages.ParamMappingEditDialog_Options);
+		optionsGroup.setText(Messages.get().ParamMappingEditDialog_Options);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -201,7 +201,7 @@ public class ParamMappingEditDialog extends Dialog
 		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		
 		checkForceText = new Button(optionsGroup, SWT.CHECK);
-		checkForceText.setText(Messages.ParamMappingEditDialog_NeverConvertToHex);
+		checkForceText.setText(Messages.get().ParamMappingEditDialog_NeverConvertToHex);
 		checkForceText.setSelection((pm.getFlags() & SnmpTrapParameterMapping.FORCE_TEXT) != 0);
 		
 		enableControls(pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID);
@@ -258,7 +258,7 @@ public class ParamMappingEditDialog extends Dialog
 			}
 			catch(SnmpObjectIdFormatException e)
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.ParamMappingEditDialog_Warning, Messages.ParamMappingEditDialog_WarningInvalidOID);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().ParamMappingEditDialog_Warning, Messages.get().ParamMappingEditDialog_WarningInvalidOID);
 				return;
 			}
 		}

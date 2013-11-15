@@ -67,7 +67,7 @@ public class EnterIpAddressDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.EnterIpAddressDlg_Title);
+		newShell.setText(Messages.get().EnterIpAddressDlg_Title);
 	}
 	
 	/* (non-Javadoc)
@@ -84,7 +84,7 @@ public class EnterIpAddressDlg extends Dialog
       dialogArea.setLayout(layout);
       
       ipAddressText = new LabeledText(dialogArea, SWT.NONE);
-      ipAddressText.setLabel(Messages.EnterIpAddressDlg_IpAddress);
+      ipAddressText.setLabel(Messages.get().EnterIpAddressDlg_IpAddress);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -94,7 +94,7 @@ public class EnterIpAddressDlg extends Dialog
       if (zoningEnabled)
       {
 	      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-	      objectSelector.setLabel(Messages.EnterIpAddressDlg_Zone);
+	      objectSelector.setLabel(Messages.get().EnterIpAddressDlg_Zone);
 	      objectSelector.setObjectClass(Zone.class);
 	      objectSelector.setClassFilter(ObjectSelectionDialog.createZoneSelectionFilter());
 	      gd = new GridData();
@@ -119,7 +119,7 @@ public class EnterIpAddressDlg extends Dialog
 		}
 		catch(UnknownHostException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.EnterIpAddressDlg_Warning, Messages.EnterIpAddressDlg_EnterValidAddress);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().EnterIpAddressDlg_Warning, Messages.get().EnterIpAddressDlg_EnterValidAddress);
 			return;
 		}
 		
@@ -128,13 +128,13 @@ public class EnterIpAddressDlg extends Dialog
 			long objectId = objectSelector.getObjectId();
 			if (objectId == 0)
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.EnterIpAddressDlg_Warning, Messages.EnterIpAddressDlg_SelectZone);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().EnterIpAddressDlg_Warning, Messages.get().EnterIpAddressDlg_SelectZone);
 				return;
 			}
 			AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
 			if ((object == null) || !(object instanceof Zone))
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.EnterIpAddressDlg_Warning, Messages.EnterIpAddressDlg_SelectZone);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().EnterIpAddressDlg_Warning, Messages.get().EnterIpAddressDlg_SelectZone);
 				return;
 			}
 			zoneId = ((Zone)object).getZoneId();

@@ -89,7 +89,7 @@ public class IdMatchingDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.IdMatchingDialog_Title);
+		newShell.setText(Messages.get().IdMatchingDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -106,14 +106,14 @@ public class IdMatchingDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.WRAP);
-		label.setText(Messages.IdMatchingDialog_HelpText);
+		label.setText(Messages.get().IdMatchingDialog_HelpText);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 0;
 		label.setLayoutData(gd);
 		
-		final String[] names = { Messages.IdMatchingDialog_ColumnOriginalID, Messages.IdMatchingDialog_ColumnName, Messages.IdMatchingDialog_ColumnMatchID, Messages.IdMatchingDialog_ColumnMatchName };
+		final String[] names = { Messages.get().IdMatchingDialog_ColumnOriginalID, Messages.get().IdMatchingDialog_ColumnName, Messages.get().IdMatchingDialog_ColumnMatchID, Messages.get().IdMatchingDialog_ColumnMatchName };
 		final int[] widths = { 100, 300, 80, 300 };
 		viewer = new SortableTreeViewer(dialogArea, names, widths, 0, SWT.UP, SWT.BORDER | SWT.SINGLE | SWT.FULL_SELECTION);
 		viewer.getTree().setLinesVisible(true);
@@ -141,7 +141,7 @@ public class IdMatchingDialog extends Dialog
 	 */
 	private void createActions()
 	{
-		actionMap = new Action(Messages.IdMatchingDialog_MapTo, Activator.getImageDescriptor("icons/sync.gif")) { //$NON-NLS-1$
+		actionMap = new Action(Messages.get().IdMatchingDialog_MapTo, Activator.getImageDescriptor("icons/sync.gif")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -229,7 +229,7 @@ public class IdMatchingDialog extends Dialog
 			}
 			else
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.IdMatchingDialog_Warning, Messages.IdMatchingDialog_ClassMismatch);
+				MessageDialogHelper.openWarning(getShell(), Messages.get().IdMatchingDialog_Warning, Messages.get().IdMatchingDialog_ClassMismatch);
 			}
 		}
 	}
@@ -245,7 +245,7 @@ public class IdMatchingDialog extends Dialog
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.IdMatchingDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().IdMatchingDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -277,7 +277,7 @@ public class IdMatchingDialog extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.IdMatchingDialog_JobErrorText;
+				return Messages.get().IdMatchingDialog_JobErrorText;
 			}
 		}.start();
 	}
@@ -328,7 +328,7 @@ public class IdMatchingDialog extends Dialog
 		
 		if (!ok)
 		{
-			if (!MessageDialogHelper.openQuestion(getShell(), Messages.IdMatchingDialog_MatchingErrors, Messages.IdMatchingDialog_ConfirmationText))
+			if (!MessageDialogHelper.openQuestion(getShell(), Messages.get().IdMatchingDialog_MatchingErrors, Messages.get().IdMatchingDialog_ConfirmationText))
 				return;
 		}
 		

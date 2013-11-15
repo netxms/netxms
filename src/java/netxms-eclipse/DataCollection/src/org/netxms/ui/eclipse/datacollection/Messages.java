@@ -492,12 +492,14 @@ public class Messages extends NLS
 
 	private Messages()
 	{
-	}
-	
+ }
+
+
 	private static Messages instance = new Messages();
-	
-	public Messages get()
+
+	public static Messages get()
 	{
-	   return instance;
+		return instance;
 	}
+
 }

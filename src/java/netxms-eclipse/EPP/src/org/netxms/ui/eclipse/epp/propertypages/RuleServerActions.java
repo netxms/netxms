@@ -78,7 +78,7 @@ public class RuleServerActions extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.RuleServerActions_Action };
+      final String[] columnNames = { Messages.get().RuleServerActions_Action };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -116,7 +116,7 @@ public class RuleServerActions extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.RuleServerActions_Add);
+      addButton.setText(Messages.get().RuleServerActions_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -135,7 +135,7 @@ public class RuleServerActions extends PropertyPage
       addButton.setLayoutData(rd);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.RuleServerActions_Delete);
+      deleteButton.setText(Messages.get().RuleServerActions_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

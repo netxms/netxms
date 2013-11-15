@@ -239,7 +239,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 		
-		actionWalk = new Action(Messages.MibExplorer_Walk) {
+		actionWalk = new Action(Messages.get().MibExplorer_Walk) {
 			@Override
 			public void run()
 			{
@@ -248,7 +248,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 		actionWalk.setEnabled(currentNode != null);
 		
-		actionSetNode = new Action(Messages.MibExplorer_SetNodeObject) {
+		actionSetNode = new Action(Messages.get().MibExplorer_SetNodeObject) {
 			@Override
 			public void run()
 			{
@@ -261,7 +261,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
-		actionCopyObjectName = new Action(Messages.MibExplorer_CopyName) {
+		actionCopyObjectName = new Action(Messages.get().MibExplorer_CopyName) {
 			@Override
 			public void run()
 			{
@@ -271,7 +271,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
-		actionCopy = new Action(Messages.MibExplorer_CopyToClipboard) {
+		actionCopy = new Action(Messages.get().MibExplorer_CopyToClipboard) {
 			@Override
 			public void run()
 			{
@@ -295,7 +295,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
-		actionCopyName = new Action(Messages.MibExplorer_CopyName) {
+		actionCopyName = new Action(Messages.get().MibExplorer_CopyName) {
 			@Override
 			public void run()
 			{
@@ -303,7 +303,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
-		actionCopyType = new Action(Messages.MibExplorer_CopyType) {
+		actionCopyType = new Action(Messages.get().MibExplorer_CopyType) {
 			@Override
 			public void run()
 			{
@@ -311,7 +311,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
-		actionCopyValue = new Action(Messages.MibExplorer_CopyValue) {
+		actionCopyValue = new Action(Messages.get().MibExplorer_CopyValue) {
 			@Override
 			public void run()
 			{
@@ -319,7 +319,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 		
-		actionSelect = new Action(Messages.MibExplorer_SelectInTree) {
+		actionSelect = new Action(Messages.get().MibExplorer_SelectInTree) {
 			@Override
 			public void run()
 			{
@@ -489,15 +489,15 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private void setupViewerColumns()
 	{
 		TableColumn tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText(Messages.MibExplorer_OID);
+		tc.setText(Messages.get().MibExplorer_OID);
 		tc.setWidth(300);
 
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText(Messages.MibExplorer_Type);
+		tc.setText(Messages.get().MibExplorer_Type);
 		tc.setWidth(100);
 
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText(Messages.MibExplorer_Value);
+		tc.setText(Messages.get().MibExplorer_Value);
 		tc.setWidth(300);
 		
 		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "MibExplorer"); //$NON-NLS-1$
@@ -551,7 +551,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		viewer.setInput(new SnmpValue[0]);
 		walkData.clear();
 		
-		ConsoleJob job = new ConsoleJob(Messages.MibExplorer_WalkJob_Title, this, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().MibExplorer_WalkJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -561,7 +561,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.MibExplorer_WalkJob_Error;
+				return Messages.get().MibExplorer_WalkJob_Error;
 			}
 
 			@Override

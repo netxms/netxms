@@ -129,7 +129,7 @@ public abstract class AbstractTraceWidget extends Composite
 	{
 		final IHandlerService handlerService = (IHandlerService)PlatformUI.getWorkbench().getService(IHandlerService.class);
 		
-		actionPause = new Action(Messages.AbstractTraceView_Pause, Action.AS_CHECK_BOX) {
+		actionPause = new Action(Messages.get().AbstractTraceView_Pause, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -141,7 +141,7 @@ public abstract class AbstractTraceWidget extends Composite
 		final ActionHandler pauseHandler = new ActionHandler(actionPause);
 		handlerService.activateHandler(actionPause.getActionDefinitionId(), pauseHandler);
 		
-      actionShowFilter = new Action(Messages.AbstractTraceView_ShowFilter, Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.get().AbstractTraceView_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -152,7 +152,7 @@ public abstract class AbstractTraceWidget extends Composite
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.show_trace_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
-      actionCopy = new Action(Messages.AbstractTraceView_CopyToClipboard, SharedIcons.COPY) {
+      actionCopy = new Action(Messages.get().AbstractTraceView_CopyToClipboard, SharedIcons.COPY) {
 			@Override
 			public void run()
 			{

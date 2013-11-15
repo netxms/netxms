@@ -92,7 +92,7 @@ public class EditActionDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(createNew ? Messages.EditActionDlg_CreateAction : Messages.EditActionDlg_EditAction);
+		newShell.setText(createNew ? Messages.get().EditActionDlg_CreateAction : Messages.get().EditActionDlg_EditAction);
 	}
 
 	/* (non-Javadoc)
@@ -108,11 +108,11 @@ public class EditActionDlg extends Dialog
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		dialogArea.setLayout(layout);
 		
-		name = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.EditActionDlg_Name, action.getName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+		name = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.get().EditActionDlg_Name, action.getName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 
 		/* type selection radio buttons */
 		Group typeGroup = new Group(dialogArea, SWT.NONE);
-		typeGroup.setText(Messages.EditActionDlg_Type);
+		typeGroup.setText(Messages.get().EditActionDlg_Type);
 		typeGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -120,38 +120,38 @@ public class EditActionDlg extends Dialog
 		typeGroup.setLayoutData(gd);
 		
 		typeLocalExec = new Button(typeGroup, SWT.RADIO);
-		typeLocalExec.setText(Messages.EditActionDlg_ExecCommandOnServer);
+		typeLocalExec.setText(Messages.get().EditActionDlg_ExecCommandOnServer);
 		typeLocalExec.setSelection(action.getType() == ServerAction.EXEC_LOCAL);
 		typeLocalExec.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeRemoteExec = new Button(typeGroup, SWT.RADIO);
-		typeRemoteExec.setText(Messages.EditActionDlg_ExecCommandOnNode);
+		typeRemoteExec.setText(Messages.get().EditActionDlg_ExecCommandOnNode);
 		typeRemoteExec.setSelection(action.getType() == ServerAction.EXEC_REMOTE);
 		typeRemoteExec.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeExecScript = new Button(typeGroup, SWT.RADIO);
-		typeExecScript.setText(Messages.EditActionDlg_ExecuteScript);
+		typeExecScript.setText(Messages.get().EditActionDlg_ExecuteScript);
 		typeExecScript.setSelection(action.getType() == ServerAction.EXEC_NXSL_SCRIPT);
 		typeExecScript.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeEMail = new Button(typeGroup, SWT.RADIO);
-		typeEMail.setText(Messages.EditActionDlg_SenMail);
+		typeEMail.setText(Messages.get().EditActionDlg_SenMail);
 		typeEMail.setSelection(action.getType() == ServerAction.SEND_EMAIL);
 		typeEMail.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeSMS = new Button(typeGroup, SWT.RADIO);
-		typeSMS.setText(Messages.EditActionDlg_SendSMS);
+		typeSMS.setText(Messages.get().EditActionDlg_SendSMS);
 		typeSMS.setSelection(action.getType() == ServerAction.SEND_SMS);
 		typeSMS.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeForward = new Button(typeGroup, SWT.RADIO);
-		typeForward.setText(Messages.EditActionDlg_ForwardEvent);
+		typeForward.setText(Messages.get().EditActionDlg_ForwardEvent);
 		typeForward.setSelection(action.getType() == ServerAction.FORWARD_EVENT);
 		typeForward.addSelectionListener(new TypeButtonSelectionListener());
 		/* type selection radio buttons - end */
 
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText(Messages.EditActionDlg_Options);
+		optionsGroup.setText(Messages.get().EditActionDlg_Options);
 		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -159,7 +159,7 @@ public class EditActionDlg extends Dialog
 		optionsGroup.setLayoutData(gd);
 		
 		markDisabled = new Button(optionsGroup, SWT.CHECK);
-		markDisabled.setText(Messages.EditActionDlg_ActionDisabled);
+		markDisabled.setText(Messages.get().EditActionDlg_ActionDisabled);
 		markDisabled.setSelection(action.isDisabled());
 		
 		recipient = new LabeledText(dialogArea, SWT.NONE);
@@ -171,7 +171,7 @@ public class EditActionDlg extends Dialog
 		recipient.setLayoutData(gd);
 
 		subject = new LabeledText(dialogArea, SWT.NONE);
-		subject.setLabel(Messages.EditActionDlg_MailSubject);
+		subject.setLabel(Messages.get().EditActionDlg_MailSubject);
 		subject.setText(action.getEmailSubject());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -202,15 +202,15 @@ public class EditActionDlg extends Dialog
 		switch(type)
 		{
 			case ServerAction.EXEC_REMOTE:
-				return Messages.EditActionDlg_RemoteHost;
+				return Messages.get().EditActionDlg_RemoteHost;
 			case ServerAction.SEND_SMS:
-				return Messages.EditActionDlg_PhoneNumber;
+				return Messages.get().EditActionDlg_PhoneNumber;
 			case ServerAction.FORWARD_EVENT:
-				return Messages.EditActionDlg_RemoteServer;
+				return Messages.get().EditActionDlg_RemoteServer;
 			case ServerAction.EXEC_NXSL_SCRIPT:
-				return Messages.EditActionDlg_ScriptName;
+				return Messages.get().EditActionDlg_ScriptName;
 		}
-		return Messages.EditActionDlg_Recipient;
+		return Messages.get().EditActionDlg_Recipient;
 	}
 	
 	/**
@@ -224,11 +224,11 @@ public class EditActionDlg extends Dialog
 		switch(type)
 		{
 			case ServerAction.EXEC_LOCAL:
-				return Messages.EditActionDlg_Command;
+				return Messages.get().EditActionDlg_Command;
 			case ServerAction.EXEC_REMOTE:
-				return Messages.EditActionDlg_Action;
+				return Messages.get().EditActionDlg_Action;
 		}
-		return Messages.EditActionDlg_MessageText;
+		return Messages.get().EditActionDlg_MessageText;
 	}
 
 	/* (non-Javadoc)

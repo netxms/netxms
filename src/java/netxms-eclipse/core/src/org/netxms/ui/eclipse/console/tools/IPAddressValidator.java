@@ -57,6 +57,6 @@ public class IPAddressValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return String.format(Messages.IPAddressValidator_ErrorMessage, label);
+		return String.format(Messages.get().IPAddressValidator_ErrorMessage, label);
 	}
 }

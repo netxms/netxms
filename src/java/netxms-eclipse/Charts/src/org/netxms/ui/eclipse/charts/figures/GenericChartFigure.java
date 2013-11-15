@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.charts.api.DataChart;
  */
 public abstract class GenericChartFigure extends Figure implements DataChart
 {
-	protected String title = Messages.GenericChart_Title0;
+	protected String title = Messages.get().GenericChart_Title0;
 	protected boolean titleVisible = false;
 	protected boolean legendVisible = true;
 	protected boolean displayIn3D = true;

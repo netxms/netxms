@@ -98,23 +98,7 @@ public class Messages extends NLS
 
 	private Messages()
 	{
-	}
-
-	/**
-	 * This is intentional mix between old and new approach. getString
-	 * used to read log display name based on log name. 
-	 */
-	public static String getString(String key)
-	{
-		try
-		{
-			return RESOURCE_BUNDLE.getString(key);
-		}
-		catch(MissingResourceException e)
-		{
-			return '!' + key + '!';
-		}
-	}
+ }
 
 
 	/**
@@ -152,5 +136,21 @@ public class Messages extends NLS
 			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
 		}
 	}
+//start
+	/**
+	 * This is intentional mix between old and new approach. getString
+	 * used to read log display name based on log name. 
+	 */
+	public static String getString(String key)
+	{
+		try
+		{
+			return RESOURCE_BUNDLE.getString(key);
+		}
+		catch(MissingResourceException e)
+		{
+			return '!' + key + '!';
+		}
+	}
+	//end
 }
-

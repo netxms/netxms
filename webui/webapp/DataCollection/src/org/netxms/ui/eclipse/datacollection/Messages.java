@@ -495,8 +495,9 @@ public class Messages extends NLS
 
 	private Messages()
 	{
-	}
-	
+ }
+
+
 	/**
 	 * Get message class for current locale
 	 *
@@ -532,5 +533,5 @@ public class Messages extends NLS
 			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
 		}
 	}
-}
 
+}

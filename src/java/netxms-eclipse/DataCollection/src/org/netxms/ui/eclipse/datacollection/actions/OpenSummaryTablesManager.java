@@ -65,7 +65,7 @@ public class OpenSummaryTablesManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenSummaryTablesManager_Error, String.format(Messages.OpenSummaryTablesManager_CannotOpenView, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSummaryTablesManager_Error, String.format(Messages.get().OpenSummaryTablesManager_CannotOpenView, e.getLocalizedMessage()));
 			}
 		}
 	}

@@ -51,7 +51,7 @@ public class UserLabelProvider extends WorkbenchLabelProvider implements ITableL
 			case UserManagementView.COLUMN_NAME:
 				return getText(element);
 			case UserManagementView.COLUMN_TYPE:
-				return (element instanceof User) ? Messages.UserLabelProvider_User : Messages.UserLabelProvider_Group;
+				return (element instanceof User) ? Messages.get().UserLabelProvider_User : Messages.get().UserLabelProvider_Group;
 			case UserManagementView.COLUMN_FULLNAME:
 				return (element instanceof User) ? ((User) element).getFullName() : null;
 			case UserManagementView.COLUMN_DESCRIPTION:

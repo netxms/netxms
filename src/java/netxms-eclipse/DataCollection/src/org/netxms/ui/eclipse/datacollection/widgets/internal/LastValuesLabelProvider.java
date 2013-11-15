@@ -93,9 +93,9 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				return ((DciValue)element).getDescription();
 			case LastValuesWidget.COLUMN_VALUE:
 				if (showErrors && ((DciValue)element).getErrorCount() > 0)
-					return Messages.LastValuesLabelProvider_Error;
+					return Messages.get().LastValuesLabelProvider_Error;
 				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
-					return Messages.LastValuesLabelProvider_Table;
+					return Messages.get().LastValuesLabelProvider_Table;
 				return useMultipliers ? getValue((DciValue)element) : ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() == 0)
@@ -116,7 +116,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	private String formatThreshold(Threshold threshold)
 	{
 		if (threshold == null)
-			return Messages.LastValuesLabelProvider_OK;
+			return Messages.get().LastValuesLabelProvider_OK;
 		return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
 	}
 
@@ -141,15 +141,15 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					}
 					if ((i >= 10000000000L) || (i <= -10000000000L))
 					{
-						return Long.toString(i / 1000000000L) + Messages.LastValuesLabelProvider_Giga;
+						return Long.toString(i / 1000000000L) + Messages.get().LastValuesLabelProvider_Giga;
 					}
 					if ((i >= 10000000) || (i <= -10000000))
 					{
-						return Long.toString(i / 1000000) + Messages.LastValuesLabelProvider_Mega;
+						return Long.toString(i / 1000000) + Messages.get().LastValuesLabelProvider_Mega;
 					}
 					if ((i >= 10000) || (i <= -10000))
 					{
-						return Long.toString(i / 1000) + Messages.LastValuesLabelProvider_Kilo;
+						return Long.toString(i / 1000) + Messages.get().LastValuesLabelProvider_Kilo;
 					}
 				}
 				catch(NumberFormatException e)
@@ -168,15 +168,15 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					}
 					if ((d >= 10000000000.0) || (d <= -10000000000.0))
 					{
-						return nf.format(d / 1000000000.0) + Messages.LastValuesLabelProvider_Giga;
+						return nf.format(d / 1000000000.0) + Messages.get().LastValuesLabelProvider_Giga;
 					}
 					if ((d >= 10000000) || (d <= -10000000))
 					{
-						return nf.format(d / 1000000) + Messages.LastValuesLabelProvider_Mega;
+						return nf.format(d / 1000000) + Messages.get().LastValuesLabelProvider_Mega;
 					}
 					if ((d >= 10000) || (d <= -10000))
 					{
-						return nf.format(d / 1000) + Messages.LastValuesLabelProvider_Kilo;
+						return nf.format(d / 1000) + Messages.get().LastValuesLabelProvider_Kilo;
 					}
 				}
 				catch(NumberFormatException e)
