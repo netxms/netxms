@@ -145,7 +145,7 @@ public class TableColumns extends PropertyPage
       leftButtons.setLayout(buttonsLayout);
 
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText("&Up");
+      upButton.setText(Messages.get().TableColumns_Up);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
@@ -164,7 +164,7 @@ public class TableColumns extends PropertyPage
 		});
 
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText("Do&wn");
+      downButton.setText(Messages.get().TableColumns_Down);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
@@ -332,11 +332,11 @@ public class TableColumns extends PropertyPage
 		column.setWidth(80);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText("Instance");
+		column.setText(Messages.get().TableColumns_Instance);
 		column.setWidth(50);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText("Aggregation");
+		column.setText(Messages.get().TableColumns_Aggregation);
 		column.setWidth(80);
 		
 		column = new TableColumn(table, SWT.LEFT);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -269,7 +269,7 @@ public class LastValuesWidget extends Composite
 		};
 		actionShowUnsupported.setChecked(isShowUnsupported());
 		
-		actionShowDisabled = new Action("Show disabled", Action.AS_CHECK_BOX) {
+		actionShowDisabled = new Action(Messages.get().LastValuesWidget_ShowDisabled, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
