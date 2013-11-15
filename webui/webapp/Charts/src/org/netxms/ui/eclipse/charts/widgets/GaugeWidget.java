@@ -69,7 +69,7 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 	protected boolean vertical = false;
 	protected boolean legendInside = true;
 	protected boolean gridVisible = true;
-	protected String fontName = "Verdana";
+	protected String fontName = "Verdana"; //$NON-NLS-1$
 	
 	private boolean fontsCreated = false;
 	
@@ -662,7 +662,7 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 	public void setFontName(String fontName)
 	{
 		if ((fontName == null) || fontName.isEmpty())
-			fontName = "Verdana";
+			fontName = "Verdana"; //$NON-NLS-1$
 		if (!fontName.equals(this.fontName))
 		{
 			this.fontName = fontName;

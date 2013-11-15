@@ -50,8 +50,6 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	 */
 	public AlarmListLabelProvider()
 	{
-	   super();
-	   
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$

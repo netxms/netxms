@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -255,8 +255,6 @@ public class AlarmList extends Composite
 	private void createActions()
 	{
 		actionComments = new Action(Messages.get().AlarmList_Comments, Activator.getImageDescriptor("icons/comments.png")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -419,7 +417,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get(getDisplay()).AlarmList_SyncJobError;
+				return Messages.get().AlarmList_SyncJobError;
 			}
 		}.start();
 	}
@@ -477,7 +475,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get(getDisplay()).AcknowledgeAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get().AcknowledgeAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -492,7 +490,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get(getDisplay()).AcknowledgeAlarm_ErrorMessage;
+				return Messages.get().AcknowledgeAlarm_ErrorMessage;
 			}
 		}.start();
 	}
@@ -512,7 +510,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get(getDisplay()).AlarmList_ResolveAlarm, alarms.length);
+				monitor.beginTask(Messages.get().AlarmList_ResolveAlarm, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -527,7 +525,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get(getDisplay()).AlarmList_CannotResoveAlarm;
+				return Messages.get().AlarmList_CannotResoveAlarm;
 			}
 		}.start();
 	}
@@ -546,7 +544,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get(getDisplay()).TerminateAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get().TerminateAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -561,7 +559,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get(getDisplay()).TerminateAlarm_ErrorMessage;
+				return Messages.get().TerminateAlarm_ErrorMessage;
 			}
 		}.start();
 	}
