@@ -34,6 +34,12 @@ import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.ScalableFigure;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.gef4.zest.core.viewers.GraphViewer;
+import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
+import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
+import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
+import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
@@ -47,12 +53,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.gef4.zest.core.viewers.GraphViewer;
-import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
-import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
-import org.eclipse.gef4.zest.core.widgets.GraphConnection;
-import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
-import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -68,6 +68,7 @@ import org.netxms.ui.eclipse.tools.ColorCache;
  * (https://bugs.eclipse.org/bugs/show_bug.cgi?id=244496) 
  *
  */
+@SuppressWarnings("restriction")
 public class ExtendedGraphViewer extends GraphViewer
 {
 	private static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 4.00 };
