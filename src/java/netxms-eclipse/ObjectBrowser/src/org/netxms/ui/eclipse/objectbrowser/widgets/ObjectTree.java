@@ -695,7 +695,9 @@ public class ObjectTree extends Composite
          public boolean performDrop(Object data) 
          {
             AbstractObject movableObject = (AbstractObject)((TreeSelection)data).getFirstElement();
-            obj.performObjectMove((AbstractObject)getCurrentTarget(), movableObject.getParentsAsArray()[movableObject.getParentsAsArray().length-1], movableObject);
+            TreePath path = ((TreeSelection)data).getPaths()[0];
+            AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
+            obj.performObjectMove((AbstractObject)getCurrentTarget(), parent, movableObject);
             return true;
          }
 
