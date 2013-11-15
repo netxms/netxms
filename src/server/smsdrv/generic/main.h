@@ -3,6 +3,8 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#define INCLUDE_LIBNXSRV_MESSAGES
+
 #include <nxsrvapi.h>
 
 #ifdef _WIN32

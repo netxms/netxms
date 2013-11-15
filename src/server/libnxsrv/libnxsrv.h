@@ -24,6 +24,8 @@
 #ifndef _libnxsrv_h_
 #define _libnxsrv_h_
 
+#define INCLUDE_LIBNXSRV_MESSAGES
+
 #include <nms_common.h>
 #include <nms_util.h>
 #include <uuid.h>

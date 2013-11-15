@@ -24,6 +24,8 @@
 #ifndef _portech_h_
 #define _portech_h_
 
+#define INCLUDE_LIBNXSRV_MESSAGES
+
 #include <nxsrvapi.h>
 
 

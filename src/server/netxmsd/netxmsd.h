@@ -24,6 +24,8 @@
 #ifndef _netxmsd_h_
 #define _netxmsd_h_
 
+#define INCLUDE_LIBNXSRV_MESSAGES
+
 #include <nms_core.h>
 
 #ifdef _WIN32
