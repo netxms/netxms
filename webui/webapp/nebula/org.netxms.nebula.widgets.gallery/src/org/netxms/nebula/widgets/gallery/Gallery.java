@@ -104,11 +104,6 @@ import org.eclipse.swt.widgets.TypedListener;
 
 public class Gallery extends Canvas {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
 	//private static final String BUG_PLATFORM_LINUX_GTK_174932 = "gtk"; //$NON-NLS-1$
 
 	/**
@@ -600,10 +595,6 @@ public class Gallery extends Canvas {
 	 */
 	private void _addDisposeListeners() {
 		this.addDisposeListener(new DisposeListener() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
 
 			public void widgetDisposed(DisposeEvent e) {
 				onDispose();
@@ -616,10 +607,6 @@ public class Gallery extends Canvas {
 	 */
 	private void _addPaintListeners() {
 		addPaintListener(new PaintListener() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
 
 			public void paintControl(PaintEvent event) {
 				onPaint(event.gc);
@@ -632,10 +619,6 @@ public class Gallery extends Canvas {
 	 */
 	private void _addResizeListeners() {
 		addControlListener(new ControlAdapter() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
 
 			public void controlResized(ControlEvent event) {
 				updateStructuralValues(null, true);
@@ -654,11 +637,6 @@ public class Gallery extends Canvas {
 		if (verticalBar != null) {
 			verticalBar.addSelectionListener(new SelectionAdapter() {
 
-				/**
-				 * 
-				 */
-				private static final long serialVersionUID = 1L;
-
 				public void widgetSelected(SelectionEvent event) {
 					if (vertical)
 						scrollVertical();
@@ -672,11 +650,6 @@ public class Gallery extends Canvas {
 		if (horizontalBar != null) {
 			horizontalBar.addSelectionListener(new SelectionAdapter() {
 
-				/**
-				 * 
-				 */
-				private static final long serialVersionUID = 1L;
-
 				public void widgetSelected(SelectionEvent event) {
 					if (!vertical)
 						scrollHorizontal();
@@ -688,11 +661,6 @@ public class Gallery extends Canvas {
 
 	private void _addKeyListeners() {
 		this.addKeyListener(new KeyListener() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
 
 			public void keyPressed(KeyEvent e) {
 
@@ -785,11 +753,6 @@ public class Gallery extends Canvas {
 	 */
 	private void _addMouseListeners() {
 		addMouseListener(new MouseListener() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
 
 			public void mouseDoubleClick(MouseEvent e) {
 				onMouseDoubleClick(e);

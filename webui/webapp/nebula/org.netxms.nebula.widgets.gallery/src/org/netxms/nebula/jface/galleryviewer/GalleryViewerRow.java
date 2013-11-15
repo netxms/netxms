@@ -29,7 +29,6 @@ import org.netxms.nebula.widgets.gallery.GalleryItem;
  * @since Dec 5, 2007
  */
 public class GalleryViewerRow extends ViewerRow {
-	private static final long serialVersionUID = 1L;
 
 	protected GalleryItem item;
 

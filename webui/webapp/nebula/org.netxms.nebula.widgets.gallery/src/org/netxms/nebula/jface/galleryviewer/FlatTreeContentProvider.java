@@ -23,7 +23,6 @@ import org.eclipse.jface.viewers.Viewer;
  * @since Dec 6, 2007
  */
 public class FlatTreeContentProvider implements ITreeContentProvider {
-	private static final long serialVersionUID = 1L;
 
 	protected final Object rootNode;
 	protected final IStructuredContentProvider provider;

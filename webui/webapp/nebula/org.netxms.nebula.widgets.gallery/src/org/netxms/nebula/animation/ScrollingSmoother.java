@@ -127,11 +127,6 @@ public class ScrollingSmoother {
 
 	Listener mouseWheelListener = new Listener() {
 
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
 		public void handleEvent(Event event) {
 			// Remove standard behavior
 			event.doit = false;
@@ -205,7 +200,6 @@ public class ScrollingSmoother {
 	}
 
 	SelectionListener cancelEffectIfUserSelection = new SelectionListener() {
-		private static final long serialVersionUID = 1L;
 
 		public void widgetDefaultSelected(SelectionEvent e) {
 			widgetSelected(e);
