@@ -402,19 +402,21 @@ private:
 protected:
 	void (*m_objectDestructor)(void *);
 
+   Array(void *data, int initial, int grow, int elementSize);
+
 public:
 	Array(int initial = 0, int grow = 16, bool owner = false);
 	virtual ~Array();
 
-	int add(void *object);
-	void *get(int index) { return ((index >= 0) && (index < m_size)) ? m_data[index] : NULL; }
-   int indexOf(void *object);
-	void set(int index, void *object);
-	void replace(int index, void *object);
+	int add(void *element);
+   void *get(int index) { return ((index >= 0) && (index < m_size)) ? ((m_elementSize <= sizeof(void *)) ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   int indexOf(void *element);
+	void set(int index, void *element);
+	void replace(int index, void *element);
 	void remove(int index) { internalRemove(index, true); }
-   void remove(void *object) { internalRemove(indexOf(object), true); }
+   void remove(void *element) { internalRemove(indexOf(element), true); }
 	void unlink(int index) { internalRemove(index, false); }
-	void unlink(void *object) { internalRemove(indexOf(object), false); }
+	void unlink(void *element) { internalRemove(indexOf(element), false); }
 	void clear();
 
 	int size() { return m_size; }
@@ -452,7 +454,7 @@ public:
 template <class T> class IntegerArray : public Array
 {
 private:
-	static void destructor(void *object) { }
+	static void destructor(void *element) { }
 
 public:
 	IntegerArray(int initial = 0, int grow = 16) : Array(initial, grow, false) { m_objectDestructor = destructor; }
@@ -467,22 +469,25 @@ public:
 /**
  * Auxilliary class to hold dynamically allocated array of structures
  */
-template <class T> class StructArray
+template <class T> class StructArray : public Array
 {
 private:
-   int m_size;
-	int m_allocated;
-	int m_grow;
-	T *m_data;
+	static void destructor(void *element) { }
 
 public:
-	StructArray(T *data, int size) { m_data = data; m_size = size; }
-	~StructArray() { safe_free(m_data); }
+	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
+	StructArray(T *data, int size) : Array(data, size, 16, sizeof(T)) { m_objectDestructor = destructor; }
+	virtual ~StructArray() { }
 
-	int size() { return m_size; }
-
-	T *get(int index) { return ((index >= 0) && (index < m_count)) ? &m_data[index] : NULL; }
-   void replace(int index, T *value) { if ((index >= 0) && (index < m_count)) memcpy(&m_data[index], value, sizeof(T)); }
+	int add(T *element) { return Array::add((void *)element); }
+	T *get(int index) { return (T*)Array::get(index); }
+   int indexOf(T *element) { return Array::indexOf((void *)element); }
+	void set(int index, T *element) { Array::set(index, (void *)element); }
+	void replace(int index, T *element) { Array::replace(index, (void *)element); }
+	void remove(int index) { Array::remove(index); }
+   void remove(T *element) { Array::remove((void *)element); }
+	void unlink(int index) { Array::unlink(index); }
+   void unlink(T *element) { Array::unlink((void *)element); }
 };
 
 /**

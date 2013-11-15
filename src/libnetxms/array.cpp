@@ -23,12 +23,14 @@
 
 #include "libnetxms.h"
 
+#define ADDR(index) ((void *)((char *)m_data + m_elementSize * (index)))
+
 /**
- * Default object destructor
+ * Default element destructor
  */
-static void ObjectDestructor(void *object)
+static void ObjectDestructor(void *element)
 {
-	free(object);
+	free(element);
 }
 
 /**
@@ -65,7 +67,7 @@ Array::~Array()
 /**
  * Add pointer-sized element by value
  */
-int Array::add(void *object)
+int Array::add(void *element)
 {
 	if (m_size == m_allocated)
 	{
@@ -73,18 +75,23 @@ int Array::add(void *object)
 		m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
 	}
    if (m_elementSize <= sizeof(void *))
-	   m_data[m_size++] = object;
+   {
+	   m_data[m_size++] = element;
+   }
    else
-   	memcpy(&m_data[m_size++], element, m_elementSize);
+   {
+   	memcpy(ADDR(m_size), element, m_elementSize);
+      m_size++;
+   }
 	return m_size - 1;
 }
 
 /**
- * Set object at given index. If index is within array bounds, object at this position will be replaced,
+ * Set element at given index. If index is within array bounds, element at this position will be replaced,
  * otherwise array will be expanded as required. Other new positions created during expansion will
  * be filled with NULL values.
  */
-void Array::set(int index, void *object)
+void Array::set(int index, void *element)
 {
 	if (index < 0)
 		return;
@@ -102,21 +109,21 @@ void Array::set(int index, void *object)
 			m_allocated += m_grow * ((index - m_allocated) / m_grow + 1);
 			m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
 		}
-		memset(&m_data[m_size], 0, m_elementSize * (index - m_size));
+		memset(ADDR(m_size), 0, m_elementSize * (index - m_size));
 		m_size = index + 1;
 	}
 
    if (m_elementSize <= sizeof(void *))
-   	m_data[index] = object;
+   	m_data[index] = element;
    else
-   	memcpy(&m_data[index], element, m_elementSize);
+   	memcpy(ADDR(index), element, m_elementSize);
 }
 
 /**
- * Replace object at given index. If index is beyond array bounds,
+ * Replace element at given index. If index is beyond array bounds,
  * this method will do nothing.
  */
-void Array::replace(int index, void *object)
+void Array::replace(int index, void *element)
 {
 	if ((index < 0) || (index >= m_size))
 		return;
@@ -125,9 +132,9 @@ void Array::replace(int index, void *object)
 		destroyObject(m_data[index]);
 
    if (m_elementSize <= sizeof(void *))
-   	m_data[index] = object;
+   	m_data[index] = element;
    else
-   	memcpy(&m_data[index], element, m_elementSize);
+   	memcpy(ADDR(index), element, m_elementSize);
 }
 
 /**
@@ -141,7 +148,7 @@ void Array::internalRemove(int index, bool allowDestruction)
 	if (m_objectOwner && allowDestruction)
 		destroyObject(m_data[index]);
 	m_size--;
-	memmove(&m_data[index], &m_data[index + 1], m_elementSize * (m_size - index));
+	memmove(ADDR(index), ADDR(index + 1), m_elementSize * (m_size - index));
 }
 
 /**
@@ -164,12 +171,25 @@ void Array::clear()
 }
 
 /**
- * Get index of given object
+ * Get index of given element
  */
-int Array::indexOf(void *object)
+int Array::indexOf(void *element)
 {
-	for(int i = 0; i < m_size; i++)
-      if (m_data[i] == object)
-         return i;
+   if (m_elementSize <= sizeof(void *))
+   {
+	   for(int i = 0; i < m_size; i++)
+      {
+         if (m_data[i] == element)
+            return i;
+      }
+   }
+   else
+   {
+	   for(int i = 0; i < m_size; i++)
+      {
+         if (!memcmp(ADDR(i), element, m_elementSize))
+            return i;
+      }
+   }
    return -1;
 }
