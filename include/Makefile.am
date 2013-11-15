@@ -12,6 +12,7 @@ include_HEADERS = \
 	appagent.h \
 	ata.h \
 	base64.h \
+	build.h \
 	config-netware.h \
 	dbdrv.h \
 	geolocation.h \
