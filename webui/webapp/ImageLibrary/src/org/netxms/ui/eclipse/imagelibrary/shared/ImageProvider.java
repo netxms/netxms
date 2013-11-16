@@ -164,7 +164,7 @@ public class ImageProvider
 			cache.put(guid, image);
 			if (libraryIndex.containsKey(guid))
 			{
-				new ConsoleJob(Messages.get().ImageProvider_JobName, null, Activator.PLUGIN_ID, null) {		
+				new ConsoleJob(Messages.get().ImageProvider_JobName, null, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
@@ -209,13 +209,13 @@ public class ImageProvider
 			}
 			catch(SWTException e)
 			{
-				Activator.logError("Cannot decode image", e);
+				Activator.logError("Cannot decode image", e); //$NON-NLS-1$
 				cache.put(guid, missingImage);
 			}
 		}
 		catch(Exception e)
 		{
-			Activator.logError("Cannot retrive image from server", e);
+			Activator.logError("Cannot retrive image from server", e); //$NON-NLS-1$
 		}
 	}
 

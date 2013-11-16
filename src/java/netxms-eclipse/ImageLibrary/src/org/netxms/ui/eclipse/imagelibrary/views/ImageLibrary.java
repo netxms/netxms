@@ -123,8 +123,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		}
 
 		ImageProvider.getInstance().addUpdateListener(this);
-		parent.addDisposeListener(new DisposeListener()
-		{
+		parent.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

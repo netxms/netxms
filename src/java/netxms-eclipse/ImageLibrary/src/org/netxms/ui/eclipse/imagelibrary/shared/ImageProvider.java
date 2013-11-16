@@ -93,6 +93,9 @@ public class ImageProvider
 		}
 	}
 
+	/**
+	 * 
+	 */
 	private void clearCache()
 	{
 		for(Image image : cache.values())
@@ -123,7 +126,6 @@ public class ImageProvider
 			if (libraryIndex.containsKey(guid))
 			{
 				new ConsoleJob(Messages.get().ImageProvider_JobName, null, Activator.PLUGIN_ID, null) {
-					
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
