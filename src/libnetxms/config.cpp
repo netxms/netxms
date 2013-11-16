@@ -1081,7 +1081,22 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
 bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
 	FILE *f;
-	int ch;
+	int ch, ret;
+	struct stat fileStats;
+
+	ret = _tstat(file, &fileStats);
+
+	if (ret)
+	{
+	   error(_T("Could not process '%s'!"), file);
+	   return false;
+	}
+
+	if (!S_ISREG(fileStats.st_mode))
+	{
+	   error(_T("'%s' is not a file!"), file);
+	   return false;
+	}
 
 	f = _tfopen(file, _T("r"));
 	if (f == NULL)
