@@ -31,13 +31,11 @@ import org.netxms.ui.eclipse.nxsl.views.ScriptLibrary;
  */
 public class ScriptLabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private Image iconScript;
 	
 	public ScriptLabelProvider()
 	{
-		iconScript = Activator.getImageDescriptor("icons/script.png").createImage();
+		iconScript = Activator.getImageDescriptor("icons/script.png").createImage(); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)

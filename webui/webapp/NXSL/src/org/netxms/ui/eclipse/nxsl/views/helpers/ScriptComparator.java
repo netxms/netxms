@@ -31,8 +31,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ScriptComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -43,7 +41,7 @@ public class ScriptComparator extends ViewerComparator
 
 		Script s1 = (Script)e1;
 		Script s2 = (Script)e2;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case ScriptLibrary.COLUMN_ID:
 				result = Long.signum(s1.getId() - s2.getId());

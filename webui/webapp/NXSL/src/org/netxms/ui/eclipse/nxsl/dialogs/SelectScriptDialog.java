@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.nxsl.dialogs;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -41,7 +40,9 @@ import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
+import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -49,8 +50,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class SelectScriptDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private TableViewer viewer;
 	private Script script;
 	
@@ -68,7 +67,7 @@ public class SelectScriptDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText("Select script");
+		newShell.setText(Messages.get().SelectScriptDialog_Title);
 		super.configureShell(newShell);
 	}
 
@@ -84,13 +83,11 @@ public class SelectScriptDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText("Available scripts");
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().SelectScriptDialog_AvailableScripts);
 		
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new LabelProvider() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public String getText(Object element)
 			{
@@ -98,8 +95,6 @@ public class SelectScriptDialog extends Dialog
 			}
       });
       viewer.setComparator(new ViewerComparator() {
-      	private static final long serialVersionUID = 1L;
-
       	@Override
       	public int compare(Viewer viewer, Object e1, Object e2)
       	{
@@ -126,7 +121,7 @@ public class SelectScriptDialog extends Dialog
       viewer.getControl().setLayoutData(gd);
       
 		final ScriptLibraryManager session = (ScriptLibraryManager)ConsoleSharedData.getSession();
-      new ConsoleJob("Get script list", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().SelectScriptDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -143,7 +138,7 @@ public class SelectScriptDialog extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get script list from server";
+				return Messages.get().SelectScriptDialog_JobError;
 			}
 		}.start();
       
@@ -159,7 +154,7 @@ public class SelectScriptDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() == 0)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "You must select at script from list and then press OK.");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectScriptDialog_Warning, Messages.get().SelectScriptDialog_WarningEmptySelection);
 			return;
 		}
 		script = (Script)selection.getFirstElement();

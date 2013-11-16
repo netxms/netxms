@@ -19,13 +19,14 @@
 package org.netxms.ui.eclipse.nxsl.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.nxsl.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -34,8 +35,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class CreateScriptDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private boolean rename;
 	private Text nameInputField;
 	private String name;
@@ -65,7 +64,7 @@ public class CreateScriptDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Script name", name,
+      nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateScriptDialog_ScriptName, name,
                                                       WidgetHelper.DEFAULT_LAYOUT_DATA);
       nameInputField.getShell().setMinimumSize(300, 0);
       
@@ -81,7 +80,7 @@ public class CreateScriptDialog extends Dialog
 		name = nameInputField.getText();
 		name = name.trim();
 		if (name.isEmpty())
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid script name");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateScriptDialog_Warning, Messages.get().CreateScriptDialog_WarningEmptyName);
 		else
 			super.okPressed();
 	}
@@ -93,7 +92,7 @@ public class CreateScriptDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(rename ? "Rename script" : "Create new script");
+		newShell.setText(rename ? Messages.get().CreateScriptDialog_Rename : Messages.get().CreateScriptDialog_CreateNew);
 	}
 
 	/**

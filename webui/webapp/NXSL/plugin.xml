@@ -8,7 +8,7 @@
             class="org.netxms.ui.eclipse.nxsl.views.ScriptLibrary"
             icon="icons/library.png"
             id="org.netxms.ui.eclipse.nxsl.views.ScriptLibrary"
-            name="Script Library"
+            name="%view.name.ScriptLibrary"
             restorable="true">
       </view>
       <view
@@ -16,39 +16,35 @@
             class="org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"
             icon="icons/editor.png"
             id="org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"
-            name="Edit Script"
+            name="%view.name.EditScript"
             restorable="true">
       </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
-      <category
-            id="org.netxms.ui.eclipse.console.category.views"
-            name="Views">
-      </category>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open Script Library"
+            description="%command.description.ScriptLibrary"
             id="org.netxms.ui.eclipse.nxsl.commands.open_script_library"
-            name="Script Library">
+            name="%command.name.ScriptLibrary">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.script_library"
-            label="Script Library"
+            label="%actionSet.label.ScriptLibrary"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.nxsl.actions.OpenScriptLibrary"
                definitionId="org.netxms.ui.eclipse.nxsl.commands.open_script_library"
                icon="icons/library.png"
                id="org.netxms.ui.eclipse.nxsl.actions.OpenScriptLibrary"
-               label="Script Library"
+               label="%action.label.ScriptLibrary"
                menubarPath="config/additions"
                style="push"
                toolbarPath="config/additions"
-               tooltip="Open Script Library">
+               tooltip="%action.tooltip.ScriptLibrary">
          </action>
       </actionSet>
    </extension>

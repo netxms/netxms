@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,10 @@
 package org.netxms.ui.eclipse.nxsl.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -42,9 +39,11 @@ import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
+import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Script editor view
@@ -52,7 +51,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class ScriptEditorView extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView";
+	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"; //$NON-NLS-1$
 	
 	private ScriptLibraryManager scriptLibraryManager;
 	private ScriptEditor editor;
@@ -84,8 +83,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		
 		editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
 		editor.getTextWidget().addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -120,8 +117,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -129,17 +124,13 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionSave = new Action() {
-			private static final long serialVersionUID = 1L;
-
+		actionSave = new Action(Messages.get().ScriptEditorView_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
 				saveScript();
 			}
 		};
-		actionSave.setText("&Save");
-		actionSave.setImageDescriptor(SharedIcons.SAVE);
 	}
 
 	/**
@@ -183,11 +174,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	 */
 	private void reloadScript()
 	{
-		new ConsoleJob("Loading script [" + scriptId + "]", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().ScriptEditorView_LoadJobTitle, scriptId), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load script with ID " + scriptId + " from server";
+				return String.format(Messages.get().ScriptEditorView_LoadJobError, scriptId);
 			}
 
 			@Override
@@ -199,7 +190,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 					public void run()
 					{
 						scriptName = script.getName();
-						setPartName("Edit Script - " + scriptName);
+						setPartName(String.format(Messages.get().ScriptEditorView_PartName, scriptName));
 						editor.setText(script.getSource());
 						actionSave.setEnabled(false);
 					}
@@ -215,11 +206,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		final String source = editor.getText();
 		editor.getTextWidget().setEditable(false);
-		new ConsoleJob("Saving script to library", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ScriptEditorView_SaveJobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save script to database";
+				return Messages.get().ScriptEditorView_SaveJobError;
 			}
 
 			@Override
@@ -240,20 +231,19 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	private void doScriptSave(String source, IProgressMonitor monitor) throws Exception
 	{
 		scriptLibraryManager.modifyScript(scriptId, scriptName, source);
-		new UIJob(editor.getDisplay(), "Update script editor") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
-			{
-				if (!editor.isDisposed())
-				{
-					editor.getTextWidget().setEditable(true);
-					actionSave.setEnabled(false);
-					modified = false;
-					firePropertyChange(PROP_DIRTY);
-				}
-				return Status.OK_STATUS;
-			}
-		}.schedule();
+		editor.getDisplay().asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            if (editor.isDisposed())
+               return;
+            
+            editor.getTextWidget().setEditable(true);
+            actionSave.setEnabled(false);
+            modified = false;
+            firePropertyChange(PROP_DIRTY);
+         }
+      });
 	}
 
 	/* (non-Javadoc)
@@ -285,7 +275,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save script: " + e.getMessage());
+			MessageDialogHelper.openError(getViewSite().getShell(), Messages.get().ScriptEditorView_Error, String.format(Messages.get().ScriptEditorView_SaveErrorMessage, e.getMessage()));
 		}
 	}
 

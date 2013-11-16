@@ -28,9 +28,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ScriptSelector extends AbstractSelector
 {
-	private static final long serialVersionUID = 1L;
-
-	private String scriptName = "";
+	private String scriptName = ""; //$NON-NLS-1$
 	
 	/**
 	 * @param parent
