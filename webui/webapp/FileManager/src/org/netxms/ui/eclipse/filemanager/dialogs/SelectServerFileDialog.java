@@ -19,10 +19,8 @@
 package org.netxms.ui.eclipse.filemanager.dialogs;
 
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -41,6 +39,7 @@ import org.netxms.ui.eclipse.filemanager.dialogs.helpers.ServerFileComparator;
 import org.netxms.ui.eclipse.filemanager.dialogs.helpers.ServerFileLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -50,8 +49,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class SelectServerFileDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_SIZE = 1;
 	public static final int COLUMN_MODTIME = 2;
@@ -143,7 +140,7 @@ public class SelectServerFileDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), Messages.get().SelectServerFileDialog_Warning, Messages.get().SelectServerFileDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectServerFileDialog_Warning, Messages.get().SelectServerFileDialog_WarningText);
 			return;
 		}
 		

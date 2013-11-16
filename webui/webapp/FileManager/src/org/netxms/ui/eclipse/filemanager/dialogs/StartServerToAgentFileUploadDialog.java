@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.filemanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -30,6 +29,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.ServerFile;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.ServerFileSelector;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class StartServerToAgentFileUploadDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private ServerFileSelector fileSelector;
 	private LabeledText textRemoteFile;
 	private Button checkJobOnHold;
@@ -110,7 +108,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		serverFile = fileSelector.getFile();
 		if (serverFile == null)
 		{
-			MessageDialog.openWarning(getShell(), Messages.get().StartServerToAgentFileUploadDialog_Warning, Messages.get().StartServerToAgentFileUploadDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().StartServerToAgentFileUploadDialog_Warning, Messages.get().StartServerToAgentFileUploadDialog_WarningText);
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();

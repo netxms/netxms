@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
  */
 public class ServerFileLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	WorkbenchLabelProvider wbLabelProvider;
+	private WorkbenchLabelProvider wbLabelProvider;
 	
 	public ServerFileLabelProvider()
 	{

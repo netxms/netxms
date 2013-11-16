@@ -20,20 +20,20 @@
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;

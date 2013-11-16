@@ -21,7 +21,7 @@
                class="org.netxms.ui.eclipse.filemanager.actions.UploadFileToAgent"
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Node"
-               label="Upload file..."
+               label="%action.label.UploadFile"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -34,7 +34,7 @@
                class="org.netxms.ui.eclipse.filemanager.actions.UploadFileToAgent"
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Container"
-               label="Upload file..."
+               label="%action.label.UploadFile"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -47,7 +47,7 @@
                class="org.netxms.ui.eclipse.filemanager.actions.UploadFileToAgent"
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_ServiceRoot"
-               label="Upload file..."
+               label="%action.label.UploadFile"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -60,7 +60,7 @@
                class="org.netxms.ui.eclipse.filemanager.actions.UploadFileToAgent"
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Subnet"
-               label="Upload file..."
+               label="%action.label.UploadFile"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -73,7 +73,7 @@
                class="org.netxms.ui.eclipse.filemanager.actions.UploadFileToAgent"
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_EntireNetwork"
-               label="Upload file..."
+               label="%action.label.UploadFile"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -82,25 +82,25 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Upload local file to server"
+            description="%command.description.UploadToServer"
             id="org.netxms.ui.eclipse.filemanager.commands.upload_file_to_server"
-            name="Upload file to server...">
+            name="%command.name.UploadToServer">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.filemanager.action_set"
-            label="File Manager Action Set"
+            label="%actionSet.label.FileManager"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.filemanager.actions.UploadFileToServer"
                definitionId="org.netxms.ui.eclipse.filemanager.commands.upload_file_to_server"
                icon="icons/upload.png"
                id="org.netxms.ui.eclipse.filemanager.actions.upload_file_to_server"
-               label="Upload file to server..."
+               label="%action.label.UploadToServer"
                menubarPath="tools/additions"
-               tooltip="Upload local file to server&apos;s file store">
+               tooltip="%action.tooltip.UploadToServer">
          </action>
       </actionSet>
    </extension>

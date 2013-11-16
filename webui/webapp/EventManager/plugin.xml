@@ -5,7 +5,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Event Configuration"
+            name="%view.name.EventCfg"
             icon="icons/event_configurator.png"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.eventmanager.views.EventConfigurator"
@@ -16,7 +16,7 @@
             class="org.netxms.ui.eclipse.eventmanager.views.EventMonitor"
             icon="icons/event_monitor.png"
             id="org.netxms.ui.eclipse.eventmanager.views.EventMonitor"
-            name="Event Monitor"
+            name="%view.name.EventMonitor"
             restorable="true">
       </view>
       <view
@@ -24,46 +24,42 @@
             class="org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor"
             icon="icons/event_monitor.png"
             id="org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor"
-            name="Syslog Monitor"
+            name="%view.name.SyslogMonitor"
             restorable="true">
       </view>
    </extension>
 
    <extension
          point="org.eclipse.ui.commands">
-      <category
-            name="Views"
-            id="org.netxms.ui.eclipse.console.category.views">
-      </category>
       <command
-            name="Event Configuration"
-            description="Open event configuration"
+            name="%command.name.OpenEventCfg"
+            description="%command.description.OpenEventCfg"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open event monitor"
+            description="%command.description.EventMonitor"
             id="org.netxms.ui.eclipse.eventmanager.commands.open_event_monitor"
-            name="Event Monitor">
+            name="%command.name.EventMonitor">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open syslog monitor"
+            description="%command.description.SyslogMonitor"
             id="org.netxms.ui.eclipse.eventmanager.commands.open_syslog_monitor"
-            name="Syslog Monitor">
+            name="%command.name.SyslogMonitor">
       </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.action_set.event_configuration"
-		   label="Event Configuration"
+		   label="%actionSet.label.EventCfg"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.eventmanager.actions.open"
 			   menubarPath="config/additions"
 			   toolbarPath="config/additions"
-			   label="Event Configuration"
-			   tooltip="Open event configuration"
+			   label="%action.label.EventCfg"
+			   tooltip="%action.tooltip.EventCfg"
 			   icon="icons/event_configurator.png"
 			   class="org.netxms.ui.eclipse.eventmanager.actions.OpenEventConfigurator"
 			   definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
@@ -72,17 +68,17 @@
            class="org.netxms.ui.eclipse.eventmanager.actions.OpenEventMonitor"
            definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_event_monitor"
            id="org.netxms.ui.eclipse.eventmanager.actions.open_event_monitor"
-           label="Events"
+           label="%action.label.EventMonitor"
            menubarPath="monitor/additions"
-           tooltip="Open event monitor">
+           tooltip="%action.tooltip.EventMonitor">
      </action>
      <action
            class="org.netxms.ui.eclipse.eventmanager.actions.OpenSyslogMonitor"
            definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_syslog_monitor"
            id="org.netxms.ui.eclipse.eventmanager.actions.open_syslog_monitor"
-           label="Syslog"
+           label="%action.label.SyslogMonitor"
            menubarPath="monitor/additions"
-           tooltip="Open syslog monitor">
+           tooltip="%action.tooltip.SyslogMonitor">
      </action>
 	   </actionSet>
    </extension>

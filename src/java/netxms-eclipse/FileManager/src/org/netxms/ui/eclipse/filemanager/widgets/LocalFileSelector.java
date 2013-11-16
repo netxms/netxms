@@ -48,9 +48,7 @@ public class LocalFileSelector extends AbstractSelector
 		setText(Messages.get().LocalFileSelector_None);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
 	 */
 	@Override
@@ -67,10 +65,8 @@ public class LocalFileSelector extends AbstractSelector
 			setFile(null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getButtonToolTip()
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
 	 */
 	@Override
 	protected String getSelectionButtonToolTip()

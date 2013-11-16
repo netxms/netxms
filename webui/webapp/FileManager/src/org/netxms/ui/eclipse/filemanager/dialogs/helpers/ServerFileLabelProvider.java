@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
  */
 public class ServerFileLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private WorkbenchLabelProvider wbLabelProvider;
 	
 	public ServerFileLabelProvider()

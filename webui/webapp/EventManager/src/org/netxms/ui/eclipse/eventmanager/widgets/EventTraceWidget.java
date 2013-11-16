@@ -104,8 +104,8 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		super.saveConfig();
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setValue("EventMonitor.showColor", labelProvider.isShowColor());
-		ps.setValue("EventMonitor.showIcons", labelProvider.isShowIcons());
+		ps.setValue("EventMonitor.showColor", labelProvider.isShowColor()); //$NON-NLS-1$
+		ps.setValue("EventMonitor.showIcons", labelProvider.isShowIcons()); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

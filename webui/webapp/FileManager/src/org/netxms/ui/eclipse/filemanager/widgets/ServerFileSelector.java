@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ServerFileSelector extends AbstractSelector
 {
-	private static final long serialVersionUID = 1L;
-
 	private ServerFile file = null;
 	private WorkbenchLabelProvider labelProvider;
 	

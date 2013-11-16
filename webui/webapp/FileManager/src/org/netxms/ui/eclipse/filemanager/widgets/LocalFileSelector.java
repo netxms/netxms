@@ -29,14 +29,11 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class LocalFileSelector extends AbstractSelector
 {
-	private static final long serialVersionUID = 1L;
-
 	private File file = null;
 	private String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
 	private String[] filterNames = { Messages.get().LocalFileSelector_AllFiles };
-
 	private int selectorType;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -45,7 +42,7 @@ public class LocalFileSelector extends AbstractSelector
 	public LocalFileSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
 		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
-		
+
 		this.selectorType = selectorType;
 
 		setText(Messages.get().LocalFileSelector_None);

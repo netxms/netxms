@@ -17,8 +17,6 @@ import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
  */
 public class ServerFileComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 5596212019313538530L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -30,7 +28,7 @@ public class ServerFileComparator extends ViewerComparator
 			return 0;
 		
 		int rc;
-		switch((Integer)sortColumn.getData("ID"))
+		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case SelectServerFileDialog.COLUMN_NAME:
 				rc = ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());
