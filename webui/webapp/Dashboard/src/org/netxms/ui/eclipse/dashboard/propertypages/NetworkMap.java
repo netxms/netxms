@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ public class NetworkMap extends PropertyPage
 		title.setLayoutData(gd);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText("Zoom level (%)");
+		label.setText(Messages.get().NetworkMap_ZoomLevel);
 		gd = new GridData();
 		gd.horizontalSpan = 2;
 		label.setLayoutData(gd);

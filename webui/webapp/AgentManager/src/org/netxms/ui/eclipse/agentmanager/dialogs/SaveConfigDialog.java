@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class SaveConfigDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int SAVE_ID = 100;
 	public static final int SAVE_AND_APPLY_ID = 101;
 	public static final int DISCARD_ID = 102;

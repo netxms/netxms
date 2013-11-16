@@ -86,8 +86,6 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		
 		editor = new AgentConfigEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
 		editor.getTextWidget().addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -138,8 +136,6 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		};
 		
 		actionSave = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{

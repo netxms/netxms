@@ -32,8 +32,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class AgentConfigEditor extends Composite
 {
-	private static final long serialVersionUID = -3664402982525808493L;
-	
 	private Text editor;
 
 	/**

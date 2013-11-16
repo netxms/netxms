@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,8 +161,6 @@ public class PackageManager extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -171,8 +169,6 @@ public class PackageManager extends ViewPart
 		};
 		
 		actionInstall = new Action(Messages.get().PackageManager_InstallAction, SharedIcons.ADD_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -181,8 +177,6 @@ public class PackageManager extends ViewPart
 		};
 		
 		actionRemove = new Action(Messages.get().PackageManager_RemoveAction, SharedIcons.DELETE_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -191,8 +185,6 @@ public class PackageManager extends ViewPart
 		};
 		
 		actionDeploy = new Action(Messages.get().PackageManager_DeployAction, Activator.getImageDescriptor("icons/package_deploy.gif")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -243,8 +235,6 @@ public class PackageManager extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

@@ -166,7 +166,7 @@ public class LineChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot get value for DCI %s:\"%s\"", session.getObjectName(currentDci.nodeId), currentDci.name);
+				return String.format(Messages.get().LineChartElement_JobError, session.getObjectName(currentDci.nodeId), currentDci.name);
 			}
 
 			@Override

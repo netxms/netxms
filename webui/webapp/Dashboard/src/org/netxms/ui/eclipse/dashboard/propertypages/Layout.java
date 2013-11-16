@@ -80,11 +80,11 @@ public class Layout extends PropertyPage
 		comboVerticalAlign.select(elementLayout.vertcalAlignment);
 		
 		checkGrabHorizontalSpace = new Button(dialogArea, SWT.CHECK);
-		checkGrabHorizontalSpace.setText("Grab excessive horizontal space");
+		checkGrabHorizontalSpace.setText(Messages.get().Layout_GrapExtraH);
 		checkGrabHorizontalSpace.setSelection(elementLayout.grabHorizontalSpace);
 		
 		checkGrabVerticalSpace = new Button(dialogArea, SWT.CHECK);
-		checkGrabVerticalSpace.setText("Grab excessive vertical space");
+		checkGrabVerticalSpace.setText(Messages.get().Layout_GrapExtraV);
 		checkGrabVerticalSpace.setSelection(elementLayout.grabVerticalSpace);
 		
 		final WidgetFactory factory = new WidgetFactory() {

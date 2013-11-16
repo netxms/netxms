@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class DeploymentStatusLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final String[] statusText = { Messages.get().DeploymentStatusLabelProvider_Pending, Messages.get().DeploymentStatusLabelProvider_Uploading, Messages.get().DeploymentStatusLabelProvider_Installing, Messages.get().DeploymentStatusLabelProvider_Completed, Messages.get().DeploymentStatusLabelProvider_Failed, Messages.get().DeploymentStatusLabelProvider_Init }; 
 			
 	private WorkbenchLabelProvider workbenchLabelProvider;

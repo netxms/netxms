@@ -158,11 +158,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 			}
 		};
 		
-		actionSave = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionSave = new Action() {
 			@Override
 			public void run()
 			{
