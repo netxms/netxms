@@ -462,6 +462,9 @@ public:
 
 	virtual bool showThresholdSummary();
 
+	virtual int getChildCount();
+	virtual int getParentCount();
+
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
    const TCHAR *dbgGetChildList(TCHAR *szBuffer);
