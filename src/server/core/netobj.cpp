@@ -485,8 +485,8 @@ void NetObj::deleteObject()
 
    DbgPrintf(4, _T("Deleting object %d [%s]"), m_dwId, m_szName);
 
-	// Prevent object change propagation util it marked as deleted
-	// (to prevent object re-appearance in GUI if client hides object
+	// Prevent object change propagation until it's marked as deleted
+	// (to prevent the object's re-appearance in GUI if client hides the object
 	// after successful call to Session::deleteObject())
 	LockData();
    m_isHidden = true;
@@ -551,6 +551,7 @@ void NetObj::deleteObject()
  */
 void NetObj::onObjectDelete(UINT32 dwObjectId)
 {
+   PostEvent(EVENT_SUBNET_DELETED, dwObjectId, NULL);
 }
 
 /**
@@ -1542,4 +1543,14 @@ ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
 bool NetObj::showThresholdSummary()
 {
 	return false;
+}
+
+int NetObj::getChildCount()
+{
+   return m_dwChildCount;
+}
+
+int NetObj::getParentCount()
+{
+   return m_dwParentCount;
 }
