@@ -5,7 +5,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Log Viewer"
+            name="%view.name.LogViewer"
             allowMultiple="true"
             class="org.netxms.ui.eclipse.logviewer.views.LogViewer"
             id="org.netxms.ui.eclipse.logviewer.view.log_viewer">
@@ -15,81 +15,81 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            name="Audit Log"
-            description="Open Audit Log"
+            name="%command.name.AuditLog"
+            description="%command.description.AuditLog"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.logviewer.commands.openAuditLog">
       </command>
       <command
-            name="Event Log"
-            description="Open Event Log"
+            name="%command.name.EventLog"
+            description="%command.description.EventLog"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.logviewer.commands.openEventLog">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open Syslog"
+            description="%command.description.Syslog"
             id="org.netxms.ui.eclipse.logviewer.commands.openSyslog"
-            name="Syslog">
+            name="%command.name.Syslog">
       </command>
       <command
-            description="Show Log Filter"
+            description="%command.description.LogFilter"
             id="org.netxms.ui.eclipse.logviewer.commands.show_filter"
-            name="Show Filter">
+            name="%command.name.LogFilter">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open SNMP Trap Log"
+            description="%command.description.TrapLog"
             id="org.netxms.ui.eclipse.logviewer.commands.openSnmpTrapLog"
-            name="SNMP Trap Log">
+            name="%command.name.TrapLog">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open Alarm Log"
+            description="%command.description.AlarmLog"
             id="org.netxms.ui.eclipse.logviewer.commands.openAlarmLog"
-            name="Alarm Log">
+            name="%command.name.AlarmLog">
       </command>
       <command
-            description="Get more data"
+            description="%command.description.MoreData"
             id="org.netxms.ui.eclipse.logviewer.commands.get_more_data"
-            name="Get more data">
+            name="%command.name.MoreData">
       </command>
       <command
-            description="Execute query"
+            description="%command.description.Query"
             id="org.netxms.ui.eclipse.logviewer.commands.execute"
-            name="Execute query">
+            name="%command.name.Query">
       </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.logviewer.action_set"
-		   label="Log Viewer"
+		   label="%actionSet.label.LogViewer"
 		   visible="true">
      <action
            class="org.netxms.ui.eclipse.logviewer.actions.OpenSyslog"
            definitionId="org.netxms.ui.eclipse.logviewer.commands.openSyslog"
            icon="icons/syslog.png"
            id="org.netxms.ui.eclipse.logviewer.actions.openSyslog"
-           label="Syslog"
+           label="%action.label.Syslog"
            menubarPath="view/logs"
            toolbarPath="logs/additions"
-           tooltip="Open Syslog">
+           tooltip="%action.tooltip.Syslog">
      </action>
      <action
            class="org.netxms.ui.eclipse.logviewer.actions.OpenSnmpTrapLog"
            definitionId="org.netxms.ui.eclipse.logviewer.commands.openSnmpTrapLog"
            icon="icons/EventLog.png"
            id="org.netxms.ui.eclipse.logviewer.actions.openSnmpTrapLog"
-           label="SNMP Trap Log"
+           label="%action.label.TrapLog"
            menubarPath="view/logs"
            toolbarPath="logs/additions"
-           tooltip="Open SNMP Trap Log">
+           tooltip="%action.tooltip.TrapLog">
      </action>
 		   <action id="org.netxms.ui.eclipse.logviewer.actions.openEventLog"
 			   menubarPath="view/logs"
 			   toolbarPath="logs/additions"
-			   label="Event Log"
-			   tooltip="Open Event Log"
+			   label="%action.label.EventLog"
+			   tooltip="%action.tooltip.EventLog"
 			   icon="icons/EventLog.png"
 			   class="org.netxms.ui.eclipse.logviewer.actions.OpenEventLog"
 			   definitionId="org.netxms.ui.eclipse.logviewer.commands.openEventLog">
@@ -97,8 +97,8 @@
 		   <action id="org.netxms.ui.eclipse.logviewer.actions.openAuditLog"
 			   menubarPath="view/logs"
 			   toolbarPath="logs/additions"
-			   label="Audit Log"
-			   tooltip="Open Audit Log"
+			   label="%action.label.AuditLog"
+			   tooltip="%action.tooltip.AuditLog"
 			   icon="icons/AuditLog.png"
 			   class="org.netxms.ui.eclipse.logviewer.actions.OpenAuditLog"
 			   definitionId="org.netxms.ui.eclipse.logviewer.commands.openAuditLog">
@@ -108,10 +108,10 @@
            definitionId="org.netxms.ui.eclipse.logviewer.commands.openAlarmLog"
            icon="icons/AlarmLog.png"
            id="org.netxms.ui.eclipse.logviewer.actions.openAlarmLog"
-           label="Alarm Log"
+           label="%action.label.AlarmLog"
            menubarPath="view/logs"
            toolbarPath="logs/additions"
-           tooltip="Open Alarm Log">
+           tooltip="%action.tooltip.AlarmLog">
      </action>
 	   </actionSet>
    </extension>
