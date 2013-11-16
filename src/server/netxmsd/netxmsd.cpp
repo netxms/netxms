@@ -306,10 +306,30 @@ static BOOL ParseCommandLine(int argc, char *argv[])
    return TRUE;
 }
 
+void ExtractConfigFileFromCommandLine(int argc, char* argv[])
+{
+   for(int i = 1; i < argc; i++)
+   {
+      if (strcmp(argv[i], "-c") == 0)
+      {
+         if (i < argc - 1)
+         {
+#ifdef UNICODE
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[i + 1], -1, g_szConfigFile, MAX_PATH - 1);
+            //g_szConfigFile[MAX_PATH - 1] = 0;
+#else
+            strncpy(g_szConfigFile, argv[i + 1], MAX_PATH);
+#endif
+            break;
+         }
+      }
+   }
+}
+
 /**
  * Startup code
  */
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
 #ifdef _WIN32
    HKEY hKey;
@@ -349,8 +369,7 @@ int main(int argc, char *argv[])
       nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
 #endif
 
-   if (!ParseCommandLine(argc, argv))
-      return 1;
+   ExtractConfigFileFromCommandLine(argc, argv);
 
    if (!LoadConfig())
    {
@@ -358,6 +377,9 @@ int main(int argc, char *argv[])
          _tprintf(_T("Error loading configuration file\n"));
       return 1;
    }
+
+   if (!ParseCommandLine(argc, argv))
+         return 1;
 
 	// Set exception handler
 #ifdef _WIN32
