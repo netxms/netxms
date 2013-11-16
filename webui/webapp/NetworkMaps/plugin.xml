@@ -12,7 +12,7 @@
             class="org.netxms.ui.eclipse.networkmaps.views.IPNeighbors"
             icon="icons/quickmap.png"
             id="org.netxms.ui.eclipse.networkmaps.view.ip_neighbors"
-            name="IP Neighbors"
+            name="%view.name.IPNeighbors"
             restorable="true">
       </view>
       <view
@@ -21,7 +21,7 @@
             class="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"
             icon="icons/service_deps.gif"
             id="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"
-            name="Service Dependency">
+            name="%view.name.ServiceDeps">
       </view>
       <view
             allowMultiple="true"
@@ -29,7 +29,7 @@
             class="org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"
             icon="icons/service_components.gif"
             id="org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"
-            name="Service Components"
+            name="%view.name.ServiceComponents"
             restorable="true">
       </view>
       <view
@@ -38,12 +38,12 @@
             class="org.netxms.ui.eclipse.networkmaps.views.Layer2Topology"
             icon="icons/layer2.png"
             id="org.netxms.ui.eclipse.networkmaps.views.Layer2Topology"
-            name="Layer 2 Topology"
+            name="%view.name.L2Topology"
             restorable="true">
       </view>
       <category
             id="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
-            name="Network Maps">
+            name="%category.name.NetworkMaps">
       </category>
       <view
             allowMultiple="true"
@@ -51,7 +51,7 @@
             class="org.netxms.ui.eclipse.networkmaps.views.PredefinedMap"
             icon="icons/netmap.png"
             id="org.netxms.ui.eclipse.networkmaps.views.PredefinedMap"
-            name="Network Map"
+            name="%view.name.NetworkMap"
             restorable="true">
       </view>
       <view
@@ -60,7 +60,7 @@
             class="org.netxms.ui.eclipse.networkmaps.views.VlanMap"
             icon="icons/quickmap.png"
             id="org.netxms.ui.eclipse.networkmaps.views.VlanMap"
-            name="VLAN Map"
+            name="%view.name.VlanMap"
             restorable="true">
       </view>
       <view
@@ -69,7 +69,7 @@
             class="org.netxms.ui.eclipse.networkmaps.views.IPRouteMap"
             icon="icons/route.gif"
             id="org.netxms.ui.eclipse.networkmaps.views.IPRouteMap"
-            name="IP Route"
+            name="%view.name.IPRoute"
             restorable="true">
       </view>
    </extension>
@@ -83,7 +83,7 @@
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPNeighbors"
                enablesFor="1"
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPNeighbors"
-               label="IP Neighbors"
+               label="%action.label.IPNeighbors"
                icon="icons/quickmap.png"
                menubarPath="topology">
          </action>
@@ -92,7 +92,7 @@
                enablesFor="1"
                icon="icons/layer2.png"
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowLayer2Topology"
-               label="Layer 2 Topology"
+               label="%action.label.L2Topology"
                menubarPath="topology">
          </action>
          <action
@@ -100,7 +100,7 @@
                enablesFor="1"
                icon="icons/service_deps.gif"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#node"
-               label="Service Dependency"
+               label="%action.label.ServiceDeps"
                menubarPath="additions">
          </action>
          <action
@@ -108,7 +108,7 @@
                enablesFor="+"
                icon="icons/route.gif"
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPRoute"
-               label="IP Route"
+               label="%action.label.IPRoute"
                menubarPath="topology">
          </action>
       </objectContribution>
@@ -119,7 +119,7 @@
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#cluster"
-               label="Service Dependency"
+               label="%action.label.ServiceDeps"
                icon="icons/service_deps.gif"
                menubarPath="additions">
          </action>
@@ -131,7 +131,7 @@
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#container"
-               label="Service Dependency"
+               label="%action.label.ServiceDeps"
                icon="icons/service_deps.gif"
                menubarPath="additions">
          </action>
@@ -140,7 +140,7 @@
                enablesFor="1"
                icon="icons/service_components.gif"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceComponents#container"
-               label="Service Components"
+               label="%action.label.ServiceComponents"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -152,7 +152,7 @@
                enablesFor="1"
                icon="icons/service_components.gif"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceComponents#serviceroot"
-               label="Service Components"
+               label="%action.label.ServiceComponents"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -164,14 +164,14 @@
                class="org.netxms.ui.eclipse.networkmaps.actions.CreateMapGroup"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMapGroup#NetworkMapRoot"
-               label="Create network map &amp;group..."
+               label="%action.label.CreateMapGroup"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapRoot"
-               label="Create network &amp;map..."
+               label="%action.label.CreateMap"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -183,14 +183,14 @@
                class="org.netxms.ui.eclipse.networkmaps.actions.CreateMapGroup"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMapGroup#NetworkMapGroup"
-               label="Create network map &amp;group..."
+               label="%action.label.CreateMapGroup"
                menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapGroup"
-               label="Create network &amp;map..."
+               label="%action.label.CreateMap"
                menubarPath="objectcreation">
          </action>
       </objectContribution>
@@ -202,7 +202,7 @@
                class="org.netxms.ui.eclipse.networkmaps.actions.OpenMapObject"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.Open#NetworkMap"
-               label="&amp;Open map"
+               label="%action.label.OpenMap"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -212,7 +212,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.preferencepages.GeneralMapPreferences"
             id="org.netxms.ui.eclipse.networkmaps.preferencepages.General"
-            name="Network Maps">
+            name="%page.name.NetMaps">
       </page>
    </extension>
    <extension
@@ -220,7 +220,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.MapOptions"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapOptions"
-            name="Map Options">
+            name="%page.name.MapOptions">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objects.NetworkMap">
@@ -230,7 +230,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.MapObjectFilter"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapObjectFilter"
-            name="Object Filter">
+            name="%page.name.ObjectFilter">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objects.NetworkMap">
@@ -240,7 +240,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.MapBackground"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapBackground"
-            name="Map Background">
+            name="%page.name.MapBkgnd">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objects.NetworkMap">
@@ -250,7 +250,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.MapLinkGeneral"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapLinkGeneral#0"
-            name="General">
+            name="%page.name.General">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor">
@@ -279,19 +279,19 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Add new object to the map"
+            description="%command.description.AddObj"
             id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"
-            name="Add object">
+            name="%command.name.AddObj">
       </command>
       <command
-            description="Link selected objects"
+            description="%command.description.LinkObj"
             id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"
-            name="Link selected objects">
+            name="%command.name.LinkObj">
       </command>
       <command
-            description="Remove selected element(s)"
+            description="%command.description.Remove"
             id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"
-            name="Remove">
+            name="%command.name.Remove">
       </command>
    </extension>
    <extension

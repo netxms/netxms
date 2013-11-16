@@ -42,6 +42,7 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -83,7 +84,7 @@ public class MapBackground extends PropertyPage
 		dialogArea.setLayout(layout);
       
 		Group typeGroup = new Group(dialogArea, SWT.NONE);
-      typeGroup.setText("Background type");
+      typeGroup.setText(Messages.get().MapBackground_BkgndType);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -106,22 +107,22 @@ public class MapBackground extends PropertyPage
 		};
       
       radioTypeNone = new Button(typeGroup, SWT.RADIO);
-      radioTypeNone.setText("&None");
+      radioTypeNone.setText(Messages.get().MapBackground_None);
       radioTypeNone.setSelection(object.getBackground().equals(NXCommon.EMPTY_GUID));
       radioTypeNone.addSelectionListener(listener);
       
       radioTypeImage = new Button(typeGroup, SWT.RADIO);
-      radioTypeImage.setText("&Image");
+      radioTypeImage.setText(Messages.get().MapBackground_Image);
       radioTypeImage.setSelection(!object.getBackground().equals(NXCommon.EMPTY_GUID) && !object.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND));
       radioTypeImage.addSelectionListener(listener);
 
       radioTypeGeoMap = new Button(typeGroup, SWT.RADIO);
-      radioTypeGeoMap.setText("&Geographic Map");
+      radioTypeGeoMap.setText(Messages.get().MapBackground_GeoMap);
       radioTypeGeoMap.setSelection(object.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND));
       radioTypeGeoMap.addSelectionListener(listener);
       
       image = new ImageSelector(dialogArea, SWT.NONE);
-      image.setLabel("Background image");
+      image.setLabel(Messages.get().MapBackground_BkgndImage);
       if (radioTypeImage.getSelection())
       	image.setImageGuid(object.getBackground(), true);
       gd = new GridData();
@@ -130,7 +131,7 @@ public class MapBackground extends PropertyPage
       image.setLayoutData(gd);
       
       Group geomapGroup = new Group(dialogArea, SWT.NONE);
-      geomapGroup.setText("Geographic map");
+      geomapGroup.setText(Messages.get().MapBackground_GroupGeoMap);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -141,7 +142,7 @@ public class MapBackground extends PropertyPage
       GeoLocation gl = object.getBackgroundLocation();
 
       latitude = new LabeledText(geomapGroup, SWT.NONE);
-      latitude.setLabel("Latitude");
+      latitude.setLabel(Messages.get().MapBackground_Lat);
    	latitude.setText(gl.getLatitudeAsString());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -149,7 +150,7 @@ public class MapBackground extends PropertyPage
       latitude.setLayoutData(gd);
       
       longitude = new LabeledText(geomapGroup, SWT.NONE);
-      longitude.setLabel("Longitude");
+      longitude.setLabel(Messages.get().MapBackground_Lon);
       longitude.setText(gl.getLongitudeAsString());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -170,7 +171,7 @@ public class MapBackground extends PropertyPage
       zoomGroup.setLayoutData(gd);
       
       zoomLabel = new Label(zoomGroup, SWT.NONE);
-      zoomLabel.setText("Zoom level");
+      zoomLabel.setText(Messages.get().MapBackground_ZoomLevel);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;
@@ -229,7 +230,7 @@ public class MapBackground extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       colorArea.setLayoutData(gd);
       Label label = new Label(colorArea, SWT.NONE);
-      label.setText("Background color:");
+      label.setText(Messages.get().MapBackground_BkgndColor);
       backgroundColor = new ColorSelector(colorArea);
       backgroundColor.setColorValue(ColorConverter.rgbFromInt(object.getBackgroundColor()));
 
@@ -277,7 +278,7 @@ public class MapBackground extends PropertyPage
 			}
 			catch(GeoLocationFormatException e)
 			{
-				MessageDialogHelper.openError(getShell(), "Error", "Geolocation format error");
+				MessageDialogHelper.openError(getShell(), Messages.get().MapBackground_Error, Messages.get().MapBackground_GeoLocFormatError);
 				return false;
 			}
 			md.setMapBackground(NetworkMap.GEOMAP_BACKGROUND, location, zoomSpinner.getSelection(), ColorConverter.rgbToInt(backgroundColor.getColorValue()));
@@ -287,7 +288,7 @@ public class MapBackground extends PropertyPage
 			setValid(false);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update map background for map object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MapBackground_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -297,7 +298,7 @@ public class MapBackground extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot modify background for map object " + object.getObjectName();
+				return Messages.get().MapBackground_JobError + object.getObjectName();
 			}
 
 			@Override

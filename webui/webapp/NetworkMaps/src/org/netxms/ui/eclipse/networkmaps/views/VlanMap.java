@@ -33,6 +33,7 @@ import org.netxms.client.topology.Port;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 
 /**
  * IP neighbors for given node
@@ -40,7 +41,7 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
  */
 public class VlanMap extends AbstractNetworkMapView
 {
-	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.VlanMap";
+	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.VlanMap"; //$NON-NLS-1$
 	
 	private int vlanId;
 	
@@ -53,18 +54,18 @@ public class VlanMap extends AbstractNetworkMapView
 		super.init(site);
 		
 		// This view expects secondary ID to be in form nodeId&vlanId
-		String[] parts = site.getSecondaryId().split("&");
+		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length < 2)
-			throw new PartInitException("Internal error: incorrect view secondary ID");
+			throw new PartInitException(Messages.get().VlanMap_IncorrectSecondaryId);
 		try
 		{
 			vlanId = Integer.parseInt(parts[1]);
 		}
 		catch(NumberFormatException e)
 		{
-			throw new PartInitException("Internal error: incorrect view secondary ID", e);
+			throw new PartInitException(Messages.get().VlanMap_IncorrectSecondaryId, e);
 		}
-		setPartName("Vlan Map - " + Integer.toString(vlanId) + "@" + rootObject.getObjectName());
+		setPartName(String.format(Messages.get().VlanMap_PartName, vlanId, rootObject.getObjectName()));
 	}
 
 	/**
@@ -75,7 +76,7 @@ public class VlanMap extends AbstractNetworkMapView
 		if (mapPage == null)
 			mapPage = new NetworkMapPage();
 		
-		new ConsoleJob("Get VLAN information for " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(String.format(Messages.get().VlanMap_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -96,7 +97,7 @@ public class VlanMap extends AbstractNetworkMapView
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get VLAN information for " + rootObject.getObjectName();
+				return String.format(Messages.get().VlanMap_JobError, rootObject.getObjectName());
 			}
 		}.start();
 	}
@@ -157,7 +158,7 @@ public class VlanMap extends AbstractNetworkMapView
 					{
 						Interface peerIf = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
 						page.addLink(new NetworkMapLink(null, NetworkMapLink.NORMAL, rootElementId, nodeElementId,
-								       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???"));
+								       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???")); //$NON-NLS-1$
 					}
 				}
 				catch(NXCException e)

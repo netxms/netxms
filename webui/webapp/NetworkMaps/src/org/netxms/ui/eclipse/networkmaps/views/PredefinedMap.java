@@ -61,6 +61,7 @@ import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -74,7 +75,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 @SuppressWarnings("restriction")
 public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdateListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap";
+	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap"; //$NON-NLS-1$
 
 	private org.netxms.client.objects.NetworkMap mapObject;
 	private Action actionAddObject;
@@ -253,19 +254,19 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		super.createActions();
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 
-		actionAddObject = new Action("&Add object...") {
+		actionAddObject = new Action(Messages.get().PredefinedMap_AddObject) {
 			@Override
 			public void run()
 			{
 				addObjectToMap();
 			}
 		};
-		actionAddObject.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddObject");
-		actionAddObject.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject");
+		actionAddObject.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddObject"); //$NON-NLS-1$
+		actionAddObject.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"); //$NON-NLS-1$
 		final ActionHandler addObjectHandler = new ActionHandler(actionAddObject);
 		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
 
-		actionAddGroupBox = new Action("&Group box...") {
+		actionAddGroupBox = new Action(Messages.get().PredefinedMap_GroupBox) {
 			@Override
 			public void run()
 			{
@@ -273,7 +274,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		};
 
-		actionAddImage = new Action("&Image...") {
+		actionAddImage = new Action(Messages.get().PredefinedMap_Image) {
 			@Override
 			public void run()
 			{
@@ -281,31 +282,31 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		};
 
-		actionLinkObjects = new Action("&Link selected objects", Activator.getImageDescriptor("icons/link_add.png")) {
+		actionLinkObjects = new Action(Messages.get().PredefinedMap_LinkObjects, Activator.getImageDescriptor("icons/link_add.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
 				linkSelectedObjects();
 			}
 		};
-		actionLinkObjects.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.LinkObjects");
-		actionLinkObjects.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects");
+		actionLinkObjects.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.LinkObjects"); //$NON-NLS-1$
+		actionLinkObjects.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"); //$NON-NLS-1$
 		final ActionHandler linkObjectHandler = new ActionHandler(actionLinkObjects);
 		handlerService.activateHandler(actionLinkObjects.getActionDefinitionId(), linkObjectHandler);
 
-		actionRemove = new Action("&Remove from map", SharedIcons.DELETE_OBJECT) {
+		actionRemove = new Action(Messages.get().PredefinedMap_RemoveFromMap, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
 				removeSelectedElements();
 			}
 		};
-		actionRemove.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.Remove");
-		actionRemove.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove");
+		actionRemove.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.Remove"); //$NON-NLS-1$
+		actionRemove.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"); //$NON-NLS-1$
 		final ActionHandler removeHandler = new ActionHandler(actionRemove);
 		handlerService.activateHandler(actionRemove.getActionDefinitionId(), removeHandler);
 
-		actionMapProperties = new Action("Map &properties") {
+		actionMapProperties = new Action(Messages.get().PredefinedMap_MapProperties) {
 			@Override
 			public void run()
 			{
@@ -313,7 +314,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		};
 
-		actionLinkProperties = new Action("&Properties") {
+		actionLinkProperties = new Action(Messages.get().PredefinedMap_Properties) {
 			@Override
 			public void run()
 			{
@@ -329,7 +330,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	 */
 	private IMenuManager createDecorationAdditionSubmenu()
 	{
-		MenuManager menu = new MenuManager("Add &decoration");
+		MenuManager menu = new MenuManager(Messages.get().PredefinedMap_AddDecoration);
 		menu.add(actionAddGroupBox);
 		menu.add(actionAddImage);
 		return menu;
@@ -512,8 +513,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Removal", "Are you sure to remove selected element"
-				+ (selection.size() == 1 ? "" : "s") + " from map?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().PredefinedMap_ConfirmRemoval, 
+		      (selection.size() == 1) ? Messages.get().PredefinedMap_RemovalConfirmationSingular : Messages.get().PredefinedMap_RemovalConfirmationPlural))
 			return;
 
 		Object[] objects = selection.toArray();
@@ -604,7 +605,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			flags &= ~NetworkMap.MF_SHOW_STATUS_BKGND;
 		md.setObjectFlags(flags);
 
-		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
+		new ConsoleJob(String.format(Messages.get().PredefinedMap_SaveJobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
 		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -622,7 +623,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update map content on server";
+				return Messages.get().PredefinedMap_SaveJobError;
 			}
 		}.start();
 	}
@@ -696,7 +697,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected void onObjectChange(final AbstractObject object)
 	{
-		super.onObjectChange(object);
+	   super.onObjectChange(object);
 		
 		if (object.getObjectId() != mapObject.getObjectId())
 			return;

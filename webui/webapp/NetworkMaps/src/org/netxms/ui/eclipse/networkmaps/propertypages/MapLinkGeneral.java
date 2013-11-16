@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -53,7 +54,7 @@ public class MapLinkGeneral extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel("Name");
+		name.setLabel(Messages.get().MapLinkGeneral_Name);
 		name.setText(object.getName());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -62,7 +63,7 @@ public class MapLinkGeneral extends PropertyPage
 		name.setLayoutData(gd);
 		
 		connector1 = new LabeledText(dialogArea, SWT.NONE);
-		connector1.setLabel("Name for connector 1");
+		connector1.setLabel(Messages.get().MapLinkGeneral_NameConn1);
 		connector1.setText(object.getConnectorName1());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -71,7 +72,7 @@ public class MapLinkGeneral extends PropertyPage
 		connector1.setLayoutData(gd);
 		
 		connector2 = new LabeledText(dialogArea, SWT.NONE);
-		connector2.setLabel("Name for connector 2");
+		connector2.setLabel(Messages.get().MapLinkGeneral_NameConn2);
 		connector2.setText(object.getConnectorName2());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -80,7 +81,7 @@ public class MapLinkGeneral extends PropertyPage
 		connector2.setLayoutData(gd);
 		
 		final Group colorGroup = new Group(dialogArea, SWT.NONE);
-		colorGroup.setText("Color");
+		colorGroup.setText(Messages.get().MapLinkGeneral_Color);
 		layout = new GridLayout();
 		colorGroup.setLayout(layout);
 		gd = new GridData();
@@ -105,17 +106,17 @@ public class MapLinkGeneral extends PropertyPage
 		};
 		
 		radioColorDefault = new Button(colorGroup, SWT.RADIO);
-		radioColorDefault.setText("&Default color");
+		radioColorDefault.setText(Messages.get().MapLinkGeneral_DefColor);
 		radioColorDefault.setSelection((object.getColor() < 0) && (object.getStatusObject() == 0));
 		radioColorDefault.addSelectionListener(listener);
 
 		radioColorObject = new Button(colorGroup, SWT.RADIO);
-		radioColorObject.setText("Based on object &status");
+		radioColorObject.setText(Messages.get().MapLinkGeneral_BasedOnObjStatus);
 		radioColorObject.setSelection(object.getStatusObject() != 0);
 		radioColorObject.addSelectionListener(listener);
 
 		statusObject = new ObjectSelector(colorGroup, SWT.NONE, true);
-		statusObject.setLabel("Status object");
+		statusObject.setLabel(Messages.get().MapLinkGeneral_StatusObject);
 		statusObject.setObjectClass(AbstractObject.class);
 		statusObject.setObjectId(object.getStatusObject());
 		gd = new GridData();
@@ -126,7 +127,7 @@ public class MapLinkGeneral extends PropertyPage
 		statusObject.setEnabled(radioColorObject.getSelection());
 
 		radioColorCustom = new Button(colorGroup, SWT.RADIO);
-		radioColorCustom.setText("&Custom color");
+		radioColorCustom.setText(Messages.get().MapLinkGeneral_CustomColor);
 		radioColorCustom.setSelection((object.getColor() >= 0) && (object.getStatusObject() == 0));
 		radioColorCustom.addSelectionListener(listener);
 
@@ -142,11 +143,11 @@ public class MapLinkGeneral extends PropertyPage
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		routingAlgorithm = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Routing algorithm", gd);
-		routingAlgorithm.add("Map Default");
-		routingAlgorithm.add("Direct");
-		routingAlgorithm.add("Manhattan");
-		routingAlgorithm.add("Bend points");
+		routingAlgorithm = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().MapLinkGeneral_RoutingAlg, gd);
+		routingAlgorithm.add(Messages.get().MapLinkGeneral_MapDefault);
+		routingAlgorithm.add(Messages.get().MapLinkGeneral_Direct);
+		routingAlgorithm.add(Messages.get().MapLinkGeneral_Manhattan);
+		routingAlgorithm.add(Messages.get().MapLinkGeneral_BendPoints);
 		routingAlgorithm.select(object.getRoutingAlgorithm());
 		
 		return dialogArea;

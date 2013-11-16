@@ -29,6 +29,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 
 /**
  * Service dependency for service, cluster, condition, or node object
@@ -36,7 +37,7 @@ import org.netxms.client.objects.AbstractObject;
  */
 public class ServiceDependency extends AbstractNetworkMapView
 {
-	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.ServiceDependency";
+	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"; //$NON-NLS-1$
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -45,7 +46,7 @@ public class ServiceDependency extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName("Service Dependency - " + ((rootObject != null) ? rootObject.getObjectName() : "<error>"));
+		setPartName(Messages.get().ServiceDependency_PartTitle + ((rootObject != null) ? rootObject.getObjectName() : Messages.get().ServiceDependency_Error));
 	}
 
 	/* (non-Javadoc)

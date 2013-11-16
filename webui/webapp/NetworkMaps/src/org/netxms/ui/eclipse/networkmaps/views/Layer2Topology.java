@@ -25,13 +25,14 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 
 /**
  * Layer 2 topology view for given object
  */
 public class Layer2Topology extends AbstractNetworkMapView
 {
-	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.Layer2Topology";
+	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.Layer2Topology"; //$NON-NLS-1$
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -40,7 +41,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName("Layer 2 Topology - " + rootObject.getObjectName());
+		setPartName(Messages.get().Layer2Topology_PartTitle + rootObject.getObjectName());
 	}
 
 	/* (non-Javadoc)
@@ -52,7 +53,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 		if (mapPage == null)
 			mapPage = new NetworkMapPage();
 		
-		new ConsoleJob("Get layer 2 topology for " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(String.format(Messages.get().Layer2Topology_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -72,7 +73,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get layer 2 topology for " + rootObject.getObjectName();
+				return String.format(Messages.get().Layer2Topology_JobError, rootObject.getObjectName());
 			}
 		}.start();
 	}
