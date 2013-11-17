@@ -34,7 +34,8 @@ ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *fi
    m_first = NULL;
    m_last = NULL;
    m_next = NULL;
-   if (parent != NULL) parent->addEntry(this);
+   if (parent != NULL)
+      parent->addEntry(this);
    m_valueCount = 0;
    m_values = NULL;
    m_file = _tcsdup(CHECK_NULL(file));
@@ -79,7 +80,8 @@ ConfigEntry* ConfigEntry::findEntry(const TCHAR *name)
    ConfigEntry *e;
 
    for(e = m_first; e != NULL; e = e->getNext())
-      if (!_tcsicmp(e->getName(), name)) return e;
+      if (!_tcsicmp(e->getName(), name))
+         return e;
    return NULL;
 }
 
@@ -91,7 +93,8 @@ ConfigEntry* ConfigEntry::createEntry(const TCHAR *name)
    ConfigEntry *e;
 
    for(e = m_first; e != NULL; e = e->getNext())
-      if (!_tcsicmp(e->getName(), name)) return e;
+      if (!_tcsicmp(e->getName(), name))
+         return e;
 
    return new ConfigEntry(name, this, _T("<memory>"), 0, 0);
 }
@@ -103,9 +106,11 @@ void ConfigEntry::addEntry(ConfigEntry *entry)
 {
    entry->m_parent = this;
    entry->m_next = NULL;
-   if (m_last != NULL) m_last->m_next = entry;
+   if (m_last != NULL)
+      m_last->m_next = entry;
    m_last = entry;
-   if (m_first == NULL) m_first = entry;
+   if (m_first == NULL)
+      m_first = entry;
 }
 
 /**
@@ -127,7 +132,8 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
          {
             m_first = curr->m_next;
          }
-         if (m_last == curr) m_last = prev;
+         if (m_last == curr)
+            m_last = prev;
          curr->m_next = NULL;
          break;
       }
@@ -172,7 +178,8 @@ ConfigEntryList* ConfigEntry::getOrderedSubEntries(const TCHAR *mask)
 
 const TCHAR* ConfigEntry::getValue(int index)
 {
-   if ((index < 0) || (index >= m_valueCount)) return NULL;
+   if ((index < 0) || (index >= m_valueCount))
+      return NULL;
    return m_values[index];
 }
 
@@ -256,7 +263,8 @@ int ConfigEntry::getConcatenatedValuesLength()
 {
    int i, len;
 
-   if (m_valueCount < 1) return 0;
+   if (m_valueCount < 1)
+      return 0;
 
    for(i = 0, len = 0; i < m_valueCount; i++)
       len += (int) _tcslen(m_values[i]);
@@ -274,7 +282,8 @@ int ConfigEntry::getConcatenatedValuesLength()
 const TCHAR* ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const TCHAR *defaultValue)
 {
    ConfigEntry *e = findEntry(name);
-   if (e == NULL) return defaultValue;
+   if (e == NULL)
+      return defaultValue;
    const TCHAR *value = e->getValue(index);
    return (value != NULL) ? value : defaultValue;
 }
@@ -350,7 +359,8 @@ void ConfigEntry::createXml(String &xml, int level)
 {
    TCHAR *name = _tcsdup(m_name);
    TCHAR *ptr = _tcschr(name, _T('#'));
-   if (ptr != NULL) *ptr = 0;
+   if (ptr != NULL)
+      *ptr = 0;
 
    if (m_id == 0)
       xml.addFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
@@ -365,7 +375,8 @@ void ConfigEntry::createXml(String &xml, int level)
       xml.addFormattedString(_T("%*s"), level * 4, _T(""));
    }
 
-   if (m_valueCount > 0) xml.addDynamicString(EscapeStringForXML(m_values[0], -1));
+   if (m_valueCount > 0)
+      xml.addDynamicString(EscapeStringForXML(m_values[0], -1));
    xml.addFormattedString(_T("</%s>\n"), name);
 
    for(int i = 1, len = 0; i < m_valueCount; i++)
@@ -536,7 +547,8 @@ const TCHAR * Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
    if (entry != NULL)
    {
       value = entry->getValue();
-      if (value == NULL) value = defaultValue;
+      if (value == NULL)
+         value = defaultValue;
    }
    else
    {
@@ -626,9 +638,11 @@ ConfigEntry * Config::getEntry(const TCHAR *path)
    TCHAR name[256];
    ConfigEntry *entry = m_root;
 
-   if ((path == NULL) || (*path != _T('/'))) return NULL;
+   if ((path == NULL) || (*path != _T('/')))
+      return NULL;
 
-   if (!_tcscmp(path, _T("/"))) return m_root;
+   if (!_tcscmp(path, _T("/")))
+      return m_root;
 
    curr = path + 1;
    while(entry != NULL)
@@ -661,9 +675,11 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
    TCHAR name[256];
    ConfigEntry *entry, *parent;
 
-   if ((path == NULL) || (*path != _T('/'))) return NULL;
+   if ((path == NULL) || (*path != _T('/')))
+      return NULL;
 
-   if (!_tcscmp(path, _T("/"))) return m_root;
+   if (!_tcscmp(path, _T("/")))
+      return m_root;
 
    curr = path + 1;
    parent = m_root;
@@ -677,15 +693,18 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
          name[len] = 0;
          entry = parent->findEntry(name);
          curr = end + 1;
-         if (entry == NULL) entry = new ConfigEntry(name, parent, _T("<memory>"), 0, 0);
+         if (entry == NULL)
+            entry = new ConfigEntry(name, parent, _T("<memory>"), 0, 0);
          parent = entry;
       }
       else
       {
          entry = parent->findEntry(curr);
-         if (entry == NULL) entry = new ConfigEntry(curr, parent, _T("<memory>"), 0, 0);
+         if (entry == NULL)
+            entry = new ConfigEntry(curr, parent, _T("<memory>"), 0, 0);
       }
-   } while(end != NULL);
+   }
+   while(end != NULL);
    return entry;
 }
 
@@ -695,7 +714,8 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
 void Config::deleteEntry(const TCHAR *path)
 {
    ConfigEntry *entry = getEntry(path);
-   if (entry == NULL) return;
+   if (entry == NULL)
+      return;
 
    ConfigEntry *parent = entry->getParent();
    if (parent == NULL)	// root entry
@@ -713,7 +733,8 @@ void Config::deleteEntry(const TCHAR *path)
 bool Config::setValue(const TCHAR *path, const TCHAR *value)
 {
    ConfigEntry *entry = createEntry(path);
-   if (entry == NULL) return false;
+   if (entry == NULL)
+      return false;
    entry->setValue(value);
    return true;
 }
@@ -764,8 +785,7 @@ bool Config::setValue(const TCHAR *path, uuid_t value)
  * Find comment start in INI style config line
  * Comment starts with # character, characters within double quotes ignored
  */
-static TCHAR *
-FindComment(TCHAR *str)
+static TCHAR* FindComment(TCHAR *str)
 {
    TCHAR *curr;
    bool quotes;
@@ -812,22 +832,26 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
    {
       // Read line from file
       buffer[0] = 0;
-      if (_fgetts(buffer, 4095, cfg) == NULL) break;	// EOF or error
+      if (_fgetts(buffer, 4095, cfg) == NULL)
+         break;	// EOF or error
       sourceLine++;
       ptr = _tcschr(buffer, _T('\n'));
       if (ptr != NULL)
       {
          if (ptr != buffer)
          {
-            if (*(ptr - 1) == '\r') ptr--;
+            if (*(ptr - 1) == '\r')
+               ptr--;
          }
          *ptr = 0;
       }
       ptr = FindComment(buffer);
-      if (ptr != NULL) *ptr = 0;
+      if (ptr != NULL)
+         *ptr = 0;
 
       StrStrip(buffer);
-      if (buffer[0] == 0) continue;
+      if (buffer[0] == 0)
+         continue;
 
       // Check if it's a section name
       if ((buffer[0] == _T('*')) || (buffer[0] == _T('[')))
@@ -835,7 +859,8 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
          if (buffer[0] == _T('['))
          {
             TCHAR *end = _tcschr(buffer, _T(']'));
-            if (end != NULL) *end = 0;
+            if (end != NULL)
+               *end = 0;
          }
          currentSection = m_root->findEntry(&buffer[1]);
          if (currentSection == NULL)
@@ -968,7 +993,8 @@ static void EndElement(void *userData, const char *name)
    else if (ps->level > 0)
    {
       ps->level--;
-      if (ps->trimValue[ps->level]) ps->charData[ps->level].trim();
+      if (ps->trimValue[ps->level])
+         ps->charData[ps->level].trim();
       ps->stack[ps->level]->addValue(ps->charData[ps->level]);
    }
 }
@@ -980,7 +1006,8 @@ static void CharData(void *userData, const XML_Char *s, int len)
 {
    XML_PARSER_STATE *ps = (XML_PARSER_STATE *) userData;
 
-   if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH)) ps->charData[ps->level - 1].addMultiByteString(s, len, CP_UTF8);
+   if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
+      ps->charData[ps->level - 1].addMultiByteString(s, len, CP_UTF8);
 }
 
 /**
@@ -1066,7 +1093,8 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool 
    do
    {
       ch = fgetc(f);
-   } while(isspace(ch));
+   }
+   while(isspace(ch));
 
    fclose(f);
 
@@ -1092,12 +1120,15 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
       while(1)
       {
          file = _treaddir(dir);
-         if (file == NULL) break;
+         if (file == NULL)
+            break;
 
-         if (!_tcscmp(file->d_name, _T(".")) || !_tcscmp(file->d_name, _T(".."))) continue;
+         if (!_tcscmp(file->d_name, _T(".")) || !_tcscmp(file->d_name, _T("..")))
+            continue;
 
          size_t len = _tcslen(path) + _tcslen(file->d_name) + 2;
-         if (len > MAX_PATH) continue;	// Full file name is too long
+         if (len > MAX_PATH)
+            continue;	// Full file name is too long
 
          _tcscpy(fileName, path);
          _tcscat(fileName, FS_PATH_SEPARATOR);
@@ -1124,7 +1155,8 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
 
 void Config::print(FILE *file)
 {
-   if (m_root != NULL) m_root->print(file, 0);
+   if (m_root != NULL)
+      m_root->print(file, 0);
 }
 
 /**
