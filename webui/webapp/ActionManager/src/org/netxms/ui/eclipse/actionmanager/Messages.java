@@ -30,8 +30,7 @@ public class Messages extends NLS
 	public String ActionManager_DeleteJobName;
 	public String ActionManager_LoadJobError;
 	public String ActionManager_LoadJobName;
-	public String ActionManager_UiUpdateJobName;
-	public String ActionManager_UodateJobError;
+	public String ActionManager_UpdateJobError;
 	public String ActionManager_UpdateJobName;
 	public String EditActionDlg_Action;
 	public String EditActionDlg_ActionDisabled;

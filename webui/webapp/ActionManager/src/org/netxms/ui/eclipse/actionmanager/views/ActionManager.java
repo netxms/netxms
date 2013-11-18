@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -47,7 +45,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
@@ -372,7 +369,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.get().ActionManager_UodateJobError;
+					return Messages.get().ActionManager_UpdateJobError;
 				}
 
 				@Override
@@ -420,17 +417,16 @@ public class ActionManager extends ViewPart implements SessionListener
 	 */
 	private void updateActionsList()
 	{
-		new UIJob(viewer.getControl().getDisplay(), Messages.get().ActionManager_UiUpdateJobName) {
+		viewer.getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
+			public void run()
 			{
 				synchronized(ActionManager.this.actions)
 				{
 					viewer.setInput(ActionManager.this.actions.values().toArray());
 				}
-				return Status.OK_STATUS;
 			}
-		}.schedule();
+		});
 	}
 
 	/* (non-Javadoc)
