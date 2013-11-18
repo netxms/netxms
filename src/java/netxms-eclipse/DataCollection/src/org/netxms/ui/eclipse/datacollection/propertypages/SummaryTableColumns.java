@@ -51,7 +51,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditDciSummaryTableColumnDlg;

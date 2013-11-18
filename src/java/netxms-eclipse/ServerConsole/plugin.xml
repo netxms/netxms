@@ -25,7 +25,8 @@
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.serverconsole.action_set"
-            label="%actionSet.serverConsole">
+            label="%actionSet.serverConsole"
+            visible="true">
          <action
                class="org.netxms.ui.eclipse.serverconsole.actions.OpenServerConsole"
                definitionId="org.netxms.ui.eclipse.serverconsole.commands.open_server_console"
