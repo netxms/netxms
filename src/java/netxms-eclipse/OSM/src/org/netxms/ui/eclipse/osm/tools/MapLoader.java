@@ -50,6 +50,7 @@ public class MapLoader
 	private static Object CACHE_MUTEX = new Object();
 
 	private Display display;
+	private NXCSession session;
 	private Image missingTile = null; 
 	private Image loadingTile = null; 
 	private Image borderTile = null;
@@ -62,6 +63,7 @@ public class MapLoader
 	public MapLoader(Display display)
 	{
 		this.display = display;
+		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 	
 	/**
@@ -146,7 +148,7 @@ public class MapLoader
 		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
 			return getBorderTileImage();
 
-		final String tileServerURL = ((NXCSession)ConsoleSharedData.getSession()).getTileServerURL();
+		final String tileServerURL = session.getTileServerURL();
 		URL url = null;
 		try
 		{
@@ -281,7 +283,7 @@ public class MapLoader
 	 */
 	public TileSet getAllTiles(Point mapSize, GeoLocation basePoint, int pointLocation, int zoom, boolean cachedOnly)
 	{
-		if ((mapSize.x < 32) || (mapSize.y < 32))
+		if ((mapSize.x < 32) || (mapSize.y < 32) || (basePoint == null))
 			return null;
 		
 		Area coverage = GeoLocationCache.calculateCoverage(mapSize, basePoint, pointLocation, zoom);

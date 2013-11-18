@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 */
 	public GeoMapViewer(Composite parent, int style)
 	{
-		super(parent, style | SWT.NO_BACKGROUND);
+		super(parent, style | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
 
 		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		mapLoader = new MapLoader(getDisplay());

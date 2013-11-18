@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,8 +131,6 @@ public abstract class AbstractGeolocationView extends ViewPart
 	protected void createActions()
 	{
 		actionZoomIn = new Action(Messages.get().AbstractGeolocationView_ZoomIn) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -142,8 +140,6 @@ public abstract class AbstractGeolocationView extends ViewPart
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 	
 		actionZoomOut = new Action(Messages.get().AbstractGeolocationView_ZoomOut) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -194,8 +190,6 @@ public abstract class AbstractGeolocationView extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

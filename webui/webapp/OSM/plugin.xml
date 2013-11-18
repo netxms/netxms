@@ -5,7 +5,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Geolocation"
+            name="%view.name.Geolocation"
             allowMultiple="true"
             icon="icons/map.png"
             class="org.netxms.ui.eclipse.osm.views.LocationMap"
@@ -17,7 +17,7 @@
             class="org.netxms.ui.eclipse.osm.views.WorldMap"
             icon="icons/map.png"
             id="org.netxms.ui.eclipse.osm.views.WorldMap"
-            name="World Map"
+            name="%view.name.WorldMap"
             restorable="true">
       </view>
    </extension>
@@ -31,7 +31,7 @@
                class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
                enablesFor="1"
                id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Node"
-               label="Geolocation"
+               label="%action.label.Geolocation"
                icon="icons/map.png"
                menubarPath="additions">
          </action>
@@ -44,7 +44,7 @@
                enablesFor="1"
                icon="icons/map.png"
                id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Cluster"
-               label="Geolocation"
+               label="%action.label.Geolocation"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -56,7 +56,7 @@
                enablesFor="1"
                icon="icons/map.png"
                id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Container"
-               label="Geolocation"
+               label="%action.label.Geolocation"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -68,7 +68,7 @@
                enablesFor="1"
                icon="icons/map.png"
                id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#MobileDevice"
-               label="Geolocation"
+               label="%action.label.Geolocation"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -76,26 +76,26 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Open world map view"
+            description="%command.description.WorldMap"
             id="org.netxms.ui.eclipse.osm.commands.open_world_map"
-            name="World Map">
+            name="%command.name.WorldMap">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.open_world_map"
-            label="World Map"
+            label="%actionSet.label.WorldMap"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.osm.actions.OpenWorldMap"
                definitionId="org.netxms.ui.eclipse.osm.commands.open_world_map"
                icon="icons/map.png"
                id="org.netxms.ui.eclipse.osm.actions.open_world_map"
-               label="World Map"
+               label="%action.label.WorldMap"
                menubarPath="view/primary"
                style="push"
-               tooltip="Open World Map view">
+               tooltip="%action.tooltip.WorldMap">
          </action>
       </actionSet>
    </extension>

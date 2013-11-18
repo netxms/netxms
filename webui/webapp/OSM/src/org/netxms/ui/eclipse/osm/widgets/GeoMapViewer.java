@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,8 +76,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener, MouseListener, MouseMoveListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 150, 240, 88);
 	private static final Color INFO_BLOCK_BORDER = new Color(Display.getCurrent(), 0, 0, 0);
@@ -140,8 +138,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		};
 
 		addListener(SWT.Resize, new Listener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void handleEvent(Event event)
 			{
@@ -151,8 +147,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		});
 
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -166,7 +160,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				}
 			}
 		});
-		
+
 		addMouseListener(this);
 
 		/* the following code is a hack for adding

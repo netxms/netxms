@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectview.services;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;

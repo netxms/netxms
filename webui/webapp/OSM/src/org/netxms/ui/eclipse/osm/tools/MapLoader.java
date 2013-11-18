@@ -176,7 +176,7 @@ public class MapLoader
 		URL url = null;
 		try
 		{
-			url = new URL(tileServerURL + zoom + "/" + x + "/" + y + ".png");
+			url = new URL(tileServerURL + zoom + "/" + x + "/" + y + ".png"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 		catch(MalformedURLException e)
 		{
@@ -223,14 +223,14 @@ public class MapLoader
 			targetDir = new File(loc.getURL().getPath());
 		}
 		
-		StringBuilder sb = new StringBuilder("OSM");
+		StringBuilder sb = new StringBuilder("OSM"); //$NON-NLS-1$
 		sb.append(File.separatorChar);
 		sb.append(zoom);
 		sb.append(File.separatorChar);
 		sb.append(x);
 		sb.append(File.separatorChar);
 		sb.append(y);
-		sb.append(".png");
+		sb.append(".png"); //$NON-NLS-1$
 
 		return new File(targetDir, sb.toString());
 	}

@@ -21,7 +21,7 @@ public abstract class TableElement extends OverviewPageElement
 
 	/**
 	 * @param parent
-	 * @param object
+	 * @param anchor
 	 */
 	public TableElement(Composite parent, OverviewPageElement anchor)
 	{

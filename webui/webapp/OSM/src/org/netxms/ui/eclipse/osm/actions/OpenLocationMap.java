@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.osm.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -31,6 +30,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.views.LocationMap;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Object action: open geolocation view
@@ -63,7 +63,7 @@ public class OpenLocationMap implements IObjectActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.get().OpenLocationMap_Error, Messages.get().OpenLocationMap_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenLocationMap_Error, Messages.get().OpenLocationMap_ErrorText + e.getMessage());
 			}
 		}
 	}
