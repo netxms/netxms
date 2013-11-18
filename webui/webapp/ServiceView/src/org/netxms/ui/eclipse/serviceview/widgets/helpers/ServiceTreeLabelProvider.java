@@ -37,8 +37,6 @@ import org.netxms.ui.eclipse.serviceview.Activator;
  */
 public class ServiceTreeLabelProvider extends LabelProvider implements IFigureProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private GraphViewer viewer;
 	private IServiceFigureListener figureListener;
 	private ILabelProvider workbenchLabelProvider;
@@ -56,9 +54,9 @@ public class ServiceTreeLabelProvider extends LabelProvider implements IFigurePr
 		this.viewer = viewer;
 		this.figureListener = figureListener;
 		workbenchLabelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
-		font = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
-		collapsedIcon = Activator.getImageDescriptor("icons/collapsed.png").createImage();
-		expandedIcon = Activator.getImageDescriptor("icons/expanded.png").createImage();
+		font = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL); //$NON-NLS-1$
+		collapsedIcon = Activator.getImageDescriptor("icons/collapsed.png").createImage(); //$NON-NLS-1$
+		expandedIcon = Activator.getImageDescriptor("icons/expanded.png").createImage(); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

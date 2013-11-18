@@ -39,8 +39,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ServiceTree extends Composite implements IServiceFigureListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private GraphViewer viewer;
 	private ServiceTreeModel model;
 	
@@ -56,7 +54,7 @@ public class ServiceTree extends Composite implements IServiceFigureListener
 		// Initiate loading of object manager plugin if it was not loaded before
 		try
 		{
-			Platform.getAdapterManager().loadAdapter(((NXCSession)ConsoleSharedData.getSession()).getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(((NXCSession)ConsoleSharedData.getSession()).getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{

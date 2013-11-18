@@ -69,7 +69,7 @@ public class ServiceFigure extends Figure
 		label.setMaximumSize(new Dimension(MAX_LABEL_WIDTH, -1));
 		add(label, BorderLayout.LEFT);
 		
-		expandBox = new Label("");
+		expandBox = new Label(""); //$NON-NLS-1$
 		expandBox.setFont(labelProvider.getFont());
 		expandBox.setIcon(labelProvider.getExpansionStatusIcon(service));
 		expandBox.setIconAlignment(PositionConstants.LEFT);

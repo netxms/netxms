@@ -9,7 +9,7 @@
             class="org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"
             icon="icons/trapeditor.png"
             id="org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"
-            name="SNMP Trap Configuration"
+            name="%view.name.TrapCfg"
             restorable="true">
       </view>
       <view
@@ -18,74 +18,74 @@
             class="org.netxms.ui.eclipse.snmp.views.MibExplorer"
             icon="icons/mibexplorer.gif"
             id="org.netxms.ui.eclipse.snmp.views.MibExplorer"
-            name="MIB Explorer"
+            name="%view.name.MIBExplorer"
             restorable="true">
       </view>
       <view
             class="org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor"
             icon="icons/snmp_trap_monitor.png"
             id="org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor"
-            name="SNMP Trap Monitor"
+            name="%view.name.TrapMonitor"
             restorable="true">
       </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Open SNMP traps configuration"
+            description="%command.description.TrapCfg"
             id="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_editor"
-            name="SNMP Traps Configuration">
+            name="%command.name.TrapCfg">
       </command>
       <command
-            description="Open MIB Explorer"
+            description="%command.description.MIBExplorer"
             id="org.netxms.ui.eclipse.snmp.commands.open_mib_explorer"
-            name="MIB Explorer">
+            name="%command.name.MIBExplorer">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open SNMP trap monitor"
+            description="%command.description.TrapMonitor"
             id="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_monitor"
-            name="SNMP Trap Monitor">
+            name="%command.name.TrapMonitor">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.snmp_traps_configuration"
-            label="SNMP Traps Configuration"
+            label="%actionSet.label.TrapCfg"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.snmp.actions.OpenTrapEditor"
                definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_editor"
                icon="icons/trapeditor.png"
                id="org.netxms.ui.eclipse.snmp.actions.open_trap_editor"
-               label="SNMP Traps Configuration"
+               label="%action.label.TrapCfg"
                menubarPath="config/additions"
                style="push"
-               tooltip="Open SNMP traps configuration">
+               tooltip="%action.tooltip.TrapCfg">
          </action>
          <action
                class="org.netxms.ui.eclipse.snmp.actions.OpenSnmpTrapMonitor"
                definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_monitor"
                id="org.netxms.ui.eclipse.snmp.actions.open_snmp_trap_monitor"
-               label="SNMP Traps"
+               label="%action.label.TrapMonitor"
                menubarPath="monitor/additions"
-               tooltip="Open SNMP trap monitor">
+               tooltip="%action.tooltip.TrapMonitor">
          </action>
       </actionSet>
       <actionSet
             id="org.netxms.ui.eclipse.action_set.mib_explorer"
-            label="MIB Explorer"
+            label="%actionSet.label.MIBExplorer"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.snmp.actions.OpenMibExplorer"
                definitionId="org.netxms.ui.eclipse.snmp.commands.open_mib_explorer"
                icon="icons/mibexplorer.gif"
                id="org.netxms.ui.eclipse.snmp.actions.open_mib_explorer"
-               label="MIB Explorer"
+               label="%action.label.MIBExplorer"
                menubarPath="view/tools"
                style="push"
-               tooltip="Open MIB Explorer">
+               tooltip="%action.tooltip.MIBExplorer">
          </action>
       </actionSet>
    </extension>
@@ -99,7 +99,7 @@
                enablesFor="1"
                icon="icons/mibexplorer.gif"
                id="org.netxms.ui.eclipse.snmp.popupActions.OpenMibExplorer"
-               label="&amp;MIB Explorer"
+               label="%action.label.MIBExplorerNode"
                menubarPath="additions">
          </action>
       </objectContribution>

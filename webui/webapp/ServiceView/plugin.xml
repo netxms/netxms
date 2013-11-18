@@ -9,30 +9,30 @@
             class="org.netxms.ui.eclipse.serviceview.views.ServiceTreeView"
             icon="icons/service_tree.png"
             id="org.netxms.ui.eclipse.serviceview.views.ServiceTreeView"
-            name="Service Tree"
+            name="%view.name.ServiceTree"
             restorable="true">
       </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Open service tree vizualization"
+            description="%command.description.ServiceTree"
             id="org.netxms.ui.eclipse.serviceview.commands.open_service_tree"
-            name="Service Tree">
+            name="%command.name.ServiceTree">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.service_view"
-            label="Service View"
+            label="%actionSet.label.ServiceTree"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.serviceview.actions.OpenServiceTree"
                definitionId="org.netxms.ui.eclipse.serviceview.commands.open_service_tree"
                icon="icons/service_tree.png"
                id="org.netxms.ui.eclipse.serviceview.actions.open_service_tree"
-               label="Service Tree"
+               label="%action.label.ServiceTree"
                menubarPath="view/primary"
                style="push">
          </action>

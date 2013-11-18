@@ -157,7 +157,7 @@ public class MibSelectionDialog extends Dialog
 		if (nodeId != 0)
 		{
 			Button button = new Button(dialogArea, SWT.PUSH);
-			button.setText("&Walk...");
+			button.setText(Messages.get().MibSelectionDialog_Walk);
 			gd = new GridData();
 			gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 			gd.verticalAlignment = SWT.BOTTOM;
@@ -224,7 +224,7 @@ public class MibSelectionDialog extends Dialog
 		}
 		catch(SnmpObjectIdFormatException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.get().MibSelectionDialog_Warning, "Please enter valid SNMP object ID or select one from the tree");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().MibSelectionDialog_Warning, Messages.get().MibSelectionDialog_EnterValidOID);
 			return;
 		}
 		
@@ -306,7 +306,7 @@ public class MibSelectionDialog extends Dialog
 		}
 		catch(SnmpObjectIdFormatException e)
 		{
-			MessageDialogHelper.openError(getShell(), "Error", "Error parsing SNMP OID");
+			MessageDialogHelper.openError(getShell(), Messages.get().MibSelectionDialog_Error, Messages.get().MibSelectionDialog_OIDParseError);
 		}
 	}
 

@@ -75,7 +75,7 @@ public class MibObjectDetails extends Composite
 				}
 			});
 
-			oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, "OID as text", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+			oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, Messages.get().MibObjectDetails_OIDAsText, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 			oidText.setEditable(false);
 		}
 		else
@@ -124,7 +124,7 @@ public class MibObjectDetails extends Composite
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		textualConvention = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY,
-		                                                   500, "Textual Convention", "", gd);
+		                                                   500, Messages.get().MibObjectDetails_TextualConv, "", gd); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

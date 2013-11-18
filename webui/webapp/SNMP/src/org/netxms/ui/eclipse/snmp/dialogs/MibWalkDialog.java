@@ -65,7 +65,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("MIB Walk Results");
+		newShell.setText(Messages.get().MibWalkDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
