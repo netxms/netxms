@@ -111,8 +111,6 @@ public class ServerJobManager extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -194,8 +192,6 @@ public class ServerJobManager extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -231,8 +227,6 @@ public class ServerJobManager extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -241,8 +235,6 @@ public class ServerJobManager extends ViewPart
 		};
 		
 		actionCancelJob = new Action("&Cancel") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -253,8 +245,6 @@ public class ServerJobManager extends ViewPart
 		actionCancelJob.setEnabled(false);
 		
 		actionHoldJob = new Action("&Hold") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -265,8 +255,6 @@ public class ServerJobManager extends ViewPart
 		actionHoldJob.setEnabled(false);
 		
 		actionUnholdJob = new Action("&Unhold") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -277,8 +265,6 @@ public class ServerJobManager extends ViewPart
 		actionUnholdJob.setEnabled(false);
 		
 		actionRestartJob = new Action("&Restart") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
