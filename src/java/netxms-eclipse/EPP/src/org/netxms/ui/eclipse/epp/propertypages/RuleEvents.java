@@ -185,16 +185,15 @@ public class RuleEvents extends PropertyPage
 	/**
 	 * Delete event from list
 	 */
-	@SuppressWarnings("unchecked")
 	private void deleteEvent()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<EventTemplate> it = selection.iterator();
+		Iterator<?> it = selection.iterator();
 		if (it.hasNext())
 		{
 			while(it.hasNext())
 			{
-				EventTemplate e = it.next();
+				EventTemplate e = (EventTemplate) it.next();
 				events.remove(e.getCode());
 			}
 	      viewer.setInput(events.values().toArray());

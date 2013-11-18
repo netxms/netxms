@@ -55,8 +55,7 @@ public class DefaultGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	/**
 	 * Stores colors used in drop shadows
 	 */
-	@SuppressWarnings("rawtypes")
-	protected ArrayList dropShadowsColors = new ArrayList();
+	protected ArrayList<Object> dropShadowsColors = new ArrayList<Object>();
 
 	// Renderer parameters
 	boolean dropShadows = false;
@@ -278,7 +277,6 @@ public class DefaultGalleryItemRenderer extends AbstractGalleryItemRenderer {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	private void createColors() {
 		if (dropShadowsSize > 0) {
 			int step = 125 / dropShadowsSize;
@@ -291,11 +289,10 @@ public class DefaultGalleryItemRenderer extends AbstractGalleryItemRenderer {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	private void freeDropShadowsColors() {
 		// Free colors :
 		{
-			Iterator i = this.dropShadowsColors.iterator();
+			Iterator<?> i = this.dropShadowsColors.iterator();
 			while (i.hasNext()) {
 				Color c = (Color) i.next();
 				if (c != null && !c.isDisposed())

@@ -1258,7 +1258,6 @@ public class Gallery extends Canvas {
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private int[] getVisibleItems(Rectangle clipping) {
 
 		if (items == null)
@@ -1270,7 +1269,7 @@ public class Gallery extends Canvas {
 		int end = vertical ? (clipping.y + clipping.height + translate)
 				: (clipping.x + clipping.width + translate);
 
-		ArrayList al = new ArrayList();
+		ArrayList<Object> al = new ArrayList<Object>();
 		int index = 0;
 		GalleryItem item = null;
 		while (index < items.length) {

@@ -29,8 +29,7 @@ import org.netxms.client.ServerAction;
  */
 public class ServerActionAdapterFactory implements IAdapterFactory
 {
-	@SuppressWarnings("rawtypes")
-	private static final Class[] supportedClasses = 
+	private static final Class<?>[] supportedClasses = 
 	{
 		IWorkbenchAdapter.class
 	};
@@ -91,9 +90,8 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Class[] getAdapterList()
+	public Class<?>[] getAdapterList()
 	{
 		return supportedClasses;
 	}

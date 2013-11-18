@@ -177,7 +177,6 @@ public class DataCollectionEditor extends ViewPart
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "DataCollectionEditor"); //$NON-NLS-1$
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@SuppressWarnings("unchecked")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
@@ -191,12 +190,12 @@ public class DataCollectionEditor extends ViewPart
 					actionConvert.setEnabled(selection.size() > 0);
 					actionDuplicate.setEnabled(selection.size() > 0);
 					
-					Iterator<DataCollectionObject> it = selection.iterator();
+					Iterator<?> it = selection.iterator();
 					boolean canActivate = false;
 					boolean canDisable = false;
 					while(it.hasNext() && (!canActivate || !canDisable))
 					{
-						DataCollectionObject dci = it.next();
+						DataCollectionObject dci = (DataCollectionObject) it.next();
 						if (dci.getStatus() != DataCollectionObject.ACTIVE)
 							canActivate = true;
 						if (dci.getStatus() != DataCollectionObject.DISABLED)
@@ -715,14 +714,13 @@ public class DataCollectionEditor extends ViewPart
 	/**
 	 * Duplicate selected item(s)
 	 */
-	@SuppressWarnings("unchecked")
 	private void duplicateItems()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<DataCollectionObject> it = selection.iterator();
+		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-			dciList[i] = it.next().getId();
+			dciList[i] = ((DataCollectionObject) it.next()).getId();
 		
 		new ConsoleJob(Messages.get().DataCollectionEditor_DupJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
@@ -751,7 +749,6 @@ public class DataCollectionEditor extends ViewPart
 	/**
 	 * Copy items to another node
 	 */
-	@SuppressWarnings("unchecked")
 	private void copyItems(final boolean doMove)
 	{
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeAndTemplateSelectionFilter(true));
@@ -759,10 +756,10 @@ public class DataCollectionEditor extends ViewPart
 			return;
 
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<DataCollectionObject> it = selection.iterator();
+		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-			dciList[i] = it.next().getId();
+			dciList[i] = ((DataCollectionObject) it.next()).getId();
 		
 		new ConsoleJob(Messages.get().DataCollectionEditor_CopyJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
@@ -801,7 +798,6 @@ public class DataCollectionEditor extends ViewPart
 	/**
 	 * Convert selected item(s) to template items
 	 */
-	@SuppressWarnings("unchecked")
 	private void convertToTemplate()
 	{
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createTemplateSelectionFilter());
@@ -814,10 +810,10 @@ public class DataCollectionEditor extends ViewPart
 		final Template template = (Template)objects[0];
 		
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<DataCollectionObject> it = selection.iterator();
+		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-			dciList[i] = it.next().getId();
+			dciList[i] = ((DataCollectionObject) it.next()).getId();
 		
 		new ConsoleJob(Messages.get().DataCollectionEditor_ConvertJob_TitlePrefix + object.getObjectName() + Messages.get().DataCollectionEditor_ConvertJob_TitleSuffix, this, Activator.PLUGIN_ID, null) {
 			@Override

@@ -444,13 +444,12 @@ public class SummaryTableColumns extends PropertyPage
 	/**
 	 * Delete selected columns
 	 */
-	@SuppressWarnings("unchecked")
 	private void deleteColumns()
 	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (!selection.isEmpty())
 		{
-			Iterator<Threshold> it = selection.iterator();
+			Iterator<?> it = selection.iterator();
 			while(it.hasNext())
 			{
 				columns.remove(it.next());

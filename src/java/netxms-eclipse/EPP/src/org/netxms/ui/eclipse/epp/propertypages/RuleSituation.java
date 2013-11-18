@@ -221,13 +221,13 @@ public class RuleSituation extends PropertyPage
 	/**
 	 * Edit selected attribute
 	 */
-	@SuppressWarnings("unchecked")
 	private void editAttribute()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() != 1)
 			return;
 		
+		@SuppressWarnings("unchecked")
 		Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
 		AttributeEditDialog dlg = new AttributeEditDialog(getShell(), attr.getKey(), attr.getValue());
 		if (dlg.open() == Window.OK)
@@ -240,16 +240,16 @@ public class RuleSituation extends PropertyPage
 	/**
 	 * Delete attribute(s) from list
 	 */
-	@SuppressWarnings("unchecked")
 	private void deleteAttribute()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<Entry<String, String>> it = selection.iterator();
+		Iterator<?> it = selection.iterator();
 		if (it.hasNext())
 		{
 			while(it.hasNext())
 			{
-				Entry<String, String> e = it.next();
+			   @SuppressWarnings("unchecked")
+				Entry<String, String> e = (Entry<String, String>) it.next();
 				attributes.remove(e.getKey());
 			}
 	      viewer.setInput(attributes.entrySet().toArray());

@@ -238,14 +238,13 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getSelection(org.eclipse
 	 * .swt.widgets.Control)
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Item[] getSelection(Control control) {
 		Item[] selection = ((Gallery) control).getSelection();
 		if (selection == null) {
 			return new GalleryItem[0];
 		}
 
-		List notDisposed = new ArrayList(selection.length);
+		List<Object> notDisposed = new ArrayList<Object>(selection.length);
 		for (int i = 0; i < selection.length; i++) {
 			if (!selection[i].isDisposed()) {
 				notDisposed.add(selection[i]);
@@ -481,11 +480,10 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 *            child index
 	 * @since 3.3
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void remove(final Object parentOrTreePath, final int index) {
 		// if (isBusy())
 		// return;
-		final List oldSelection = new LinkedList(Arrays
+		final List<Object> oldSelection = new LinkedList<Object>(Arrays
 				.asList(((TreeSelection) getSelection()).getPaths()));
 		preservingSelection(new Runnable() {
 			public void run() {
@@ -516,7 +514,7 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 				}
 				if (removedPath != null) {
 					boolean removed = false;
-					for (Iterator it = oldSelection.iterator(); it.hasNext();) {
+					for (Iterator<?> it = oldSelection.iterator(); it.hasNext();) {
 						TreePath path = (TreePath) it.next();
 						if (path.startsWith(removedPath, getComparer())) {
 							it.remove();

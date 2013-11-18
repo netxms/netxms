@@ -310,9 +310,9 @@ void ExtractConfigFileFromCommandLine(int argc, char* argv[])
 {
    for(int i = 1; i < argc; i++)
    {
-      if (strcmp(argv[i], "-c") == 0)
+      if (!strcmp(argv[i], "-c"))
       {
-         if (i < argc - 1)
+         if (i < (argc - 1))
          {
 #ifdef UNICODE
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[i + 1], -1, g_szConfigFile, MAX_PATH - 1);

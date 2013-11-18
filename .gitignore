@@ -183,6 +183,7 @@ target
 /x64
 
 # Eclipse CDT
+.project
 .cproject
 .metadata
 

@@ -313,13 +313,12 @@ public class TableThresholds extends PropertyPage
 	/**
 	 * Delete selected thresholds
 	 */
-	@SuppressWarnings("unchecked")
 	private void deleteThresholds()
 	{
 		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
 		if (!selection.isEmpty())
 		{
-			Iterator<TableThreshold> it = selection.iterator();
+			Iterator<?> it = selection.iterator();
 			while(it.hasNext())
 			{
 				thresholds.remove(it.next());

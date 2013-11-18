@@ -448,12 +448,11 @@ public class ObjectTree extends Composite
 	 * 
 	 * @return ID of selected object or 0 if no objects selected
 	 */
-	@SuppressWarnings("rawtypes")
 	public Long[] getSelectedObjects()
 	{
 		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
 		Set<Long> objects = new HashSet<Long>(selection.size());
-		Iterator it = selection.iterator();
+      Iterator<?> it = selection.iterator();
 		while(it.hasNext())
 		{
 			objects.add(((AbstractObject)it.next()).getObjectId());
@@ -699,15 +698,14 @@ public class ObjectTree extends Composite
             return true;
          }
 
-         @SuppressWarnings("rawtypes")
-         @Override
+			@Override
          public boolean validateDrop(Object target, int operation, TransferData transferType)
          {
             if (!LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
                return false;
 
             IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-            Iterator it = selection.iterator();
+            Iterator<?> it = selection.iterator();
             Object object = it.next();
             SubtreeType subtree = null;
             if ((object instanceof AbstractObject)) {

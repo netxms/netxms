@@ -55,11 +55,10 @@ public class ExtendedPropertyDialog extends PropertyDialog
 	/**
 	 * Create controls for all pages
 	 */
-	@SuppressWarnings("rawtypes")
 	public void createAllPages()
 	{
-		List nodes = getPreferenceManager().getElements(PreferenceManager.POST_ORDER);
-		Iterator i = nodes.iterator();
+		List<?> nodes = getPreferenceManager().getElements(PreferenceManager.POST_ORDER);
+		Iterator<?> i = nodes.iterator();
 		while(i.hasNext()) 
 		{
 			IPreferenceNode node = (IPreferenceNode)i.next();
@@ -79,7 +78,6 @@ public class ExtendedPropertyDialog extends PropertyDialog
 	 * @param name
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
 	public static ExtendedPropertyDialog createDialogOn(Shell shell, final String propertyPageId, Object element, String name)
 	{
 		if (element == null)
@@ -92,7 +90,7 @@ public class ExtendedPropertyDialog extends PropertyDialog
 		// fill the manager with contributions from the matching contributors
 		PropertyPageContributorManager.getManager().contribute(pageManager, element);
 		// testing if there are pages in the manager
-		Iterator pages = pageManager.getElements(PreferenceManager.PRE_ORDER).iterator();
+		Iterator<?> pages = pageManager.getElements(PreferenceManager.PRE_ORDER).iterator();
 		if (!pages.hasNext())
 		{
 			MessageDialogHelper.openInformation(shell, WorkbenchMessages.PropertyDialog_messageTitle,

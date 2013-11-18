@@ -166,7 +166,7 @@ public class ActionSelectionDialog extends Dialog
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
-	@SuppressWarnings("unchecked")
+	SuppressWarnings("unchecked")
 	@Override
 	protected void okPressed()
 	{

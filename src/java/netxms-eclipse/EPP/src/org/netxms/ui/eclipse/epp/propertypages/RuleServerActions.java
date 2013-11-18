@@ -175,16 +175,15 @@ public class RuleServerActions extends PropertyPage
 	/**
 	 * Delete event from list
 	 */
-	@SuppressWarnings("unchecked")
 	private void deleteAction()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<ServerAction> it = selection.iterator();
+		Iterator<?> it = selection.iterator();
 		if (it.hasNext())
 		{
 			while(it.hasNext())
 			{
-				ServerAction a = it.next();
+				ServerAction a = (ServerAction) it.next();
 				actions.remove(a.getId());
 			}
 	      viewer.setInput(actions.values().toArray());
