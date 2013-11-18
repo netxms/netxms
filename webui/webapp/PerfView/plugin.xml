@@ -5,7 +5,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Historical Data Chart"
+            name="%view.name.HistDataChart"
             allowMultiple="true"
             icon="icons/chart_line.png"
             class="org.netxms.ui.eclipse.perfview.views.HistoricalGraphView"
@@ -16,7 +16,7 @@
             class="org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"
             icon="icons/graph_tree.png"
             id="org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"
-            name="Graphs"
+            name="%view.name.Graphs"
             restorable="true">
       </view>
       <view
@@ -24,7 +24,7 @@
             class="org.netxms.ui.eclipse.perfview.views.DataComparisonView"
             icon="icons/chart_bar.png"
             id="org.netxms.ui.eclipse.perfview.views.DataComparisionView"
-            name="Last Values Chart"
+            name="%view.name.LastValuesChart"
             restorable="true">
       </view>
       <view
@@ -32,7 +32,7 @@
             class="org.netxms.ui.eclipse.perfview.views.TableLastValuesView"
             icon="icons/table.gif"
             id="org.netxms.ui.eclipse.perfview.views.TableLastValues"
-            name="Table Last Values"
+            name="%view.name.TableLastValues"
             restorable="true">
       </view>
       <view
@@ -40,7 +40,7 @@
             class="org.netxms.ui.eclipse.perfview.views.HistoricalDataView"
             icon="icons/data_history.gif"
             id="org.netxms.ui.eclipse.perfview.views.HistoricalDataView"
-            name="Historical Data"
+            name="%view.name.HistData"
             restorable="true">
       </view>
    </extension>
@@ -54,20 +54,20 @@
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
                icon="icons/chart_pie.png"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart_SimpleDciValue#30"
-               label="Pie Chart"
+               label="%action.label.PieChart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowBarChart"
                icon="icons/chart_bar.png"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart_SimpleDciValue#20"
-               label="Bar Chart"
+               label="%action.label.BarChart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryGraph"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph_SimpleDciValue#10"
-               label="Line Chart"
+               label="%action.label.LineChart"
                icon="icons/chart_line.png"
                menubarPath="additions">
          </action>
@@ -75,7 +75,7 @@
                class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryData"
                icon="icons/data_history.gif"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_SimpleDciValue#40"
-               label="History"
+               label="%action.label.History"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -87,7 +87,7 @@
                class="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
                icon="icons/table.gif"
                id="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues_TableDciValue#10"
-               label="Table Last Value"
+               label="%action.label.TableLastValue"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -98,20 +98,20 @@
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
                icon="icons/chart_pie.png"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart_DataCollectionItem"
-               label="Pie Chart"
+               label="%action.label.PieChart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowBarChart"
                icon="icons/chart_bar.png"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart_DataCollectionItem"
-               label="Bar Chart"
+               label="%action.label.BarChart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryGraph"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph_DataCollectionItem"
-               label="Line Chart"
+               label="%action.label.LineChart"
                icon="icons/chart_line.png"
                menubarPath="additions">
          </action>
@@ -119,7 +119,7 @@
                class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryData"
                icon="icons/data_history.gif"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_DataCollectionItem"
-               label="History"
+               label="%action.label.History"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -131,7 +131,7 @@
                class="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
                icon="icons/table.gif"
                id="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues_DataCollectionTable"
-               label="Table Last Value"
+               label="%action.label.TableLastValue"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -142,7 +142,7 @@
       <page
             class="org.netxms.ui.eclipse.perfview.propertypages.PerfTab"
             id="org.netxms.ui.eclipse.perfview.propertypages.PerfTab#100"
-            name="Performance Tab">
+            name="%page.name.PerfTab">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.datacollection.DataCollectionItem">
@@ -152,7 +152,7 @@
       <page
             class="org.netxms.ui.eclipse.perfview.propertypages.General"
             id="org.netxms.ui.eclipse.perfview.propertypages.General#1"
-            name="General">
+            name="%page.name.General">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.perfview.ChartConfig">
@@ -162,7 +162,7 @@
       <page
             class="org.netxms.ui.eclipse.perfview.propertypages.DataSources"
             id="org.netxms.ui.eclipse.perfview.propertypages.DataSources#10"
-            name="Data Sources">
+            name="%page.name.DataSources">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.perfview.ChartConfig">
@@ -172,7 +172,7 @@
       <page
             class="org.netxms.ui.eclipse.perfview.propertypages.PredefinedGraph"
             id="org.netxms.ui.eclipse.perfview.propertypages.PredefinedGraph#0"
-            name="Predefined Graph">
+            name="%page.name.PredefGraph">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.perfview.PredefinedChartConfig">
@@ -183,23 +183,23 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Open predefined graphs navigation view"
+            description="%command.description.PredefGraphs"
             id="org.netxms.ui.eclipse.perfview.commands.open_predef_graph_tree"
-            name="Predefined Graphs">
+            name="%command.name.PredefGraphs">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.predefined_graphs"
-            label="Graphs"
+            label="%actionSet.label.Graphs"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.perfview.actions.OpenPredefinedGraphsTree"
                definitionId="org.netxms.ui.eclipse.perfview.commands.open_predef_graph_tree"
                icon="icons/graph_tree.png"
                id="org.netxms.ui.eclipse.perfview.action.open_predef_graph_tree"
-               label="Predefined Graphs"
+               label="%action.label.PredefGraphs"
                menubarPath="view/primary"
                style="push"
                toolbarPath="view/additions">
@@ -212,7 +212,7 @@
             class="org.netxms.ui.eclipse.perfview.objecttabs.PerformanceTab"
             icon="icons/chart_line.png"
             id="org.netxms.ui.eclipse.perfview.objecttabs.PerformanceTab"
-            name="Performance"
+            name="%tab.name.Performance"
             order="40">
       </tab>
    </extension>
