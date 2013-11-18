@@ -5,7 +5,7 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.objectbrowser;singleton:=true
 Bundle-Version: 1.2.10
 Bundle-Activator: org.netxms.ui.eclipse.objectbrowser.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.netxms.webui.core;bundle-version="1.2.9",
+Require-Bundle: org.netxms.webui.core;bundle-version="1.2.10",
  org.eclipse.rap.ui;bundle-version="2.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

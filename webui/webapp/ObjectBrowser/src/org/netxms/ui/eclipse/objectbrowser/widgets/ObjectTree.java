@@ -700,7 +700,7 @@ public class ObjectTree extends Composite
          }
 
          @SuppressWarnings("rawtypes")
-			@Override
+         @Override
          public boolean validateDrop(Object target, int operation, TransferData transferType)
          {
             if (!LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
