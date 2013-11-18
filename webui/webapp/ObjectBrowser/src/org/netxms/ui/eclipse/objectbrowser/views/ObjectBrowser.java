@@ -65,8 +65,6 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
-import org.netxms.client.objects.Dashboard;
-import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
@@ -84,12 +82,6 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
-import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.objects.NetworkMapGroup;
-import org.netxms.client.objects.NetworkMapRoot;
-import org.netxms.client.objects.AgentPolicy;
-import org.netxms.client.objects.PolicyGroup;
-import org.netxms.client.objects.PolicyRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.tools.CommandBridge;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -351,7 +343,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveObject = new Action(Messages.get().get().ObjectBrowser_MoveObject) {
+		actionMoveObject = new Action(Messages.get().ObjectBrowser_MoveObject) {
 			@Override
 			public void run()
 			{
@@ -359,7 +351,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveTemplate = new Action(Messages.get().get().ObjectBrowser_MoveTemplate) {
+		actionMoveTemplate = new Action(Messages.get().ObjectBrowser_MoveTemplate) {
 			@Override
 			public void run()
 			{
@@ -367,7 +359,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveBusinessService = new Action(Messages.get().get().ObjectBrowser_MoveService) {
+		actionMoveBusinessService = new Action(Messages.get().ObjectBrowser_MoveService) {
 			@Override
 			public void run()
 			{
@@ -375,7 +367,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveDashboard = new Action(Messages.get().get().ObjectBrowser_MoveDashboard) { 
+		actionMoveDashboard = new Action(Messages.get().ObjectBrowser_MoveDashboard) { 
          @Override
          public void run()
          {
@@ -383,7 +375,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
       
-      actionMoveMap = new Action(Messages.get().get().ObjectBrowser_MoveMap) { 
+      actionMoveMap = new Action(Messages.get().ObjectBrowser_MoveMap) { 
          @Override
          public void run()
          {
@@ -391,7 +383,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
       
-      actionMovePolicy = new Action(Messages.get().get().ObjectBrowser_MovePolicy) { 
+      actionMovePolicy = new Action(Messages.get().ObjectBrowser_MovePolicy) { 
          @Override
          public void run()
          {
@@ -399,7 +391,7 @@ public class ObjectBrowser extends ViewPart
          }
       };
 		
-      actionHideUnmanaged = new Action(Messages.get().get().ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
+      actionHideUnmanaged = new Action(Messages.get().ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -409,7 +401,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 
-      actionHideTemplateChecks = new Action(Messages.get().get().ObjectBrowser_HideCheckTemplates, Action.AS_CHECK_BOX) {
+      actionHideTemplateChecks = new Action(Messages.get().ObjectBrowser_HideCheckTemplates, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -419,7 +411,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
-      actionShowFilter = new Action(Messages.get().get().ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.get().ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -432,7 +424,7 @@ public class ObjectBrowser extends ViewPart
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
       
-      actionShowStatusIndicator = new Action(Messages.get().get().ObjectBrowser_ShowStatusIndicator, Action.AS_CHECK_BOX) {
+      actionShowStatusIndicator = new Action(Messages.get().ObjectBrowser_ShowStatusIndicator, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

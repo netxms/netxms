@@ -38,7 +38,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceAdapter;
 import org.eclipse.swt.dnd.DragSourceEvent;
-import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.DisposeEvent;
@@ -64,15 +63,14 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectFilter;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
-import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectFilter;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.FilterText;
@@ -701,7 +699,8 @@ public class ObjectTree extends Composite
             return true;
          }
 
-         @Override
+         @SuppressWarnings("rawtypes")
+			@Override
          public boolean validateDrop(Object target, int operation, TransferData transferType)
          {
             if (!LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
