@@ -5,7 +5,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Server Configuration"
+            name="%view.name.ServerConfig"
             icon="icons/server_config.png"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor"
@@ -16,7 +16,7 @@
             class="org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator"
             icon="icons/network_discovery.gif"
             id="org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator"
-            name="Network Discovery"
+            name="%view.name.NetworkDiscovery"
             restorable="true">
       </view>
       <view
@@ -24,7 +24,7 @@
             class="org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator"
             icon="icons/syslog_cfg.gif"
             id="org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator"
-            name="Syslog Parser"
+            name="%view.name.SyslogParser"
             restorable="true">
       </view>
       <view
@@ -32,7 +32,7 @@
             class="org.netxms.ui.eclipse.serverconfig.views.ExportFileBuilder"
             icon="icons/export.gif"
             id="org.netxms.ui.eclipse.serverconfig.views.ExportFileBuilder"
-            name="Export Configuration"
+            name="%view.name.ExportConfig"
             restorable="true">
       </view>
       <view
@@ -41,7 +41,7 @@
             class="org.netxms.ui.eclipse.serverconfig.views.MappingTables"
             icon="icons/mapping_table.png"
             id="org.netxms.ui.eclipse.serverconfig.views.MappingTables"
-            name="MappingTables"
+            name="%view.name.MappingTables"
             restorable="true">
       </view>
       <view
@@ -50,75 +50,67 @@
             class="org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor"
             icon="icons/mapping_table_edit.png"
             id="org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor"
-            name="Mapping Table"
+            name="%view.name.MappingTable"
             restorable="false">
       </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
-      <category
-            name="Tools"
-            id="org.netxms.ui.eclipse.console.category.tools">
-      </category>
       <command
-            name="Export configuration"
-            description="Export configuration"
+            name="%command.name.ExportConfig"
+            description="%command.description.ExportConfig"
             categoryId="org.netxms.ui.eclipse.console.category.tools"
             id="org.netxms.ui.eclipse.serverconfig.commands.export_configuration">
       </command>
       <command
-            name="Import configuration..."
-            description="Import configuration"
+            name="%command.name.ImportConfig"
+            description="%command.description.ImportConfig"
             categoryId="org.netxms.ui.eclipse.console.category.tools"
             id="org.netxms.ui.eclipse.serverconfig.commands.import_configuration">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open server configuration editor"
+            description="%command.description.ServerConfig"
             id="org.netxms.ui.eclipse.serverconfig.commands.open_server_config"
-            name="Server Configuration">
+            name="%command.name.ServerConfig">
       </command>
-      <category
-            id="org.netxms.ui.eclipse.console.category.views"
-            name="Views">
-      </category>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open network discovery configuration"
+            description="%command.description.NetworkDiscovery"
             id="org.netxms.ui.eclipse.serverconfig.commands.open_netdisco_config"
-            name="Network Discovery">
+            name="%command.name.NetworkDiscovery">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open syslog parser configuration"
+            description="%command.description.SyslogParser"
             id="org.netxms.ui.eclipse.serverconfig.commands.open_syslog_config"
-            name="Syslog Parser">
+            name="%command.name.SyslogParser">
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open mapping tables configuration"
+            description="%command.description.MappingTables"
             id="org.netxms.ui.eclipse.serverconfig.commands.open_mapping_tables"
-            name="Mapping Tables">
+            name="%command.name.MappingTables">
       </command>
       <command
             id="org.netxms.ui.eclipse.serverconfig.commands.add_new_row"
-            name="New row">
+            name="%command.name.NewRow">
       </command>
       <command
             id="org.netxms.ui.eclipse.serverconfig.commands.delete_rows"
-            name="Delete rows">
+            name="%command.name.DeleteRows">
       </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.action_set.server_configuration"
-		   label="Server Configuration"
+		   label="%actionSet.label.ServerConfig"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.serverconfig.actions.open"
 			   menubarPath="config/additions"
 			   toolbarPath="config/additions"
-			   label="Server Configuration"
-			   tooltip="Open server configuration editor"
+			   label="%action.label.ServerConfig"
+			   tooltip="%action.tooltip.ServerConfig"
 			   icon="icons/server_config.png"
 			   class="org.netxms.ui.eclipse.serverconfig.actions.OpenServerConfig"
 			   definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_server_config">
@@ -128,53 +120,53 @@
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_netdisco_config"
            icon="icons/network_discovery.gif"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_netdisco_config"
-           label="Network Discovery"
+           label="%action.label.NetworkDiscovery"
            menubarPath="config/additions"
            toolbarPath="config/additions"
-           tooltip="Open network discovery configuration">
+           tooltip="%action.tooltip.NetworkDiscovery">
      </action>
      <action
            class="org.netxms.ui.eclipse.serverconfig.actions.OpenSyslogParserConfig"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_syslog_config"
            icon="icons/syslog_cfg.gif"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_syslog_config"
-           label="Syslog Parser"
+           label="%action.label.SyslogParser"
            menubarPath="config/additions"
            toolbarPath="config/additions"
-           tooltip="Open syslog parser configuration">
+           tooltip="%action.tooltip.SyslogParser">
      </action>
      <action
            class="org.netxms.ui.eclipse.serverconfig.actions.OpenMappingTables"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_mapping_tables"
            icon="icons/mapping_table.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_mapping_tables"
-           label="Mapping Tables"
+           label="%action.label.MappingTables"
            menubarPath="config/additions"
            style="push"
            toolbarPath="config/additions"
-           tooltip="Open mapping tables editor">
+           tooltip="%action.tooltip.MappingTables">
      </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
-		   label="Configuration export/import"
+		   label="%actionSet.label.ExportImport"
 		   visible="true">
 		   <action
            class="org.netxms.ui.eclipse.serverconfig.actions.ExportConfiguration"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.export_configuration"
            icon="icons/export.gif"
            id="org.netxms.ui.eclipse.serverconfig.actions.export_configuration"
-           label="Export configuration"
+           label="%action.label.ExportConfig"
            menubarPath="tools/additions"
-           tooltip="Export configuration">
+           tooltip="%action.tooltip.ExportConfig">
 		   </action>
      <action
            class="org.netxms.ui.eclipse.serverconfig.actions.ImportConfiguration"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.import_configuration"
            icon="icons/import.gif"
            id="org.netxms.ui.eclipse.serverconfig.actions.import_configuration"
-           label="Import configuration..."
+           label="%action.label.ImportConfig"
            menubarPath="tools/additions"
-           tooltip="Import configuration">
+           tooltip="%action.tooltip.ImportConfig">
      </action>
 	   </actionSet>
    </extension>

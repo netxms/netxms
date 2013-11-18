@@ -30,7 +30,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -61,6 +60,7 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableListComparat
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -118,8 +118,6 @@ public class MappingTables extends ViewPart
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTableViewerSettings(viewer, settings, "MappingTablesList");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -193,8 +191,6 @@ public class MappingTables extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -203,8 +199,6 @@ public class MappingTables extends ViewPart
 		};
 		
 		actionNewTable = new Action("&New table...", SharedIcons.ADD_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -213,8 +207,6 @@ public class MappingTables extends ViewPart
 		};
 		
 		actionEditTable = new Action("&Edit", SharedIcons.EDIT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -224,8 +216,6 @@ public class MappingTables extends ViewPart
 		actionEditTable.setEnabled(false);
 		
 		actionDeleteTables = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -274,8 +264,6 @@ public class MappingTables extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -405,7 +393,7 @@ public class MappingTables extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(getSite().getShell(), "Error", "Error opening view: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), "Error", "Error opening view: " + e.getLocalizedMessage());
 		}
 	}
 	
@@ -418,7 +406,7 @@ public class MappingTables extends ViewPart
 		if ((selection == null) || (selection.size() == 0))
 			return;
 
-		if (!MessageDialog.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected mapping tables?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected mapping tables?"))
 			return;
 		
 		final List<Integer> tables = new ArrayList<Integer>(selection.size());

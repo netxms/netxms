@@ -79,6 +79,9 @@ public class UserFieldEditor extends FieldEditor
 		});
 	}
 
+	/**
+	 * 
+	 */
 	protected void selectUser()
 	{
 		final SelectUserDialog dialog = new SelectUserDialog(getShell(), false);

@@ -436,7 +436,6 @@ public class ReportExecutionForm extends Composite
 				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				session.executeReport(report.getId(), execParameters);
 				getDisplay().asyncExec(new Runnable() {
-
 					@Override
 					public void run()
 					{

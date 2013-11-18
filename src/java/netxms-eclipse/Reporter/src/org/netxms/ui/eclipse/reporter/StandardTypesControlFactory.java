@@ -9,8 +9,14 @@ import org.netxms.ui.eclipse.reporter.widgets.StringFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.TimestampFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.UserFieldEditor;
 
+/**
+ * Control factory for standard control types
+ */
 public class StandardTypesControlFactory implements CustomControlFactory
 {
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.reporter.api.CustomControlFactory#editorForType(org.eclipse.swt.widgets.Composite, org.netxms.api.client.reporting.ReportParameter, org.eclipse.ui.forms.widgets.FormToolkit)
+	 */
 	@Override
 	public FieldEditor editorForType(Composite parent, ReportParameter parameter, FormToolkit toolkit)
 	{

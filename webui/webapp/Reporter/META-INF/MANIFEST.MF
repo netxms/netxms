@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Reporter Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.reporter;singleton:=true
-Bundle-Version: 1.2.8
+Bundle-Version: 1.2.10
 Bundle-Activator: org.netxms.ui.eclipse.reporter.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.core.runtime,
