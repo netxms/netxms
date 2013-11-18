@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.views.helpers;
+package org.netxms.ui.eclipse.serverconsole.views.helpers;
 
 import java.io.IOException;
 import java.io.OutputStream;

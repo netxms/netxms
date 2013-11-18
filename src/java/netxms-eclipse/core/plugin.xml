@@ -48,15 +48,6 @@
             id="org.netxms.ui.eclipse.viewcategory.tools"
             name="%category.tools">
       </category>
-      <view
-            allowMultiple="false"
-            category="org.netxms.ui.eclipse.viewcategory.tools"
-            class="org.netxms.ui.eclipse.console.views.ServerConsole"
-            icon="icons/server_console.png"
-            id="org.netxms.ui.eclipse.console.views.ServerConsole"
-            name="%view.serverConsole"
-            restorable="true">
-      </view>
    </extension>
 
    <extension
@@ -136,11 +127,6 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="%actionDescription.OpenServerConsole"
-            id="org.netxms.ui.eclipse.console.commands.open_server_console"
-            name="%action.OpenServerConsole">
-      </command>
-      <command
             description="%actionDescription.FullScreen"
             id="org.netxms.ui.eclipse.console.commands.full_screen"
             name="%action.FullScreen">
@@ -195,14 +181,6 @@
             id="org.netxms.ui.eclipse.console.action_set"
             label="%actionSet.core"
             visible="true">
-         <action
-               class="org.netxms.ui.eclipse.console.actions.OpenServerConsole"
-               definitionId="org.netxms.ui.eclipse.console.commands.open_server_console"
-               icon="icons/server_console.png"
-               id="org.netxms.ui.eclipse.console.actions.open_server_console"
-               label="%action.OpenServerConsole"
-               menubarPath="tools/additions">
-         </action>
          <action
                class="org.netxms.ui.eclipse.console.actions.SendSMS"
                definitionId="org.netxms.ui.eclipse.console.commands.send_sms"

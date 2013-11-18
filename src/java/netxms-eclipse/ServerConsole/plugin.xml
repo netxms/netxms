@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.serverconsole.views.ServerConsole"
+            icon="icons/server_console.png"
+            id="org.netxms.ui.eclipse.serverconsole.views.ServerConsole"
+            name="%view.serverConsole"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="%actionDescription.OpenServerConsole"
+            id="org.netxms.ui.eclipse.serverconsole.commands.open_server_console"
+            name="%action.OpenServerConsole">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.serverconsole.action_set"
+            label="%actionSet.serverConsole">
+         <action
+               class="org.netxms.ui.eclipse.serverconsole.actions.OpenServerConsole"
+               definitionId="org.netxms.ui.eclipse.serverconsole.commands.open_server_console"
+               icon="icons/server_console.png"
+               id="org.netxms.ui.eclipse.serverconsole.actions.open_server_console"
+               label="%action.OpenServerConsole"
+               menubarPath="tools/additions">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>

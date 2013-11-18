@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.console.views.helpers;
+package org.netxms.ui.eclipse.serverconsole.views.helpers;
 
 import java.io.IOException;
 import java.io.OutputStream;

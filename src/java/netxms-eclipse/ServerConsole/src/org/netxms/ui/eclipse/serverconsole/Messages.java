@@ -1,10 +1,10 @@
-package org.netxms.ui.eclipse.console;
+package org.netxms.ui.eclipse.serverconsole;
 
 import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS
 {
-	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.console.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.serverconsole.messages"; //$NON-NLS-1$
 	
 	public static String AbstractSelector_ClearSelection;
 	public static String AbstractSelector_CopyToClipboard;
@@ -109,6 +109,10 @@ public class Messages extends NLS
 	public static String NXMCWorkbenchWindowAdvisor_title_information;
 	public static String ObjectNameValidator_ErrorMessage1;
    public static String ObjectNameValidator_ErrorMessage2;
+	public static String OpenServerConsole_Error;
+	public static String OpenServerConsole_JobTitle;
+	public static String OpenServerConsole_OpenErrorMessage;
+	public static String OpenServerConsole_ViewErrorMessage;
 	public static String PasswordExpiredDialog_confirm_passwd;
 	public static String PasswordExpiredDialog_new_passwd;
 	public static String PasswordExpiredDialog_passwd_expired;
@@ -139,6 +143,10 @@ public class Messages extends NLS
    public static String ServerClock_OptionShowTimeZone;
    public static String ServerClock_ServerTime;
    public static String ServerClock_Tooltip;
+   public static String ServerConsole_CannotOpen;
+	public static String ServerConsole_ClearTerminal;
+	public static String ServerConsole_OpenServerConsole;
+	public static String ServerConsole_ScrollLock;
 	public static String StatusDisplayInfo_Critical;
 	public static String StatusDisplayInfo_Disabled;
 	public static String StatusDisplayInfo_Major;

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.views;
+package org.netxms.ui.eclipse.serverconsole.views;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -41,11 +41,11 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerConsoleListener;
-import org.netxms.ui.eclipse.console.Activator;
-import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.console.views.helpers.ServerConsoleTerminalConnector;
-import org.netxms.ui.eclipse.console.views.helpers.TerminalReader;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.serverconsole.Activator;
+import org.netxms.ui.eclipse.serverconsole.Messages;
+import org.netxms.ui.eclipse.serverconsole.views.helpers.ServerConsoleTerminalConnector;
+import org.netxms.ui.eclipse.serverconsole.views.helpers.TerminalReader;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -55,7 +55,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 @SuppressWarnings("restriction")
 public class ServerConsole extends ViewPart implements ITerminalListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.console.views.ServerConsole"; //$NON-NLS-1$
+	public static final String ID = "org.netxms.ui.eclipse.serverconsole.views.ServerConsole"; //$NON-NLS-1$
 	
 	private ITerminalViewControl terminal;
 	private ServerConsoleTerminalConnector connector;
@@ -103,7 +103,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	 */
 	private void connectToServer()
 	{
-		new ConsoleJob(Messages.get().ServerConsole_OpenServerConsole, null, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
+		new ConsoleJob(Messages.get().ServerConsole_OpenServerConsole, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
