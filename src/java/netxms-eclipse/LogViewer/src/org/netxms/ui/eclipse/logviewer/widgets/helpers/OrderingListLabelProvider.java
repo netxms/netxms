@@ -22,8 +22,8 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.log.OrderingColumn;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.logviewer.Messages;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * @author Victor

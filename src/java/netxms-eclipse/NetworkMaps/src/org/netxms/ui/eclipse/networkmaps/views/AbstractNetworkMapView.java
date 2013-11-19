@@ -84,6 +84,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ExpansionAlgorithm;
@@ -96,7 +97,6 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**

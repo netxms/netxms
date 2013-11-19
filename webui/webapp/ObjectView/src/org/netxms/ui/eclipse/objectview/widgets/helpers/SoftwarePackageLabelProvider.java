@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.SoftwarePackage;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.widgets.SoftwareInventory;
 

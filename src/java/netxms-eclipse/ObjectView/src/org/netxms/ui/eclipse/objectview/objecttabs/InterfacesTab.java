@@ -39,11 +39,11 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

@@ -24,7 +24,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.widgets.SnmpTrapTraceWidget;

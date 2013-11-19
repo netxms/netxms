@@ -19,8 +19,8 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.netxms.client.datacollection.TableCondition;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**

@@ -59,13 +59,13 @@ import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.logviewer.widgets.FilterBuilder;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**

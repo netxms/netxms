@@ -57,6 +57,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.situations.Situation;
 import org.netxms.client.situations.SituationInstance;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.propertypages.helpers.AttributeLabelProvider;
@@ -65,7 +66,6 @@ import org.netxms.ui.eclipse.epp.views.helpers.SituationTreeContentProvider;
 import org.netxms.ui.eclipse.epp.views.helpers.SituationTreeLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

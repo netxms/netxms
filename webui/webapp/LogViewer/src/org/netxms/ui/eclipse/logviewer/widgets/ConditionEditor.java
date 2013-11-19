@@ -31,7 +31,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.log.ColumnFilter;
-import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 
 /**
  * Editor widget for single log viewer condition

@@ -25,8 +25,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**

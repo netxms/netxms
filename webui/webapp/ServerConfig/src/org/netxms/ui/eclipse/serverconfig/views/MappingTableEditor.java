@@ -49,12 +49,12 @@ import org.netxms.api.client.Session;
 import org.netxms.api.client.mt.MappingTable;
 import org.netxms.api.client.mt.MappingTableEntry;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

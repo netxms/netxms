@@ -51,7 +51,7 @@ import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordRequestDialog;
 import org.netxms.ui.eclipse.console.dialogs.SecurityWarningDialog;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**

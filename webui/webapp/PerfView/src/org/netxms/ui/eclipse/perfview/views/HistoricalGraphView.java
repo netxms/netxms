@@ -59,12 +59,12 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.dialogs.SaveGraphDlg;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**

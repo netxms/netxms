@@ -33,9 +33,9 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.logviewer.Messages;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**

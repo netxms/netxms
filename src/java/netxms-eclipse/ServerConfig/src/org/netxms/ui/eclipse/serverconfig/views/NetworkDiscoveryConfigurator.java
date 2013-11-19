@@ -54,6 +54,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.IpAddressListElement;
 import org.netxms.client.constants.NetworkDiscovery;
 import org.netxms.client.snmp.SnmpUsmCredential;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.serverconfig.Activator;
@@ -63,7 +64,6 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementCompar
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.SnmpUsmComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.SnmpUsmLabelProvider;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.widgets.LabeledText;

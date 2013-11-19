@@ -55,13 +55,13 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**

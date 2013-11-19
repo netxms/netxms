@@ -40,9 +40,9 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.figures.BirtChartFigure;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.networkmaps.Messages;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Tooltip for object on map

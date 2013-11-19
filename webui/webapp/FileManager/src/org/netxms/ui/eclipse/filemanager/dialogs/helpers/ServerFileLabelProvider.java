@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerFile;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
 
 /**

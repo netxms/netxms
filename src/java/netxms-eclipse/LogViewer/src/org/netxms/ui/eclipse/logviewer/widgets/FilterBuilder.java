@@ -59,11 +59,11 @@ import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.ColumnSelectionHandler;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingColumnEditingSupport;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingListLabelProvider;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Log filter builder control

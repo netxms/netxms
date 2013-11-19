@@ -27,7 +27,7 @@ import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor;
-import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 
 /**
  * Label provider for deployment status monitor

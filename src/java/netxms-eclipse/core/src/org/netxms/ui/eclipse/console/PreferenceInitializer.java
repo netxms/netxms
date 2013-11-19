@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.console;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 
 /**
  * Preference initializer for console

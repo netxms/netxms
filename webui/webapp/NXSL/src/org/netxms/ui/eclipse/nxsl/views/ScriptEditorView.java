@@ -37,12 +37,12 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**

@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.objectbrowser.shared;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Object icons

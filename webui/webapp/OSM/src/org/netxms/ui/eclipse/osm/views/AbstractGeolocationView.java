@@ -33,12 +33,12 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Base class for all geographical views

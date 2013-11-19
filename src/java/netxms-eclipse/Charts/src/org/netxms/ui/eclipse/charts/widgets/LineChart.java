@@ -54,7 +54,7 @@ import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.Chart;

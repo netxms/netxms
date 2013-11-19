@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.webui.core.Messages;
 

@@ -15,7 +15,7 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 

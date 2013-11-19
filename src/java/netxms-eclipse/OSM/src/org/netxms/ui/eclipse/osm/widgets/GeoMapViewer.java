@@ -49,6 +49,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.osm.Activator;
@@ -61,7 +62,6 @@ import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API

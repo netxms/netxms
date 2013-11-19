@@ -50,7 +50,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
-import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;

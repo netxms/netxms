@@ -40,6 +40,7 @@ import org.netxms.nebula.widgets.gallery.DefaultGalleryItemRenderer;
 import org.netxms.nebula.widgets.gallery.Gallery;
 import org.netxms.nebula.widgets.gallery.GalleryItem;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImagePropertiesDialog;
@@ -47,7 +48,6 @@ import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Image library configurator

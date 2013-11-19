@@ -64,11 +64,11 @@ import org.netxms.ui.eclipse.alarmviewer.dialogs.EditCommentDialog;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeContentProvider;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCommentsEditor;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 

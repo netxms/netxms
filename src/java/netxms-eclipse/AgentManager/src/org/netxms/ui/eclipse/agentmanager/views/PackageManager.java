@@ -59,10 +59,10 @@ import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageComparator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageLabelProvider;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

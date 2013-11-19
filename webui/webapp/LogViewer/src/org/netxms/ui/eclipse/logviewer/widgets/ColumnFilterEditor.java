@@ -34,8 +34,8 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogColumn;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.logviewer.Messages;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**

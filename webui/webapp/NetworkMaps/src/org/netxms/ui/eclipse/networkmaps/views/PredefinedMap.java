@@ -56,6 +56,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
@@ -65,7 +66,6 @@ import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 

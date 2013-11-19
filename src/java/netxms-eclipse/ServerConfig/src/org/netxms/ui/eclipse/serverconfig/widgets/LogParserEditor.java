@@ -50,12 +50,12 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.serverconfig.dialogs.LogMacroEditDialog;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParser;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRule;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRuleEditor;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**

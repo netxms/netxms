@@ -28,9 +28,9 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.netxms.api.client.Session;
 import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * This class controls all aspects of the application's execution and is

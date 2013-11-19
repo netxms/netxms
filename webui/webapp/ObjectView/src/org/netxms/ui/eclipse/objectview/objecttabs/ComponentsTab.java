@@ -39,12 +39,12 @@ import org.netxms.client.PhysicalComponent;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ComponentTreeContentProvider;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ComponentTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**

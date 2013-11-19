@@ -41,13 +41,13 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerConsoleListener;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconsole.Activator;
 import org.netxms.ui.eclipse.serverconsole.Messages;
 import org.netxms.ui.eclipse.serverconsole.views.helpers.ServerConsoleTerminalConnector;
 import org.netxms.ui.eclipse.serverconsole.views.helpers.TerminalReader;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Server console view

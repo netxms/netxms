@@ -29,9 +29,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Web browser view

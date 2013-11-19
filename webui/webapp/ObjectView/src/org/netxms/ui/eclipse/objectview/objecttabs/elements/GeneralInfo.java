@@ -32,8 +32,8 @@ import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**

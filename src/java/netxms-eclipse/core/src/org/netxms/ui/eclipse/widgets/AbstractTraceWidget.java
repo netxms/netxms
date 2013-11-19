@@ -34,7 +34,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
 

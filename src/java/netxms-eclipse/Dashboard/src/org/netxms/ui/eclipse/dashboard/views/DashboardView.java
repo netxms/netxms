@@ -33,11 +33,11 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**

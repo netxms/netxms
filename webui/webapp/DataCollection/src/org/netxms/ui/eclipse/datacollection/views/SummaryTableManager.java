@@ -48,13 +48,13 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.SummaryTableComparator;
 import org.netxms.ui.eclipse.datacollection.views.helpers.SummaryTableLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

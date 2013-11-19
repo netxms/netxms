@@ -52,13 +52,13 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
