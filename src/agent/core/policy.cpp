@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ static void RegisterPolicy(CommSession *session, UINT32 type, uuid_t guid)
 	TCHAR path[256], buffer[64];
 	int tail;
 
-	_sntprintf(path, 256, _T("/policyRegistry/policy-%s/"), uuid_to_string(guid, buffer));
+	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/"), uuid_to_string(guid, buffer));
 	tail = (int)_tcslen(path);
 
 	Config *registry = OpenRegistry();
@@ -51,43 +51,37 @@ static void RegisterPolicy(CommSession *session, UINT32 type, uuid_t guid)
 	CloseRegistry(true);
 }
 
-
-//
-// Register policy in persistent storage
-//
-
+/**
+ * Register policy in persistent storage
+ */
 static void UnregisterPolicy(uuid_t guid)
 {
 	TCHAR path[256], buffer[64];
 
-	_sntprintf(path, 256, _T("/policyRegistry/policy-%s"), uuid_to_string(guid, buffer));
+	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s"), uuid_to_string(guid, buffer));
 	Config *registry = OpenRegistry();
 	registry->deleteEntry(path);
 	CloseRegistry(true);
 }
 
-
-//
-// Get policy type by GUID
-//
-
+/**
+ * Get policy type by GUID
+ */
 static int GetPolicyType(uuid_t guid)
 {
 	TCHAR path[256], buffer[64];
 	int type;
 
-	_sntprintf(path, 256, _T("/policyRegistry/policy-%s/type"), uuid_to_string(guid, buffer));
+	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/type"), uuid_to_string(guid, buffer));
 	Config *registry = OpenRegistry();
 	type = registry->getValueInt(path, -1);
 	CloseRegistry(false);
 	return type;
 }
 
-
-//
-// Deploy configuration file
-//
-
+/**
+ * Deploy configuration file
+ */
 static UINT32 DeployConfig(UINT32 session, uuid_t guid, CSCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
@@ -133,21 +127,17 @@ static UINT32 DeployConfig(UINT32 session, uuid_t guid, CSCPMessage *msg)
 	return rcc;
 }
 
-
-//
-// Deploy log parser policy
-//
-
+/**
+ * Deploy log parser policy
+ */
 static UINT32 DeployLogParser(UINT32 session, uuid_t guid, CSCPMessage *msg)
 {
 	return ERR_NOT_IMPLEMENTED;
 }
 
-
-//
-// Deploy policy on agent
-//
-
+/**
+ * Deploy policy on agent
+ */
 UINT32 DeployPolicy(CommSession *session, CSCPMessage *request)
 {
 	UINT32 type, rcc;
@@ -176,11 +166,9 @@ UINT32 DeployPolicy(CommSession *session, CSCPMessage *request)
 	return rcc;
 }
 
-
-//
-// Remove configuration file
-//
-
+/**
+ * Remove configuration file
+ */
 static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  CSCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
@@ -202,11 +190,9 @@ static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  CSCPMessage *msg)
 	return rcc;
 }
 
-
-//
-// Remove log parser file
-//
-
+/**
+ * Remove log parser file
+ */
 static UINT32 RemoveLogParser(UINT32 session, uuid_t guid,  CSCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
@@ -228,11 +214,9 @@ static UINT32 RemoveLogParser(UINT32 session, uuid_t guid,  CSCPMessage *msg)
 	return rcc;
 }
 
-
-//
-// Uninstall policy from agent
-//
-
+/**
+ * Uninstall policy from agent
+ */
 UINT32 UninstallPolicy(CommSession *session, CSCPMessage *request)
 {
 	UINT32 rcc;
@@ -263,11 +247,9 @@ UINT32 UninstallPolicy(CommSession *session, CSCPMessage *request)
 	return rcc;
 }
 
-
-//
-// Get policy inventory
-//
-
+/**
+ * Get policy inventory
+ */
 UINT32 GetPolicyInventory(CommSession *session, CSCPMessage *msg)
 {
 	Config *registry = OpenRegistry();
