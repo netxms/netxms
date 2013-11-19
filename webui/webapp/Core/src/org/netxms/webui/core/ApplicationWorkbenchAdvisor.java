@@ -19,7 +19,7 @@ import org.eclipse.ui.model.IContributionService;
 import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.LoginForm;
-import org.netxms.webui.core.dialogs.PasswordExpiredDialog;
+import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 
 /**
  * This workbench advisor creates the window advisor, and specifies the
