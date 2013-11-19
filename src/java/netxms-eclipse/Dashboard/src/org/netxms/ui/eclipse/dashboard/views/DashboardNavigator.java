@@ -41,9 +41,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
  * Dashboard navigator
@@ -184,19 +184,19 @@ public class DashboardNavigator extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+		manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
 		manager.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
 	}
 

@@ -16,42 +16,47 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.tools;
+package org.netxms.ui.eclipse.tools;
 
-import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.tools.TextFieldValidator;
+import org.netxms.client.MacAddress;
+import org.netxms.client.MacAddressFormatException;
+import org.netxms.webui.core.Messages;
 
 /**
- * Object name field validator
+ * Input validator for MAC address entry fields
  */
-public class ObjectNameValidator implements TextFieldValidator
+public class MacAddressValidator implements TextFieldValidator
 {
-	private static char[] INVALID_CHARACTERS = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
-	                                             0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-	                                             0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
-	                                             '|', '"', '\'', '*', '%', '#', '\\', '`', ';', '?', '<', '>', '=' };
+	private boolean allowEmpty;
 	
-	private boolean isEmpty = false;
-	
+	/**
+	 * Create new MAC address validator.
+	 * 
+	 * @param allowEmpty if true, empty string is allowed
+	 */
+	public MacAddressValidator(boolean allowEmpty)
+	{
+		this.allowEmpty = allowEmpty;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
 	 */
 	@Override
 	public boolean validate(String text)
 	{
-		isEmpty = text.trim().isEmpty();
-		if (isEmpty)
-			return false;
+		if (allowEmpty && text.trim().isEmpty())
+			return true;
 		
-		for(char c : text.toCharArray())
+		try
 		{
-			for(char tc : INVALID_CHARACTERS)
-			{
-				if (c == tc)
-					return false;
-			}
+			MacAddress.parseMacAddress(text);
+			return true;
 		}
-		return true;
+		catch(MacAddressFormatException e)
+		{
+			return false;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -60,8 +65,6 @@ public class ObjectNameValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return isEmpty ? 
-		      String.format(Messages.get().ObjectNameValidator_ErrorMessage1, label) : 
-		         String.format(Messages.get().ObjectNameValidator_ErrorMessage2, label);
+      return String.format(Messages.get().MacAddressValidator_ErrorMessage, label);
 	}
 }

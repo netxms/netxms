@@ -26,8 +26,8 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
  * Creates, adds and disposes actions for the menus and action bars of each
@@ -164,10 +164,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	protected void fillMenuBar(IMenuManager menuBar)
 	{
 		MenuManager fileMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_File, IWorkbenchActionConstants.M_FILE);
-		MenuManager viewMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_View, IActionConstants.M_VIEW);
-		MenuManager monitorMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Monitor, IActionConstants.M_MONITOR);
-		MenuManager configMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Config, IActionConstants.M_CONFIG);
-		MenuManager toolsMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Tools, IActionConstants.M_TOOLS);
+		MenuManager viewMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_View, GroupMarkers.M_VIEW);
+		MenuManager monitorMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Monitor, GroupMarkers.M_MONITOR);
+		MenuManager configMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Config, GroupMarkers.M_CONFIG);
+		MenuManager toolsMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Tools, GroupMarkers.M_TOOLS);
 		MenuManager windowMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW);
 		MenuManager helpMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Help, IWorkbenchActionConstants.M_HELP);
 
@@ -191,14 +191,14 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		fileMenu.add(actionExit);
 
 		// View
-		viewMenu.add(new GroupMarker(IActionConstants.M_PRODUCT_VIEW));
+		viewMenu.add(new GroupMarker(GroupMarkers.M_PRODUCT_VIEW));
 		viewMenu.add(new Separator());
-		viewMenu.add(new GroupMarker(IActionConstants.M_PRIMARY_VIEW));
+		viewMenu.add(new GroupMarker(GroupMarkers.M_PRIMARY_VIEW));
 		viewMenu.add(new Separator());
-		viewMenu.add(new GroupMarker(IActionConstants.M_LOGS_VIEW));
+		viewMenu.add(new GroupMarker(GroupMarkers.M_LOGS_VIEW));
 		viewMenu.add(new Separator());
 		viewMenu.add(actionOpenProgressView);
-		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
+		viewMenu.add(new GroupMarker(GroupMarkers.M_TOOL_VIEW));
 		
 		// Monitor
 		monitorMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

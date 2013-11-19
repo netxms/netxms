@@ -16,9 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.tools;
+package org.netxms.ui.eclipse.tools;
 
-import org.netxms.ui.eclipse.tools.TextFieldValidator;
 import org.netxms.webui.core.Messages;
 
 /**

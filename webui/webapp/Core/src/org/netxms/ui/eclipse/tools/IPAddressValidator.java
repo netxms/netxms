@@ -16,28 +16,25 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.tools;
+package org.netxms.ui.eclipse.tools;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.tools.TextFieldValidator;
+import org.netxms.webui.core.Messages;
 
 /**
- * Input validator for IP network mask entry fields
+ * Input validator for IP address entry fields
  */
-public class IPNetMaskValidator implements TextFieldValidator
+public class IPAddressValidator implements TextFieldValidator
 {
 	private static final String IP_ADDRESS_PATTERN = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"; //$NON-NLS-1$
 	
 	private boolean allowEmpty;
 	
 	/**
-	 * Create new IP network mask validator.
+	 * Create new IP address validator.
 	 * 
 	 * @param allowEmpty if true, empty string is allowed
 	 */
-	public IPNetMaskValidator(boolean allowEmpty)
+	public IPAddressValidator(boolean allowEmpty)
 	{
 		this.allowEmpty = allowEmpty;
 	}
@@ -50,29 +47,7 @@ public class IPNetMaskValidator implements TextFieldValidator
 	{
 		if (allowEmpty && text.trim().isEmpty())
 			return true;
-		
-		if (!text.matches(IP_ADDRESS_PATTERN))
-			return false;
-		
-		try
-		{
-			byte[] bytes = InetAddress.getByName(text).getAddress();
-			for(int i = 0, state = 0; i < bytes.length; i++)
-			{
-				if (bytes[i] == (byte)0xFF)
-					continue;
-				if ((state != 0) && (bytes[i] != 0))
-					return false;
-				if ((bytes[i] != 0) && (bytes[i] != (byte)0x80) && (bytes[i] != (byte)0xC0) && (bytes[i] != (byte)0xE0) && (bytes[i] != (byte)0xF0) && (bytes[i] != (byte)0xF8) && (bytes[i] != (byte)0xFC) && (bytes[i] != (byte)0xFE))
-					return false;
-				state = 1;
-			}
-			return true;
-		}
-		catch(UnknownHostException e)
-		{
-			return false;
-		}
+		return text.matches(IP_ADDRESS_PATTERN);
 	}
 
 	/* (non-Javadoc)
@@ -81,6 +56,6 @@ public class IPNetMaskValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-      return String.format(Messages.get().IPNetMaskValidator_ErrorMessage, label);
+		return String.format(Messages.get().IPAddressValidator_ErrorMessage, label);
 	}
 }

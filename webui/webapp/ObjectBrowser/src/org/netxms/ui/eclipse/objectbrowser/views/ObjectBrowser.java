@@ -83,7 +83,7 @@ import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.tools.CommandBridge;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
@@ -94,7 +94,7 @@ import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.tools.CommandBridge;
 
 /**
  * Object browser view
@@ -493,13 +493,13 @@ public class ObjectBrowser extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_NXVS));
+		manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
 		if (isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
          manager.add(actionMoveObject);
       if (isValidSelectionForMove(SubtreeType.TEMPLATES))
@@ -515,11 +515,11 @@ public class ObjectBrowser extends ViewPart
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+		manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
 		manager.add(actionProperties);
 	}
 	

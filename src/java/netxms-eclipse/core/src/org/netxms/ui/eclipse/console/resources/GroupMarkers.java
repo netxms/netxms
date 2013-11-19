@@ -16,13 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.shared;
+package org.netxms.ui.eclipse.console.resources;
 
 /**
  * @author Victor
  *
  */
-public interface IActionConstants
+public interface GroupMarkers
 {
 	public static final String M_VIEW = "view"; //$NON-NLS-1$
 	public static final String M_TOOLS = "tools"; //$NON-NLS-1$

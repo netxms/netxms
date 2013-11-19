@@ -16,30 +16,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.tools;
+package org.netxms.ui.eclipse.tools;
 
-import org.netxms.client.MacAddress;
-import org.netxms.client.MacAddressFormatException;
-import org.netxms.ui.eclipse.tools.TextFieldValidator;
-import org.netxms.webui.core.Messages;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
- * Input validator for MAC address entry fields
+ * Input validator for IP address entry fields
  */
-public class MacAddressValidator implements TextFieldValidator
+public class IPAddressValidator implements TextFieldValidator
 {
+	private static final String IP_ADDRESS_PATTERN = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"; //$NON-NLS-1$
+	
 	private boolean allowEmpty;
 	
 	/**
-	 * Create new MAC address validator.
+	 * Create new IP address validator.
 	 * 
 	 * @param allowEmpty if true, empty string is allowed
 	 */
-	public MacAddressValidator(boolean allowEmpty)
+	public IPAddressValidator(boolean allowEmpty)
 	{
 		this.allowEmpty = allowEmpty;
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
 	 */
@@ -48,16 +47,7 @@ public class MacAddressValidator implements TextFieldValidator
 	{
 		if (allowEmpty && text.trim().isEmpty())
 			return true;
-		
-		try
-		{
-			MacAddress.parseMacAddress(text);
-			return true;
-		}
-		catch(MacAddressFormatException e)
-		{
-			return false;
-		}
+		return text.matches(IP_ADDRESS_PATTERN);
 	}
 
 	/* (non-Javadoc)
@@ -66,6 +56,6 @@ public class MacAddressValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-      return String.format(Messages.get().MacAddressValidator_ErrorMessage, label);
+		return String.format(Messages.get().IPAddressValidator_ErrorMessage, label);
 	}
 }

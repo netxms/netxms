@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.tools;
+package org.netxms.ui.eclipse.tools;
 
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +33,6 @@ import org.eclipse.ui.internal.WorkbenchMessages;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.internal.dialogs.PropertyPageContributorManager;
 import org.eclipse.ui.internal.dialogs.PropertyPageManager;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * @author Victor
@@ -55,11 +54,10 @@ public class ExtendedPropertyDialog extends PropertyDialog
 	/**
 	 * Create controls for all pages
 	 */
-	@SuppressWarnings("rawtypes")
 	public void createAllPages()
 	{
-		List nodes = getPreferenceManager().getElements(PreferenceManager.POST_ORDER);
-		Iterator i = nodes.iterator();
+		List<?> nodes = getPreferenceManager().getElements(PreferenceManager.POST_ORDER);
+		Iterator<?> i = nodes.iterator();
 		while(i.hasNext()) 
 		{
 			IPreferenceNode node = (IPreferenceNode)i.next();
@@ -79,7 +77,6 @@ public class ExtendedPropertyDialog extends PropertyDialog
 	 * @param name
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
 	public static ExtendedPropertyDialog createDialogOn(Shell shell, final String propertyPageId, Object element, String name)
 	{
 		if (element == null)
@@ -92,14 +89,14 @@ public class ExtendedPropertyDialog extends PropertyDialog
 		// fill the manager with contributions from the matching contributors
 		PropertyPageContributorManager.getManager().contribute(pageManager, element);
 		// testing if there are pages in the manager
-		Iterator pages = pageManager.getElements(PreferenceManager.PRE_ORDER).iterator();
+		Iterator<?> pages = pageManager.getElements(PreferenceManager.PRE_ORDER).iterator();
 		if (!pages.hasNext())
 		{
-			MessageDialogHelper.openInformation(shell, WorkbenchMessages.get().PropertyDialog_messageTitle,
-					NLS.bind(WorkbenchMessages.get().PropertyDialog_noPropertyMessage, name));
+			MessageDialogHelper.openInformation(shell, WorkbenchMessages.PropertyDialog_messageTitle,
+					NLS.bind(WorkbenchMessages.PropertyDialog_noPropertyMessage, name));
 			return null;
 		}
-		title = NLS.bind(WorkbenchMessages.get().PropertyDialog_propertyMessage, name);
+		title = NLS.bind(WorkbenchMessages.PropertyDialog_propertyMessage, name);
 		ExtendedPropertyDialog propertyDialog = new ExtendedPropertyDialog(shell, pageManager, new StructuredSelection(element));
 
 		if (propertyPageId != null)

@@ -73,10 +73,10 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
  * Widget showing "heat" map of nodes under given root object
@@ -164,19 +164,19 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+		manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
 		if (viewPart != null)
 			manager.add(new PropertyDialogAction(viewPart.getSite(), this));
 	}

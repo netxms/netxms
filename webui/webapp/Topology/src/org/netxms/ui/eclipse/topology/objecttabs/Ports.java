@@ -43,9 +43,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
@@ -166,21 +166,21 @@ public class Ports extends ObjectTab implements ISelectionProvider
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			manager.add(new Separator());
-			manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+			manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
 			manager.add(new PropertyDialogAction(getViewPart().getSite(), this));
 		}
 	}

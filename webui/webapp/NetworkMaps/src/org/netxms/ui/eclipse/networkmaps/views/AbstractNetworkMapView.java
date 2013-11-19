@@ -84,6 +84,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
@@ -96,7 +97,6 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -886,25 +886,25 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		manager.add(actionOpenSubmap);
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_NXVS));
+		manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
 
 		if (currentSelection.size() == 1)
 		{
 			manager.add(new Separator());
 			manager.add(actionShowObjectDetails);
-			manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+			manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
 			manager.add(new PropertyDialogAction(getSite(), this));
 		}
 	}

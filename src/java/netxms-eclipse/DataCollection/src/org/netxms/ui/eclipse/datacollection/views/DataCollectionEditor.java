@@ -66,8 +66,8 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.console.tools.ExtendedPropertyDialog;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciComparator;
@@ -76,7 +76,7 @@ import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.tools.ExtendedPropertyDialog;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
@@ -331,7 +331,7 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_SECONDARY));
+		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 		manager.add(actionExportAllToCsv);
@@ -372,7 +372,7 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_SECONDARY));
+		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
 	}
 
 	/**

@@ -16,19 +16,18 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.tools;
+package org.netxms.ui.eclipse.tools;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.ui.eclipse.console.Activator;
+import org.eclipse.rap.rwt.RWT;
+import org.netxms.webui.core.Activator;
 
 /**
  * Command bridge - allows one plugin to register action and other plugin to execute it by name
  */
 public final class CommandBridge
 {
-	private static CommandBridge instance = new CommandBridge();
-	
 	/**
 	 * Get instance
 	 * 
@@ -36,6 +35,12 @@ public final class CommandBridge
 	 */
 	public static CommandBridge getInstance()
 	{
+		CommandBridge instance = (CommandBridge)RWT.getUISession().getAttribute("netxms.commandBridge");
+		if (instance == null)
+		{
+			instance = new CommandBridge();
+			RWT.getUISession().setAttribute("netxms.commandBridge", instance);
+		}
 		return instance;
 	}
 	

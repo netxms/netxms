@@ -68,10 +68,10 @@ import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmToolTip;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -454,7 +454,7 @@ public class AlarmList extends Composite
 
 		if (selection.size() == 1)
 		{
-			manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+			manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
 			manager.add(new Separator());
 			manager.add(actionShowObjectDetails);
 			manager.add(new Separator());

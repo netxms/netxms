@@ -30,12 +30,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.MacAddress;
-import org.netxms.ui.eclipse.console.tools.IPAddressValidator;
-import org.netxms.ui.eclipse.console.tools.IPNetMaskValidator;
-import org.netxms.ui.eclipse.console.tools.MacAddressValidator;
-import org.netxms.ui.eclipse.console.tools.ObjectNameValidator;
+import org.netxms.ui.eclipse.tools.IPAddressValidator;
+import org.netxms.ui.eclipse.tools.IPNetMaskValidator;
+import org.netxms.ui.eclipse.tools.MacAddressValidator;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
+import org.netxms.ui.eclipse.tools.ObjectNameValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 

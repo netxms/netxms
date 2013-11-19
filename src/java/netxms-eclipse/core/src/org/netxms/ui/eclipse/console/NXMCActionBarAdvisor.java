@@ -53,8 +53,8 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.netxms.base.NXCommon;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -239,10 +239,10 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	{
 		MenuManager fileMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_file, //$NON-NLS-1$
 				IWorkbenchActionConstants.M_FILE);
-		MenuManager viewMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_view, IActionConstants.M_VIEW); //$NON-NLS-1$
-		MenuManager monitorMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_monitor, IActionConstants.M_MONITOR); //$NON-NLS-1$
-		MenuManager configMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_configuration, IActionConstants.M_CONFIG); //$NON-NLS-1$
-		MenuManager toolsMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_tools, IActionConstants.M_TOOLS); //$NON-NLS-1$
+		MenuManager viewMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_view, GroupMarkers.M_VIEW); //$NON-NLS-1$
+		MenuManager monitorMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_monitor, GroupMarkers.M_MONITOR); //$NON-NLS-1$
+		MenuManager configMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_configuration, GroupMarkers.M_CONFIG); //$NON-NLS-1$
+		MenuManager toolsMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_tools, GroupMarkers.M_TOOLS); //$NON-NLS-1$
 		MenuManager windowMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW); //$NON-NLS-1$
 		MenuManager helpMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_help, //$NON-NLS-1$
 				IWorkbenchActionConstants.M_HELP);
@@ -274,14 +274,14 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		fileMenu.add(actionExit);
 
 		// View
-		viewMenu.add(new GroupMarker(IActionConstants.M_PRODUCT_VIEW));
+		viewMenu.add(new GroupMarker(GroupMarkers.M_PRODUCT_VIEW));
 		viewMenu.add(new Separator());
-		viewMenu.add(new GroupMarker(IActionConstants.M_PRIMARY_VIEW));
+		viewMenu.add(new GroupMarker(GroupMarkers.M_PRIMARY_VIEW));
 		viewMenu.add(new Separator());
-		viewMenu.add(new GroupMarker(IActionConstants.M_LOGS_VIEW));
+		viewMenu.add(new GroupMarker(GroupMarkers.M_LOGS_VIEW));
 		viewMenu.add(new Separator());
 		viewMenu.add(actionOpenProgressView);
-		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
+		viewMenu.add(new GroupMarker(GroupMarkers.M_TOOL_VIEW));
 		
 		// Monitor
 		monitorMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
