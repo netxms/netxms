@@ -81,8 +81,15 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 							{
 								*place = _T('\0');
 								const TCHAR* dbval = map->get(key);
-								ret_string(value, dbval);
-								ret = SYSINFO_RC_SUCCESS;
+                        if (dbval != NULL)
+                        {
+								   ret_string(value, dbval);
+								   ret = SYSINFO_RC_SUCCESS;
+                        }
+                        else
+                        {
+                           ret = SYSINFO_RC_ERROR;
+                        }
 							}
 							break;
 						}
@@ -298,6 +305,7 @@ bool getParametersFromDB( int dbIndex )
 		for (int j = 0; j < g_paramGroup[i].valueCount[dbIndex]; j++)
 			delete (g_paramGroup[i].values[dbIndex])[j].attrs;
 		safe_free((void*)g_paramGroup[i].values[dbIndex]);
+      g_paramGroup[i].valueCount[dbIndex] = 0;
 
 		DB_RESULT queryResult = DBSelect(info.handle, g_paramGroup[i].query);
 		if (queryResult == NULL)

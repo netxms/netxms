@@ -116,21 +116,30 @@ LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
 					MutexLock(g_dbInfo[i].accessMutex);
 					// Loop through the values
 					AgentWriteDebugLog(9, _T("%s: valuecount %d"), MYNAMESTR, g_paramGroup[k].valueCount[i]);
-					for (int j = 0; j < g_paramGroup[k].valueCount[i]; j++)
+					for(int j = 0; j < g_paramGroup[k].valueCount[i]; j++)
 					{
-						StringMap* map = (g_paramGroup[k].values[i])[j].attrs;
-						TCHAR* name = (g_paramGroup[k].values[i])[j].name;
+						StringMap *map = (g_paramGroup[k].values[i])[j].attrs;
+						TCHAR *name = (g_paramGroup[k].values[i])[j].name;
+   					AgentWriteDebugLog(9, _T("%s: map=%p name=%s"), MYNAMESTR, map, name);
 						if (!_tcsnicmp(name, entity, MAX_STR))	// found value which matches the parameters argument
 						{
 							TCHAR key[MAX_STR];
 							nx_strncpy(key, parameter + _tcslen(g_paramGroup[k].prefix), MAX_STR);
-							TCHAR* place = _tcschr(key, _T('('));
+							TCHAR *place = _tcschr(key, _T('('));
 							if (place != NULL)
 							{
-								*place = _T('\0');
-								const TCHAR* dbval = map->get(key);
-								ret_string(value, dbval);
-								ret = SYSINFO_RC_SUCCESS;
+								*place = 0;
+								const TCHAR *dbval = map->get(key);
+                        if (dbval != NULL)
+                        {
+								   ret_string(value, dbval);
+								   ret = SYSINFO_RC_SUCCESS;
+                        }
+                        else
+                        {
+                        	AgentWriteDebugLog(7, _T("%s: no data for dbid='%s', param='%s'"), MYNAMESTR, dbId, parameter);
+                           ret = SYSINFO_RC_ERROR;
+                        }
 							}
 							break;
 						}
@@ -362,6 +371,7 @@ bool getParametersFromDB( int dbIndex )
 		for (int j = 0; g_paramGroup[i].values[dbIndex] && j < g_paramGroup[i].valueCount[dbIndex]; j++)
 			delete (g_paramGroup[i].values[dbIndex])[j].attrs;
 		safe_free_and_null(g_paramGroup[i].values[dbIndex]);
+      g_paramGroup[i].valueCount[dbIndex] = 0;
 
 		DB_RESULT queryResult = DBSelect(info.handle, g_paramGroup[i].query);
 		if (queryResult == NULL)
