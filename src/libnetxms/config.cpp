@@ -24,6 +24,7 @@
 #include "libnetxms.h"
 #include <nxconfig.h>
 #include <expat.h>
+#include <nxstat.h>
 
 /**
  * Constructor for config entry
@@ -1064,25 +1065,21 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
  */
 bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
-   FILE *f;
-   int ch, ret;
-   struct stat fileStats;
-
-   ret = _tstat(file, &fileStats);
-
-   if (ret)
+   NX_STAT_STRUCT fileStats;
+   int ret = CALL_STAT(file, &fileStats);
+   if (ret != 0)
    {
-      error(_T("Could not process '%s'!"), file);
+      error(_T("Could not process \"%s\"!"), file);
       return false;
    }
 
    if (!S_ISREG(fileStats.st_mode))
    {
-      error(_T("'%s' is not a file!"), file);
+      error(_T("\"%s\" is not a file!"), file);
       return false;
    }
 
-   f = _tfopen(file, _T("r"));
+   FILE *f = _tfopen(file, _T("r"));
    if (f == NULL)
    {
       error(_T("Cannot open file %s"), file);
@@ -1090,6 +1087,7 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool 
    }
 
    // Skip all space/newline characters
+   int ch;
    do
    {
       ch = fgetc(f);

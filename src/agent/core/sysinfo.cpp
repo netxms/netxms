@@ -25,61 +25,29 @@
 #include <sys/utsname.h>
 #endif
 
-#ifndef S_ISDIR
-#define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
-#endif
+#include <nxstat.h>
 
-#if defined(_WIN32)
-#define NX_STAT _tstati64
-#define NX_STAT_STRUCT struct _stati64
-#elif HAVE_LSTAT64 && HAVE_STRUCT_STAT64
-#define NX_STAT lstat64
-#define NX_STAT_STRUCT struct stat64
-#else
-#define NX_STAT lstat
-#define NX_STAT_STRUCT struct stat
-#endif
-
-#if defined(UNICODE) && !defined(_WIN32)
-inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s)
-{
-	char *mbf = MBStringFromWideString(f);
-	int rc = NX_STAT(mbf, s);
-	free(mbf);
-	return rc;
-}
-#define CALL_STAT(f, s) __call_stat(f, s)
-#else
-#define CALL_STAT(f, s) NX_STAT(f, s)
-#endif
-
-
-//
-// Handler for System.CurrentTime parameter
-//
-
+/**
+ * Handler for System.CurrentTime parameter
+ */
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    ret_int64(value, (INT64)time(NULL));
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for Agent.Uptime parameter
-//
-
+/**
+ * Handler for Agent.Uptime parameter
+ */
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    ret_uint(value, (UINT32)(time(NULL) - g_tmAgentStartTime));
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// File filter for GetDirInfo
-//
-
+/**
+ * File filter for GetDirInfo
+ */
 static bool MatchFileFilter(const TCHAR *fileName, NX_STAT_STRUCT &fileInfo, const TCHAR *pattern, int ageFilter, INT64 sizeFilter)
 {
 	if (!MatchString(pattern, fileName, FALSE))

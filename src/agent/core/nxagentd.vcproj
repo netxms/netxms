@@ -515,6 +515,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\nxstat.h"
+				>
+			</File>
+			<File
 				RelativePath=".\resource.h"
 				>
 			</File>
