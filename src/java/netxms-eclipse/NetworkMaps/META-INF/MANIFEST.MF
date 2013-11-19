@@ -13,10 +13,10 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.netxms.ui.eclipse.osm;bundle-version="1.2.7",
  org.netxms.ui.eclipse.charts;bundle-version="1.2.9",
  org.eclipse.draw2d;bundle-version="3.9.0",
- org.eclipse.gef4.zest.core;bundle-version="2.0.0",
- org.eclipse.gef4.zest.jface;bundle-version="2.0.0",
- org.eclipse.gef4.zest.layouts;bundle-version="2.0.0",
- org.netxms.ui.eclipse.nxsl;bundle-version="1.2.7"
+ org.netxms.ui.eclipse.nxsl;bundle-version="1.2.7",
+ org.netxms.gef4.zest.core;bundle-version="2.0.0",
+ org.netxms.gef4.zest.jface;bundle-version="2.0.0",
+ org.netxms.gef4.zest.layouts;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
