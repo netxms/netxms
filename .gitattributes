@@ -7,3 +7,6 @@
 
 *.sln text eol=crlf
 *.vcproj text eol=crlf
+
+*.product text eol=lf
+MANIFEST.MF text eol=lf
