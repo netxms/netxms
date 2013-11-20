@@ -36,7 +36,6 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
@@ -281,11 +280,10 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.ui.workbench.texteditor.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.ui.workbench.texteditor.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.ui.workbench.texteditor.nl_zh_TW" fragment="true"/>
-      <plugin id="org.eclipse.zest.core"/>
-      <plugin id="org.eclipse.zest.jface"/>
-      <plugin id="org.eclipse.zest.layouts"/>
       <plugin id="org.mozilla.javascript"/>
-      <plugin id="org.netxms.certificatemanager" fragment=""/>
+      <plugin id="org.netxms.gef4.zest.core"/>
+      <plugin id="org.netxms.gef4.zest.jface"/>
+      <plugin id="org.netxms.gef4.zest.layouts"/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
@@ -311,6 +309,7 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.netxms.ui.eclipse.policymanager"/>
       <plugin id="org.netxms.ui.eclipse.reporter"/>
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
+      <plugin id="org.netxms.ui.eclipse.serverconsole"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
       <plugin id="org.netxms.ui.eclipse.serviceview"/>
       <plugin id="org.netxms.ui.eclipse.slm"/>
