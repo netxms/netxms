@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.webui.core.dialogs;
+package org.netxms.ui.eclipse.console.dialogs;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -49,13 +49,13 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.BrandingManager;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
-import org.netxms.webui.core.Activator;
-import org.netxms.webui.core.BrandingManager;
-import org.netxms.webui.core.Messages;
 
 /**
  *	Login form

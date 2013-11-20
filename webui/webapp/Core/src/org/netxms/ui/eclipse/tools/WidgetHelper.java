@@ -39,11 +39,11 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
-import org.netxms.webui.core.Messages;
 
 /**
  * Utility class for simplified creation of widgets

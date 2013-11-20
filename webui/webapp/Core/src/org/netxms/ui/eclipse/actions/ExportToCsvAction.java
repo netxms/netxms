@@ -36,17 +36,16 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.handlers.IHandlerService;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.webui.core.Activator;
-import org.netxms.webui.core.DownloadServiceHandler;
 
 /**
  * Action for exporting selected table viewer rows to CSV file
  */
 public class ExportToCsvAction extends Action
 {
-	private static final long serialVersionUID = 1L;
-
 	private IViewPart viewPart;
 	private ColumnViewer viewer;
 	private ViewerProvider viewerProvider;
@@ -62,7 +61,7 @@ public class ExportToCsvAction extends Action
 	 */
 	private ExportToCsvAction(IViewPart viewPart, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
-		super(selectionOnly ? "E&xport to CSV..." : "Export all to CSV...", Activator.getImageDescriptor("icons/csv.png"));
+		super(selectionOnly ? Messages.get().ExportToCsvAction_ExportToCsv : Messages.get().ExportToCsvAction_ExportAllToCsv, Activator.getImageDescriptor("icons/csv.png")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 		this.viewPart = viewPart;
 		this.viewer = viewer;
@@ -72,7 +71,7 @@ public class ExportToCsvAction extends Action
 		// "Object Details" view can contain multiple widgets
 		// with "Export to CSV" action defined, so binding it to handler service
 		// will cause handler conflict
-		if (viewPart.getViewSite().getId().equals("org.netxms.ui.eclipse.objectview.view.tabbed_object_view"))
+		if (viewPart.getViewSite().getId().equals("org.netxms.ui.eclipse.objectview.view.tabbed_object_view")) //$NON-NLS-1$
 			return;
 		
 		final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);
@@ -174,7 +173,7 @@ public class ExportToCsvAction extends Action
 						if (i > 0)
 							out.write(',');
 						out.write('"');
-						out.write(row[i].replace("\"", "\"\""));
+						out.write(row[i].replace("\"", "\"\"")); //$NON-NLS-1$ //$NON-NLS-2$
 						out.write('"');
 					}
 					out.newLine();
@@ -210,7 +209,7 @@ public class ExportToCsvAction extends Action
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save table data to file";
+				return Messages.get().ExportToCsvAction_SaveError;
 			}
 		}.start();
 	}

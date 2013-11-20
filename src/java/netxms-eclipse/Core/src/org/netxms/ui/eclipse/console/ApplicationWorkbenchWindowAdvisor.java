@@ -57,12 +57,12 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Workbench window advisor
  */
-public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implements KeyStoreRequestListener, KeyStoreEntryPasswordRequestListener
+public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implements KeyStoreRequestListener, KeyStoreEntryPasswordRequestListener
 {
    /**
     * @param configurer
     */
-   public NXMCWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
+   public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
    {
       super(configurer);
    }
@@ -75,7 +75,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    @Override
    public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer)
    {
-      return new NXMCActionBarAdvisor(configurer);
+      return new ApplicationActionBarAdvisor(configurer);
    }
 
    /*
@@ -249,13 +249,13 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
             else
             {
                e.getCause().printStackTrace();
-               MessageDialog.openError(null, Messages.get().NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage());
+               MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
             }
          }
          catch(Exception e)
          {
             e.printStackTrace();
-            MessageDialog.openError(null, Messages.get().NXMCWorkbenchWindowAdvisor_exception, e.toString()); //$NON-NLS-1$
+            MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString()); //$NON-NLS-1$
          }
       }
 
@@ -302,8 +302,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          return SecurityWarningDialog.YES;
 
       return SecurityWarningDialog.showSecurityWarning(null,
-                  String.format(Messages.get().NXMCWorkbenchWindowAdvisor_NoEncryptionSupport, settings.get("Connect.Server")), //$NON-NLS-1$
-                  Messages.get().NXMCWorkbenchWindowAdvisor_NoEncryptionSupportDetails);
+                  String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_NoEncryptionSupport, settings.get("Connect.Server")), //$NON-NLS-1$
+                  Messages.get().ApplicationWorkbenchWindowAdvisor_NoEncryptionSupportDetails);
    }
 
    /**
@@ -325,7 +325,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
             {
                try
                {
-                  monitor.setTaskName(Messages.get().NXMCWorkbenchWindowAdvisor_ChangingPassword);
+                  monitor.setTaskName(Messages.get().ApplicationWorkbenchWindowAdvisor_ChangingPassword);
                   ((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
                   monitor.setTaskName(""); //$NON-NLS-1$
                }
@@ -343,18 +343,18 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
          try
          {
             ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
-            MessageDialog.openInformation(null, Messages.get().NXMCWorkbenchWindowAdvisor_title_information,
-                  Messages.get().NXMCWorkbenchWindowAdvisor_passwd_changed);
+            MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information,
+                  Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
             return;
          }
          catch(InvocationTargetException e)
          {
-            MessageDialog.openError(null, Messages.get().NXMCWorkbenchWindowAdvisor_title_error,
-                  Messages.get().NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+            MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error,
+                  Messages.get().ApplicationWorkbenchWindowAdvisor_CannotChangePswd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
          }
          catch(InterruptedException e)
          {
-            MessageDialog.openError(null, Messages.get().NXMCWorkbenchWindowAdvisor_exception, e.toString());
+            MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
          }
       }
    }
@@ -368,9 +368,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
       Shell shell = Display.getCurrent().getActiveShell();
 
       FileDialog dialog = new FileDialog(shell);
-      dialog.setText(Messages.get().NXMCWorkbenchWindowAdvisor_CertDialogTitle);
+      dialog.setText(Messages.get().ApplicationWorkbenchWindowAdvisor_CertDialogTitle);
       dialog.setFilterExtensions(new String[] { "*.p12; *.pfx" }); //$NON-NLS-1$
-      dialog.setFilterNames(new String[] { Messages.get().NXMCWorkbenchWindowAdvisor_PkcsFiles });
+      dialog.setFilterNames(new String[] { Messages.get().ApplicationWorkbenchWindowAdvisor_PkcsFiles });
 
       return dialog.open();
    }
@@ -381,8 +381,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    @Override
    public String keyStorePasswordRequested()
    {
-      return showPasswordRequestDialog(Messages.get().NXMCWorkbenchWindowAdvisor_CertStorePassword,
-            Messages.get().NXMCWorkbenchWindowAdvisor_CertStorePasswordMsg);
+      return showPasswordRequestDialog(Messages.get().ApplicationWorkbenchWindowAdvisor_CertStorePassword,
+            Messages.get().ApplicationWorkbenchWindowAdvisor_CertStorePasswordMsg);
    }
 
    /* (non-Javadoc)
@@ -391,8 +391,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implement
    @Override
    public String keyStoreEntryPasswordRequested()
    {
-      return showPasswordRequestDialog(Messages.get().NXMCWorkbenchWindowAdvisor_CertPassword,
-            Messages.get().NXMCWorkbenchWindowAdvisor_CertPasswordMsg);
+      return showPasswordRequestDialog(Messages.get().ApplicationWorkbenchWindowAdvisor_CertPassword,
+            Messages.get().ApplicationWorkbenchWindowAdvisor_CertPasswordMsg);
    }
 
    /**

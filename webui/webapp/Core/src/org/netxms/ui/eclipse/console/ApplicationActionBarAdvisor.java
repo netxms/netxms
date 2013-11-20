@@ -1,4 +1,22 @@
-package org.netxms.webui.core;
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.console;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -11,7 +29,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -28,10 +45,10 @@ import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Creates, adds and disposes actions for the menus and action bars of each
- * workbench window.
+ * Action bar advisor for management console
  */
 public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 {
@@ -72,9 +89,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionExit = ActionFactory.QUIT.create(window);
 		register(actionExit);
 
-		actionAbout = new Action(String.format(Messages.get().ApplicationActionBarAdvisor_AboutActionName, BrandingManager.getInstance().getProductName())) {
-			private static final long serialVersionUID = 1L;
-			
+		actionAbout = new Action(String.format(Messages.get().ApplicationActionBarAdvisor_About, BrandingManager.getInstance().getProductName())) {
 			@Override
 			public void run()
 			{
@@ -85,8 +100,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				}
 				else
 				{
-					MessageDialog.openInformation(window.getShell(), 
-							Messages.get().ApplicationActionBarAdvisor_About, 
+					MessageDialogHelper.openInformation(window.getShell(), 
+							Messages.get().ApplicationActionBarAdvisor_AboutTitle, 
 							String.format(Messages.get().ApplicationActionBarAdvisor_AboutText, NXCommon.VERSION + " (" + BuildNumber.TEXT +")"));
 				}
 			}
@@ -124,10 +139,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		
 		actionShowViewMenu = ActionFactory.SHOW_VIEW_MENU.create(window);
 		register(actionShowViewMenu);
-
+		
 		actionOpenProgressView = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -166,7 +179,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		MenuManager fileMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_File, IWorkbenchActionConstants.M_FILE);
 		MenuManager viewMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_View, GroupMarkers.M_VIEW);
 		MenuManager monitorMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Monitor, GroupMarkers.M_MONITOR);
-		MenuManager configMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Config, GroupMarkers.M_CONFIG);
+		MenuManager configMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Configuration, GroupMarkers.M_CONFIG);
 		MenuManager toolsMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Tools, GroupMarkers.M_TOOLS);
 		MenuManager windowMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW);
 		MenuManager helpMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Help, IWorkbenchActionConstants.M_HELP);
@@ -179,8 +192,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 
 		// Add a group marker indicating where action set menus will appear.
 		menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		
-		if (!Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WINDOW_MENU"))
+		if (!Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WINDOW_MENU")) //$NON-NLS-1$
 			menuBar.add(windowMenu);
 		menuBar.add(helpMenu);
 		

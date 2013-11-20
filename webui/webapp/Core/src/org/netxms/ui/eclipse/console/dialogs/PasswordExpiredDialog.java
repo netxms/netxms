@@ -30,17 +30,15 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.webui.core.Activator;
-import org.netxms.webui.core.Messages;
 
 /**
  * "Password expired" dialog
  */
 public class PasswordExpiredDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text textPassword1;
 	private Text textPassword2;
 	private String password;
@@ -78,13 +76,13 @@ public class PasswordExpiredDialog extends Dialog
 		editArea.setLayout(editAreaLayout);
 		
 		Label msg = new Label(editArea, SWT.WRAP);
-		msg.setText(Messages.get().PasswordExpiredDialog_Prompt);
+		msg.setText(Messages.get().PasswordExpiredDialog_passwd_expired); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		msg.setLayoutData(gd);
-		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().PasswordExpiredDialog_NewPassword, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-2$
-		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().PasswordExpiredDialog_ConfirmNewPassword, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-2$
+		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().PasswordExpiredDialog_new_passwd, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$ //$NON-NLS-2$
+		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().PasswordExpiredDialog_confirm_passwd, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$ //$NON-NLS-2$
 
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -93,8 +91,6 @@ public class PasswordExpiredDialog extends Dialog
 		editArea.setLayoutData(gd);
 		
 		final ModifyListener listener = new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -131,7 +127,7 @@ public class PasswordExpiredDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().PasswordExpiredDialog_Title);
+		newShell.setText(Messages.get().PasswordExpiredDialog_title); //$NON-NLS-1$
 	}
 
 	@Override

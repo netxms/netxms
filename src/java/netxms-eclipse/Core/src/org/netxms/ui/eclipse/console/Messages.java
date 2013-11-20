@@ -22,7 +22,6 @@ public class Messages extends NLS
 	public static String FilterText_Filter;
 	public static String FilterText_FilterIsEmpty;
 	public static String NumericTextFieldValidator_ErrorMessage;
-
    public static String NumericTextFieldValidator_RangeSeparator;
 	public static String RefreshAction_Name;
 	public static String WidgetHelper_Action_Copy;
@@ -66,47 +65,47 @@ public class Messages extends NLS
 	public static String LoginJob_sync_objects;
 	public static String LoginJob_sync_users;
 	public static String MacAddressValidator_ErrorMessage;
-	public static String NXMCActionBarAdvisor_About;
-	public static String NXMCActionBarAdvisor_AboutTitle;
-	public static String NXMCActionBarAdvisor_AboutText;
-	public static String NXMCActionBarAdvisor_ConfirmRestart;
-	public static String NXMCActionBarAdvisor_FullScreen;
-	public static String NXMCActionBarAdvisor_LangChinese;
-	public static String NXMCActionBarAdvisor_LangEnglish;
-	public static String NXMCActionBarAdvisor_LangRussian;
-	public static String NXMCActionBarAdvisor_LangSpanish;
-	public static String NXMCActionBarAdvisor_Language;
-	public static String NXMCActionBarAdvisor_menu_configuration;
-	public static String NXMCActionBarAdvisor_menu_file;
-	public static String NXMCActionBarAdvisor_menu_help;
-	public static String NXMCActionBarAdvisor_menu_monitor;
-	public static String NXMCActionBarAdvisor_menu_tools;
-	public static String NXMCActionBarAdvisor_menu_view;
-	public static String NXMCActionBarAdvisor_Navigation;
-	public static String NXMCActionBarAdvisor_OpenPerspective;
-	public static String NXMCActionBarAdvisor_progress;
-	public static String NXMCActionBarAdvisor_RestartConsoleMessage;
-	public static String NXMCActionBarAdvisor_ShowView;
-	public static String NXMCActionBarAdvisor_Window;
-	public static String NXMCWorkbenchAdvisor_CommunicationError;
-	public static String NXMCWorkbenchAdvisor_ConnectionLostMessage;
-	public static String NXMCWorkbenchAdvisor_OKToCloseMessage;
-	public static String NXMCWorkbenchAdvisor_ServerShutdownMessage;
-	public static String NXMCWorkbenchWindowAdvisor_cannot_change_passwd;
-	public static String NXMCWorkbenchWindowAdvisor_CertDialogTitle;
-   public static String NXMCWorkbenchWindowAdvisor_CertPassword;
-   public static String NXMCWorkbenchWindowAdvisor_CertPasswordMsg;
-   public static String NXMCWorkbenchWindowAdvisor_CertStorePassword;
-   public static String NXMCWorkbenchWindowAdvisor_CertStorePasswordMsg;
-   public static String NXMCWorkbenchWindowAdvisor_ChangingPassword;
-	public static String NXMCWorkbenchWindowAdvisor_connectionError;
-	public static String NXMCWorkbenchWindowAdvisor_exception;
-   public static String NXMCWorkbenchWindowAdvisor_NoEncryptionSupport;
-   public static String NXMCWorkbenchWindowAdvisor_NoEncryptionSupportDetails;
-	public static String NXMCWorkbenchWindowAdvisor_passwd_changed;
-   public static String NXMCWorkbenchWindowAdvisor_PkcsFiles;
-	public static String NXMCWorkbenchWindowAdvisor_title_error;
-	public static String NXMCWorkbenchWindowAdvisor_title_information;
+	public static String ApplicationActionBarAdvisor_About;
+	public static String ApplicationActionBarAdvisor_AboutTitle;
+	public static String ApplicationActionBarAdvisor_AboutText;
+	public static String ApplicationActionBarAdvisor_ConfirmRestart;
+	public static String ApplicationActionBarAdvisor_FullScreen;
+	public static String ApplicationActionBarAdvisor_LangChinese;
+	public static String ApplicationActionBarAdvisor_LangEnglish;
+	public static String ApplicationActionBarAdvisor_LangRussian;
+	public static String ApplicationActionBarAdvisor_LangSpanish;
+	public static String ApplicationActionBarAdvisor_Language;
+	public static String ApplicationActionBarAdvisor_Configuration;
+	public static String ApplicationActionBarAdvisor_File;
+	public static String ApplicationActionBarAdvisor_Help;
+	public static String ApplicationActionBarAdvisor_Monitor;
+	public static String ApplicationActionBarAdvisor_Tools;
+	public static String ApplicationActionBarAdvisor_View;
+	public static String ApplicationActionBarAdvisor_Navigation;
+	public static String ApplicationActionBarAdvisor_OpenPerspective;
+	public static String ApplicationActionBarAdvisor_Progress;
+	public static String ApplicationActionBarAdvisor_RestartConsoleMessage;
+	public static String ApplicationActionBarAdvisor_ShowView;
+	public static String ApplicationActionBarAdvisor_Window;
+	public static String ApplicationWorkbenchAdvisor_CommunicationError;
+	public static String ApplicationWorkbenchAdvisor_ConnectionLostMessage;
+	public static String ApplicationWorkbenchAdvisor_OKToCloseMessage;
+	public static String ApplicationWorkbenchAdvisor_ServerShutdownMessage;
+	public static String ApplicationWorkbenchWindowAdvisor_CannotChangePswd;
+	public static String ApplicationWorkbenchWindowAdvisor_CertDialogTitle;
+   public static String ApplicationWorkbenchWindowAdvisor_CertPassword;
+   public static String ApplicationWorkbenchWindowAdvisor_CertPasswordMsg;
+   public static String ApplicationWorkbenchWindowAdvisor_CertStorePassword;
+   public static String ApplicationWorkbenchWindowAdvisor_CertStorePasswordMsg;
+   public static String ApplicationWorkbenchWindowAdvisor_ChangingPassword;
+	public static String ApplicationWorkbenchWindowAdvisor_ConnectionError;
+	public static String ApplicationWorkbenchWindowAdvisor_Exception;
+   public static String ApplicationWorkbenchWindowAdvisor_NoEncryptionSupport;
+   public static String ApplicationWorkbenchWindowAdvisor_NoEncryptionSupportDetails;
+	public static String ApplicationWorkbenchWindowAdvisor_PasswordChanged;
+   public static String ApplicationWorkbenchWindowAdvisor_PkcsFiles;
+	public static String ApplicationWorkbenchWindowAdvisor_Error;
+	public static String ApplicationWorkbenchWindowAdvisor_Information;
 	public static String ObjectNameValidator_ErrorMessage1;
    public static String ObjectNameValidator_ErrorMessage2;
 	public static String PasswordExpiredDialog_confirm_passwd;
@@ -163,8 +162,7 @@ public class Messages extends NLS
 
 	private Messages()
 	{
- }
-
+	}
 
 	private static Messages instance = new Messages();
 

@@ -11,7 +11,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 /**
  * This class controls all aspects of the application's execution
  */
-public class NXMCApplication implements IApplication
+public class Application implements IApplication
 {
 	/*
 	 * (non-Javadoc)
@@ -34,7 +34,7 @@ public class NXMCApplication implements IApplication
 			StatusDisplayInfo.init(display);
 			DataCollectionDisplayInfo.init();
 			
-			int returnCode = PlatformUI.createAndRunWorkbench(display, new NXMCWorkbenchAdvisor());
+			int returnCode = PlatformUI.createAndRunWorkbench(display, new ApplicationWorkbenchAdvisor());
 			if (returnCode == PlatformUI.RETURN_RESTART)
 				return IApplication.EXIT_RESTART;
 			else

@@ -14,28 +14,21 @@
             cardinality="singleton-global"
             visible="true">
          <run
-               class="org.netxms.webui.core.Application">
+               class="org.netxms.ui.eclipse.console.Application">
          </run>
       </application>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
+            name="%perspective.default"
             class="org.netxms.ui.eclipse.console.perspectives.DefaultPerspective"
-            id="org.netxms.ui.eclipse.console.DefaultPerspective"
-            name="%perspective.default">
+            id="org.netxms.ui.eclipse.console.DefaultPerspective">
       </perspective>
    </extension>
+   
    <extension
          point="org.eclipse.ui.views">
-      <category
-            id="org.netxms.ui.eclipse.viewcategory.config"
-            name="%category.config">
-      </category>
-      <category
-            id="org.netxms.ui.eclipse.viewcategory.tools"
-            name="%category.tools">
-      </category>
       <view
             allowMultiple="false"
             category="org.eclipse.ui"
@@ -45,6 +38,46 @@
             name="%view.progress"
             restorable="true">
       </view>
+      <category
+            id="org.netxms.ui.eclipse.viewcategory.config"
+            name="%category.config">
+      </category>
+      <category
+            id="org.netxms.ui.eclipse.viewcategory.tools"
+            name="%category.tools">
+      </category>
+   </extension>
+   <extension point="org.eclipse.ui.preferencePages">
+     <page name="%page.workbench"
+           class="org.netxms.ui.eclipse.console.preferencepages.WorkbenchGeneralPrefs"
+           id="org.eclipse.ui.preferencePages.Workbench">
+     </page>
+     <page name="%page.appearance"
+           category="org.eclipse.ui.preferencePages.Workbench"
+           class="org.eclipse.ui.ExtensionFactory:appearancePreferencePage"
+           id="org.eclipse.ui.preferencePages.Views">
+         <keywordReference id="org.eclipse.ui.ide.appearance"/>
+         <keywordReference id="org.eclipse.ui.ide.themes"/>
+         <keywordReference id="org.eclipse.ui.ide.tabs"/>
+      </page>
+      <page category="org.eclipse.ui.preferencePages.Workbench"
+            class="org.eclipse.ui.ExtensionFactory:keysPreferencePage"
+            id="org.eclipse.ui.preferencePages.Keys"
+            name="%page.keys">
+         <keywordReference id="org.eclipse.ui.ide.keys"/>
+     </page>
+     <page
+            name="%page.decorators"
+            category="org.eclipse.ui.preferencePages.Views"
+            class="org.eclipse.ui.ExtensionFactory:decoratorsPreferencePage"
+            id="org.eclipse.ui.preferencePages.Decorators">
+         <keywordReference id="org.eclipse.ui.ide.appearance"/>
+     </page>
+     <page
+           class="org.netxms.ui.eclipse.console.preferencepages.RegionalSettingsPrefPage"
+           id="org.netxms.ui.eclipse.preferencePages.RegionalSettings"
+           name="%page.regionalSettings">
+     </page>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -54,8 +87,9 @@
             name="%action.OpenServerConsole">
       </command>
       <command
+            description="%actionDescription.SendSMS"
             id="org.netxms.ui.eclipse.console.commands.send_sms"
-            name="Send SMS">
+            name="%action.SendSMS">
       </command>
       <command
             description="%command.ToggleTraceFilter"
@@ -68,25 +102,48 @@
             name="%command.PauseTrace">
       </command>
       <command
-            description="Copy to clipboard"
+            description="%command.description.Copy"
             id="org.netxms.ui.eclipse.library.commands.copy"
-            name="Copy">
+            name="%command.name.Copy">
       </command>
       <command
-            description="Refresh"
+            description="%command.description.Refresh"
             id="org.netxms.ui.eclipse.library.commands.refresh"
-            name="Refresh">
+            name="%command.name.Refresh">
       </command>
       <command
-            description="Export to CSV"
+            description="%command.description.ExportCSV"
             id="org.netxms.ui.eclipse.library.commands.export_to_csv_selection"
-            name="Export to CSV">
+            name="%command.name.ExportCSV">
       </command>
       <command
-            description="Export all to CSV"
+            description="%command.description.ExportAllCSV"
             id="org.netxms.ui.eclipse.library.commands.export_to_csv_all"
-            name="Export all to CSV">
+            name="%command.name.ExportAllCSV">
       </command>
+      <category
+            id="org.netxms.ui.eclipse.console.category.views"
+            name="%category.name.Views">
+      </category>
+      <category
+            id="org.netxms.ui.eclipse.console.category.tools"
+            name="%category.name.Tools">
+      </category>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.console.action_set"
+            label="%actionSet.core"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.console.actions.SendSMS"
+               definitionId="org.netxms.ui.eclipse.console.commands.send_sms"
+               id="org.netxms.ui.eclipse.console.actions.send_sms"
+               label="%action.SendSMS"
+               menubarPath="tools/additions">
+         </action>
+      </actionSet>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -132,9 +189,9 @@
             sequence="M1+M3+A">
       </key>
       <scheme
-            description="Default NXMC key binding scheme"
+            description="%scheme.description"
             id="org.netxms.ui.eclipse.defaultKeyBinding"
-            name="NetXMS Default">
+            name="%scheme.name">
       </scheme>
    </extension>
    <extension
@@ -145,23 +202,6 @@
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
-
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            id="org.netxms.ui.eclipse.console.action_set"
-            label="%actionSet.core"
-            visible="true">
-         <action
-               class="org.netxms.ui.eclipse.console.actions.SendSMS"
-               definitionId="org.netxms.ui.eclipse.console.commands.send_sms"
-               id="org.netxms.ui.eclipse.console.actions.send_sms"
-               label="%action.SendSMS"
-               menubarPath="tools/additions">
-         </action>
-      </actionSet>
-   </extension>
-
    <extension
          point="org.eclipse.rap.ui.branding">
       <branding
@@ -180,19 +220,6 @@
       </theme>
    </extension>
    <extension
-         point="org.eclipse.ui.preferencePages">
-      <page
-            class="org.netxms.ui.eclipse.console.preferencepages.RegionalSettingsPrefPage"
-            id="org.netxms.ui.eclipse.preferencePages.RegionalSettings"
-            name="%page.regionalSettings">
-      </page>
-      <page
-            class="org.netxms.ui.eclipse.console.preferencepages.WorkbenchGeneralPrefs"
-            id="org.eclipse.ui.preferencePages.Workbench"
-            name="%page.workbench">
-      </page>
-   </extension>
-   <extension
          point="org.eclipse.rap.ui.entrypoint">
       <entrypoint
             applicationId="org.netxms.webui.core.nxmc"
@@ -205,13 +232,13 @@
       point="org.eclipse.equinox.http.registry.servlets">
     <servlet
          alias="/"
-         class="org.netxms.webui.core.RedirectServlet">
+         class="org.netxms.ui.eclipse.console.RedirectServlet">
     </servlet>
   </extension>
    <extension
          point="org.eclipse.rap.ui.serviceHandler">
       <serviceHandler
-            class="org.netxms.webui.core.DownloadServiceHandler"
+            class="org.netxms.ui.eclipse.console.DownloadServiceHandler"
             id="downloadServiceHandler">
       </serviceHandler>
    </extension>

@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.tools;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import org.netxms.webui.core.Messages;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Input validator for IP network mask entry fields

@@ -19,10 +19,10 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.webui.core.Activator;
-import org.netxms.webui.core.Messages;
 
 /**
  * Widget showing server clock

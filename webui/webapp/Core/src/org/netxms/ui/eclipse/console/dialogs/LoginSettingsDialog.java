@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.webui.core.dialogs;
+package org.netxms.ui.eclipse.console.dialogs;
 
 import java.util.Properties;
 import org.eclipse.jface.dialogs.Dialog;
@@ -26,9 +26,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
-import org.netxms.webui.core.Messages;
 
 /**
  * Advanced login settings dialog

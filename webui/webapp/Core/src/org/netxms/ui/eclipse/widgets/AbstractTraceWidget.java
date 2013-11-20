@@ -30,9 +30,9 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
-import org.netxms.webui.core.Activator;
 
 /**
  * Abstract widget for trace views

@@ -32,8 +32,6 @@ import org.eclipse.swt.widgets.Display;
  */
 public class ColorCache implements DisposeListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private Map<RGB, Color> cache = new HashMap<RGB, Color>();
 
 	/**

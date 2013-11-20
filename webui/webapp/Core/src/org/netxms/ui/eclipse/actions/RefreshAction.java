@@ -22,17 +22,14 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.handlers.IHandlerService;
-import org.netxms.webui.core.Activator;
-import org.netxms.webui.core.Messages;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
- * @author victor
- *
+ * Refresh action - provides corret icon and text
  */
 public class RefreshAction extends Action
 {
-	private static final long serialVersionUID = 1L;
-
 	/**
 	 * Create default refresh action
 	 */
@@ -51,7 +48,7 @@ public class RefreshAction extends Action
 		super(Messages.get().RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
 
 		final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);
-      setActionDefinitionId("org.netxms.ui.eclipse.library.commands.refresh");
+      setActionDefinitionId("org.netxms.ui.eclipse.library.commands.refresh"); //$NON-NLS-1$
 		handlerService.activateHandler(getActionDefinitionId(), new ActionHandler(this));
 	}
 }

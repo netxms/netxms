@@ -23,8 +23,8 @@ import java.text.SimpleDateFormat;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.webui.core.Activator;
 
 /**
  * Helper class to deal with regional and language settings

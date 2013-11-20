@@ -52,6 +52,7 @@ import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -60,7 +61,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Action bar advisor for management console
  */
-public class NXMCActionBarAdvisor extends ActionBarAdvisor
+public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 {
 	private IWorkbenchAction actionExit;
 	private IWorkbenchAction actionAbout;
@@ -89,7 +90,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	/**
 	 * @param configurer
 	 */
-	public NXMCActionBarAdvisor(IActionBarConfigurer configurer)
+	public ApplicationActionBarAdvisor(IActionBarConfigurer configurer)
 	{
 		super(configurer);
 	}
@@ -109,7 +110,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionAbout = ActionFactory.ABOUT.create(window);
 		register(actionAbout);
 		
-		actionAboutCustom = new Action(Messages.get().NXMCActionBarAdvisor_About) {
+		actionAboutCustom = new Action(Messages.get().ApplicationActionBarAdvisor_About) {
 			@Override
 			public void run()
 			{
@@ -119,8 +120,10 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 					dlg.open();
 				}
 				else
-				{	
-					MessageDialogHelper.openInformation(window.getShell(), Messages.get().NXMCActionBarAdvisor_AboutTitle, String.format(Messages.get().NXMCActionBarAdvisor_AboutText, NXCommon.VERSION));
+				{
+					MessageDialogHelper.openInformation(window.getShell(), 
+							Messages.get().ApplicationActionBarAdvisor_AboutTitle, 
+							String.format(Messages.get().ApplicationActionBarAdvisor_AboutText, NXCommon.VERSION + " (" + BuildNumber.TEXT +")"));
 				}
 			}
 		};
@@ -187,10 +190,10 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				}
 			}
 		};
-		actionOpenProgressView.setText(Messages.get().NXMCActionBarAdvisor_progress); //$NON-NLS-1$
+		actionOpenProgressView.setText(Messages.get().ApplicationActionBarAdvisor_Progress);
 		actionOpenProgressView.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif")); //$NON-NLS-1$
 		
-		actionFullScreen = new Action(Messages.get().NXMCActionBarAdvisor_FullScreen, Action.AS_CHECK_BOX) { //$NON-NLS-1$
+		actionFullScreen = new Action(Messages.get().ApplicationActionBarAdvisor_FullScreen, Action.AS_CHECK_BOX) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -205,25 +208,25 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
 		ConsoleSharedData.setProperty("FullScreenAction", actionFullScreen); //$NON-NLS-1$
 		
-		actionLangChinese = new Action(Messages.get().NXMCActionBarAdvisor_LangChinese, Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$
+		actionLangChinese = new Action(Messages.get().ApplicationActionBarAdvisor_LangChinese, Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$
 			public void run()
 			{
 				setLanguage("zh"); //$NON-NLS-1$
 			}
 		};
-		actionLangEnglish = new Action(Messages.get().NXMCActionBarAdvisor_LangEnglish, Activator.getImageDescriptor("icons/lang/gb.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+		actionLangEnglish = new Action(Messages.get().ApplicationActionBarAdvisor_LangEnglish, Activator.getImageDescriptor("icons/lang/gb.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("en"); //$NON-NLS-1$
 			}
 		};
-		actionLangRussian = new Action(Messages.get().NXMCActionBarAdvisor_LangRussian, Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+		actionLangRussian = new Action(Messages.get().ApplicationActionBarAdvisor_LangRussian, Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("ru"); //$NON-NLS-1$
 			}
 		};
-		actionLangSpanish = new Action(Messages.get().NXMCActionBarAdvisor_LangSpanish, Activator.getImageDescriptor("icons/lang/es.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+		actionLangSpanish = new Action(Messages.get().ApplicationActionBarAdvisor_LangSpanish, Activator.getImageDescriptor("icons/lang/es.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("es"); //$NON-NLS-1$
@@ -237,15 +240,13 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	@Override
 	protected void fillMenuBar(IMenuManager menuBar)
 	{
-		MenuManager fileMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_file, //$NON-NLS-1$
-				IWorkbenchActionConstants.M_FILE);
-		MenuManager viewMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_view, GroupMarkers.M_VIEW); //$NON-NLS-1$
-		MenuManager monitorMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_monitor, GroupMarkers.M_MONITOR); //$NON-NLS-1$
-		MenuManager configMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_configuration, GroupMarkers.M_CONFIG); //$NON-NLS-1$
-		MenuManager toolsMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_tools, GroupMarkers.M_TOOLS); //$NON-NLS-1$
-		MenuManager windowMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW); //$NON-NLS-1$
-		MenuManager helpMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_menu_help, //$NON-NLS-1$
-				IWorkbenchActionConstants.M_HELP);
+		MenuManager fileMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_File, IWorkbenchActionConstants.M_FILE);
+		MenuManager viewMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_View, GroupMarkers.M_VIEW);
+		MenuManager monitorMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Monitor, GroupMarkers.M_MONITOR);
+		MenuManager configMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Configuration, GroupMarkers.M_CONFIG);
+		MenuManager toolsMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Tools, GroupMarkers.M_TOOLS);
+		MenuManager windowMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW);
+		MenuManager helpMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Help, IWorkbenchActionConstants.M_HELP);
 
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
@@ -260,7 +261,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		menuBar.add(helpMenu);
 		
 		// Language selection
-		final MenuManager langMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_Language); //$NON-NLS-1$
+		final MenuManager langMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Language); //$NON-NLS-1$
 		langMenu.add(actionLangChinese);
 		langMenu.add(actionLangEnglish);
 		langMenu.add(actionLangRussian);
@@ -290,14 +291,11 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		
 		// Window
-		windowMenu.add(actionFullScreen);
-		windowMenu.add(new Separator());
-		
-		MenuManager openPerspectiveMenuMgr = new MenuManager(Messages.get().NXMCActionBarAdvisor_OpenPerspective, "openPerspective"); //$NON-NLS-1$ //$NON-NLS-2$
+		MenuManager openPerspectiveMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_OpenPerspective, "openPerspective"); //$NON-NLS-2$
 		openPerspectiveMenuMgr.add(contribItemOpenPerspective);
 		windowMenu.add(openPerspectiveMenuMgr);
 		
-		final MenuManager showViewMenuMgr = new MenuManager(Messages.get().NXMCActionBarAdvisor_ShowView, "showView"); //$NON-NLS-1$ //$NON-NLS-2$
+		final MenuManager showViewMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_ShowView, "showView"); //$NON-NLS-2$
 		showViewMenuMgr.add(contribItemShowView);
 		windowMenu.add(showViewMenuMgr);
 		
@@ -309,7 +307,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		windowMenu.add(actionCloseAllPerspectives);
 		windowMenu.add(new Separator());
 		
-		final MenuManager navMenu = new MenuManager(Messages.get().NXMCActionBarAdvisor_Navigation, IWorkbenchActionConstants.M_NAVIGATE); //$NON-NLS-1$
+		final MenuManager navMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Navigation, IWorkbenchActionConstants.M_NAVIGATE);
 		windowMenu.add(navMenu);
 		navMenu.add(actionQuickAccess);
 		navMenu.add(actionShowViewMenu);
@@ -381,7 +379,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	 */
 	private void setLanguage(String locale)
 	{
-		if (!MessageDialogHelper.openConfirm(null, Messages.get().NXMCActionBarAdvisor_ConfirmRestart, Messages.get().NXMCActionBarAdvisor_RestartConsoleMessage))
+		if (!MessageDialogHelper.openConfirm(null, Messages.get().ApplicationActionBarAdvisor_ConfirmRestart, Messages.get().ApplicationActionBarAdvisor_RestartConsoleMessage))
 			return;
 		
 		Activator.getDefault().getPreferenceStore().setValue("NL", locale); //$NON-NLS-1$

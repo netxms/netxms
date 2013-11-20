@@ -20,16 +20,17 @@ package org.netxms.ui.eclipse.console.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.dialogs.SendSMSDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.webui.core.Activator;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Send SMS
@@ -69,7 +70,7 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Send SMS to " + dlg.getPhoneNumber(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SendSMS_JobTitle + dlg.getPhoneNumber(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,8 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(window.getShell(), "Send SMS", "SMS to number " + dlg.getPhoneNumber() + " sent successfully");
+						final String message = Messages.get().SendSMS_DialogTextPrefix + dlg.getPhoneNumber() + Messages.get().SendSMS_DialogTextSuffix;
+						MessageDialogHelper.openInformation(window.getShell(), Messages.get().SendSMS_DialogTitle, message);
 					}
 				});
 			}
@@ -86,7 +88,7 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot send SMS to " + dlg.getPhoneNumber();
+				return Messages.get().SendSMS_SendError + dlg.getPhoneNumber();
 			}
 		}.start();
 	}

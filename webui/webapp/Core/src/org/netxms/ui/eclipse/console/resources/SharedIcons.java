@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.console.resources;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.webui.core.Activator;
+import org.netxms.ui.eclipse.console.Activator;
 
 /**
  * Shared console icons
@@ -99,8 +99,8 @@ public class SharedIcons
 	 */
 	public static void init(Display display)
 	{
-		ALARM = Activator.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
 		ADD_OBJECT = Activator.getImageDescriptor("icons/add_obj.gif"); //$NON-NLS-1$
+      ALARM = Activator.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png"); //$NON-NLS-1$
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
 		CLEAR = Activator.getImageDescriptor("icons/clear.gif"); //$NON-NLS-1$

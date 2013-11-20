@@ -41,14 +41,14 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Workbench advisor for NetXMS console application
  */
-public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
+public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)
 	 */
 	public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{
-		return new NXMCWorkbenchWindowAdvisor(configurer);
+		return new ApplicationWorkbenchWindowAdvisor(configurer);
 	}
 
 	/* (non-Javadoc)
@@ -143,8 +143,8 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 						public void run()
 						{
 							MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
-									Messages.get().NXMCWorkbenchAdvisor_CommunicationError,
-									((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? Messages.get().NXMCWorkbenchAdvisor_ConnectionLostMessage : Messages.get().NXMCWorkbenchAdvisor_ServerShutdownMessage) + Messages.get().NXMCWorkbenchAdvisor_OKToCloseMessage);
+									Messages.get().ApplicationWorkbenchAdvisor_CommunicationError,
+									((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage : Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage) + Messages.get().ApplicationWorkbenchAdvisor_OKToCloseMessage);
 							PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
 						}
 					});

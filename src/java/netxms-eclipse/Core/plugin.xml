@@ -11,7 +11,7 @@
          point="org.eclipse.core.runtime.applications">
       <application>
          <run
-               class="org.netxms.ui.eclipse.console.NXMCApplication">
+               class="org.netxms.ui.eclipse.console.Application">
          </run>
       </application>
    </extension>

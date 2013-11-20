@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.webui.core;
+package org.netxms.ui.eclipse.console;
 
 import org.eclipse.ui.internal.dialogs.PropertyPageNode;
 import org.eclipse.ui.model.ContributionComparator;

@@ -25,17 +25,16 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
-import org.netxms.webui.core.Activator;
 
 /**
  * Dialog for sending SMS message
  */
 public class SendSMSDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-	
 	private String phoneNumber;
 	private String message;
 	private LabeledText numberField;
@@ -57,7 +56,7 @@ public class SendSMSDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Send SMS");
+		newShell.setText(Messages.get().SendSMSDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -74,7 +73,7 @@ public class SendSMSDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		numberField = new LabeledText(dialogArea, SWT.NONE);
-		numberField.setLabel("Phone number");
+		numberField.setLabel(Messages.get().SendSMSDialog_PhoneNumber);
 		numberField.setText(phoneNumber);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -83,7 +82,7 @@ public class SendSMSDialog extends Dialog
 		numberField.setLayoutData(gd);
 		
 		messageField = new LabeledText(dialogArea, SWT.NONE);
-		messageField.setLabel("Message");
+		messageField.setLabel(Messages.get().SendSMSDialog_Message);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

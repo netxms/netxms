@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.webui.core;
+package org.netxms.ui.eclipse.console;
 
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.rap.rwt.RWT;

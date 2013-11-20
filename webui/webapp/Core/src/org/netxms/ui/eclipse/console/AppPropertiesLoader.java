@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.webui.core;
+package org.netxms.ui.eclipse.console;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.tools;
 
 import org.netxms.client.MacAddress;
 import org.netxms.client.MacAddressFormatException;
-import org.netxms.webui.core.Messages;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Input validator for MAC address entry fields

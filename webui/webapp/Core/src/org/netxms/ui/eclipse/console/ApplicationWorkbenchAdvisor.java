@@ -1,4 +1,22 @@
-package org.netxms.webui.core;
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.console;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -22,13 +40,12 @@ import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 
 /**
- * This workbench advisor creates the window advisor, and specifies the
- * perspective id for the initial window.
+ * Workbench advisor for NetXMS console application
  */
 public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 {
-	private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.DefaultPerspective"; //$NON-NLS-1$
-
+   private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.DefaultPerspective"; //$NON-NLS-1$
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)
 	 */
@@ -91,7 +108,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		boolean success = false;
 		try
 		{
-			LoginJob job = new LoginJob(server, login, password, Display.getCurrent());
+			LoginJob job = new LoginJob(Display.getCurrent(), server, login, false, false);
 			ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
 			pd.run(false, false, job);
 			success = true;

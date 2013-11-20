@@ -28,11 +28,11 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.ServerClockContributionItem;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.webui.core.Activator;
-import org.netxms.webui.core.Messages;
-import org.netxms.webui.core.ServerClockContributionItem;
 
 /**
  * "Workbench" preference page 

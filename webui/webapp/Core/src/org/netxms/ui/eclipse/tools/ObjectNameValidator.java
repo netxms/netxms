@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.tools;
 
-import org.netxms.webui.core.Messages;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Object name field validator

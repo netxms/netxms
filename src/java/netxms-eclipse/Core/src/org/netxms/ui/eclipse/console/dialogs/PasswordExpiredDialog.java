@@ -36,7 +36,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Password expired" dialog
- *
  */
 public class PasswordExpiredDialog extends Dialog
 {
@@ -49,6 +48,9 @@ public class PasswordExpiredDialog extends Dialog
 		super(parentShell);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -88,9 +90,7 @@ public class PasswordExpiredDialog extends Dialog
 		gd.widthHint = 250;
 		editArea.setLayoutData(gd);
 		
-		final ModifyListener listener = new ModifyListener()
-		{
-
+		final ModifyListener listener = new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
 			{

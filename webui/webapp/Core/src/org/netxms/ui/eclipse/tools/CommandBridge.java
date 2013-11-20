@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.tools;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.rap.rwt.RWT;
-import org.netxms.webui.core.Activator;
+import org.netxms.ui.eclipse.console.Activator;
 
 /**
  * Command bridge - allows one plugin to register action and other plugin to execute it by name

@@ -31,8 +31,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.api.client.NetXMSClientException;
-import org.netxms.webui.core.Activator;
-import org.netxms.webui.core.Messages;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.

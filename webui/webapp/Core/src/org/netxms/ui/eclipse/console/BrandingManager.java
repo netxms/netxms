@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.webui.core;
+package org.netxms.ui.eclipse.console;
 
 import java.util.Map;
 import java.util.Properties;
@@ -32,7 +32,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.console.api.BrandingProvider;
 import org.netxms.ui.eclipse.console.api.LoginForm;
-import org.netxms.webui.core.dialogs.DefaultLoginForm;
+import org.netxms.ui.eclipse.console.dialogs.DefaultLoginForm;
 
 /**
  * Branding manager. There should be only one instance of branding manager,
