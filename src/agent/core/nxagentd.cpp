@@ -917,6 +917,15 @@ BOOL Initialize()
 			StartWatchdog();
 	}
 
+	//Delete file for upgrade if exists
+   Config *registry = OpenRegistry();
+   const TCHAR* szFullPath = registry->getValue(_T("/upgrade/file"));
+   if(szFullPath != NULL){
+      _tremove(szFullPath);
+   }
+   registry->deleteEntry(_T("/upgrade/file"));
+   CloseRegistry(true);
+
 	delete g_config;
 
    return TRUE;

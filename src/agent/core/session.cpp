@@ -852,6 +852,12 @@ UINT32 CommSession::upgrade(CSCPMessage *pRequest)
       szPkgName[0] = 0;
       pRequest->GetVariableStr(VID_FILE_NAME, szPkgName, MAX_PATH);
       BuildFullPath(szPkgName, szFullPath);
+
+      //Create line in registry file with upgrade file name to delete it after system start
+      Config *registry = OpenRegistry();
+      registry->setValue(_T("/upgrade/file"), szFullPath);
+      CloseRegistry(true);
+
       return UpgradeAgent(szFullPath);
    }
    else
