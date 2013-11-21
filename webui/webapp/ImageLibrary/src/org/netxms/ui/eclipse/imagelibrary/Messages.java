@@ -44,9 +44,11 @@ public class Messages extends NLS
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
 	}
 
-	private Messages()
+	
+
+private Messages()
 	{
- }
+	}
 
 
 	/**

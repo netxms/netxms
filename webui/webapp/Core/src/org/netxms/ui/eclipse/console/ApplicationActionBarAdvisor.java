@@ -89,7 +89,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionExit = ActionFactory.QUIT.create(window);
 		register(actionExit);
 
-		actionAbout = new Action(String.format(Messages.get().ApplicationActionBarAdvisor_About, BrandingManager.getInstance().getProductName())) {
+		actionAbout = new Action(String.format(Messages.get().ApplicationActionBarAdvisor_AboutActionName, BrandingManager.getInstance().getProductName())) {
 			@Override
 			public void run()
 			{

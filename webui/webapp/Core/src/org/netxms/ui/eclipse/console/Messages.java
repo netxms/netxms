@@ -156,7 +156,15 @@ public class Messages extends NLS
 	public String WorkbenchGeneralPrefs_ShowHiddenAttrs;
    public String WorkbenchGeneralPrefs_ShowServerClock;	
 	public String SplashHandler_Version;
-   //start
+	
+	static
+	{
+		// initialize resource bundle
+		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
+	}
+
+	//move.start
+   public String ApplicationActionBarAdvisor_AboutActionName;
 	public String ApplicationActionBarAdvisor_AboutProductName;
 	public String ApplicationWorkbenchWindowAdvisor_AppTitle;
    public String LoginForm_AdvOptionsDisabled;
@@ -169,15 +177,9 @@ public class Messages extends NLS
    public String LoginForm_Version;
    public String LoginSettingsDialog_ServerAddress;
    public String LoginSettingsDialog_Title;
-   //end
-	
-	static
-	{
-		// initialize resource bundle
-		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
-	}
+   //move.end
 
-	private Messages()
+   private Messages()
 	{
 	}
 
