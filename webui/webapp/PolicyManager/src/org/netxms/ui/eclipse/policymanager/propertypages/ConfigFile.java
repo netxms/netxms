@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.policymanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -29,12 +27,12 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.policymanager.Activator;
+import org.netxms.ui.eclipse.policymanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -70,7 +68,7 @@ public class ConfigFile extends PropertyPage
       
 		// File content
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("File");
+      label.setText(Messages.get().ConfigFile_File);
       
       initialContent = new String(object.getFileContent());
       GridData gd = new GridData();
@@ -101,7 +99,7 @@ public class ConfigFile extends PropertyPage
 			setValid(false);
 		
 		final String newContent = new String(textContent.getText());
-		new ConsoleJob("Change policy", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ConfigFile_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -119,21 +117,20 @@ public class ConfigFile extends PropertyPage
 			{
 				if (isApply)
 				{
-					new UIJob("Update \"Configuration File\" property page") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							ConfigFile.this.setValid(true);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
+				   runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     ConfigFile.this.setValid(true);
+                  }
+               });
 				}
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update agent policy";
+				return Messages.get().ConfigFile_JobError;
 			}
 		}.start();
 	}

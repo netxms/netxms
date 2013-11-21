@@ -60,11 +60,11 @@ public class CreateAgentPolicyConfig implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(targetPart.getSite().getShell(), Messages.CreateAgentPolicyConfig_AgentPolicy_Config);
+		final CreateObjectDialog dlg = new CreateObjectDialog(targetPart.getSite().getShell(), Messages.get().CreateAgentPolicyConfig_AgentPolicy_Config);
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.CreateAgentPolicyConfig_JobName, targetPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().CreateAgentPolicyConfig_JobName, targetPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -75,7 +75,7 @@ public class CreateAgentPolicyConfig implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.CreateAgentPolicyConfig_JobError;
+					return Messages.get().CreateAgentPolicyConfig_JobError;
 				}
 			}.start();
 		}

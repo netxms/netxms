@@ -31,6 +31,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.policymanager.Activator;
+import org.netxms.ui.eclipse.policymanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -70,7 +71,7 @@ public class Policy extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL,
-      		SWT.DEFAULT, "Description", initialDescription, gd);
+      		SWT.DEFAULT, Messages.get().Policy_Description, initialDescription, gd);
       textDescription.setLayoutData(gd);
 		
 		return dialogArea;
@@ -93,7 +94,7 @@ public class Policy extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setDescription(newDescription);
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Change policy", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().Policy_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -119,7 +120,7 @@ public class Policy extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change agent policy";
+				return Messages.get().Policy_JobError;
 			}
 		}.start();
 	}

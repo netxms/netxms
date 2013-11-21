@@ -68,7 +68,7 @@ public class ConfigFile extends PropertyPage
       
 		// File content
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.ConfigFile_File);
+      label.setText(Messages.get().ConfigFile_File);
       
       initialContent = new String(object.getFileContent());
       GridData gd = new GridData();
@@ -99,7 +99,7 @@ public class ConfigFile extends PropertyPage
 			setValid(false);
 		
 		final String newContent = new String(textContent.getText());
-		new ConsoleJob(Messages.ConfigFile_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ConfigFile_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -130,7 +130,7 @@ public class ConfigFile extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ConfigFile_JobError;
+				return Messages.get().ConfigFile_JobError;
 			}
 		}.start();
 	}

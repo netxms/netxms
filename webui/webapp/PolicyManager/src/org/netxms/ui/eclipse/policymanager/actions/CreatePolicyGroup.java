@@ -33,6 +33,7 @@ import org.netxms.client.objects.PolicyRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
+import org.netxms.ui.eclipse.policymanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -58,11 +59,11 @@ public class CreatePolicyGroup implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(targetPart.getSite().getShell(), "Policy Group");
+		final CreateObjectDialog dlg = new CreateObjectDialog(targetPart.getSite().getShell(), Messages.get().CreatePolicyGroup_PolicyGroup);
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Create policy group", targetPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().CreatePolicyGroup_JobName, targetPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -73,7 +74,7 @@ public class CreatePolicyGroup implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create policy group";
+					return Messages.get().CreatePolicyGroup_JobError;
 				}
 			}.start();
 		}

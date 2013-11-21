@@ -75,7 +75,7 @@ public class UninstallPolicy implements IObjectActionDelegate
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			for(final AgentPolicy policy : currentSelection)
 			{
-				new ConsoleJob(String.format(Messages.UninstallPolicy_JobName, policy.getObjectName()), null, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(String.format(Messages.get().UninstallPolicy_JobName, policy.getObjectName()), null, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
@@ -87,7 +87,7 @@ public class UninstallPolicy implements IObjectActionDelegate
 					@Override
 					protected String getErrorMessage()
 					{
-						return String.format(Messages.UninstallPolicy_JobError, policy.getObjectName());
+						return String.format(Messages.get().UninstallPolicy_JobError, policy.getObjectName());
 					}
 				}.start();
 			}

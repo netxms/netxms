@@ -179,7 +179,7 @@ public class Messages extends NLS
    public String LoginSettingsDialog_Title;
    //move.end
 
-   private Messages()
+private Messages()
 	{
 	}
 

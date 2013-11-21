@@ -71,7 +71,7 @@ public class SelectInstallTargetDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SelectInstallTargetDialog_Title);
+		newShell.setText(Messages.get().SelectInstallTargetDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -103,12 +103,12 @@ public class SelectInstallTargetDialog extends Dialog
 		};
 
 		radioInstallOnCurrent = new Button(dialogArea, SWT.RADIO);
-		radioInstallOnCurrent.setText(Messages.SelectInstallTargetDialog_InstallOnAlreadyInstalled);
+		radioInstallOnCurrent.setText(Messages.get().SelectInstallTargetDialog_InstallOnAlreadyInstalled);
 		radioInstallOnCurrent.setSelection(installMode == INSTALL_ON_CURRENT);
 		radioInstallOnCurrent.addSelectionListener(listener);
 		
 		radioInstallOnSelected = new Button(dialogArea, SWT.RADIO);
-		radioInstallOnSelected.setText(Messages.SelectInstallTargetDialog_InstallOnSelected);
+		radioInstallOnSelected.setText(Messages.get().SelectInstallTargetDialog_InstallOnSelected);
 		radioInstallOnSelected.setSelection(installMode == INSTALL_ON_SELECTED);
 		radioInstallOnSelected.addSelectionListener(listener);
 		

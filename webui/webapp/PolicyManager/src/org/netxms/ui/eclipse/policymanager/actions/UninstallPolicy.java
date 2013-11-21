@@ -35,6 +35,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
+import org.netxms.ui.eclipse.policymanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -62,7 +63,7 @@ public class UninstallPolicy implements IObjectActionDelegate
 	{
 		// Read custom root objects
 		long[] rootObjects = null;
-		Object value = ConsoleSharedData.getProperty("PolicyManager.rootObjects");
+		Object value = ConsoleSharedData.getProperty("PolicyManager.rootObjects"); //$NON-NLS-1$
 		if ((value != null) && (value instanceof long[]))
 		{
 			rootObjects = (long[])value;
@@ -74,7 +75,7 @@ public class UninstallPolicy implements IObjectActionDelegate
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			for(final AgentPolicy policy : currentSelection)
 			{
-				new ConsoleJob("Uninstall agent policy " + policy.getObjectName(), null, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(String.format(Messages.get().UninstallPolicy_JobName, policy.getObjectName()), null, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
@@ -86,7 +87,7 @@ public class UninstallPolicy implements IObjectActionDelegate
 					@Override
 					protected String getErrorMessage()
 					{
-						return "Cannot uninstall agent policy " + policy.getObjectName();
+						return String.format(Messages.get().UninstallPolicy_JobError, policy.getObjectName());
 					}
 				}.start();
 			}
