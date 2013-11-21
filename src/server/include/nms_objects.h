@@ -963,7 +963,8 @@ protected:
 	MUTEX m_mutexTopoAccess;
    AgentConnectionEx *m_pAgentConnection;
    SMCLP_Connection *m_smclpConnection;
-	QWORD m_lastAgentTrapId;	// ID of last received agent trap
+	QWORD m_lastAgentTrapId;	     // ID of last received agent trap
+   QWORD m_lastAgentPushRequestId; // ID of last received agent push request
    UINT32 m_dwPollerNode;      // Node used for network service polling
    UINT32 m_dwProxyNode;       // Node used as proxy for agent connection
 	UINT32 m_dwSNMPProxy;			// Node used as proxy for SNMP requests
@@ -1136,6 +1137,7 @@ public:
 
    BOOL connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL);
 	bool checkAgentTrapId(QWORD id);
+   bool checkAgentPushRequestId(QWORD id);
 
    bool connectToSMCLP();
 

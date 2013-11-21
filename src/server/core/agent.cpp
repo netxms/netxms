@@ -114,52 +114,77 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 	msg->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
 	msg->GetVariableStr(VID_VALUE, value, MAX_RESULT_LENGTH);
 
-	Node *sender = FindNodeByIP(0, getIpAddr());	/* FIXME: is it possible to receive push data form other zones? */
+   Node *sender;
+	if (m_nodeId != 0)
+		sender = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+   if (sender == NULL)
+	   sender = FindNodeByIP(0, getIpAddr());
+
 	if (sender != NULL)
 	{
-      Node *target;
-      UINT32 objectId = msg->GetVariableLong(VID_OBJECT_ID);
-      if (objectId != 0)
-      {
-         // push on behalf of other node
-         target = (Node *)FindObjectById(objectId, OBJECT_NODE);
-         if (target != NULL)
+		// Check for duplicate data requests - only accept requests with ID
+		// higher than last received
+		// agents prior to 1.2.10 will not send request id
+		// we should accept data in that case to maintain compatibility
+		bool acceptRequest;
+		QWORD requestId = msg->GetVariableInt64(VID_REQUEST_ID);
+		if (requestId != 0)
+		{
+			acceptRequest = sender->checkAgentPushRequestId(requestId);
+			DbgPrintf(5, _T("AgentConnectionEx::onDataPush(): requestId is%s valid"), acceptRequest ? _T("") : _T(" not"));
+		}
+		else
+		{
+			acceptRequest = true;
+			DbgPrintf(5, _T("AgentConnectionEx::onDataPush(): request ID not provided"));
+		}
+
+		if (acceptRequest)
+		{
+         Node *target;
+         UINT32 objectId = msg->GetVariableLong(VID_OBJECT_ID);
+         if (objectId != 0)
          {
-            if (target->isTrustedNode(sender->Id()))
+            // push on behalf of other node
+            target = (Node *)FindObjectById(objectId, OBJECT_NODE);
+            if (target != NULL)
             {
-               DbgPrintf(5, _T("%s: agent data push: target set to %s [%d]"), sender->Name(), target->Name(), target->Id());
-            }
-            else
-            {
-               DbgPrintf(5, _T("%s: agent data push: not in trusted node list for target %s [%d]"), sender->Name(), target->Name(), target->Id());
-               target = NULL;
+               if (target->isTrustedNode(sender->Id()))
+               {
+                  DbgPrintf(5, _T("%s: agent data push: target set to %s [%d]"), sender->Name(), target->Name(), target->Id());
+               }
+               else
+               {
+                  DbgPrintf(5, _T("%s: agent data push: not in trusted node list for target %s [%d]"), sender->Name(), target->Name(), target->Id());
+                  target = NULL;
+               }
             }
          }
-      }
-      else
-      {
-         target = sender;
-      }
+         else
+         {
+            target = sender;
+         }
 
-      if (target != NULL)
-      {
-		   DbgPrintf(5, _T("%s: agent data push: %s=%s"), target->Name(), name, value);
-		   DCObject *dci = target->getDCObjectByName(name);
-		   if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
-		   {
-			   DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->Name(), dci->getId());
-			   time_t t = time(NULL);
-			   target->processNewDCValue(dci, t, value);
-			   dci->setLastPollTime(t);
-		   }
-		   else
-		   {
-			   DbgPrintf(5, _T("%s: agent data push: DCI not found for %s"), target->Name(), name);
-		   }
-      }
-      else
-      {
-		   DbgPrintf(5, _T("%s: agent data push: target node not found or not accessible"), sender->Name());
+         if (target != NULL)
+         {
+		      DbgPrintf(5, _T("%s: agent data push: %s=%s"), target->Name(), name, value);
+		      DCObject *dci = target->getDCObjectByName(name);
+		      if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
+		      {
+			      DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->Name(), dci->getId());
+			      time_t t = time(NULL);
+			      target->processNewDCValue(dci, t, value);
+			      dci->setLastPollTime(t);
+		      }
+		      else
+		      {
+			      DbgPrintf(5, _T("%s: agent data push: DCI not found for %s"), target->Name(), name);
+		      }
+         }
+         else
+         {
+		      DbgPrintf(5, _T("%s: agent data push: target node not found or not accessible"), sender->Name());
+         }
       }
 	}
 }

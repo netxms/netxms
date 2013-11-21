@@ -23,6 +23,11 @@
 #include "nxagentd.h"
 
 /**
+ * Request ID
+ */
+static QWORD s_requestId = (QWORD)time(NULL) << 32;
+
+/**
  * Push parameter's data
  */
 bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId)
@@ -36,6 +41,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId)
 	msg.SetVariable(VID_NAME, parameter);
 	msg.SetVariable(VID_VALUE, value);
    msg.SetVariable(VID_OBJECT_ID, objectId);
+   msg.SetVariable(VID_REQUEST_ID, s_requestId++); 
 
    if (g_dwFlags & AF_SUBAGENT_LOADER)
    {

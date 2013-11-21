@@ -66,6 +66,7 @@ Node::Node() : DataCollectionTarget()
    m_pAgentConnection = NULL;
    m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
+   m_lastAgentPushRequestId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
 	m_sysDescription = NULL;
@@ -141,6 +142,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy
    m_pAgentConnection = NULL;
    m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
+   m_lastAgentPushRequestId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
 	m_sysDescription = NULL;
@@ -5669,6 +5671,19 @@ bool Node::checkAgentTrapId(QWORD trapId)
 	bool valid = (trapId > m_lastAgentTrapId);
 	if (valid)
 		m_lastAgentTrapId = trapId;
+	UnlockData();
+	return valid;
+}
+
+/**
+ * Check and update last agent data push request ID
+ */
+bool Node::checkAgentPushRequestId(QWORD requestId)
+{
+	LockData();
+	bool valid = (requestId > m_lastAgentPushRequestId);
+	if (valid)
+		m_lastAgentPushRequestId = requestId;
 	UnlockData();
 	return valid;
 }
