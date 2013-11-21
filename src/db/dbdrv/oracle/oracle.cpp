@@ -479,11 +479,9 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 	stmt->bindings->set(pos - 1, handleBind);
 }
 
-
-//
-// Execute prepared non-select statement
-//
-
+/**
+ * Execute prepared non-select statement
+ */
 extern "C" DWORD EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, WCHAR *errorText)
 {
 	DWORD dwResult;
