@@ -2721,7 +2721,15 @@ void ClientSession::deleteUser(CSCPMessage *pRequest)
       {
          if (!IsLoggedIn(dwUserId))
          {
-            msg.SetVariable(VID_RCC, DeleteUserDatabaseObject(dwUserId));
+            TCHAR name[MAX_DB_STRING];
+            ResolveUserId(dwUserId, name, MAX_DB_STRING);
+            UINT32 rcc =  DeleteUserDatabaseObject(dwUserId);
+            msg.SetVariable(VID_RCC, rcc);
+            if(rcc == RCC_SUCCESS)
+            {
+               WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, dwUserId,
+                             _T("%s %s [%d] deleted"), (dwUserId & GROUP_FLAG) ? _T("Group") : _T("User"), name, dwUserId);
+            } 
          }
          else
          {
