@@ -445,7 +445,7 @@ Config *OpenRegistry();
 void CloseRegistry(bool modified);
 
 void StartPushConnector();
-bool PushData(const TCHAR *parameter, const TCHAR *value);
+bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId);
 
 void StartStorageDiscoveryConnector();
 

@@ -9,10 +9,11 @@
 - Server's ICMP ping timeout can be configured
 - DB/2 monitoring subagent
 - Table DCIs can be used in condition objects
+- nxapush can push data on behalf of other nodes
 - Management console:
 	- New command line option -fullscreen
-- Fixed issues: #150, #226, #364, #366, #373, #378, #384, #401, #410, #414, 
-                #416, #419, #440, 387
+- Fixed issues: #150, #226, #364, #366, #373, #378, #384, #387, #401, #410,
+                #414, #416, #419, #440
 
 
 *

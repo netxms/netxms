@@ -25,7 +25,7 @@
 /**
  * Push parameter's data
  */
-bool PushData(const TCHAR *parameter, const TCHAR *value)
+bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId)
 {
 	CSCPMessage msg;
 	bool success = false;
@@ -35,6 +35,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value)
 	msg.SetCode(CMD_PUSH_DCI_DATA);
 	msg.SetVariable(VID_NAME, parameter);
 	msg.SetVariable(VID_VALUE, value);
+   msg.SetVariable(VID_OBJECT_ID, objectId);
 
    if (g_dwFlags & AF_SUBAGENT_LOADER)
    {
@@ -71,14 +72,15 @@ static void ProcessPushRequest(HPIPE hPipe)
 		AgentWriteDebugLog(6, _T("ProcessPushRequest: received message %s"), NXCPMessageCodeName(msg->GetCode(), buffer));
 		if (msg->GetCode() == CMD_PUSH_DCI_DATA)
 		{
-			DWORD count = msg->GetVariableLong(VID_NUM_ITEMS);
-			DWORD varId = VID_PUSH_DCI_DATA_BASE;
+         UINT32 objectId = msg->GetVariableLong(VID_OBJECT_ID);
+			UINT32 count = msg->GetVariableLong(VID_NUM_ITEMS);
+			UINT32 varId = VID_PUSH_DCI_DATA_BASE;
 			for(DWORD i = 0; i < count; i++)
 			{
 				TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
 				msg->GetVariableStr(varId++, name, MAX_PARAM_NAME);
 				msg->GetVariableStr(varId++, value, MAX_RESULT_LENGTH);
-				PushData(name, value);
+				PushData(name, value, objectId);
 			}
 		}
 		else

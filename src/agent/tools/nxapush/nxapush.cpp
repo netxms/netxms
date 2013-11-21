@@ -64,21 +64,21 @@ static BOOL Teardown();
 //
 
 static int optVerbose = 1;
-static int optBatchSize = 0;
+static UINT32 optObjectId = 0;
 
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
-	{ (char *)"version",   no_argument,       NULL,        'V'},
 	{ (char *)"help",      no_argument,       NULL,        'h'},
-	{ (char *)"verbose",   no_argument,       NULL,        'v'},
+	{ (char *)"object",    required_argument, NULL,        'o'},
 	{ (char *)"quiet",     no_argument,       NULL,        'q'},
-	{ (char *)"batchsize", required_argument, NULL,        'b'},
+	{ (char *)"verbose",   no_argument,       NULL,        'v'},
+	{ (char *)"version",   no_argument,       NULL,        'V'},
 	{ NULL, 0, NULL, 0}
 };
 #endif
 
-#define SHORT_OPTIONS "Vhvqb:"
+#define SHORT_OPTIONS "ho:qvV"
 
 /**
  * Show online help
@@ -87,20 +87,22 @@ static void usage(char *argv0)
 {
 	_tprintf(
 _T("NetXMS Agent PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
-_T("Copyright (c) 2006-2012 Raden Solutions\n\n")
+_T("Copyright (c) 2006-2013 Raden Solutions\n\n")
 _T("Usage: %hs [OPTIONS] [@batch_file] [values]\n")
 _T("  \n")
 _T("Options:\n")
 #if HAVE_GETOPT_LONG
-_T("  -V, --version              Display version information.\n")
 _T("  -h, --help                 Display this help message.\n")
-_T("  -v, --verbose              Enable verbose messages. Add twice for debug\n")
+_T("  -o, --object <id>          Push data on behalf of object with given id.\n")
 _T("  -q, --quiet                Suppress all messages.\n\n")
+_T("  -v, --verbose              Enable verbose messages. Add twice for debug\n")
+_T("  -V, --version              Display version information.\n")
 #else
-_T("  -V             Display version information.\n")
 _T("  -h             Display this help message.\n")
-_T("  -v             Enable verbose messages. Add twice for debug\n")
+_T("  -o <id>        Push data on behalf of object with given id.\n")
 _T("  -q             Suppress all messages.\n\n")
+_T("  -v             Enable verbose messages. Add twice for debug\n")
+_T("  -V             Display version information.\n")
 #endif
 _T("Notes:\n")
 _T("  * Values should be given in the following format:\n")
@@ -136,26 +138,26 @@ int main(int argc, char *argv[])
 	{
 		switch(c)
 		{
-		case 'V': // version
-			_tprintf(_T("nxapush (") NETXMS_VERSION_STRING _T(")\n"));
-			exit(0);
-			break;
-		case 'h': // help
-			usage(argv[0]);
-			exit(1);
-			break;
-		case 'v': // verbose
-			optVerbose++;
-			break;
-		case 'q': // quiet
-			optVerbose = 0;
-			break;
-		case 'b': // batch size
-			optBatchSize = atoi(optarg); // 0 == unlimited
-			break;
-		case '?':
-			exit(3);
-			break;
+		   case 'V': // version
+			   _tprintf(_T("nxapush (") NETXMS_VERSION_STRING _T(")\n"));
+			   exit(0);
+			   break;
+		   case 'h': // help
+			   usage(argv[0]);
+			   exit(1);
+			   break;
+		   case 'v': // verbose
+			   optVerbose++;
+			   break;
+		   case 'q': // quiet
+			   optVerbose = 0;
+			   break;
+		   case 'o': // object ID
+			   optObjectId = strtoul(optarg, NULL, 0);
+			   break;
+		   case '?':
+			   exit(3);
+			   break;
 		}
 	}
 	
@@ -338,6 +340,7 @@ static BOOL Send()
 
 	CSCPMessage msg;
 	msg.SetCode(CMD_PUSH_DCI_DATA);
+   msg.SetVariable(VID_OBJECT_ID, optObjectId);
    msg.SetVariable(VID_NUM_ITEMS, s_data->getSize());
 	for(DWORD i = 0, varId = VID_PUSH_DCI_DATA_BASE; i < s_data->getSize(); i++)
 	{

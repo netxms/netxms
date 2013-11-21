@@ -1281,7 +1281,7 @@ void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHA
                                           void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
                                           void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long),
-                                          bool (* pushData)(const TCHAR *, const TCHAR *));
+                                          bool (* pushData)(const TCHAR *, const TCHAR *, UINT32));
 
 #endif
 
