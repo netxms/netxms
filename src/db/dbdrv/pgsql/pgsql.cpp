@@ -715,11 +715,9 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(PG_CONN *pConn, PG_STATEMENT *h
 	return (DBDRV_RESULT)pResult;
 }
 
-
-//
-// Get field length from result
-//
-
+/**
+ * Get field length from result
+ */
 extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int nColumn)
 {
    char *pszValue;
@@ -731,13 +729,10 @@ extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int nCo
    return (pszValue != NULL) ? (LONG)strlen(pszValue) : (LONG)-1;
 }
 
-
-//
-// Get field value from result
-//
-
-extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn,
-                                     WCHAR *pBuffer, int nBufLen)
+/**
+ * Get field value from result
+ */
+extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn, WCHAR *pBuffer, int nBufLen)
 {
 	if (pResult == NULL)
       return NULL;
@@ -748,11 +743,9 @@ extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn
 	return pBuffer;
 }
 
-
-//
-// Get number of rows in result
-//
-
+/**
+ * Get number of rows in result
+ */
 extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
 {
 	return (pResult != NULL) ? PQntuples((PGresult *)pResult) : 0;

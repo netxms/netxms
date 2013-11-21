@@ -782,13 +782,13 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STAT
 extern "C" LONG EXPORT DrvGetFieldLength(ORACLE_RESULT *pResult, int nRow, int nColumn)
 {
 	if (pResult == NULL)
-		return 0;
+		return -1;
 
 	if ((nRow >= 0) && (nRow < pResult->nRows) &&
 		 (nColumn >= 0) && (nColumn < pResult->nCols))
 		return (LONG)wcslen(pResult->pData[pResult->nCols * nRow + nColumn]);
 	
-	return 0;
+	return -1;
 }
 
 /**
