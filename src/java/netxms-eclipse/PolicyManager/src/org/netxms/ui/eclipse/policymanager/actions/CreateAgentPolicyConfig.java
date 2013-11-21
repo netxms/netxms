@@ -33,6 +33,7 @@ import org.netxms.client.objects.PolicyRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
+import org.netxms.ui.eclipse.policymanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -59,11 +60,11 @@ public class CreateAgentPolicyConfig implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(targetPart.getSite().getShell(), "Agent Policy (Configuration File)");
+		final CreateObjectDialog dlg = new CreateObjectDialog(targetPart.getSite().getShell(), Messages.CreateAgentPolicyConfig_AgentPolicy_Config);
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Create agent policy", targetPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.CreateAgentPolicyConfig_JobName, targetPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -74,7 +75,7 @@ public class CreateAgentPolicyConfig implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create agent policy";
+					return Messages.CreateAgentPolicyConfig_JobError;
 				}
 			}.start();
 		}

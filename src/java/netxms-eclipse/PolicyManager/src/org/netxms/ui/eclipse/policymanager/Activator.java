@@ -28,7 +28,7 @@ public class Activator extends AbstractUIPlugin
 {
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.policymanager";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.policymanager"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;

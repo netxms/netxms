@@ -33,6 +33,7 @@ import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.policymanager.Activator;
+import org.netxms.ui.eclipse.policymanager.Messages;
 import org.netxms.ui.eclipse.policymanager.dialogs.SelectInstallTargetDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -76,7 +77,7 @@ public class InstallPolicy implements IObjectActionDelegate
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			for(final AgentPolicy policy : currentSelection)
 			{
-				new ConsoleJob("Deploy agent policy " + policy.getObjectName(), null, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(String.format(Messages.InstallPolicy_JobName, policy.getObjectName()), null, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
@@ -90,7 +91,7 @@ public class InstallPolicy implements IObjectActionDelegate
 					@Override
 					protected String getErrorMessage()
 					{
-						return "Cannot deploy agent policy " + policy.getObjectName();
+						return String.format(Messages.InstallPolicy_JobError, policy.getObjectName());
 					}
 				}.start();
 			}

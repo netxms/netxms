@@ -36,6 +36,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
+import org.netxms.ui.eclipse.policymanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -70,7 +71,7 @@ public class SelectInstallTargetDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Policy Installation Target");
+		newShell.setText(Messages.SelectInstallTargetDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -102,18 +103,18 @@ public class SelectInstallTargetDialog extends Dialog
 		};
 
 		radioInstallOnCurrent = new Button(dialogArea, SWT.RADIO);
-		radioInstallOnCurrent.setText("Install on all nodes where this policy already installed");
+		radioInstallOnCurrent.setText(Messages.SelectInstallTargetDialog_InstallOnAlreadyInstalled);
 		radioInstallOnCurrent.setSelection(installMode == INSTALL_ON_CURRENT);
 		radioInstallOnCurrent.addSelectionListener(listener);
 		
 		radioInstallOnSelected = new Button(dialogArea, SWT.RADIO);
-		radioInstallOnSelected.setText("Install on nodes selected below");
+		radioInstallOnSelected.setText(Messages.SelectInstallTargetDialog_InstallOnSelected);
 		radioInstallOnSelected.setSelection(installMode == INSTALL_ON_SELECTED);
 		radioInstallOnSelected.addSelectionListener(listener);
 		
 		// Read custom root objects
 		long[] rootObjects = null;
-		Object value = ConsoleSharedData.getProperty("PolicyManager.rootObjects");
+		Object value = ConsoleSharedData.getProperty("PolicyManager.rootObjects"); //$NON-NLS-1$
 		if ((value != null) && (value instanceof long[]))
 		{
 			rootObjects = (long[])value;
