@@ -209,7 +209,7 @@ public class GaugeConfig extends AbstractChartConfig
 	 */
 	public String getFontName()
 	{
-		return (fontName != null) ? fontName : "";
+		return (fontName != null) ? fontName : ""; //$NON-NLS-1$
 	}
 
 	/**

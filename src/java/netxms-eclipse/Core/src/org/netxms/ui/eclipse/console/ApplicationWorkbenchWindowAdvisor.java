@@ -178,7 +178,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          {
             autoConnect = true;
          }
-         else if (s.equals("-ignore-protocol-version"))
+         else if (s.equals("-ignore-protocol-version")) //$NON-NLS-1$
          {
             ignoreProtocolVersion = true;
          }

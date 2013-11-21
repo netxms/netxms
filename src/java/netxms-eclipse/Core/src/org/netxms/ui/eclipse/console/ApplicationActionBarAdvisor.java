@@ -123,7 +123,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				{
 					MessageDialogHelper.openInformation(window.getShell(), 
 							Messages.get().ApplicationActionBarAdvisor_AboutTitle, 
-							String.format(Messages.get().ApplicationActionBarAdvisor_AboutText, NXCommon.VERSION + " (" + BuildNumber.TEXT +")"));
+							String.format(Messages.get().ApplicationActionBarAdvisor_AboutText, NXCommon.VERSION + " (" + BuildNumber.TEXT +")")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		};
@@ -291,11 +291,11 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		
 		// Window
-		MenuManager openPerspectiveMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_OpenPerspective, "openPerspective"); //$NON-NLS-2$
+		MenuManager openPerspectiveMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_OpenPerspective, "openPerspective"); //$NON-NLS-1$
 		openPerspectiveMenuMgr.add(contribItemOpenPerspective);
 		windowMenu.add(openPerspectiveMenuMgr);
 		
-		final MenuManager showViewMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_ShowView, "showView"); //$NON-NLS-2$
+		final MenuManager showViewMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_ShowView, "showView"); //$NON-NLS-1$
 		showViewMenuMgr.add(contribItemShowView);
 		windowMenu.add(showViewMenuMgr);
 		

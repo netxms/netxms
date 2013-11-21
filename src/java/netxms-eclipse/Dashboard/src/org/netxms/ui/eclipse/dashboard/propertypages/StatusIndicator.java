@@ -72,7 +72,7 @@ public class StatusIndicator extends PropertyPage
 		title.setLayoutData(gd);
 		
 		checkFullColors = new Button(dialogArea, SWT.CHECK);
-		checkFullColors.setText("Use &full status color range");
+		checkFullColors.setText(Messages.get().StatusIndicator_UseFullColorRange);
 		checkFullColors.setSelection(config.isFullColorRange());
 		
 		return dialogArea;

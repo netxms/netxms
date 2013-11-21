@@ -48,8 +48,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
  */
 public class DashboardElementAdapterFactory implements IAdapterFactory
 {
-	@SuppressWarnings("rawtypes")
-	private static final Class[] supportedClasses = 
+	private static final Class<?>[] supportedClasses = 
 	{
 		DashboardElementConfig.class
 	};
@@ -57,9 +56,8 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Class[] getAdapterList()
+	public Class<?>[] getAdapterList()
 	{
 		return supportedClasses;
 	}

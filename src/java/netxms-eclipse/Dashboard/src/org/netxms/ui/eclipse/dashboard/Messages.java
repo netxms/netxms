@@ -251,6 +251,7 @@ public class Messages extends NLS
 	public static String SeparatorProperties_TopMargin;
 	public static String StatusIndicator_Object;
 	public static String StatusIndicator_Title;
+   public static String StatusIndicator_UseFullColorRange;
 	public static String StatusMap_DisplayMode;
    public static String StatusMap_Group;
    public static String StatusMap_NoGroup;
