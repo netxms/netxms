@@ -28,6 +28,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerJob;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
+import org.netxms.ui.eclipse.serverjobmanager.Messages;
 import org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -50,21 +51,21 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		statusTexts.put(ServerJob.ACTIVE, "Active");
-		statusTexts.put(ServerJob.CANCEL_PENDING, "Cancel pending");
-		statusTexts.put(ServerJob.CANCELLED, "Cancelled");
-		statusTexts.put(ServerJob.COMPLETED, "Completed");
-		statusTexts.put(ServerJob.FAILED, "Failed");
-		statusTexts.put(ServerJob.ON_HOLD, "On hold");
-		statusTexts.put(ServerJob.PENDING, "Pending");
+		statusTexts.put(ServerJob.ACTIVE, Messages.get().ServerJobLabelProvider_Active);
+		statusTexts.put(ServerJob.CANCEL_PENDING, Messages.get().ServerJobLabelProvider_CancelPending);
+		statusTexts.put(ServerJob.CANCELLED, Messages.get().ServerJobLabelProvider_Cancelled);
+		statusTexts.put(ServerJob.COMPLETED, Messages.get().ServerJobLabelProvider_Completed);
+		statusTexts.put(ServerJob.FAILED, Messages.get().ServerJobLabelProvider_Failed);
+		statusTexts.put(ServerJob.ON_HOLD, Messages.get().ServerJobLabelProvider_OnHold);
+		statusTexts.put(ServerJob.PENDING, Messages.get().ServerJobLabelProvider_Pending);
 
-		statusImages.put(ServerJob.ACTIVE, Activator.getImageDescriptor("icons/active.gif").createImage());
-		statusImages.put(ServerJob.CANCEL_PENDING, Activator.getImageDescriptor("icons/cancel_pending.png").createImage());
-		statusImages.put(ServerJob.CANCELLED, Activator.getImageDescriptor("icons/cancel.png").createImage());
-		statusImages.put(ServerJob.COMPLETED, Activator.getImageDescriptor("icons/completed.gif").createImage());
-		statusImages.put(ServerJob.FAILED, Activator.getImageDescriptor("icons/failed.png").createImage());
-		statusImages.put(ServerJob.ON_HOLD, Activator.getImageDescriptor("icons/hold.gif").createImage());
-		statusImages.put(ServerJob.PENDING, Activator.getImageDescriptor("icons/pending.gif").createImage());
+		statusImages.put(ServerJob.ACTIVE, Activator.getImageDescriptor("icons/active.gif").createImage()); //$NON-NLS-1$
+		statusImages.put(ServerJob.CANCEL_PENDING, Activator.getImageDescriptor("icons/cancel_pending.png").createImage()); //$NON-NLS-1$
+		statusImages.put(ServerJob.CANCELLED, Activator.getImageDescriptor("icons/cancel.png").createImage()); //$NON-NLS-1$
+		statusImages.put(ServerJob.COMPLETED, Activator.getImageDescriptor("icons/completed.gif").createImage()); //$NON-NLS-1$
+		statusImages.put(ServerJob.FAILED, Activator.getImageDescriptor("icons/failed.png").createImage()); //$NON-NLS-1$
+		statusImages.put(ServerJob.ON_HOLD, Activator.getImageDescriptor("icons/hold.gif").createImage()); //$NON-NLS-1$
+		statusImages.put(ServerJob.PENDING, Activator.getImageDescriptor("icons/pending.gif").createImage()); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -81,19 +82,19 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 					return statusTexts.get(((ServerJob)obj).getStatus());
 				case ServerJobManager.COLUMN_USER:
 					AbstractUserObject user = session.findUserDBObjectById(((ServerJob)obj).getUserId());
-					return (user != null) ? user.getName() : "<unknown>";
+					return (user != null) ? user.getName() : Messages.get().ServerJobLabelProvider_Unknown;
 				case ServerJobManager.COLUMN_NODE:
 					AbstractObject object = session.findObjectById(((ServerJob)obj).getNodeId());
-					return (object != null) ? object.getObjectName() : "<unknown>";
+					return (object != null) ? object.getObjectName() : Messages.get().ServerJobLabelProvider_Unknown;
 				case ServerJobManager.COLUMN_DESCRIPTION:
 					return ((ServerJob)obj).getDescription();
 				case ServerJobManager.COLUMN_PROGRESS:
-					return (((ServerJob)obj).getStatus() == ServerJob.ACTIVE) ? Integer.toString(((ServerJob)obj).getProgress()) + "%" : "";
+					return (((ServerJob)obj).getStatus() == ServerJob.ACTIVE) ? Integer.toString(((ServerJob)obj).getProgress()) + "%" : ""; //$NON-NLS-1$ //$NON-NLS-2$
 				case ServerJobManager.COLUMN_MESSAGE:
 					return ((ServerJob)obj).getFailureMessage();
 			}
 		}
-		return "";
+		return ""; //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

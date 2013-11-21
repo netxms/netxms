@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
+import org.netxms.ui.eclipse.serverjobmanager.Messages;
 import org.netxms.ui.eclipse.serverjobmanager.views.helpers.ServerJobComparator;
 import org.netxms.ui.eclipse.serverjobmanager.views.helpers.ServerJobLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -63,8 +64,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ServerJobManager extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager";
-	public static final String JOB_FAMILY = "ServerJobManagerJob";
+	public static final String ID = "org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"; //$NON-NLS-1$
+	public static final String JOB_FAMILY = "ServerJobManagerJob"; //$NON-NLS-1$
 		
 	// Columns
 	public static final int COLUMN_STATUS = 0;
@@ -74,7 +75,7 @@ public class ServerJobManager extends ViewPart
 	public static final int COLUMN_PROGRESS = 4;
 	public static final int COLUMN_MESSAGE = 5;
 
-	private static final String TABLE_CONFIG_PREFIX = "ServerJobManager";
+	private static final String TABLE_CONFIG_PREFIX = "ServerJobManager"; //$NON-NLS-1$
 	
 	private static final int CANCEL_JOB = 0;
 	private static final int HOLD_JOB = 1;
@@ -96,7 +97,7 @@ public class ServerJobManager extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Status", "Initiator", "Node", "Description", "Progress", "Message" };
+		final String[] names = { Messages.get().ServerJobManager_ColStatus, Messages.get().ServerJobManager_ColInitiator, Messages.get().ServerJobManager_ColNode, Messages.get().ServerJobManager_ColDescription, Messages.get().ServerJobManager_ColProgress, Messages.get().ServerJobManager_ColMessage };
 		final int[] widths = { 80, 100, 150, 250, 100, 300 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -234,37 +235,37 @@ public class ServerJobManager extends ViewPart
 			}
 		};
 		
-		actionCancelJob = new Action("&Cancel") {
+		actionCancelJob = new Action(Messages.get().ServerJobManager_Cancel) {
 			@Override
 			public void run()
 			{
 				cancelServerJob();
 			}
 		};
-		actionCancelJob.setImageDescriptor(Activator.getImageDescriptor("icons/cancel.png"));
+		actionCancelJob.setImageDescriptor(Activator.getImageDescriptor("icons/cancel.png")); //$NON-NLS-1$
 		actionCancelJob.setEnabled(false);
 		
-		actionHoldJob = new Action("&Hold") {
+		actionHoldJob = new Action(Messages.get().ServerJobManager_Hold) {
 			@Override
 			public void run()
 			{
 				holdServerJob();
 			}
 		};
-		actionHoldJob.setImageDescriptor(Activator.getImageDescriptor("icons/hold.gif"));
+		actionHoldJob.setImageDescriptor(Activator.getImageDescriptor("icons/hold.gif")); //$NON-NLS-1$
 		actionHoldJob.setEnabled(false);
 		
-		actionUnholdJob = new Action("&Unhold") {
+		actionUnholdJob = new Action(Messages.get().ServerJobManager_Unhold) {
 			@Override
 			public void run()
 			{
 				unholdServerJob();
 			}
 		};
-		actionUnholdJob.setImageDescriptor(Activator.getImageDescriptor("icons/unhold.gif"));
+		actionUnholdJob.setImageDescriptor(Activator.getImageDescriptor("icons/unhold.gif")); //$NON-NLS-1$
 		actionUnholdJob.setEnabled(false);
 		
-		actionRestartJob = new Action("&Restart") {
+		actionRestartJob = new Action(Messages.get().ServerJobManager_Restart) {
 			@Override
 			public void run()
 			{
@@ -298,7 +299,7 @@ public class ServerJobManager extends ViewPart
 	 */
 	private void refreshJobList(boolean userInitiated)
 	{
-		ConsoleJob job = new ConsoleJob("Refresh server job list", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.get().ServerJobManager_RefreshJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -335,7 +336,7 @@ public class ServerJobManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get job list from server";
+				return Messages.get().ServerJobManager_RefreshJobError;
 			}
 		};
 		job.setUser(userInitiated);
@@ -347,7 +348,7 @@ public class ServerJobManager extends ViewPart
 	 */
 	private void cancelServerJob()
 	{
-		doJobAction("Cancel", CANCEL_JOB);
+		doJobAction(Messages.get().ServerJobManager_ActionName_Cancel, Messages.get().ServerJobManager_ActionErrorName_Cancel, CANCEL_JOB);
 	}
 	
 	/**
@@ -355,7 +356,7 @@ public class ServerJobManager extends ViewPart
 	 */
 	private void holdServerJob()
 	{
-		doJobAction("Hold", HOLD_JOB);
+		doJobAction(Messages.get().ServerJobManager_ActionName_Hold, Messages.get().ServerJobManager_ActionErrorName_Hold, HOLD_JOB);
 	}
 	
 	/**
@@ -363,7 +364,7 @@ public class ServerJobManager extends ViewPart
 	 */
 	private void unholdServerJob()
 	{
-		doJobAction("Unhold", UNHOLD_JOB);
+		doJobAction(Messages.get().ServerJobManager_ActionName_Unhold, Messages.get().ServerJobManager_ActionErrorName_Unhold, UNHOLD_JOB);
 	}
 	
 	/**
@@ -372,10 +373,10 @@ public class ServerJobManager extends ViewPart
 	 * @param actionName
 	 * @param actionId
 	 */
-	private void doJobAction(final String actionName, final int actionId)
+	private void doJobAction(final String actionName, final String actionErrorName, final int actionId)
 	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		new ConsoleJob(actionName + " server jobs", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(String.format(Messages.get().ServerJobManager_ActionJobName, actionName), this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@SuppressWarnings("rawtypes")
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -412,7 +413,7 @@ public class ServerJobManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot " + actionName.toLowerCase() + " server job";
+				return String.format(Messages.get().ServerJobManager_ActionJobError, actionErrorName);
 			}
 
 			@Override
