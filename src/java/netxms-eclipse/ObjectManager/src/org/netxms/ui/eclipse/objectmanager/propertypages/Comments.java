@@ -92,7 +92,7 @@ public class Comments extends PropertyPage
 		
 		final String newComments = new String(comments.getText());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update comments for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Update comments for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

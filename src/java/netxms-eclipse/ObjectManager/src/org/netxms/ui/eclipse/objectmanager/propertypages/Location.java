@@ -170,7 +170,7 @@ public class Location extends PropertyPage
 			setValid(false);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update comments for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Update geolocation for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

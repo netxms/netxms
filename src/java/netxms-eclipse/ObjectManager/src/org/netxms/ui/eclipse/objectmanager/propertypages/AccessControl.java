@@ -294,7 +294,7 @@ public class AccessControl extends PropertyPage
 		md.setACL(acl.values().toArray(new AccessListElement[acl.size()]));
 		md.setInheritAccessRights(inheritAccessRights);
 
-		new ConsoleJob("Update access control list for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Update access control list for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

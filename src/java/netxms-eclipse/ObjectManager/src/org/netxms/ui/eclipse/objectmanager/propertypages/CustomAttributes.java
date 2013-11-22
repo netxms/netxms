@@ -154,7 +154,8 @@ public class CustomAttributes extends PropertyPage
 				{
 					if (attributes.containsKey(dlg.getAttrName()))
 					{
-						MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
+						MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), "Warning", 
+						      String.format("Attribute named %s already exists", dlg.getAttrName()));
 					}
 					else
 					{

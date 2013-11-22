@@ -100,7 +100,7 @@ public class ZoneCommunications extends PropertyPage
 		md.setIcmpProxy(icmpProxy.getObjectId());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update communication settings for zone " + zone.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Update communication settings for zone %s", zone.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

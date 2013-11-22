@@ -32,6 +32,7 @@ import org.netxms.client.objects.Condition;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -66,7 +67,7 @@ public class ConditionScript extends PropertyPage
       
       // Script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Status calculation script");
+      label.setText(Messages.ConditionScript_Script);
 
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(object.getScript());
@@ -100,7 +101,7 @@ public class ConditionScript extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setScript(newScript);
-		new ConsoleJob("Update condition script", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ConditionScript_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -111,7 +112,7 @@ public class ConditionScript extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change condition script";
+				return Messages.ConditionScript_JobError;
 			}
 
 			@Override

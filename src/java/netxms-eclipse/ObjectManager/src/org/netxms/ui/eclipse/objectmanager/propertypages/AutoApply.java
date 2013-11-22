@@ -35,6 +35,7 @@ import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -74,7 +75,7 @@ public class AutoApply extends PropertyPage
 
       // Enable/disable check box
       checkboxEnableApply = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableApply.setText("Apply this template automatically to nodes selected by filter");
+      checkboxEnableApply.setText(Messages.AutoApply_AutoApply);
       checkboxEnableApply.setSelection(object.isAutoApplyEnabled());
       checkboxEnableApply.addSelectionListener(new SelectionListener() {
 			@Override
@@ -102,13 +103,13 @@ public class AutoApply extends PropertyPage
       
       // Enable/disable check box
       checkboxEnableRemove = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableRemove.setText("Remove this template automatically when node no longer passes through filter");
+      checkboxEnableRemove.setText(Messages.AutoApply_AutoRemove);
       checkboxEnableRemove.setSelection(object.isAutoRemoveEnabled());
       checkboxEnableRemove.setEnabled(object.isAutoApplyEnabled());
       
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Filtering script");
+      label.setText(Messages.AutoApply_Script);
 
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
@@ -158,7 +159,7 @@ public class AutoApply extends PropertyPage
 		md.setAutoBindFilter(filterSource.getText());
 		md.setObjectFlags(flags);
 		
-		new ConsoleJob("Update auto-apply filter", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.AutoApply_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -185,7 +186,7 @@ public class AutoApply extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change template automatic apply options";
+				return Messages.AutoApply_JobError;
 			}
 		}.start();
 	}

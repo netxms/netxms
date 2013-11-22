@@ -422,10 +422,18 @@ public class StatusCalculation extends PropertyPage
 	{
 		if (!WidgetHelper.validateTextInput(textRelativeStatus, "Relative status", new NumericTextFieldValidator(-4, 4), this) ||
 		    !WidgetHelper.validateTextInput(textSingleThreshold, "Single threshold", new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[0], "Threshold - " + StatusDisplayInfo.getStatusText(Severity.WARNING), new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[1], "Threshold - " + StatusDisplayInfo.getStatusText(Severity.MINOR), new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[2], "Threshold - " + StatusDisplayInfo.getStatusText(Severity.MAJOR), new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[3], "Threshold - " + StatusDisplayInfo.getStatusText(Severity.CRITICAL), new NumericTextFieldValidator(0, 100), this))
+		    !WidgetHelper.validateTextInput(textThresholds[0], 
+		          String.format("Threshold - %s", StatusDisplayInfo.getStatusText(Severity.WARNING)), 
+		          new NumericTextFieldValidator(0, 100), this) ||
+		    !WidgetHelper.validateTextInput(textThresholds[1], 
+		          String.format("Threshold - %s", StatusDisplayInfo.getStatusText(Severity.MINOR)),
+		          new NumericTextFieldValidator(0, 100), this) ||
+		    !WidgetHelper.validateTextInput(textThresholds[2], 
+		          String.format("Threshold - %s", StatusDisplayInfo.getStatusText(Severity.MAJOR)), 
+		          new NumericTextFieldValidator(0, 100), this) ||
+		    !WidgetHelper.validateTextInput(textThresholds[3], 
+		          String.format("Threshold - %s", StatusDisplayInfo.getStatusText(Severity.CRITICAL)), 
+		          new NumericTextFieldValidator(0, 100), this))
 			return false;
 
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
@@ -451,7 +459,7 @@ public class StatusCalculation extends PropertyPage
 			setValid(false);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update status calculation for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Update status calculation for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

@@ -197,7 +197,7 @@ public class TrustedNodes extends PropertyPage
 			nodes[i++] = id;
 		md.setTrustedNodes(nodes);
 		
-		new ConsoleJob("Update trusted nodes for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Update trusted nodes for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

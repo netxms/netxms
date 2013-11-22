@@ -344,7 +344,8 @@ public class Communication extends PropertyPage
 			final String hostName = primaryName.getText().trim();
 			if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$"))
 			{
-				MessageDialogHelper.openWarning(getShell(), "Warning", "String \"" + hostName + "\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name");
+				MessageDialogHelper.openWarning(getShell(), "Warning", 
+				      String.format("String \"%s\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name", hostName));
 				return false;
 			}
 			md.setPrimaryName(hostName);
@@ -396,7 +397,7 @@ public class Communication extends PropertyPage
 		md.setObjectFlags(flags);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update communication settings for node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Update communication settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

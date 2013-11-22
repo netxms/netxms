@@ -47,6 +47,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterSyncNetwork;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.ClusterNetworkEditDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.NetworkListComparator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.NetworkListLabelProvider;
@@ -88,7 +89,7 @@ public class ClusterNetworks extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Address", "Mask" };
+      final String[] columnNames = { Messages.ClusterNetworks_ColAddress, Messages.ClusterNetworks_ColMask };
       final int[] columnWidths = { 150, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -121,7 +122,7 @@ public class ClusterNetworks extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.ClusterNetworks_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -140,7 +141,7 @@ public class ClusterNetworks extends PropertyPage
       });
 		
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText("&Modify...");
+      editButton.setText(Messages.ClusterNetworks_Modify);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -159,7 +160,7 @@ public class ClusterNetworks extends PropertyPage
       });
       
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.ClusterNetworks_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -267,7 +268,7 @@ public class ClusterNetworks extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setNetworkList(networks);
-		new ConsoleJob("Update cluster interconnect network list", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ClusterNetworks_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -278,7 +279,7 @@ public class ClusterNetworks extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update cluster interconnect network list";
+				return Messages.ClusterNetworks_JobError;
 			}
 
 			@Override

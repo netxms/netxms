@@ -291,7 +291,7 @@ public class NodePollerView extends ViewPart
 			}
 		};
 		
-		Job job = new Job("Node poll: " + node.getObjectName() + " [" + node.getObjectId() + "]") {
+		Job job = new Job(String.format("Node poll: %s [%d]", node.getObjectName(), node.getObjectId())) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
