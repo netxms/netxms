@@ -29,7 +29,7 @@ import org.simpleframework.xml.Text;
 public class LogParserEvent
 {
 	@Text
-	private String event = "0";
+	private String event = "0"; //$NON-NLS-1$
 
 	@Attribute(name="params", required=false)
 	private int parameterCount = 0;

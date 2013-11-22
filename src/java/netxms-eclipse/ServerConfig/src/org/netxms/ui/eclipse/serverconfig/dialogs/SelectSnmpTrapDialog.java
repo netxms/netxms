@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.SnmpTrapComparator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -64,7 +65,7 @@ public class SelectSnmpTrapDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Trap Mapping");
+		newShell.setText(Messages.get().SelectSnmpTrapDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -80,7 +81,7 @@ public class SelectSnmpTrapDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		final String[] names = { "SNMP OID", "Event", "Description" };
+		final String[] names = { Messages.get().SelectSnmpTrapDialog_ColOID, Messages.get().SelectSnmpTrapDialog_ColEvent, Messages.get().SelectSnmpTrapDialog_ColDescription };
 		final int[] widths = { 350, 250, 400 };
 		viewer = new SortableTableViewer(dialogArea, names, widths, COLUMN_OID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
 		viewer.setContentProvider(new ArrayContentProvider());

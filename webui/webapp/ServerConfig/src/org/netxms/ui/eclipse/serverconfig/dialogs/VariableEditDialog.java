@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -63,7 +64,7 @@ public class VariableEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel("Name");
+      textName.setLabel(Messages.get().VariableEditDialog_Name);
       textName.getTextControl().setTextLimit(63);
       if (varName != null)
       {
@@ -77,7 +78,7 @@ public class VariableEditDialog extends Dialog
       textName.setLayoutData(gd);
       
       textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel("Value");
+      textValue.setLabel(Messages.get().VariableEditDialog_Value);
       textValue.getTextControl().setTextLimit(255);
       if (varValue != null)
       	textValue.setText(varValue);
@@ -99,7 +100,7 @@ public class VariableEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((varName == null) ? "Create Variable" : "Edit Variable");
+		newShell.setText((varName == null) ? Messages.get().VariableEditDialog_TitleCreate : Messages.get().VariableEditDialog_TitleEdit);
 	}
 	
 	/**

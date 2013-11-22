@@ -53,6 +53,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.LogMacroEditDialog;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParser;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
@@ -147,10 +148,10 @@ public class LogParserEditor extends Composite
 		/* FORM */
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(tabFolder);
-		form.setText("Log Parser");
+		form.setText(Messages.get().LogParserEditor_LogParser);
 
 		final CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
-		tabItem.setText("Editor");
+		tabItem.setText(Messages.get().LogParserEditor_Editor);
 		tabItem.setImage(SharedIcons.IMG_EDIT);
 		tabItem.setControl(form);
 		tabItem.setData(TAB_BUILDER);
@@ -161,7 +162,7 @@ public class LogParserEditor extends Composite
 
 		/* Rules section */
 		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.TWISTIE | Section.EXPANDED);
-		section.setText("Rules");
+		section.setText(Messages.get().LogParserEditor_Rules);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -177,7 +178,7 @@ public class LogParserEditor extends Composite
 		section.setClient(rulesArea);
 		
 		addColumnLink = toolkit.createImageHyperlink(rulesArea, SWT.NONE);
-		addColumnLink.setText("Add rule");
+		addColumnLink.setText(Messages.get().LogParserEditor_AddRule);
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
 		addColumnLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -189,7 +190,7 @@ public class LogParserEditor extends Composite
 		
 		/* Macros section */
 		section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.TWISTIE);
-		section.setText("Macros");
+		section.setText(Messages.get().LogParserEditor_Macros);
 		td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		section.setLayoutData(td);
@@ -221,7 +222,7 @@ public class LogParserEditor extends Composite
 		xmlEditor.setFont(font);
 
 		final CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
-		tabItem.setText("XML");
+		tabItem.setText(Messages.get().LogParserEditor_XML);
 		tabItem.setImage(SharedIcons.IMG_XML);
 		tabItem.setControl(xmlEditor);
 		tabItem.setData(TAB_XML);
@@ -255,18 +256,18 @@ public class LogParserEditor extends Composite
 		table.setLayoutData(gd);
 		
 		TableColumn tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Name");
+		tc.setText(Messages.get().LogParserEditor_Name);
 		tc.setWidth(100);
 
 		tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Value");
+		tc.setText(Messages.get().LogParserEditor_Value);
 		tc.setWidth(200);
 		
 		macroList.setContentProvider(new ArrayContentProvider());
 		
 		ImageHyperlink link = toolkit.createImageHyperlink(macroArea, SWT.NONE);
 		link.setImage(SharedIcons.IMG_ADD_OBJECT);
-		link.setText("Add...");
+		link.setText(Messages.get().LogParserEditor_Add);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		link.setLayoutData(gd);
@@ -280,7 +281,7 @@ public class LogParserEditor extends Composite
 
 		link = toolkit.createImageHyperlink(macroArea, SWT.NONE);
 		link.setImage(SharedIcons.IMG_EDIT);
-		link.setText("Edit...");
+		link.setText(Messages.get().LogParserEditor_Edit);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		link.setLayoutData(gd);
@@ -294,7 +295,7 @@ public class LogParserEditor extends Composite
 
 		link = toolkit.createImageHyperlink(macroArea, SWT.NONE);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-		link.setText("Delete");
+		link.setText(Messages.get().LogParserEditor_Delete);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		link.setLayoutData(gd);
@@ -346,7 +347,7 @@ public class LogParserEditor extends Composite
 			case TAB_XML:
 				return xmlEditor.getText();
 			default:
-				return "<parser></parser>";
+				return "<parser></parser>"; //$NON-NLS-1$
 		}
 	}
 	
@@ -366,7 +367,7 @@ public class LogParserEditor extends Composite
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			return "<parser>\n</parser>";
+			return "<parser>\n</parser>"; //$NON-NLS-1$
 		}
 	}
 
@@ -401,7 +402,7 @@ public class LogParserEditor extends Composite
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			MessageDialogHelper.openError(getShell(), "Error", "Log parser definition is invalid");
+			MessageDialogHelper.openError(getShell(), Messages.get().LogParserEditor_Error, Messages.get().LogParserEditor_InvalidDefinition);
 			parser = new LogParser();
 		}
 		

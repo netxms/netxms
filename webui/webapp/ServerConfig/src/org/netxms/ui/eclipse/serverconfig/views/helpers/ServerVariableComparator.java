@@ -28,7 +28,7 @@ public class ServerVariableComparator extends ViewerComparator
 	{
 		int result;
 		
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case ServerConfigurationEditor.COLUMN_NAME:
 				result = ((ServerVariable)e1).getName().compareToIgnoreCase(((ServerVariable)e2).getName());

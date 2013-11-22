@@ -29,6 +29,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ConfigurationImportDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -67,11 +68,11 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			ConsoleJob job = new ConsoleJob("Import Configuration", null, Activator.PLUGIN_ID, null) {
+			ConsoleJob job = new ConsoleJob(Messages.get().ImportConfiguration_JobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot import configuration";
+					return Messages.get().ImportConfiguration_JobError;
 				}
 
 				@Override
@@ -82,14 +83,15 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 					file.read(data);
 					file.close();
 					
-					String content = new String(data, "UTF-8");
+					String content = new String(data, "UTF-8"); //$NON-NLS-1$
 					session.importConfiguration(content, dlg.getFlags());
 					
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
-							MessageDialogHelper.openInformation(shell, "Information", "Configuration was successfully imported from file " + dlg.getFileName());
+							MessageDialogHelper.openInformation(shell, Messages.get().ImportConfiguration_Information, 
+							      String.format(Messages.get().ImportConfiguration_SuccessMessage, dlg.getFileName()));
 						}
 					});
 				}

@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -64,7 +65,7 @@ public class OpenServerConfig implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenServerConfig_Error, Messages.get().OpenServerConfig_ErrorOpeningView + e.getMessage());
 			}
 		}
 	}

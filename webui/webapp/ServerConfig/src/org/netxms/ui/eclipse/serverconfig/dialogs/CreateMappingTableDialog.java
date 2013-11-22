@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -61,7 +62,7 @@ public class CreateMappingTableDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel("Name");
+      textName.setLabel(Messages.get().CreateMappingTableDialog_Name);
       textName.getTextControl().setTextLimit(63);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -70,7 +71,7 @@ public class CreateMappingTableDialog extends Dialog
       textName.setLayoutData(gd);
       
       textDescription = new LabeledText(dialogArea, SWT.NONE);
-      textDescription.setLabel("Description");
+      textDescription.setLabel(Messages.get().CreateMappingTableDialog_Description);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -86,7 +87,7 @@ public class CreateMappingTableDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Mapping Table");
+		newShell.setText(Messages.get().CreateMappingTableDialog_Title);
 	}
 	
 	/**

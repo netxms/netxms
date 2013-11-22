@@ -51,6 +51,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ServerVariableComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ServerVariablesLabelProvider;
@@ -64,8 +65,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ServerConfigurationEditor extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverconfig.view.server_config";
-	public static final String JOB_FAMILY = "ServerConfigJob";
+	public static final String ID = "org.netxms.ui.eclipse.serverconfig.view.server_config"; //$NON-NLS-1$
+	public static final String JOB_FAMILY = "ServerConfigJob"; //$NON-NLS-1$
 		
 	private SortableTableViewer viewer;
 	private ServerManager session;
@@ -88,7 +89,7 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Name", "Value", "Restart" };
+		final String[] names = { Messages.get().ServerConfigurationEditor_ColName, Messages.get().ServerConfigurationEditor_ColValue, Messages.get().ServerConfigurationEditor_ColRestart };
 		final int[] widths = { 200, 150, 80 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -112,17 +113,17 @@ public class ServerConfigurationEditor extends ViewPart
 		});
 		
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		WidgetHelper.restoreTableViewerSettings(viewer, settings, "ServerConfigurationEditor");
+		WidgetHelper.restoreTableViewerSettings(viewer, settings, "ServerConfigurationEditor"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, settings, "ServerConfigurationEditor");
+				WidgetHelper.saveTableViewerSettings(viewer, settings, "ServerConfigurationEditor"); //$NON-NLS-1$
 			}
 		});
 
 		// Create the help context id for the viewer's control
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "org.netxms.nxmc.serverconfig.viewer");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "org.netxms.nxmc.serverconfig.viewer"); //$NON-NLS-1$
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
@@ -136,11 +137,11 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	public void refresh()
 	{
-		new ConsoleJob("Load server configuration variables", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().ServerConfigurationEditor_LoadJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load server configuration variables";
+				return Messages.get().ServerConfigurationEditor_LoadJobError;
 			}
 
 			@Override
@@ -206,7 +207,7 @@ public class ServerConfigurationEditor extends ViewPart
 			}
 		};
 		
-		actionAdd = new Action("&Create new...", SharedIcons.ADD_OBJECT) {
+		actionAdd = new Action(Messages.get().ServerConfigurationEditor_ActionCreate, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -214,7 +215,7 @@ public class ServerConfigurationEditor extends ViewPart
 			}
 		};
 		
-		actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
+		actionEdit = new Action(Messages.get().ServerConfigurationEditor_ActionEdit, SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
@@ -223,7 +224,7 @@ public class ServerConfigurationEditor extends ViewPart
 		};
 		actionEdit.setEnabled(false);
 		
-		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+		actionDelete = new Action(Messages.get().ServerConfigurationEditor_ActionDelete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -288,11 +289,11 @@ public class ServerConfigurationEditor extends ViewPart
 		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), null, null);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Create configuration variable", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.get().ServerConfigurationEditor_CreateJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create configuration variable";
+					return Messages.get().ServerConfigurationEditor_CreateJobError;
 				}
 
 				@Override
@@ -319,11 +320,11 @@ public class ServerConfigurationEditor extends ViewPart
 		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), var.getName(), var.getValue());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Modify configuration variable", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.get().ServerConfigurationEditor_ModifyJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot modify configuration variable";
+					return Messages.get().ServerConfigurationEditor_ModifyJobError;
 				}
 
 				@Override
@@ -345,7 +346,7 @@ public class ServerConfigurationEditor extends ViewPart
 		if ((selection == null) || (selection.size() == 0))
 			return;
 		
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected configuration variables?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().ServerConfigurationEditor_DeleteConfirmation, Messages.get().ServerConfigurationEditor_DeleteConfirmationText))
 			return;
 		
 		final List<String> names = new ArrayList<String>(selection.size());
@@ -354,7 +355,7 @@ public class ServerConfigurationEditor extends ViewPart
 			if (o instanceof ServerVariable)
 				names.add(((ServerVariable)o).getName());
 		}
-		new ConsoleJob("Delete configuration variables", this, Activator.PLUGIN_ID, ServerConfigurationEditor.JOB_FAMILY) {
+		new ConsoleJob(Messages.get().ServerConfigurationEditor_DeleteJobName, this, Activator.PLUGIN_ID, ServerConfigurationEditor.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -374,7 +375,7 @@ public class ServerConfigurationEditor extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete configuration variable";
+				return Messages.get().ServerConfigurationEditor_DeleteJobError;
 			}
 		}.start();
 	}

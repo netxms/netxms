@@ -58,6 +58,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.AddAddressListElementDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.AddUsmCredDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementComparator;
@@ -73,7 +74,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator";
+	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator"; //$NON-NLS-1$
 
 	private DiscoveryConfig config;
 	private boolean modified = false;
@@ -106,7 +107,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		if (memento != null)
 		{
 			// Restoring, load config
-			new ConsoleJob("Loading network discovery configuration", this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().NetworkDiscoveryConfigurator_LoadJobName, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -123,7 +124,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot load network discovery configuration";
+					return Messages.get().NetworkDiscoveryConfigurator_LoadJobError;
 				}
 			}.start();
 		}
@@ -137,7 +138,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	{
 		toolkit = new FormToolkit(getSite().getShell().getDisplay());
 		form = toolkit.createScrolledForm(parent);
-		form.setText("Network Discovery Configuration");
+		form.setText(Messages.get().NetworkDiscoveryConfigurator_FormTitle);
 
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
@@ -159,7 +160,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	 */
 	private void createActions()
 	{
-		actionSave = new Action("&Save", SharedIcons.SAVE) {
+		actionSave = new Action(Messages.get().NetworkDiscoveryConfigurator_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
@@ -206,8 +207,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private void createGeneralSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText("General");
-		section.setDescription("General network discovery settings");
+		section.setText(Messages.get().NetworkDiscoveryConfigurator_SectionGeneral);
+		section.setDescription(Messages.get().NetworkDiscoveryConfigurator_SectionGeneralDescr);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -241,16 +242,16 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			}
 		};
 		
-		radioDiscoveryOff = toolkit.createButton(clientArea, "&Disabled", SWT.RADIO);
+		radioDiscoveryOff = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_Disabled, SWT.RADIO);
 		radioDiscoveryOff.addSelectionListener(listener);
-		radioDiscoveryPassive = toolkit.createButton(clientArea, "&Passive only (using ARP and routing information)", SWT.RADIO);
+		radioDiscoveryPassive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_PassiveDiscovery, SWT.RADIO);
 		radioDiscoveryPassive.addSelectionListener(listener);
-		radioDiscoveryActive = toolkit.createButton(clientArea, "&Active and passive", SWT.RADIO);
+		radioDiscoveryActive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery, SWT.RADIO);
 		radioDiscoveryActive.addSelectionListener(listener);
 		
 		defaultSnmpCommunity = new LabeledText(clientArea, SWT.NONE);
 		toolkit.adapt(defaultSnmpCommunity);
-		defaultSnmpCommunity.setLabel("Default SNMP community string");
+		defaultSnmpCommunity.setLabel(Messages.get().NetworkDiscoveryConfigurator_DefCommString);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -272,8 +273,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private void createFilterSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText("Filter");
-		section.setDescription("Discovery filter");
+		section.setText(Messages.get().NetworkDiscoveryConfigurator_SectionFilter);
+		section.setDescription(Messages.get().NetworkDiscoveryConfigurator_SectionFilterDescr);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -333,9 +334,9 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			}
 		};
 		
-		radioFilterOff = toolkit.createButton(clientArea, "&No filtering", SWT.RADIO);
+		radioFilterOff = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_NoFiltering, SWT.RADIO);
 		radioFilterOff.addSelectionListener(radioButtonListener);
-		radioFilterCustom = toolkit.createButton(clientArea, "&Custom script", SWT.RADIO);
+		radioFilterCustom = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_CustomScript, SWT.RADIO);
 		radioFilterCustom.addSelectionListener(radioButtonListener);
 		filterScript = new ScriptSelector(clientArea, SWT.NONE, true, false);
 		toolkit.adapt(filterScript);
@@ -357,22 +358,22 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			}
 		});
 		
-		radioFilterAuto = toolkit.createButton(clientArea, "A&utomatically generated script with following rules", SWT.RADIO);
+		radioFilterAuto = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_AutoScript, SWT.RADIO);
 		radioFilterAuto.addSelectionListener(radioButtonListener);
 		
-		checkAgentOnly = toolkit.createButton(clientArea, "Accept node if it has &NetXMS agent", SWT.CHECK);
+		checkAgentOnly = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_AcceptAgent, SWT.CHECK);
 		checkAgentOnly.addSelectionListener(checkBoxListener);
 		gd = new GridData();
 		gd.horizontalIndent = 20;
 		checkAgentOnly.setLayoutData(gd);
 		
-		checkSnmpOnly = toolkit.createButton(clientArea, "Accept node if it has &SNMP agent", SWT.CHECK);
+		checkSnmpOnly = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_AcceptSNMP, SWT.CHECK);
 		checkSnmpOnly.addSelectionListener(checkBoxListener);
 		gd = new GridData();
 		gd.horizontalIndent = 20;
 		checkSnmpOnly.setLayoutData(gd);
 		
-		checkRangeOnly = toolkit.createButton(clientArea, "Accept node if it is within given &range or subnet", SWT.CHECK);
+		checkRangeOnly = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_AcceptRange, SWT.CHECK);
 		checkRangeOnly.addSelectionListener(checkBoxListener);
 		gd = new GridData();
 		gd.horizontalIndent = 20;
@@ -385,8 +386,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private void createActiveDiscoverySection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText("Active Discovery Targets");
-		section.setDescription("Subnets and address ranges to be scanned during active discovery");
+		section.setText(Messages.get().NetworkDiscoveryConfigurator_SectionActiveDiscoveryTargets);
+		section.setDescription(Messages.get().NetworkDiscoveryConfigurator_SectionActiveDiscoveryTargetsDescr);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -413,7 +414,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		activeDiscoveryAddressList.setComparator(new AddressListElementComparator());
 		
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add...");
+		linkAdd.setText(Messages.get().NetworkDiscoveryConfigurator_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -427,7 +428,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		});
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.get().NetworkDiscoveryConfigurator_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -447,8 +448,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private void createSubnetFilterSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText("Address Filters");
-		section.setDescription("Subnets and address ranges for \"match address\" filter");
+		section.setText(Messages.get().NetworkDiscoveryConfigurator_SectionAddressFilters);
+		section.setDescription(Messages.get().NetworkDiscoveryConfigurator_SectionAddressFiltersDescr);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -475,7 +476,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		filterAddressList.setComparator(new AddressListElementComparator());
 		
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add...");
+		linkAdd.setText(Messages.get().NetworkDiscoveryConfigurator_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -489,7 +490,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		});
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.get().NetworkDiscoveryConfigurator_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -510,8 +511,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private void createSnmpCommunitySection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText("SNMP Communities");
-		section.setDescription("SNMP community strings used in the network");
+		section.setText(Messages.get().NetworkDiscoveryConfigurator_SectionCommunities);
+		section.setDescription(Messages.get().NetworkDiscoveryConfigurator_SectionCommunitiesDescr);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -538,7 +539,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		snmpCommunityList.setComparator(new StringComparator());
 		
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add...");
+		linkAdd.setText(Messages.get().NetworkDiscoveryConfigurator_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -552,7 +553,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		});
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.get().NetworkDiscoveryConfigurator_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -572,8 +573,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private void createSnmpUsmCredSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText("SNMP USM Credentials");
-		section.setDescription("SNMP USM credentials used in the network");
+		section.setText(Messages.get().NetworkDiscoveryConfigurator_SectionUSM);
+		section.setDescription(Messages.get().NetworkDiscoveryConfigurator_SectionUSMDescr);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -600,7 +601,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		snmpUsmCredList.setComparator(new SnmpUsmComparator());
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add...");
+		linkAdd.setText(Messages.get().NetworkDiscoveryConfigurator_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -614,7 +615,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		});
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.get().NetworkDiscoveryConfigurator_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -731,7 +732,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot save network discovery configuration: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), Messages.get().NetworkDiscoveryConfigurator_Error, 
+			      String.format(Messages.get().NetworkDiscoveryConfigurator_SaveErrorText, e.getLocalizedMessage()));
 		}
 	}
 
@@ -775,7 +777,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	 */
 	private void save()
 	{
-		new ConsoleJob("Saving network discovery configuration", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().NetworkDiscoveryConfigurator_SaveJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -793,7 +795,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save network discovery configuration";
+				return Messages.get().NetworkDiscoveryConfigurator_SaveJobError;
 			}
 		}.start();
 	}
@@ -803,8 +805,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	 */
 	private void addCommunity()
 	{
-		InputDialog dlg = new InputDialog(getSite().getShell(), "Add SNMP Community", 
-				"Please enter SNMP community string", "", null);
+		InputDialog dlg = new InputDialog(getSite().getShell(), Messages.get().NetworkDiscoveryConfigurator_AddCommunity, 
+				Messages.get().NetworkDiscoveryConfigurator_AddCommunityDescr, "", null); //$NON-NLS-1$
 		if (dlg.open() == Window.OK)
 		{
 			String s = dlg.getValue();

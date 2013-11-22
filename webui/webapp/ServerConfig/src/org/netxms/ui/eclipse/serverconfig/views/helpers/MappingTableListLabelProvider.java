@@ -8,6 +8,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.api.client.mt.MappingTable;
 import org.netxms.api.client.mt.MappingTableDescriptor;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.views.MappingTables;
 
 /**
@@ -40,7 +41,7 @@ public class MappingTableListLabelProvider extends LabelProvider implements ITab
 			case MappingTables.COLUMN_DESCRIPTION:
 				return d.getDescription();
 			case MappingTables.COLUMN_FLAGS:
-				return ((d.getFlags() & MappingTable.NUMERIC_KEYS) != 0) ? "NUMERIC" : "none";
+				return ((d.getFlags() & MappingTable.NUMERIC_KEYS) != 0) ? Messages.get().MappingTableListLabelProvider_FlagNumeric : Messages.get().MappingTableListLabelProvider_FlagNone;
 		}
 		return null;
 	}

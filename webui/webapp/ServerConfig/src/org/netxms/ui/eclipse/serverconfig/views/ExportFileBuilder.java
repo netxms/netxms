@@ -63,6 +63,7 @@ import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.RuleComparator;
@@ -77,7 +78,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class ExportFileBuilder extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.ExportFileBuilder";
+	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.ExportFileBuilder"; //$NON-NLS-1$
 
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	private FormToolkit toolkit;
@@ -106,8 +107,8 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		// Initiate loading of required plugins if they was not loaded yet
 		try
 		{
-			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
-			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
+			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
@@ -115,7 +116,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		
 		toolkit = new FormToolkit(getSite().getShell().getDisplay());
 		form = toolkit.createScrolledForm(parent);
-		form.setText("Export Configuration");
+		form.setText(Messages.get().ExportFileBuilder_FormTitle);
 
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
@@ -139,7 +140,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void createFileSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		section.setText("Export File");
+		section.setText(Messages.get().ExportFileBuilder_SectionFile);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -154,7 +155,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		
 		exportFile = new LocalFileSelector(clientArea, SWT.NONE, true, SWT.SAVE);
 		toolkit.adapt(exportFile);
-		exportFile.setLabel("File name");
+		exportFile.setLabel(Messages.get().ExportFileBuilder_FileName);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -162,7 +163,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		
 		description = new LabeledText(clientArea, SWT.NONE);
 		toolkit.adapt(description);
-		description.setLabel("Description");
+		description.setLabel(Messages.get().ExportFileBuilder_Description);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -175,7 +176,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void createTemplateSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		section.setText("Templates");
+		section.setText(Messages.get().ExportFileBuilder_SectionTemplates);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -203,7 +204,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		templateViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add...");
+		linkAdd.setText(Messages.get().ExportFileBuilder_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -217,7 +218,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		});
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -237,7 +238,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void createEventSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		section.setText("Events");
+		section.setText(Messages.get().ExportFileBuilder_SectionEvents);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -265,7 +266,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		eventViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add...");
+		linkAdd.setText(Messages.get().ExportFileBuilder_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -279,7 +280,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		});
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -299,7 +300,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void createTrapSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		section.setText("SNMP Traps");
+		section.setText(Messages.get().ExportFileBuilder_SectionTraps);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -327,7 +328,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		trapViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add...");
+		linkAdd.setText(Messages.get().ExportFileBuilder_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -338,7 +339,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			{
 				if (snmpTrapCache == null)
 				{
-					new ConsoleJob("Loading SNMP trap configuration", ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
+					new ConsoleJob(Messages.get().ExportFileBuilder_TrapsLoadJobName, ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
@@ -355,7 +356,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 						@Override
 						protected String getErrorMessage()
 						{
-							return "Cannot load SNMP trap configuration";
+							return Messages.get().ExportFileBuilder_TrapsLoadJobError;
 						}
 					}.start();
 				}
@@ -367,7 +368,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		});
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -387,7 +388,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void createRuleSection()
 	{
 		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		section.setText("Rules");
+		section.setText(Messages.get().ExportFileBuilder_SectionRules);
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -415,7 +416,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		ruleViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add...");
+		linkAdd.setText(Messages.get().ExportFileBuilder_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -426,7 +427,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			{
 				if (rulesCache == null)
 				{
-					new ConsoleJob("Loading event processing policy", ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
+					new ConsoleJob(Messages.get().ExportFileBuilder_EPPLoadJobName, ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
@@ -443,7 +444,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 						@Override
 						protected String getErrorMessage()
 						{
-							return "Cannot load event processing policy";
+							return Messages.get().ExportFileBuilder_EPPLoadJobError;
 						}
 					}.start();
 				}
@@ -455,7 +456,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		});
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -474,7 +475,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	 */
 	private void createActions()
 	{
-		actionSave = new Action("&Save") {
+		actionSave = new Action(Messages.get().ExportFileBuilder_Save) {
 			@Override
 			public void run()
 			{
@@ -544,7 +545,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	{
 		if (exportFile.getFile() == null)
 		{
-			MessageDialogHelper.openWarning(getSite().getShell(), "Warning", "Please enter valid file name to write exported configuration to!");
+			MessageDialogHelper.openWarning(getSite().getShell(), Messages.get().ExportFileBuilder_Warning, Messages.get().ExportFileBuilder_EnterValidFileName);
 			return;
 		}
 		
@@ -570,12 +571,12 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		
 		final String descriptionText = description.getText();
 		
-		new ConsoleJob("Exporting and saving configuration", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ExportFileBuilder_ExportJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList);
-				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(exportFile.getFile()), "UTF-8");
+				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(exportFile.getFile()), "UTF-8"); //$NON-NLS-1$
 				try
 				{
 					out.write(xml);
@@ -597,7 +598,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot export configuration";
+				return Messages.get().ExportFileBuilder_ExportJobError;
 			}
 		}.start();
 	}
@@ -692,7 +693,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			}
 			templateViewer.setInput(templates.toArray());
 			setModified();
-			new ConsoleJob("Resolving event dependencies", this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().ExportFileBuilder_ResolveJobName, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{

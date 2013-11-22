@@ -35,7 +35,7 @@ public class LogParserRule
 	private Boolean breakProcessing = null;
 	
 	@Element(required=false)
-	private String match = ".*";
+	private String match = ".*"; //$NON-NLS-1$
 	
 	@Element(required=false)
 	private LogParserEvent event = null;

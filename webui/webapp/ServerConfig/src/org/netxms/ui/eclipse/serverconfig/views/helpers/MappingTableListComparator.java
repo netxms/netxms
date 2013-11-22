@@ -40,7 +40,7 @@ public class MappingTableListComparator extends ViewerComparator
 		
 		MappingTableDescriptor d1 = (MappingTableDescriptor)e1;
 		MappingTableDescriptor d2 = (MappingTableDescriptor)e2;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case MappingTables.COLUMN_ID:
 				result = d1.getId() - d2.getId();

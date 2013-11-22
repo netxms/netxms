@@ -56,7 +56,7 @@ public class TrapListLabelProvider extends LabelProvider implements ITableLabelP
 				return trap.getObjectId().toString();
 			case SelectSnmpTrapDialog.COLUMN_EVENT:
 				EventTemplate evt = session.findEventTemplateByCode(trap.getEventCode());
-				return (evt != null) ? evt.getName() : ("[" + Integer.toString(trap.getEventCode()) + "]");
+				return (evt != null) ? evt.getName() : ("[" + Integer.toString(trap.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case SelectSnmpTrapDialog.COLUMN_DESCRIPTION:
 				return trap.getDescription();
 		}

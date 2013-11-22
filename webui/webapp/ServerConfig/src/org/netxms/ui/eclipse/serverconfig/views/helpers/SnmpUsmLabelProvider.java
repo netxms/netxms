@@ -7,14 +7,15 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.snmp.SnmpUsmCredential;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 
 /**
  * Label provider for SnmpUsmCredentials class
  */
 public class SnmpUsmLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] authMethodName = { "NONE", "MD5", "SHA1" };
-	private static final String[] privMethodName = { "NONE", "DES", "AES" };
+	private static final String[] authMethodName = { Messages.get().SnmpUsmLabelProvider_AuthNone, Messages.get().SnmpUsmLabelProvider_AuthMD5, Messages.get().SnmpUsmLabelProvider_AuthSHA1 };
+	private static final String[] privMethodName = { Messages.get().SnmpUsmLabelProvider_EncNone, Messages.get().SnmpUsmLabelProvider_EncDES, Messages.get().SnmpUsmLabelProvider_EncAES };
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

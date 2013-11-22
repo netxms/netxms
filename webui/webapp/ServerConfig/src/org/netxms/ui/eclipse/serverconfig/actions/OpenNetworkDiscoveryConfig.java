@@ -27,6 +27,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -66,7 +67,7 @@ public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegat
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Loading network discovery configuration", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().OpenNetworkDiscoveryConfig_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -82,7 +83,7 @@ public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegat
 						} 
 						catch (PartInitException e) 
 						{
-							MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+							MessageDialogHelper.openError(window.getShell(), Messages.get().OpenNetworkDiscoveryConfig_Error, Messages.get().OpenNetworkDiscoveryConfig_ErrorOpeningView + e.getMessage());
 						}
 					}
 				});
@@ -91,7 +92,7 @@ public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegat
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load network discovery configuration";
+				return Messages.get().OpenNetworkDiscoveryConfig_JobError;
 			}
 		}.start();
 	}

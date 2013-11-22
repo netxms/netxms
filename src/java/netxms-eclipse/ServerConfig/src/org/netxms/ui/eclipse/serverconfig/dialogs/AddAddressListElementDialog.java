@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.IpAddressListElement;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -63,7 +64,7 @@ public class AddAddressListElementDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Add Address List Element");
+		newShell.setText(Messages.get().AddAddressListElementDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -81,14 +82,14 @@ public class AddAddressListElementDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		radioSubnet = new Button(dialogArea, SWT.RADIO);
-		radioSubnet.setText("&Subnet");
+		radioSubnet.setText(Messages.get().AddAddressListElementDialog_Subnet);
 		radioSubnet.setSelection(true);
 		radioSubnet.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				textAddr1.setLabel("Network address");
-				textAddr2.setLabel("Network mask");
+				textAddr1.setLabel(Messages.get().AddAddressListElementDialog_NetAddr);
+				textAddr2.setLabel(Messages.get().AddAddressListElementDialog_NetMask);
 			}
 			
 			@Override
@@ -99,13 +100,13 @@ public class AddAddressListElementDialog extends Dialog
 		});
 		
 		radioRange = new Button(dialogArea, SWT.RADIO);
-		radioRange.setText("Address &range");
+		radioRange.setText(Messages.get().AddAddressListElementDialog_AddrRange);
 		radioRange.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				textAddr1.setLabel("Start address");
-				textAddr2.setLabel("End address");
+				textAddr1.setLabel(Messages.get().AddAddressListElementDialog_StartAddr);
+				textAddr2.setLabel(Messages.get().AddAddressListElementDialog_EndAddr);
 			}
 			
 			@Override
@@ -116,8 +117,8 @@ public class AddAddressListElementDialog extends Dialog
 		});
 		
 		textAddr1 = new LabeledText(dialogArea, SWT.NONE);
-		textAddr1.setLabel("Network address");
-		textAddr1.setText("0.0.0.0");
+		textAddr1.setLabel(Messages.get().AddAddressListElementDialog_NetAddr);
+		textAddr1.setText("0.0.0.0"); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -125,8 +126,8 @@ public class AddAddressListElementDialog extends Dialog
 		textAddr1.setLayoutData(gd);
 		
 		textAddr2 = new LabeledText(dialogArea, SWT.NONE);
-		textAddr2.setLabel("Network mask");
-		textAddr2.setText("255.255.255.0");
+		textAddr2.setLabel(Messages.get().AddAddressListElementDialog_NetMask);
+		textAddr2.setText("255.255.255.0"); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -149,7 +150,7 @@ public class AddAddressListElementDialog extends Dialog
 		}
 		catch(UnknownHostException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid IP address/mask");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().AddAddressListElementDialog_Warning, Messages.get().AddAddressListElementDialog_EnterValidData);
 			return;
 		}
 		super.okPressed();

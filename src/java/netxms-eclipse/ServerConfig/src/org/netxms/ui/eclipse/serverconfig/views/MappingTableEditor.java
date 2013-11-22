@@ -52,6 +52,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -63,7 +64,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class MappingTableEditor extends ViewPart implements ISaveablePart2
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor";
+	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor"; //$NON-NLS-1$
 	
 	public static final int COLUMN_KEY = 0;
 	public static final int COLUMN_VALUE = 1;
@@ -92,12 +93,12 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		}
 		catch(Exception e)
 		{
-			throw new PartInitException("Internal error", e);
+			throw new PartInitException("Internal error", e); //$NON-NLS-1$
 		}
 		if (mappingTableId <= 0)
-			throw new PartInitException("Internal error");
+			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
-		setPartName("Mapping Table - [" + mappingTableId + "]");
+		setPartName(String.format(Messages.get().MappingTableEditor_InitialPartName, mappingTableId));
 		
 		session = ConsoleSharedData.getSession();
 	}
@@ -109,13 +110,13 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 	public void createPartControl(Composite parent)
 	{
 		final int[] widths = { 200, 200, 400 };
-		final String[] names = { "Key", "Value", "Comments" };
+		final String[] names = { Messages.get().MappingTableEditor_ColKey, Messages.get().MappingTableEditor_ColValue, Messages.get().MappingTableEditor_ColComments };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_KEY, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new MappingTableEntryLabelProvider());
 		viewer.setComparator(new MappingTableEntryComparator());
 		
-		viewer.setColumnProperties(new String[] { "key", "value", "comments" });
+		viewer.setColumnProperties(new String[] { "key", "value", "comments" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		CellEditor[] editors = new CellEditor[] { new TextCellEditor(viewer.getTable()), new TextCellEditor(viewer.getTable()), new TextCellEditor(viewer.getTable()) };
 		viewer.setCellEditors(editors);
 		viewer.setCellModifier(new CellModifier());
@@ -146,7 +147,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
 		if (contextService != null)
 		{
-			contextService.activateContext("org.netxms.ui.eclipse.serverconfig.context.MappingTableEditor");
+			contextService.activateContext("org.netxms.ui.eclipse.serverconfig.context.MappingTableEditor"); //$NON-NLS-1$
 		}
 	}
 	
@@ -162,13 +163,13 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			public void run()
 			{
 				if (modified)
-					if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Refresh Confirmation", "This will destroy unsaved changes. Are you sure?"))
+					if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().MappingTableEditor_RefreshConfirmation, Messages.get().MappingTableEditor_RefreshConfirmationText))
 						return;
 				refresh();
 			}
 		};
 		
-		actionNewRow = new Action("&New row", SharedIcons.ADD_OBJECT) {
+		actionNewRow = new Action(Messages.get().MappingTableEditor_NewRow, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -176,10 +177,10 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			}
 		};
 		actionNewRow.setEnabled(false);
-		actionNewRow.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.add_new_row");
+		actionNewRow.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.add_new_row"); //$NON-NLS-1$
 		handlerService.activateHandler(actionNewRow.getActionDefinitionId(), new ActionHandler(actionNewRow));
 		
-		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+		actionDelete = new Action(Messages.get().MappingTableEditor_Delete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -187,10 +188,10 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			}
 		};
 		actionDelete.setEnabled(false);
-		actionDelete.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.delete_rows");
+		actionDelete.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.delete_rows"); //$NON-NLS-1$
 		handlerService.activateHandler(actionDelete.getActionDefinitionId(), new ActionHandler(actionDelete));
 		
-		actionSave = new Action("&Save", SharedIcons.SAVE) {
+		actionSave = new Action(Messages.get().MappingTableEditor_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
@@ -340,7 +341,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 	 */
 	private void refresh()
 	{
-		new ConsoleJob("Load mapping table", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MappingTableEditor_LoadJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -350,7 +351,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 					public void run()
 					{
 						mappingTable = t;
-						setPartName("Mapping Table - " + mappingTable.getName());
+						setPartName(String.format(Messages.get().MappingTableEditor_PartName, mappingTable.getName()));
 						viewer.setInput(mappingTable.getData().toArray());
 						actionNewRow.setEnabled(true);
 						setModified(false);
@@ -361,7 +362,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load mapping table content from server";
+				return Messages.get().MappingTableEditor_LoadJobError;
 			}
 		}.start();
 	}
@@ -389,7 +390,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		if (mappingTable == null)
 			return;
 		
-		MappingTableEntry e = new MappingTableEntry("", "", "");
+		MappingTableEntry e = new MappingTableEntry("", "", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		mappingTable.getData().add(e);
 		viewer.setInput(mappingTable.getData().toArray());
 		viewer.setSelection(new StructuredSelection(e));
@@ -426,7 +427,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			
 			MappingTableEntry e = (MappingTableEntry)element;
 			boolean changed = false;
-			if (property.equals("key"))
+			if (property.equals("key")) //$NON-NLS-1$
 			{
 				if (!e.getKey().equals(value))
 				{
@@ -434,7 +435,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 					changed = true;
 				}
 			}
-			else if (property.equals("value"))
+			else if (property.equals("value")) //$NON-NLS-1$
 			{
 				if (!e.getValue().equals(value))
 				{
@@ -442,7 +443,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 					changed = true;
 				}
 			}
-			else if (property.equals("comments"))
+			else if (property.equals("comments")) //$NON-NLS-1$
 			{
 				if (!e.getDescription().equals(value))
 				{
@@ -462,11 +463,11 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		public Object getValue(Object element, String property)
 		{
 			MappingTableEntry e = (MappingTableEntry)element;
-			if (property.equals("key"))
+			if (property.equals("key")) //$NON-NLS-1$
 				return e.getKey();
-			if (property.equals("value"))
+			if (property.equals("value")) //$NON-NLS-1$
 				return e.getValue();
-			if (property.equals("comments"))
+			if (property.equals("comments")) //$NON-NLS-1$
 				return e.getDescription();
 			return null;
 		}
@@ -485,7 +486,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 	{
 		public SaveJob()
 		{
-			super("Save mapping table", MappingTableEditor.this, Activator.PLUGIN_ID, null);
+			super(Messages.get().MappingTableEditor_SaveJobName, MappingTableEditor.this, Activator.PLUGIN_ID, null);
 		}
 
 		/* (non-Javadoc)
@@ -510,7 +511,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		@Override
 		protected String getErrorMessage()
 		{
-			return "Cannot save mapping table";
+			return Messages.get().MappingTableEditor_SaveJobError;
 		}
 	}
 }

@@ -13,7 +13,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin
 {
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.serverconfig";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.serverconfig"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;
@@ -39,7 +39,7 @@ public class Activator extends AbstractUIPlugin
 
 		// Register icon for our jobs
 		IProgressService service = PlatformUI.getWorkbench().getProgressService();
-	   service.registerIconForFamily(getImageDescriptor("icons/server_config.png"), ServerConfigurationEditor.JOB_FAMILY);
+	   service.registerIconForFamily(getImageDescriptor("icons/server_config.png"), ServerConfigurationEditor.JOB_FAMILY); //$NON-NLS-1$
 	}
 
 	/*

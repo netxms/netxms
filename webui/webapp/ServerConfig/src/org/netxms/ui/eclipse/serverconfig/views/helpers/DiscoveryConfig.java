@@ -48,11 +48,11 @@ public class DiscoveryConfig
 		
 		Map<String, ServerVariable> variables = session.getServerVariables();
 		
-		config.enabled = getBoolean(variables, "RunNetworkDiscovery", false);
-		config.active = getBoolean(variables, "ActiveNetworkDiscovery", false);
-		config.filterFlags = getInteger(variables, "DiscoveryFilterFlags", 0);
-		config.filter = getString(variables, "DiscoveryFilter", "none");
-		config.defaultCommunity = getString(variables, "DefaultCommunityString", "public");
+		config.enabled = getBoolean(variables, "RunNetworkDiscovery", false); //$NON-NLS-1$
+		config.active = getBoolean(variables, "ActiveNetworkDiscovery", false); //$NON-NLS-1$
+		config.filterFlags = getInteger(variables, "DiscoveryFilterFlags", 0); //$NON-NLS-1$
+		config.filter = getString(variables, "DiscoveryFilter", "none"); //$NON-NLS-1$ //$NON-NLS-2$
+		config.defaultCommunity = getString(variables, "DefaultCommunityString", "public"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		config.addressFilter = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER);
 		config.targets = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS);

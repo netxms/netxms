@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 
 /**
@@ -42,9 +43,9 @@ public class ServerVariablesLabelProvider extends LabelProvider implements ITabl
 			case ServerConfigurationEditor.COLUMN_VALUE:
 				return ((ServerVariable)obj).getValue();
 			case ServerConfigurationEditor.COLUMN_NEED_RESTART:
-				return ((ServerVariable)obj).isServerRestartNeeded() ? "Yes" : "No";
+				return ((ServerVariable)obj).isServerRestartNeeded() ? Messages.get().ServerVariablesLabelProvider_Yes : Messages.get().ServerVariablesLabelProvider_No;
 		}
-		return "";
+		return ""; //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

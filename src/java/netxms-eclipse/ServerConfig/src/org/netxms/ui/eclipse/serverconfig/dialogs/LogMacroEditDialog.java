@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -65,7 +66,7 @@ public class LogMacroEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel("Name");
+      textName.setLabel(Messages.get().LogMacroEditDialog_Name);
       textName.getTextControl().setTextLimit(63);
       if (name != null)
       {
@@ -79,7 +80,7 @@ public class LogMacroEditDialog extends Dialog
       textName.setLayoutData(gd);
       
       textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel("Value");
+      textValue.setLabel(Messages.get().LogMacroEditDialog_Value);
       textValue.getTextControl().setTextLimit(255);
       if (value != null)
       	textValue.setText(value);
@@ -101,7 +102,7 @@ public class LogMacroEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((name == null) ? "Create Macro" : "Edit Macro");
+		newShell.setText((name == null) ? Messages.get().LogMacroEditDialog_TitleCreate : Messages.get().LogMacroEditDialog_TitleEdit);
 	}
 	
 	/**

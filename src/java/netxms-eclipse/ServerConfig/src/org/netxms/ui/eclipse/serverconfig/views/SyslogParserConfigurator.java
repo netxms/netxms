@@ -37,6 +37,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.widgets.LogParserEditor;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -47,7 +48,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator";
+	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private LogParserEditor editor;
@@ -100,7 +101,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionSave = new Action("&Save", SharedIcons.SAVE) {
+		actionSave = new Action(Messages.get().SyslogParserConfigurator_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
@@ -169,11 +170,12 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 		});
 		try
 		{
-			session.setServerConfigClob("SyslogParser", content);
+			session.setServerConfigClob("SyslogParser", content); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot save syslog parser configuration: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), Messages.get().SyslogParserConfigurator_Error, 
+			      String.format(Messages.get().SyslogParserConfigurator_ErrorSaveConfig, e.getLocalizedMessage()));
 		}
 	}
 
@@ -219,18 +221,18 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	{
 		if (modified)
 		{
-			if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Refresh", "This will destroy all unsaved changes. Are you sure?"))
+			if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().SyslogParserConfigurator_ConfirmRefresh, Messages.get().SyslogParserConfigurator_ConfirmRefreshText))
 				return;
 		}
 		
 		actionSave.setEnabled(false);
-		new ConsoleJob("Load syslog parser configuration", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SyslogParserConfigurator_LoadJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				try
 				{
-					content = session.getServerConfigClob("SyslogParser");
+					content = session.getServerConfigClob("SyslogParser"); //$NON-NLS-1$
 				}
 				catch(NXCException e)
 				{
@@ -238,7 +240,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 					// UNKNOWN_VARIABLE error
 					if (e.getErrorCode() != RCC.UNKNOWN_VARIABLE)
 						throw e;
-					content = "<parser>\n</parser>\n";
+					content = "<parser>\n</parser>\n"; //$NON-NLS-1$
 				}
 				runInUIThread(new Runnable() {
 					@Override
@@ -253,7 +255,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load syslog parser configuration";
+				return Messages.get().SyslogParserConfigurator_LoadJobError;
 			}
 		}.start();
 	}
@@ -265,11 +267,11 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	{
 		final String xml = editor.getParserXml();
 		actionSave.setEnabled(false);
-		new ConsoleJob("Save syslog parser configuration", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SyslogParserConfigurator_SaveJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.setServerConfigClob("SyslogParser", xml);
+				session.setServerConfigClob("SyslogParser", xml); //$NON-NLS-1$
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -282,7 +284,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save syslog parser configuration";
+				return Messages.get().SyslogParserConfigurator_SaveJobError;
 			}
 		}.start();
 	}

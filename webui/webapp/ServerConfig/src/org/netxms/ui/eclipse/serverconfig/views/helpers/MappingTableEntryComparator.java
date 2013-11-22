@@ -40,7 +40,7 @@ public class MappingTableEntryComparator extends ViewerComparator
 		
 		MappingTableEntry me1 = (MappingTableEntry)e1;
 		MappingTableEntry me2 = (MappingTableEntry)e2;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case MappingTableEditor.COLUMN_KEY:
 				result = me1.getKey().compareToIgnoreCase(me2.getKey());

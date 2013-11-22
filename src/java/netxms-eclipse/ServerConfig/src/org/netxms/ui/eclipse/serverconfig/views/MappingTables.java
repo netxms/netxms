@@ -56,6 +56,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.CreateMappingTableDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableListComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableListLabelProvider;
@@ -69,7 +70,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class MappingTables extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.MappingTables";
+	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.MappingTables"; //$NON-NLS-1$
 
 	// Columns
 	public static final int COLUMN_ID = 0;
@@ -93,7 +94,7 @@ public class MappingTables extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		final int[] widths = { 80, 160, 80, 400 };
-		final String[] names = { "ID", "Name", "Flags", "Description" };
+		final String[] names = { Messages.get().MappingTables_ColID, Messages.get().MappingTables_ColName, Messages.get().MappingTables_ColFlags, Messages.get().MappingTables_ColDescription };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new MappingTableListLabelProvider());
@@ -116,12 +117,12 @@ public class MappingTables extends ViewPart
 		});
 		
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		WidgetHelper.restoreTableViewerSettings(viewer, settings, "MappingTablesList");
+		WidgetHelper.restoreTableViewerSettings(viewer, settings, "MappingTablesList"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, settings, "MappingTablesList");
+				WidgetHelper.saveTableViewerSettings(viewer, settings, "MappingTablesList"); //$NON-NLS-1$
 			}
 		});
 		
@@ -198,7 +199,7 @@ public class MappingTables extends ViewPart
 			}
 		};
 		
-		actionNewTable = new Action("&New table...", SharedIcons.ADD_OBJECT) {
+		actionNewTable = new Action(Messages.get().MappingTables_NewTable, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -206,7 +207,7 @@ public class MappingTables extends ViewPart
 			}
 		};
 		
-		actionEditTable = new Action("&Edit", SharedIcons.EDIT) {
+		actionEditTable = new Action(Messages.get().MappingTables_Edit, SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
@@ -215,7 +216,7 @@ public class MappingTables extends ViewPart
 		};
 		actionEditTable.setEnabled(false);
 		
-		actionDeleteTables = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+		actionDeleteTables = new Action(Messages.get().MappingTables_Delete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -294,7 +295,7 @@ public class MappingTables extends ViewPart
 	 */
 	private void refresh(final int tableId)
 	{
-		new ConsoleJob("Reload mapping tables list", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MappingTables_ReloadJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -330,7 +331,7 @@ public class MappingTables extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get list of mapping tables";
+				return Messages.get().MappingTables_ReloadJobError;
 			}
 		}.start();
 	}
@@ -344,7 +345,7 @@ public class MappingTables extends ViewPart
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create new mapping table", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MappingTables_CreateJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -393,7 +394,7 @@ public class MappingTables extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(getSite().getShell(), "Error", "Error opening view: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), Messages.get().MappingTables_Error, String.format(Messages.get().MappingTables_ErrorOpeningView, e.getLocalizedMessage()));
 		}
 	}
 	
@@ -406,7 +407,7 @@ public class MappingTables extends ViewPart
 		if ((selection == null) || (selection.size() == 0))
 			return;
 
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected mapping tables?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().MappingTables_DeleteConfirmation, Messages.get().MappingTables_DeleteConfirmationText))
 			return;
 		
 		final List<Integer> tables = new ArrayList<Integer>(selection.size());
@@ -415,7 +416,7 @@ public class MappingTables extends ViewPart
 			if (o instanceof MappingTableDescriptor)
 				tables.add(((MappingTableDescriptor)o).getId());
 		}
-		new ConsoleJob("Delete mapping tables", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MappingTables_DeleteJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -435,7 +436,7 @@ public class MappingTables extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete mapping table";
+				return Messages.get().MappingTables_DeleteJobError;
 			}
 		}.start();
 	}

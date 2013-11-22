@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.snmp.SnmpUsmCredential;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -57,7 +58,7 @@ public class AddUsmCredDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Add SNMP USM Credentials");
+		newShell.setText(Messages.get().AddUsmCredDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -78,34 +79,34 @@ public class AddUsmCredDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel("User name");
+		name.setLabel(Messages.get().AddUsmCredDialog_UserName);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
 		
-		authMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Authentication", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		authMethod.add("NONE");
-		authMethod.add("MD5");
-		authMethod.add("SHA1");
+		authMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().AddUsmCredDialog_Auth, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		authMethod.add(Messages.get().AddUsmCredDialog_AuthTypeNone);
+		authMethod.add(Messages.get().AddUsmCredDialog_AuthTypeMD5);
+		authMethod.add(Messages.get().AddUsmCredDialog_AuthTypeSHA1);
 		authMethod.select(2);
 
-		privMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Encryption", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		privMethod.add("NONE");
-		privMethod.add("DES");
-		privMethod.add("AES");
+		privMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().AddUsmCredDialog_Encryption, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		privMethod.add(Messages.get().AddUsmCredDialog_EncTypeNone);
+		privMethod.add(Messages.get().AddUsmCredDialog_EncTypeDES);
+		privMethod.add(Messages.get().AddUsmCredDialog_EncTypeAES);
 		privMethod.select(2);
 		
 		authPasswd = new LabeledText(dialogArea, SWT.NONE);
-		authPasswd.setLabel("Authentication password");
+		authPasswd.setLabel(Messages.get().AddUsmCredDialog_AuthPasswd);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		authPasswd.setLayoutData(gd);
 		
 		privPasswd = new LabeledText(dialogArea, SWT.NONE);
-		privPasswd.setLabel("Encryption password");
+		privPasswd.setLabel(Messages.get().AddUsmCredDialog_EncPasswd);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

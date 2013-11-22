@@ -58,7 +58,7 @@ public class SnmpTrapComparator extends ViewerComparator
 		int rc;
 		SnmpTrap trap1 = (SnmpTrap)e1;
 		SnmpTrap trap2 = (SnmpTrap)e2;
-		switch((Integer)sortColumn.getData("ID"))
+		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case SelectSnmpTrapDialog.COLUMN_OID:
 				rc = trap1.getObjectId().compareTo(trap2.getObjectId());
@@ -66,8 +66,8 @@ public class SnmpTrapComparator extends ViewerComparator
 			case SelectSnmpTrapDialog.COLUMN_EVENT:
 				EventTemplate evt1 = session.findEventTemplateByCode(trap1.getEventCode());
 				EventTemplate evt2 = session.findEventTemplateByCode(trap2.getEventCode());
-				String name1 = (evt1 != null) ? evt1.getName() : ("[" + Integer.toString(trap1.getEventCode()) + "]");
-				String name2 = (evt2 != null) ? evt2.getName() : ("[" + Integer.toString(trap2.getEventCode()) + "]");
+				String name1 = (evt1 != null) ? evt1.getName() : ("[" + Integer.toString(trap1.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+				String name2 = (evt2 != null) ? evt2.getName() : ("[" + Integer.toString(trap2.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 				rc = name1.compareToIgnoreCase(name2);
 				break;
 			case SelectSnmpTrapDialog.COLUMN_DESCRIPTION:

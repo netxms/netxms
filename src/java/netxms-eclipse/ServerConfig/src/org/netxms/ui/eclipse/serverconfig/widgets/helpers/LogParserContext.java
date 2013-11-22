@@ -35,14 +35,14 @@ public class LogParserContext
 	private String reset = null;
 	
 	@Text(required=false)
-	private String data = "";
+	private String data = ""; //$NON-NLS-1$
 
 	/**
 	 * @return the action
 	 */
 	public int getAction()
 	{
-		return (action == null) ? 0 : (action.equalsIgnoreCase("set") ? 0 : 1);
+		return (action == null) ? 0 : (action.equalsIgnoreCase("set") ? 0 : 1); //$NON-NLS-1$
 	}
 
 	/**
@@ -50,7 +50,7 @@ public class LogParserContext
 	 */
 	public void setAction(int action)
 	{
-		this.action = (action == 0) ? "set" : "clear";
+		this.action = (action == 0) ? "set" : "clear"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -58,7 +58,7 @@ public class LogParserContext
 	 */
 	public int getReset()
 	{
-		return (reset == null) ? 0 : (reset.equalsIgnoreCase("auto") ? 0 : 1);
+		return (reset == null) ? 0 : (reset.equalsIgnoreCase("auto") ? 0 : 1); //$NON-NLS-1$
 	}
 
 	/**
@@ -66,7 +66,7 @@ public class LogParserContext
 	 */
 	public void setReset(int reset)
 	{
-		this.reset = (action.equalsIgnoreCase("clear")) ? null : ((reset == 0) ? "auto" : "manual");
+		this.reset = (action.equalsIgnoreCase("clear")) ? null : ((reset == 0) ? "auto" : "manual"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/**

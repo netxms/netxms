@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -71,10 +72,10 @@ public class ConfigurationImportDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);
       
-      textFileName = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, "File name", null, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textFileName = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.get().ConfigurationImportDialog_FileName, null, WidgetHelper.DEFAULT_LAYOUT_DATA);
       
       browseButton = new Button(dialogArea, SWT.PUSH);
-      browseButton.setText("Browse...");
+      browseButton.setText(Messages.get().ConfigurationImportDialog_Browse);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -90,9 +91,9 @@ public class ConfigurationImportDialog extends Dialog
 			public void widgetSelected(SelectionEvent e)
 			{
 				FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
-				fd.setText("Select Configuration File");
-				fd.setFilterExtensions(new String[] { "*.xml", "*.*" });
-				fd.setFilterNames(new String[] { "XML files", "All files" });
+				fd.setText(Messages.get().ConfigurationImportDialog_SelectFile);
+				fd.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+				fd.setFilterNames(new String[] { Messages.get().ConfigurationImportDialog_FileTypeXML, Messages.get().ConfigurationImportDialog_FileTypeAll });
 				String selected = fd.open();
 				if (selected != null)
 					textFileName.setText(selected);
@@ -109,10 +110,10 @@ public class ConfigurationImportDialog extends Dialog
       options.setLayoutData(gd);
       
       overrideEventsByName = new Button(options, SWT.CHECK);
-      overrideEventsByName.setText("Replace events with matching &name");
+      overrideEventsByName.setText(Messages.get().ConfigurationImportDialog_ReplaceByName);
       
       overrideEventsByCode = new Button(options, SWT.CHECK);
-      overrideEventsByCode.setText("Replace events with matching event &code");
+      overrideEventsByCode.setText(Messages.get().ConfigurationImportDialog_ReplaceByCode);
       
       return dialogArea;
 	}
@@ -157,6 +158,6 @@ public class ConfigurationImportDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Import Configuration");
+		newShell.setText(Messages.get().ConfigurationImportDialog_Title);
 	}
 }
