@@ -209,6 +209,8 @@ mibs_DATA = \
 	LLDP-MIB.txt \
 	LLDP-V2-MIB.txt \
 	LLDP-V2-TC-MIB.txt \
+	LSI-AdapterSAS.txt \
+	LSI-AdapterSASIR.txt \
 	Mac-Based-Authentication-MIB.txt \
 	MAU-MIB.txt \
 	MCAST-SNOOPING-MIB.txt \

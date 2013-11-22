@@ -1,0 +1,4406 @@
+-- Copyright(c) 2006-2007, LSI Corporation
+-- MIB file for MegaRAID SAS IR controllers
+-- File: 1.21-02
+-- Previous:1.21-01
+-- Date: 01-03-2013
+-- Revision : Added new PD State 
+-- Revision : For Battery Type Description
+-- Revision : For PRL and SRL description changes for RAID Level
+-- Revision : Description changed for hostName
+-- Revision : Added Description for Trap Attributes "OldState" and "NewState" for PDTraps and VDTraps.
+-- Revision : Added Support for SSD Devices.
+-- Revision : Changed only the versioning for MIB.
+-- Revision : Replaced LSI Logic Corporation with LSI Corporation                                    
+-- Revision : Removed VDDiskCachePolicy Unchanged option. 
+-- Revision : tParentIndex description has been updated
+-- Revision : Temperature unit added in the description of enclosureTemperature, and spareType description has been updated
+-- Revision : pdtInserted Trap description has been updated. Trap CATEGORY has been changed to "Error Events".
+--				 ir Trap prefix has been inserted for Trap naming conflict with sas mib in HPOV.
+-- Revision : Trap decsription has been modified and Trap ID has been changed from 9000 series to 7000 series
+-- Revision : in pdtPredictiveThresholdExceed Trap, Trap Spelling Predictive corrected
+-- Revision : Predictive Failure Trap inserted
+-- Revision : Some MIB Description changed
+-- Revision : Some MIB Description changed
+-- Revision : SYNTAX  INTEGER (0..2) implemented for VDDiskCache Policy
+-- Revision :  Add a new Trap pdtSMARTAlert
+-- Revision : For LSI SAS IR support
+
+LSI-megaRAID-SAS-IR-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+    enterprises, Counter        FROM RFC1155-SMI
+    Gauge                       FROM RFC1155-SMI
+    PhysAddress                 FROM RFC1213-MIB
+    DisplayString               FROM RFC1213-MIB
+    OBJECT-TYPE                 FROM RFC-1212
+    TRAP-TYPE                   FROM RFC-1215;
+
+--
+-- LSI specific object identifiers.
+--
+lsi   OBJECT IDENTIFIER ::= {enterprises 3582}
+lsiStorageComponents    OBJECT IDENTIFIER ::= { lsi 5 }
+lsiRAIDServer              OBJECT IDENTIFIER ::= { lsiStorageComponents 1 }
+
+--------------------------------------------------------------------------------
+--
+-- Server Information group.
+--
+--------------------------------------------------------------------------------
+hostName                     OBJECT-TYPE
+    SYNTAX                     DisplayString (SIZE(0..63))
+    ACCESS                     read-only
+    STATUS                     mandatory
+    DESCRIPTION                "Name of the host system."
+    ::= { lsiRAIDServer 1 }
+hostOSInfo                     OBJECT-TYPE
+    SYNTAX                     DisplayString (SIZE(0..63))
+    ACCESS                     read-only
+    STATUS                     mandatory
+    DESCRIPTION                "Operating System description where SNMP agent is running."
+    ::= { lsiRAIDServer 2 }
+--------------------------------------------------------------------------------
+--
+-- Version Information group.
+--
+--------------------------------------------------------------------------------
+versionInfo                     OBJECT IDENTIFIER ::= {lsiRAIDServer 3}
+
+mibVersion                      OBJECT-TYPE
+    SYNTAX                      DisplayString (SIZE(0..63))
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The MIB version no. (xx.yy.zz)"
+    ::= { versionInfo 1 }
+
+agentModuleName                 OBJECT-TYPE
+    SYNTAX                      DisplayString (SIZE(0..63))
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The agent module name"
+    ::= { versionInfo 2 }
+
+agentModuleVersion              OBJECT-TYPE
+    SYNTAX                      DisplayString (SIZE(0..63))
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The module version in xx.yy format. Where xx is the major version number and yy is the minor version number(without build information)."
+    ::= { versionInfo 3 }
+
+releaseDate                     OBJECT-TYPE
+    SYNTAX                      DisplayString (SIZE(0..63))
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Module Release Date (DD/MM/YYYY)"
+    ::= { versionInfo 4 }
+
+--------------------------------------------------------------------------------
+
+megaRAID-SAS-IR                           OBJECT IDENTIFIER ::= { lsiRAIDServer 4 }
+--------------------------------------------------------------------------------
+--
+-- Management/monitoring MIB object groups.
+--
+--------------------------------------------------------------------------------
+
+adapter                         OBJECT IDENTIFIER ::= {megaRAID-SAS-IR 1}
+adapterDetails                         OBJECT IDENTIFIER ::= {adapter 1}
+
+-- Adapter Table Definition----------------------------------------------------
+
+adpNumber                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The total no of SAS adapters present."
+    ::= { adapterDetails 1 }
+
+adapterPropertiesTable               OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF AdapterPropertiesEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of adapter Entries containing Information/Properties about the adapters."
+    ::= { adapterDetails 2 }
+
+    adapterPropertiesEntry                OBJECT-TYPE
+    SYNTAX                      AdapterPropertiesEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the adapter table."
+    INDEX                       { adapterID }
+    ::= { adapterPropertiesTable 1 }
+
+    AdapterPropertiesEntry ::=
+        SEQUENCE {
+    adapterID               INTEGER,
+    rebuildRate             INTEGER,
+    reconstructionRate      INTEGER,
+    alarmState              INTEGER,
+    cacheFlushInterval       INTEGER,
+    clusterState            INTEGER,
+	predFailPollInterval    INTEGER,
+	intThrottleCount        INTEGER,
+	intThrottleTimeUs       INTEGER,
+	patrolReadRate          INTEGER,
+	bgiRate                 INTEGER,
+	ccRate                  INTEGER,
+	spinupDelay             INTEGER,
+	spinupDriveCount        INTEGER,
+	coercionMode            INTEGER,
+	disableAutoRebuild       INTEGER,
+	disableBatteryWarning    INTEGER,
+        multipathSupport       INTEGER,
+-- Estatoah Falls start	  17/03/2008
+	  ssdSMARTerEnabled 	 INTEGER,
+-- Estatoah Falls end	  17/03/2008
+   sasAddr                 DisplayString,          
+	auxilaryPowerPresent DisplayString,
+	ddLifeCurveStatus DisplayString,
+	ddSSDLifeLeft DisplayString,
+	dDStatus DisplayString     
+    }
+
+-- defines for each attribute in AdapterEntry
+
+adapterID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "AdapterID for this Adapter.(Unique)"
+    ::= { adapterPropertiesEntry 1 }
+
+rebuildRate                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Rebuild rate on this Adapter."
+    ::= { adapterPropertiesEntry 2 }
+
+reconstructionRate              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Reconstruction rate on this Adapter."
+    ::= { adapterPropertiesEntry 3 }
+
+alarmState                      OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Alarm is enabled(1) or disabled(0) on this adapter."
+    ::= { adapterPropertiesEntry 4 }
+
+cacheFlushInterval                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Cache flush interval in seconds for this adapter."
+    ::= { adapterPropertiesEntry 5 }
+    
+clusterState                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Cluster is enabled(1) or disabled(0) on this adapter."
+    ::= { adapterPropertiesEntry 6 }
+
+predFailPollInterval            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of seconds between predictive fail polls on this adapter."
+    ::= { adapterPropertiesEntry 7 }
+
+intThrottleCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Interrupt throttle active count on this adapter."
+    ::= { adapterPropertiesEntry 8 }
+
+intThrottleTimeUs               OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Interrupt throttle completion hold time on this adapter."
+    ::= { adapterPropertiesEntry 9 }
+
+patrolReadRate                  OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Patrol Read Rate for this adapter."
+    ::= { adapterPropertiesEntry 10 }
+
+bgiRate                         OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Background initialization rate for this adapter."
+    ::= { adapterPropertiesEntry 11 }
+ccRate                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Consistency Check rate on this Adapter."
+    ::= { adapterPropertiesEntry 12 }
+
+spinupDelay                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of seconds to delay among spinup groups for this adapter."
+    ::= { adapterPropertiesEntry 13 }
+
+spinupDriveCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Maximum number of drives to spin up at one time for this adapter."
+    ::= { adapterPropertiesEntry 14 }
+    
+coercionMode                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Drive capacity coercion mode. 0->None; 1->128MB; 2->1GB; 3->Adaptive Coercion."
+    ::= { adapterPropertiesEntry 15 }
+
+disableAutoRebuild                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "auto-rebuild and hot-spare commissioning status. 1->Disable , 0->Enable"
+    ::= { adapterPropertiesEntry 16 }
+
+disableBatteryWarning                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "disable/enable warnings for missing battery or missing HW status. 1->Disable , 0->Enable"
+    ::= { adapterPropertiesEntry 17 }
+
+multipathSupport                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Multipath is supported or not supported on this adapter.Values: not supported(0),supported(1)"
+    ::= { adapterPropertiesEntry 18 }
+    
+-- Estatoah Falls start	  17/03/2008
+ssdSMARTerEnabled            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Copyback to SSD on SMART error. Values Enabled(0),Disabled(1)"
+    ::= { adapterPropertiesEntry 19 }
+  
+-- Estatoah Falls end	  17/03/2008    
+    
+sasAddr		            OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "This field gives the controller SAS address"
+    ::= { adapterPropertiesEntry 20 }
+
+auxilaryPowerPresent					OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Presence of Auxilary Power"
+    ::= { adapterPropertiesEntry 21 } 
+
+ddLifeCurveStatus					OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Check for throttling"
+    ::= { adapterPropertiesEntry 22 }
+
+ddSSDLifeLeft					OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Percentage of SSD life left"
+    ::= { adapterPropertiesEntry 23 }
+
+dDStatus					OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Overall DD status"
+    ::= { adapterPropertiesEntry 24 }
+
+
+    
+--------------start adp info-------------------------------------
+adapterInfoTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF AdapterInfoEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of adapter Entries containing Information/Properties about the adapters."
+    
+    ::= { adapterDetails 3 }
+
+    adapterInfoEntry                OBJECT-TYPE
+    SYNTAX                      AdapterInfoEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the adapterInfo table."
+    INDEX                       { adapterID }
+    ::= { adapterInfoTable 1 }
+
+    AdapterInfoEntry ::=
+        SEQUENCE {
+	infAdpID           INTEGER,
+	vendorId         INTEGER,
+	devId         INTEGER,
+	subVendorID         INTEGER,
+	subDevID         INTEGER,
+	hostInterface    INTEGER,
+	hostInterfacePortCnt         INTEGER,
+	hostInterfacePortAddr         DisplayString,
+	devInterface    DisplayString,
+	devInterfacePortCnt         INTEGER,
+	devInterfacePortAddr         DisplayString,
+	productName         DisplayString,
+	serialNo         DisplayString,
+	firmwareVersion         DisplayString,
+	driverVersion         DisplayString,
+	nvramSize            INTEGER,
+	memorySize            INTEGER,
+	flashSize            INTEGER,
+	vdPresentCount       INTEGER,
+	vdDegradedCount       INTEGER,
+	vdOfflineCount       INTEGER,
+	pdPresentCount       INTEGER,
+	pdDiskPresentCount       INTEGER,
+	pdDiskPredFailureCount       INTEGER,
+	pdDiskFailedCount       INTEGER,
+	clusterStatus         INTEGER,
+	devInterfaceType         INTEGER
+        }
+
+-- defines for each attribute in AdapterEntry
+
+infAdpID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "AdapterID for this Adapter.(Unique)"
+    ::= { adapterInfoEntry 1 }
+
+vendorId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "PCI Vendor ID for this Adapter."
+    ::= { adapterInfoEntry 2 }
+
+devId                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "PCI Device ID for this Adapter."
+    ::= { adapterInfoEntry 3 }
+
+subVendorID                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "PCI Sub-Vendor ID for this adapter."
+    ::= { adapterInfoEntry 4 }
+subDevID                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "PCI Sub-Device ID for this adapter."
+    ::= { adapterInfoEntry 5 }
+hostInterface                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Host interface information for this adapter.
+	                             Values are as follows:
+								 N/A(0), PCIX(1), PCIE(2), iSCSI(3), SAS_3G(4)"
+    ::= { adapterInfoEntry 6 }
+hostInterfacePortCnt                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Port Count on this adapter."
+    ::= { adapterInfoEntry 7 }
+hostInterfacePortAddr                 OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Port address comma delimited"
+    ::= { adapterInfoEntry 8 }
+devInterface                 OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Multiple device interface support values separated by space."
+    ::= { adapterInfoEntry 9 }
+devInterfacePortCnt           OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Device Port Count on this adapter."
+    ::= { adapterInfoEntry 10 }
+devInterfacePortAddr                 OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Device Port address comma delimited"
+    ::= { adapterInfoEntry 11 }
+productName                 OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Product name e.g. SAS2008 B1."
+    ::= { adapterInfoEntry 12 }
+serialNo                 OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Controller serial number"
+    ::= { adapterInfoEntry 13 }
+
+firmwareVersion                 OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Firmware version Format->(Firmware Package Version:Version:Date:Time)"
+    ::= { adapterInfoEntry 14 }
+    
+driverVersion                 OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Driver version Format->(Driver Name:Version)"
+    ::= { adapterInfoEntry 15 }
+
+nvramSize                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "NVRAM size in KB for this adapter.A value -1 for invalid or undefined size."
+    ::= { adapterInfoEntry 16 }
+
+memorySize                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Memory size in MB for this adapter.A value -1 for invalid or undefined size."
+    ::= { adapterInfoEntry 17 }
+
+flashSize                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Flash size in MB for this adapter.A value -1 for invalid or undefined size."
+    ::= { adapterInfoEntry 18 }
+vdPresentCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual  devices present in this adapter."
+    ::= { adapterInfoEntry 19 }
+vdDegradedCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of virtual  devices in this adapter that are critical"
+    ::= { adapterInfoEntry 20 }
+vdOfflineCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of virtual  devices in this adapter that are offline"
+    ::= { adapterInfoEntry 21 }
+pdPresentCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Physical devices present in this adapter."
+    ::= { adapterInfoEntry 22 }
+pdDiskPresentCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Physical disk devices present in this adapter."
+    ::= { adapterInfoEntry 23 }
+pdDiskPredFailureCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of disk devices in this adapter that are critical"
+    ::= { adapterInfoEntry 24 }
+pdDiskFailedCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of disk devices in this adapter that are failed"
+    ::= { adapterInfoEntry 25 }
+clusterStatus                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Cluster state on this adapter. Values: ACTIVE(1), INACTIVE(0)"
+    ::= { adapterInfoEntry 26 }
+devInterfaceType                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Type of the interface of the IR adapter. Values: GEN1(0), GEN2(1)"
+    ::= { adapterInfoEntry 27 }
+
+
+--------------end adp info          
+--------------start adp support info
+adapterSupportInfoTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF AdapterSupportInfoEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of  Entries containing Properties supported by the Controller."
+    ::= { adapterDetails 4 }
+
+    adapterSupportInfoEntry                OBJECT-TYPE
+    SYNTAX                      AdapterSupportInfoEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the adapter table."
+    INDEX                       { adapterID }
+    ::= { adapterSupportInfoTable 1 }
+
+    AdapterSupportInfoEntry ::=
+        SEQUENCE {
+            suAdpID           INTEGER,
+            supportMaxArms         INTEGER,
+            supportMaxSpans         INTEGER,
+            supportMaxArrays         INTEGER,
+            supportMaxLDs         INTEGER,
+            supportHardwarePresent    DisplayString,
+			supportMaxConcurrentCmds         INTEGER,
+			supportMaxSGECount         INTEGER,
+			supportMaxRequestSize         INTEGER,
+			supportClusterPermitted         INTEGER,
+			supportMinStripeSize  INTEGER,
+			supportMaxStripeSize  INTEGER,
+			supportSupportsSAS              INTEGER,
+			supportSupportsSATA       INTEGER,
+			supportAllowMixInEnclosure            INTEGER,
+			supportAllowMixInVD       INTEGER,
+			supportAllowSataInCluster  INTEGER,
+-- Estatoah Falls start	  17/03/2008	
+			allowSSDMixInLD INTEGER,
+			allowMixSSDHDDInLD INTEGER
+-- Estatoah Falls end	  17/03/2008			
+        }
+
+-- defines for each attribute in AdapterEntry
+
+suAdpID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "AdapterID for this Adapter.(Unique)"
+    ::= { adapterSupportInfoEntry 1 }
+
+supportMaxArms                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Maximum arms per Logical Drive supported for this Adapter."
+    ::= { adapterSupportInfoEntry 2 }
+
+supportMaxSpans                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Maximum spans per Logical Drive supported for this Adapter."
+    ::= { adapterSupportInfoEntry 3 }
+
+supportMaxArrays                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Maximum number arrays supported this Adapter."
+    ::= { adapterSupportInfoEntry 4 }
+supportMaxLDs                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Maximum number of Logical Drive's supported for this Adapter."
+    ::= { adapterSupportInfoEntry 5 }     
+supportHardwarePresent                 OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Supported Hardware on this adapter. bbu(1),alarm(2),nvram(3),uart(4). For multiple hardware support a comma delimited list will appear."
+    ::= { adapterSupportInfoEntry 6 }     
+supportMaxConcurrentCmds                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The maximum parallel commands supported on this Adapter."
+    ::= { adapterSupportInfoEntry 7 }
+supportMaxSGECount                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The maximum Scatter Gather Element count allowed on this Adapter."
+    ::= { adapterSupportInfoEntry 8 }
+supportMaxRequestSize                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The maximum data transfer size in sectors, on this Adapter."
+    ::= { adapterSupportInfoEntry 9 }
+supportClusterPermitted                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Clustering support on this Adapter. Values: FALSE(0), TRUE(1)"
+    ::= { adapterSupportInfoEntry 10 }
+supportMinStripeSize                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Minimum stripe size supported. 0(512),1(1K),2(2K),3(4K),4(8K),5(16K),6(32),7(64K),8(128K) ... 11(1MB) etc"
+    ::= { adapterSupportInfoEntry 11 }
+
+supportMaxStripeSize                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Maximum stripe size supported. 0(512),1(1K),2(2K),3(4K),4(8K),5(16K),6(32),7(64K),8(128K) ... 11(1MB) etc"
+    ::= { adapterSupportInfoEntry 12 }
+supportSupportsSAS              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "SAS physical drive support.Values: notSupported(0), supported(1)"
+    ::= { adapterSupportInfoEntry 13 }
+supportSupportsSATA              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "SATA physical drive support.Values: notSupported(0), supported(1)"
+    ::= { adapterSupportInfoEntry 14 }
+supportAllowMixInEnclosure              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Mix InEnclosure support.Values: notSupported(0), supported(1)"
+    ::= { adapterSupportInfoEntry 15 }
+supportAllowMixInVD              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "MixInVD support.Values: notSupported(0), supported(1)"
+    ::= { adapterSupportInfoEntry 16 }
+supportAllowSataInCluster              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "SataInCluster support. Values: notSupported(0), supported(1)"
+    ::= { adapterSupportInfoEntry 17 }
+
+-- Estatoah Falls start	  17/03/2008	    
+
+allowSSDMixInLD              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "allow SAS/SATA SSD mix within an LD. allow(1), not allow(0)"
+    ::= { adapterSupportInfoEntry 18 }
+
+allowMixSSDHDDInLD              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "allow SSD/HDD mix within an LD.allow(1), not allow(0)"
+    ::= { adapterSupportInfoEntry 19 }
+    
+-- Estatoah Falls end	  17/03/2008	
+
+--------------end adp info
+--------------start adp operations support info
+adpOperationsSupportInfoTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF AdpOperationsSupportInfoEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of  Entries containing operations supported by the Controller."
+    ::= { adapterDetails 5 }
+
+    adpOperationsSupportInfoEntry                OBJECT-TYPE
+    SYNTAX                      AdpOperationsSupportInfoEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the adapter table."
+    INDEX                       { opAdpID }
+    ::= { adpOperationsSupportInfoTable 1 }
+
+    AdpOperationsSupportInfoEntry ::=
+        SEQUENCE {
+            opAdpID           INTEGER,
+            rbldRate         INTEGER,
+            suCCRate         INTEGER,
+            suBgiRate         INTEGER,
+            reconRate         INTEGER,
+            patrolRate    INTEGER,
+			alarmControl         INTEGER,
+			clusterSupported         INTEGER,
+            bbu    INTEGER,
+			spanningAllowed         INTEGER,
+			dedicatedHotSpares         INTEGER,
+			revertibleHotSpares         INTEGER,
+			foreignConfigImport         INTEGER,
+			selfDiagnostic         INTEGER,
+			allowMixedRedundancyOnArray         INTEGER,
+			globalHotSpares INTEGER,
+			oceWithNoDriveAddition  INTEGER
+        }
+
+-- defines for each attribute in AdapterEntry
+
+opAdpID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "AdapterID for this Adapter.(Unique)"
+    ::= { adpOperationsSupportInfoEntry 1 }
+
+rbldRate                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Rebuilding rate change support for this Adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 2 }
+
+suCCRate                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Consistency Check rate change support for this Adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 3 }
+
+suBgiRate                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Background initialization rate change support for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 4 }
+reconRate                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Reconstruction rate change support for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 5 }
+patrolRate                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Patrol read rate change support for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 6 }
+alarmControl                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Alarm control support for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 7 }
+clusterSupported                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Cluster support for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 8 }
+bbu                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "BBU support for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 9 }
+spanningAllowed                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Spanning support for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 10 }
+dedicatedHotSpares                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Dedicated HotSpares for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 11 }
+revertibleHotSpares                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Revertible HotSpares support for this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 12 }
+foreignConfigImport                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Support foreign config import on this adapter. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 13 }
+selfDiagnostic                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Controller supports self diagnostic. Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 14 }
+allowMixedRedundancyOnArray                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Allow different Virtual Disk on the same array to have different redundancy levels
+	                             Values: False(0), True(1)"
+    ::= { adpOperationsSupportInfoEntry 15 }
+globalHotSpares                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Global hot spares are supported. Values: False(0), True(1) "
+    ::= { adpOperationsSupportInfoEntry 16 }
+
+oceWithNoDriveAddition           OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Online Capacity Expansion supported. Values: False(0), True(1) "
+    ::= { adpOperationsSupportInfoEntry 17 }
+
+--------------end adp info
+driveOperationSupportTable               OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF DriveOperationSupportEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of operations supported by Physical Drive."
+    ::= { adapterDetails 6 }
+
+    driveOperationSupportEntry          OBJECT-TYPE
+    SYNTAX                      DriveOperationSupportEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the driveOperationSupport table."
+    INDEX                       { drvAdpID }
+    ::= { driveOperationSupportTable 1 }
+
+    DriveOperationSupportEntry ::=
+        SEQUENCE {
+        drvAdpID               INTEGER,
+        forceOnline               INTEGER,
+        forceOffline             INTEGER,
+        forceRebuild      INTEGER
+    }
+
+-----------
+drvAdpID                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Unique adapter ID"
+    ::= { driveOperationSupportEntry 1 }
+
+forceOnline                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Physical Drive force Online operation support
+	                             Values: notSupported(0), supported(1)"
+    ::= { driveOperationSupportEntry 2 }
+
+forceOffline                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Physical Drive force Offline operation support
+	                             Values: notSupported(0), supported(1)"
+    ::= { driveOperationSupportEntry 3 }
+
+forceRebuild              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Physical Drive force Rebuild operation support
+	                             Values: notSupported(0), supported(1)"
+    ::= { driveOperationSupportEntry 4 }
+
+-- vd operation support info
+
+vdOperationSupportTable               OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF VdOperationSupportEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List operations supported by Virtual Drive"
+    ::= { adapterDetails 7 }
+
+    vdOperationSupportEntry          OBJECT-TYPE
+    SYNTAX                      VdOperationSupportEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the vdOperationSupport Table."
+    INDEX                       { adapterID }
+    ::= { vdOperationSupportTable 1 }
+
+    VdOperationSupportEntry ::=
+        SEQUENCE {
+        vdOpAdpID               INTEGER,
+        readPolicy               INTEGER,
+        writePolicy             INTEGER,
+        ioPolicy      INTEGER,
+        accessPolicy              INTEGER,
+        diskCachePolicy       INTEGER
+
+    }
+
+vdOpAdpID                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Unique adapter ID"
+    ::= { vdOperationSupportEntry 1 }
+    
+readPolicy                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Read policy support. Values: False(0), True(1)"
+    ::= { vdOperationSupportEntry 2 }
+
+writePolicy                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Write policy support. Values: False(0), True(1)"
+    ::= { vdOperationSupportEntry 3 }
+
+ioPolicy              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "IO policy support. Values: False(0), True(1)"
+    ::= { vdOperationSupportEntry 4 }
+accessPolicy              OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Access policy support. Values: False(0), True(1)"
+    ::= { vdOperationSupportEntry 5 }
+
+diskCachePolicy                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "Disk Cache Policy support. Values: False(0), True(1)"
+    ::= { vdOperationSupportEntry 6 }
+
+--------------------------------------------------------------------------------
+-- BBU Information.
+--------------------------------------------------------------------------------
+bbuInfo                      OBJECT IDENTIFIER ::= {adapter 2}
+
+bbuNumber                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the bbuTable."
+    ::= { bbuInfo 1 }
+bbuTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF BBUEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of bbu Entries containing Information/Properties about the BBU."
+    ::= { bbuInfo 2 }
+
+
+    bbuEntry                OBJECT-TYPE
+    SYNTAX                      BBUEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the BBU table."
+    INDEX                       { bbuID }
+    ::= { bbuTable 1 }
+
+    BBUEntry ::=
+        SEQUENCE {
+            bbuID           INTEGER,
+            batteryType    INTEGER,
+            nextLearnTime         INTEGER,
+            absStateOfCharge     INTEGER,
+            fullChargeCapacity         INTEGER,
+            averageEmptyTime         INTEGER,
+            cycleCount         INTEGER,
+            firmwareStatus         DisplayString,
+            voltage         INTEGER,
+            autoLearnPeriod         INTEGER,
+            relStateOfCharge         INTEGER,
+            capacityRemain         INTEGER,
+            runTimeToEmpty         INTEGER,
+            avgTimeToFull         INTEGER,
+            errorMargin         INTEGER,
+            temperature         INTEGER,
+            mfgName             DisplayString,
+            deviceName             DisplayString,
+            serialNumber             DisplayString,
+            chargerStatus        INTEGER,
+            adpID        INTEGER,
+            remainingCapAlarm        INTEGER,
+            remainingTimeAlarm        INTEGER,
+            bbu-current        INTEGER,
+            gasGaugeStatus     INTEGER
+    }
+
+
+-- defines for each attribute in BBUEntry
+
+bbuID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "BBUID for this BBU.(Unique)"
+    ::= { bbuEntry 1 }
+
+batteryType                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "BBU Type: Values: n/a(0), ibbu(1), bbu(2), zcr_legacy(3), itbbu3(4)"
+    ::= { bbuEntry 2 }
+nextLearnTime                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Time of next scheduled lean cycle (seconds path 1/1/2000)"
+    ::= { bbuEntry 3 }
+absStateOfCharge                OBJECT-TYPE
+    SYNTAX                      INTEGER(0..100)
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Predicted remaining capacity expressed as % of DesignCapacity() (0-100). Value of -1 means not supported"
+    ::= { bbuEntry 4 }
+fullChargeCapacity                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Predicted pack capacity when it is fully charged in mAh"
+    ::= { bbuEntry 5 }
+averageEmptyTime                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "One-minute rolling average of the predicted remaining battery life. Value of -1 means not supported"
+    ::= { bbuEntry 6 }
+cycleCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of charge cycles the battery has experienced. Value of -1 means not supported"
+    ::= { bbuEntry 7 }
+firmwareStatus                OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "condition of battery in following order:
+                                 packMissing(0/1)           
+                                 voltageLow(0/1)            
+                                 temperatureHigh(0/1)       
+                                 chargeActive(0/1)          
+                                 dischargeActive(0/1)       
+                                 learnCycleRequested(0/1)   
+                                 learnCycleActive(0/1)      
+                                 learnCycleFailed(0/1)      
+                                 learnCycleTimeout(0/1)     
+                                 i2cErrorsDetected(0/1)
+                                 Only enabled(1) values will be shown"     
+    
+    ::= { bbuEntry 8 }
+voltage                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Accurate battery terminal voltage in mV, resolution of 1mV"
+    ::= { bbuEntry 9 }
+autoLearnPeriod                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Time (in seconds) between learn cycles (0 to disable auto learn)"
+    ::= { bbuEntry 10 }
+relStateOfCharge                OBJECT-TYPE
+    SYNTAX                      INTEGER(0..100)
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Predicted remaining capacity expressed as % of FullChargeCapacity() (0-100). Value of -1 means not supported"
+    ::= { bbuEntry 11 }
+capacityRemain                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Predicted charge or energy remaining in the battery in mAh"
+    ::= { bbuEntry 12 }
+runTimeToEmpty                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "(in minutes)Relative gain or loss in remaining life in response to change in power policy. Value of -1 means not supported"
+    ::= { bbuEntry 13 }
+avgTimeToFull                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "One-minute rolling average of predicted remaining time to full charge. Value of -1 means not supported"
+    ::= { bbuEntry 14 }
+errorMargin                OBJECT-TYPE
+    SYNTAX                      INTEGER(2..100)
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Expected margin of error (%) in charge calculation (2-100). Value of -1 means not supported"
+    ::= { bbuEntry 15 }
+temperature                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Battery temperature in degree Centigrade"
+    ::= { bbuEntry 16 }
+mfgName                OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Battery manufacturer's name"
+    ::= { bbuEntry 17 }
+deviceName                OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Battery name"
+    ::= { bbuEntry 18 }
+serialNumber                OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Battery serialNumber"
+    ::= { bbuEntry 19 }
+chargerStatus                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Battery charger status. Values: N/A(-1), off(0), complete(1), progress(2)"
+    ::= { bbuEntry 20 }
+adpID                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The adapter id where BBU is attached"
+    ::= { bbuEntry 21 }
+remainingCapAlarm                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Remaining capacity to alarm. Value of -1 means not supported"
+    ::= { bbuEntry 22 }
+remainingTimeAlarm                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Remaining time to alarm. Value of -1 means not supported"
+    ::= { bbuEntry 23 }
+bbu-current                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Current(In mA) being supplied (or accepted) through the terminals of the battery"
+    ::= { bbuEntry 24 }
+gasGaugeStatus                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Gas guage status"
+    ::= { bbuEntry 25 }
+--------------------------------------
+device                          OBJECT IDENTIFIER ::= {megaRAID-SAS-IR 2}
+
+physicalDriveInfo                      OBJECT IDENTIFIER ::= {device 1}
+--------------------------------------------------------------------------------
+-- PD Information group.
+--------------------------------------------------------------------------------
+
+pdNumber                        OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the physicalDrive table."
+    ::= { physicalDriveInfo 1 }
+
+pdTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF PdEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of physicalDrive Entries containing Information/Properties about the drives"
+    ::= { physicalDriveInfo 2 }
+
+pdEntry                     OBJECT-TYPE
+        SYNTAX                  PdEntry
+        ACCESS                  not-accessible
+        STATUS                  optional
+        DESCRIPTION             "An Entry in the Device Table."
+        INDEX                   { physDevID  }
+    ::= { pdTable 1 }
+
+    PdEntry ::=
+        SEQUENCE {
+		    pdIndex           INTEGER,
+            physDevID           INTEGER,
+            oemSupported       INTEGER,
+            scsiDevType            INTEGER,
+            connectedAdapterPort                 INTEGER,
+            deviceSpeed                 INTEGER,
+            mediaErrCount                 INTEGER,
+            otherErrCount                 INTEGER,
+            predFailCount                 INTEGER,
+            pdState                 INTEGER,
+            disabledForRemoval                 INTEGER,
+            linkSpeed                 INTEGER,
+            pdSupportFlags                 DisplayString,
+            pdSasAddr                 DisplayString,
+            rawSize                 INTEGER,
+            nonCoercedSize                 INTEGER,
+            coercedSize                 INTEGER,
+            enclDeviceId                 INTEGER,
+            enclIndex                 INTEGER,
+            slotNumber                 INTEGER,
+            pdOperationProgress            DisplayString,
+            pdAdpID                      INTEGER,
+            operationSupport                DisplayString,
+            vendorID                DisplayString,
+            productID                DisplayString,
+	    pdFwversion				DisplayString,
+	    pdSerialNumber		DisplayString,
+            diskType             INTEGER,
+            partnerDevId  INTEGER,
+-- Estatoah Falls start	  17/03/2008		    
+	        mediatype INTEGER,
+-- Estatoah Falls end	            
+	    oemCertified   INTEGER,
+		pdTemperature		INTEGER,
+		piType			INTEGER,
+		userDataBlockSize       INTEGER,
+
+	    cage   INTEGER,
+	    location   DisplayString,
+	    whtemperature   INTEGER,
+	    flashType   DisplayString,
+	    lifeCurveStatus   DisplayString,
+	    sSDLifeLeft   DisplayString
+	}
+-- defines for each attribute in PhysicaldriveEntry
+pdIndex                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The unique ID"
+    ::= { pdEntry 1 }
+
+physDevID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The Device ID"
+    ::= { pdEntry 2 }
+
+oemSupported                   OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Drive support by the OEM (OEM-specific checks)
+Values: notSupported(1), supported(0)"
+    ::= { pdEntry 3 }
+
+scsiDevType                        OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Type of this Device. Values:
+disk(0), tape(1), printer(2), processor(3), cdrom(5), scanner(6),
+optical(7), enclosure(13), dvd(10), unknown(31)	"
+    ::= { pdEntry 4 }
+
+connectedAdapterPort                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Adapter port to which the device is connected."
+    ::= { pdEntry 5 }
+
+deviceSpeed                     OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Maximum supported speed. Values:
+speed_unknown(0), speed_1p5G(1), speed_3G(2),speed_6G(3)"
+    ::= { pdEntry 6 }
+mediaErrCount                   OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Error count of the device"
+    ::= { pdEntry 7 }
+otherErrCount                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "other error count of the device"
+    ::= { pdEntry 8 }
+predFailCount                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Predictive fail count of the device"
+    ::= { pdEntry 9 }
+pdState                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Firmware's interpretation of drive state. Values:
+unconfigured_good(0), unconfigured_bad(1), hot_spare(2), offline(16), failed(17), rebuild(20), online(24),copyback(32),system(64)"
+    ::= { pdEntry 10 }
+disabledForRemoval                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "If true, drive is ready for removal. Values: false(0), true(1)"
+    ::= { pdEntry 11 }
+linkSpeed                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Negotiated link speed. Values: speed_unknown(0), speed_1p5G(1), speed_3G(2), speed_6G(3)"
+    ::= { pdEntry 12 }
+pdSupportFlags                   OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "1st Byte:forcedPDGUID(0/1),2nd Byte:inVD(0/1),3rd Byte:isGlobalSpare(0/1),4th Byte:isSpare(0/1),5th Byte:isForeign(0/1),6th Byte:intf(0-Unknown, 1-parallel SCSI, 2-SAS, 3-SATA, 4-FC).A comma delimited list will appear."
+    ::= { pdEntry 13 }
+pdSasAddr                             OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Device SAS addresses. Comma separeted for multiple address"
+    ::= { pdEntry 14 }
+rawSize                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Size(MB) before COD and coercion"
+    ::= { pdEntry 15 }
+nonCoercedSize                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Size(MB) after COD is reserved but before coercion"
+    ::= { pdEntry 16 }
+coercedSize                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Size(MB) after COD is reserved and after coercion"
+    ::= { pdEntry 17 }
+enclDeviceId                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure's device Id (in decimal); if device is not within enclosure value is -1"
+    ::= { pdEntry 18 }
+enclIndex                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Firmware internal enclosure index"
+    ::= { pdEntry 19 }
+slotNumber                             OBJECT-TYPE
+    SYNTAX                      INTEGER(0..255)
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Slot number of this drive, if this Physical Drive is an enclosure then -1"
+    ::= { pdEntry 20 }
+pdOperationProgress                             OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "% Progress is %. e.g. Rebuild progress is 10%"
+    ::= { pdEntry 21 }
+pdAdpID                             OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Controller id where this Physical Drive is attached"
+    ::= { pdEntry 22 }
+operationSupport                             OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "
+Online,Offline,Failed,Bad,Uncofigured good,Unconfigured bad,
+Spare,Spare,replaceMissing,markMissing,startRebuild,stopRebuild,
+locate,stopSecureEraseNonSED,FWDownloadAllowed"
+    ::= { pdEntry 23 }
+vendorID                             OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Vendor ID"
+    ::= { pdEntry 24 }
+productID                             OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Product ID"
+    ::= { pdEntry 25 }
+pdFwversion						OBJECT-TYPE
+	SYNTAX				DisplayString
+	ACCESS					read-only
+	STATUS					optional
+	DESCRIPTION				"Physical drive firmware version"
+	::= { pdEntry 26 }
+	
+pdSerialNumber                    OBJECT-TYPE
+    SYNTAX			    DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Physical drive serial number"
+    ::= { pdEntry 27 }
+
+diskType                        OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Type of the disk : 0-Unknown, 1-parallel SCSI, 2-SAS, 3-SATA, 4-FC"
+    ::= { pdEntry 28 }
+
+partnerDevId                    OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "If drive is in an enclosure with dual paths,This is Partner Device ID.				 
+                                 In all other cases INVALID(-1)"
+    ::= { pdEntry 29 }
+
+-- Estatoah Falls start	  17/03/2008		    
+
+mediatype                    OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Media Type HDD(0),SSD(1)"
+    ::= { pdEntry 30 }
+
+-- Estatoah Falls end	  17/03/2008
+
+oemCertified                    OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Indicates whether device is certified(0) or not(1)"
+    ::= { pdEntry 31 }
+	
+pdTemperature                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Physical Drive temperature in Celsius"
+    ::= { pdEntry 32 }
+
+piType                  OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "SAS Protection Information Type .No SAS protection type used(0) ,SAS PI Type 1(1) ,SAS PI Type 2(2) ,SAS PI Type 3(3) ,Reserved SAS PI Type 4(4) ,Reserved SAS PI Type 5(5) ,Reserved SAS PI Type 6(6) ,Reserved SAS PI Type 7(7)."
+    ::= { pdEntry 33 }
+
+userDataBlockSize                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of bytes of user data in LBA"
+    ::= { pdEntry 34 }
+
+cage                    OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Current Cage that holds the SSD"
+    ::= { pdEntry 35 }
+
+location                    OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Current location of SSD 0 - Upper, 1 - Lower"
+    ::= { pdEntry 36 }
+
+whtemperature                    OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Temperature of each SSD"
+    ::= { pdEntry 37 }
+
+flashType                    OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Flash Type being used (SLC / MLC / EMLC)"
+    ::= { pdEntry 38 }
+
+lifeCurveStatus                    OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "100 - No throttling being done, 90 - SSD is being throttled"
+    ::= { pdEntry 39 }
+
+sSDLifeLeft                    OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Percentage of SSD life left"
+    ::= { pdEntry 40 }
+
+--Virtual Devices
+virtualDevice                      OBJECT IDENTIFIER ::= {megaRAID-SAS-IR 3}
+
+vdInfo                     OBJECT IDENTIFIER ::= {virtualDevice 1}
+
+vdNumber                        OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the virtualDrive table."
+    ::= { vdInfo 1 }
+
+vdTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF VdEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of Virtual Drive Entries containing Information/Properties about the virtualDrive."
+    ::= { vdInfo 2 }
+
+vdEntry                     OBJECT-TYPE
+        SYNTAX                  VdEntry
+        ACCESS                  not-accessible
+        STATUS                  optional
+        DESCRIPTION             "An Entry in the virtualDrive Table."
+        INDEX                   { virtualDevID  }
+    ::= { vdTable 1 }
+
+    VdEntry ::=
+        SEQUENCE {
+            virtualDevID           INTEGER,
+            size       INTEGER,
+            clusterOwnerDeviceId       INTEGER,
+            targetId       INTEGER,
+            state       INTEGER,
+            name       DisplayString,
+            defaultCachePolicy       INTEGER,
+            vdAccessPolicy       INTEGER,
+            vdDiskCachePolicy       INTEGER,
+            bgiState       INTEGER,
+            prl       INTEGER,
+            rLQ       INTEGER,
+            sRL       INTEGER,
+            stripeSize       INTEGER,
+            numDrives       INTEGER,
+            spanDepth       INTEGER,
+            initState       INTEGER,
+            currentCachePolicy     INTEGER,  
+            operationProgress      DisplayString,
+			vdAdpID         INTEGER
+        }
+-- defines for each attribute in PhysicaldriveEntry
+
+virtualDevID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The unique Virtual Drive ID"
+    ::= { vdEntry 1 }
+size                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Total size in MB of the drive"
+    ::= { vdEntry 2 }
+clusterOwnerDeviceId                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive owner's device Id"
+    ::= { vdEntry 3 }
+targetId                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive target id (i.e. 0 to 63)"
+    ::= { vdEntry 4 }
+state                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive state. Values: offline(0), partially_degraded(1), degraded(2), optimal(3)"
+    ::= { vdEntry 5 }
+name                       OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive name"
+    ::= { vdEntry 6 }
+defaultCachePolicy         OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Default cache policy settings. Values: direct_io(0), cached_io(1)"
+    ::= { vdEntry 7 }
+vdAccessPolicy                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Access policy settings. Values: access_rw(0), access_read_only(2), access_blocked(3)"
+    ::= { vdEntry 8 }
+vdDiskCachePolicy                       OBJECT-TYPE
+    SYNTAX                      INTEGER  (1..2)
+    ACCESS                      read-write
+    STATUS                      optional
+    DESCRIPTION                 "Physical disk cache policy. Values:  enable(1), disable(2)"
+    ::= { vdEntry 9 }
+bgiState                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "BGI state on this VD. Values disable(1), enable(0) "
+    ::= { vdEntry 10 }
+prl                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Primay raid level. Values: 0(RAID-0), 1(RAID-1), 3(RAID-3), 4(RAID-4), 5(RAID-5), 6(RAID-6),15(Single Disk or JBOD), 
+				17(RAID-1E/10), 21(RAID-5E), 31(Concatenation),37(RAID-5EEE)"
+    ::= { vdEntry 11 }
+rLQ                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Raid level qualifier"
+    ::= { vdEntry 12 }
+sRL                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Secondary raid level. Values: 0(Stripped), 1(Mirrored), 2(Concatenated), 3(Spanned), -1(Not Supported for IR2)"
+    ::= { vdEntry 13 }
+stripeSize                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Stripe Size. 0(512B),1(1K),2(2K),3(4K),4(8K),5(16K),6(32),7(64K),8(128K) ... 11(1MB) etc"
+    ::= { vdEntry 14 }
+numDrives                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of drivers per span"
+    ::= { vdEntry 15 }
+spanDepth                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of spans. If only one array then it is considered as 1 span"
+    ::= { vdEntry 16 }
+initState                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "0=no init, 1=quick init, 2=full init"
+    ::= { vdEntry 17 }
+currentCachePolicy                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Default cache policy settings. Values: direct_io(0), cached_io(1)"
+    ::= { vdEntry 18 }
+operationProgress                       OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Progress % for operation x/ No operation in progress"
+    ::= { vdEntry 19 }
+vdAdpID                         OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Controller id where this vd is present"
+    ::= { vdEntry 20 }
+
+--VD Span
+vdSpanInfo                     OBJECT IDENTIFIER ::= {virtualDevice 2}
+
+vdSpanNumber                        OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the virtualDrive table."
+    ::= { vdSpanInfo 1 }
+
+vdSpanTable                   OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF VdSpanEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of span Entries containing Information/Properties vd span."
+    ::= { vdSpanInfo 2 }
+
+vdSpanEntry                     OBJECT-TYPE
+        SYNTAX                  VdSpanEntry
+        ACCESS                  not-accessible
+        STATUS                  optional
+        DESCRIPTION             "An Entry in the vdSpan Table."
+        INDEX                   { spanID  }
+    ::= { vdSpanTable 1 }
+
+    VdSpanEntry ::=
+        SEQUENCE {
+            spanID              INTEGER,
+            vDevID           INTEGER,
+            startBlock           INTEGER,
+            numBlocks           DisplayString,
+            vdsArrayRef           INTEGER,
+            spAdpId           INTEGER
+        }
+        
+spanID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The unique Span ID"
+    ::= { vdSpanEntry 1 }
+
+vDevID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The Virtual Device ID"
+    ::= { vdSpanEntry 2 }
+startBlock                       OBJECT-TYPE
+    SYNTAX                     INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Span physical disk starting block"
+    ::= { vdSpanEntry 3 }
+numBlocks                       OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Span physical disk block count"
+    ::= { vdSpanEntry 4 }
+vdsArrayRef                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Array reference (index)"
+    ::= { vdSpanEntry 5 }
+spAdpId                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Adapter where the span will be found"
+    ::= { vdSpanEntry 6 }
+
+---------------
+arrayInfo                     OBJECT IDENTIFIER ::= {virtualDevice 3}
+
+arrayNumber                        OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the array table."
+    ::= { arrayInfo 1 }
+
+arrayTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF ArrayEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of array Entries containing Information/Properties about the arrays."
+    ::= { arrayInfo 2 }
+
+arrayEntry                     OBJECT-TYPE
+        SYNTAX                  ArrayEntry
+        ACCESS                  not-accessible
+        STATUS                  optional
+        DESCRIPTION             "An Entry in the array Table."
+        INDEX                   { arrayID  }
+    ::= { arrayTable 1 }
+
+    ArrayEntry ::=
+        SEQUENCE {
+            arrayID           INTEGER,
+            arrSize           INTEGER,
+            arrNumDrives           INTEGER,
+            arrayRef           INTEGER,
+            pdList         DisplayString,
+	    arrAdpId           INTEGER
+        }
+
+arrayID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The unique array ID"
+    ::= { arrayEntry 1 }
+arrSize                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Size in MB"
+    ::= { arrayEntry 2 }
+arrNumDrives                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of drives for this array"
+    ::= { arrayEntry 3 }
+arrayRef                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Tag for the array"
+    ::= { arrayEntry 4 }
+pdList                       OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Space separated pd identification. e.g. {devID devID devID} etc "
+    ::= { arrayEntry 5 }
+arrAdpId                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Adapter where the array will be found"
+    ::= { arrayEntry 6 }
+
+---------------
+spareInfo                     OBJECT IDENTIFIER ::= {virtualDevice 4}
+
+spareDevNumber                        OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the sparepool table."
+    ::= { spareInfo 1 }
+
+spareTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF SpareEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of sparepool Entries containing Information/Properties about the spare drive"
+    ::= { spareInfo 2 }
+
+spareEntry                     OBJECT-TYPE
+        SYNTAX                  SpareEntry
+        ACCESS                  not-accessible
+        STATUS                  optional
+        DESCRIPTION             "An Entry in the sparepool Table."
+        INDEX                   { spareID  }
+    ::= { spareTable 1 }
+
+    SpareEntry ::=
+        SEQUENCE {
+            spareID           INTEGER,
+            deviceIdentification           INTEGER,
+            spareType           DisplayString,
+            arrayCount           INTEGER,
+            arrRef         DisplayString,
+            sprAdpId           INTEGER
+       }
+-- defines for each attribute in PhysicaldriveEntry
+
+spareID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The unique Index"
+    ::= { spareEntry 1 }
+deviceIdentification                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The Device ID"
+    ::= { spareEntry 2 }
+spareType                       OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Spare type. isDedicated(0/1)isRevertible(0/1)isEnclAffinity(0/1). 1 implies particular feature is enable and 0 represent feature is disable."
+    ::= { spareEntry 3 }
+arrayCount                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The number of arrays to which the PD can be dedicated"
+    ::= { spareEntry 4 }
+arrRef                       OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Comma separated array ids. e.g. 2,4,5 etc "
+    ::= { spareEntry 5 }
+
+sprAdpId                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Adapter where the spare will be found"
+    ::= { spareEntry 6 }
+
+--------------------------------------------------------------------------------
+-- Enclosure Information.
+--------------------------------------------------------------------------------
+enclosure                      OBJECT IDENTIFIER ::= {megaRAID-SAS-IR 4}
+enclosureInfo                      OBJECT IDENTIFIER ::= {enclosure 1}
+
+enclosureNumber                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the enclosure table."
+    ::= { enclosureInfo 1 }
+enclosureTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF EnclosureEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of enclosure Entries containing Information/Properties about the enclosures in the system."
+    ::= { enclosureInfo 2 }
+
+
+    enclosureEntry                OBJECT-TYPE
+    SYNTAX                      EnclosureEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the enclosure table."
+    INDEX                       { enclosureID }
+    ::= { enclosureTable 1 }
+
+    EnclosureEntry ::=
+        SEQUENCE {
+            enclosureID           INTEGER,
+            deviceId    INTEGER,
+            enclosureIndex         INTEGER,
+            slotCount     INTEGER,
+            psCount         INTEGER,
+            fanCount         INTEGER,
+            tempSensorCount         INTEGER,
+            alarmCount         INTEGER,
+            simCount         INTEGER,
+            isFault         INTEGER,
+            pdCount         INTEGER,
+            pdIds         DisplayString,
+			encAdpID         INTEGER
+    }
+
+-- defines for each attribute in EncloserEntry
+
+enclosureID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "EnclosureID for this enclosure.(Unique)"
+    ::= { enclosureEntry 1 }
+
+deviceId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure device Id."
+    ::= { enclosureEntry 2 }
+enclosureIndex                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Firmware internal enclosure index"
+    ::= { enclosureEntry 3 }
+slotCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of slots"
+    ::= { enclosureEntry 4 }
+psCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of power supplies"
+    ::= { enclosureEntry 5 }
+fanCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of fans"
+    ::= { enclosureEntry 6 }
+tempSensorCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of temperature sensors"
+    ::= { enclosureEntry 7 }
+alarmCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of alarms"
+    ::= { enclosureEntry 8 }
+simCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of SIM modules"
+    ::= { enclosureEntry 9 }
+isFault                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure has entered a FAULT state or not. Values: false(0), true(1)"
+    ::= { enclosureEntry 10 }
+pdCount                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of physical drives present"
+    ::= { enclosureEntry 11 }
+pdIds                OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Physical drive deviceId's comma separated."
+    ::= { enclosureEntry 12 }
+encAdpID                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Adapter ID where this enclosure is connected"
+    ::= { enclosureEntry 13 }
+
+----------------------
+enclosureFanInfo                      OBJECT IDENTIFIER ::= {enclosure 2}
+
+enclosureFanNumber                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the enclosure fan table."
+    ::= { enclosureFanInfo 1 }
+
+enclosureFanTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF EnclosureFanEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of fan Entries containing Information/Properties about the enclosureFan."
+    ::= { enclosureFanInfo 2 }
+
+
+    enclosureFanEntry                OBJECT-TYPE
+    SYNTAX                      EnclosureFanEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the enclosureFan table."
+    INDEX                       { fanID }
+    ::= { enclosureFanTable 1 }
+
+    EnclosureFanEntry ::=
+        SEQUENCE {
+            fanID           INTEGER,
+            enclosureId    INTEGER,
+            fanStatus         INTEGER
+    }
+
+-- defines for each attribute in EncloserEntry
+
+fanID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "ID for this enclosureFan.(Unique)"
+    ::= { enclosureFanEntry 1 }
+
+enclosureId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure ID where the fan is attached"
+    ::= { enclosureFanEntry 2 }
+fanStatus                OBJECT-TYPE
+    SYNTAX                      INTEGER{
+                                status-ok(1),
+                                status-critical(2),
+                                status-nonCritical(3),
+                                status-unrecoverable(4),
+                                status-not-installed(5),
+                                status-unknown(6),
+                                status-not-available(7)
+                                }
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "status of the device"
+    ::= { enclosureFanEntry 3 }
+
+----------------------
+enclosureSlotInfo                      OBJECT IDENTIFIER ::= {enclosure 3}
+
+enclosureSlotNum                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the enclosure slot table."
+    ::= { enclosureSlotInfo 1 }
+
+enclosureSlotTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF EnclosureSlotEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of slot Entries containing Information/Properties about the enclosure slots."
+    ::= { enclosureSlotInfo 2 }
+
+
+    enclosureSlotEntry                OBJECT-TYPE
+    SYNTAX                      EnclosureSlotEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the enclosureSlot table."
+    INDEX                       { slotID }
+    ::= { enclosureSlotTable 1 }
+
+    EnclosureSlotEntry ::=
+        SEQUENCE {
+            slotID           INTEGER,
+            sltEncId    INTEGER,
+            slotStatus         INTEGER
+    }
+
+-- defines for each attribute in EncloserEntry
+
+slotID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "ID for this slot.(Unique)"
+    ::= { enclosureSlotEntry 1 }
+
+sltEncId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure ID where the slot"
+    ::= { enclosureSlotEntry 2 }
+slotStatus                OBJECT-TYPE
+    SYNTAX                      INTEGER{
+                                status-ok(1),
+                                status-critical(2),
+                                status-nonCritical(3),
+                                status-unrecoverable(4),
+                                status-not-installed(5),
+                                status-unknown(6),
+                                status-not-available(7)
+                                }
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "status of the device. Values: status-ok(1), status-critical(2),
+status-nonCritical(3), status-unrecoverable(4), status-not-installed(5), status-unknown(6), status-not-available(7)"
+    ::= { enclosureSlotEntry 3 }
+----------------------
+enclosurePSInfo                      OBJECT IDENTIFIER ::= {enclosure 4}
+
+enclosurePSNumber                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the enclosure fan table."
+    ::= { enclosurePSInfo 1 }
+enclosurePSTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF EnclosurePSEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of powerSupply Entries containing Information/Properties about the enclosure powerSupply"
+    ::= { enclosurePSInfo 2 }
+
+enclosurePSEntry                OBJECT-TYPE
+SYNTAX                      EnclosurePSEntry
+ACCESS                      not-accessible
+STATUS                      mandatory
+DESCRIPTION                 "An Entry in the powerSupply table."
+INDEX                       { powerSupplyID }
+::= { enclosurePSTable 1 }
+
+EnclosurePSEntry ::=
+    SEQUENCE {
+        powerSupplyID           INTEGER,
+        psEnclosureId    INTEGER,
+        powerSupplyStatus         INTEGER
+}
+
+-- defines for each attribute in EncloserEntry
+
+powerSupplyID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "ID for this powerSupply.(Unique)"
+    ::= { enclosurePSEntry 1 }
+
+psEnclosureId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure id for the powerSupply"
+    ::= { enclosurePSEntry 2 }
+powerSupplyStatus                OBJECT-TYPE
+    SYNTAX                      INTEGER{
+                                status-ok(1),
+                                status-critical(2),
+                                status-nonCritical(3),
+                                status-unrecoverable(4),
+                                status-not-installed(5),
+                                status-unknown(6),
+                                status-not-available(7)
+                                }
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "status of the power Supply"
+    ::= { enclosurePSEntry 3 }
+----------------------
+enclosureTSInfo                      OBJECT IDENTIFIER ::= {enclosure 5}
+
+enclosureTSNumber                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the enclosure fan table."
+    ::= { enclosureTSInfo 1 }
+enclosureTSTable              OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF EnclosureTSEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of TempSensor Entries containing Information/Properties about the enclosure TempSensor"
+    ::= { enclosureTSInfo 2 }
+
+
+    enclosureTSEntry     OBJECT-TYPE
+    SYNTAX                      EnclosureTSEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the adapter table."
+    INDEX                       { tempSensorID }
+    ::= { enclosureTSTable 1 }
+
+    EnclosureTSEntry ::=
+        SEQUENCE {
+            tempSensorID           INTEGER,
+            encId    INTEGER,
+            tempSensorStatus         INTEGER,
+            tsTemperature         INTEGER
+    }
+
+-- defines for each attribute in EncloserEntry
+
+tempSensorID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "ID for this TempSensor.(Unique)"
+    ::= { enclosureTSEntry 1 }
+
+encId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "enclosure id for this TempSensor"
+    ::= { enclosureTSEntry 2 }
+tempSensorStatus                OBJECT-TYPE
+    SYNTAX                      INTEGER{
+                                status-ok(1),
+                                status-critical(2),
+                                status-nonCritical(3),
+                                status-unrecoverable(4),
+                                status-not-installed(5),
+                                status-unknown(6),
+                                status-not-available(7)
+                                }
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "status of this tempSensor"
+    ::= { enclosureTSEntry 3 }
+tsTemperature                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Current temperature in degree Centigrade"
+    ::= { enclosureTSEntry 4 }
+    
+----------------------
+enclosureAlarmInfo                      OBJECT IDENTIFIER ::= {enclosure 6}
+
+enclosureAlarmNumber                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the enclosure fan table."
+    ::= { enclosureAlarmInfo 1 }
+enclosureAlarmTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF EnclosureAlarmEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of Alarm Entries containing Information/Properties about enclosure Alarms"
+    ::= { enclosureAlarmInfo 2 }
+
+
+    enclosureAlarmEntry                OBJECT-TYPE
+    SYNTAX                      EnclosureAlarmEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the enclosureAlarm table."
+    INDEX                       { alarmID }
+    ::= { enclosureAlarmTable 1 }
+
+    EnclosureAlarmEntry ::=
+        SEQUENCE {
+            alarmID           INTEGER,
+            almEnclosureId    INTEGER,
+            alarmStatus         INTEGER
+    }
+
+-- defines for each attribute in EncloserAlarmEntry
+
+alarmID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "ID for this Alarm.(Unique)"
+    ::= { enclosureAlarmEntry 1 }
+
+almEnclosureId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure id where the Alarm is attached"
+    ::= { enclosureAlarmEntry 2 }
+alarmStatus                OBJECT-TYPE
+    SYNTAX                      INTEGER{
+                                status-ok(1),
+                                status-critical(2),
+                                status-nonCritical(3),
+                                status-unrecoverable(4),
+                                status-not-installed(5),
+                                status-unknown(6),
+                                status-not-available(7)
+                                }
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Status of the alarm"
+    ::= { enclosureAlarmEntry 3 }
+----------------------
+enclosureSIMInfo                      OBJECT IDENTIFIER ::= {enclosure 7}
+
+enclosureSIMNumber                       OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the enclosure fan table."
+    ::= { enclosureSIMInfo 1 }
+enclosureSIMTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF EnclosureSIMEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of SIM Entries containing Information/Properties about enclosure SIMs"
+    ::= { enclosureSIMInfo 2 }
+
+
+    enclosureSIMEntry                OBJECT-TYPE
+    SYNTAX                      EnclosureSIMEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the enclosureSIM table."
+    INDEX                       { simID }
+    ::= { enclosureSIMTable 1 }
+
+    EnclosureSIMEntry ::=
+        SEQUENCE {
+            simID           INTEGER,
+            simEnclosureId    INTEGER,
+            simStatus         INTEGER
+    }
+
+-- defines for each attribute in EncloserEntry
+
+simID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "ID for this SIM.(Unique)"
+    ::= { enclosureSIMEntry 1 }
+
+simEnclosureId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure id where the SIM is attached"
+    ::= { enclosureSIMEntry 2 }
+simStatus                OBJECT-TYPE
+    SYNTAX                      INTEGER{
+                                status-ok(1),
+                                status-critical(2),
+                                status-nonCritical(3),
+                                status-unrecoverable(4),
+                                status-not-installed(5),
+                                status-unknown(6),
+                                status-not-available(7)
+                                }
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Number of Logical Drives Configured on this Adapter."
+    ::= { enclosureSIMEntry 3 }
+    
+--------------------------------------------------------------------------------
+-- Topology Information.
+--------------------------------------------------------------------------------
+topology                      OBJECT IDENTIFIER ::= {megaRAID-SAS-IR 5}
+
+phyInfo                      OBJECT IDENTIFIER ::= {topology 1}
+
+phyNumber                   OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the Phy table."
+    ::= { phyInfo 1 }
+
+phyTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF PhyEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of phy Entries containing Information/Properties about the sas topology in the system."
+    ::= { phyInfo 2 }
+
+
+    phyEntry                OBJECT-TYPE
+    SYNTAX                      PhyEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the Phy table."
+    INDEX                       { phyIndex }
+    ::= { phyTable 1 }
+
+    PhyEntry ::=
+        SEQUENCE {
+            phyIndex           INTEGER,
+            deviceIndex    INTEGER,
+            deviceType    INTEGER,
+            phyID    INTEGER,
+            deviceOffset       INTEGER,
+            phyPos   INTEGER
+   }
+
+-- defines for each attribute in PhyEntry
+phyIndex                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Index for this phy.(Unique)"
+    ::= { phyEntry 1 }
+
+deviceIndex                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Index of the device in tDeviceTable where the phy is attached"
+    ::= { phyEntry 2 }
+
+deviceType                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Type of device attached to this phy NO_DEVICE = 0, IOC(1), EDGE_EXPANDER(2), FANOUT_EXPANDER(3),END_DEVICE(4)"
+    ::= { phyEntry 3 }  
+    
+phyID                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The phy ID of the attached device"
+    ::= { phyEntry 4 }
+
+deviceOffset                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "The memory offset where the node of the device that is attached to this phy starts."
+    ::= { phyEntry 5 }
+
+phyPos                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Position of the Phy in device attached."
+    ::= { phyEntry 6 }
+
+-------------------------------------------------------------------------------
+devicesInTopology                      OBJECT IDENTIFIER ::= {topology 2}
+
+tDeviceNumber                   OBJECT-TYPE
+    SYNTAX                      Gauge
+    ACCESS                      read-only
+    STATUS                      mandatory
+    DESCRIPTION                 "The present number of rows in the topology Device table."
+    ::= { devicesInTopology 1 }
+
+tDeviceTable                    OBJECT-TYPE
+    SYNTAX                      SEQUENCE OF TDeviceEntry
+    ACCESS                      not-accessible
+    STATUS                      optional
+    DESCRIPTION                 "A List of device Entries containing Information/Properties about the sas topology in the system."
+    ::= { devicesInTopology 2 }
+
+
+    tDeviceEntry                OBJECT-TYPE
+    SYNTAX                      TDeviceEntry
+    ACCESS                      not-accessible
+    STATUS                      mandatory
+    DESCRIPTION                 "An Entry in the tDevice table."
+    INDEX                       { tDeviceIndex }
+    ::= { tDeviceTable 1 }
+
+    TDeviceEntry ::=
+        SEQUENCE {
+            tDeviceIndex           INTEGER,
+            contID      INTEGER,
+            tDeviceId    INTEGER,
+            tDeviceType    INTEGER,
+            tParentIndex    INTEGER,
+            tNumPhy       INTEGER,
+            tSASAddr         DisplayString,
+            tDevDescription         DisplayString
+   }
+
+-- defines for each attribute in TDeviceEntry
+
+tDeviceIndex                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Index for this device.(Unique)"
+    ::= { tDeviceEntry 1 }
+
+contID                       OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Adapter ID where this device is attached"
+    ::= { tDeviceEntry 2 }
+
+tDeviceId                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Device ID."
+    ::= { tDeviceEntry 3 }  
+    
+tDeviceType                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "NO_DEVICE = 0, IOC(1), EDGE_EXPANDER(2), FANOUT_EXPANDER(3),END_DEVICE(4)"
+    ::= { tDeviceEntry 4 }
+
+tParentIndex                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Index of the parent device in the table where this device is connected. -1 if it root device."
+    ::= { tDeviceEntry 5 }
+
+tNumPhy                OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Total no of Phy present in this device"
+    ::= { tDeviceEntry 6 }
+    
+tSASAddr                             OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Device SAS addresses. Comma separeted for multiple address"
+    ::= { tDeviceEntry 7 }
+
+tDevDescription                             OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Detailed description of the Device."
+    ::= { tDeviceEntry 8 }
+    
+------------------------------Traps------------------------------
+lsi-SAS-Traps                      OBJECT IDENTIFIER ::= {megaRAID-SAS-IR 6}
+
+-- Following are the Objects defined for Traps
+
+atAdpNumber                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Adapter ID for which Trap is generated."
+    ::= { lsi-SAS-Traps 1001 }
+
+atAlarmState            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Alarm disabled(0)/enabled(1)"
+    ::= { lsi-SAS-Traps 1002 }
+
+atRate            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "BGI/Check Consistency/Rebuild/Patrol Read/Reconstruction Rate"
+    ::= { lsi-SAS-Traps 1003 }
+
+atFlashImageName            OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Flash Image Name"
+    ::= { lsi-SAS-Traps 1004 }
+
+atSensorNum            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Sensor Number"
+    ::= { lsi-SAS-Traps 1005 }
+
+atThreshold            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Threshold"
+    ::= { lsi-SAS-Traps 1006 }
+
+atTemperature            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Temperature Exceeded"
+    ::= { lsi-SAS-Traps 1007 }
+    
+devLife					OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Drive Life"
+    ::= { lsi-SAS-Traps 1008 }
+
+atWarningLevel            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Warning Level"
+    ::= { lsi-SAS-Traps 1009 }   
+    
+atErrorLevel            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Error Level"
+    ::= { lsi-SAS-Traps 1010 }      
+	
+
+Throttle				OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Throttle"
+    ::= { lsi-SAS-Traps 1011 }      
+	
+
+PercentThrottle				OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Percent Throttle"
+    ::= { lsi-SAS-Traps 1012 }      
+
+PCISlotAvailPower				OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "PCI Slot Avail Power"
+    ::= { lsi-SAS-Traps 1013 }      
+	
+
+Flags				OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Flags SENSOR(1)|SLOT(2)"
+    ::= { lsi-SAS-Traps 1014 }      
+	
+
+SensorOrSlot				OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Sensor Or Slot depending on the value of thr Flag"
+    ::= { lsi-SAS-Traps 1015 }      
+	
+
+CurrTemp				OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Current Temp"
+    ::= { lsi-SAS-Traps 1016 }      
+	
+
+ThresholdTemp				OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Threshold Temp"
+    ::= { lsi-SAS-Traps 1017 }      
+	
+	
+	-- Following are the VD trap vars
+
+vdNum                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive Target ID for which Trap is generated."
+    ::= { lsi-SAS-Traps 1101 }
+vdSeq                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive Sequence no for which Trap is generated."
+    ::= { lsi-SAS-Traps 1102 }
+vdProg                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "progress %"
+    ::= { lsi-SAS-Traps 1103 }
+
+vdCachePolicyChangeReason            OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive cache policy."
+    ::= { lsi-SAS-Traps 1104 }
+vdNewState            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive state. Values are: offline(0),partially-degraded(1),degraded(2),optimal(3)"
+    ::= { lsi-SAS-Traps 1105 }
+vdOldState            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Virtual Drive state. Values are: offline(0),partially-degraded(1),degraded(2),optimal(3)"
+    ::= { lsi-SAS-Traps 1106 }
+
+
+
+	
+
+-- Following are the PD trap vars
+
+pdID                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Device ID for which Trap is generated."
+    ::= { lsi-SAS-Traps 1201 }
+pdEncIndex                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Enclosure index(0 means not within an enclosure) for which Trap is generated."
+    ::= { lsi-SAS-Traps 1202 }
+pdSlotNo                 OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Slot no for the enclosure"
+    ::= { lsi-SAS-Traps 1203 }
+pdNewState            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Physical Drive state. Values are: unconfigured-good(0),unconfigured-bad(1),hot-spare(2),offline(16),failed(17),rebuild(20),online(24),copyback(32),system(64)"
+    ::= { lsi-SAS-Traps 1204 }
+pdOldState            OBJECT-TYPE
+    SYNTAX                      INTEGER
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Physical Drive state. Values are: unconfigured-good(0),unconfigured-bad(1),hot-spare(2),offline(16),failed(17),rebuild(20),online(24),copyback(32),system(64)"
+    ::= { lsi-SAS-Traps 1205 }
+pdCDBData  			  OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "CDB Data."
+    ::= { lsi-SAS-Traps 1206 }
+pdSenseData  			  OBJECT-TYPE
+    SYNTAX                      DisplayString
+    ACCESS                      read-only
+    STATUS                      optional
+    DESCRIPTION                 "Sence Data."
+    ::= { lsi-SAS-Traps 1207 }
+      
+
+	  
+	  
+	  
+-- Following are the trap definitions
+
+irAdpAlarmStateEnabled TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+        DESCRIPTION "Alarm has been enabled by user for Adapter $1"
+	--#TYPE "LSI SAS-IR Trap: Alarm Enabled"
+	--#SUMMARY "Alarm has been enabled by user for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+    --#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL    
+    ::= 7001
+
+irAdpBGIRateChanged TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atRate,
+        atAdpNumber
+        }
+    DESCRIPTION "Background initialization rate changed to $1 for Adapter $2" 
+    --#TYPE "LSI SAS-IR Trap: Background Initialization Rate Changed"
+	--#SUMMARY "Background Initialization Rate changed to %d for Adapter %d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL 
+    ::= 7002
+irAdpCacheDiscarded TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Controller $1 cache discarded due to memory/battery problems"
+    --#TYPE "LSI SAS-IR Trap: Controller Cache Discarded"
+	--#SUMMARY "Controller %d cache discarded due to memory/battery problems"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7003
+irAdpCacheRebootCantRecover TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Unable to recover cache data due to configuration mismatch for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Unable to Recover Cache data"
+	--#SUMMARY "Unable to recover Cache Data due to configuration mismatch for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL 
+    ::= 7004
+irAdpCacheRebootRecover TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Cache data recovered successfully for Adapter $1" 
+    --#TYPE "LSI SAS-IR Trap:Cache Recovered"
+	--#SUMMARY "Cache Data Recovered for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7005
+irAdpCacheVersionMismatch TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Controller cache discarded due to firmware version incompatibility for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Controller Cache Discarded"
+	--#SUMMARY "Controller Cache Discarded due to Firmware version incompatibility for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7006
+
+irAdpCCRateChanged TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atRate,
+        atAdpNumber
+        }
+    DESCRIPTION "Consistency Check rate changed to $1 for Adapter $2" 
+    --#TYPE "LSI SAS-IR Trap: Consistency Check Rate changed"
+	--#SUMMARY "Consistency Check Rate changed to %d for Adapter %d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL 
+    ::= 7007
+irAdpFlashBadImage TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Flash downloaded image corrupted for Adapter $1" 
+    --#TYPE "LSI SAS-IR Trap: Flash Download Image corrupted"
+	--#SUMMARY "Flash download image corrupted for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7008
+irAdpFlashEraseError TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Flash erase error for Adapter $1" 
+    --#TYPE "LSI SAS-IR Trap: Flash Erase Error"
+	--#SUMMARY "Flash erase error for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7009
+irAdpFlashEraseTimeout TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Flash timeout during erase for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Flash Timeout during Erase"
+	--#SUMMARY "Flash Timeout during Erase for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7010
+irAdpFlashGeneralError TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Flash error for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Flash Error"
+	--#SUMMARY "General Flash Error occurred for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7011
+irAdpFlashImage TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atFlashImageName,
+        atAdpNumber
+        }
+    DESCRIPTION "Flashing image: $1 for Adapter $2"
+    --#TYPE "LSI SAS-IR Trap: Flashing Image"
+	--#SUMMARY "Flashing Image %s for Adapter %d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL 
+    ::= 7012
+irAdpFlashOK TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Flash of new firmware image(s)complete for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Flash of Firmware Image Complete"
+	--#SUMMARY "Flash of Firmware Image complete for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7013
+irAdpFlashProgramError TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Flash programming error for Adapter $1" 
+    --#TYPE "LSI SAS-IR Trap: Flash programming Error"
+	--#SUMMARY "Flash programming error for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL 
+    ::= 7014
+irAdpFlashProgramTimeout TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Flash timeout during programming for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Flash timeout"
+	--#SUMMARY "Flash timeout during programming for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7015
+    
+irAdpLogCleared TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Event log cleared for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Event Log cleared"
+	--#SUMMARY "Event log cleared for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7016
+irAdpLogWrapped TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Event log wrapped for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Event log wrapped"
+	--#SUMMARY "Event log wrapped for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7017
+    
+irAdpPatrolReadComplete TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Patrol Read complete for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Patrol Read complete"
+	--#SUMMARY "Patrol Read complete for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7018
+irAdpPatrolReadPaused TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Patrol Read paused for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Patrol Read paused"
+	--#SUMMARY "Patrol Read paused for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7019
+irAdpPatrolReadResumed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Patrol Read resumed for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Patrol Read resumed"
+	--#SUMMARY "Patrol Read resumed for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7020
+irAdpPatrolReadStarted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Patrol Read started for Adapter $1" 
+    --#TYPE "LSI SAS-IR Trap: Patrol Read Started"
+	--#SUMMARY "Patrol Read started for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7021
+irAdpShutdown TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Shutdown command received for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Shutdown command received"
+	--#SUMMARY "Shutdown command received for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL 
+    ::= 7022
+irAdpHibernate TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Hibernate command received for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Hibernate command received"
+	--#SUMMARY "Hibernate command received for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7023
+irAdpCrash TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atAdpNumber
+        }
+    DESCRIPTION "Fatal error received for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Fatal Error received"
+	--#SUMMARY "Fatal error received for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7024
+
+irAdpRRChanged TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atRate,
+        atAdpNumber
+        }
+    DESCRIPTION "Rebuild rate changed to $1 for Adapter $2"
+    --#TYPE "LSI SAS-IR Trap: Rebuild Rate changed"
+	--#SUMMARY "Rebuild Rate changed to %d for Adapter %d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL"
+    ::= 7025
+irAdpPRRateChanged TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atRate,
+        atAdpNumber
+        }
+    DESCRIPTION "Patrol Read rate changed to $1 for Adapter $2"
+    --#TYPE "LSI SAS-IR Trap: Patrol Read Rate changed"
+	--#SUMMARY "Patrol Read Rate changed to %d for Adapter %d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7026
+irAdpAlarmStateDisabled TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Alarm has been disabled by user for Adapter $1" 
+    --#TYPE "LSI SAS-IR Trap: Alarm disabled"
+	--#SUMMARY "Alarm disabled by user for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7027
+irAdpConfigCleared TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Configuration cleared for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Configuration cleared"
+	--#SUMMARY "Configuration cleared for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7028
+irAdpReconRateChanged TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {
+        atRate,
+        atAdpNumber
+        }
+    DESCRIPTION "Reconstruction rate changed to $1 for Adapter $2"
+    --#TYPE "LSI SAS-IR Trap: Reconstruction Rate changed"
+	--#SUMMARY "Reconstruction Rate changed to %d for Adapter %d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL 
+    ::= 7029
+irAdpDefault TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Factory defaults restored for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Factory defaults restored"
+	--#SUMMARY "Factory defaults restored for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7030   
+
+irAdpThresholdsExceededCritical TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    atSensorNum,
+    atThreshold,
+    atTemperature
+    }
+    DESCRIPTION "Adapter $1 on sensor $2 has exceeded critical temperature threshold $3 Temperature $4"
+    --#TYPE "LSI SAS-IR Trap: Exceeded critical temperature threshold"
+	--#SUMMARY "Adapter %d on sensor %d has exceeded critical temperature threshold %d Temperature %d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7031   
+
+irAdpThresholdsExceededWarning TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    atSensorNum,
+    atThreshold,
+    atTemperature
+    }
+    DESCRIPTION "Adapter $1 on sensor $2 has exceeded warning temperature threshold $3 Temperature $4"
+    --#TYPE "LSI SAS-IR Trap: Exceeded warning temperature threshold"
+	--#SUMMARY "Adapter %d on sensor %d has exceeded warning temperature threshold %d Temperature %d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7032   
+
+irAdpBRMFailed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Backup Rail Monitor has failed for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Backup Rail Monitor has failed"
+	--#SUMMARY "Backup Rail Monitor has failed for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7033   
+
+irAdpSSDLifeExhausted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    pdSlotNo,
+    pdID,
+    devLife,
+    atWarningLevel,
+    atErrorLevel
+    }
+    DESCRIPTION "Adapter $1 SSD Life for SlotNo $2 PD ID $3 Dev Life $4 Warning Level $5 Error Level $6"
+    --#TYPE "LSI SAS-IR Trap: SSD Life Left"
+	--#SUMMARY "Adapter %d SSD Life for SlotNo %d PD ID %d Dev Life %d Warning Level %d Error Level %d"
+	--#ARGUMENTS {0,1,2,3,4,5}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7034   
+
+irAdpSSDLifeWarning TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    pdSlotNo,
+    pdID,
+    devLife,
+    atWarningLevel,
+    atErrorLevel
+    }
+    DESCRIPTION "Adapter $1 SSD Life for SlotNo $2 PD ID $3 Dev Life $4 Warning Level $5 Error Level $6"
+    --#TYPE "LSI SAS-IR Trap: SSD Life Left"
+	--#SUMMARY "Adapter %d SSD Life for SlotNo %d PD ID %d Dev Life %d Warning Level %d Error Level %d"
+	--#ARGUMENTS {0,1,2,3,4,5}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7035   
+   
+irAdpSSDThrottlingRemoved TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    pdSlotNo,
+    pdID,
+    Throttle
+    }
+    DESCRIPTION "Throttling Removed for Adapter $1 PD Slot No $2 Dev ID $3 Throttle $4"
+    --#TYPE "LSI SAS-IR Trap: hrottling Removed"
+	--#SUMMARY "Throttling Removed for Adapter %d PD Slot No %d Dev ID %d Throttle %d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7036   
+
+irAdpSSDThrottlingOccuring TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    pdSlotNo,
+    pdID,
+    Throttle
+    }
+    DESCRIPTION "Throttling Occuring for Adapter $1 PD Slot No $2 Dev ID $3 Throttle $4"
+    --#TYPE "LSI SAS-IR Trap: Throttling Occuring"
+	--#SUMMARY "Throttling Occuring for Adapter %d PD Slot No %d Dev ID %d Throttle %d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7037   
+
+irAdpPowerThrottlingRemoved TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    PercentThrottle,
+    PCISlotAvailPower
+    }
+    DESCRIPTION "Power Throttling is Removed for Adapter $1 Percent Throttle $2 PCISlotAvailPower $3"
+    --#TYPE "LSI SAS-IR Trap: Throttling Removed"
+	--#SUMMARY "Power Throttling is Removed for Adapter %d Percent Throttle %d PCISlotAvailPower %d"
+	--#ARGUMENTS {0,1,2}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7038   
+
+irAdpPowerThrottlingOccuring TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    PercentThrottle,
+    PCISlotAvailPower
+    }
+    DESCRIPTION "Power Throttling is Occuring for Adapter $1 Percent Throttle $2 PCISlotAvailPower $3"
+    --#TYPE "LSI SAS-IR Trap: Throttling Occuring"
+	--#SUMMARY "Power Throttling is Occuring for Adapter %d Percent Throttle %d PCISlotAvailPower %d"
+	--#ARGUMENTS {0,1,2}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7039   
+   
+irAdpDFFTempExceededWarning TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    Flags,
+    SensorOrSlot,
+    CurrTemp,
+    ThresholdTemp,
+    pdID
+    }
+    DESCRIPTION "Adapter $1 Flags $2 SensorOrSlot $3 CurrTemp $4 ThresholdTemp $5 pdID $6"
+    --#TYPE "LSI SAS-IR Trap: Exceeded critical temperature threshold"
+	--#SUMMARY "Adapter %d Flags %d SensorOrSlot %d CurrTemp %d ThresholdTemp %d pdID %d"
+	--#ARGUMENTS {0,1,2,3,4,5}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Warning Events"
+	--#STATE OPERATIONAL
+    ::= 7040   
+
+irAdpDFFTempExceededCritical TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber,
+    Flags,
+    SensorOrSlot,
+    CurrTemp,
+    ThresholdTemp,
+    pdID
+    }
+    DESCRIPTION "Adapter $1 Flags $2 SensorOrSlot $3 CurrTemp $4 ThresholdTemp $5 pdID $6"
+    --#TYPE "LSI SAS-IR Trap: Exceeded critical temperature threshold"
+	--#SUMMARY "Adapter %d Flags %d SensorOrSlot %d CurrTemp %d ThresholdTemp %d pdID %d"
+	--#ARGUMENTS {0,1,2,3,4,5}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7041   
+
+
+---------------vd trap----------
+
+irVdtBGIAborted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,vdNum}
+    DESCRIPTION "BGI aborted on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: BGI aborted"
+	--#SUMMARY "BGI aborted on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7101
+irVdtBGICompleted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,vdNum}
+    DESCRIPTION "BGI completed on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: BGI completed"
+	--#SUMMARY "BGI completed on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7102
+irVdtBGIDoneWR TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,vdNum}
+    DESCRIPTION "BGI completed with uncorrectable errors on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: BGI completed with uncorrectble errors"
+	--#SUMMARY "BGI completed with uncorrectable errors on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7103
+irVdtBGIFailed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,vdNum}
+    DESCRIPTION "BGI failed on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: BGI failed"
+	--#SUMMARY "BGI failedon Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7104
+irVdtBGIStarted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,vdNum}
+    DESCRIPTION "BGI started on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: BGI started"
+	--#SUMMARY "BGI started on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7105
+
+irVdtCCStarted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "CC started on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: CC started"
+	--#SUMMARY "CC started on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7107
+irVdtCCCompleted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "CC completed on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: CC completed"
+	--#SUMMARY "CC completed on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7108
+irVdtCCFailed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "CC failed on Adapter -$1 VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: CC failed"
+	--#SUMMARY "CC failed on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7109
+irVdtCCAborted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "CC aborted on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: CC aborted"
+	--#SUMMARY "CC aborted on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7110
+irVdtCCCompCor TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "CC completed with correction on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: CC completed with correction"
+	--#SUMMARY "CC completed with correction on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7111
+irVdtInitAborted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Initialization aborted on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Initialization aborted"
+	--#SUMMARY "Initialization aborted on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7112
+irVdtInitFailed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Initialization failed on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Initialization failed"
+	--#SUMMARY "Initialization failed on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7113
+irVdtInitCompleted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Initialization completed on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Initialization completed"
+	--#SUMMARY "Initialization completed on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7114
+irVdtInitFastStarted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Fast Initialization started on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Fast Initialization started"
+	--#SUMMARY "Fast Initialization started on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7115
+irVdtInitFullStarted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Full Initialization started on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Full Initialization started"
+	--#SUMMARY "Full Initialization started on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7116
+irVdtReconStarted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Reconstructoin started on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Reconstruction started"
+	--#SUMMARY "Reconstruction started on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7117
+irVdtReconCompleted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Reconstruction completed on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Reconstruction completed"
+	--#SUMMARY "Reconstruction completed on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7118
+irVdtReconResumed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Reconstruction resumed on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Reconstruction resumed"
+	--#SUMMARY "Reconstruction resumed on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7119
+irVdtReconStopped TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "Reconstruction stopped on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: Reconstruction stopped"
+	--#SUMMARY "Reconstruction stopped on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7120
+irVdtStateChange TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum, vdOldState, vdNewState}
+    DESCRIPTION "VD state changed on Adapter -$1  VD Target -$2  from $3 to $4"
+    --#TYPE "LSI SAS-IR Trap: VD state changed"
+	--#SUMMARY "VD state changed on Adapter -%d  VD Target -%d from %d to %d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7121
+irVdtCreated TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "A new VD created on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: New VD created"
+	--#SUMMARY "A new VD created on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7122
+irVdtDeleted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,vdNum}
+    DESCRIPTION "A VD deleted on Adapter -$1  VD Target -$2"
+    --#TYPE "LSI SAS-IR Trap: VD deleted"
+	--#SUMMARY "A VD deleted on Adapter -%d  VD Target -%d"
+	--#ARGUMENTS {0,1}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7123
+
+
+---------------pd trap----------
+irPdtClearAborted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,pdID,pdEncIndex,pdSlotNo }
+    DESCRIPTION "PD Clear aborted on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Physical Drive Clear aborted"
+	--#SUMMARY "Physical Drive Clear aborted on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7201
+irPdtClearFailed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,pdID,pdEncIndex,pdSlotNo }
+    DESCRIPTION "PD Clear failed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Physical Drive Clear failed"
+	--#SUMMARY "Physical Drive Clear failed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7202
+irPdtClearStarted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,pdID,pdEncIndex,pdSlotNo }
+    DESCRIPTION "PD Clear started on Adapter -$1 Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Physical Drive Clear started"
+	--#SUMMARY "Physical Drive Clear started on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7203
+irPdtClearCompleted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES { atAdpNumber,pdID,pdEncIndex,pdSlotNo }
+    DESCRIPTION "PD Clear completed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Physical Drive Clear completed"
+	--#SUMMARY "Physical Drive Clear completed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7204
+irPdtError TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "Error occurred on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Error occurred"
+	--#SUMMARY "Error occurred on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7205
+irPdtFormatStart TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "PD format started on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Physical Drive Format started"
+	--#SUMMARY "Physical Drive Format started on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7206
+irPdtFormatCompleted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "PD format completed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Physical Drive Format completed"
+	--#SUMMARY "Physical Drive Format completed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7207
+irPdtInserted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "PD inserted on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Physical Drive Inserted"
+	--#SUMMARY "Physical Drive inserted on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7208
+irPdtRblAborted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "Rebuild aborted on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Rebuild aborted"
+	--#SUMMARY "Rebuild aborted on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7209
+irPdtRblCompleted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "Rebuild completed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Rebuild completed"
+	--#SUMMARY "Rebuild completed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7210
+irPdtRblFailedBS TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "Rebuild failed(bad source) on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Rebuild failed(bad source)"
+	--#SUMMARY "Rebuild failed(bad source) on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7211
+irPdtRblFailedBT TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "Rebuild failed(bad target) on Adapter -$1  Dev -$2  Enc -$3 Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Rebuild failed(bad target)"
+	--#SUMMARY "Rebuild failed(bad target) on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7212
+irPdtRblStart TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "Rebuild started on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Rebuild started"
+	--#SUMMARY "Rebuild started on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7213
+irPdtRblResumed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "Rebuild resumed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Rebuild resumed"
+	--#SUMMARY "Rebuild resumed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7214
+irPdtRblStartA TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "Rebuild started(auto) on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Rebuild started(auto)"
+	--#SUMMARY "Rebuild started(auto) on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7215
+irPdtRemoved TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
+    DESCRIPTION "PD removed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Physical Drive removed"
+	--#SUMMARY "Physical Drive removed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7216
+irPdtStateChange TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        {atAdpNumber,pdID,pdEncIndex,pdSlotNo, pdOldState, pdNewState}
+    DESCRIPTION "PD state changed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4  from $5 to $6"
+    --#TYPE "LSI SAS-IR Trap: PD state changed"
+	--#SUMMARY "PD state changed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d  from %d to %d"
+	--#ARGUMENTS {0,1,2,3,4,5}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7217
+irPdtSENSEAlert TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES
+        { atAdpNumber, pdID, pdEncIndex,pdSlotNo, pdCDBData,pdSenseData }
+    DESCRIPTION "An unexpected Sense was detected on Adapter -$1  Dev -$2  Enc -$3  Slot -$4  CDBData -$5  SenseData -$6"
+    --#TYPE "LSI SAS-IR Trap: PD SENSE Alert"
+	--#SUMMARY "Unexpected Sense detected on Adapter -%d  Dev -%d  Enc -%d  Slot -%d  CDBData -%s  SenseData -%s"
+	--#ARGUMENTS {0,1,2,3,4,5}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7218
+irPdtPredictiveThresholdExceed TRAP-TYPE
+	ENTERPRISE lsi-SAS-Traps
+	VARIABLES
+		{ atAdpNumber, pdID, pdEncIndex,pdSlotNo}
+	DESCRIPTION "Predictive Threshold Exceeded on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Predictive Threshold Exceeded"
+	--#SUMMARY "Predictive Threshold Exceeded on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7219		
+
+irPdSSDSecurityLocked TRAP-TYPE
+	ENTERPRISE lsi-SAS-Traps
+	VARIABLES
+		{ atAdpNumber, pdID, pdEncIndex,pdSlotNo}
+	DESCRIPTION "SSD is in locked state on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Predictive Threshold Exceeded"
+	--#SUMMARY "Predictive Threshold Exceeded on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7220		
+
+irPdSSDSecurityUnlocked TRAP-TYPE
+	ENTERPRISE lsi-SAS-Traps
+	VARIABLES
+		{ atAdpNumber, pdID, pdEncIndex,pdSlotNo}
+	DESCRIPTION "SSD is in unlocked state on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
+    --#TYPE "LSI SAS-IR Trap: Predictive Threshold Exceeded"
+	--#SUMMARY "Predictive Threshold Exceeded on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
+	--#ARGUMENTS {0,1,2,3}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7221		
+	
+---------------bbu trap----------
+irBbuPresent TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery Present for Adapter %d"
+	--#TYPE "LSI SAS-IR Trap: Battery present"
+	--#SUMMARY "Battery Present for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7301   
+irBbuNotPresent TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery Not Present for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery Not present"
+	--#SUMMARY "Battery Not Present for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7302   
+irBbuNewBattery TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "New Battery for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: New Battery "
+	--#SUMMARY "New Battery for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7303   
+irBbuReplaced TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }  
+    DESCRIPTION "Battery replaced for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery replaced"
+	--#SUMMARY "Battery has been replaced for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7304   
+irBbuTempHigh TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }  
+    DESCRIPTION "Battery temperature high for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery temperature high"
+	--#SUMMARY "Battery Temperature is high for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7305   
+irBbuVoltageLow TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    } 
+    DESCRIPTION "Battery voltage low for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery voltage low"
+	--#SUMMARY "Battery Voltage low for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7306   
+irBbuCharging TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery started charging for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery started changing"
+	--#SUMMARY "Battery started changing for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7307   
+irBbuDisCharging TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery is discharging for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery discharging"
+	--#SUMMARY "Battery is discharging for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7308   
+irBbuTempNormal TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery temperature is normal for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery temperature normal"
+	--#SUMMARY "Battery Temperature is normal for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7309   
+irBbuReplace TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery needs replacement, SOH Bad for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery needs replacement"
+	--#SUMMARY "Battery needs replacement for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7310   
+irBbuRelearnStarted TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery relearn started for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery relearn started"
+	--#SUMMARY "Battery Relearn started for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7311   
+irBbuRelearnProgress TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery relearn in progress for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery relearn in progress"
+	--#SUMMARY "Battery Relearn in progress for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7312   
+irBbuRelearnComplete TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery relearn completed for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery relearn completed"
+	--#SUMMARY "Battery Relearn completed for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7313   
+irBbuRelearnTimeout TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery relearn timed out for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery relearn timed out"
+	--#SUMMARY "Battery Relearn timed out for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7314   
+irBbuRelearnPending TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery relearn pending: Battery is under charge for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery relearn pending"
+	--#SUMMARY "Battery Relearn pending: Battery is under charge for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7315   
+irBbuRelearnPostponed TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery relearn postponed for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery relearn postponed"
+	--#SUMMARY "Battery Relearn postponed for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7316   
+irBbuRemoved TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Battery removed for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Battery removed"
+	--#SUMMARY "Battery removed for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7317   
+irBbuCapacityLow TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Current capacity of the battery is below threshold for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Current capacity below threshold"
+	--#SUMMARY "Current Capacity of the battery is below threshold for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+    ::= 7318   
+irBbuCapacityAbove TRAP-TYPE
+    ENTERPRISE lsi-SAS-Traps
+    VARIABLES 
+    { 
+    atAdpNumber
+    }
+    DESCRIPTION "Current capacity of the battery is above threshold for Adapter $1"
+    --#TYPE "LSI SAS-IR Trap: Current capacity above threshold"
+	--#SUMMARY "Current Capacity of the battery is above threshold for Adapter %d"
+	--#ARGUMENTS {0}
+	--#SEVERITY INFORMATIONAL
+	--#GENERIC 6
+	--#CATEGORY "Error Events"
+	--#STATE OPERATIONAL
+	::= 7319
+
+copyrightInfo                     OBJECT IDENTIFIER ::= {lsiRAIDServer 8}
+
+copyright                     OBJECT-TYPE
+   SYNTAX                     DisplayString (SIZE(0..63))
+   ACCESS                     read-only
+   STATUS                     mandatory
+   DESCRIPTION                "LSI LOGIC "
+    ::= { copyrightInfo 1 }
+END
