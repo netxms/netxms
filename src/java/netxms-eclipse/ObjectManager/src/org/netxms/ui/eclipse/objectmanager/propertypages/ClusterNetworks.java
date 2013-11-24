@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ public class ClusterNetworks extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.ClusterNetworks_ColAddress, Messages.ClusterNetworks_ColMask };
+      final String[] columnNames = { Messages.get().ClusterNetworks_ColAddress, Messages.get().ClusterNetworks_ColMask };
       final int[] columnWidths = { 150, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -122,7 +122,7 @@ public class ClusterNetworks extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.ClusterNetworks_Add);
+      addButton.setText(Messages.get().ClusterNetworks_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -141,7 +141,7 @@ public class ClusterNetworks extends PropertyPage
       });
 		
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText(Messages.ClusterNetworks_Modify);
+      editButton.setText(Messages.get().ClusterNetworks_Modify);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -160,7 +160,7 @@ public class ClusterNetworks extends PropertyPage
       });
       
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.ClusterNetworks_Delete);
+      deleteButton.setText(Messages.get().ClusterNetworks_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -268,7 +268,7 @@ public class ClusterNetworks extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setNetworkList(networks);
-		new ConsoleJob(Messages.ClusterNetworks_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ClusterNetworks_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -279,7 +279,7 @@ public class ClusterNetworks extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ClusterNetworks_JobError;
+				return Messages.get().ClusterNetworks_JobError;
 			}
 
 			@Override

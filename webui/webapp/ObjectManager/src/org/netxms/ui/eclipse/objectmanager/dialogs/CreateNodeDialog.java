@@ -43,6 +43,7 @@ import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -93,7 +94,7 @@ public class CreateNodeDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Node Object");
+		newShell.setText(Messages.get().CreateNodeDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -113,7 +114,7 @@ public class CreateNodeDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		objectNameField = new LabeledText(dialogArea, SWT.NONE);
-		objectNameField.setLabel("Name");
+		objectNameField.setLabel(Messages.get().CreateNodeDialog_Name);
 		objectNameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -135,7 +136,7 @@ public class CreateNodeDialog extends Dialog
 		ipAddrGroup.setLayoutData(gd);
 		
 		hostNameField = new LabeledText(ipAddrGroup, SWT.NONE);
-		hostNameField.setLabel("Primary host name or IP address");
+		hostNameField.setLabel(Messages.get().CreateNodeDialog_PrimaryHostName);
 		hostNameField.getTextControl().setTextLimit(255);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -143,7 +144,7 @@ public class CreateNodeDialog extends Dialog
 		hostNameField.setLayoutData(gd);
 		
 		final Button resolve = new Button(ipAddrGroup, SWT.PUSH);
-		resolve.setText("&Resolve");
+		resolve.setText(Messages.get().CreateNodeDialog_Resolve);
 		gd = new GridData();
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 		gd.verticalAlignment = SWT.BOTTOM;
@@ -162,14 +163,14 @@ public class CreateNodeDialog extends Dialog
 			}
 		});
 		
-		agentPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "NetXMS agent port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		agentPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_AgentPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		agentPortField.setSelection(4700);
 		
-		snmpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "SNMP agent port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		snmpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_SNMPPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		snmpPortField.setSelection(161);
 		
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText("Options");
+		optionsGroup.setText(Messages.get().CreateNodeDialog_Options);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -178,19 +179,19 @@ public class CreateNodeDialog extends Dialog
 		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		
 		checkUnmanaged = new Button(optionsGroup, SWT.CHECK);
-		checkUnmanaged.setText("Create as &unmanaged object");
+		checkUnmanaged.setText(Messages.get().CreateNodeDialog_CreateUnmanaged);
 
 		checkDisableAgent = new Button(optionsGroup, SWT.CHECK);
-		checkDisableAgent.setText("Disable usage of NetXMS &agent for all polls");
+		checkDisableAgent.setText(Messages.get().CreateNodeDialog_DisableAgent);
 		
 		checkDisableSNMP = new Button(optionsGroup, SWT.CHECK);
-		checkDisableSNMP.setText("Disable usage of &SNMP for all polls");
+		checkDisableSNMP.setText(Messages.get().CreateNodeDialog_DisableSNMP);
 		
 		checkDisablePing = new Button(optionsGroup, SWT.CHECK);
-		checkDisablePing.setText("Disable usage of &ICMP ping for all polls");
+		checkDisablePing.setText(Messages.get().CreateNodeDialog_DisableICMP);
 		
 		agentProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-		agentProxySelector.setLabel("Proxy for NetXMS agents");
+		agentProxySelector.setLabel(Messages.get().CreateNodeDialog_AgentProxy);
 		agentProxySelector.setObjectClass(Node.class);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -199,7 +200,7 @@ public class CreateNodeDialog extends Dialog
 		agentProxySelector.setLayoutData(gd);
 		
 		snmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-		snmpProxySelector.setLabel("Proxy for SNMP");
+		snmpProxySelector.setLabel(Messages.get().CreateNodeDialog_SNMPProxy);
 		snmpProxySelector.setObjectClass(Node.class);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -210,7 +211,7 @@ public class CreateNodeDialog extends Dialog
 		if (session.isZoningEnabled())
 		{
 			zoneSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-			zoneSelector.setLabel("Zone");
+			zoneSelector.setLabel(Messages.get().CreateNodeDialog_Zone);
 			zoneSelector.setObjectClass(Zone.class);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -232,9 +233,10 @@ public class CreateNodeDialog extends Dialog
 		hostName = hostNameField.getText().trim();
 		if (hostName.isEmpty())
 			hostName = objectNameField.getText().trim();
-		if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$"))
+		if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$")) //$NON-NLS-1$
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "String \"" + hostName + "\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNodeDialog_Warning, 
+			      String.format(Messages.get().CreateNodeDialog_WarningInvalidHostname, hostName));
 			return;
 		}
 		
@@ -276,7 +278,7 @@ public class CreateNodeDialog extends Dialog
 	private void resolveName()
 	{
 		final String name = objectNameField.getText();
-		new ConsoleJob("Resolve host name", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateNodeDialog_ResolveJobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -293,7 +295,7 @@ public class CreateNodeDialog extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot resolve host name " + name + " to IP address";
+				return String.format(Messages.get().CreateNodeDialog_ResolveJobError, name);
 			}
 		}.start();
 	}

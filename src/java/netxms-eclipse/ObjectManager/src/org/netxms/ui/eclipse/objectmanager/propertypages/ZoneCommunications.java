@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -58,7 +59,7 @@ public class ZoneCommunications extends PropertyPage
 		dialogArea.setLayout(dialogLayout);
 
 		agentProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
-		agentProxy.setLabel("Default agent proxy");
+		agentProxy.setLabel(Messages.get().ZoneCommunications_DefaultAgentProxy);
 		agentProxy.setObjectId(zone.getAgentProxy());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -66,7 +67,7 @@ public class ZoneCommunications extends PropertyPage
 		agentProxy.setLayoutData(gd);
 		
 		snmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
-		snmpProxy.setLabel("Default SNMP proxy");
+		snmpProxy.setLabel(Messages.get().ZoneCommunications_DefaultSNMPProxy);
 		snmpProxy.setObjectId(zone.getSnmpProxy());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -74,7 +75,7 @@ public class ZoneCommunications extends PropertyPage
 		snmpProxy.setLayoutData(gd);
 		
 		icmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
-		icmpProxy.setLabel("Default ICMP proxy");
+		icmpProxy.setLabel(Messages.get().ZoneCommunications_DefaultICMPProxy);
 		icmpProxy.setObjectId(zone.getIcmpProxy());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -100,7 +101,7 @@ public class ZoneCommunications extends PropertyPage
 		md.setIcmpProxy(icmpProxy.getObjectId());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Update communication settings for zone %s", zone.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().ZoneCommunications_JobName, zone.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -110,7 +111,7 @@ public class ZoneCommunications extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update communication settings";
+				return Messages.get().ZoneCommunications_JobError;
 			}
 
 			@Override

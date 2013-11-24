@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ public class AutoApply extends PropertyPage
 
       // Enable/disable check box
       checkboxEnableApply = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableApply.setText(Messages.AutoApply_AutoApply);
+      checkboxEnableApply.setText(Messages.get().AutoApply_AutoApply);
       checkboxEnableApply.setSelection(object.isAutoApplyEnabled());
       checkboxEnableApply.addSelectionListener(new SelectionListener() {
 			@Override
@@ -103,13 +103,13 @@ public class AutoApply extends PropertyPage
       
       // Enable/disable check box
       checkboxEnableRemove = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableRemove.setText(Messages.AutoApply_AutoRemove);
+      checkboxEnableRemove.setText(Messages.get().AutoApply_AutoRemove);
       checkboxEnableRemove.setSelection(object.isAutoRemoveEnabled());
       checkboxEnableRemove.setEnabled(object.isAutoApplyEnabled());
       
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.AutoApply_Script);
+      label.setText(Messages.get().AutoApply_Script);
 
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
@@ -159,7 +159,7 @@ public class AutoApply extends PropertyPage
 		md.setAutoBindFilter(filterSource.getText());
 		md.setObjectFlags(flags);
 		
-		new ConsoleJob(Messages.AutoApply_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().AutoApply_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -186,7 +186,7 @@ public class AutoApply extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AutoApply_JobError;
+				return Messages.get().AutoApply_JobError;
 			}
 		}.start();
 	}

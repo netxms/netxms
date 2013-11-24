@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -69,7 +70,7 @@ public class CreateNetworkServiceDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Network Service Object");
+		newShell.setText(Messages.get().CreateNetworkServiceDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -88,7 +89,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name");
+		nameField.setLabel(Messages.get().CreateNetworkServiceDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -100,27 +101,27 @@ public class CreateNetworkServiceDialog extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		serviceTypeField = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Service type", gd);
-		serviceTypeField.add("User-defined");
-		serviceTypeField.add("SSH");
-		serviceTypeField.add("POP3");
-		serviceTypeField.add("SMTP");
-		serviceTypeField.add("FTP");
-		serviceTypeField.add("HTTP");
-		serviceTypeField.add("HTTPS");
-		serviceTypeField.add("Telnet");
+		serviceTypeField = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().CreateNetworkServiceDialog_ServiceType, gd);
+		serviceTypeField.add(Messages.get().CreateNetworkServiceDialog_TypeUserDef);
+		serviceTypeField.add(Messages.get().CreateNetworkServiceDialog_TypeSSH);
+		serviceTypeField.add(Messages.get().CreateNetworkServiceDialog_TypePOP3);
+		serviceTypeField.add(Messages.get().CreateNetworkServiceDialog_TypeSMTP);
+		serviceTypeField.add(Messages.get().CreateNetworkServiceDialog_TypeFTP);
+		serviceTypeField.add(Messages.get().CreateNetworkServiceDialog_TypeHTTP);
+		serviceTypeField.add(Messages.get().CreateNetworkServiceDialog_TypeHTTPS);
+		serviceTypeField.add(Messages.get().CreateNetworkServiceDialog_TypeTelnet);
 		serviceTypeField.select(NetworkService.CUSTOM);
 		
 		portField = new LabeledText(dialogArea, SWT.NONE);
-		portField.setLabel("Port");
-		portField.setText("0");
+		portField.setLabel(Messages.get().CreateNetworkServiceDialog_Port);
+		portField.setText("0"); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		portField.setLayoutData(gd);
 		
 		requestField = new LabeledText(dialogArea, SWT.NONE);
-		requestField.setLabel("Request");
+		requestField.setLabel(Messages.get().CreateNetworkServiceDialog_Request);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -128,7 +129,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		requestField.setLayoutData(gd);
 		
 		responseField = new LabeledText(dialogArea, SWT.NONE);
-		responseField.setLabel("Response");
+		responseField.setLabel(Messages.get().CreateNetworkServiceDialog_Response);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -137,8 +138,8 @@ public class CreateNetworkServiceDialog extends Dialog
 
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		checkCreateDci = new Button(dialogArea, SWT.CHECK);
-		checkCreateDci.setText("&Create service status DCI at parent node");
-		checkCreateDci.setSelection(settings.getBoolean("CreateNetworkServiceDialog.checkCreateDci"));
+		checkCreateDci.setText(Messages.get().CreateNetworkServiceDialog_CreateStatusDCI);
+		checkCreateDci.setSelection(settings.getBoolean("CreateNetworkServiceDialog.checkCreateDci")); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -157,7 +158,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkServiceDialog_Warning, Messages.get().CreateNetworkServiceDialog_WarningEmptyName);
 			return;
 		}
 		
@@ -171,7 +172,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid port number (1 .. 65535)");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkServiceDialog_Warning, Messages.get().CreateNetworkServiceDialog_WarningInvalidPort);
 			return;
 		}
 		
@@ -180,7 +181,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		createDci = checkCreateDci.getSelection();
 		
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		settings.put("CreateNetworkServiceDialog.checkCreateDci", createDci);
+		settings.put("CreateNetworkServiceDialog.checkCreateDci", createDci); //$NON-NLS-1$
 		
 		super.okPressed();
 	}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.ClusterResource;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -61,7 +62,7 @@ public class EditClusterResourceDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((resource != null) ? "Edit Cluster Resource" : "Create Cluster Resource");
+		newShell.setText((resource != null) ? Messages.get().EditClusterResourceDialog_TitleEdit : Messages.get().EditClusterResourceDialog_TitleCreate);
 	}
 	
 	/* (non-Javadoc)
@@ -79,7 +80,7 @@ public class EditClusterResourceDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Resource Name");
+		nameField.setLabel(Messages.get().EditClusterResourceDialog_ResName);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -88,7 +89,7 @@ public class EditClusterResourceDialog extends Dialog
 		nameField.setLayoutData(gd);
 		
 		addressField = new LabeledText(dialogArea, SWT.NONE);
-		addressField.setLabel("Virtual IP Address");
+		addressField.setLabel(Messages.get().EditClusterResourceDialog_VIP);
 		addressField.getTextControl().setTextLimit(32);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -116,14 +117,14 @@ public class EditClusterResourceDialog extends Dialog
 		}
 		catch(UnknownHostException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid IP address");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().EditClusterResourceDialog_Warning, Messages.get().EditClusterResourceDialog_WarningInvalidIP);
 			return;
 		}
 		
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().EditClusterResourceDialog_Warning, Messages.get().EditClusterResourceDialog_WarningEmptyName);
 			return;
 		}
 		

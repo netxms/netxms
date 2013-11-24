@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.MacAddress;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.IPAddressValidator;
 import org.netxms.ui.eclipse.tools.IPNetMaskValidator;
 import org.netxms.ui.eclipse.tools.MacAddressValidator;
@@ -78,7 +79,7 @@ public class CreateInterfaceDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Interface Object");
+		newShell.setText(Messages.get().CreateInterfaceDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -98,7 +99,7 @@ public class CreateInterfaceDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name");
+		nameField.setLabel(Messages.get().CreateInterfaceDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -108,7 +109,7 @@ public class CreateInterfaceDialog extends Dialog
 		nameField.setLayoutData(gd);
 		
 		macAddrField = new LabeledText(dialogArea, SWT.NONE);
-		macAddrField.setLabel("MAC Address");
+		macAddrField.setLabel(Messages.get().CreateInterfaceDialog_MACAddr);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -116,21 +117,21 @@ public class CreateInterfaceDialog extends Dialog
 		macAddrField.setLayoutData(gd);
 		
 		ipAddrField = new LabeledText(dialogArea, SWT.NONE);
-		ipAddrField.setLabel("IP Address");
+		ipAddrField.setLabel(Messages.get().CreateInterfaceDialog_IPAddr);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		ipAddrField.setLayoutData(gd);
 		
 		ipMaskField = new LabeledText(dialogArea, SWT.NONE);
-		ipMaskField.setLabel("IP Network Mask");
+		ipMaskField.setLabel(Messages.get().CreateInterfaceDialog_IPNetMak);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		ipMaskField.setLayoutData(gd);
 		
 		checkIsPhy = new Button(dialogArea, SWT.CHECK);
-		checkIsPhy.setText("This interface is a physical port");
+		checkIsPhy.setText(Messages.get().CreateInterfaceDialog_IsPhysicalPort);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -152,8 +153,8 @@ public class CreateInterfaceDialog extends Dialog
 		});
 		
 		slotField = new LabeledText(dialogArea, SWT.NONE);
-		slotField.setLabel("Slot");
-		slotField.setText("0");
+		slotField.setLabel(Messages.get().CreateInterfaceDialog_Slot);
+		slotField.setText("0"); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -161,8 +162,8 @@ public class CreateInterfaceDialog extends Dialog
 		slotField.setEnabled(false);
 		
 		portField = new LabeledText(dialogArea, SWT.NONE);
-		portField.setLabel("Port");
-		portField.setText("0");
+		portField.setLabel(Messages.get().CreateInterfaceDialog_Port);
+		portField.setText("0"); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -192,8 +193,8 @@ public class CreateInterfaceDialog extends Dialog
 		{
 			name = nameField.getText().trim();
 			macAddress = macAddrField.getText().trim().isEmpty() ? new MacAddress() : MacAddress.parseMacAddress(macAddrField.getText());
-			ipAddress = ipAddrField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipAddrField.getText());
-			ipNetMask = ipMaskField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipMaskField.getText());
+			ipAddress = ipAddrField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipAddrField.getText()); //$NON-NLS-1$
+			ipNetMask = ipMaskField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipMaskField.getText()); //$NON-NLS-1$
 			slot = physicalPort ? Integer.parseInt(slotField.getText()) : 0;
 			port = physicalPort ? Integer.parseInt(portField.getText()) : 0;
 			
@@ -201,7 +202,7 @@ public class CreateInterfaceDialog extends Dialog
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(getShell(), "Error", "Internal error: " + e.getMessage());
+			MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDialog_Error, String.format("Internal error: %s", e.getMessage())); //$NON-NLS-1$
 		}
 	}
 

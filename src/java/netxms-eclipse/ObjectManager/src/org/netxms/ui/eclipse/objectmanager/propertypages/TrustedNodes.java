@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -80,7 +81,7 @@ public class TrustedNodes extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "AbstractNode" };
+      final String[] columnNames = { Messages.get().TrustedNodes_Node };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -115,7 +116,7 @@ public class TrustedNodes extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton.setText(Messages.get().TrustedNodes_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -142,7 +143,7 @@ public class TrustedNodes extends PropertyPage
       addButton.setLayoutData(rd);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(Messages.get().TrustedNodes_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -197,7 +198,7 @@ public class TrustedNodes extends PropertyPage
 			nodes[i++] = id;
 		md.setTrustedNodes(nodes);
 		
-		new ConsoleJob(String.format("Update trusted nodes for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().TrustedNodes_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -222,7 +223,7 @@ public class TrustedNodes extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update trusted nodes list";
+				return Messages.get().TrustedNodes_JobError;
 			}
 		}.schedule();
 	}

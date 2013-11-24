@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -72,7 +73,7 @@ public class Location extends PropertyPage
       dialogArea.setLayout(layout);
       
       Group typeGroup = new Group(dialogArea, SWT.NONE);
-      typeGroup.setText("Location type");
+      typeGroup.setText(Messages.get().Location_LocationType);
       GridData gd = new GridData();
       gd.verticalSpan = 2;
       typeGroup.setLayoutData(gd);
@@ -80,19 +81,19 @@ public class Location extends PropertyPage
       typeGroup.setLayout(layout);
       
       radioTypeUndefined = new Button(typeGroup, SWT.RADIO);
-      radioTypeUndefined.setText("&Undefined");
+      radioTypeUndefined.setText(Messages.get().Location_Undefined);
       radioTypeUndefined.setSelection(gl.getType() == GeoLocation.UNSET);
       
       radioTypeManual = new Button(typeGroup, SWT.RADIO);
-      radioTypeManual.setText("&Manual");
+      radioTypeManual.setText(Messages.get().Location_Manual);
       radioTypeManual.setSelection(gl.getType() == GeoLocation.MANUAL);
       
       radioTypeAuto = new Button(typeGroup, SWT.RADIO);
-      radioTypeAuto.setText("&Automatic from GPS receiver");
+      radioTypeAuto.setText(Messages.get().Location_Automatic);
       radioTypeAuto.setSelection(gl.getType() == GeoLocation.GPS);
       
       latitude = new LabeledText(dialogArea, SWT.NONE);
-      latitude.setLabel("Latitude");
+      latitude.setLabel(Messages.get().Location_Latitude);
       if (gl.getType() != GeoLocation.UNSET)
       	latitude.setText(gl.getLatitudeAsString());
       gd = new GridData();
@@ -102,7 +103,7 @@ public class Location extends PropertyPage
       latitude.setEnabled(gl.getType() == GeoLocation.MANUAL);
       
       longitude = new LabeledText(dialogArea, SWT.NONE);
-      longitude.setLabel("Longitude");
+      longitude.setLabel(Messages.get().Location_Longitude);
       if (gl.getType() != GeoLocation.UNSET)
       	longitude.setText(gl.getLongitudeAsString());
       gd = new GridData();
@@ -154,7 +155,7 @@ public class Location extends PropertyPage
 			}
 			catch(GeoLocationFormatException e)
 			{
-				MessageDialogHelper.openError(getShell(), "Error", "Geolocation format error");
+				MessageDialogHelper.openError(getShell(), Messages.get().Location_Error, Messages.get().Location_FormatError);
 				return false;
 			}
 		}
@@ -170,7 +171,7 @@ public class Location extends PropertyPage
 			setValid(false);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Update geolocation for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().Location_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -180,7 +181,7 @@ public class Location extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot modify object's geolocation";
+				return Messages.get().Location_JobError;
 			}
 
 			@Override
@@ -230,9 +231,9 @@ public class Location extends PropertyPage
 		radioTypeUndefined.setSelection(true);
 		radioTypeManual.setSelection(false);
 		radioTypeAuto.setSelection(false);
-		latitude.setText("");
+		latitude.setText(""); //$NON-NLS-1$
 		latitude.setEnabled(false);
-		longitude.setText("");
+		longitude.setText(""); //$NON-NLS-1$
 		longitude.setEnabled(false);
 	}
 }

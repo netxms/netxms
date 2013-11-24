@@ -75,7 +75,7 @@ public class AutoBind extends PropertyPage
 
       // Enable/disable check box
       checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableBind.setText(Messages.AutoBind_AutoBind);
+      checkboxEnableBind.setText(Messages.get().AutoBind_AutoBind);
       checkboxEnableBind.setSelection(object.isAutoBindEnabled());
       checkboxEnableBind.addSelectionListener(new SelectionListener() {
 			@Override
@@ -102,13 +102,13 @@ public class AutoBind extends PropertyPage
       });
       
       checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableUnbind.setText(Messages.AutoBind_AUtoUnbind);
+      checkboxEnableUnbind.setText(Messages.get().AutoBind_AUtoUnbind);
       checkboxEnableUnbind.setSelection(object.isAutoUnbindEnabled());
       checkboxEnableUnbind.setEnabled(object.isAutoBindEnabled());
       
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.AutoBind_Script);
+      label.setText(Messages.get().AutoBind_Script);
 
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
@@ -158,7 +158,7 @@ public class AutoBind extends PropertyPage
 		md.setObjectFlags(flags);
 		md.setAutoBindFilter(filterSource.getText());
 		
-		new ConsoleJob(Messages.AutoBind_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().AutoBind_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -185,7 +185,7 @@ public class AutoBind extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AutoBind_JobError;
+				return Messages.get().AutoBind_JobError;
 			}
 		}.start();
 	}

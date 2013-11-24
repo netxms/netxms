@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -55,7 +56,7 @@ public class CreateMobileDeviceDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Mobile Device Object");
+		newShell.setText(Messages.get().CreateMobileDeviceDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -73,7 +74,7 @@ public class CreateMobileDeviceDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name");
+		nameField.setLabel(Messages.get().CreateMobileDeviceDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -82,7 +83,7 @@ public class CreateMobileDeviceDialog extends Dialog
 		nameField.setLayoutData(gd);
 		
 		deviceIdField = new LabeledText(dialogArea, SWT.NONE);
-		deviceIdField.setLabel("Device ID (IMEI or ESN)");
+		deviceIdField.setLabel(Messages.get().CreateMobileDeviceDialog_DeviceID);
 		deviceIdField.getTextControl().setTextLimit(64);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -102,7 +103,7 @@ public class CreateMobileDeviceDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateMobileDeviceDialog_Warning, Messages.get().CreateMobileDeviceDialog_WarningEmptyName);
 			return;
 		}
 		

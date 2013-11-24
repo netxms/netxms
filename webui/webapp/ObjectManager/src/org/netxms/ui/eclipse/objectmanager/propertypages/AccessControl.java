@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AccessListComparator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AccessListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -80,7 +81,7 @@ public class AccessControl extends PropertyPage
 			acl.put(origAcl[i].getUserId(), new AccessListElement(origAcl[i]));
 		
 		// Initiate loading of user manager plugin if it was not loaded before
-		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -91,7 +92,7 @@ public class AccessControl extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		Group users = new Group(dialogArea, SWT.NONE);
-		users.setText("Users and Groups");
+		users.setText(Messages.get().AccessControl_UsersGroups);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
@@ -102,7 +103,7 @@ public class AccessControl extends PropertyPage
 		layout = new GridLayout();
 		users.setLayout(layout);
       
-      final String[] columnNames = { "Login Name", "Rights" };
+      final String[] columnNames = { Messages.get().AccessControl_ColLogin, Messages.get().AccessControl_ColRights };
       final int[] columnWidths = { 150, 100 };
       userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP,
                                          SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -127,7 +128,7 @@ public class AccessControl extends PropertyPage
       buttons.setLayoutData(gd);
       
       final Button addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton.setText(Messages.get().AccessControl_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -150,7 +151,7 @@ public class AccessControl extends PropertyPage
       });
 
       final Button deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(Messages.get().AccessControl_Delete);
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -175,7 +176,7 @@ public class AccessControl extends PropertyPage
       });
       
       Group rights = new Group(dialogArea, SWT.NONE);
-      rights.setText("Access Rights");
+      rights.setText(Messages.get().AccessControl_AccessRights);
       rights.setLayout(new RowLayout(SWT.VERTICAL));
       gd = new GridData();
       gd.grabExcessVerticalSpace = true;
@@ -183,17 +184,17 @@ public class AccessControl extends PropertyPage
       gd.verticalAlignment = SWT.FILL;
       rights.setLayoutData(gd);
       
-      createAccessCheck(rights, "&Read", UserAccessRights.OBJECT_ACCESS_READ);
-      createAccessCheck(rights, "&Modify", UserAccessRights.OBJECT_ACCESS_MODIFY);
-      createAccessCheck(rights, "&Create child objects", UserAccessRights.OBJECT_ACCESS_CREATE);
-      createAccessCheck(rights, "&Delete", UserAccessRights.OBJECT_ACCESS_DELETE);
-      createAccessCheck(rights, "C&ontrol", UserAccessRights.OBJECT_ACCESS_CONTROL);
-      createAccessCheck(rights, "Send &events", UserAccessRights.OBJECT_ACCESS_SEND_EVENTS);
-      createAccessCheck(rights, "&View alarms", UserAccessRights.OBJECT_ACCESS_READ_ALARMS);
-      createAccessCheck(rights, "Ac&knowledge alarms", UserAccessRights.OBJECT_ACCESS_ACK_ALARMS);
-      createAccessCheck(rights, "&Terminate alarms", UserAccessRights.OBJECT_ACCESS_TERM_ALARMS);
-      createAccessCheck(rights, "&Push data", UserAccessRights.OBJECT_ACCESS_PUSH_DATA);
-      createAccessCheck(rights, "&Access control", UserAccessRights.OBJECT_ACCESS_ACL);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessRead, UserAccessRights.OBJECT_ACCESS_READ);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessModify, UserAccessRights.OBJECT_ACCESS_MODIFY);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessCreate, UserAccessRights.OBJECT_ACCESS_CREATE);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessDelete, UserAccessRights.OBJECT_ACCESS_DELETE);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessControl, UserAccessRights.OBJECT_ACCESS_CONTROL);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessSendEvents, UserAccessRights.OBJECT_ACCESS_SEND_EVENTS);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessViewAlarms, UserAccessRights.OBJECT_ACCESS_READ_ALARMS);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessAckAlarms, UserAccessRights.OBJECT_ACCESS_ACK_ALARMS);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessTermAlarms, UserAccessRights.OBJECT_ACCESS_TERM_ALARMS);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessPushData, UserAccessRights.OBJECT_ACCESS_PUSH_DATA);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessAccessControl, UserAccessRights.OBJECT_ACCESS_ACL);
       
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -223,7 +224,7 @@ public class AccessControl extends PropertyPage
       });
       
       checkInherit = new Button(dialogArea, SWT.CHECK);
-      checkInherit.setText("&Inherit access rights from parent object(s)");
+      checkInherit.setText(Messages.get().AccessControl_InheritRights);
       checkInherit.setSelection(object.isInheritAccessRights());
       
 		return dialogArea;
@@ -294,7 +295,7 @@ public class AccessControl extends PropertyPage
 		md.setACL(acl.values().toArray(new AccessListElement[acl.size()]));
 		md.setInheritAccessRights(inheritAccessRights);
 
-		new ConsoleJob("Update access control list for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -319,7 +320,7 @@ public class AccessControl extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change access control list";
+				return Messages.get().AccessControl_JobError;
 			}
 		}.start();
 	}

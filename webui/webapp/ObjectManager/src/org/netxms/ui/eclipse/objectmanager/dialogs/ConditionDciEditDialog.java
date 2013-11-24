@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -68,7 +69,7 @@ public class ConditionDciEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Edit source DCI");
+		newShell.setText(Messages.get().ConditionDciEditDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -84,7 +85,7 @@ public class ConditionDciEditDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		LabeledText node = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
-		node.setLabel("Node");
+		node.setLabel(Messages.get().ConditionDciEditDialog_Node);
 		node.setText(nodeName);
 		GridData gd = new GridData();
 		gd.horizontalSpan = 2;
@@ -94,7 +95,7 @@ public class ConditionDciEditDialog extends Dialog
 		node.setLayoutData(gd);
 		
 		LabeledText parameter = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
-		parameter.setLabel("Parameter");
+		parameter.setLabel(Messages.get().ConditionDciEditDialog_Parameter);
 		parameter.setText(dciName);
 		gd = new GridData();
 		gd.horizontalSpan = 2;
@@ -107,13 +108,13 @@ public class ConditionDciEditDialog extends Dialog
    		gd = new GridData();
    		gd.horizontalAlignment = SWT.FILL;
    		gd.grabExcessHorizontalSpace = true;
-   		function = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, "Function", gd);
-   		function.add("Last");
-   		function.add("Average");
-   		function.add("Deviation");
-   		function.add("Diff");
-   		function.add("Error");
-   		function.add("Sum");
+   		function = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, Messages.get().ConditionDciEditDialog_Function, gd);
+   		function.add(Messages.get().ConditionDciEditDialog_FuncLast);
+   		function.add(Messages.get().ConditionDciEditDialog_FuncAvg);
+   		function.add(Messages.get().ConditionDciEditDialog_FuncDeviation);
+   		function.add(Messages.get().ConditionDciEditDialog_FuncDiff);
+   		function.add(Messages.get().ConditionDciEditDialog_FuncError);
+   		function.add(Messages.get().ConditionDciEditDialog_FuncSum);
    		function.select(dci.getFunction());
    		function.addSelectionListener(new SelectionListener() {
    			@Override
@@ -139,7 +140,7 @@ public class ConditionDciEditDialog extends Dialog
    				return spinner;
    			}
    		};
-   		polls = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, "Polls", gd);
+   		polls = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, Messages.get().ConditionDciEditDialog_Polls, gd);
    		polls.setSelection(dci.getPolls());
    		polls.setEnabled(isFunctionWithArgs());
 		}		

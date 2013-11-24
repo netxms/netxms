@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -52,7 +53,7 @@ public class SetInterfaceExpStateDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Set Interface Expected State");
+		newShell.setText(Messages.get().SetInterfaceExpStateDlg_Title);
 	}
 
 	/* (non-Javadoc)
@@ -71,7 +72,7 @@ public class SetInterfaceExpStateDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText("New expected state for selected interface(s):");
+		label.setText(Messages.get().SetInterfaceExpStateDlg_Label);
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
 		label.setLayoutData(gd);
@@ -80,9 +81,9 @@ public class SetInterfaceExpStateDlg extends Dialog
 		gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
 		comboStates.setLayoutData(gd);
-		comboStates.add("UP");
-		comboStates.add("DOWN");
-		comboStates.add("IGNORE");
+		comboStates.add(Messages.get().SetInterfaceExpStateDlg_StateUp);
+		comboStates.add(Messages.get().SetInterfaceExpStateDlg_StateDown);
+		comboStates.add(Messages.get().SetInterfaceExpStateDlg_StateIgnore);
 		comboStates.select(0);
 
 		return dialogArea;

@@ -33,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -72,17 +73,17 @@ public class InterfacePolling extends PropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      pollCount = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Required poll count", 0, 1000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      pollCount = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().InterfacePolling_RequiredPollCount, 0, 1000, WidgetHelper.DEFAULT_LAYOUT_DATA);
       pollCount.setSelection(object.getRequiredPollCount());
       
-      expectedState = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Expected state", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      expectedState.add("UP");
-      expectedState.add("DOWN");
-      expectedState.add("IGNORE");
+      expectedState = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().InterfacePolling_ExpectedState, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      expectedState.add(Messages.get().InterfacePolling_StateUP);
+      expectedState.add(Messages.get().InterfacePolling_StateDOWN);
+      expectedState.add(Messages.get().InterfacePolling_StateIGNORE);
       expectedState.select(object.getExpectedState());
       
       checkExcludeFromTopology = new Button(dialogArea, SWT.CHECK);
-      checkExcludeFromTopology.setText("&Exclude this interface from network topology");
+      checkExcludeFromTopology.setText(Messages.get().InterfacePolling_ExcludeFromTopology);
       checkExcludeFromTopology.setSelection(object.isExcludedFromTopology());
       checkExcludeFromTopology.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
       
@@ -109,7 +110,7 @@ public class InterfacePolling extends PropertyPage
 		data.setExpectedState(expectedState.getSelectionIndex());
 		data.setRequiredPolls(pollCount.getSelection());
 		data.setObjectFlags(checkExcludeFromTopology.getSelection() ? Interface.IF_EXCLUDE_FROM_TOPOLOGY : 0);
-		new ConsoleJob("Update interface polling configuration", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().InterfacePolling_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -119,7 +120,7 @@ public class InterfacePolling extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot modify interface object %s", object.getObjectName());
+				return String.format(Messages.get().InterfacePolling_JobError, object.getObjectName());
 			}
 
 			@Override

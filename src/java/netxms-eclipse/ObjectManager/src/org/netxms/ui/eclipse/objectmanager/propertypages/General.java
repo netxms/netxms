@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -61,16 +62,16 @@ public class General extends PropertyPage
       dialogArea.setLayout(layout);
       
       // Object ID
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Object ID",
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.get().General_ObjectID,
                                      Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object class
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Object class",
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.get().General_ObjectClass,
                                      object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Object name
       initialName = object.getObjectName();
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Object name",
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_ObjectName,
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		return dialogArea;
@@ -90,7 +91,7 @@ public class General extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setName(newName);
-		new ConsoleJob("Rename object", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().General_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -100,7 +101,7 @@ public class General extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot modify object";
+				return Messages.get().General_JobError;
 			}
 
 			@Override

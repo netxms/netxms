@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -70,7 +71,7 @@ public class NodePolling extends PropertyPage
       
       /* poller node */
       Group servicePollGroup = new Group(dialogArea, SWT.NONE);
-      servicePollGroup.setText("Network service polling");
+      servicePollGroup.setText(Messages.get().NodePolling_GroupNetSrv);
 		layout = new GridLayout();
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.numColumns = 2;
@@ -81,9 +82,9 @@ public class NodePolling extends PropertyPage
 		servicePollGroup.setLayoutData(gd);
 		
 		pollerNode = new ObjectSelector(servicePollGroup, SWT.NONE, true);
-		pollerNode.setLabel("Poller node");
+		pollerNode.setLabel(Messages.get().NodePolling_PollerNode);
 		pollerNode.setObjectClass(AbstractNode.class);
-		pollerNode.setEmptySelectionName("<server>");
+		pollerNode.setEmptySelectionName(Messages.get().NodePolling_EmptySelectionServer);
 		pollerNode.setObjectId(object.getPollerNodeId());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -91,14 +92,14 @@ public class NodePolling extends PropertyPage
 		pollerNode.setLayoutData(gd);
 		
 		Label label = new Label(servicePollGroup, SWT.WRAP);
-		label.setText("All network services of this node will be polled from poller node specified here, if not overrided by network service settings.");
+		label.setText(Messages.get().NodePolling_PollerNodeDescription);
 		gd = new GridData();
 		gd.widthHint = 250;
 		label.setLayoutData(gd);
 
 		/* options */
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText("Options");
+		optionsGroup.setText(Messages.get().NodePolling_GroupOptions);
 		layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		optionsGroup.setLayout(layout);
@@ -107,19 +108,19 @@ public class NodePolling extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		optionsGroup.setLayoutData(gd);
 		
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_NXCP, "Disable usage of NetXMS &agent for all polls");
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, "Disable usage of &SNMP for all polls");
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, "Disable usage of &ICMP pings for status polling");
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_STATUS_POLL, "Disable s&tatus polling");
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_CONF_POLL, "Disable &configuration polling");
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ROUTE_POLL, "Disable &routing table polling");
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, "Disable &topology polling");
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, "Disable network &discovery polling");
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DATA_COLLECT, "Disable data c&ollection");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_NXCP, Messages.get().NodePolling_OptDisableAgent);
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, Messages.get().NodePolling_OptDisableSNMP);
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, Messages.get().NodePolling_OptDisableICMP);
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_STATUS_POLL, Messages.get().NodePolling_OptDisableStatusPoll);
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_CONF_POLL, Messages.get().NodePolling_OptDisableConfigPoll);
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ROUTE_POLL, Messages.get().NodePolling_OptDisableRTPoll);
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, Messages.get().NodePolling_OptDisableTopoPoll);
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, Messages.get().NodePolling_OptDisableDiscoveryPoll);
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DATA_COLLECT, Messages.get().NodePolling_OptDisableDataCollection);
 		
 		/* use ifXTable */
 		Group ifXTableGroup = new Group(dialogArea, SWT.NONE);
-		ifXTableGroup.setText("Use ifXTable for interface polling");
+		ifXTableGroup.setText(Messages.get().NodePolling_GroupIfXTable);
 		layout = new GridLayout();
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.numColumns = 3;
@@ -131,15 +132,15 @@ public class NodePolling extends PropertyPage
 		ifXTableGroup.setLayoutData(gd);
 		
 		radioDefault = new Button(ifXTableGroup, SWT.RADIO);
-		radioDefault.setText("De&fault");
+		radioDefault.setText(Messages.get().NodePolling_Default);
 		radioDefault.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DEFAULT);
 
 		radioEnable = new Button(ifXTableGroup, SWT.RADIO);
-		radioEnable.setText("&Enable");
+		radioEnable.setText(Messages.get().NodePolling_Enable);
 		radioEnable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_ENABLED);
 
 		radioDisable = new Button(ifXTableGroup, SWT.RADIO);
-		radioDisable.setText("&Disable");
+		radioDisable.setText(Messages.get().NodePolling_Disable);
 		radioDisable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DISABLED);
 
       return dialogArea;
@@ -213,7 +214,7 @@ public class NodePolling extends PropertyPage
 			setValid(false);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update node polling settings", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().NodePolling_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -223,7 +224,7 @@ public class NodePolling extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update node polling settings";
+				return Messages.get().NodePolling_JobError;
 			}
 
 			@Override

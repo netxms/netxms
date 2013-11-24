@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ public class ConditionScript extends PropertyPage
       
       // Script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.ConditionScript_Script);
+      label.setText(Messages.get().ConditionScript_Script);
 
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(object.getScript());
@@ -101,7 +101,7 @@ public class ConditionScript extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setScript(newScript);
-		new ConsoleJob(Messages.ConditionScript_JobName, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ConditionScript_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -112,7 +112,7 @@ public class ConditionScript extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.ConditionScript_JobError;
+				return Messages.get().ConditionScript_JobError;
 			}
 
 			@Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 
@@ -65,7 +66,7 @@ public class AttributeEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Name");
+      label.setText(Messages.get().AttributeEditDialog_Name);
       
       textName = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
       textName.setTextLimit(63);
@@ -76,10 +77,10 @@ public class AttributeEditDialog extends Dialog
       }
       
       label = new Label(dialogArea, SWT.NONE);
-      label.setText("");
+      label.setText(""); //$NON-NLS-1$
 
       label = new Label(dialogArea, SWT.NONE);
-      label.setText("Value");
+      label.setText(Messages.get().AttributeEditDialog_Value);
 
       textValue = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
       textValue.setTextLimit(255);
@@ -100,7 +101,7 @@ public class AttributeEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((attrName == null) ? "Add Attribute" : "Modify Attribute");
+		newShell.setText((attrName == null) ? Messages.get().AttributeEditDialog_AddAttr : Messages.get().AttributeEditDialog_ModifyAttr);
 	}
 	
 	

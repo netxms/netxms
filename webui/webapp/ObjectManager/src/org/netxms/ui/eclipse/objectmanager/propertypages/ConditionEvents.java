@@ -30,13 +30,14 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.Condition;
-import org.netxms.ui.eclipse.widgets.StatusSelector;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.StatusSelector;
 
 /**
  * "Events" property page for condition objects
@@ -71,7 +72,7 @@ public class ConditionEvents extends PropertyPage
 		
 		/* event group */
 		Group eventGroup = new Group(dialogArea, SWT.NONE);
-		eventGroup.setText("Events");
+		eventGroup.setText(Messages.get().ConditionEvents_Events);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -81,7 +82,7 @@ public class ConditionEvents extends PropertyPage
 		eventGroup.setLayout(layout);
 		
 		activationEvent = new EventSelector(eventGroup, SWT.NONE);
-		activationEvent.setLabel("Activation event");
+		activationEvent.setLabel(Messages.get().ConditionEvents_ActivationEvent);
 		activationEvent.setEventCode(object.getActivationEvent());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -89,7 +90,7 @@ public class ConditionEvents extends PropertyPage
 		activationEvent.setLayoutData(gd);
 		
 		deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
-		deactivationEvent.setLabel("Deactivation event");
+		deactivationEvent.setLabel(Messages.get().ConditionEvents_DeactivationEvent);
 		deactivationEvent.setEventCode(object.getDeactivationEvent());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -97,8 +98,8 @@ public class ConditionEvents extends PropertyPage
 		deactivationEvent.setLayoutData(gd);
 
 		sourceObject = new ObjectSelector(eventGroup, SWT.NONE, true);
-		sourceObject.setLabel("Source object for events");
-		sourceObject.setEmptySelectionName("<server>");
+		sourceObject.setLabel(Messages.get().ConditionEvents_SourceObject);
+		sourceObject.setEmptySelectionName(Messages.get().ConditionEvents_SelectionServer);
 		sourceObject.setObjectId(object.getEventSourceObject());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -107,7 +108,7 @@ public class ConditionEvents extends PropertyPage
 		
 		/* status group */
 		Group statusGroup = new Group(dialogArea, SWT.NONE);
-		statusGroup.setText("Status");
+		statusGroup.setText(Messages.get().ConditionEvents_Status);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -118,7 +119,7 @@ public class ConditionEvents extends PropertyPage
 		statusGroup.setLayout(layout);
 		
 		activeStatus = new StatusSelector(statusGroup, SWT.NONE, Severity.CRITICAL);
-		activeStatus.setLabel("Active status");
+		activeStatus.setLabel(Messages.get().ConditionEvents_ActiveStatus);
 		activeStatus.setSelection(object.getActiveStatus());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -126,7 +127,7 @@ public class ConditionEvents extends PropertyPage
 		activeStatus.setLayoutData(gd);
 		
 		inactiveStatus = new StatusSelector(statusGroup, SWT.NONE, Severity.CRITICAL);
-		inactiveStatus.setLabel("Inactive status");
+		inactiveStatus.setLabel(Messages.get().ConditionEvents_InactiveStatus);
 		inactiveStatus.setSelection(object.getInactiveStatus());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -154,7 +155,7 @@ public class ConditionEvents extends PropertyPage
 		md.setInactiveStatus(inactiveStatus.getSelection());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update condition events configuration", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ConditionEvents_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -164,7 +165,7 @@ public class ConditionEvents extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change condition events configuration";
+				return Messages.get().ConditionEvents_JobError;
 			}
 
 			@Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -54,7 +55,7 @@ public class Comments extends PropertyPage
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		initialComments = object.getComments();
 		if (initialComments == null)
-			initialComments = "";
+			initialComments = ""; //$NON-NLS-1$
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -92,7 +93,7 @@ public class Comments extends PropertyPage
 		
 		final String newComments = new String(comments.getText());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Update comments for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().Comments_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -103,7 +104,7 @@ public class Comments extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change comments";
+				return Messages.get().Comments_JobError;
 			}
 
 			@Override
@@ -149,6 +150,6 @@ public class Comments extends PropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		comments.setText("");
+		comments.setText(""); //$NON-NLS-1$
 	}
 }

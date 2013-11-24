@@ -47,6 +47,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.EditClusterResourceDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.ResourceListComparator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.ResourceListLabelProvider;
@@ -88,7 +89,7 @@ public class ClusterResources extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Name", "Virtual IP" };
+      final String[] columnNames = { Messages.get().ClusterResources_ColName, Messages.get().ClusterResources_ColVIP };
       final int[] columnWidths = { 250, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -121,7 +122,7 @@ public class ClusterResources extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.get().ClusterResources_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -140,7 +141,7 @@ public class ClusterResources extends PropertyPage
       });
 		
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText("&Modify...");
+      editButton.setText(Messages.get().ClusterResources_Modify);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -159,7 +160,7 @@ public class ClusterResources extends PropertyPage
       });
       
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.get().ClusterResources_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -275,7 +276,7 @@ public class ClusterResources extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setResourceList(resources);
-		new ConsoleJob("Update cluster resource list", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ClusterResources_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -286,7 +287,7 @@ public class ClusterResources extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update cluster resource list";
+				return Messages.get().ClusterResources_JobError;
 			}
 
 			@Override

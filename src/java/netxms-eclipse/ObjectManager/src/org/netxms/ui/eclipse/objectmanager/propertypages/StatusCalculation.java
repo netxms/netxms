@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -126,7 +127,7 @@ public class StatusCalculation extends PropertyPage
 	private void createLeftPanel(Composite parent)
 	{
 		Group group = new Group(parent, SWT.NONE);
-		group.setText("Propagate status as");
+		group.setText(Messages.get().StatusCalculation_PropagateAs);
 		
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -138,15 +139,15 @@ public class StatusCalculation extends PropertyPage
 		group.setLayout(layout);
 		
 		radioPropDefault = new Button(group, SWT.RADIO);
-		radioPropDefault.setText("&Default");
+		radioPropDefault.setText(Messages.get().StatusCalculation_Default);
 		radioPropDefault.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_DEFAULT);
 		
 		radioPropUnchanged = new Button(group, SWT.RADIO);
-		radioPropUnchanged.setText("&Unchanged");
+		radioPropUnchanged.setText(Messages.get().StatusCalculation_Unchanged);
 		radioPropUnchanged.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_UNCHANGED);
 		
 		radioPropFixed = new Button(group, SWT.RADIO);
-		radioPropFixed.setText("&Fixed to value:");
+		radioPropFixed.setText(Messages.get().StatusCalculation_FixedTo);
 		radioPropFixed.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_FIXED);
 		
 		comboFixedStatus = new Combo(group, SWT.BORDER | SWT.READ_ONLY);
@@ -160,7 +161,7 @@ public class StatusCalculation extends PropertyPage
 		comboFixedStatus.select(object.getFixedPropagatedStatus());
 		
 		radioPropRelative = new Button(group, SWT.RADIO);
-		radioPropRelative.setText("&Relative with offset:");
+		radioPropRelative.setText(Messages.get().StatusCalculation_Relative);
 		radioPropRelative.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_RELATIVE);
 		
 		textRelativeStatus = new Text(group, SWT.BORDER);
@@ -172,7 +173,7 @@ public class StatusCalculation extends PropertyPage
 		textRelativeStatus.setText(Integer.toString(object.getStatusShift()));
 
 		radioPropTranslated = new Button(group, SWT.RADIO);
-		radioPropTranslated.setText("&Severity based:");
+		radioPropTranslated.setText(Messages.get().StatusCalculation_SeverityBased);
 		radioPropTranslated.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_TRANSLATED);
 
 		Composite translationGroup = new Composite(group, SWT.NONE);
@@ -193,7 +194,7 @@ public class StatusCalculation extends PropertyPage
 			label.setLayoutData(gd);
 			
 			label = new Label(translationGroup, SWT.NONE);
-			label.setText("->");
+			label.setText("->"); //$NON-NLS-1$
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.CENTER;
 			label.setLayoutData(gd);
@@ -217,7 +218,7 @@ public class StatusCalculation extends PropertyPage
 	private void createRightPanel(Composite parent)
 	{
 		Group group = new Group(parent, SWT.NONE);
-		group.setText("Calculate status as");
+		group.setText(Messages.get().StatusCalculation_CalculateAs);
 		
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -229,15 +230,15 @@ public class StatusCalculation extends PropertyPage
 		group.setLayout(layout);
 		
 		radioCalcDefault = new Button(group, SWT.RADIO);
-		radioCalcDefault.setText("D&efault");
+		radioCalcDefault.setText(Messages.get().StatusCalculation_Default2);
 		radioCalcDefault.setSelection(object.getStatusCalculationMethod() == AbstractObject.CALCULATE_DEFAULT);
 		
 		radioCalcMostCritical = new Button(group, SWT.RADIO);
-		radioCalcMostCritical.setText("&Most critical");
+		radioCalcMostCritical.setText(Messages.get().StatusCalculation_MostCritical);
 		radioCalcMostCritical.setSelection(object.getStatusCalculationMethod() == AbstractObject.CALCULATE_MOST_CRITICAL);
 		
 		radioCalcSingle = new Button(group, SWT.RADIO);
-		radioCalcSingle.setText("&Single threshold (%):");
+		radioCalcSingle.setText(Messages.get().StatusCalculation_SingleThreshold);
 		radioCalcSingle.setSelection(object.getStatusCalculationMethod() == AbstractObject.CALCULATE_SINGLE_THRESHOLD);
 		
 		textSingleThreshold = new Text(group, SWT.BORDER);
@@ -249,7 +250,7 @@ public class StatusCalculation extends PropertyPage
 		textSingleThreshold.setText(Integer.toString(object.getStatusSingleThreshold()));
 
 		radioCalcMultiple = new Button(group, SWT.RADIO);
-		radioCalcMultiple.setText("M&ultiple thresholds (%):");
+		radioCalcMultiple.setText(Messages.get().StatusCalculation_MultipleThresholds);
 		radioCalcMultiple.setSelection(object.getStatusCalculationMethod() == AbstractObject.CALCULATE_MULTIPLE_THRESHOLDS);
 
 		Composite thresholdGroup = new Composite(group, SWT.NONE);
@@ -420,19 +421,19 @@ public class StatusCalculation extends PropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (!WidgetHelper.validateTextInput(textRelativeStatus, "Relative status", new NumericTextFieldValidator(-4, 4), this) ||
-		    !WidgetHelper.validateTextInput(textSingleThreshold, "Single threshold", new NumericTextFieldValidator(0, 100), this) ||
+		if (!WidgetHelper.validateTextInput(textRelativeStatus, Messages.get().StatusCalculation_Validate_RelativeStatus, new NumericTextFieldValidator(-4, 4), this) ||
+		    !WidgetHelper.validateTextInput(textSingleThreshold, Messages.get().StatusCalculation_Validate_SingleThreshold, new NumericTextFieldValidator(0, 100), this) ||
 		    !WidgetHelper.validateTextInput(textThresholds[0], 
-		          String.format("Threshold - %s", StatusDisplayInfo.getStatusText(Severity.WARNING)), 
+		          String.format(Messages.get().StatusCalculation_Validate_Threshold, StatusDisplayInfo.getStatusText(Severity.WARNING)), 
 		          new NumericTextFieldValidator(0, 100), this) ||
 		    !WidgetHelper.validateTextInput(textThresholds[1], 
-		          String.format("Threshold - %s", StatusDisplayInfo.getStatusText(Severity.MINOR)),
+		          String.format(Messages.get().StatusCalculation_Validate_Threshold, StatusDisplayInfo.getStatusText(Severity.MINOR)),
 		          new NumericTextFieldValidator(0, 100), this) ||
 		    !WidgetHelper.validateTextInput(textThresholds[2], 
-		          String.format("Threshold - %s", StatusDisplayInfo.getStatusText(Severity.MAJOR)), 
+		          String.format(Messages.get().StatusCalculation_Validate_Threshold, StatusDisplayInfo.getStatusText(Severity.MAJOR)), 
 		          new NumericTextFieldValidator(0, 100), this) ||
 		    !WidgetHelper.validateTextInput(textThresholds[3], 
-		          String.format("Threshold - %s", StatusDisplayInfo.getStatusText(Severity.CRITICAL)), 
+		          String.format(Messages.get().StatusCalculation_Validate_Threshold, StatusDisplayInfo.getStatusText(Severity.CRITICAL)), 
 		          new NumericTextFieldValidator(0, 100), this))
 			return false;
 
@@ -459,7 +460,7 @@ public class StatusCalculation extends PropertyPage
 			setValid(false);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Update status calculation for object %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().StatusCalculation_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -469,7 +470,7 @@ public class StatusCalculation extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change object's status calculation properties";
+				return Messages.get().StatusCalculation_JobError;
 			}
 
 			@Override

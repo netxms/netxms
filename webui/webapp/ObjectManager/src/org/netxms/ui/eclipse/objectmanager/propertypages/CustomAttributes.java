@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrListLabelProvider;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrViewerComparator;
@@ -92,7 +93,7 @@ public class CustomAttributes extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Name", "Value" };
+      final String[] columnNames = { Messages.get().CustomAttributes_Name, Messages.get().CustomAttributes_Value };
       final int[] columnWidths = { 150, 250 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -103,14 +104,14 @@ public class CustomAttributes extends PropertyPage
       attributes = new HashMap<String, String>(object.getCustomAttributes());
       viewer.setInput(attributes.entrySet());
       
-      if (!Platform.getPreferencesService().getBoolean("org.netxms.ui.eclipse.console", "SHOW_HIDDEN_ATTRIBUTES", false, null))
+      if (!Platform.getPreferencesService().getBoolean("org.netxms.ui.eclipse.console", "SHOW_HIDDEN_ATTRIBUTES", false, null)) //$NON-NLS-1$ //$NON-NLS-2$
       {
 	      viewer.addFilter(new ViewerFilter() {
 				@SuppressWarnings("unchecked")
 				@Override
 				public boolean select(Viewer viewer, Object parentElement, Object element)
 				{
-					return !((Entry<String, String>)element).getKey().startsWith(".");
+					return !((Entry<String, String>)element).getKey().startsWith("."); //$NON-NLS-1$
 				}
 			});
       }
@@ -135,7 +136,7 @@ public class CustomAttributes extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.get().CustomAttributes_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -154,7 +155,8 @@ public class CustomAttributes extends PropertyPage
 				{
 					if (attributes.containsKey(dlg.getAttrName()))
 					{
-						MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
+						MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), Messages.get().CustomAttributes_Warning, 
+						      String.format(Messages.get().CustomAttributes_WarningAlreadyExist, dlg.getAttrName()));
 					}
 					else
 					{
@@ -167,7 +169,7 @@ public class CustomAttributes extends PropertyPage
       });
 		
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText("&Modify...");
+      editButton.setText(Messages.get().CustomAttributes_Modify);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -198,7 +200,7 @@ public class CustomAttributes extends PropertyPage
       });
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.get().CustomAttributes_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -265,7 +267,7 @@ public class CustomAttributes extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setCustomAttributes(attributes);
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update custom attributes", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CustomAttributes_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -276,7 +278,7 @@ public class CustomAttributes extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update object's custom attributes";
+				return Messages.get().CustomAttributes_JobError;
 			}
 
 			@Override

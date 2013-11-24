@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.netxms.client.objects.NetworkService;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -72,19 +73,19 @@ public class NetworkServicePolling extends PropertyPage
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		serviceType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Service type", gd);
-		serviceType.add("User-defined");
-		serviceType.add("SSH");
-		serviceType.add("POP3");
-		serviceType.add("SMTP");
-		serviceType.add("FTP");
-		serviceType.add("HTTP");
-		serviceType.add("HTTPS");
-		serviceType.add("Telnet");
+		serviceType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().NetworkServicePolling_ServiceType, gd);
+		serviceType.add(Messages.get().NetworkServicePolling_TypeUserDef);
+		serviceType.add(Messages.get().NetworkServicePolling_TypeSSH);
+		serviceType.add(Messages.get().NetworkServicePolling_TypePOP3);
+		serviceType.add(Messages.get().NetworkServicePolling_TypeSMTP);
+		serviceType.add(Messages.get().NetworkServicePolling_TypeFTP);
+		serviceType.add(Messages.get().NetworkServicePolling_TypeHTTP);
+		serviceType.add(Messages.get().NetworkServicePolling_TypeHTTPS);
+		serviceType.add(Messages.get().NetworkServicePolling_TypeTelnet);
 		serviceType.select(object.getServiceType());
 		
 		port = new LabeledText(dialogArea, SWT.NONE);
-		port.setLabel("Port");
+		port.setLabel(Messages.get().NetworkServicePolling_Port);
 		port.setText(Integer.toString(object.getPort()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -92,7 +93,7 @@ public class NetworkServicePolling extends PropertyPage
 		port.setLayoutData(gd);
 		
 		request = new LabeledText(dialogArea, SWT.NONE);
-		request.setLabel("Request");
+		request.setLabel(Messages.get().NetworkServicePolling_Request);
 		request.setText(object.getRequest());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -101,7 +102,7 @@ public class NetworkServicePolling extends PropertyPage
 		request.setLayoutData(gd);
 		
 		response = new LabeledText(dialogArea, SWT.NONE);
-		response.setLabel("Response");
+		response.setLabel(Messages.get().NetworkServicePolling_Response);
 		response.setText(object.getResponse());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -110,8 +111,8 @@ public class NetworkServicePolling extends PropertyPage
 		response.setLayoutData(gd);
 		
 		pollerNode = new ObjectSelector(dialogArea, SWT.NONE, true);
-		pollerNode.setLabel("Poller node");
-		pollerNode.setEmptySelectionName("<default>");
+		pollerNode.setLabel(Messages.get().NetworkServicePolling_PollerNode);
+		pollerNode.setEmptySelectionName(Messages.get().NetworkServicePolling_SelectionDefault);
 		pollerNode.setObjectClass(AbstractNode.class);
 		pollerNode.setObjectId(object.getPollerNode());
 		gd = new GridData();
@@ -122,7 +123,7 @@ public class NetworkServicePolling extends PropertyPage
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = false;
-      pollCount = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Required poll count", 0, 1000, gd);
+      pollCount = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().NetworkServicePolling_RequiredPolls, 0, 1000, gd);
       pollCount.setSelection(object.getPollCount());
 		
 		return dialogArea;
@@ -146,7 +147,7 @@ public class NetworkServicePolling extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid port number (1 .. 65535)");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().NetworkServicePolling_Warning, Messages.get().NetworkServicePolling_WarningInvalidPort);
 			return false;
 		}
 		
@@ -160,7 +161,7 @@ public class NetworkServicePolling extends PropertyPage
 			setValid(false);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update network service object", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().NetworkServicePolling_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -170,7 +171,7 @@ public class NetworkServicePolling extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update network service object";
+				return Messages.get().NetworkServicePolling_JobError;
 			}
 
 			@Override

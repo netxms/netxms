@@ -34,6 +34,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.propertypages.ConditionData;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -42,7 +43,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] functions = { "last()", "average(", "deviation(", "diff()", "error(", "sum(" };
+	private static final String[] functions = { "last()", "average(", "deviation(", "diff()", "error(", "sum(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
 	private NXCSession session;
 	private Map<NodeItemPair, String> dciNameCache = new HashMap<NodeItemPair, String>();
@@ -118,13 +119,13 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case ConditionData.COLUMN_NODE:
 				AbstractObject object = session.findObjectById(dci.getNodeId());
-				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]");
+				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case ConditionData.COLUMN_METRIC:
 				String name = dciNameCache.get(new NodeItemPair(dci.getNodeId(), dci.getDciId()));
-				return (name != null) ? name : "<unresolved>";
+				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
 			case ConditionData.COLUMN_FUNCTION:
 			   if (dci.getType() == DataCollectionObject.DCO_TYPE_TABLE)
-			      return "";
+			      return ""; //$NON-NLS-1$
 				int f = dci.getFunction();
 				StringBuilder text = new StringBuilder(functions[f]);
 				if ((f != Threshold.F_DIFF) && (f != Threshold.F_LAST))
@@ -144,7 +145,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void resolveDciNames(final Collection<ConditionDciInfo> dciList)
 	{
-		new ConsoleJob("Resolve DCI names", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DciListLabelProvider_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -165,7 +166,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot resolve DCI names";
+				return Messages.get().DciListLabelProvider_JobError;
 			}
 		}.runInForeground();
 	}

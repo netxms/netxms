@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -67,7 +68,7 @@ public class ClusterNetworkEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Address");
+      label.setText(Messages.get().ClusterNetworkEditDialog_Address);
       
       textAddress = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
       textAddress.setTextLimit(15);
@@ -75,10 +76,10 @@ public class ClusterNetworkEditDialog extends Dialog
       	textAddress.setText(address.getHostAddress());
       
       label = new Label(dialogArea, SWT.NONE);
-      label.setText("");
+      label.setText(""); //$NON-NLS-1$
 
       label = new Label(dialogArea, SWT.NONE);
-      label.setText("Mask");
+      label.setText(Messages.get().ClusterNetworkEditDialog_Mask);
 
       textMask = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
       textMask.setTextLimit(15);
@@ -96,7 +97,7 @@ public class ClusterNetworkEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((address == null) ? "Add Network" : "Modify Network");
+		newShell.setText((address == null) ? Messages.get().ClusterNetworkEditDialog_AddNet : Messages.get().ClusterNetworkEditDialog_ModifyNet);
 	}
 	
 	/* (non-Javadoc)
@@ -112,7 +113,7 @@ public class ClusterNetworkEditDialog extends Dialog
 		}
 		catch(UnknownHostException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid IP address and network mask");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().ClusterNetworkEditDialog_Warning, Messages.get().ClusterNetworkEditDialog_WarningInvalidIP);
 			return;
 		}
 		super.okPressed();

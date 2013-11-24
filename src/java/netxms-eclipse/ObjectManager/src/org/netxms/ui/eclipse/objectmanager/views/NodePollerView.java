@@ -47,6 +47,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -55,9 +56,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class NodePollerView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.NodePollerView";
+	public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.NodePollerView"; //$NON-NLS-1$
 	
-	private static final String[] POLL_NAME = { "", "Status Poll", "Configuration Poll", "Interface Poll", "Topology Poll" };
+	private static final String[] POLL_NAME = { "", Messages.get().NodePollerView_StatusPoll, Messages.get().NodePollerView_ConfigPoll, Messages.get().NodePollerView_InterfacePoll, Messages.get().NodePollerView_TopologyPoll }; //$NON-NLS-1$
 	private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
 	private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
 	private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
@@ -82,17 +83,17 @@ public class NodePollerView extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		// Secondary ID must by in form nodeId&pollType
-		String[] parts = site.getSecondaryId().split("&");
+		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length != 2)
-			throw new PartInitException("Internal error");
+			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		AbstractObject obj = session.findObjectById(Long.parseLong(parts[0]));
 		node = ((obj != null) && (obj instanceof AbstractNode)) ? (AbstractNode)obj : null;
 		if (node == null)
-			throw new PartInitException("Invalid object ID");
+			throw new PartInitException(Messages.get().NodePollerView_InvalidObjectID);
 		pollType = Integer.parseInt(parts[1]);
 		
-		setPartName(POLL_NAME[pollType] + " - " + node.getObjectName());
+		setPartName(POLL_NAME[pollType] + " - " + node.getObjectName()); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -115,7 +116,7 @@ public class NodePollerView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRestart = new Action("&Restart poll", SharedIcons.RESTART) {
+		actionRestart = new Action(Messages.get().NodePollerView_ActionRestart, SharedIcons.RESTART) {
 			@Override
 			public void run()
 			{
@@ -123,11 +124,11 @@ public class NodePollerView extends ViewPart
 			}
 		};
 
-		actionClearOutput = new Action("&Clear output", SharedIcons.CLEAR_LOG) {
+		actionClearOutput = new Action(Messages.get().NodePollerView_ActionClear, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
-				textArea.setText("");
+				textArea.setText(""); //$NON-NLS-1$
 			}
 		};
 	}
@@ -206,7 +207,7 @@ public class NodePollerView extends ViewPart
 	private void addPollerMessage(String message)
 	{
 		Date now = new Date();
-		textArea.append("[" + RegionalSettings.getDateTimeFormat().format(now) + "] ");
+		textArea.append("[" + RegionalSettings.getDateTimeFormat().format(now) + "] "); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		int index = message.indexOf(0x7F);
 		if (index != -1)
@@ -273,13 +274,13 @@ public class NodePollerView extends ViewPart
 		pollActive = true;
 		actionRestart.setEnabled(false);
 		
-		addPollerMessage("\u007Fl**** Poll request sent to server ****\r\n");
+		addPollerMessage("\u007Fl**** Poll request sent to server ****\r\n"); //$NON-NLS-1$
 		
 		final NodePollListener listener = new NodePollListener() {
 			@Override
 			public void onPollerMessage(final String message)
 			{
-				new UIJob(textArea.getDisplay(), "Update poller window") {
+				new UIJob(textArea.getDisplay(), "Update poller window") { //$NON-NLS-1$
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -291,7 +292,7 @@ public class NodePollerView extends ViewPart
 			}
 		};
 		
-		Job job = new Job(String.format("Node poll: %s [%d]", node.getObjectName(), node.getObjectId())) {
+		Job job = new Job(String.format(Messages.get().NodePollerView_JobName, node.getObjectName(), node.getObjectId())) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
@@ -322,7 +323,7 @@ public class NodePollerView extends ViewPart
 		if (textArea.isDisposed())
 			return;
 		
-		new UIJob(textArea.getDisplay(), "Update poller window") {
+		new UIJob(textArea.getDisplay(), "Update poller window") { //$NON-NLS-1$
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{
@@ -330,12 +331,12 @@ public class NodePollerView extends ViewPart
 				{
 					if (success)
 					{
-						addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n");
+						addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n"); //$NON-NLS-1$
 					}
 					else
 					{
-						addPollerMessage("\u007FePOLL ERROR: " + errorMessage);
-						addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n");
+						addPollerMessage("\u007FePOLL ERROR: " + errorMessage); //$NON-NLS-1$
+						addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n"); //$NON-NLS-1$
 					}
 					pollActive = false;
 					actionRestart.setEnabled(true);

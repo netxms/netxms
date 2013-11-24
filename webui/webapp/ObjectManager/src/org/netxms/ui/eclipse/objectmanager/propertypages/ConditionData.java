@@ -51,6 +51,7 @@ import org.netxms.client.objects.Condition;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.ConditionDciEditDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -104,7 +105,7 @@ public class ConditionData extends PropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Pos", "Node", "Parameter", "Function" };
+      final String[] columnNames = { Messages.get().ConditionData_ColPosition, Messages.get().ConditionData_ColNode, Messages.get().ConditionData_ColParameter, Messages.get().ConditionData_ColFunction };
       final int[] columnWidths = { 40, 130, 220, 80 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -135,7 +136,7 @@ public class ConditionData extends PropertyPage
       leftButtons.setLayoutData(gridData);
       
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText("&Up");
+      upButton.setText(Messages.get().ConditionData_Up);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
@@ -149,7 +150,7 @@ public class ConditionData extends PropertyPage
       upButton.setEnabled(false);
       
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText("&Down");
+      downButton.setText(Messages.get().ConditionData_Down);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
@@ -175,7 +176,7 @@ public class ConditionData extends PropertyPage
       rightButtons.setLayoutData(gridData);
 
       addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.get().ConditionData_Add);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -188,7 +189,7 @@ public class ConditionData extends PropertyPage
       });
 		
       editButton = new Button(rightButtons, SWT.PUSH);
-      editButton.setText("&Modify...");
+      editButton.setText(Messages.get().ConditionData_Modify);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -202,7 +203,7 @@ public class ConditionData extends PropertyPage
       editButton.setEnabled(false);
 		
       deleteButton = new Button(rightButtons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.get().ConditionData_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -305,7 +306,7 @@ public class ConditionData extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setDciList(dciList);
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update condition's DCI list", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ConditionData_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -316,7 +317,7 @@ public class ConditionData extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update condition's DCI list";
+				return Messages.get().ConditionData_JobError;
 			}
 
 			@Override

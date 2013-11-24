@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -56,7 +57,7 @@ public class CreateZoneDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Zone Object");
+		newShell.setText(Messages.get().CreateZoneDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -74,7 +75,7 @@ public class CreateZoneDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name");
+		nameField.setLabel(Messages.get().CreateZoneDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -83,7 +84,7 @@ public class CreateZoneDialog extends Dialog
 		nameField.setLayoutData(gd);
 		
 		zoneIdField = new LabeledText(dialogArea, SWT.NONE);
-		zoneIdField.setLabel("Zone ID");
+		zoneIdField.setLabel(Messages.get().CreateZoneDialog_ZoneId);
 		zoneIdField.getTextControl().setTextLimit(12);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -105,19 +106,19 @@ public class CreateZoneDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Zone ID must be positive integer");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningInvalidZoneId);
 			return;
 		}
 		if (zoneId <= 0)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Zone ID must be positive integer");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningInvalidZoneId);
 			return;
 		}
 		
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningEmptyName);
 			return;
 		}
 		

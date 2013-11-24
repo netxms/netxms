@@ -34,6 +34,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -66,7 +67,7 @@ public class MapAppearance extends PropertyPage
       
       // Image
       image = new ImageSelector(dialogArea, SWT.NONE);
-      image.setLabel("Presentation image");
+      image.setLabel(Messages.get().MapAppearance_Image);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -77,7 +78,7 @@ public class MapAppearance extends PropertyPage
       if (!(object instanceof NetworkMap))
       {
 	      submap = new ObjectSelector(dialogArea, SWT.NONE, true);
-	      submap.setLabel("Drill-down submap");
+	      submap.setLabel(Messages.get().MapAppearance_Submap);
 	      submap.setObjectClass(NetworkMap.class);
 	      submap.setObjectId(object.getSubmapId());
 	      submap.setClassFilter(ObjectSelectionDialog.createNetworkMapSelectionFilter());
@@ -104,7 +105,7 @@ public class MapAppearance extends PropertyPage
 		if (submap != null)
 			data.setSubmapId(submap.getObjectId());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update object's map appearance", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().MapAppearance_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -114,7 +115,7 @@ public class MapAppearance extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot modify object " + object.getObjectName();
+				return String.format(Messages.get().MapAppearance_JobError, object.getObjectName());
 			}
 
 			@Override

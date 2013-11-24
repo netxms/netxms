@@ -42,6 +42,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -85,7 +86,7 @@ public class Communication extends PropertyPage
 		
 		// General
 		Group generalGroup = new Group(dialogArea, SWT.NONE);
-		generalGroup.setText("General");
+		generalGroup.setText(Messages.get().Communication_GroupGeneral);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -94,7 +95,7 @@ public class Communication extends PropertyPage
 		generalGroup.setLayout(generalGroupLayout);
 		
 		primaryName = new LabeledText(generalGroup, SWT.NONE);
-		primaryName.setLabel("Primary host name");
+		primaryName.setLabel(Messages.get().Communication_PrimaryHostName);
 		primaryName.setText(node.getPrimaryName());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -110,7 +111,7 @@ public class Communication extends PropertyPage
 		
 		// Agent
 		Group agentGroup = new Group(dialogArea, SWT.NONE);
-		agentGroup.setText("NetXMS Agent");
+		agentGroup.setText(Messages.get().Communication_GroupAgent);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -123,7 +124,7 @@ public class Communication extends PropertyPage
 		agentGroup.setLayout(agentGroupLayout);
 		
 		agentPort = new LabeledText(agentGroup, SWT.NONE);
-		agentPort.setLabel("TCP port");
+		agentPort.setLabel(Messages.get().Communication_TCPPort);
 		agentPort.setText(Integer.toString(node.getAgentPort()));
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
@@ -131,7 +132,7 @@ public class Communication extends PropertyPage
 		agentPort.setLayoutData(fd);
 		
 		agentProxy = new ObjectSelector(agentGroup, SWT.NONE, true);
-		agentProxy.setLabel("Proxy");
+		agentProxy.setLabel(Messages.get().Communication_Proxy);
 		agentProxy.setObjectId(node.getProxyNodeId());
 		fd = new FormData();
 		fd.left = new FormAttachment(agentPort, 0, SWT.RIGHT);
@@ -140,7 +141,7 @@ public class Communication extends PropertyPage
 		agentProxy.setLayoutData(fd);
 
 		agentForceEncryption = new Button(agentGroup, SWT.CHECK);
-		agentForceEncryption.setText("Force encryption");
+		agentForceEncryption.setText(Messages.get().Communication_ForceEncryption);
 		agentForceEncryption.setSelection((node.getFlags() & AbstractNode.NF_FORCE_ENCRYPTION) != 0);
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
@@ -150,11 +151,11 @@ public class Communication extends PropertyPage
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(agentForceEncryption, 0, SWT.BOTTOM);
-		agentAuthMethod = WidgetHelper.createLabeledCombo(agentGroup, SWT.BORDER | SWT.READ_ONLY, "Authentication method", fd);
-		agentAuthMethod.add("NONE");
-		agentAuthMethod.add("PLAIN TEXT");
-		agentAuthMethod.add("MD5");
-		agentAuthMethod.add("SHA1");
+		agentAuthMethod = WidgetHelper.createLabeledCombo(agentGroup, SWT.BORDER | SWT.READ_ONLY, Messages.get().Communication_AuthMethod, fd);
+		agentAuthMethod.add(Messages.get().Communication_AuthNone);
+		agentAuthMethod.add(Messages.get().Communication_AuthPlain);
+		agentAuthMethod.add(Messages.get().Communication_AuthMD5);
+		agentAuthMethod.add(Messages.get().Communication_AuthSHA1);
 		agentAuthMethod.select(node.getAgentAuthMethod());
 		agentAuthMethod.addSelectionListener(new SelectionListener() {
 			@Override
@@ -171,7 +172,7 @@ public class Communication extends PropertyPage
 		});
 		
 		agentSharedSecret = new LabeledText(agentGroup, SWT.NONE);
-		agentSharedSecret.setLabel("Shared secret");
+		agentSharedSecret.setLabel(Messages.get().Communication_SharedSecret);
 		agentSharedSecret.setText(node.getAgentSharedSecret());
 		fd = new FormData();
 		fd.left = new FormAttachment(agentAuthMethod.getParent(), 0, SWT.RIGHT);
@@ -182,7 +183,7 @@ public class Communication extends PropertyPage
 	
 		// SNMP
 		Group snmpGroup = new Group(dialogArea, SWT.NONE);
-		snmpGroup.setText("SNMP");
+		snmpGroup.setText(Messages.get().Communication_GroupSNMP);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -197,10 +198,10 @@ public class Communication extends PropertyPage
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
-		snmpVersion = WidgetHelper.createLabeledCombo(snmpGroup, SWT.BORDER | SWT.READ_ONLY, "Version", fd);
-		snmpVersion.add("1");
-		snmpVersion.add("2c");
-		snmpVersion.add("3");
+		snmpVersion = WidgetHelper.createLabeledCombo(snmpGroup, SWT.BORDER | SWT.READ_ONLY, Messages.get().Communication_Version, fd);
+		snmpVersion.add("1"); //$NON-NLS-1$
+		snmpVersion.add("2c"); //$NON-NLS-1$
+		snmpVersion.add("3"); //$NON-NLS-1$
 		snmpVersion.select(snmpVersionToIndex(node.getSnmpVersion()));
 		snmpVersion.addSelectionListener(new SelectionListener() {
 			@Override
@@ -217,31 +218,31 @@ public class Communication extends PropertyPage
 		});
 		
 		snmpPort = new LabeledText(snmpGroup, SWT.NONE);
-		snmpPort.setLabel("UDP Port");
+		snmpPort.setLabel(Messages.get().Communication_UDPPort);
 		snmpPort.setText(Integer.toString(node.getSnmpPort()));
 		
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(snmpVersion.getParent(), 0, SWT.BOTTOM);
-		snmpAuth = WidgetHelper.createLabeledCombo(snmpGroup, SWT.BORDER | SWT.READ_ONLY, "Authentication", fd);
-		snmpAuth.add("NONE");
-		snmpAuth.add("MD5");
-		snmpAuth.add("SHA1");
+		snmpAuth = WidgetHelper.createLabeledCombo(snmpGroup, SWT.BORDER | SWT.READ_ONLY, Messages.get().Communication_Authentication, fd);
+		snmpAuth.add(Messages.get().Communication_AuthNone);
+		snmpAuth.add(Messages.get().Communication_AuthMD5);
+		snmpAuth.add(Messages.get().Communication_AuthSHA1);
 		snmpAuth.select(node.getSnmpAuthMethod());
 		snmpAuth.setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
 		
 		fd = new FormData();
 		fd.left = new FormAttachment(snmpAuth.getParent(), 0, SWT.RIGHT);
 		fd.top = new FormAttachment(snmpVersion.getParent(), 0, SWT.BOTTOM);
-		snmpPriv = WidgetHelper.createLabeledCombo(snmpGroup, SWT.BORDER | SWT.READ_ONLY, "Encryption", fd);
-		snmpPriv.add("NONE");
-		snmpPriv.add("DES");
-		snmpPriv.add("AES");
+		snmpPriv = WidgetHelper.createLabeledCombo(snmpGroup, SWT.BORDER | SWT.READ_ONLY, Messages.get().Communication_Encryption, fd);
+		snmpPriv.add(Messages.get().Communication_EncNone);
+		snmpPriv.add(Messages.get().Communication_EncDES);
+		snmpPriv.add(Messages.get().Communication_EncAES);
 		snmpPriv.select(node.getSnmpPrivMethod());
 		snmpPriv.setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
 		
 		snmpProxy = new ObjectSelector(snmpGroup, SWT.NONE, true);
-		snmpProxy.setLabel("Proxy");
+		snmpProxy.setLabel(Messages.get().Communication_Proxy);
 		snmpProxy.setObjectId(node.getSnmpProxyId());
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
@@ -250,7 +251,7 @@ public class Communication extends PropertyPage
 		snmpProxy.setLayoutData(fd);
 		
 		snmpAuthName = new LabeledText(snmpGroup, SWT.NONE);
-		snmpAuthName.setLabel(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3 ? "User name" : "Community string");
+		snmpAuthName.setLabel(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3 ? Messages.get().Communication_UserName : Messages.get().Communication_Community);
 		snmpAuthName.setText(node.getSnmpAuthName());
 		fd = new FormData();
 		fd.left = new FormAttachment(snmpProxy, 0, SWT.RIGHT);
@@ -259,7 +260,7 @@ public class Communication extends PropertyPage
 		snmpAuthName.setLayoutData(fd);
 		
 		snmpAuthPassword = new LabeledText(snmpGroup, SWT.NONE);
-		snmpAuthPassword.setLabel("Authentication password");
+		snmpAuthPassword.setLabel(Messages.get().Communication_AuthPassword);
 		snmpAuthPassword.setText(node.getSnmpAuthPassword());
 		fd = new FormData();
 		fd.left = new FormAttachment(snmpAuthName, 0, SWT.LEFT);
@@ -269,7 +270,7 @@ public class Communication extends PropertyPage
 		snmpAuthPassword.getTextControl().setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
 		
 		snmpPrivPassword = new LabeledText(snmpGroup, SWT.NONE);
-		snmpPrivPassword.setLabel("Encryption password");
+		snmpPrivPassword.setLabel(Messages.get().Communication_EncPassword);
 		snmpPrivPassword.setText(node.getSnmpPrivPassword());
 		fd = new FormData();
 		fd.left = new FormAttachment(snmpAuthName, 0, SWT.LEFT);
@@ -322,7 +323,7 @@ public class Communication extends PropertyPage
 	private void onSnmpVersionChange()
 	{
 		boolean isV3 = (snmpVersion.getSelectionIndex() == 2);
-		snmpAuthName.setLabel(isV3 ? "User name" : "Community string");
+		snmpAuthName.setLabel(isV3 ? Messages.get().Communication_UserName : Messages.get().Communication_Community);
 		snmpAuth.setEnabled(isV3);
 		snmpPriv.setEnabled(isV3);
 		snmpAuthPassword.getTextControl().setEnabled(isV3);
@@ -342,10 +343,10 @@ public class Communication extends PropertyPage
 		{
 			// Validate primary name
 			final String hostName = primaryName.getText().trim();
-			if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$"))
+			if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$")) //$NON-NLS-1$
 			{
-				MessageDialogHelper.openWarning(getShell(), "Warning", 
-				      String.format("String \"%s\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name", hostName));
+				MessageDialogHelper.openWarning(getShell(), Messages.get().Communication_Warning, 
+				      String.format(Messages.get().Communication_WarningInvalidHostname, hostName));
 				return false;
 			}
 			md.setPrimaryName(hostName);
@@ -360,7 +361,7 @@ public class Communication extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid agent port number");
+			MessageDialog.openWarning(getShell(), Messages.get().Communication_Warning, Messages.get().Communication_WarningInvalidAgentPort);
 			if (isApply)
 				setValid(true);
 			return false;
@@ -376,7 +377,7 @@ public class Communication extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid SNMP port number");
+			MessageDialog.openWarning(getShell(), Messages.get().Communication_Warning, Messages.get().Communication_WarningInvalidSNMPPort);
 			if (isApply)
 				setValid(true);
 			return false;
@@ -397,7 +398,7 @@ public class Communication extends PropertyPage
 		md.setObjectFlags(flags);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Update communication settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().Communication_JobName, node.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -407,7 +408,7 @@ public class Communication extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update communication settings";
+				return Messages.get().Communication_JobError;
 			}
 
 			@Override
@@ -454,19 +455,19 @@ public class Communication extends PropertyPage
 	{
 		super.performDefaults();
 		
-		agentPort.setText("4700");
+		agentPort.setText("4700"); //$NON-NLS-1$
 		agentForceEncryption.setSelection(false);
 		agentAuthMethod.select(0);
 		agentProxy.setObjectId(0);
-		agentSharedSecret.setText("");
+		agentSharedSecret.setText(""); //$NON-NLS-1$
 		agentSharedSecret.getTextControl().setEnabled(false);
 		
 		snmpVersion.select(0);
 		snmpAuth.select(0);
 		snmpPriv.select(0);
-		snmpAuthName.setText("public");
-		snmpAuthPassword.setText("");
-		snmpPrivPassword.setText("");
+		snmpAuthName.setText("public"); //$NON-NLS-1$
+		snmpAuthPassword.setText(""); //$NON-NLS-1$
+		snmpPrivPassword.setText(""); //$NON-NLS-1$
 		snmpProxy.setObjectId(0);
 		onSnmpVersionChange();
 	}

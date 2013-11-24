@@ -35,6 +35,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -74,7 +75,7 @@ public class AutoBind extends PropertyPage
 
       // Enable/disable check box
       checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableBind.setText("Automatically bind nodes selected by filter to this container");
+      checkboxEnableBind.setText(Messages.get().AutoBind_AutoBind);
       checkboxEnableBind.setSelection(object.isAutoBindEnabled());
       checkboxEnableBind.addSelectionListener(new SelectionListener() {
 			@Override
@@ -101,13 +102,13 @@ public class AutoBind extends PropertyPage
       });
       
       checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableUnbind.setText("Automatically unbind nodes from this container when they no longer passes filter");
+      checkboxEnableUnbind.setText(Messages.get().AutoBind_AUtoUnbind);
       checkboxEnableUnbind.setSelection(object.isAutoUnbindEnabled());
       checkboxEnableUnbind.setEnabled(object.isAutoBindEnabled());
       
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Filtering script");
+      label.setText(Messages.get().AutoBind_Script);
 
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
@@ -157,7 +158,7 @@ public class AutoBind extends PropertyPage
 		md.setObjectFlags(flags);
 		md.setAutoBindFilter(filterSource.getText());
 		
-		new ConsoleJob("Update auto-bind filter", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().AutoBind_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -184,7 +185,7 @@ public class AutoBind extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change container automatic bind options";
+				return Messages.get().AutoBind_JobError;
 			}
 		}.start();
 	}
