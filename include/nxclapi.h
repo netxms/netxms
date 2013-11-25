@@ -534,6 +534,7 @@ enum
 #define RCC_HIGH_QUERY_COST          ((UINT32)104)
 #define RCC_LICENSE_VIOLATION        ((UINT32)105)
 #define RCC_CLIENT_LICENSE_EXCEEDED  ((UINT32)106)
+#define RCC_OBJECT_ALREADY_EXISTS    ((UINT32)107)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

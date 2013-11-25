@@ -12,8 +12,8 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			dcobject.cpp dcst.cpp dctable.cpp dctarget.cpp \
 			dctcolumn.cpp dctthreshold.cpp debug.cpp \
 			download_job.cpp ef.cpp email.cpp entirenet.cpp \
-			epp.cpp events.cpp evproc.cpp fdb.cpp hk.cpp id.cpp \
-			import.cpp index.cpp interface.cpp isc.cpp job.cpp \
+			epp.cpp events.cpp evproc.cpp fdb.cpp graph.cpp hk.cpp \
+			id.cpp import.cpp index.cpp interface.cpp isc.cpp job.cpp \
 			jobmgr.cpp jobqueue.cpp layer2.cpp lln.cpp lldp.cpp \
 			locks.cpp logfilter.cpp loghandle.cpp logs.cpp \
 			main.cpp mdconn.cpp mdsession.cpp mobile.cpp \
@@ -28,7 +28,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			syncer.cpp syslogd.cpp template.cpp tools.cpp \
 			tracert.cpp uniroot.cpp upload_job.cpp uptimecalc.cpp \
 			userdb.cpp userdb_objects.cpp vpnconn.cpp vrrp.cpp \
-			watchdog.cpp winperf.cpp zone.cpp
+			watchdog.cpp winperf.cpp zone.cpp 
 libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcore_la_LIBADD = \

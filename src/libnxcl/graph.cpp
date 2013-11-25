@@ -142,7 +142,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCDefineGraph(NXC_SESSION hSession, NXC_GRAPH *pGraph
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DEFINE_GRAPH);
+   msg.SetCode(CMD_SAVE_GRAPH);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_GRAPH_ID, pGraph->dwId);
 	msg.SetVariable(VID_NAME, pGraph->pszName);

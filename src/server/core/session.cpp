@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -102,16 +102,6 @@ typedef struct
    UINT32 dwToolId;
    UINT32 dwUserId;
 } OBJECT_TOOL_ACL;
-
-/**
- * Graph ACL entry
- */
-struct GRAPH_ACL_ENTRY
-{
-	UINT32 dwGraphId;
-	UINT32 dwUserId;
-	UINT32 dwAccess;
-};
 
 /**
  *
@@ -315,7 +305,7 @@ ClientSession::~ClientSession()
 		m_pCtx->decRefCount();
    if (m_condEncryptionSetup != INVALID_CONDITION_HANDLE)
       ConditionDestroy(m_condEncryptionSetup);
-	
+
 	if (m_console != NULL)
 	{
 		delete m_console->pMsg;
@@ -384,7 +374,7 @@ void ClientSession::readThread()
 			   pDecryptionBuffer = (BYTE *)realloc(pDecryptionBuffer, msgBufferSize);
 		}
 
-      if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize, 
+      if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize,
 		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
 												900000, MAX_MSG_SIZE)) <= 0)  // timeout 15 minutes
 		{
@@ -747,8 +737,8 @@ void ClientSession::processingThread()
 
       m_wCurrentCmd = pMsg->GetCode();
       debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
-      if (!(m_dwFlags & CSF_AUTHENTICATED) && 
-          (m_wCurrentCmd != CMD_LOGIN) && 
+      if (!(m_dwFlags & CSF_AUTHENTICATED) &&
+          (m_wCurrentCmd != CMD_LOGIN) &&
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
           (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION) &&
           (m_wCurrentCmd != CMD_GET_MY_CONFIG))
@@ -1137,9 +1127,9 @@ void ClientSession::processingThread()
 			case CMD_GET_GRAPH_LIST:
 				SendGraphList(pMsg->GetId());
 				break;
-			case CMD_DEFINE_GRAPH:
-				DefineGraph(pMsg);
-				break;
+			case CMD_SAVE_GRAPH:
+			   SaveGraph(pMsg);
+            break;
 			case CMD_DELETE_GRAPH:
 				DeleteGraph(pMsg);
 				break;
@@ -1640,7 +1630,7 @@ void ClientSession::login(CSCPMessage *pRequest)
    if (pRequest->IsVariableExist(VID_CLIENT_INFO))
    {
       TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
-      
+
       pRequest->GetVariableStr(VID_CLIENT_INFO, szClientInfo, 32);
       pRequest->GetVariableStr(VID_OS_INFO, szOSInfo, 32);
       pRequest->GetVariableStr(VID_LIBNXCL_VERSION, szLibVersion, 16);
@@ -1845,7 +1835,7 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
  */
 static void SendEventDBChangeNotification(ClientSession *session, void *arg)
 {
-	if (session->isAuthenticated() && 
+	if (session->isAuthenticated() &&
        (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) ||
         session->checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) ||
         session->checkSysAccessRights(SYSTEM_ACCESS_EPP)))
@@ -2101,7 +2091,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
    for(UINT32 i = 0; i < numObjects; i++)
 	{
 		NetObj *object = FindObjectById(objects[i]);
-      if ((object != NULL) && 
+      if ((object != NULL) &&
 		    object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
           (object->getTimeStamp() >= dwTimeStamp) &&
           !object->isHidden() && !object->isSystem())
@@ -2195,7 +2185,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
    	sendMessage(&msg);
    	msg.deleteAllVariables();
 	   msg.SetCode(CMD_EVENTLOG_RECORDS);
-	   
+
       for(dwId = VID_EVENTLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
       {
          if (dwNumRows == 10)
@@ -2361,10 +2351,10 @@ void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR name[MAX_OBJECT_NAME], *value;
-   
+
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	
+
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
       pRequest->GetVariableStr(VID_NAME, name, MAX_OBJECT_NAME);
@@ -2392,7 +2382,7 @@ void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -2405,10 +2395,10 @@ void ClientSession::getConfigCLOB(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR name[MAX_OBJECT_NAME], *value;
-   
+
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	
+
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
       pRequest->GetVariableStr(VID_NAME, name, MAX_OBJECT_NAME);
@@ -2428,7 +2418,7 @@ void ClientSession::getConfigCLOB(CSCPMessage *pRequest)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -2679,7 +2669,7 @@ void ClientSession::updateUser(CSCPMessage *pRequest)
          TCHAR name[MAX_DB_STRING];
          UINT32 id = pRequest->GetVariableLong(VID_USER_ID);
          ResolveUserId(id, name, MAX_DB_STRING);
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, id, 
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, id,
             _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
       }
       msg.SetVariable(VID_RCC, result);
@@ -3104,13 +3094,13 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
 							switch(dcObjectType)
 							{
 								case DCO_TYPE_ITEM:
-									dcObject = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, DCI_DT_INT, 
-										ConfigReadInt(_T("DefaultDCIPollingInterval"), 60), 
+									dcObject = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, DCI_DT_INT,
+										ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
 										ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)object);
 									break;
 								case DCO_TYPE_TABLE:
-									dcObject = new DCTable(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, 
-										ConfigReadInt(_T("DefaultDCIPollingInterval"), 60), 
+									dcObject = new DCTable(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL,
+										ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
 										ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)object);
 									break;
 								default:
@@ -3281,17 +3271,17 @@ void ClientSession::clearDCIData(CSCPMessage *pRequest)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
 				dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-				debugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, object->Id()); 
+				debugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, object->Id());
             DCObject *dci = ((Template *)object)->getDCObjectById(dwItemId);
 				if (dci != NULL)
 				{
 					msg.SetVariable(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
-					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dwItemId, object->Id()); 
+					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dwItemId, object->Id());
 				}
 				else
 				{
 					msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
-					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d not found"), dwItemId, object->Id()); 
+					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d not found"), dwItemId, object->Id());
 				}
          }
          else  // User doesn't have DELETE rights on object
@@ -3333,7 +3323,7 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
    if ((pSource != NULL) && (pDestination != NULL))
    {
       // Check object types
-      if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_MOBILEDEVICE) || (pSource->Type() == OBJECT_TEMPLATE) || (pSource->Type() == OBJECT_CLUSTER)) && 
+      if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_MOBILEDEVICE) || (pSource->Type() == OBJECT_TEMPLATE) || (pSource->Type() == OBJECT_CLUSTER)) &&
 		    ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_MOBILEDEVICE) || (pDestination->Type() == OBJECT_TEMPLATE) || (pDestination->Type() == OBJECT_CLUSTER)))
       {
          if (((Template *)pSource)->isLockedBySession(m_dwIndex))
@@ -3703,7 +3693,7 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 						ucs4_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #else
 						DBGetField(hResult, i, 1, pCurr->value.string, MAX_DCI_STRING_VALUE);
-#endif                        
+#endif
 #else
 						DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
 						mb_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
@@ -3717,7 +3707,7 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 			pData->numRows = htonl(numRows);
 
 			// Prepare and send raw message with fetched data
-			CSCP_MESSAGE *msg = 
+			CSCP_MESSAGE *msg =
 				CreateRawNXCPMessage(CMD_DCI_DATA, request->GetId(), 0,
 											numRows * m_dwRowSize[dataType] + sizeof(DCI_DATA_HEADER),
 											pData, NULL);
@@ -4075,7 +4065,7 @@ void ClientSession::processEPPRecord(CSCPMessage *pRequest)
             g_pEventPolicy->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
             g_pEventPolicy->saveToDB();
             m_ppEPPRuleList = NULL;
-            
+
             // ... and send final confirmation
             msg.SetCode(CMD_REQUEST_COMPLETED);
             msg.SetId(pRequest->GetId());
@@ -4192,7 +4182,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    if ((pParent != NULL) || (iClass == OBJECT_NODE))
    {
       // User should have create access to parent object
-      if ((pParent != NULL) ? 
+      if ((pParent != NULL) ?
             pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE) :
             g_pEntireNet->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
       {
@@ -4296,7 +4286,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								   wIpPort = pRequest->GetVariableShort(VID_IP_PORT);
 								   pszRequest = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
 								   pszResponse = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
-								   object = new NetworkService(iServiceType, wIpProto, wIpPort, 
+								   object = new NetworkService(iServiceType, wIpProto, wIpPort,
 																	     pszRequest, pszResponse, (Node *)pParent);
 								   object->setName(szObjectName);
 								   NetObjInsert(object, TRUE);
@@ -4425,7 +4415,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 									   }
 								   }
 							   }
-   							
+
 							   pszComments = pRequest->GetVariableStr(VID_COMMENTS);
 							   if (pszComments != NULL)
 								   object->setComments(pszComments);
@@ -4518,14 +4508,14 @@ void ClientSession::addClusterNode(CSCPMessage *request)
 
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
 					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, cluster->Id(),
-									  _T("Node %s [%d] added to cluster %s [%d]"), 
+									  _T("Node %s [%d] added to cluster %s [%d]"),
 									  node->Name(), node->Id(), cluster->Name(), cluster->Id());
 				}
 				else
 				{
 					msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 					WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, cluster->Id(),
-									  _T("Access denied on adding node %s [%d] to cluster %s [%d]"), 
+									  _T("Access denied on adding node %s [%d] to cluster %s [%d]"),
 									  node->Name(), node->Id(), cluster->Name(), cluster->Id());
 				}
 			}
@@ -5394,7 +5384,7 @@ void ClientSession::onTrap(CSCPMessage *pRequest)
                                      pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
                                      pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
                                      pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
-         
+
          // Cleanup
          for(i = 0; i < iNumArgs; i++)
             safe_free(pszArgList[i]);
@@ -5531,7 +5521,7 @@ void ClientSession::queryAgentTable(CSCPMessage *pRequest)
          {
 				TCHAR name[MAX_PARAM_NAME];
 				pRequest->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
-				
+
 				Table *table;
 				UINT32 rcc = ((Node *)object)->getTableForClient(name, &table);
 				msg.SetVariable(VID_RCC, rcc);
@@ -5810,7 +5800,7 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
          // Remove possible path specification from file name
          const TCHAR *pszCleanFileName = GetCleanFileName(szFileName);
 
-         if (IsValidObjectName(pszCleanFileName) && 
+         if (IsValidObjectName(pszCleanFileName) &&
              IsValidObjectName(szPkgName) &&
              IsValidObjectName(szPkgVersion) &&
              IsValidObjectName(szPlatform))
@@ -6128,7 +6118,7 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
    if ((pSource != NULL) && (pDestination != NULL))
    {
       // Check object types
-      if ((pSource->Type() == OBJECT_TEMPLATE) && 
+      if ((pSource->Type() == OBJECT_TEMPLATE) &&
           ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_CLUSTER) || (pDestination->Type() == OBJECT_MOBILEDEVICE)))
       {
          TCHAR szLockInfo[MAX_SESSION_NAME];
@@ -6460,7 +6450,7 @@ void ClientSession::copyUserVariable(CSCPMessage *pRequest)
             {
                bExist = FALSE;
             }
-            
+
             pszValue = DBGetField(hResult, i, 1, NULL, 0);
             if (bExist)
                _sntprintf(szQuery, 32768,
@@ -7330,7 +7320,7 @@ void ClientSession::sendScript(CSCPMessage *pRequest)
 				TCHAR name[MAX_DB_STRING];
 
             msg.SetVariable(VID_NAME, DBGetField(hResult, 0, 0, name, MAX_DB_STRING));
-            
+
 				pszCode = DBGetField(hResult, 0, 1, NULL, 0);
             msg.SetVariable(VID_SCRIPT_CODE, pszCode);
             free(pszCode);
@@ -7655,7 +7645,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
 		sendMessage(&msg);
 		msg.deleteAllVariables();
 		msg.SetCode(CMD_SYSLOG_RECORDS);
-		
+
       // Send records, up to 10 per message
       for(dwId = VID_SYSLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
       {
@@ -7911,7 +7901,7 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            
+
             object->incRefCount();
             m_dwRefCount++;
 
@@ -7920,7 +7910,7 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
             pArg->object = object;
             pArg->dwRqId = pRequest->GetId();
             pRequest->GetVariableStr(VID_SNMP_OID, pArg->szBaseOID, MAX_OID_LEN * 4);
-            
+
             ThreadCreate(WalkerThread, 0, pArg);
          }
          else
@@ -8003,7 +7993,7 @@ void ClientSession::resolveDCINames(CSCPMessage *pRequest)
    pdwDCIList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
    pRequest->GetVariableInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
    pRequest->GetVariableInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
-   
+
    for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
    {
       dwResult = resolveDCIName(pdwNodeList[i], pdwDCIList[i], &pszName);
@@ -9082,76 +9072,6 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
 
 
 //
-// Check access to the graph
-//
-
-static BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 dwGraphId,
-									  UINT32 dwUserId, UINT32 dwDesiredAccess)
-{
-	int i;
-
-	for(i = 0; i < nACLSize; i++)
-	{
-		if (pACL[i].dwGraphId == dwGraphId)
-		{
-			if ((pACL[i].dwUserId == dwUserId) ||
-				 ((pACL[i].dwUserId & GROUP_FLAG) && CheckUserMembership(dwUserId, pACL[i].dwUserId)))
-			{
-				if ((pACL[i].dwAccess & dwDesiredAccess) == dwDesiredAccess)
-					return TRUE;
-			}
-		}
-	}
-	return FALSE;
-}
-
-
-//
-// Load graph's ACL - load for all graphs if dwGraphId is 0
-//
-
-static GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 dwGraphId, int *pnACLSize)
-{
-	int i, nSize;
-	GRAPH_ACL_ENTRY *pACL = NULL;
-	DB_RESULT hResult;
-
-	if (dwGraphId == 0)
-	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,user_id,user_rights FROM graph_acl"));
-	}
-	else
-	{
-		TCHAR szQuery[256];
-
-		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), dwGraphId);
-		hResult = DBSelect(g_hCoreDB, szQuery);
-	}
-	if (hResult != NULL)
-	{
-		nSize = DBGetNumRows(hResult);
-		if (nSize > 0)
-		{
-			pACL = (GRAPH_ACL_ENTRY *)malloc(sizeof(GRAPH_ACL_ENTRY) * nSize);
-			for(i = 0; i < nSize; i++)
-			{
-				pACL[i].dwGraphId = DBGetFieldULong(hResult, i, 0);
-				pACL[i].dwUserId = DBGetFieldULong(hResult, i, 1);
-				pACL[i].dwAccess = DBGetFieldULong(hResult, i, 2);
-			}
-		}
-		*pnACLSize = nSize;
-		DBFreeResult(hResult);
-	}
-	else
-	{
-		*pnACLSize = -1;	// Database error
-	}
-	return pACL;
-}
-
-
-//
 // Send list of available graphs to client
 //
 
@@ -9238,76 +9158,59 @@ void ClientSession::SendGraphList(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
 //
-// Define graph
+// Save graph
 //
 
-void ClientSession::DefineGraph(CSCPMessage *pRequest)
+void ClientSession::SaveGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	BOOL bNew, bSuccess;
-	UINT32 dwId, dwGraphId, dwOwner, dwUserId, dwAccess;
-	TCHAR szQuery[16384], *pszEscName, *pszEscData, *pszTemp;
-	GRAPH_ACL_ENTRY *pACL = NULL;
-	int i, nACLSize;
-	DB_RESULT hResult;
+	UINT32 dwId, dwGraphId, dwUserId, dwAccess;
+	UINT16 overwrite;
+	TCHAR szQuery[16384], *pszEscName, *pszEscData, *pszTemp, dwGraphName[255];
+	int i, nACLSize, acessRightStatus;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
 	dwGraphId = pRequest->GetVariableLong(VID_GRAPH_ID);
+	pRequest->GetVariableStr(VID_NAME,dwGraphName,255);
+	overwrite = pRequest->GetVariableShort(VID_FLAGS);
+
+   GRAPH_ACL_AND_ID nameUniq = checkNameExistsAndGetID(dwGraphName);
+
+   if(nameUniq.dwGraphId == dwGraphId)
+   {
+      nameUniq.status = RCC_SUCCESS;
+   }
+
 	if (dwGraphId == 0)
 	{
-		// New graph
-		dwGraphId = CreateUniqueId(IDG_GRAPH);
+		dwGraphId = nameUniq.dwGraphId ? nameUniq.dwGraphId : CreateUniqueId(IDG_GRAPH);
 		bNew = TRUE;
-		bSuccess = TRUE;
+		acessRightStatus = RCC_SUCCESS;
 	}
 	else
 	{
+	   acessRightStatus = getAccessCehckResult(dwGraphId, m_dwUserId);
 		bNew = FALSE;
-		bSuccess = FALSE;
-
-		// Check existence and access rights
-		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
-		hResult = DBSelect(g_hCoreDB, szQuery);
-		if (hResult != NULL)
-		{
-			if (DBGetNumRows(hResult) > 0)
-			{
-				dwOwner = DBGetFieldULong(hResult, 0, 0);
-				pACL = LoadGraphACL(dwGraphId, &nACLSize);
-				if (nACLSize != -1)
-				{
-					if ((m_dwUserId == 0) ||
-						 (m_dwUserId == dwOwner) ||
-						 CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_WRITE))
-					{
-						bSuccess = TRUE;
-					}
-					else
-					{
-						msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-					}
-					safe_free(pACL);
-				}
-				else
-				{
-					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-				}
-			}
-			else
-			{
-				msg.SetVariable(VID_RCC, RCC_INVALID_GRAPH_ID);
-			}
-			DBFreeResult(hResult);
-		}
-		else
-		{
-			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-		}
 	}
+
+   if( acessRightStatus == RCC_SUCCESS && ( nameUniq.status == RCC_SUCCESS || (overwrite && bNew) ) )
+   {
+      bSuccess = TRUE;
+      if(nameUniq.status != RCC_SUCCESS )
+      {
+         bNew = FALSE;
+         dwGraphId = nameUniq.dwGraphId;
+      }
+   }
+   else
+   {
+      bSuccess = FALSE;
+      msg.SetVariable(VID_RCC, acessRightStatus ? acessRightStatus : nameUniq.status );
+   }
 
 	// Create/update graph
 	if (bSuccess)
@@ -9880,7 +9783,7 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -9934,7 +9837,7 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -9972,7 +9875,7 @@ void ClientSession::createSituation(CSCPMessage *pRequest)
 
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	
+
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
 	{
 		pRequest->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
@@ -9991,7 +9894,7 @@ void ClientSession::createSituation(CSCPMessage *pRequest)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -10002,10 +9905,10 @@ void ClientSession::updateSituation(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    Situation *st;
-   
+
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	
+
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
 	{
 		st = FindSituationById(pRequest->GetVariableLong(VID_SITUATION_ID));
@@ -10023,7 +9926,7 @@ void ClientSession::updateSituation(CSCPMessage *pRequest)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -10033,10 +9936,10 @@ void ClientSession::updateSituation(CSCPMessage *pRequest)
 void ClientSession::deleteSituation(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   
+
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	
+
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
 	{
 		msg.SetVariable(VID_RCC, ::DeleteSituation(pRequest->GetVariableLong(VID_SITUATION_ID)));
@@ -10045,7 +9948,7 @@ void ClientSession::deleteSituation(CSCPMessage *pRequest)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -10056,17 +9959,17 @@ void ClientSession::deleteSituationInstance(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    Situation *st;
-   
+
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	
+
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
 	{
 		st = FindSituationById(pRequest->GetVariableLong(VID_SITUATION_ID));
 		if (st != NULL)
 		{
 			TCHAR instance[MAX_DB_STRING];
-			
+
 			pRequest->GetVariableStr(VID_SITUATION_INSTANCE, instance, MAX_DB_STRING);
 			msg.SetVariable(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_INSTANCE_NOT_FOUND);
 		}
@@ -10079,7 +9982,7 @@ void ClientSession::deleteSituationInstance(CSCPMessage *pRequest)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -10648,7 +10551,7 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -10721,7 +10624,7 @@ void ClientSession::updateUsmCredentials(CSCPMessage *request)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -10795,7 +10698,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 	{
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -10842,7 +10745,7 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 		msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
 		debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 	}
-	
+
 	sendMessage(&msg);
 }
 
@@ -12514,7 +12417,7 @@ void ClientSession::querySummaryTable(CSCPMessage *request)
 
    UINT32 rcc;
    Table *result = QuerySummaryTable((LONG)request->GetVariableLong(VID_SUMMARY_TABLE_ID),
-                                      request->GetVariableLong(VID_OBJECT_ID), 
+                                      request->GetVariableLong(VID_OBJECT_ID),
                                       m_dwUserId, &rcc);
    if (result != NULL)
    {

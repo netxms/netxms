@@ -579,7 +579,7 @@ private:
    void exportConfiguration(CSCPMessage *pRequest);
    void importConfiguration(CSCPMessage *pRequest);
 	void SendGraphList(UINT32 dwRqId);
-	void DefineGraph(CSCPMessage *pRequest);
+	void SaveGraph(CSCPMessage *pRequest);
 	void DeleteGraph(CSCPMessage *pRequest);
 	void AddCACertificate(CSCPMessage *pRequest);
 	void DeleteCertificate(CSCPMessage *pRequest);
@@ -725,6 +725,25 @@ typedef struct
 	UINT32 dciId;
 	TCHAR value[MAX_RESULT_LENGTH];
 } DELAYED_IDATA_INSERT;
+
+/**
+ * Graph ACL entry
+ */
+struct GRAPH_ACL_ENTRY
+{
+   UINT32 dwGraphId;
+   UINT32 dwUserId;
+   UINT32 dwAccess;
+};
+
+/**
+ * Information about graph with name existence and it's ID.
+ */
+struct GRAPH_ACL_AND_ID
+{
+   UINT32 dwGraphId;
+   UINT32 status;
+};
 
 /**
  * Functions
@@ -885,6 +904,12 @@ void SetPollerInfo(int nIdx, const TCHAR *pszMsg);
 void ShowServerStats(CONSOLE_CTX pCtx);
 void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName);
 void DumpProcess(CONSOLE_CTX pCtx);
+
+GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 dwGraphId, int *pnACLSize);
+BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 dwGraphId,
+                             UINT32 dwUserId, UINT32 dwDesiredAccess);
+int getAccessCehckResult(UINT32 dwGraphId,UINT32 m_dwUserId);
+GRAPH_ACL_AND_ID checkNameExistsAndGetID(TCHAR *dwGraphName);
 
 /**
  * Global variables

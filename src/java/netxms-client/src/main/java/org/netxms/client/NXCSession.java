@@ -5201,19 +5201,29 @@ public class NXCSession
       }
       return list;
    }
-
+   
    /**
-    * Create or modify predefined graph. If graph ID in GraphSettings object
-    * set to 0, new predefined graph will be created on server, and ID assigned to it will be returned.
+    * Checks if graph with specified name can be created/overwritten and creates/overwrites it in DB. 
+    * If graph id is set to 0 it checks if graph with the same name exists, and if yes checks overwrite parameter. If it is
+    * set to false, then function returns error that graph with this name already exists. 
+    * If there is no graph with the same name it just creates a new one.
+    * If id is set it checks that provided name is assigned only to this graph and overwrites it or throws error is the 
+    * same name was already used. 
+    * Also check if user have permissions to overwrite graph. 
+    *   
+    * If it can, then it returns 1.
+    * If graph with this name already exists, but can be overwritten by current user function returns 2.
+    * If graph with this name already exists, but can not be overwritten by current user function returns 0.
     *
     * @param graph predefined graph configuration
+    * @param overwrite defines if existing graph should be overwritten
     * @return ID of predefined graph object
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long modifyPredefinedGraph(GraphSettings graph) throws IOException, NXCException
+   public long saveGraph(GraphSettings graph, boolean overwrite) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DEFINE_GRAPH);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_GRAPH);
       msg.setVariableInt32(NXCPCodes.VID_GRAPH_ID, (int) graph.getId());
       msg.setVariable(NXCPCodes.VID_NAME, graph.getName());
       msg.setVariable(NXCPCodes.VID_GRAPH_CONFIG, graph.getConfig());
@@ -5223,7 +5233,8 @@ public class NXCSession
       {
          msg.setVariableInt32(varId++, (int) e.getUserId());
          msg.setVariableInt32(varId++, e.getAccessRights());
-      }
+      }      
+      msg.setVariableInt16(NXCPCodes.VID_FLAGS, overwrite ? 1 : 0);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getVariableAsInt64(NXCPCodes.VID_GRAPH_ID);

@@ -400,7 +400,7 @@ public class DataSources extends PropertyPage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.modifyPredefinedGraph(((PredefinedChartConfig)config).createServerSettings());
+					session.saveGraph(((PredefinedChartConfig)config).createServerSettings(), true);
 				}
 	
 				@Override
