@@ -45,7 +45,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-	   List<String> row = (List<String>) element;
+		List<String> row = (List<String>)element;
 		
 		if (columnIndex >= row.size())
 			return null;

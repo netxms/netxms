@@ -195,7 +195,7 @@ public class DataCollectionEditor extends ViewPart
 					boolean canDisable = false;
 					while(it.hasNext() && (!canActivate || !canDisable))
 					{
-						DataCollectionObject dci = (DataCollectionObject) it.next();
+						DataCollectionObject dci = (DataCollectionObject)it.next();
 						if (dci.getStatus() != DataCollectionObject.ACTIVE)
 							canActivate = true;
 						if (dci.getStatus() != DataCollectionObject.DISABLED)
@@ -720,7 +720,7 @@ public class DataCollectionEditor extends ViewPart
 		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-			dciList[i] = ((DataCollectionObject) it.next()).getId();
+			dciList[i] = ((DataCollectionObject)it.next()).getId();
 		
 		new ConsoleJob(Messages.get().DataCollectionEditor_DupJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
@@ -759,7 +759,7 @@ public class DataCollectionEditor extends ViewPart
 		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-			dciList[i] = ((DataCollectionObject) it.next()).getId();
+			dciList[i] = ((DataCollectionObject)it.next()).getId();
 		
 		new ConsoleJob(Messages.get().DataCollectionEditor_CopyJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
@@ -813,7 +813,7 @@ public class DataCollectionEditor extends ViewPart
 		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-			dciList[i] = ((DataCollectionObject) it.next()).getId();
+			dciList[i] = ((DataCollectionObject)it.next()).getId();
 		
 		new ConsoleJob(Messages.get().DataCollectionEditor_ConvertJob_TitlePrefix + object.getObjectName() + Messages.get().DataCollectionEditor_ConvertJob_TitleSuffix, this, Activator.PLUGIN_ID, null) {
 			@Override

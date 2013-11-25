@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,10 +59,12 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 {
 	private static final int IFDCI_IN_BYTES = 0;
 	private static final int IFDCI_OUT_BYTES = 1;
-	private static final int IFDCI_IN_PACKETS = 2;
-	private static final int IFDCI_OUT_PACKETS = 3;
-	private static final int IFDCI_IN_ERRORS = 4;
-	private static final int IFDCI_OUT_ERRORS = 5;
+   private static final int IFDCI_IN_BITS = 2;
+   private static final int IFDCI_OUT_BITS = 3;
+	private static final int IFDCI_IN_PACKETS = 4;
+	private static final int IFDCI_OUT_PACKETS = 5;
+	private static final int IFDCI_IN_ERRORS = 6;
+	private static final int IFDCI_OUT_ERRORS = 7;
 	
 	private Shell shell;
 	private ViewPart viewPart;
@@ -189,9 +191,11 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			switch(dciType)
 			{
 				case IFDCI_IN_BYTES:
+            case IFDCI_IN_BITS:
 					dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.BytesIn64(" : "Net.Interface.BytesIn(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					break;
 				case IFDCI_OUT_BYTES:
+            case IFDCI_OUT_BITS:
 					dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.BytesOut64(" : "Net.Interface.BytesOut(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					break;
 				case IFDCI_IN_PACKETS:
@@ -213,9 +217,11 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			switch(dciType)
 			{
 				case IFDCI_IN_BYTES:
+            case IFDCI_IN_BITS:
 					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.6." : ".1.3.6.1.2.1.2.2.1.10.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_BYTES:
+            case IFDCI_OUT_BITS:
 					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.10." : ".1.3.6.1.2.1.2.2.1.16.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_PACKETS:
@@ -231,6 +237,11 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 					dci.setName(".1.3.6.1.2.1.2.2.1.20." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 			}
+		}
+		
+		if ((dciType == IFDCI_IN_BITS) || (dciType == IFDCI_OUT_BITS))
+		{
+		   dci.setTransformationScript("return $1 * 8;"); //$NON-NLS-1$
 		}
 		
 		dcc.modifyObject(dci);

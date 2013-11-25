@@ -44,11 +44,11 @@ public class ThresholdTreeContentProvider implements ITreeContentProvider
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
-		return ((List)inputElement).toArray();
+		return ((List<Object>)inputElement).toArray();
 	}
 
 	/* (non-Javadoc)

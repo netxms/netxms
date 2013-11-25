@@ -229,11 +229,10 @@ public class CustomSchedule extends PropertyPage
 	/**
 	 * Delete selected schedules
 	 */
-	@SuppressWarnings("unchecked")
 	private void deleteSchedules()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<String> it = selection.iterator();
+		Iterator<?> it = selection.iterator();
 		while(it.hasNext())
 		{
 			schedules.remove(it.next());

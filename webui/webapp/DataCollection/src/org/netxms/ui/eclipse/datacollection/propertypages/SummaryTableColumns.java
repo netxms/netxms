@@ -51,7 +51,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditDciSummaryTableColumnDlg;
@@ -444,13 +443,12 @@ public class SummaryTableColumns extends PropertyPage
 	/**
 	 * Delete selected columns
 	 */
-	@SuppressWarnings("unchecked")
 	private void deleteColumns()
 	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (!selection.isEmpty())
 		{
-			Iterator<Threshold> it = selection.iterator();
+			Iterator<?> it = selection.iterator();
 			while(it.hasNext())
 			{
 				columns.remove(it.next());
