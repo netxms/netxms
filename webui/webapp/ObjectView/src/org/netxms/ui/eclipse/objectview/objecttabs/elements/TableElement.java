@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.objectview.Messages;
 
 /**
  * Generic table element
@@ -48,9 +49,9 @@ public abstract class TableElement extends OverviewPageElement
 	private void setupTable()
 	{
 		TableColumn tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Name");
+		tc.setText(Messages.get().TableElement_Name);
 		tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Value");
+		tc.setText(Messages.get().TableElement_Value);
 		
 		table.setHeaderVisible(false);
 		table.setLinesVisible(false);
@@ -121,7 +122,7 @@ public abstract class TableElement extends OverviewPageElement
 			return;
 		TableItem item = new TableItem(table, SWT.NONE);
 		item.setText(0, attr);
-		item.setText(1, (value != null) ? value : "");
+		item.setText(1, (value != null) ? value : ""); //$NON-NLS-1$
 	}
 
 	/**

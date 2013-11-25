@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.objectview.Messages;
 
 /**
  * "Capabilities" element for object overview page
@@ -41,7 +42,7 @@ public class Capabilities extends TableElement
 	@Override
 	protected String getTitle()
 	{
-		return "Capabilities";
+		return Messages.get().Capabilities_Title;
 	}
 
 	/* (non-Javadoc)
@@ -54,24 +55,24 @@ public class Capabilities extends TableElement
 			return;
 		
 		AbstractNode node = (AbstractNode)getObject();
-		addFlag("isAgent", (node.getFlags() & AbstractNode.NF_IS_NATIVE_AGENT) != 0);
-		addFlag("isBridge", (node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0);
-		addFlag("isCDP", (node.getFlags() & AbstractNode.NF_IS_CDP) != 0);
-		addFlag("isDot1x", (node.getFlags() & AbstractNode.NF_IS_8021X) != 0);
-		addFlag("isLLDP", (node.getFlags() & AbstractNode.NF_IS_LLDP) != 0);
-		addFlag("isNDP", (node.getFlags() & AbstractNode.NF_IS_SONMP) != 0);
-		addFlag("isPrinter", (node.getFlags() & AbstractNode.NF_IS_PRINTER) != 0);
-		addFlag("isRouter", (node.getFlags() & AbstractNode.NF_IS_ROUTER) != 0);
-		addFlag("isSMCLP", (node.getFlags() & AbstractNode.NF_IS_SMCLP) != 0);
-		addFlag("isSNMP", (node.getFlags() & AbstractNode.NF_IS_SNMP) != 0);
-		addFlag("isSTP", (node.getFlags() & AbstractNode.NF_IS_STP) != 0);
-		addFlag("isVRRP", (node.getFlags() & AbstractNode.NF_IS_VRRP) != 0);
-		addFlag("hasEntityMIB", (node.getFlags() & AbstractNode.NF_HAS_ENTITY_MIB) != 0);
-		addFlag("hasIfXTable", (node.getFlags() & AbstractNode.NF_HAS_IFXTABLE) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsAgent, (node.getFlags() & AbstractNode.NF_IS_NATIVE_AGENT) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsBridge, (node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsCDP, (node.getFlags() & AbstractNode.NF_IS_CDP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsDot1x, (node.getFlags() & AbstractNode.NF_IS_8021X) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsLLDP, (node.getFlags() & AbstractNode.NF_IS_LLDP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsNDP, (node.getFlags() & AbstractNode.NF_IS_SONMP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsPrinter, (node.getFlags() & AbstractNode.NF_IS_PRINTER) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsRouter, (node.getFlags() & AbstractNode.NF_IS_ROUTER) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsSMCLP, (node.getFlags() & AbstractNode.NF_IS_SMCLP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsSNMP, (node.getFlags() & AbstractNode.NF_IS_SNMP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsSTP, (node.getFlags() & AbstractNode.NF_IS_STP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsVRRP, (node.getFlags() & AbstractNode.NF_IS_VRRP) != 0);
+		addFlag(Messages.get().Capabilities_FlagHasEntityMIB, (node.getFlags() & AbstractNode.NF_HAS_ENTITY_MIB) != 0);
+		addFlag(Messages.get().Capabilities_FlagHasIfXTable, (node.getFlags() & AbstractNode.NF_HAS_IFXTABLE) != 0);
 		if ((node.getFlags() & AbstractNode.NF_IS_SNMP) != 0)
 		{
-			addPair("snmpPort", Integer.toString(node.getSnmpPort()));
-			addPair("snmpVersion", getSnmpVersionName(node.getSnmpVersion()));
+			addPair(Messages.get().Capabilities_SNMPPort, Integer.toString(node.getSnmpPort()));
+			addPair(Messages.get().Capabilities_SNMPVersion, getSnmpVersionName(node.getSnmpVersion()));
 		}
 	}
 	
@@ -83,7 +84,7 @@ public class Capabilities extends TableElement
 	 */
 	private void addFlag(String name, boolean value)
 	{
-		addPair(name, value ? "Yes" : "No");
+		addPair(name, value ? Messages.get().Capabilities_Yes : Messages.get().Capabilities_No);
 	}
 	
 	/**
@@ -97,13 +98,13 @@ public class Capabilities extends TableElement
 		switch(version)
 		{
 			case AbstractNode.SNMP_VERSION_1:
-				return "1";
+				return "1"; //$NON-NLS-1$
 			case AbstractNode.SNMP_VERSION_2C:
-				return "2c";
+				return "2c"; //$NON-NLS-1$
 			case AbstractNode.SNMP_VERSION_3:
-				return "3";
+				return "3"; //$NON-NLS-1$
 			default:
-				return "???";
+				return "???"; //$NON-NLS-1$
 		}
 	}
 

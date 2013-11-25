@@ -69,7 +69,7 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 		e.gc.setAlpha(255);
 		e.gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		
-		final String text = node.getObjectName() + "\n" + node.getPrimaryIP().getHostAddress();
+		final String text = node.getObjectName() + "\n" + node.getPrimaryIP().getHostAddress(); //$NON-NLS-1$
 		
 		rect.x += 4;
 		rect.y += 4;
@@ -87,7 +87,7 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
 		GC gc = new GC(getShell());
-		int h = gc.textExtent("MMM\nMMM", SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).y;
+		int h = gc.textExtent("MMM\nMMM", SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).y; //$NON-NLS-1$
 		gc.dispose();
 		return new Point(160, h + 8);
 	}

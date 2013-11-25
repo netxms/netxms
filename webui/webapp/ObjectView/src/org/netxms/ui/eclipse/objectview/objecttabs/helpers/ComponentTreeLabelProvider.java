@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.PhysicalComponent;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab;
 
 /**
@@ -29,8 +30,20 @@ import org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab;
  */
 public class ComponentTreeLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] className = { null, "other", "unknown", "chassis", "backplane", "container",
-	                                            "power supply", "fan", "sensor", "module", "port", "stack" };
+	private final String[] className = { 
+	   null, 
+	   Messages.get().ComponentTreeLabelProvider_ClassOther, 
+	   Messages.get().ComponentTreeLabelProvider_ClassUnknown, 
+	   Messages.get().ComponentTreeLabelProvider_ClassChassis, 
+	   Messages.get().ComponentTreeLabelProvider_ClassBackplane, 
+	   Messages.get().ComponentTreeLabelProvider_ClassContainer,
+	   Messages.get().ComponentTreeLabelProvider_ClassPS, 
+	   Messages.get().ComponentTreeLabelProvider_ClassFan, 
+	   Messages.get().ComponentTreeLabelProvider_ClassSensor, 
+	   Messages.get().ComponentTreeLabelProvider_ClassModule, 
+	   Messages.get().ComponentTreeLabelProvider_ClassPort, 
+	   Messages.get().ComponentTreeLabelProvider_ClassStack 
+	};
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

@@ -33,6 +33,7 @@ import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ClusterResourceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ClusterResourceListLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -72,7 +73,7 @@ public class ClusterTab extends ObjectTab
 		clusterMap.setLayoutData(gd);
 		clusterMap.setMapLayout(NetworkMap.LAYOUT_VTREE);
 		
-		final String[] names = { "Resource", "VIP", "Owner" };
+		final String[] names = { Messages.get().ClusterTab_Resource, Messages.get().ClusterTab_VirtualIP, Messages.get().ClusterTab_Owner };
 		final int[] widths = { 200, 120, 150 };
 		resourceList = new SortableTableViewer(content, names, widths, COLUMN_NAME, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		resourceList.setContentProvider(new ArrayContentProvider());

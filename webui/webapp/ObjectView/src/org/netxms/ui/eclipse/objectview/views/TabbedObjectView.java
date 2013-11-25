@@ -74,7 +74,7 @@ import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
  */
 public class TabbedObjectView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objectview.view.tabbed_object_view";
+	public static final String ID = "org.netxms.ui.eclipse.objectview.view.tabbed_object_view"; //$NON-NLS-1$
 	
 	private CLabel header;
 	private CTabFolder tabFolder;
@@ -111,7 +111,7 @@ public class TabbedObjectView extends ViewPart
 		layout.verticalSpacing = 0;
 		parent.setLayout(layout);
 		
-		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD);
+		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD); //$NON-NLS-1$
 		
 		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -151,7 +151,7 @@ public class TabbedObjectView extends ViewPart
 			@Override
 			public void selectionChanged(IWorkbenchPart part, ISelection selection)
 			{
-				if ((part.getSite().getId().equals("org.netxms.ui.eclipse.view.navigation.objectbrowser")) && 
+				if ((part.getSite().getId().equals("org.netxms.ui.eclipse.view.navigation.objectbrowser")) &&  //$NON-NLS-1$
 				    (selection instanceof IStructuredSelection))
 				{
 					if (selection.isEmpty())
@@ -197,7 +197,7 @@ public class TabbedObjectView extends ViewPart
 		};
 		session.addListener(sessionListener);
 		
-		CommandBridge.getInstance().registerCommand("TabbedObjectView/selectTab", new Command() {
+		CommandBridge.getInstance().registerCommand("TabbedObjectView/selectTab", new Command() { //$NON-NLS-1$
 			@Override
 			public Object execute(String name, Object arg)
 			{
@@ -207,7 +207,7 @@ public class TabbedObjectView extends ViewPart
 			}
 		});
 
-		CommandBridge.getInstance().registerCommand("TabbedObjectView/changeObject", new Command() {
+		CommandBridge.getInstance().registerCommand("TabbedObjectView/changeObject", new Command() { //$NON-NLS-1$
 			@Override
 			public Object execute(String name, Object arg)
 			{
@@ -371,7 +371,7 @@ public class TabbedObjectView extends ViewPart
 				tab.changeObject(null);
 			}
 			objectId = 0;
-			header.setText("");
+			header.setText(""); //$NON-NLS-1$
 		}
 		if (focusControl != null)
 			focusControl.setFocus();
@@ -396,18 +396,18 @@ public class TabbedObjectView extends ViewPart
 	{
 		// Read all registered extensions and create tabs
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectview.tabs");
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectview.tabs"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			try
 			{
-				final ObjectTab tab = (ObjectTab)elements[i].createExecutableExtension("class");
+				final ObjectTab tab = (ObjectTab)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
 				tab.configure(elements[i], this);
 				tabs.add(tab);
 			}
 			catch(CoreException e)
 			{
-				Activator.log("Exception when instantiating object tab", e);
+				Activator.log("Exception when instantiating object tab", e); //$NON-NLS-1$
 			}
 		}
 		
@@ -454,7 +454,7 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
-		CommandBridge.getInstance().unregisterCommand("TabbedObjectView/selectTab");
+		CommandBridge.getInstance().unregisterCommand("TabbedObjectView/selectTab"); //$NON-NLS-1$
 		ConsoleSharedData.getSession().removeListener(sessionListener);
 		if (sourceProvider != null)
 			sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, null);

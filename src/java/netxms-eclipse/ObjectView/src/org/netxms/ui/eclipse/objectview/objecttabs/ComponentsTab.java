@@ -44,6 +44,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ComponentTreeContentProvider;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ComponentTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -76,22 +77,22 @@ public class ComponentsTab extends ObjectTab
 	protected void createTabContent(Composite parent)
 	{
 		viewer = new TreeViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
-		addColumn("Name", 200);
-		addColumn("Class", 100);
-		addColumn("Model", 150);
-		addColumn("Firmware", 100);
-		addColumn("Serial Number", 150);
-		addColumn("Vendor", 150);
+		addColumn(Messages.get().ComponentsTab_ColName, 200);
+		addColumn(Messages.get().ComponentsTab_ColClass, 100);
+		addColumn(Messages.get().ComponentsTab_ColModel, 150);
+		addColumn(Messages.get().ComponentsTab_ColFirmware, 100);
+		addColumn(Messages.get().ComponentsTab_ColSerial, 150);
+		addColumn(Messages.get().ComponentsTab_ColVendor, 150);
 		viewer.setLabelProvider(new ComponentTreeLabelProvider());
 		viewer.setContentProvider(new ComponentTreeContentProvider());
 		viewer.getTree().setHeaderVisible(true);
 		viewer.getTree().setLinesVisible(true);
-		WidgetHelper.restoreColumnSettings(viewer.getTree(), Activator.getDefault().getDialogSettings(), "ComponentTree");
+		WidgetHelper.restoreColumnSettings(viewer.getTree(), Activator.getDefault().getDialogSettings(), "ComponentTree"); //$NON-NLS-1$
 		viewer.getTree().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTree(), Activator.getDefault().getDialogSettings(), "ComponentTree");
+				WidgetHelper.saveColumnSettings(viewer.getTree(), Activator.getDefault().getDialogSettings(), "ComponentTree"); //$NON-NLS-1$
 			}
 		});
 		createActions();
@@ -154,7 +155,7 @@ public class ComponentsTab extends ObjectTab
 	 */
 	private void createActions()
 	{
-		actionCopy = new Action("&Copy to clipboard", SharedIcons.COPY) {
+		actionCopy = new Action(Messages.get().ComponentsTab_ActionCopy, SharedIcons.COPY) {
 			@Override
 			public void run()
 			{
@@ -162,7 +163,7 @@ public class ComponentsTab extends ObjectTab
 			}
 		};
 
-		actionCopyName = new Action("Copy &name to clipboard") {
+		actionCopyName = new Action(Messages.get().ComponentsTab_ActionCopyName) {
 			@Override
 			public void run()
 			{
@@ -170,7 +171,7 @@ public class ComponentsTab extends ObjectTab
 			}
 		};
 
-		actionCopyModel = new Action("Copy &model to clipboard") {
+		actionCopyModel = new Action(Messages.get().ComponentsTab_ActionCopyModel) {
 			@Override
 			public void run()
 			{
@@ -178,7 +179,7 @@ public class ComponentsTab extends ObjectTab
 			}
 		};
 
-		actionCopySerial = new Action("Copy &serial number to clipboard") {
+		actionCopySerial = new Action(Messages.get().ComponentsTab_ActionCopySerial) {
 			@Override
 			public void run()
 			{
@@ -186,7 +187,7 @@ public class ComponentsTab extends ObjectTab
 			}
 		};
 
-		actionCollapseAll = new Action("C&ollapse all", SharedIcons.COLLAPSE_ALL) {
+		actionCollapseAll = new Action(Messages.get().ComponentsTab_ActionCollapseAll, SharedIcons.COLLAPSE_ALL) {
 			@Override
 			public void run()
 			{
@@ -194,7 +195,7 @@ public class ComponentsTab extends ObjectTab
 			}
 		};
 
-		actionExpandAll = new Action("&Expand all", SharedIcons.EXPAND_ALL) {
+		actionExpandAll = new Action(Messages.get().ComponentsTab_ActionExpandAll, SharedIcons.EXPAND_ALL) {
 			@Override
 			public void run()
 			{
@@ -211,7 +212,7 @@ public class ComponentsTab extends ObjectTab
 		TreeItem[] selection = viewer.getTree().getSelection();
 		if (selection.length > 0)
 		{
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
 			StringBuilder sb = new StringBuilder();
 			for(int i = 0; i < selection.length; i++)
 			{
@@ -222,7 +223,7 @@ public class ComponentsTab extends ObjectTab
 					sb.append(selection[i].getText(0));
 					for(int j = 1; j < viewer.getTree().getColumnCount(); j++)
 					{
-						sb.append("\t");
+						sb.append("\t"); //$NON-NLS-1$
 						sb.append(selection[i].getText(j));
 					}
 				}
@@ -246,7 +247,7 @@ public class ComponentsTab extends ObjectTab
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		ConsoleJob job = new ConsoleJob("Get node components", getViewPart(), Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().ComponentsTab_JobName, getViewPart(), Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -293,7 +294,7 @@ public class ComponentsTab extends ObjectTab
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot get component information for node %s", object.getObjectName());
+				return String.format(Messages.get().ComponentsTab_JobError, object.getObjectName());
 			}
 		};
 		job.setUser(false);

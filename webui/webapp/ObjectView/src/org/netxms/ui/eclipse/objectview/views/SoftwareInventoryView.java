@@ -37,6 +37,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.actions.ViewerProvider;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.widgets.SoftwareInventory;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -45,7 +46,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class SoftwareInventoryView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView";
+	public static final String ID = "org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView"; //$NON-NLS-1$
 	
 	private long rootObjectId;
 	private SoftwareInventory inventoryWidget;
@@ -62,7 +63,7 @@ public class SoftwareInventoryView extends ViewPart
 		super.init(site);
 		
 		rootObjectId = Long.parseLong(site.getSecondaryId());
-		setPartName("Software Inventory - " + ((NXCSession)ConsoleSharedData.getSession()).getObjectName(rootObjectId));
+		setPartName(Messages.get().SoftwareInventoryView_PartName + ((NXCSession)ConsoleSharedData.getSession()).getObjectName(rootObjectId));
 	}
 
 	/* (non-Javadoc)
@@ -71,7 +72,7 @@ public class SoftwareInventoryView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		inventoryWidget = new SoftwareInventory(parent, SWT.NONE, this, "SoftwareInventoryView");
+		inventoryWidget = new SoftwareInventory(parent, SWT.NONE, this, "SoftwareInventoryView"); //$NON-NLS-1$
 		inventoryWidget.setRootObjectId(rootObjectId);
 
 		createActions();

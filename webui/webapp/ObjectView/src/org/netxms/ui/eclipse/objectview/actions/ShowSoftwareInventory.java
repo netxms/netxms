@@ -30,6 +30,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -64,7 +65,7 @@ public class ShowSoftwareInventory implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowSoftwareInventory_Error, String.format(Messages.get().ShowSoftwareInventory_ErrorOpeningView, e.getMessage()));
 			}
 		}
 	}

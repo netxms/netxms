@@ -30,9 +30,9 @@ import org.eclipse.ui.services.IServiceLocator;
  */
 public class SourceProvider extends AbstractSourceProvider
 {
-	private static final String INSTANCE_ATTRIBUTE = SourceProvider.class.getSimpleName() + ".INSTANCE";
+	private static final String INSTANCE_ATTRIBUTE = SourceProvider.class.getSimpleName() + ".INSTANCE"; //$NON-NLS-1$
 	
-	public static final String ACTIVE_TAB = "nxmcObjectViewActiveTab";
+	public static final String ACTIVE_TAB = "nxmcObjectViewActiveTab"; //$NON-NLS-1$
 	
 	private static final String[] PROVIDED_SOURCE_NAMES = new String[] { ACTIVE_TAB };
 	

@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
@@ -63,7 +64,7 @@ public class AvailabilityChart extends OverviewPageElement
 	@Override
 	protected String getTitle()
 	{
-		return "Availability";
+		return Messages.get().AvailabilityChart_Title;
 	}
 
 	/* (non-Javadoc)
@@ -97,9 +98,9 @@ public class AvailabilityChart extends OverviewPageElement
 		layout.numColumns = 4;
 		clientArea.setLayout(layout);
 		
-		dayChart = createChart(clientArea, "Today");
-		weekChart = createChart(clientArea, "This Week");
-		monthChart = createChart(clientArea, "This Month");
+		dayChart = createChart(clientArea, Messages.get().AvailabilityChart_Today);
+		weekChart = createChart(clientArea, Messages.get().AvailabilityChart_ThisWeek);
+		monthChart = createChart(clientArea, Messages.get().AvailabilityChart_ThisMonth);
 		
 		Canvas legend = new Canvas(clientArea, SWT.NONE);
 		legend.addPaintListener(new PaintListener() {
@@ -134,8 +135,8 @@ public class AvailabilityChart extends OverviewPageElement
 		chart.setLabelsVisible(false);
 		chart.setRotation(225.0);
 		
-		chart.addParameter(new GraphItem(0, 0, 0, 0, "Up", "Up"), 100);
-		chart.addParameter(new GraphItem(0, 0, 0, 0, "Down", "Down"), 0);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChart_Up, Messages.get().AvailabilityChart_Up), 100);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChart_Down, Messages.get().AvailabilityChart_Down), 0);
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();
@@ -154,7 +155,7 @@ public class AvailabilityChart extends OverviewPageElement
 	 */
 	private void paintLegend(GC gc)
 	{
-		final int th = gc.textExtent("UptimeDowntime").y;
+		final int th = gc.textExtent(Messages.get().AvailabilityChart_Uptime + Messages.get().AvailabilityChart_Downtime).y;
 		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, getDisplay());
 		
 		gc.setBackground(colors.create(127, 154, 72));
@@ -168,8 +169,8 @@ public class AvailabilityChart extends OverviewPageElement
 		gc.drawRectangle(5, 40, th, th);
 
 		gc.setForeground(fg);
-		gc.drawText("Uptime", 10 + th, 10, true);
-		gc.drawText("Downtime", 10 + th, 40, true);
+		gc.drawText(Messages.get().AvailabilityChart_Uptime, 10 + th, 10, true);
+		gc.drawText(Messages.get().AvailabilityChart_Downtime, 10 + th, 40, true);
 	}
 
 	/* (non-Javadoc)

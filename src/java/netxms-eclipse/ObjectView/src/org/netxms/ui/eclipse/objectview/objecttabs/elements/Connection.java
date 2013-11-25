@@ -31,6 +31,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -96,7 +97,7 @@ public class Connection extends OverviewPageElement
 	@Override
 	protected String getTitle()
 	{
-		return "Connection";
+		return Messages.get().Connection_Title;
 	}
 
 	/* (non-Javadoc)
@@ -113,24 +114,24 @@ public class Connection extends OverviewPageElement
 		if (peerNodeId != 0)
 		{
 			AbstractObject node = session.findObjectById(peerNodeId);
-			nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">");
+			nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
 			nodeLabel.setImage(labelProvider.getImage(node));
 		}
 		else
 		{
-			nodeLabel.setText("N/A");
+			nodeLabel.setText(Messages.get().Connection_NA);
 		}
 		
 		long peerInterfaceId = iface.getPeerInterfaceId();
 		if (peerInterfaceId != 0)
 		{
 			AbstractObject peerIface = session.findObjectById(peerInterfaceId);
-			interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">");
+			interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
 			interfaceLabel.setImage(labelProvider.getImage(peerIface));
 		}
 		else
 		{
-			interfaceLabel.setText("N/A");
+			interfaceLabel.setText(Messages.get().Connection_NA);
 		}
 	}
 

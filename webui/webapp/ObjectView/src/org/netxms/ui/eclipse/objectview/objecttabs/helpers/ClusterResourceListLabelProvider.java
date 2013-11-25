@@ -26,6 +26,7 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ClusterTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -72,11 +73,11 @@ public class ClusterResourceListLabelProvider extends LabelProvider implements I
 				if (ownerId > 0)
 				{
 					Node owner = (Node)session.findObjectById(ownerId, Node.class);
-					return (owner != null) ? owner.getObjectName() : "<" + Long.toString(ownerId) + ">";
+					return (owner != null) ? owner.getObjectName() : "<" + Long.toString(ownerId) + ">"; //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				else
 				{
-					return "NONE";
+					return Messages.get().ClusterResourceListLabelProvider_None;
 				}
 		}
 		return null;

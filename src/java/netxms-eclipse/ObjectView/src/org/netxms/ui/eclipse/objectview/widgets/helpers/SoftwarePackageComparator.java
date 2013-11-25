@@ -38,7 +38,7 @@ public class SoftwarePackageComparator extends ViewerComparator
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		int result;
-		final int column = (viewer instanceof SortableTableViewer) ? (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID") : (Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID");
+		final int column = (viewer instanceof SortableTableViewer) ? (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID") : (Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		if (e1 instanceof SoftwareInventoryNode)
 		{

@@ -28,6 +28,7 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -36,7 +37,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class InterfaceListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-	private static final String[] ifaceExpectedState = { "UP", "DOWN", "IGNORE" };
+	private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore };
 	
 	private Node node = null;
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();

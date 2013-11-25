@@ -39,6 +39,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -78,9 +79,26 @@ public class InterfacesTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		final String[] names = { "ID", "Name", "ifType", "ifIndex", "Slot", "Port", "Description", "MAC Address", 
-		                         "IP Address", "Peer Node", "Peer MAC", "Peer IP", 
-				                   "Admin State", "Oper State", "Exp. State", "Status", "802.1x PAE", "802.1x Backend" };
+		final String[] names = { 
+	      Messages.get().InterfacesTab_ColId, 
+	      Messages.get().InterfacesTab_ColName, 
+	      Messages.get().InterfacesTab_ColIfType, 
+	      Messages.get().InterfacesTab_ColIfIndex, 
+	      Messages.get().InterfacesTab_ColSlot, 
+	      Messages.get().InterfacesTab_ColPort, 
+	      Messages.get().InterfacesTab_ColDescription, 
+	      Messages.get().InterfacesTab_ColMacAddr,
+	      Messages.get().InterfacesTab_ColIpAddr, 
+	      Messages.get().InterfacesTab_ColPeerNode, 
+	      Messages.get().InterfacesTab_ColPeerMAC, 
+	      Messages.get().InterfacesTab_ColPeerIP, 
+	      Messages.get().InterfacesTab_ColAdminState, 
+	      Messages.get().InterfacesTab_ColOperState, 
+	      Messages.get().InterfacesTab_ColExpState, 
+	      Messages.get().InterfacesTab_ColStatus, 
+	      Messages.get().InterfacesTab_Col8021xPAE, 
+	      Messages.get().InterfacesTab_Col8021xBackend 
+		};
 		final int[] widths = { 60, 150, 90, 70, 70, 70, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		labelProvider = new InterfaceListLabelProvider();
@@ -89,12 +107,12 @@ public class InterfacesTab extends ObjectTab
 		viewer.setComparator(new InterfaceListComparator());
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable");
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable");
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable"); //$NON-NLS-1$
 			}
 		});
 		createActions();

@@ -40,6 +40,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.SoftwareInventoryContentProvider;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.SoftwareInventoryNode;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.SoftwarePackageComparator;
@@ -61,7 +62,7 @@ public class SoftwareInventory extends Composite
 	public static final int COLUMN_DESCRIPTION = 4;
 	public static final int COLUMN_URL = 5;
 	
-	private static final String[] names = { "Name", "Version", "Vendor", "Install Date", "Description", "URL" };
+	private static final String[] names = { Messages.get().SoftwareInventory_Name, Messages.get().SoftwareInventory_Version, Messages.get().SoftwareInventory_Vendor, Messages.get().SoftwareInventory_InstallDate, Messages.get().SoftwareInventory_Description, Messages.get().SoftwareInventory_URL };
 	private static final int[] widths = { 200, 100, 200, 100, 300, 200 };
 	
 	private IViewPart viewPart;
@@ -142,7 +143,7 @@ public class SoftwareInventory extends Composite
 	public void refresh()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Read software package information", viewPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SoftwareInventory_JobName, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -187,7 +188,7 @@ public class SoftwareInventory extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get software package information for node";
+				return Messages.get().SoftwareInventory_JobError;
 			}
 		}.start();
 	}

@@ -51,7 +51,7 @@ public class ClusterResourceListComparator extends ViewerComparator
 	{
 		final ClusterResource r1 = (ClusterResource)e1;
 		final ClusterResource r2 = (ClusterResource)e2;
-		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID");
+		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		
 		int result;
 		switch(column)
@@ -90,11 +90,11 @@ public class ClusterResourceListComparator extends ViewerComparator
 		if (ownerId > 0)
 		{
 			Node owner = (Node)session.findObjectById(ownerId, Node.class);
-			return (owner != null) ? owner.getObjectName() : "<" + Long.toString(ownerId) + ">";
+			return (owner != null) ? owner.getObjectName() : "<" + Long.toString(ownerId) + ">"; //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else
 		{
-			return "NONE";
+			return "NONE"; //$NON-NLS-1$
 		}
 	}
 }

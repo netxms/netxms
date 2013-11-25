@@ -34,6 +34,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -58,118 +59,118 @@ public class GeneralInfo extends TableElement
 		final AbstractObject object = getObject();
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
-		addPair("ID", Long.toString(object.getObjectId()));
+		addPair(Messages.get().GeneralInfo_ID, Long.toString(object.getObjectId()));
 		if (object.getGuid() != null)
-			addPair("GUID", object.getGuid().toString());
-		addPair("Class", object.getObjectClassName());
-		addPair("Status", StatusDisplayInfo.getStatusText(object.getStatus()));
+			addPair(Messages.get().GeneralInfo_GUID, object.getGuid().toString());
+		addPair(Messages.get().GeneralInfo_Class, object.getObjectClassName());
+		addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
 		switch(object.getObjectClass())
 		{
 			case AbstractObject.OBJECT_INTERFACE:
 				Interface iface = (Interface)object;
-				addPair("Interface Index", Integer.toString(iface.getIfIndex()));
-				addPair("Interface Type", Integer.toString(iface.getIfType()));
-				addPair("Description", iface.getDescription());
-				addPair("Administrative State", iface.getAdminStateAsText());
-				addPair("Operational State", iface.getOperStateAsText());
-				addPair("MAC Address", iface.getMacAddress().toString());
+				addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));
+				addPair(Messages.get().GeneralInfo_IfType, Integer.toString(iface.getIfType()));
+				addPair(Messages.get().GeneralInfo_Description, iface.getDescription());
+				addPair(Messages.get().GeneralInfo_AdmState, iface.getAdminStateAsText());
+				addPair(Messages.get().GeneralInfo_OperState, iface.getOperStateAsText());
+				addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				{
-					addPair("Slot/Port", Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort()));
+					addPair(Messages.get().GeneralInfo_SlotPort, Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort())); //$NON-NLS-1$
 					AbstractNode node = iface.getParentNode();
 					if ((node != null) && node.is8021xSupported())
 					{
-						addPair("802.1x PAE State", iface.getDot1xPaeStateAsText());
-						addPair("802.1x Backend State", iface.getDot1xBackendStateAsText());
+						addPair(Messages.get().GeneralInfo_8021xPAE, iface.getDot1xPaeStateAsText());
+						addPair(Messages.get().GeneralInfo_8021xBackend, iface.getDot1xBackendStateAsText());
 					}
 				}
 				if (!iface.getPrimaryIP().isAnyLocalAddress())
 				{
 					if (session.isZoningEnabled())
-						addPair("Zone ID", Long.toString(iface.getZoneId()));
-					addPair("IP Address", iface.getPrimaryIP().getHostAddress());
-					addPair("IP Subnet Mask", iface.getSubnetMask().getHostAddress());
+						addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(iface.getZoneId()));
+					addPair(Messages.get().GeneralInfo_IPAddr, iface.getPrimaryIP().getHostAddress());
+					addPair(Messages.get().GeneralInfo_IPNetMask, iface.getSubnetMask().getHostAddress());
 				}
 				break;
 			case AbstractObject.OBJECT_NODE:
 				AbstractNode node = (AbstractNode)object;
 				if (session.isZoningEnabled())
-					addPair("Zone ID", Long.toString(node.getZoneId()));
-				addPair("Primary Host Name", node.getPrimaryName());
-				addPair("Primary IP Address", node.getPrimaryIP().getHostAddress());
+					addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(node.getZoneId()));
+				addPair(Messages.get().GeneralInfo_PrimaryHostName, node.getPrimaryName());
+				addPair(Messages.get().GeneralInfo_PrimaryIP, node.getPrimaryIP().getHostAddress());
 				if (node.hasAgent())
-					addPair("NetXMS Agent Version", node.getAgentVersion());
-				addPair("System Description", node.getSystemDescription(), false);
-				addPair("Platform Name", node.getPlatformName(), false);
-				addPair("SNMP sysName", node.getSnmpSysName(), false);
-				addPair("SNMP Object ID", node.getSnmpOID(), false);
+					addPair(Messages.get().GeneralInfo_AgentVersion, node.getAgentVersion());
+				addPair(Messages.get().GeneralInfo_SysDescr, node.getSystemDescription(), false);
+				addPair(Messages.get().GeneralInfo_PlatformName, node.getPlatformName(), false);
+				addPair(Messages.get().GeneralInfo_SysName, node.getSnmpSysName(), false);
+				addPair(Messages.get().GeneralInfo_SysOID, node.getSnmpOID(), false);
 				if ((node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0)
-					addPair("Bridge Base Address", node.getBridgeBaseAddress().toString());
-				addPair("Driver", node.getDriverName(), false);
+					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
+				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             if (node.getBootTime() != null)
-               addPair("Boot Time", RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
+               addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
 				break;
 			case AbstractObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;
 				if (md.getLastReportTime().getTime() == 0)
-					addPair("Last Report", "never");
+					addPair(Messages.get().GeneralInfo_LastReport, Messages.get().GeneralInfo_Never);
 				else
-					addPair("Last Report", RegionalSettings.getDateTimeFormat().format(md.getLastReportTime()));
-				addPair("Device ID", md.getDeviceId());
-				addPair("Vendor", md.getVendor());
-				addPair("Model", md.getModel());
-				addPair("Serial Number", md.getSerialNumber());
-				addPair("Operating System", md.getOsName());
-				addPair("OS Version", md.getOsVersion());
-				addPair("User", md.getUserId(), false);
+					addPair(Messages.get().GeneralInfo_LastReport, RegionalSettings.getDateTimeFormat().format(md.getLastReportTime()));
+				addPair(Messages.get().GeneralInfo_DeviceId, md.getDeviceId());
+				addPair(Messages.get().GeneralInfo_Vendor, md.getVendor());
+				addPair(Messages.get().GeneralInfo_Model, md.getModel());
+				addPair(Messages.get().GeneralInfo_Serial, md.getSerialNumber());
+				addPair(Messages.get().GeneralInfo_OS, md.getOsName());
+				addPair(Messages.get().GeneralInfo_OSVersion, md.getOsVersion());
+				addPair(Messages.get().GeneralInfo_User, md.getUserId(), false);
 				if (md.getBatteryLevel() >= 0)
-					addPair("Battery Level", Integer.toString(md.getBatteryLevel()) + "%");
+					addPair(Messages.get().GeneralInfo_BatteryLevel, Integer.toString(md.getBatteryLevel()) + "%"); //$NON-NLS-1$
 				break;
 			case AbstractObject.OBJECT_ACCESSPOINT:
 				AccessPoint ap = (AccessPoint)object;
-				addPair("Vendor", ap.getVendor());
-				addPair("Model", ap.getModel());
-				addPair("Serial Number", ap.getSerialNumber());
-				addPair("MAC Address", ap.getMacAddress().toString());
+				addPair(Messages.get().GeneralInfo_Vendor, ap.getVendor());
+				addPair(Messages.get().GeneralInfo_Model, ap.getModel());
+				addPair(Messages.get().GeneralInfo_Serial, ap.getSerialNumber());
+				addPair(Messages.get().GeneralInfo_MACAddr, ap.getMacAddress().toString());
 				break;
 			case AbstractObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;
 				if (session.isZoningEnabled())
-					addPair("Zone ID", Long.toString(subnet.getZoneId()));
+					addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(subnet.getZoneId()));
 				break;
 			case AbstractObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;
-				addPair("Zone ID", Long.toString(zone.getZoneId()));
+				addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(zone.getZoneId()));
 				break;
 			case AbstractObject.OBJECT_NODELINK:
 				AbstractNode linkedNode = (AbstractNode)session.findObjectById(((NodeLink)object).getNodeId(), AbstractNode.class);
 				if (linkedNode != null)
-					addPair("Linked node", linkedNode.getObjectName());
+					addPair(Messages.get().GeneralInfo_LinkedNode, linkedNode.getObjectName());
 			case AbstractObject.OBJECT_BUSINESSSERVICE:
 			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
 				ServiceContainer service = (ServiceContainer)object;
 				NumberFormat nf = NumberFormat.getNumberInstance();
 				nf.setMinimumFractionDigits(3);
 				nf.setMaximumFractionDigits(3);
-				addPair("Uptime for day", nf.format(service.getUptimeForDay()) + "%");
-				addPair("Uptime for week", nf.format(service.getUptimeForWeek()) + "%");
-				addPair("Uptime for month", nf.format(service.getUptimeForMonth()) + "%");
+				addPair(Messages.get().GeneralInfo_UptimeDay, nf.format(service.getUptimeForDay()) + "%"); //$NON-NLS-1$
+				addPair(Messages.get().GeneralInfo_UptimeWeek, nf.format(service.getUptimeForWeek()) + "%"); //$NON-NLS-1$
+				addPair(Messages.get().GeneralInfo_UptimeMonth, nf.format(service.getUptimeForMonth()) + "%"); //$NON-NLS-1$
 				break;
 			case AbstractObject.OBJECT_SLMCHECK:
 				ServiceCheck check = (ServiceCheck)object;
-				addPair("Is template", check.isTemplate() ? "Yes" : "No");
+				addPair(Messages.get().GeneralInfo_IsTemplate, check.isTemplate() ? Messages.get().GeneralInfo_Yes : Messages.get().GeneralInfo_No);
 				if (check.getTemplateId() != 0)
 				{
 					ServiceCheck tmpl = (ServiceCheck)session.findObjectById(check.getTemplateId(), ServiceCheck.class);
 					if (tmpl != null)
-						addPair("Template", tmpl.getObjectName());
+						addPair(Messages.get().GeneralInfo_Template, tmpl.getObjectName());
 				}
 				break;
 			default:
 				break;
 		}
 		if (object.getGeolocation().getType() != GeoLocation.UNSET)
-			addPair("Location", object.getGeolocation().toString());
+			addPair(Messages.get().GeneralInfo_Location, object.getGeolocation().toString());
 	}
 
 	/* (non-Javadoc)
@@ -178,6 +179,6 @@ public class GeneralInfo extends TableElement
 	@Override
 	protected String getTitle()
 	{
-		return "General";
+		return Messages.get().GeneralInfo_Title;
 	}
 }

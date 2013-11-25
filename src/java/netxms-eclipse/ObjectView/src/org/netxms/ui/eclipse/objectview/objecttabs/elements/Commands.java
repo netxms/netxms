@@ -29,6 +29,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.CommandBox;
@@ -60,12 +61,12 @@ public class Commands extends OverviewPageElement
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
-		actionWakeup = new Action("Wakeup node using Wake-on-LAN") {
+		actionWakeup = new Action(Messages.get().Commands_ActionWakeup) {
 			@Override
 			public void run()
 			{
 				final AbstractObject object = getObject();
-				new ConsoleJob("Wakeup node", null, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(Messages.get().Commands_WakeupJobName, null, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
@@ -75,87 +76,90 @@ public class Commands extends OverviewPageElement
 					@Override
 					protected String getErrorMessage()
 					{
-						return "Cannot send wake-on-LAN packet to node";
+						return Messages.get().Commands_WakeupJobError;
 					}
 				}.start();
 			}
 		};
-		actionWakeup.setImageDescriptor(Activator.getImageDescriptor("icons/wol.png"));
+		actionWakeup.setImageDescriptor(Activator.getImageDescriptor("icons/wol.png")); //$NON-NLS-1$
 		
-		actionRestartAgent = new Action("Restart NetXMS agent") {
+		actionRestartAgent = new Action(Messages.get().Commands_ActionRestartAgent) {
 			@Override
 			public void run()
 			{
 				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(commandBox.getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(commandBox.getShell(), Messages.get().Commands_Confirmation, 
+				      String.format(Messages.get().Commands_AgentRestartConfirmation, object.getObjectName())))
 				{
-					new ConsoleJob("Initiate agent restart on node " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+					new ConsoleJob(String.format(Messages.get().Commands_AgentRestartJobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							session.executeAction(object.getObjectId(), "Agent.Restart");
+							session.executeAction(object.getObjectId(), "Agent.Restart"); //$NON-NLS-1$
 						}
 	
 						@Override
 						protected String getErrorMessage()
 						{
-							return "Cannot initiate agent restart on node " + object.getObjectName();
+							return String.format(Messages.get().Commands_AgentRestartJobError, object.getObjectName());
 						}
 					}.start();
 				}
 			}
 		};
-		actionRestartAgent.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png"));
+		actionRestartAgent.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png")); //$NON-NLS-1$
 		
-		actionRestart = new Action("Restart system") {
+		actionRestart = new Action(Messages.get().Commands_ActionRestartNode) {
 			@Override
 			public void run()
 			{
 				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(commandBox.getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(commandBox.getShell(), Messages.get().Commands_Confirmation, 
+                  String.format(Messages.get().Commands_RestartNodeConfirmation, object.getObjectName())))
 				{
-					new ConsoleJob("Initiate node restart", null, Activator.PLUGIN_ID, null) {
+					new ConsoleJob(String.format(Messages.get().Commands_RestartNodeJobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							session.executeAction(object.getObjectId(), "System.Restart");
+							session.executeAction(object.getObjectId(), "System.Restart"); //$NON-NLS-1$
 						}
 	
 						@Override
 						protected String getErrorMessage()
 						{
-							return "Cannot initiate node restart";
+							return String.format(Messages.get().Commands_RestartNodeJobError, object.getObjectName());
 						}
 					}.start();
 				}
 			}
 		};
-		actionRestart.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png"));
+		actionRestart.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png")); //$NON-NLS-1$
 		
-		actionShutdown = new Action("Shutdown system") {
+		actionShutdown = new Action(Messages.get().Commands_ActionShutdown) {
 			@Override
 			public void run()
 			{
 				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(commandBox.getShell(), "Confirmation", "Node " + object.getObjectName() + " will be shut down. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(commandBox.getShell(), Messages.get().Commands_Confirmation, 
+				      String.format(Messages.get().Commands_ShutdownConfirmation, object.getObjectName())))
 				{
-					new ConsoleJob("Initiate node shutdown", null, Activator.PLUGIN_ID, null) {
+					new ConsoleJob(String.format(Messages.get().Commands_ShutdownJobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							session.executeAction(object.getObjectId(), "System.Shutdown");
+							session.executeAction(object.getObjectId(), "System.Shutdown"); //$NON-NLS-1$
 						}
 	
 						@Override
 						protected String getErrorMessage()
 						{
-							return "Cannot initiate node shutdown";
+							return String.format(Messages.get().Commands_ShutdownJobError, object.getObjectName());
 						}
 					}.start();
 				}
 			}
 		};
-		actionShutdown.setImageDescriptor(Activator.getImageDescriptor("icons/shutdown.png"));
+		actionShutdown.setImageDescriptor(Activator.getImageDescriptor("icons/shutdown.png")); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -164,7 +168,7 @@ public class Commands extends OverviewPageElement
 	@Override
 	protected String getTitle()
 	{
-		return "Commands";
+		return Messages.get().Commands_Title;
 	}
 
 	/* (non-Javadoc)

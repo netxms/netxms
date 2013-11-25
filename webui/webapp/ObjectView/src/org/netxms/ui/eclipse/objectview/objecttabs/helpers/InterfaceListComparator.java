@@ -39,7 +39,7 @@ public class InterfaceListComparator extends ViewerComparator
 	{
 		final Interface iface1 = (Interface)e1;
 		final Interface iface2 = (Interface)e2;
-		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID");
+		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		
 		int result;
 		switch(column)

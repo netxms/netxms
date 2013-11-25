@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -56,9 +57,9 @@ public abstract class TableElement extends OverviewPageElement
 	private void setupTable()
 	{
 		TableColumn tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Name");
+		tc.setText(Messages.get().TableElement_Name);
 		tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Value");
+		tc.setText(Messages.get().TableElement_Value);
 		
 		table.setHeaderVisible(false);
 		table.setLinesVisible(false);
@@ -84,7 +85,7 @@ public abstract class TableElement extends OverviewPageElement
 	 */
 	protected void createActions()
 	{
-		actionCopy = new Action("Copy to clipboard") {
+		actionCopy = new Action(Messages.get().TableElement_ActionCopy) {
 			@Override
 			public void run()
 			{
@@ -92,12 +93,12 @@ public abstract class TableElement extends OverviewPageElement
 				if (index >= 0)
 				{
 					final TableItem item = table.getItem(index);
-					WidgetHelper.copyToClipboard(item.getText(0) + "=" + item.getText(1));
+					WidgetHelper.copyToClipboard(item.getText(0) + "=" + item.getText(1)); //$NON-NLS-1$
 				}
 			}
 		};
 
-		actionCopyName = new Action("Copy &name to clipboard") {
+		actionCopyName = new Action(Messages.get().TableElement_ActionCopyName) {
 			@Override
 			public void run()
 			{
@@ -110,7 +111,7 @@ public abstract class TableElement extends OverviewPageElement
 			}
 		};
 
-		actionCopyValue = new Action("Copy &value to clipboard") {
+		actionCopyValue = new Action(Messages.get().TableElement_ActionCopyValue) {
 			@Override
 			public void run()
 			{
@@ -184,7 +185,7 @@ public abstract class TableElement extends OverviewPageElement
 			return;
 		TableItem item = new TableItem(table, SWT.NONE);
 		item.setText(0, attr);
-		item.setText(1, (value != null) ? value : "");
+		item.setText(1, (value != null) ? value : ""); //$NON-NLS-1$
 	}
 
 	/**

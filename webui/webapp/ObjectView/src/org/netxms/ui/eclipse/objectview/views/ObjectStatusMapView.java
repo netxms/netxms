@@ -32,6 +32,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -40,7 +41,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectStatusMapView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView";
+	public static final String ID = "org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView"; //$NON-NLS-1$
 
 	private long rootObjectId;
 	private ObjectStatusMap map;
@@ -59,7 +60,7 @@ public class ObjectStatusMapView extends ViewPart
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		rootObjectId = Long.parseLong(site.getSecondaryId());
 		final AbstractObject object = session.findObjectById(rootObjectId);
-		setPartName("Status Map - " + ((object != null) ? object.getObjectName() : ("[" + rootObjectId + "]")));
+		setPartName(Messages.get().ObjectStatusMapView_PartName + ((object != null) ? object.getObjectName() : ("[" + rootObjectId + "]"))); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -70,7 +71,7 @@ public class ObjectStatusMapView extends ViewPart
 	{
 		if (memento != null)
 		{
-			Boolean f = memento.getBoolean("GroupObjects");
+			Boolean f = memento.getBoolean("GroupObjects"); //$NON-NLS-1$
 			if (f != null)
 				initialGroupFlag = f;
 		}
@@ -84,7 +85,7 @@ public class ObjectStatusMapView extends ViewPart
 	public void saveState(IMemento memento)
 	{
 		super.saveState(memento);
-		memento.putBoolean("GroupObjects", map.isGroupObjects());
+		memento.putBoolean("GroupObjects", map.isGroupObjects()); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -114,7 +115,7 @@ public class ObjectStatusMapView extends ViewPart
 			}
 		};
 		
-		actionGroupNodes = new Action("&Group nodes", Action.AS_CHECK_BOX) {
+		actionGroupNodes = new Action(Messages.get().ObjectStatusMapView_ActionGroupNodes, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

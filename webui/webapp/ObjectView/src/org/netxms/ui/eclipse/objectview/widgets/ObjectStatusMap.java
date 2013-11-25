@@ -205,7 +205,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		}
 		
 		if (groupObjects)
-			buildSection(rootObjectId, "");
+			buildSection(rootObjectId, ""); //$NON-NLS-1$
 		else
 			buildFlatView();
 		dataArea.layout(true, true);
@@ -351,7 +351,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			if (!(o instanceof Container) && !(o instanceof ServiceRoot))
 				continue;
 			
-			buildSection(o.getObjectId(), namePrefix + root.getObjectName() + " / ");
+			buildSection(o.getObjectId(), namePrefix + root.getObjectName() + " / "); //$NON-NLS-1$
 		}
 	}
 	
@@ -458,16 +458,16 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	{
 		// Read all registered extensions and create tabs
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectview.objectDetailsProvider");
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectview.objectDetailsProvider"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			try
 			{
-				final ObjectDetailsProvider provider = (ObjectDetailsProvider)elements[i].createExecutableExtension("class");
+				final ObjectDetailsProvider provider = (ObjectDetailsProvider)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
 				int priority;
 				try
 				{
-					priority = Integer.parseInt(elements[i].getAttribute("priority"));
+					priority = Integer.parseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
 				}
 				catch(NumberFormatException e)
 				{

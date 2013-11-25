@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.objectview.Messages;
 
 /**
  * Show object's comments
@@ -61,7 +62,7 @@ public class Comments extends OverviewPageElement
 	@Override
 	protected String getTitle()
 	{
-		return "Comments";
+		return Messages.get().Comments_Title;
 	}
 
 	/* (non-Javadoc)

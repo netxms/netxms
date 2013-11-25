@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.objectview.widgets.SoftwareInventory;
 public class SoftwarePackageLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private WorkbenchLabelProvider wbl = new WorkbenchLabelProvider();
-	private Image imgPackage = Activator.getImageDescriptor("icons/package.gif").createImage();
+	private Image imgPackage = Activator.getImageDescriptor("icons/package.gif").createImage(); //$NON-NLS-1$
 	private boolean treeMode;
 
 	/**

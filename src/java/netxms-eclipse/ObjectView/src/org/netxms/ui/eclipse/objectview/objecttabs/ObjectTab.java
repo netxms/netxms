@@ -59,24 +59,24 @@ public abstract class ObjectTab implements IPluginContribution
 		this.viewPart = viewPart;
 		
 		pluginId = ce.getContributor().getName();
-		id = ce.getAttribute("id");
+		id = ce.getAttribute("id"); //$NON-NLS-1$
 		if (id == null)
-			id = "no_id";
+			id = "no_id"; //$NON-NLS-1$
 		
-		name = ce.getAttribute("name");
+		name = ce.getAttribute("name"); //$NON-NLS-1$
 		if (name == null)
-			name = "<noname>";
+			name = "<noname>"; //$NON-NLS-1$
 		
 		try
 		{
-			order = Integer.parseInt(ce.getAttribute("order"), 10);
+			order = Integer.parseInt(ce.getAttribute("order"), 10); //$NON-NLS-1$
 		}
 		catch(NumberFormatException e)
 		{
 			order = Integer.MAX_VALUE;
 		}
 		
-		String path = ce.getAttribute("icon");
+		String path = ce.getAttribute("icon"); //$NON-NLS-1$
 		if (path != null)
 		{
 			icon = AbstractUIPlugin.imageDescriptorFromPlugin(ce.getContributor().getName(), path);

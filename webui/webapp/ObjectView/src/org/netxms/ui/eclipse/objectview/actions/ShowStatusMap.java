@@ -29,6 +29,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -63,7 +64,7 @@ public class ShowStatusMap implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowStatusMap_Error, String.format(Messages.get().ShowStatusMap_ErrorOpeningView, e.getMessage()));
 			}
 		}
 	}
