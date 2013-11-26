@@ -358,7 +358,7 @@ public class General extends PropertyPage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.modifyPredefinedGraph(((PredefinedChartConfig)config).createServerSettings());
+					session.saveGraph(((PredefinedChartConfig)config).createServerSettings(), true);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
