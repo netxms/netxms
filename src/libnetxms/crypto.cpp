@@ -473,7 +473,6 @@ void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, c
 	ice_key_set(ice, key);
 
 	int stopPos = inLen - (inLen % 8);
-	const BYTE *curr = in;
 	for(int pos = 0; pos < stopPos; pos += 8)
 		ice_key_encrypt(ice, &in[pos], &out[pos]);
 
@@ -498,7 +497,6 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, c
 	ice_key_set(ice, key);
 
 	int stopPos = inLen - (inLen % 8);
-	const BYTE *curr = in;
 	for(int pos = 0; pos < stopPos; pos += 8)
 		ice_key_decrypt(ice, &in[pos], &out[pos]);
 
