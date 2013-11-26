@@ -2122,6 +2122,10 @@ Composite.gray {
   background-color: #f0f0f0;
 }
 
+Label.gray {
+  background-color: #f0f0f0;
+}
+
 
 /* FileUpload */
 
