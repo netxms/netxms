@@ -129,6 +129,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 					return;
 				
 				updateChart();
+				display.timerExec(-1, this);
 				display.timerExec(config.getRefreshRate() * 1000, this);
 			}
 		};
@@ -326,9 +327,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
 		// Automatic refresh
 		actionAutoRefresh.setChecked(config.isAutoRefresh());
-		getSite().getShell().getDisplay().timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
+		getSite().getShell().getDisplay().timerExec(-1, refreshTimer);
+		if (config.isAutoRefresh())
+		{
+		   getSite().getShell().getDisplay().timerExec(config.getRefreshRate() * 1000, refreshTimer);
+	
+		}
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
@@ -487,7 +493,11 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 			{
 				config.setAutoRefresh(!config.isAutoRefresh());
 				setChecked(config.isAutoRefresh());
-				HistoricalGraphView.this.getSite().getShell().getDisplay().timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
+				HistoricalGraphView.this.getSite().getShell().getDisplay().timerExec(-1, refreshTimer);
+				if (config.isAutoRefresh())
+				{
+				   HistoricalGraphView.this.getSite().getShell().getDisplay().timerExec(config.getRefreshRate() * 1000, refreshTimer);
+				}
 			}
 		};
 		actionAutoRefresh.setChecked(config.isAutoRefresh());
