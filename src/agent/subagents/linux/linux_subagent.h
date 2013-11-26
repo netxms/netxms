@@ -79,14 +79,15 @@ typedef struct ifaddrs IFADDRS;
 /*
  * Interface info
  */
-typedef struct {
+typedef struct IFINFO {
+   IFINFO* next;
    UINT32 index;
-   char addr[32];
-   int mask;
+   char addr[40];
+   BYTE mask;
    int type;
    char mac[16];
    char name[16];
-} IFINFO;
+};
 
 /*
  * FS info types
