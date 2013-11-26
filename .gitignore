@@ -129,9 +129,7 @@ target
 /src/java/netxms-client/.classpath
 /src/java/netxms-client/.project
 /src/java/netxms-client/.settings
-/src/java/netxms-eclipse/core/jar/*.jar
-/src/java/netxms-eclipse/core/jar/netxms-client-*.jar
-/src/java/netxms-eclipse/library/jar/*.jar
+/src/java/netxms-eclipse/Core/jar/*.jar
 /src/java/report-generator/.classpath
 /src/java/report-generator/.project
 /src/java/report-generator/.settings
