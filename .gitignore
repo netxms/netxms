@@ -41,11 +41,9 @@ target
 /aclocal.m4
 /android/src/agent/bin
 /android/src/agent/gen
-/android/src/agent/libs/*.jar
 /android/src/agent/res/values/build_number.xml
 /android/src/console/bin
 /android/src/console/gen
-/android/src/console/libs/*.jar
 /android/src/console/res/values/build_number.xml
 /autom4te.cache
 /bin64
@@ -129,7 +127,6 @@ target
 /src/java/netxms-client/.classpath
 /src/java/netxms-client/.project
 /src/java/netxms-client/.settings
-/src/java/netxms-eclipse/Core/jar/*.jar
 /src/java/report-generator/.classpath
 /src/java/report-generator/.project
 /src/java/report-generator/.settings
@@ -177,7 +174,6 @@ target
 /stamp-h1
 /status
 /webui/eclipse
-/webui/webapp/Core/jar/*.jar
 /x64
 
 # Eclipse CDT
@@ -187,4 +183,12 @@ target
 
 # Dolphin browser
 .directory
+
+# Autoconf
+/INSTALL
+
+# Java
+*.jar
+*.war
+*.ear
 
