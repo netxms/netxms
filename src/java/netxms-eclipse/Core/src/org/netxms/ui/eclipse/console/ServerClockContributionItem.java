@@ -45,11 +45,13 @@ public class ServerClockContributionItem extends ContributionItem
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
+      layout.marginRight = 5;
       clientArea.setLayout(layout);
       
       clock = new ServerClock(clientArea, SWT.NONE);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
+      gd.verticalAlignment = SWT.CENTER;
       gd.grabExcessHorizontalSpace = true;
       clock.setLayoutData(gd);
    }
