@@ -24,16 +24,16 @@
 #include "nxcore.h"
 
 //
-// Load graph's ACL - load for all graphs if dwGraphId is 0
+// Load graph's ACL - load for all graphs if graphId is 0
 //
 
-GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 dwGraphId, int *pnACLSize)
+GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize)
 {
    int i, nSize;
    GRAPH_ACL_ENTRY *pACL = NULL;
    DB_RESULT hResult;
 
-   if (dwGraphId == 0)
+   if (graphId == 0)
    {
       hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,user_id,user_rights FROM graph_acl"));
    }
@@ -41,7 +41,7 @@ GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 dwGraphId, int *pnACLSize)
    {
       TCHAR szQuery[256];
 
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), dwGraphId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), graphId);
       hResult = DBSelect(g_hCoreDB, szQuery);
    }
    if (hResult != NULL)
@@ -71,19 +71,19 @@ GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 dwGraphId, int *pnACLSize)
 // Check access to the graph
 //
 
-BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 dwGraphId,
-                             UINT32 dwUserId, UINT32 dwDesiredAccess)
+BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId,
+                             UINT32 graphUserId, UINT32 graphDesiredAccess)
 {
    int i;
 
    for(i = 0; i < nACLSize; i++)
    {
-      if (pACL[i].dwGraphId == dwGraphId)
+      if (pACL[i].dwGraphId == graphId)
       {
-         if ((pACL[i].dwUserId == dwUserId) ||
-             ((pACL[i].dwUserId & GROUP_FLAG) && CheckUserMembership(dwUserId, pACL[i].dwUserId)))
+         if ((pACL[i].dwUserId == graphUserId) ||
+             ((pACL[i].dwUserId & GROUP_FLAG) && CheckUserMembership(graphUserId, pACL[i].dwUserId)))
          {
-            if ((pACL[i].dwAccess & dwDesiredAccess) == dwDesiredAccess)
+            if ((pACL[i].dwAccess & graphDesiredAccess) == graphDesiredAccess)
                return TRUE;
          }
       }
@@ -91,7 +91,7 @@ BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 dwGraphId,
    return FALSE;
 }
 
-int getAccessCehckResult(UINT32 dwGraphId,UINT32 m_dwUserId)
+int GetAccessCehckResult(UINT32 graphId,UINT32 graphUserId)
 {
    // Check existence and access rights
    TCHAR szQuery[16384];
@@ -100,19 +100,19 @@ int getAccessCehckResult(UINT32 dwGraphId,UINT32 m_dwUserId)
    GRAPH_ACL_ENTRY *pACL = NULL;
    int nACLSize;
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), graphId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
       {
          dwOwner = DBGetFieldULong(hResult, 0, 0);
-         pACL = LoadGraphACL(dwGraphId, &nACLSize);
+         pACL = LoadGraphACL(graphId, &nACLSize);
          if (nACLSize != -1)
          {
-            if ((m_dwUserId == 0) ||
-                (m_dwUserId == dwOwner) ||
-                CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_WRITE))
+            if ((graphUserId == 0) ||
+                (graphUserId == dwOwner) ||
+                CheckGraphAccess(pACL, nACLSize, graphId, graphUserId, NXGRAPH_ACCESS_WRITE))
             {
                return RCC_SUCCESS;
             }
@@ -143,30 +143,30 @@ int getAccessCehckResult(UINT32 dwGraphId,UINT32 m_dwUserId)
  *
  */
 
-GRAPH_ACL_AND_ID checkNameExistsAndGetID(TCHAR *dwGraphName)
+GRAPH_ACL_AND_ID CheckNameExistsAndGetID(TCHAR *graphName)
 {
    CSCPMessage msg;
-   UINT32 dwGraphId;
+   UINT32 graphId;
    TCHAR szQuery[16384];
    GRAPH_ACL_ENTRY *pACL = NULL;
    int nACLSize;
    DB_RESULT hResult;
    GRAPH_ACL_AND_ID result;
-   result.dwGraphId = 0;
+   result.graphId = 0;
 
    // Check existence and access rights
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id FROM graphs WHERE name='%s'"), dwGraphName);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id FROM graphs WHERE name='%s'"), graphName);
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         dwGraphId = DBGetFieldULong(hResult, 0, 0);
-         pACL = LoadGraphACL(dwGraphId, &nACLSize);
+         graphId = DBGetFieldULong(hResult, 0, 0);
+         pACL = LoadGraphACL(graphId, &nACLSize);
          if (nACLSize != -1)
          {
-            result.dwGraphId = dwGraphId;
+            result.graphId = graphId;
             result.status = RCC_OBJECT_ALREADY_EXISTS;
          }
          else

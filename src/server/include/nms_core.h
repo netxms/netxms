@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -683,9 +683,9 @@ public:
 	int getClientType() { return m_clientType; }
    time_t getLoginTime() { return m_loginTime; }
 
-	bool checkSysAccessRights(UINT32 requiredAccess) 
-   { 
-      return (m_dwUserId == 0) ? true : 
+	bool checkSysAccessRights(UINT32 requiredAccess)
+   {
+      return (m_dwUserId == 0) ? true :
          ((requiredAccess & m_dwSystemAccess) == requiredAccess);
    }
 
@@ -741,7 +741,7 @@ struct GRAPH_ACL_ENTRY
  */
 struct GRAPH_ACL_AND_ID
 {
-   UINT32 dwGraphId;
+   UINT32 graphId;
    UINT32 status;
 };
 
@@ -824,7 +824,7 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode();
 Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags, WORD agentPort,
-                  WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy, Cluster *pCluster, 
+                  WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy, Cluster *pCluster,
 						UINT32 zoneId, bool doConfPoll, bool discoveredNode);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
@@ -880,7 +880,7 @@ void InitAuditLog();
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
                                      const TCHAR *workstation, UINT32 objectId,
                                      const TCHAR *format, ...);
-                                     
+
 bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen);
 UINT32 ImportConfig(Config *config, UINT32 flags);
 
@@ -905,11 +905,11 @@ void ShowServerStats(CONSOLE_CTX pCtx);
 void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName);
 void DumpProcess(CONSOLE_CTX pCtx);
 
-GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 dwGraphId, int *pnACLSize);
-BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 dwGraphId,
-                             UINT32 dwUserId, UINT32 dwDesiredAccess);
-int getAccessCehckResult(UINT32 dwGraphId,UINT32 m_dwUserId);
-GRAPH_ACL_AND_ID checkNameExistsAndGetID(TCHAR *dwGraphName);
+GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize);
+BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId,
+                             UINT32 graphUserId, UINT32 graphDesiredAccess);
+int GetAccessCehckResult(UINT32 graphId,UINT32 graphUserId);
+GRAPH_ACL_AND_ID CheckNameExistsAndGetID(TCHAR *graphName);
 
 /**
  * Global variables

@@ -2719,7 +2719,7 @@ void ClientSession::deleteUser(CSCPMessage *pRequest)
             {
                WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, dwUserId,
                              _T("%s %s [%d] deleted"), (dwUserId & GROUP_FLAG) ? _T("Group") : _T("User"), name, dwUserId);
-            } 
+            }
          }
          else
          {
@@ -9166,56 +9166,56 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	BOOL bNew, bSuccess;
-	UINT32 dwId, dwGraphId, dwUserId, dwAccess;
+	UINT32 id, graphId, graphUserId, graphAccess;
 	UINT16 overwrite;
 	TCHAR szQuery[16384], *pszEscName, *pszEscData, *pszTemp, dwGraphName[255];
-	int i, nACLSize, acessRightStatus;
+	int i, nACLSize, accessRightStatus;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-	dwGraphId = pRequest->GetVariableLong(VID_GRAPH_ID);
+	graphId = pRequest->GetVariableLong(VID_GRAPH_ID);
 	pRequest->GetVariableStr(VID_NAME,dwGraphName,255);
 	overwrite = pRequest->GetVariableShort(VID_FLAGS);
 
-   GRAPH_ACL_AND_ID nameUniq = checkNameExistsAndGetID(dwGraphName);
+   GRAPH_ACL_AND_ID nameUniq = CheckNameExistsAndGetID(dwGraphName);
 
-   if(nameUniq.dwGraphId == dwGraphId)
+   if(nameUniq.graphId == graphId)
    {
       nameUniq.status = RCC_SUCCESS;
    }
 
-	if (dwGraphId == 0)
+	if (graphId == 0)
 	{
-		dwGraphId = nameUniq.dwGraphId ? nameUniq.dwGraphId : CreateUniqueId(IDG_GRAPH);
+		graphId = nameUniq.graphId ? nameUniq.graphId : CreateUniqueId(IDG_GRAPH);
 		bNew = TRUE;
-		acessRightStatus = RCC_SUCCESS;
+		accessRightStatus = RCC_SUCCESS;
 	}
 	else
 	{
-	   acessRightStatus = getAccessCehckResult(dwGraphId, m_dwUserId);
+	   accessRightStatus = GetAccessCehckResult(graphId, m_dwUserId);
 		bNew = FALSE;
 	}
 
-   if( acessRightStatus == RCC_SUCCESS && ( nameUniq.status == RCC_SUCCESS || (overwrite && bNew) ) )
+   if( accessRightStatus == RCC_SUCCESS && ( nameUniq.status == RCC_SUCCESS || (overwrite && bNew) ) )
    {
       bSuccess = TRUE;
       if(nameUniq.status != RCC_SUCCESS )
       {
          bNew = FALSE;
-         dwGraphId = nameUniq.dwGraphId;
+         graphId = nameUniq.graphId;
       }
    }
    else
    {
       bSuccess = FALSE;
-      msg.SetVariable(VID_RCC, acessRightStatus ? acessRightStatus : nameUniq.status );
+      msg.SetVariable(VID_RCC, accessRightStatus ? accessRightStatus : nameUniq.status );
    }
 
 	// Create/update graph
 	if (bSuccess)
 	{
-		debugPrintf(5, _T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), dwGraphId);
+		debugPrintf(5, _T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), graphId);
 		bSuccess = FALSE;
 		if (DBBegin(g_hCoreDB))
 		{
@@ -9230,15 +9230,15 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 			if (bNew)
 			{
 				_sntprintf(szQuery, 16384, _T("INSERT INTO graphs (graph_id,owner_id,name,config) VALUES (%d,%d,'%s','%s')"),
-				           dwGraphId, m_dwUserId, pszEscName, pszEscData);
+				           graphId, m_dwUserId, pszEscName, pszEscData);
 			}
 			else
 			{
-				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), graphId);
 				DBQuery(g_hCoreDB, szQuery);
 
 				_sntprintf(szQuery, 16384, _T("UPDATE graphs SET name='%s',config='%s' WHERE graph_id=%d"),
-				           pszEscName, pszEscData, dwGraphId);
+				           pszEscName, pszEscData, graphId);
 			}
 			free(pszEscName);
 			free(pszEscData);
@@ -9247,12 +9247,12 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 			{
 				// Insert new ACL
 				nACLSize = (int)pRequest->GetVariableLong(VID_ACL_SIZE);
-				for(i = 0, dwId = VID_GRAPH_ACL_BASE, bSuccess = TRUE; i < nACLSize; i++)
+				for(i = 0, id = VID_GRAPH_ACL_BASE, bSuccess = TRUE; i < nACLSize; i++)
 				{
-					dwUserId = pRequest->GetVariableLong(dwId++);
-					dwAccess = pRequest->GetVariableLong(dwId++);
+					graphUserId = pRequest->GetVariableLong(id++);
+					graphAccess = pRequest->GetVariableLong(id++);
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO graph_acl (graph_id,user_id,user_rights) VALUES (%d,%d,%d)"),
-					          dwGraphId, dwUserId, dwAccess);
+					          graphId, graphUserId, graphAccess);
 					if (!DBQuery(g_hCoreDB, szQuery))
 					{
 						bSuccess = FALSE;
@@ -9270,7 +9270,7 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 			{
 				DBCommit(g_hCoreDB);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				msg.SetVariable(VID_GRAPH_ID, dwGraphId);
+				msg.SetVariable(VID_GRAPH_ID, graphId);
 				notify(NX_NOTIFY_GRAPHS_CHANGED);
 			}
 			else

@@ -56,6 +56,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
+import org.netxms.ui.eclipse.perfview.views.helpers.GraphFolder;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -213,6 +214,10 @@ public class PredefinedGraphTree extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
+	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+	   if (selection.getFirstElement() instanceof GraphFolder)
+	      return;
+	   
 		mgr.add(actionOpen);
 		mgr.add(actionDelete);
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
