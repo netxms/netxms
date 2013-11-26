@@ -95,7 +95,7 @@
      <page name="%page.appearance"
            category="org.eclipse.ui.preferencePages.Workbench"
            class="org.eclipse.ui.ExtensionFactory:appearancePreferencePage"
-           id="org.eclipse.ui.preferencePages.Views">
+           id="org.eclipse.ui.preferencePages.Appearance">
          <keywordReference id="org.eclipse.ui.ide.appearance"/>
          <keywordReference id="org.eclipse.ui.ide.themes"/>
          <keywordReference id="org.eclipse.ui.ide.tabs"/>
@@ -106,12 +106,16 @@
             name="%page.keys">
          <keywordReference id="org.eclipse.ui.ide.keys"/>
      </page>
+      <page category="org.eclipse.ui.preferencePages.Workbench"
+            class="org.eclipse.ui.ExtensionFactory:perspectivesPreferencePage"
+            id="org.eclipse.ui.preferencePages.Perspectives"
+            name="%page.perspectives">
+     </page>
      <page
             name="%page.decorators"
-            category="org.eclipse.ui.preferencePages.Views"
+            category="org.eclipse.ui.preferencePages.Appearance"
             class="org.eclipse.ui.ExtensionFactory:decoratorsPreferencePage"
             id="org.eclipse.ui.preferencePages.Decorators">
-         <keywordReference id="org.eclipse.ui.ide.appearance"/>
      </page>
      <page
            class="org.netxms.ui.eclipse.console.preferencepages.HttpProxyPrefs"

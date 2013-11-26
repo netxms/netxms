@@ -52,26 +52,16 @@
            class="org.netxms.ui.eclipse.console.preferencepages.WorkbenchGeneralPrefs"
            id="org.eclipse.ui.preferencePages.Workbench">
      </page>
-     <page name="%page.appearance"
-           category="org.eclipse.ui.preferencePages.Workbench"
-           class="org.eclipse.ui.ExtensionFactory:appearancePreferencePage"
-           id="org.eclipse.ui.preferencePages.Views">
-         <keywordReference id="org.eclipse.ui.ide.appearance"/>
-         <keywordReference id="org.eclipse.ui.ide.themes"/>
-         <keywordReference id="org.eclipse.ui.ide.tabs"/>
-      </page>
       <page category="org.eclipse.ui.preferencePages.Workbench"
-            class="org.eclipse.ui.ExtensionFactory:keysPreferencePage"
-            id="org.eclipse.ui.preferencePages.Keys"
-            name="%page.keys">
-         <keywordReference id="org.eclipse.ui.ide.keys"/>
+            class="org.eclipse.ui.ExtensionFactory:perspectivesPreferencePage"
+            id="org.eclipse.ui.preferencePages.Perspectives"
+            name="%page.perspectives">
      </page>
      <page
             name="%page.decorators"
-            category="org.eclipse.ui.preferencePages.Views"
+            category="org.eclipse.ui.preferencePages.Workbench"
             class="org.eclipse.ui.ExtensionFactory:decoratorsPreferencePage"
             id="org.eclipse.ui.preferencePages.Decorators">
-         <keywordReference id="org.eclipse.ui.ide.appearance"/>
      </page>
      <page
            class="org.netxms.ui.eclipse.console.preferencepages.RegionalSettingsPrefPage"
@@ -81,11 +71,6 @@
    </extension>
    <extension
          point="org.eclipse.ui.commands">
-      <command
-            description="%actionDescription.OpenServerConsole"
-            id="org.netxms.ui.eclipse.console.commands.open_server_console"
-            name="%action.OpenServerConsole">
-      </command>
       <command
             description="%actionDescription.SendSMS"
             id="org.netxms.ui.eclipse.console.commands.send_sms"
