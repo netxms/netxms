@@ -75,7 +75,6 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 @SuppressWarnings("restriction")
 public class HistoricalGraphView extends ViewPart implements GraphSettingsChangeListener
 {
-
    public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoryGraph";
    public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
 
@@ -813,12 +812,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    public void dispose()
    {
       getSite().getShell().getDisplay().timerExec(-1, refreshTimer);
-		if (config.isAutoRefresh())
-		{
-		   getSite().getShell().getDisplay().timerExec(config.getRefreshRate() * 1000, refreshTimer);
-	
-		}
-		super.dispose();
+      super.dispose();
    }
 
    /*
@@ -856,7 +850,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          MessageDialogHelper.openError(getSite().getShell(), "Internal Error", "Enexpected exception: " + e.getLocalizedMessage());
       }
 
-      if (result == SaveGraphDlg.OVRRIDE_YES)
+      if (result == SaveGraphDlg.OVERRIDE)
       {
          new ConsoleJob("Save graph settings", this, Activator.PLUGIN_ID, null) {
             @Override

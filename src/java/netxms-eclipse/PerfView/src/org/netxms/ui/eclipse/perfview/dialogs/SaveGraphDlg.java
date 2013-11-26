@@ -5,8 +5,6 @@ package org.netxms.ui.eclipse.perfview.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -14,7 +12,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.ServerAction;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -25,14 +22,14 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class SaveGraphDlg extends Dialog
 {
-	private LabeledText fieldName;
+   public static final int OVERRIDE = 101;
+
+   private LabeledText fieldName;
 	private Label errorMessage;
 	private String name;
 	private Button checkOverwrite;
 	private String ErrorMessage;
-	private ServerAction action;
 	private boolean havePermissionToOverwrite;
-	public static final int OVRRIDE_YES = 101;
 	
 	/**
 	 * @param parentShell
@@ -105,7 +102,7 @@ public class SaveGraphDlg extends Dialog
 		}
 		if (ErrorMessage != null && checkOverwrite.getSelection())
 		{
-		   setReturnCode(OVRRIDE_YES);
+		   setReturnCode(OVERRIDE);
 		   super.close();
 		}
 		else

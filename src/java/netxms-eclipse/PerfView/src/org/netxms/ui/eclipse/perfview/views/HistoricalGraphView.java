@@ -841,7 +841,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          MessageDialogHelper.openError(getSite().getShell(), "Internal Error", "Enexpected exception: " + e.getLocalizedMessage());
       }
 
-      if (result == SaveGraphDlg.OVRRIDE_YES)
+      if (result == SaveGraphDlg.OVERRIDE)
       {
          new ConsoleJob("Save graph settings", this, Activator.PLUGIN_ID, null) {
             @Override
