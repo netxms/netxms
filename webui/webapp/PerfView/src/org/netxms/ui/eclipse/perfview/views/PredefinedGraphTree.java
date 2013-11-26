@@ -345,7 +345,7 @@ public class PredefinedGraphTree extends ViewPart
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							session.modifyPredefinedGraph(s);
+							session.saveGraph(s, true);
 						}
 						
 						@Override

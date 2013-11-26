@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2009 Alex Kirhenshtein and Victor Kirhenshtein
+** Copyright (C) 2004-2013 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 #ifndef __LINUX_SUBAGENT_H__
 #define __LINUX_SUBAGENT_H__
 
-
 #include <nms_common.h>
 #include <nms_agent.h>
 
@@ -34,11 +33,11 @@
 #include <sys/vfs.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <ifaddrs.h>
 
-
-//
-// Attributes for H_ProcInfo
-//
+/*
+ * Attributes for H_ProcInfo
+ */
 
 enum
 {
@@ -56,7 +55,7 @@ enum
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
 
-/**
+/*
  * Process entry
  */
 typedef struct t_ProcEnt
@@ -75,7 +74,21 @@ typedef struct t_ProcEnt
 	unsigned long majflt;	// Number of major page faults
 } PROC_ENT;
 
-/**
+typedef struct ifaddrs IFADDRS;
+
+/*
+ * Interface info
+ */
+typedef struct {
+   UINT32 index;
+   char addr[32];
+   int mask;
+   int type;
+   char mac[16];
+   char name[16];
+} IFINFO;
+
+/*
  * FS info types
  */
 enum
@@ -90,9 +103,9 @@ enum
 };
 
 
-//
-// Network interface stats
-//
+/*
+ * Network interface stats
+ */
 
 #define IF_INFO_ADMIN_STATUS     0
 #define IF_INFO_OPER_STATUS      1
@@ -106,9 +119,9 @@ enum
 #define IF_INFO_SPEED            9
 
 
-//
-// Memory stats
-//
+/*
+ * Memory stats
+ */
 
 enum
 {
@@ -134,9 +147,9 @@ enum
 };
 
 
-//
-// Load average intervals
-//
+/*
+ * Load average intervals
+ */
 
 enum
 {
@@ -146,9 +159,9 @@ enum
 };
 
 
-//
-// CPU stats
-//
+/*
+ * CPU stats
+ */
 
 enum 
 {
@@ -168,18 +181,20 @@ enum
 #define CPU_USAGE_PARAM_INTERVAL(p)					((CAST_FROM_POINTER((p), DWORD)) >> 16)
 #define CPU_USAGE_PARAM_SOURCE(p)					((CAST_FROM_POINTER((p), DWORD)) & 0x0000FFFF)
 
-/**
+/*
  * I/O stats
  */
+
 #define IOSTAT_NUM_READS      0
 #define IOSTAT_NUM_WRITES     1
 #define IOSTAT_NUM_SREADS     2
 #define IOSTAT_NUM_SWRITES    3
 #define IOSTAT_IO_TIME        4
 
-/**
+/*
  * Functions
  */
+
 LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);

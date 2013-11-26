@@ -818,7 +818,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.modifyPredefinedGraph(gs);
+					session.saveGraph(gs, true);
 				}
 				
 				@Override
