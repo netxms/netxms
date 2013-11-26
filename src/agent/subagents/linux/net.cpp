@@ -219,6 +219,86 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
    return nRet;
 }
 
+template<typename T> int nxffs(T t)
+{
+   int pos = 0;
+   unsigned char* p = (unsigned char*) &t;
+   int size = sizeof(t) * 8;
+   unsigned char byte;
+   unsigned char mask;
+
+   while(pos < size)
+   {
+      byte = ~(*p);
+      mask = 1;
+      while(mask > 0)
+      {
+         if ((mask & byte) == 0)
+            return pos;
+         mask <<= 1;
+         pos++;
+      }
+      p++;
+   }
+
+   return -1;
+}
+
+static IFINFO* GetInterfaceInfo(int socket)
+{
+   int ret, ifCount;
+
+   ret = ioctl(socket, SIOCGIFCOUNT, (caddr_t) &ifCount);
+   if (ret)
+      return NULL;
+
+   IFINFO* interfaces = new IFINFO[ifCount];
+
+   int i;
+   for(i = 0; i < ifCount; i++)
+   {
+      // Do stuff
+   }
+
+   return interfaces;
+}
+
+LONG H_NetIfList3(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+{
+   int socketDescriptor = socket(AF_INET, SOCK_DGRAM, 0);
+   if (socketDescriptor < 1)
+   {
+      return SYSINFO_RC_ERROR;
+   }
+
+   IFINFO* interfaces = GetInterfaceInfo(socketDescriptor);
+   close(socketDescriptor);
+
+   if (interfaces == NULL)
+   {
+      return SYSINFO_RC_ERROR;
+   }
+
+   TCHAR infoString[1024];
+   IFINFO* curInterface = interfaces;
+   while(curInterface != NULL)
+   {
+      _sntprintf(infoString, 1024, _T("%d %hs/%u %d %hs %hs"),
+         curInterface->index,
+         curInterface->addr,
+         curInterface->mask,
+         curInterface->type,
+         curInterface->mac,
+         curInterface->name);
+      pValue->add(infoString);
+
+      curInterface = curInterface->next;
+   }
+   //freeIfInfo(interfaces);
+
+   return SYSINFO_RC_SUCCESS;
+}
+
 LONG H_NetIfList2(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
    IFADDRS* interfaces;
@@ -233,19 +313,40 @@ LONG H_NetIfList2(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
    {
       TCHAR info[1024];
       ifInfo.index = if_nametoindex(curInterface->ifa_name);
-      //ifInfo.addr = NULL;
-      //ifInfo.mask = 0;
       ifInfo.type = curInterface->ifa_addr->sa_family;
-      //ifInfo.mac = 0;
       strncpy(ifInfo.name, curInterface->ifa_name, sizeof(ifInfo.name));
 
-      _sntprintf(info, 1024, _T("%d %hs/%d %d %hs %hs"),
+      if (ifInfo.type == AF_INET)
+      {
+         struct sockaddr_in* socketAddress = (struct sockaddr_in*) curInterface->ifa_addr;
+         inet_ntop(AF_INET, &(socketAddress->sin_addr), ifInfo.addr, sizeof(ifInfo.addr));
+         struct sockaddr_in* socketMask = (struct sockaddr_in*) curInterface->ifa_netmask;
+         ifInfo.mask = (BYTE) nxffs(~(socketMask->sin_addr.s_addr));
+      }
+      else if (ifInfo.type == AF_INET6)
+      {
+         struct sockaddr_in6* socketAddress = (struct sockaddr_in6*) curInterface->ifa_addr;
+         inet_ntop(AF_INET6, &(socketAddress->sin6_addr), ifInfo.addr, sizeof(ifInfo.addr));
+         struct sockaddr_in6* socketMask = (struct sockaddr_in6*) curInterface->ifa_netmask;
+         ifInfo.mask = (BYTE) nxffs(~(htons(*((unsigned long long*) socketMask->sin6_addr.s6_addr))));
+         //WriteToTerminalEx(_T("Prefix: %d\n"), nxffs(~(*((unsigned long long*) socketMask->sin6_addr.s6_addr))));
+         WriteToTerminalEx(_T("Prefix: %ll\n"), socketMask->sin6_addr.s6_addr);
+      }
+      else
+      {
+         curInterface = curInterface->ifa_next;
+         continue;
+      }
+
+      _sntprintf(info, 1024, _T("%d %hs/%u %d %hs %hs"),
          ifInfo.index,
          ifInfo.addr,
          ifInfo.mask,
          ifInfo.type,
          ifInfo.mac,
          ifInfo.name);
+
+      WriteToTerminal(info);
 
       pValue->add(info);
 
