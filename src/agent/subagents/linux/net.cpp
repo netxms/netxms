@@ -1,6 +1,6 @@
 /* 
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2013 Raden Solutions
+ ** Copyright (C) 2004-2013 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -217,6 +217,44 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
    fclose(hFile);
 
    return nRet;
+}
+
+LONG H_NetIfList2(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+{
+   IFADDRS* interfaces;
+
+   if (getifaddrs(&interfaces))
+      return SYSINFO_RC_ERROR;
+
+   IFINFO ifInfo;
+   IFADDRS* curInterface = interfaces;
+
+   while(curInterface != NULL)
+   {
+      TCHAR info[1024];
+      ifInfo.index = if_nametoindex(curInterface->ifa_name);
+      //ifInfo.addr = NULL;
+      //ifInfo.mask = 0;
+      ifInfo.type = curInterface->ifa_addr->sa_family;
+      //ifInfo.mac = 0;
+      strncpy(ifInfo.name, curInterface->ifa_name, sizeof(ifInfo.name));
+
+      _sntprintf(info, 1024, _T("%d %hs/%d %d %hs %hs"),
+         ifInfo.index,
+         ifInfo.addr,
+         ifInfo.mask,
+         ifInfo.type,
+         ifInfo.mac,
+         ifInfo.name);
+
+      pValue->add(info);
+
+      curInterface = curInterface->ifa_next;
+   }
+
+   freeifaddrs(interfaces);
+
+   return SYSINFO_RC_SUCCESS;
 }
 
 LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
