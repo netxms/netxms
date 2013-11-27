@@ -85,7 +85,7 @@ typedef struct t_IfInfo
    char addr[40];
    BYTE mask;
    UINT32 type;
-   char mac[18];
+   char mac[16];
    char name[16];
 } IFINFO;
 

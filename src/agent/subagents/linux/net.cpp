@@ -219,15 +219,6 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
    return nRet;
 }
 
-static void freeInterfaceInfo(IFINFO* ifInfo)
-{
-   if (ifInfo == NULL)
-      return;
-
-   freeInterfaceInfo(ifInfo->next);
-   delete ifInfo;
-}
-
 static int SendMessage(int socket)
 {
    sockaddr_nl kernel = {};
@@ -272,6 +263,31 @@ static int ReceiveMessage(int socket, char* replyBuffer)
    return recvmsg(socket, &reply, 0);
 }
 
+template<typename T> int nxffs(T t)
+{
+   int pos = 0;
+   unsigned char* p = (unsigned char*) &t;
+   int size = sizeof(t) * 8;
+   unsigned char byte;
+   unsigned char mask;
+
+   while(pos < size)
+   {
+      byte = ~(*p);
+      mask = 1;
+      while(mask > 0)
+      {
+         if ((mask & byte) == 0)
+            return pos;
+         mask <<= 1;
+         pos++;
+      }
+      p++;
+   }
+
+   return -1;
+}
+
 static IFINFO* ParseMessage(nlmsghdr* messageHeader)
 {
    ifinfomsg* interface;
@@ -288,17 +304,37 @@ static IFINFO* ParseMessage(nlmsghdr* messageHeader)
       if (attribute->rta_type == IFLA_IFNAME)
       {
          strncpy(interfaceInfo->name, (char*) RTA_DATA(attribute), sizeof(interfaceInfo->name));
-         interfaceInfo->index = interface->ifi_index;
-         //WriteToTerminalEx(_T("Interface %d : %hs\n"), interface->ifi_index, (TCHAR *) RTA_DATA(attribute));
       }
 
       if (attribute->rta_type == IFLA_ADDRESS)
       {
-         char hw[7];
-         strncpy(hw, (char*) RTA_DATA(attribute), 6);
-         sprintf(interfaceInfo->mac, "%02x:%02x:%02x:%02x:%02x:%02x", hw[0], hw[1], hw[2], hw[3], hw[4], hw[5]);
+         BYTE* hw = (BYTE*) RTA_DATA(attribute);
+         snprintf(interfaceInfo->mac, sizeof(interfaceInfo->mac), "%02X%02X%02X%02X%02X%02X", hw[0], hw[1], hw[2], hw[3], hw[4], hw[5]);
       }
    }
+
+   // TODO: replace these calls with netlink (if possible)
+   int inetSocket;
+   ifreq ifr = {};
+
+   inetSocket = socket(AF_INET, SOCK_DGRAM, 0);
+
+   ifr.ifr_addr.sa_family = AF_INET;
+   strncpy(ifr.ifr_name, interfaceInfo->name, IFNAMSIZ - 1);
+
+   ioctl(inetSocket, SIOCGIFADDR, &ifr);
+   sockaddr_in* socketAddress = (sockaddr_in*) &(ifr.ifr_addr);
+   inet_ntop(AF_INET, &(socketAddress->sin_addr), interfaceInfo->addr, 24);
+
+   ioctl(inetSocket, SIOCGIFNETMASK, &ifr);
+   sockaddr_in* socketMask = (sockaddr_in*) &(ifr.ifr_addr);
+   interfaceInfo->mask = (BYTE) nxffs(~(socketMask->sin_addr.s_addr));
+
+   close(inetSocket);
+
+   interfaceInfo->index = interface->ifi_index;
+   interfaceInfo->type = interface->ifi_type;
+   //interfaceInfo->type = IFTYPE_OTHER;
 
    return interfaceInfo;
 }
@@ -312,8 +348,8 @@ static IFINFO* GetInterfaceInfo(int socket)
    nlmsghdr* msg_ptr;
    int msgLen;
    int done;
+   IFINFO* interfaceInfo = NULL;
    IFINFO* curIfInfo = NULL;
-   IFINFO** interfaceInfo = &curIfInfo;
    char replyBuffer[8192];
 
    while(!done)
@@ -327,10 +363,13 @@ static IFINFO* GetInterfaceInfo(int socket)
          if (msg_ptr->nlmsg_type == RTM_NEWLINK)
          {
             IFINFO* ifInfo = ParseMessage(msg_ptr);
-            if (curIfInfo == NULL)
-               curIfInfo = ifInfo;
-            curIfInfo->next = ifInfo;
 
+            if (curIfInfo != NULL)
+               curIfInfo->next = ifInfo;
+            else
+               interfaceInfo = ifInfo;
+
+            curIfInfo = ifInfo;
          }
          else if (msg_ptr->nlmsg_type == NLMSG_DONE)
             done++;
@@ -339,10 +378,20 @@ static IFINFO* GetInterfaceInfo(int socket)
       }
    }
 
-   return *interfaceInfo;
+   return interfaceInfo;
 }
 
-LONG H_NetIfList2(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
+static void freeInterfaceInfo(IFINFO* ifInfo)
+{
+   if (ifInfo == NULL)
+      return;
+
+   freeInterfaceInfo(ifInfo->next);
+   delete ifInfo;
+   ifInfo = NULL;
+}
+
+LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
 {
    int netlinkSocket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
    if (netlinkSocket == -1)
@@ -374,7 +423,7 @@ LONG H_NetIfList2(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
    IFINFO* curInterface = interfaceInfo;
    while(curInterface != NULL)
    {
-      _sntprintf(infoString, 1024, _T("\n>>%d %s/%u %d %hs %hs<<\n"),
+      _sntprintf(infoString, 1024, _T("%d %hs/%d %d %hs %hs"),
          curInterface->index,
          curInterface->addr,
          curInterface->mask,
@@ -382,7 +431,7 @@ LONG H_NetIfList2(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
          curInterface->mac,
          curInterface->name);
       pValue->add(infoString);
-      WriteToTerminalEx(infoString);
+
       curInterface = curInterface->next;
    }
 
@@ -391,7 +440,7 @@ LONG H_NetIfList2(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
    return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_NetIfList_OLD(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
    int nRet = SYSINFO_RC_ERROR;
    struct if_nameindex *pIndex;
