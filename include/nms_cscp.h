@@ -479,6 +479,7 @@ typedef struct
 #define CMD_QUERY_SUMMARY_TABLE        0x0119
 #define CMD_SHUTDOWN                   0x011A
 #define CMD_SNMP_TRAP                  0x011B
+#define CMD_GET_SUBNET_ADDRESS_MAP     0x011C
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -945,6 +946,7 @@ typedef struct
 #define VID_SHORT_TIME_FORMAT       ((UINT32)453)
 #define VID_BOOT_TIME               ((UINT32)454)
 #define VID_REQUEST_ID              ((UINT32)455)
+#define VID_ADDRESS_MAP             ((UINT32)456)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

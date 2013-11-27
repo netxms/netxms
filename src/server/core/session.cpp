@@ -1331,6 +1331,9 @@ void ClientSession::processingThread()
          case CMD_QUERY_SUMMARY_TABLE:
             querySummaryTable(pMsg);
             break;
+         case CMD_GET_SUBNET_ADDRESS_MAP:
+            getSubnetAddressMap(pMsg);
+            break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -12453,4 +12456,48 @@ void ClientSession::forwardToReportingServer(CSCPMessage *request)
 
    sendMessage(msg);
    delete msg;
+}
+
+/**
+ * Get address map for a subnet
+ */
+void ClientSession::getSubnetAddressMap(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   Subnet *subnet = (Subnet *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_SUBNET);
+   if (subnet != NULL)
+   {
+      if (subnet->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         int length;
+         UINT32 *map = subnet->buildAddressMap(&length);
+			if (map != NULL)
+			{
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            msg.SetVariableToInt32Array(VID_ADDRESS_MAP, (UINT32)length, map);
+            free(map);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+			}
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
 }

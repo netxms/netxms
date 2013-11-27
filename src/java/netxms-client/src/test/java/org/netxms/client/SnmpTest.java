@@ -28,7 +28,6 @@ import org.netxms.client.snmp.SnmpObjectIdFormatException;
 
 /**
  * Test SNMP-related functionality of client library
- *
  */
 public class SnmpTest extends SessionTest
 {

@@ -1355,6 +1355,8 @@ public:
 	void setCorrectMask(UINT32 dwAddr, UINT32 dwMask);
 
 	bool findMacAddress(UINT32 ipAddr, BYTE *macAddr);
+
+   UINT32 *buildAddressMap(int *length);
 };
 
 /**

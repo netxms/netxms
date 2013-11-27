@@ -307,6 +307,7 @@ public class NXCPCodes
 	public static final int CMD_QUERY_SUMMARY_TABLE = 0x0119;
 	public static final int CMD_SHUTDOWN = 0x011A;
 	public static final int CMD_SNMP_TRAP = 0x011B;
+	public static final int CMD_GET_SUBNET_ADDRESS_MAP = 0x011C;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -771,6 +772,8 @@ public class NXCPCodes
 	public static final long VID_CLIENT_ADDRESS = 452;
    public static final long VID_SHORT_TIME_FORMAT = 453;
    public static final long VID_BOOT_TIME = 454;
+   public static final long VID_REQUEST_ID = 455;
+   public static final long VID_ADDRESS_MAP = 456;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -24,8 +24,7 @@
 /**
  * Subnet class default constructor
  */
-Subnet::Subnet()
-       :NetObj()
+Subnet::Subnet() : NetObj()
 {
    m_dwIpNetMask = 0;
    m_zoneId = 0;
@@ -35,7 +34,7 @@ Subnet::Subnet()
 /**
  * Subnet class constructor
  */
-Subnet::Subnet(UINT32 dwAddr, UINT32 dwNetMask, UINT32 dwZone, bool bSyntheticMask)
+Subnet::Subnet(UINT32 dwAddr, UINT32 dwNetMask, UINT32 dwZone, bool bSyntheticMask) : NetObj()
 {
    TCHAR szBuffer[32];
 
@@ -273,4 +272,26 @@ void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32
 bool Subnet::showThresholdSummary()
 {
 	return true;
+}
+
+/**
+ * Build address map - mark used and free addresses
+ */
+UINT32 *Subnet::buildAddressMap(int *length)
+{
+   *length = 1 << (32 - BitsInMask(m_dwIpNetMask));
+   if ((*length < 2) || (*length > 65536))
+      return NULL;
+   UINT32 *map = (UINT32 *)malloc(*length * sizeof(UINT32));
+
+   map[0] = 0xFFFFFFFF; // subnet
+   map[*length - 1] = 0xFFFFFFFF;   // broadcast
+   UINT32 addr = m_dwIpAddr + 1;
+   for(int i = 1; i < *length - 1; i++, addr++)
+   {
+      Node *node = FindNodeByIP(m_zoneId, addr);
+      map[i] = (node != NULL) ? node->Id() : 0;
+   }
+
+   return map;
 }

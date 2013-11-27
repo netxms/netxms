@@ -650,6 +650,7 @@ private:
    void deleteSummaryTable(CSCPMessage *request);
    void querySummaryTable(CSCPMessage *request);
    void forwardToReportingServer(CSCPMessage *request);
+   void getSubnetAddressMap(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

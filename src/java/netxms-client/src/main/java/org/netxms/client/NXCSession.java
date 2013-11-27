@@ -6669,8 +6669,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * org.netxms.api.client.reporting.ReportRenderFormat)
 	 */
    @Override
-   public File renderReport(UUID reportId, UUID jobId, ReportRenderFormat format)
-      throws NetXMSClientException, IOException
+   public File renderReport(UUID reportId, UUID jobId, ReportRenderFormat format) throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_RENDER_RESULT);
       msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
@@ -6750,5 +6749,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       }
 
       return signed;
+   }
+   
+   /**
+    * Get address map for subnet.
+    * 
+    * @param subnetId
+    * @return
+    * @throws NXCException
+    * @throws IOException
+    */
+   public long[] getSubnetAddressMap(long subnetId) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SUBNET_ADDRESS_MAP);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)subnetId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getVariableAsUInt32Array(NXCPCodes.VID_ADDRESS_MAP);
    }
 }
