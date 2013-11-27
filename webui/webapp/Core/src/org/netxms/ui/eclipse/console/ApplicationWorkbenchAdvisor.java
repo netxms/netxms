@@ -109,6 +109,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		try
 		{
 			LoginJob job = new LoginJob(Display.getCurrent(), server, login, false, false);
+			job.setPassword(password);
 			ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
 			pd.run(false, false, job);
 			success = true;

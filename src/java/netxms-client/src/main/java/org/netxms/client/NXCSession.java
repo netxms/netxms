@@ -75,8 +75,7 @@ import java.util.regex.Pattern;
 /**
  * Communication session with NetXMS server.
  */
-public class NXCSession
-   implements Session, ScriptLibraryManager, UserManager, ServerManager, ImageLibraryManager, ReportingServerManager
+public class NXCSession implements Session, ScriptLibraryManager, UserManager, ServerManager, ImageLibraryManager, ReportingServerManager
 {
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
@@ -1391,7 +1390,7 @@ public class NXCSession
          request.setVariableInt16(NXCPCodes.VID_AUTH_TYPE, authType);
          request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
 
-         if (authType == AUTH_TYPE_PASSWORD)
+         if ((authType == AUTH_TYPE_PASSWORD) || (authType == AUTH_TYPE_SSO_TICKET))
          {
             request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
          }
@@ -6719,7 +6718,6 @@ public class NXCSession
    public void setPassword(String password)
    {
       connPassword = password;
-      setAuthType(AUTH_TYPE_PASSWORD);
    }
 
    /**
@@ -6730,7 +6728,6 @@ public class NXCSession
    public void setSignature(Signature signature)
    {
       connSignature = signature;
-      setAuthType(AUTH_TYPE_CERTIFICATE);
    }
 
    /**

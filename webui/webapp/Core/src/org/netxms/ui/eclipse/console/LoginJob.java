@@ -229,6 +229,7 @@ public class LoginJob implements IRunnableWithProgress
       switch(authMethod)
       {
       	case NXCSession.AUTH_TYPE_PASSWORD:
+         case NXCSession.AUTH_TYPE_SSO_TICKET:
    	      session.setPassword(password);
    	      break;
       	case NXCSession.AUTH_TYPE_CERTIFICATE:
@@ -271,7 +272,7 @@ public class LoginJob implements IRunnableWithProgress
    public void setPassword(String password)
    {
       this.password = password;
-      authMethod = NXCSession.AUTH_TYPE_PASSWORD;
+      authMethod = (loginName != null) ? NXCSession.AUTH_TYPE_PASSWORD : NXCSession.AUTH_TYPE_SSO_TICKET;
    }
 
    /**
