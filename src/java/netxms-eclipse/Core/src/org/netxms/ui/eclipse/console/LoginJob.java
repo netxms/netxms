@@ -114,6 +114,19 @@ public class LoginJob implements IRunnableWithProgress
          }
 
          NXCSession session = createSession(hostName, port);
+         
+         session.setAuthType(authMethod);
+         switch(authMethod)
+         {
+            case NXCSession.AUTH_TYPE_PASSWORD:
+            case NXCSession.AUTH_TYPE_SSO_TICKET:
+               session.setPassword(password);
+               break;
+            case NXCSession.AUTH_TYPE_CERTIFICATE:
+               session.setSignature(signature);
+               break;
+         }
+         
          session.setConnClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
          monitor.worked(1);
@@ -209,28 +222,7 @@ public class LoginJob implements IRunnableWithProgress
          }
       }
 
-      return createNXCSession(hostName, port);
-   }
-
-   /**
-    * @param hostName
-    * @param port
-    * @return
-    */
-   private NXCSession createNXCSession(String hostName, int port)
-   {
-      NXCSession session = new NXCSession(hostName, port, loginName, password, encryptSession);
-      session.setAuthType(authMethod);
-      switch(authMethod)
-      {
-      	case NXCSession.AUTH_TYPE_PASSWORD:
-   	      session.setPassword(password);
-   	      break;
-      	case NXCSession.AUTH_TYPE_CERTIFICATE:
-   	      session.setSignature(signature);
-   	      break;
-      }
-      return session;
+      return new NXCSession(hostName, port, loginName, password, encryptSession);
    }
 
    /**
