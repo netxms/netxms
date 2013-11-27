@@ -391,7 +391,7 @@ LONG H_NetIfList2(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
    return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_NetIfList1(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
    int nRet = SYSINFO_RC_ERROR;
    struct if_nameindex *pIndex;
