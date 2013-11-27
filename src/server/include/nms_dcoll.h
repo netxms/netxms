@@ -261,7 +261,7 @@ public:
 	UINT32 getErrorCount() { return m_dwErrorCount; }
 	WORD getSnmpPort() { return m_snmpPort; }
    bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
-   bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_FOR_CLUSTER) ? true : false; }
+   bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
 
 	bool matchClusterResource();

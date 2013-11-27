@@ -569,6 +569,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\graph.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\hk.cpp"
 				>
 			</File>

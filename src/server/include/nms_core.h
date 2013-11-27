@@ -906,10 +906,9 @@ void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName);
 void DumpProcess(CONSOLE_CTX pCtx);
 
 GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize);
-BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId,
-                             UINT32 graphUserId, UINT32 graphDesiredAccess);
-int GetAccessCehckResult(UINT32 graphId,UINT32 graphUserId);
-GRAPH_ACL_AND_ID CheckNameExistsAndGetID(TCHAR *graphName);
+BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
+int GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
+GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
 
 /**
  * Global variables

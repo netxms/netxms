@@ -1,7 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** NXCP API
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,10 +22,9 @@
 
 #include "nxcore.h"
 
-//
-// Load graph's ACL - load for all graphs if graphId is 0
-//
-
+/**
+ * Load graph's ACL - load for all graphs if graphId is 0
+ */
 GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize)
 {
    int i, nSize;
@@ -67,12 +65,10 @@ GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize)
    return pACL;
 }
 
-//
-// Check access to the graph
-//
-
-BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId,
-                             UINT32 graphUserId, UINT32 graphDesiredAccess)
+/**
+ * Check access to the graph
+ */
+BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess)
 {
    int i;
 
@@ -91,7 +87,10 @@ BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId,
    return FALSE;
 }
 
-int GetAccessCehckResult(UINT32 graphId,UINT32 graphUserId)
+/**
+ * Check access to the graph
+ */
+int GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
 {
    // Check existence and access rights
    TCHAR szQuery[16384];
@@ -139,11 +138,10 @@ int GetAccessCehckResult(UINT32 graphId,UINT32 graphUserId)
    }
 };
 
-/*
- *
+/**
+ * Check if graph name already exist
  */
-
-GRAPH_ACL_AND_ID CheckNameExistsAndGetID(TCHAR *graphName)
+GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
 {
    CSCPMessage msg;
    UINT32 graphId;

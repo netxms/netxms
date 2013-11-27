@@ -30,6 +30,7 @@ public class Messages extends NLS
 	public String ClusterOptions_DataAggregation;
 	public String ClusterOptions_Max;
 	public String ClusterOptions_Min;
+   public String ClusterOptions_RunScriptOnAggregatedData;
 	public String ClusterOptions_Total;
 	public String CreateInterfaceDciDialog_BadPollingInterval;
 	public String CreateInterfaceDciDialog_BadRetentionTime;

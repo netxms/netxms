@@ -9178,7 +9178,7 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 	pRequest->GetVariableStr(VID_NAME,dwGraphName,255);
 	overwrite = pRequest->GetVariableShort(VID_FLAGS);
 
-   GRAPH_ACL_AND_ID nameUniq = CheckNameExistsAndGetID(dwGraphName);
+   GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName);
 
    if(nameUniq.graphId == graphId)
    {
@@ -9193,7 +9193,7 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 	}
 	else
 	{
-	   accessRightStatus = GetAccessCehckResult(graphId, m_dwUserId);
+	   accessRightStatus = GetGraphAccessCheckResult(graphId, m_dwUserId);
 		bNew = FALSE;
 	}
 

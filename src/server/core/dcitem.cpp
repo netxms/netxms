@@ -667,7 +667,7 @@ void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
 
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
-   if (m_pNode->Type() != OBJECT_CLUSTER)
+   if ((m_pNode->Type() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
       transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp);
 
    m_prevRawValue = rawValue;
@@ -842,8 +842,13 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
       pValue = new NXSL_Value((const TCHAR *)value);
       pEnv = new NXSL_ServerEnv;
-      m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
+      if (m_pNode->Type() == OBJECT_NODE)
+      {
+         m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      }
       m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+      m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
 	
       if (m_transformationScript->run(pEnv, 1, &pValue) == 0)
       {
@@ -929,7 +934,7 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
    // Minimum cache size is 1 for nodes (so GetLastValue can work)
    // and it is always 0 for templates
    if (((m_pNode->Type() == OBJECT_NODE) || (m_pNode->Type() == OBJECT_MOBILEDEVICE) ||
-        ((m_pNode->Type() == OBJECT_CLUSTER) && (m_flags & DCF_AGGREGATE_FOR_CLUSTER))) &&
+        ((m_pNode->Type() == OBJECT_CLUSTER) && isAggregateOnCluster())) &&
        (m_instanceDiscoveryMethod == IDM_NONE))
    {
       dwRequiredSize = 1;
@@ -1567,7 +1572,7 @@ bool DCItem::isCacheLoaded()
 bool DCItem::hasValue()
 {
    if (m_pNode->Type() == OBJECT_CLUSTER)
-      return (m_flags & DCF_AGGREGATE_FOR_CLUSTER) && (m_instanceDiscoveryMethod == IDM_NONE);
+      return isAggregateOnCluster() && (m_instanceDiscoveryMethod == IDM_NONE);
 	return m_instanceDiscoveryMethod == IDM_NONE;
 }
 

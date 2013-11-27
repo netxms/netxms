@@ -59,6 +59,7 @@ public abstract class DataCollectionObject
 	// common data collection flags
 	public static final int DCF_ADVANCED_SCHEDULE = 0x0001;
 	public static final int DCF_AGGREGATE_ON_CLUSTER = 0x0080;
+   public static final int DCF_TRANSFORM_AGGREGATED = 0x0100;
 	
 	protected DataCollectionConfiguration owner;
 	protected long id;
@@ -502,4 +503,23 @@ public abstract class DataCollectionObject
 		else
 			flags &= ~DCF_AGGREGATE_ON_CLUSTER;
 	}
+
+   /**
+    * @return 
+    */
+   public boolean isTransformAggregated()
+   {
+      return (flags & DCF_TRANSFORM_AGGREGATED) != 0;
+   }
+
+   /**
+    * @param enable
+    */
+   public void setTransformAggregated(boolean enable)
+   {
+      if (enable)
+         flags |= DCF_TRANSFORM_AGGREGATED;
+      else
+         flags &= ~DCF_TRANSFORM_AGGREGATED;
+   }
 }

@@ -53,6 +53,7 @@ public class ClusterOptions extends PropertyPage
 	private Combo clusterResource;
 	private Map<Integer, Long> clusterResourceMap;
 	private Button checkAggregate;
+	private Button checkRunScript;
 	private Combo aggregationFunction;
 
 	/* (non-Javadoc)
@@ -130,6 +131,10 @@ public class ClusterOptions extends PropertyPage
    	checkAggregate.setText(Messages.get().ClusterOptions_AggregateFromNodes);
    	checkAggregate.setSelection(editor.getObject().isAggregateOnCluster());
       	
+      checkRunScript = new Button(aggregationGroup, SWT.CHECK);
+      checkRunScript.setText(Messages.get().ClusterOptions_RunScriptOnAggregatedData);
+      checkRunScript.setSelection(editor.getObject().isTransformAggregated());
+         
       if (editor.getObject() instanceof DataCollectionItem)
       {
       	checkAggregate.addSelectionListener(new SelectionListener() {
@@ -170,6 +175,7 @@ public class ClusterOptions extends PropertyPage
 			editor.getObject().setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
 		}
 		editor.getObject().setAggregateOnCluster(checkAggregate.getSelection());
+      editor.getObject().setTransformAggregated(checkRunScript.getSelection());
 		if (editor.getObject() instanceof DataCollectionItem)
 		{
 			editor.getObjectAsItem().setAggregationFunction(aggregationFunction.getSelectionIndex());

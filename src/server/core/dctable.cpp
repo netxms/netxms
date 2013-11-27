@@ -309,7 +309,7 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
    // Transform input value
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
-   if (m_pNode->Type() != OBJECT_CLUSTER)
+   if ((m_pNode->Type() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
       transform((Table *)value);
 
    m_dwErrorCount = 0;
@@ -429,8 +429,13 @@ void DCTable::transform(Table *value)
 
       nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
       pEnv = new NXSL_ServerEnv;
-      m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
+      if (m_pNode->Type() == OBJECT_NODE)
+      {
+         m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      }
       m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+      m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
 	
       if (m_transformationScript->run(pEnv, 1, &nxslValue) != 0)
       {
