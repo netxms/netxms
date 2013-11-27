@@ -33,9 +33,10 @@
 #include <sys/vfs.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include <ifaddrs.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
 
-/*
+/**
  * Attributes for H_ProcInfo
  */
 
@@ -55,7 +56,7 @@ enum
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
 
-/*
+/**
  * Process entry
  */
 typedef struct t_ProcEnt
@@ -74,22 +75,30 @@ typedef struct t_ProcEnt
 	unsigned long majflt;	// Number of major page faults
 } PROC_ENT;
 
-typedef struct ifaddrs IFADDRS;
-
-/*
+/**
  * Interface info
  */
-typedef struct IFINFO {
-   IFINFO* next;
+typedef struct t_IfInfo
+{
+   t_IfInfo* next;
    UINT32 index;
    char addr[40];
    BYTE mask;
-   int type;
-   char mac[16];
+   UINT32 type;
+   char mac[18];
    char name[16];
-};
+} IFINFO;
 
-/*
+/**
+ * Netlink
+ */
+typedef struct
+{
+   nlmsghdr header;
+   rtgenmsg message;
+} NETLINK_REQ;
+
+/**
  * FS info types
  */
 enum
@@ -104,7 +113,7 @@ enum
 };
 
 
-/*
+/**
  * Network interface stats
  */
 
@@ -120,7 +129,7 @@ enum
 #define IF_INFO_SPEED            9
 
 
-/*
+/**
  * Memory stats
  */
 
@@ -148,7 +157,7 @@ enum
 };
 
 
-/*
+/**
  * Load average intervals
  */
 
@@ -160,7 +169,7 @@ enum
 };
 
 
-/*
+/**
  * CPU stats
  */
 
@@ -182,7 +191,7 @@ enum
 #define CPU_USAGE_PARAM_INTERVAL(p)					((CAST_FROM_POINTER((p), DWORD)) >> 16)
 #define CPU_USAGE_PARAM_SOURCE(p)					((CAST_FROM_POINTER((p), DWORD)) & 0x0000FFFF)
 
-/*
+/**
  * I/O stats
  */
 
@@ -192,7 +201,7 @@ enum
 #define IOSTAT_NUM_SWRITES    3
 #define IOSTAT_IO_TIME        4
 
-/*
+/**
  * Functions
  */
 
