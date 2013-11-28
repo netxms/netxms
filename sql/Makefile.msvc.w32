@@ -4,7 +4,7 @@
 
 CPP = cl
 
-sql_SCRIPTS = dbinit_mysql.sql dbinit_pgsql.sql dbinit_mssql.sql dbinit_oracle.sql dbinit_sqlite.sql
+sql_SCRIPTS = dbinit_mysql.sql dbinit_pgsql.sql dbinit_mssql.sql dbinit_oracle.sql dbinit_sqlite.sql dbinit_db2.sql
 
 ROOT_FILE = dbinit.in
 SOURCE = $(ROOT_FILE) database.in schema.in setup.in events.in policy.in objtools.in scripts.in images.in

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Composite;
@@ -85,6 +86,7 @@ public class FileViewer extends ViewPart
 	{
 		textViewer = new StyledText(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 		textViewer.setEditable(false);
+		textViewer.setFont(JFaceResources.getTextFont());
 	}
 
 	/* (non-Javadoc)
