@@ -981,6 +981,10 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
       oldval = __lwarx(v);
    } while(__stwcx(v, oldval + 1) == 0);
    return oldval + 1;
+#elif defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
+   VolatileCounter temp = 1;
+   __asm__ __volatile__("lock; xaddl %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
+   return temp + 1;
 #else
    return __sync_add_and_fetch(v, 1);
 #endif
@@ -998,6 +1002,10 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
       oldval = __lwarx(v);
    } while(__stwcx(v, oldval - 1) == 0);
    return oldval - 1;
+#elif defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
+   VolatileCounter temp = -1;
+   __asm__ __volatile__("lock; xaddl %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
+   return temp - 1;
 #else
    return __sync_sub_and_fetch(v, 1);
 #endif

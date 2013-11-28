@@ -334,20 +334,22 @@ static IFINFO* ParseMessage(nlmsghdr* messageHeader)
 
    interfaceInfo->index = interface->ifi_index;
    interfaceInfo->type = interface->ifi_type;
-   //interfaceInfo->type = IFTYPE_OTHER;
 
    return interfaceInfo;
 }
 
-static IFINFO* GetInterfaceInfo(int socket)
+static IFINFO *GetInterfaceInfo(int socket)
 {
    if (SendMessage(socket) == -1)
+   {
+      AgentWriteDebugLog(4, _T("GetInterfaceInfo: SendMessage failed (%s)"), _tcserror(errno));
       return NULL;
+   }
 
    msghdr reply = {};
    nlmsghdr* msg_ptr;
    int msgLen;
-   int done;
+   int done = 0;
    IFINFO* interfaceInfo = NULL;
    IFINFO* curIfInfo = NULL;
    char replyBuffer[8192];
@@ -355,8 +357,11 @@ static IFINFO* GetInterfaceInfo(int socket)
    while(!done)
    {
       msgLen = ReceiveMessage(socket, replyBuffer);
-      if (!msgLen)
+      if (msgLen <= 0)
+      {
+         AgentWriteDebugLog(4, _T("GetInterfaceInfo: ReceiveMessage failed (%s)"), _tcserror(errno));
          break;
+      }
 
       for(msg_ptr = (nlmsghdr*) replyBuffer; NLMSG_OK(msg_ptr, msgLen); msg_ptr = NLMSG_NEXT(msg_ptr, msgLen))
       {
@@ -372,21 +377,21 @@ static IFINFO* GetInterfaceInfo(int socket)
             curIfInfo = ifInfo;
          }
          else if (msg_ptr->nlmsg_type == NLMSG_DONE)
+         {
             done++;
-         else
-            break;
+         }
       }
    }
 
    return interfaceInfo;
 }
 
-static void freeInterfaceInfo(IFINFO* ifInfo)
+static void FreeInterfaceInfo(IFINFO* ifInfo)
 {
    if (ifInfo == NULL)
       return;
 
-   freeInterfaceInfo(ifInfo->next);
+   FreeInterfaceInfo(ifInfo->next);
    delete ifInfo;
    ifInfo = NULL;
 }
@@ -396,8 +401,7 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
    int netlinkSocket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
    if (netlinkSocket == -1)
    {
-      //AgentWriteDebugLog(4, _T("NetIfList: failed to opens socket.\n"));
-      WriteToTerminalEx(_T("NetIfList: failed to opens socket.\n"));
+      AgentWriteDebugLog(4, _T("H_NetIfList: failed to opens socket"));
       return SYSINFO_RC_ERROR;
    }
 
@@ -410,14 +414,19 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
 
    if (bind(netlinkSocket, (sockaddr*) &local, sizeof(local)) < 0)
    {
-      WriteToTerminalEx(_T("NetIfList: failed to bind socket.\n"));
+      AgentWriteDebugLog(4, _T("H_NetIfList: failed to bind socket"));
+      close(netlinkSocket);
+      return SYSINFO_RC_ERROR;
    }
 
    IFINFO* interfaceInfo = GetInterfaceInfo(netlinkSocket);
-   if (interfaceInfo == NULL)
-      return SYSINFO_RC_ERROR;
-
    close(netlinkSocket);
+
+   if (interfaceInfo == NULL)
+   {
+      AgentWriteDebugLog(4, _T("H_NetIfList: failed to get interface list"));
+      return SYSINFO_RC_ERROR;
+   }
 
    TCHAR infoString[1024];
    IFINFO* curInterface = interfaceInfo;
@@ -435,108 +444,8 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
       curInterface = curInterface->next;
    }
 
-   freeInterfaceInfo(interfaceInfo);
-
+   FreeInterfaceInfo(interfaceInfo);
    return SYSINFO_RC_SUCCESS;
-}
-
-LONG H_NetIfList_OLD(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
-{
-   int nRet = SYSINFO_RC_ERROR;
-   struct if_nameindex *pIndex;
-   struct ifreq irq;
-   struct sockaddr_in *sa;
-   int nFd;
-
-   int s;
-   char *buff;
-   struct ifconf ifc;
-   int i;
-
-   s = socket(PF_INET, SOCK_DGRAM, 0);
-   if (s > 0)
-   {
-      ifc.ifc_len = 0;
-      ifc.ifc_buf = NULL;
-      if (ioctl(s, SIOCGIFCONF, (caddr_t) &ifc) == 0)
-      {
-         buff = (char *) malloc(ifc.ifc_len);
-         if (buff != NULL)
-         {
-            ifc.ifc_buf = buff;
-
-            if (ioctl(s, SIOCGIFCONF, (caddr_t) &ifc) == 0)
-            {
-               for(i = 0; i < ifc.ifc_len / sizeof(struct ifreq); i++)
-               {
-                  if (ifc.ifc_req[i].ifr_addr.sa_family == AF_INET)
-                  {
-                     struct sockaddr_in *addr;
-                     struct ifreq irq;
-                     int mask = 0;
-                     int index = if_nametoindex(ifc.ifc_req[i].ifr_name);
-                     char szMacAddr[16];
-
-                     nRet = SYSINFO_RC_SUCCESS;
-
-                     strcpy(irq.ifr_name, ifc.ifc_req[i].ifr_name);
-
-                     if (ioctl(s, SIOCGIFNETMASK, &irq) == 0)
-                     {
-                        mask = 33 - ffs(htonl(((struct sockaddr_in *)
-                           &irq.ifr_addr)->sin_addr.s_addr));
-                     }
-
-                     strcpy(irq.ifr_name, ifc.ifc_req[i].ifr_name);
-                     strcpy(szMacAddr, "000000000000");
-                     if (ioctl(s, SIOCGIFHWADDR, &irq) == 0)
-                     {
-                        for(int z = 0; z < 6; z++)
-                        {
-                           sprintf(&szMacAddr[z << 1], "%02X",
-                              (unsigned char) irq.ifr_hwaddr.sa_data[z]);
-                        }
-                     }
-
-                     addr = (struct sockaddr_in *) &(ifc.ifc_req[i].ifr_addr);
-
-                     TCHAR szOut[1024];
-                     _sntprintf(szOut, 1024, _T("%d %hs/%d %d %hs %hs"),
-                        index,
-                        inet_ntoa(addr->sin_addr),
-                        mask,
-                        IFTYPE_OTHER,
-                        szMacAddr,
-                        ifc.ifc_req[i].ifr_name);
-                     pValue->add(szOut);
-                  }
-               }
-            }
-            else
-            {
-               //perror("sysctl-2()");
-            }
-
-            free(buff);
-         }
-         else
-         {
-            //perror("malloc()");
-         }
-      }
-      else
-      {
-         //perror("sysctl-1()");
-      }
-
-      close(s);
-   }
-   else
-   {
-      //perror("socket()");
-   }
-
-   return nRet;
 }
 
 LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
@@ -555,7 +464,7 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
       return 1;
    }
 
-// Check if we have interface name or index
+   // Check if we have interface name or index
    ifr.ifr_ifindex = strtol(szBuffer, &eptr, 10);
    if (*eptr == 0)
    {
@@ -569,7 +478,7 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
       strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
    }
 
-// Get interface information
+   // Get interface information
    if (nRet == SYSINFO_RC_SUCCESS)
    {
       switch ((long) pArg)
@@ -607,9 +516,8 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
       }
    }
 
-// Cleanup
+   // Cleanup
    close(fd);
-
    return nRet;
 }
 
@@ -727,52 +635,3 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 
    return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
- $Log: not supported by cvs2svn $
- Revision 1.11  2006/03/02 12:17:05  victor
- Removed various warnings related to 64bit platforms
-
- Revision 1.10  2005/10/17 20:45:46  victor
- Fixed incorrect usage of strncpy
-
- Revision 1.9  2005/09/08 16:26:31  alk
- Net.InterfaceList now use alternative way and works with virtual
- interfaces under 2.6
-
- Revision 1.8  2005/08/22 00:11:47  alk
- Net.IP.RoutingTable added
-
- Revision 1.7  2005/06/12 17:57:24  victor
- Net.Interface.AdminStatus should return 2 for disabled interfaces
-
- Revision 1.6  2005/06/11 16:28:24  victor
- Implemented all Net.Interface.* parameters except Net.Interface.Speed
-
- Revision 1.5  2005/06/09 12:15:43  victor
- Added support for Net.Interface.AdminStatus and Net.Interface.Link parameters
-
- Revision 1.4  2005/01/05 12:21:24  victor
- - Added wrappers for new and delete from gcc2 libraries
- - sys/stat.h and fcntl.h included in nms_common.h
-
- Revision 1.3  2004/11/25 08:01:27  victor
- Processing of interface list will be stopped on error
-
- Revision 1.2  2004/10/23 22:53:23  alk
- ArpCache: ignore incomplete entries
-
- Revision 1.1  2004/10/22 22:08:34  alk
- source restructured;
- implemented:
- Net.IP.Forwarding
- Net.IP6.Forwarding
- Process.Count(*)
- Net.ArpCache
- Net.InterfaceList (if-type not implemented yet)
- System.ProcessList
-
-
- */

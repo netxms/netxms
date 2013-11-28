@@ -43,6 +43,7 @@ include_HEADERS = \
 	nxsl.h \
 	nxsm_ext.h \
 	nxsnmp.h \
+	nxstat.h \
 	nxtools.h \
 	nxwinui.h \
 	rwlock.h \

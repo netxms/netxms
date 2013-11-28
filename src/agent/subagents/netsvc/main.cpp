@@ -111,7 +111,10 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
          {
             ret = SYSINFO_RC_SUCCESS;
 
+#if HAVE_DECL_CURLOPT_NOSIGNAL
             curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
+#endif
+
             // curl_easy_setopt(curl, CURLOPT_VERBOSE, (long)1);
             curl_easy_setopt(curl, CURLOPT_HEADER, (long)1); // include header in data
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, g_timeout);
@@ -196,6 +199,8 @@ static BOOL SubagentInit(Config *config) {
 
    if (ret)
    {
+      AgentWriteDebugLog(3, _T("cURL version: %hs"), curl_version());
+#if HAVE_DECL_CURL_VERSION_INFO
       curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
       char protocols[1024] = {0};
       const char * const *p = version->protocols;
@@ -205,8 +210,8 @@ static BOOL SubagentInit(Config *config) {
          strncat(protocols, " ", strlen(protocols) - 1);
          p++;
       }
-      AgentWriteDebugLog(3, _T("cURL version: %hs"), curl_version());
       AgentWriteDebugLog(3, _T("Supported protocols: %hs"), protocols);
+#endif
    }
    return ret;
 }

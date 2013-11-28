@@ -33,6 +33,7 @@
 #include <sys/vfs.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <asm/types.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 
