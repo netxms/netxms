@@ -19,7 +19,7 @@
 #ifndef DB2DCI_H_
 #define DB2DCI_H_
 
-#include <nmsutil.h>
+#include <nms_util.h>
 
 #define _D(x) _T(#x)
 #define IfEqualsReturn(str, dci) if(_tcscmp(str, _D(dci)) == 0) return dci;
