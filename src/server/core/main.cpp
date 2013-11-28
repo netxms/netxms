@@ -824,7 +824,7 @@ retry_db_lock:
 	DbgPrintf(2, _T("Java LIBDIR: %s"), g_szJavaLibDir);
 	DbgPrintf(2, _T("LIBDIR: %s"), g_szLibDir);
 
-	// Call shutdown functions for the modules
+	// Call startup functions for the modules
    for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
 		if (g_pModuleList[i].pfServerStarted != NULL)

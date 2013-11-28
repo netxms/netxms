@@ -311,7 +311,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 			for(int i = 0; i < vlans->getSize(); i++)
 			{
 				TCHAR context[16];
-				_sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? "" : "vlan-", vlans->get(i)->getVlanId());
+				_sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
 				node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context);
 				DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
 				size = fdb->getSize();
