@@ -112,9 +112,9 @@ static BOOL ExecAndWait(char *pszCommand)
 }
 
 
-//
-// Create minidump of given process
-//g_debugLevel
+/**
+ * Create minidump of given process
+ */
 
 #ifdef _WIN32
 
