@@ -14,8 +14,8 @@
 - Unknown SNMP trap sources can be automatically added as nodes
 - Management console:
 	- New command line option -fullscreen
-- Fixed issues: #150, #226, #307, #363, #364, #366, #373, #378, #384, #387, #390, $401,
-                #410, #414, #416, #419, #440
+- Fixed issues: #150, #226, #307, #363, #364, #366, #373, #378, #384, #387, 
+                #390, $401, #410, #414, #416, #419, #439, #440
 
 
 *

@@ -533,15 +533,18 @@ BOOL NXCORE_EXPORTABLE Initialize()
 			if (!(g_dwFlags & AF_DAEMON))
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}
-   nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
-	           ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
-				  ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
-              _T("LIBNXSRV.DLL"),
+   if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
+	                ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) | ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
+                   _T("LIBNXSRV.DLL"),
 #ifdef _WIN32
-				  0, NULL);
+				       0, NULL))
 #else
-				  g_dwNumMessages, g_szMessages);
+				       g_dwNumMessages, g_szMessages))
 #endif
+   {
+		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
+      return FALSE;
+   }
 	nxlog_set_console_writer(LogConsoleWriter);
 
 	// Set code page
