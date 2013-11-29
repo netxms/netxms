@@ -480,7 +480,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
          switch (cfgTemplate[i].iType)
          {
             case CT_LONG:
-               if(!_tcscmp(entry->getName(), _T("DebugLevel")))
+               if(!_tcscmp(cfgTemplate[i].szToken, _T("DebugLevel")))
                   if(*((int*) cfgTemplate[i].pBuffer) != -1) break;
 
                *((LONG *) cfgTemplate[i].pBuffer) = _tcstol(value, &eptr, 0);
