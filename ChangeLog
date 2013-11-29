@@ -13,7 +13,7 @@
 - Transformation script can be run on aggregated DCIs
 - Management console:
 	- New command line option -fullscreen
-- Fixed issues: #150, #226, #364, #366, #373, #378, #384, #387, #390, $401,
+- Fixed issues: #150, #226, #363, #364, #366, #373, #378, #384, #387, #390, $401,
                 #410, #414, #416, #419, #440
 
 

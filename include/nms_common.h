@@ -606,11 +606,11 @@ typedef unsigned int socklen_t;
 #endif
 
 // Shared library suffix
-#ifndef SHL_SUFFIX
+#ifndef SHLIB_SUFFIX
 #if defined(_HPUX) && !defined(__64BIT__)
-#define SHL_SUFFIX	_T(".sl")
+#define SHLIB_SUFFIX	_T(".sl")
 #else
-#define SHL_SUFFIX	_T(".so")
+#define SHLIB_SUFFIX	_T(".so")
 #endif
 #endif
 

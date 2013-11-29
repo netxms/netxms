@@ -27,12 +27,10 @@
 #include <sys/ndd.h>
 #include <sys/kinfo.h>
 
-
-//
-// Function getkerninfo() has not documented, but used in IBM examples.
-// It also doesn't have prototype in headers, so we declare it here.
-//
-
+/**
+ * Function getkerninfo() has not documented, but used in IBM examples.
+ * It also doesn't have prototype in headers, so we declare it here.
+ */
 #if !HAVE_DECL_GETKERNINFO
 extern "C" int getkerninfo(int, void *, void *, void *);
 #endif
