@@ -27,7 +27,7 @@
  */
 static void DeleteEmptySubnets()
 {
-	ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects(false);
+	ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects(true);
 	for(int i = 0; i < subnets->size(); i++)
 	{
 		NetObj *object = subnets->get(i);
@@ -37,6 +37,7 @@ static void DeleteEmptySubnets()
 		      object->Id(), object->getRefCount(), object->getChildCount(), object->getParentCount());
 			object->deleteObject();
 		}
+      object->decRefCount();
 	}
 	delete subnets;
 }
