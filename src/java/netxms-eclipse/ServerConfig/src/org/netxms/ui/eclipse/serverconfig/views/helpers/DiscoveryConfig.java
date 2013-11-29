@@ -20,6 +20,7 @@ public class DiscoveryConfig
 {
 	private boolean enabled;
 	private boolean active;
+	private boolean useSnmpTraps;
 	private int filterFlags;
 	private String filter;
 	private String defaultCommunity;
@@ -52,6 +53,7 @@ public class DiscoveryConfig
 		
 		config.enabled = getBoolean(variables, "RunNetworkDiscovery", false); //$NON-NLS-1$
 		config.active = getBoolean(variables, "ActiveNetworkDiscovery", false); //$NON-NLS-1$
+		config.useSnmpTraps = getBoolean(variables, "UseSNMPTrapsForDiscovery", false); //$NON-NLS-1$
 		config.filterFlags = getInteger(variables, "DiscoveryFilterFlags", 0); //$NON-NLS-1$
 		config.filter = getString(variables, "DiscoveryFilter", "none"); //$NON-NLS-1$ //$NON-NLS-2$
 		config.defaultCommunity = getString(variables, "DefaultCommunityString", "public"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -139,6 +141,7 @@ public class DiscoveryConfig
 		
 		session.setServerVariable("RunNetworkDiscovery", enabled ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		session.setServerVariable("ActiveNetworkDiscovery", active ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      session.setServerVariable("UseSNMPTrapsForDiscovery", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		session.setServerVariable("DiscoveryFilterFlags", Integer.toString(filterFlags)); //$NON-NLS-1$
 		session.setServerVariable("DiscoveryFilter", filter); //$NON-NLS-1$
 		session.setServerVariable("DefaultCommunityString", defaultCommunity); //$NON-NLS-1$
@@ -294,4 +297,20 @@ public class DiscoveryConfig
 	{
 		this.usmCredentials = usmCredentials;
 	}
+
+   /**
+    * @return the useSnmpTraps
+    */
+   public boolean isUseSnmpTraps()
+   {
+      return useSnmpTraps;
+   }
+
+   /**
+    * @param useSnmpTraps the useSnmpTraps to set
+    */
+   public void setUseSnmpTraps(boolean useSnmpTraps)
+   {
+      this.useSnmpTraps = useSnmpTraps;
+   }
 }

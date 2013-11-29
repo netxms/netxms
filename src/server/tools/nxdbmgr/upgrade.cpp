@@ -361,6 +361,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V296 to V297
+ */
+static BOOL H_UpgradeFromV296(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateConfigParam(_T("UseSNMPTrapsForDiscovery"), _T("0"), 1, 1));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='297' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V295 to V296
  */
 static BOOL H_UpgradeFromV295(int currVersion, int newVersion)
@@ -7244,6 +7254,7 @@ static struct
    { 293, 294, H_UpgradeFromV293 },
    { 294, 295, H_UpgradeFromV294 },
    { 295, 296, H_UpgradeFromV295 },
+   { 296, 297, H_UpgradeFromV296 },
    { 0, 0, NULL }
 };
 

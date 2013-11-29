@@ -313,6 +313,8 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_ENABLE_NETWORK_DISCOVERY;
 	if (ConfigReadInt(_T("ActiveNetworkDiscovery"), 0))
 		g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
+   if (ConfigReadInt(_T("UseSNMPTrapsForDiscovery"), 0))
+      g_dwFlags |= AF_SNMP_TRAP_DISCOVERY;
 	if (ConfigReadInt(_T("ResolveNodeNames"), 1))
 		g_dwFlags |= AF_RESOLVE_NODE_NAMES;
 	if (ConfigReadInt(_T("SyncNodeNamesWithDNS"), 0))
@@ -1224,6 +1226,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_NO_NETWORK_CONNECTIVITY));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_EVENT_STORM_DETECTED));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SNMP_TRAP_DISCOVERY));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
 			ConsolePrintf(pCtx, _T("\n"));

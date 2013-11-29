@@ -8739,11 +8739,9 @@ void ClientSession::setAddrList(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Reset server component
-//
-
+/**
+ * Reset server component
+ */
 void ClientSession::resetComponent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

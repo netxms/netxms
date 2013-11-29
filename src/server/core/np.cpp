@@ -668,7 +668,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 
 		DbgPrintf(4, _T("NodePoller: processing node %s/%s in zone %d"),
 		          IpToStr(pInfo->dwIpAddr, szIpAddr), IpToStr(pInfo->dwNetMask, szNetMask), (int)pInfo->zoneId);
-		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId, pInfo->bMacAddr))
+      if (pInfo->ignoreFilter || AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId, pInfo->bMacAddr))
 		{
          ObjectTransactionStart();
          PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, 0, 0, NULL, 0, 0, NULL, pInfo->zoneId, true, true);

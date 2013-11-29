@@ -944,4 +944,9 @@ void ResetDiscoveryPoller()
       g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
    else
       g_dwFlags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
+
+   if (ConfigReadInt(_T("UseSNMPTrapsForDiscovery"), 0))
+      g_dwFlags |= AF_SNMP_TRAP_DISCOVERY;
+   else
+      g_dwFlags &= ~AF_SNMP_TRAP_DISCOVERY;
 }

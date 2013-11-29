@@ -31,6 +31,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -87,6 +88,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private Button radioDiscoveryPassive;
 	private Button radioDiscoveryActive;
 	private LabeledText defaultSnmpCommunity;
+	private Button checkUseSnmpTraps;
 	private Button radioFilterOff;
 	private Button radioFilterCustom;
 	private Button radioFilterAuto;
@@ -268,6 +270,19 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 				config.setDefaultCommunity(defaultSnmpCommunity.getText());
 			}
 		});
+		
+		checkUseSnmpTraps = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery, SWT.CHECK);
+		checkUseSnmpTraps.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            config.setUseSnmpTraps(checkUseSnmpTraps.getSelection());
+            setModified();
+         }
+      });
+      gd = new GridData();
+      gd.verticalIndent = 10;
+      checkUseSnmpTraps.setLayoutData(gd);
 	}
 	
 	/**
@@ -651,6 +666,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		radioDiscoveryOff.setSelection(!config.isEnabled());
 		radioDiscoveryPassive.setSelection(config.isEnabled() && !config.isActive());
 		radioDiscoveryActive.setSelection(config.isEnabled() && config.isActive());
+		checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
 		
 		defaultSnmpCommunity.setText(config.getDefaultCommunity());
 		

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,17 +23,19 @@
 #include "nxcore.h"
 
 
-//
-// Constants
-//
+/**
+ * Externals
+ */
+extern Queue g_nodePollerQueue;
 
+/**
+ * Max SNMP packet length
+ */
 #define MAX_PACKET_LENGTH     65536
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static MUTEX m_mutexTrapCfgAccess = NULL;
 static NXC_TRAP_CFG_ENTRY *m_pTrapCfg = NULL;
 static UINT32 m_dwNumTraps = 0;
@@ -155,11 +157,9 @@ void InitTraps()
 	m_wTrapPort = (UINT16)ConfigReadULong(_T("SNMPTrapPort"), m_wTrapPort); // 162 by default;
 }
 
-
-//
-// Generate event for matched trap
-//
-
+/**
+ * Generate event for matched trap
+ */
 static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
 {
    TCHAR *pszArgList[32], szBuffer[256];
@@ -243,7 +243,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
    int iResult;
 
    dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
-	DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
+   DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
              pdu->getTrapId()->getValueAsText(), IpToStr(dwOriginAddr, szBuffer));
 	if (isInformRq)
 	{
@@ -262,7 +262,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
    pNode = FindNodeByIP(0, dwOriginAddr);
 
    // Write trap to log if required
-   if (m_bLogAllTraps || pNode != NULL)
+   if (m_bLogAllTraps || (pNode != NULL))
    {
       CSCPMessage msg;
       TCHAR szQuery[8192];
@@ -309,6 +309,8 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
    // Process trap if it is coming from host registered in database
    if (pNode != NULL)
    {
+      DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), pNode->Name(), pNode->Id());
+
       // Pass trap to loaded modules
       for(i = 0; i < g_dwNumModules; i++)
       {
@@ -372,20 +374,53 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
             }
 
             // Generate default event for unmatched traps
-            PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", 
-                      pdu->getTrapId()->getValueAsText(), pszTrapArgs);
+            PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", pdu->getTrapId()->getValueAsText(), pszTrapArgs);
             free(pszTrapArgs);
          }
       }
       MutexUnlock(m_mutexTrapCfgAccess);
    }
+   else if (g_dwFlags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
+   {
+      DbgPrintf(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), IpToStr(dwOriginAddr, szBuffer));
+      Subnet *subnet = FindSubnetForNode(0, dwOriginAddr);
+      if (subnet != NULL)
+      {
+         if ((subnet->IpAddr() != dwOriginAddr) && !IsBroadcastAddress(dwOriginAddr, subnet->getIpNetMask()))
+         {
+            NEW_NODE *pInfo;
+
+            pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+            pInfo->dwIpAddr = dwOriginAddr;
+            pInfo->dwNetMask = subnet->getIpNetMask();
+				pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
+				pInfo->ignoreFilter = FALSE;
+				memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+            g_nodePollerQueue.Put(pInfo);
+         }
+      }
+      else
+      {
+         NEW_NODE *pInfo;
+
+         pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+         pInfo->dwIpAddr = dwOriginAddr;
+         pInfo->dwNetMask = 0;
+			pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
+			pInfo->ignoreFilter = FALSE;
+			memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+         g_nodePollerQueue.Put(pInfo);
+      }
+   }
+   else  // unknown node, discovery disabled
+   {
+      DbgPrintf(4, _T("ProcessTrap: trap not matched to any node"));
+   }
 }
 
-
-//
-// Context finder - tries to find SNMPv3 security context by IP address
-//
-
+/**
+ * Context finder - tries to find SNMPv3 security context by IP address
+ */
 static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addrLen)
 {
 	UINT32 ipAddr = ntohl(((struct sockaddr_in *)addr)->sin_addr.s_addr);
@@ -640,11 +675,9 @@ UINT32 DeleteTrap(UINT32 dwId)
    return dwResult;
 }
 
-
-//
-// Save parameter mapping to database
-//
-
+/**
+ * Save parameter mapping to database
+ */
 static BOOL SaveParameterMapping(DB_HANDLE hdb, NXC_TRAP_CFG_ENTRY *pTrap)
 {
 	TCHAR szQuery[1024];
@@ -692,11 +725,9 @@ static BOOL SaveParameterMapping(DB_HANDLE hdb, NXC_TRAP_CFG_ENTRY *pTrap)
 	return bRet;
 }
 
-
-//
-// Create new trap configuration record
-//
-
+/**
+ * Create new trap configuration record
+ */
 UINT32 CreateNewTrap(UINT32 *pdwTrapId)
 {
    UINT32 dwResult = RCC_SUCCESS;
@@ -723,11 +754,9 @@ UINT32 CreateNewTrap(UINT32 *pdwTrapId)
    return dwResult;
 }
 
-
-//
-// Create new trap configuration record from NXMP data
-//
-
+/**
+ * Create new trap configuration record from NXMP data
+ */
 UINT32 CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 {
    UINT32 i, dwResult;
@@ -784,11 +813,9 @@ UINT32 CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
    return dwResult;
 }
 
-
-//
-// Update trap configuration record from message
-//
-
+/**
+ * Update trap configuration record from message
+ */
 UINT32 UpdateTrapFromMsg(CSCPMessage *pMsg)
 {
    UINT32 i, j, dwId1, dwId2, dwId3, dwId4, dwTrapId, dwResult = RCC_INVALID_TRAP_ID;
