@@ -69,6 +69,7 @@ public class GaugeElement extends ComparisonChartElement
 		chart.setLegendVisible(config.isShowLegend());
 		((Gauge)chart).setLegendInside(config.isLegendInside());
 		((Gauge)chart).setVertical(config.isVertical());
+      ((Gauge)chart).setElementBordersVisible(config.isElementBordersVisible());
 		((Gauge)chart).setMinValue(config.getMinValue());
 		((Gauge)chart).setMaxValue(config.getMaxValue());
 		((Gauge)chart).setLeftYellowZone(config.getLeftYellowZone());

@@ -42,6 +42,7 @@ public class Gauge extends PropertyPage
 	private LabeledText fontName;
 	private Button checkLegendInside;
 	private Button checkVertical;
+	private Button checkElementBorders;
 	private LabeledText minValue;
 	private LabeledText maxValue;
 	private LabeledText leftYellowZone;
@@ -149,6 +150,15 @@ public class Gauge extends PropertyPage
 		gd.horizontalSpan = 2;
 		checkVertical.setLayoutData(gd);
 		
+      checkElementBorders = new Button(dialogArea, SWT.CHECK);
+      checkElementBorders.setText("Show border around each element");
+      checkElementBorders.setSelection(config.isElementBordersVisible());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkElementBorders.setLayoutData(gd);
+      
 		return dialogArea;
 	}
 
@@ -184,6 +194,7 @@ public class Gauge extends PropertyPage
 		config.setRightRedZone(rr);
 		config.setLegendInside(checkLegendInside.getSelection());
 		config.setVertical(checkVertical.getSelection());
+		config.setElementBordersVisible(checkElementBorders.getSelection());
 		return true;
 	}
 }

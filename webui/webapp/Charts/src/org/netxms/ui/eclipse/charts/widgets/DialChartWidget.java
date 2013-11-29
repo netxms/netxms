@@ -94,9 +94,10 @@ public class DialChartWidget extends GaugeWidget
 	protected void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+		
 		if (legendVisible && !legendInside)
 		{
-			rect.height -= gc.textExtent("MMM").y - 4; //$NON-NLS-1$
+			rect.height -= gc.textExtent("MMM").y + 4; //$NON-NLS-1$
 		}
 		if (rect.height > rect.width)
 		{
@@ -191,16 +192,15 @@ public class DialChartWidget extends GaugeWidget
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
+         gc.setFont(legendInside ? markFont : null);
 			ext = gc.textExtent(dci.getName());
 			gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_LEGEND, getDisplay()));
 			if (legendInside)
 			{
-				gc.setFont(markFont);
 				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);
 			}
 			else
 			{
-				gc.setFont(null);
 				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 			}
 		}

@@ -103,6 +103,16 @@ public interface Gauge extends DataComparisonChart
 	 */
 	public void setVertical(boolean vertical);
 	
+   /**
+    * @return
+    */
+   public boolean isElementBordersVisible();
+
+   /**
+    * @param elementBordersVisible
+    */
+   public void setElementBordersVisible(boolean elementBordersVisible);
+	
 	/**
 	 * Get name of the font used for displaying values.
 	 * 

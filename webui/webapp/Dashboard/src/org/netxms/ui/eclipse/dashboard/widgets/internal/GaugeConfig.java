@@ -47,6 +47,9 @@ public class GaugeConfig extends AbstractChartConfig
 	@Element(required = false)
 	private String fontName = ""; //$NON-NLS-1$
 	
+	@Element(required=false)
+	private boolean elementBordersVisible = false;
+	
 	/**
 	 * Create dial chart settings object from XML document
 	 * 
@@ -219,4 +222,20 @@ public class GaugeConfig extends AbstractChartConfig
 	{
 		this.fontName = fontName;
 	}
+
+   /**
+    * @return the elementBordersVisible
+    */
+   public boolean isElementBordersVisible()
+   {
+      return elementBordersVisible;
+   }
+
+   /**
+    * @param elementBordersVisible the elementBordersVisible to set
+    */
+   public void setElementBordersVisible(boolean elementBordersVisible)
+   {
+      this.elementBordersVisible = elementBordersVisible;
+   }
 }

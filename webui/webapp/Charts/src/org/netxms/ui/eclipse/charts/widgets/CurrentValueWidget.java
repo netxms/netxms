@@ -75,9 +75,15 @@ public class CurrentValueWidget extends GaugeWidget
 	protected void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+		
+		if (elementBordersVisible)
+		{
+		   gc.drawRectangle(rect);
+		}
+		
 		if (legendVisible)
 		{
-			rect.height -= gc.textExtent("MMM").y - 8; //$NON-NLS-1$
+			rect.height -= gc.textExtent("MMM").y + 8; //$NON-NLS-1$
 		}
 		
 		final String value = getValueAsDisplayString(dci);
@@ -101,9 +107,9 @@ public class CurrentValueWidget extends GaugeWidget
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
+         gc.setFont(null);
 			ext = gc.textExtent(dci.getName());
 			gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_LEGEND, getDisplay()));
-			gc.setFont(null);
 			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}

@@ -69,6 +69,7 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 	protected boolean vertical = false;
 	protected boolean legendInside = true;
 	protected boolean gridVisible = true;
+	protected boolean elementBordersVisible = false;
 	protected String fontName = "Verdana"; //$NON-NLS-1$
 	
 	private boolean fontsCreated = false;
@@ -647,6 +648,24 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 	}
 
 	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.Gauge#isElementBordersVisible()
+	 */
+	@Override
+   public boolean isElementBordersVisible()
+   {
+      return elementBordersVisible;
+   }
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.Gauge#setElementBordersVisible(boolean)
+	 */
+	@Override
+   public void setElementBordersVisible(boolean elementBordersVisible)
+   {
+      this.elementBordersVisible = elementBordersVisible;
+   }
+
+   /* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.Gauge#getFontName()
 	 */
 	@Override
