@@ -393,10 +393,9 @@ void ConfigEntry::createXml(String &xml, int level)
    free(name);
 }
 
-/*
- *  Sort entry list
+/**
+ * Comparator for ConfigEntryList::sortById()
  */
-
 static int CompareById(const void *p1, const void *p2)
 {
    ConfigEntry *e1 = *((ConfigEntry **) p1);
@@ -404,15 +403,17 @@ static int CompareById(const void *p1, const void *p2)
    return e1->getId() - e2->getId();
 }
 
+/**
+ *  Sort entry list
+ */
 void ConfigEntryList::sortById()
 {
    qsort(m_list, m_size, sizeof(ConfigEntry *), CompareById);
 }
 
-/*
+/**
  * Constructor for config
  */
-
 Config::Config()
 {
    m_root = new ConfigEntry(_T("[root]"), NULL, NULL, 0, 0);
@@ -420,29 +421,26 @@ Config::Config()
    m_mutex = MutexCreate();
 }
 
-/*
+/**
  * Destructor
  */
-
 Config::~Config()
 {
    delete m_root;
    MutexDestroy(m_mutex);
 }
 
-/*
+/**
  * Default error handler
  */
-
 void Config::onError(const TCHAR *errorMessage)
 {
    _ftprintf(stderr, _T("%s\n"), errorMessage);
 }
 
-/*
+/**
  * Report error
  */
-
 void Config::error(const TCHAR *format, ...)
 {
    va_list args;
@@ -455,10 +453,9 @@ void Config::error(const TCHAR *format, ...)
    onError(buffer);
 }
 
-/*
- * Simulation of old NxLoadConfig() API
+/**
+ * Parse configuration template (emulation of old NxLoadConfig() API)
  */
-
 bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 {
    TCHAR name[MAX_PATH], *curr, *eptr;
@@ -470,27 +467,34 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
    _tcscat(name, _T("/"));
    pos = (int) _tcslen(name);
 
-   for(i = 0; cfgTemplate[i].iType != CT_END_OF_LIST; i++)
+   for(i = 0; cfgTemplate[i].type != CT_END_OF_LIST; i++)
    {
-      nx_strncpy(&name[pos], cfgTemplate[i].szToken, MAX_PATH - pos);
+      nx_strncpy(&name[pos], cfgTemplate[i].token, MAX_PATH - pos);
       entry = getEntry(name);
       if (entry != NULL)
       {
          const TCHAR *value = CHECK_NULL(entry->getValue(entry->getValueCount() - 1));
-         switch (cfgTemplate[i].iType)
+         switch (cfgTemplate[i].type)
          {
             case CT_LONG:
-               if(!_tcscmp(cfgTemplate[i].szToken, _T("DebugLevel")))
-                  if(*((int*) cfgTemplate[i].pBuffer) != -1) break;
-
-               *((LONG *) cfgTemplate[i].pBuffer) = _tcstol(value, &eptr, 0);
+               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+                   (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
+               {
+                  break;   // this parameter was already initialized, and override from config is forbidden
+               }
+               *((INT32 *)cfgTemplate[i].buffer) = _tcstol(value, &eptr, 0);
                if (*eptr != 0)
                {
                   error(_T("Invalid number '%s' in configuration file %s at line %d\n"), value, entry->getFile(), entry->getLine());
                }
                break;
             case CT_WORD:
-               *((WORD *) cfgTemplate[i].pBuffer) = (WORD) _tcstoul(value, &eptr, 0);
+               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+                   (*((INT16 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
+               {
+                  break;   // this parameter was already initialized, and override from config is forbidden
+               }
+               *((UINT16 *)cfgTemplate[i].buffer) = (UINT16)_tcstoul(value, &eptr, 0);
                if (*eptr != 0)
                {
                   error(_T("Invalid number '%s' in configuration file %s at line %d\n"), value, entry->getFile(), entry->getLine());
@@ -500,31 +504,41 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
                   || !_tcsicmp(value, _T("1")))
                {
-                  *((UINT32 *) cfgTemplate[i].pBuffer) |= cfgTemplate[i].dwBufferSize;
+                  *((UINT32 *)cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
                }
                else
                {
-                  *((UINT32 *) cfgTemplate[i].pBuffer) &= ~(cfgTemplate[i].dwBufferSize);
+                  *((UINT32 *)cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
                }
                break;
             case CT_STRING:
-               nx_strncpy((TCHAR *) cfgTemplate[i].pBuffer, value, cfgTemplate[i].dwBufferSize);
+               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+                   (*((TCHAR *)cfgTemplate[i].overrideIndicator) != 0))
+               {
+                  break;   // this parameter was already initialized, and override from config is forbidden
+               }
+               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, cfgTemplate[i].bufferSize);
                break;
             case CT_MB_STRING:
+               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+                   (*((char *)cfgTemplate[i].overrideIndicator) != 0))
+               {
+                  break;   // this parameter was already initialized, and override from config is forbidden
+               }
 #ifdef UNICODE
-               memset(cfgTemplate[i].pBuffer, 0, cfgTemplate[i].dwBufferSize);
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].pBuffer, cfgTemplate[i].dwBufferSize - 1, NULL, NULL);
+               memset(cfgTemplate[i].buffer, 0, cfgTemplate[i].bufferSize);
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, cfgTemplate[i].bufferSize - 1, NULL, NULL);
 #else
-               nx_strncpy((TCHAR *) cfgTemplate[i].pBuffer, value, cfgTemplate[i].dwBufferSize);
+               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, cfgTemplate[i].dwBufferSize);
 #endif
                break;
             case CT_STRING_LIST:
-               *((TCHAR **) cfgTemplate[i].pBuffer) = (TCHAR *) malloc(sizeof(TCHAR) * (entry->getConcatenatedValuesLength() + 1));
-               for(j = 0, curr = *((TCHAR **) cfgTemplate[i].pBuffer); j < entry->getValueCount(); j++)
+               *((TCHAR **)cfgTemplate[i].buffer) = (TCHAR *)malloc(sizeof(TCHAR) * (entry->getConcatenatedValuesLength() + 1));
+               for(j = 0, curr = *((TCHAR **) cfgTemplate[i].buffer); j < entry->getValueCount(); j++)
                {
                   _tcscpy(curr, entry->getValue(j));
                   curr += _tcslen(curr);
-                  *curr = cfgTemplate[i].cSeparator;
+                  *curr = cfgTemplate[i].separator;
                   curr++;
                }
                *curr = 0;
@@ -540,10 +554,9 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
    return (m_errorCount - initialErrorCount) == 0;
 }
 
-/*
+/**
  * Get value
  */
-
 const TCHAR * Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
 {
    const TCHAR *value;

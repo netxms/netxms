@@ -123,7 +123,7 @@ UINT32 g_dwSNMPTimeout = 3000;
 time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
-UINT32 g_debugLevel = 0;
+UINT32 g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 Config *g_config;
 #ifdef _WIN32
 UINT32 g_dwIdleTimeout = 60;   // Session idle timeout
@@ -175,52 +175,52 @@ static pid_t m_pid;
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("Action"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
-   { _T("ActionShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
-   { _T("AppAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszAppAgentList },
-   { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
-   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
-	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory },
-   { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDailyLogFileSuffix },
-	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel },
-   { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
-   { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
-   { _T("EnableArbitraryFileUpload"), CT_BOOLEAN, 0, 0, AF_ARBITRARY_FILE_UPLOAD, 0, &g_dwFlags },
-   { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
-   { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags },
-   { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags },
-   { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags },
-   { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
-   { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags },
-   { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
-	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent },
-   { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
-   { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
-   { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList },
-   { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList },
-   { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
-   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
-   { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
-   { _T("ListenPort"), CT_WORD, 0, 0, 0, 0, &g_wListenPort },
-   { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
-   { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &m_dwLogHistorySize },
-   { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &m_dwLogRotationMode },
-   { _T("LogUnresolvedSymbols"), CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
-   { _T("MasterServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList },
-   { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &m_dwMaxLogSize },
-   { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions },
-   { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix },
-   { _T("RequireAuthentication"), CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
-   { _T("RequireEncryption"), CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags },
-   { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
-   { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout },
-   { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
-	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout },
-   { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
-   { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
-   { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL },
-   { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, m_szProcessToWait },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("Action"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList, NULL },
+   { _T("ActionShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList, NULL },
+   { _T("AppAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszAppAgentList, NULL },
+   { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList, NULL },
+   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, NULL },
+	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory, NULL },
+   { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDailyLogFileSuffix, NULL },
+	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
+   { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir, NULL },
+   { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, NULL },
+   { _T("EnableArbitraryFileUpload"), CT_BOOLEAN, 0, 0, AF_ARBITRARY_FILE_UPLOAD, 0, &g_dwFlags, NULL },
+   { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers, NULL },
+   { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, NULL },
+   { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, NULL },
+   { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, NULL },
+   { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, NULL },
+   { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, NULL },
+   { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout, NULL },
+	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
+   { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList, NULL },
+   { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList, NULL },
+   { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList, NULL },
+   { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList, NULL },
+   { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore, NULL },
+   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags, NULL },
+   { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
+   { _T("ListenPort"), CT_WORD, 0, 0, 0, 0, &g_wListenPort, NULL },
+   { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, NULL },
+   { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &m_dwLogHistorySize, NULL },
+   { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &m_dwLogRotationMode, NULL },
+   { _T("LogUnresolvedSymbols"), CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags, NULL },
+   { _T("MasterServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList, NULL },
+   { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &m_dwMaxLogSize, NULL },
+   { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions, NULL },
+   { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix, NULL },
+   { _T("RequireAuthentication"), CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, NULL },
+   { _T("RequireEncryption"), CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags, NULL },
+   { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList, NULL },
+   { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, NULL },
+   { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
+	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout, NULL },
+   { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
+   { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
+   { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL, NULL },
+   { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, m_szProcessToWait, NULL },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 };
 
 /**
@@ -638,6 +638,9 @@ BOOL Initialize()
 {
    TCHAR *pItem, *pEnd;
 	TCHAR regPath[MAX_PATH];
+
+   if (g_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
+      g_debugLevel = 0;
 
    // Open log file
 	if (!(g_dwFlags & AF_USE_SYSLOG))

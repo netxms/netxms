@@ -66,22 +66,18 @@
 
 #endif   /* _WIN32 */
 
-
-//
-// Return codes for IcmpPing()
-//
-
+/**
+ * Return codes for IcmpPing()
+ */
 #define ICMP_SUCCESS          0
 #define ICMP_UNREACHEABLE     1
 #define ICMP_TIMEOUT          2
 #define ICMP_RAW_SOCK_FAILED  3
 #define ICMP_API_ERROR        3
 
-
-//
-// Token types for configuration loader
-//
-
+/**
+ * Token types for configuration loader
+ */
 #define CT_LONG         0
 #define CT_STRING       1
 #define CT_STRING_LIST  2
@@ -90,6 +86,11 @@
 #define CT_WORD         5
 #define CT_IGNORE       6
 #define CT_MB_STRING    7
+
+/**
+ * Uninitialized value for override indicator
+ */
+#define NXCONFIG_UNINITIALIZED_VALUE  (-1)
 
 /**
  * Return codes for NxLoadConfig()
@@ -676,13 +677,14 @@ public:
  */
 typedef struct
 {
-   TCHAR szToken[64];
-   BYTE iType;
-   BYTE cSeparator;     // Separator character for lists
-   WORD wListElements;  // Number of list elements, should be set to 0 before calling NxLoadConfig()
-   UINT32 dwBufferSize;  // Buffer size for strings or flag to be set for CT_BOOLEAN
-   UINT32 dwBufferPos;   // Should be set to 0
-   void *pBuffer;
+   TCHAR token[64];
+   BYTE type;
+   BYTE separator;     // Separator character for lists
+   WORD listElements;  // Number of list elements, should be set to 0 before calling NxLoadConfig()
+   UINT32 bufferSize;  // Buffer size for strings or flag to be set for CT_BOOLEAN
+   UINT32 bufferPos;   // Should be set to 0
+   void *buffer;
+   void *overrideIndicator;
 } NX_CFG_TEMPLATE;
 
 /**
@@ -694,11 +696,9 @@ typedef struct  __CODE_TO_TEXT
    const TCHAR *text;
 } CODE_TO_TEXT;
 
-
-//
-// getopt() prototype if needed
-//
-
+/**
+ * getopt() prototype if needed
+ */
 #if USE_BUNDLED_GETOPT
 #include <netxms_getopt.h>
 #endif

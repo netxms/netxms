@@ -349,8 +349,6 @@ int main(int argc, char* argv[])
       nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
 #endif
 
-   g_debugLevel = -1;
-
    if (!ParseCommandLine(argc, argv))
       return 1;
 
@@ -360,6 +358,9 @@ int main(int argc, char* argv[])
          _tprintf(_T("Error loading configuration file\n"));
       return 1;
    }
+
+   if (g_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
+      g_debugLevel = 0;
 
 	// Set exception handler
 #ifdef _WIN32

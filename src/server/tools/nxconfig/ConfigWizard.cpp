@@ -102,26 +102,26 @@ void CConfigWizard::DefaultConfig()
    {
       static NX_CFG_TEMPLATE cfgTemplate[] =
       {
-         { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, NULL },
-         { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, NULL },
-         { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, NULL },
-         { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, NULL },
-         { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, NULL },
-         { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, NULL },
-         { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, 1, 0, NULL },
-         { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, NULL },
-         { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+         { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, NULL, NULL },
+         { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, NULL, NULL },
+         { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, NULL, NULL },
+         { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, NULL, NULL },
+         { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, NULL, NULL },
+         { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, NULL, NULL },
+         { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, 1, 0, NULL, NULL },
+         { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, NULL, NULL },
+         { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
       };
       DWORD dwFlags;
 
-      cfgTemplate[0].pBuffer = m_cfg.m_szDBDriver;
-      cfgTemplate[1].pBuffer = m_cfg.m_szDBDrvParams;
-      cfgTemplate[2].pBuffer = m_cfg.m_szDBLogin;
-      cfgTemplate[3].pBuffer = m_cfg.m_szDBName;
-      cfgTemplate[4].pBuffer = m_cfg.m_szDBPassword;
-      cfgTemplate[5].pBuffer = m_cfg.m_szDBServer;
-      cfgTemplate[6].pBuffer = &dwFlags;
-      cfgTemplate[7].pBuffer = m_cfg.m_szLogFile;
+      cfgTemplate[0].buffer = m_cfg.m_szDBDriver;
+      cfgTemplate[1].buffer = m_cfg.m_szDBDrvParams;
+      cfgTemplate[2].buffer = m_cfg.m_szDBLogin;
+      cfgTemplate[3].buffer = m_cfg.m_szDBName;
+      cfgTemplate[4].buffer = m_cfg.m_szDBPassword;
+      cfgTemplate[5].buffer = m_cfg.m_szDBServer;
+      cfgTemplate[6].buffer = &dwFlags;
+      cfgTemplate[7].buffer = m_cfg.m_szLogFile;
 
 		Config config;
       if (config.loadConfig(m_cfg.m_szConfigFile, _T("server")))
