@@ -153,9 +153,7 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
 CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession *session)
 {
    if (m_connector == NULL || !m_connector->connected())
-   {
       return NULL;
-   }
 
    UINT32 originalId = request->GetId();
    UINT32 rqId = m_connector->generateMessageId();
@@ -172,7 +170,7 @@ CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession
    CSCPMessage *reply = NULL;
    if (m_connector->sendMessage(request))
    {
-      reply = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->GetId(), 10000);
+      reply = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->GetId(), 600000);
    }
 
    if (reply != NULL)

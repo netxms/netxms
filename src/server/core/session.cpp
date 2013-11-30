@@ -12440,16 +12440,30 @@ void ClientSession::querySummaryTable(CSCPMessage *request)
  */
 void ClientSession::forwardToReportingServer(CSCPMessage *request)
 {
-   TCHAR buffer[256];
-   debugPrintf(7, _T("RS: Forwarding message %s"), NXCPMessageCodeName(request->GetCode(), buffer));
+   CSCPMessage *msg = NULL;
 
-   CSCPMessage *msg = ForwardMessageToReportingServer(request, this);
-   if (msg == NULL)
+   if (checkSysAccessRights(SYSTEM_ACCESS_REPORTING_SERVER))
    {
-      msg = new CSCPMessage();
-      msg->SetCode(CMD_REQUEST_COMPLETED);
-      msg->SetId(request->GetId());
-      msg->SetVariable(VID_RCC, RCC_COMM_FAILURE);
+      TCHAR buffer[256];
+	   debugPrintf(7, _T("RS: Forwarding message %s"), NXCPMessageCodeName(request->GetCode(), buffer));
+
+	   request->SetVariable(VID_USER_NAME, getUserName());
+	   msg = ForwardMessageToReportingServer(request, this);
+	   if (msg == NULL)
+	   {
+		  msg = new CSCPMessage();
+		  msg->SetCode(CMD_REQUEST_COMPLETED);
+		  msg->SetId(request->GetId());
+		  msg->SetVariable(VID_RCC, RCC_COMM_FAILURE);
+	   }
+   }
+   else
+   {
+	   WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, 0, _T("Reporting server access denied"));
+	   msg = new CSCPMessage();
+	   msg->SetCode(CMD_REQUEST_COMPLETED);
+	   msg->SetId(request->GetId());
+	   msg->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    sendMessage(msg);
