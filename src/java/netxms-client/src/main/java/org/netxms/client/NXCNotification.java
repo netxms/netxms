@@ -63,6 +63,9 @@ public class NXCNotification extends SessionNotification
 	public static final int TRAP_CONFIGURATION_DELETED = 1018;
 	public static final int DCI_SUMMARY_TABLE_UPDATED = 1021;
 	public static final int DCI_SUMMARY_TABLE_DELETED = 1022;
+   
+	public static final int RS_SCHEDULES_MODIFIED = 1114;
+   public static final int RS_RESULTS_MODIFIED = 1115;
 
 	public static final int OBJECT_SYNC_COMPLETED = 2001;
 	

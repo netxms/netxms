@@ -59,6 +59,13 @@
                </appinfo>
             </annotation>
          </attribute>
+         <attribute name="priority" type="string" use="default" value="100">
+            <annotation>
+               <documentation>
+                  Factory with higher priority will be called first; default system factory have priority 0
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

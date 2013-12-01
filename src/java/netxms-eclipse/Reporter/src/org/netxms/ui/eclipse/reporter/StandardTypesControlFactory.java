@@ -22,7 +22,6 @@ public class StandardTypesControlFactory implements CustomControlFactory
 	{
 		FieldEditor fieldEditor = null;
 		final String type = parameter.getType();
-		System.out.println(parameter);
 		if (type.equals("START_DATE") || type.equals("END_DATE") || type.equals("TIMESTAMP"))
 		{
 			fieldEditor = new TimestampFieldEditor(parameter, toolkit, parent);

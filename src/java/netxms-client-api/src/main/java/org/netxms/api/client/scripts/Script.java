@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 NetXMS Team
+ * Copyright (C) 2003-2013 NetXMS Team
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.netxms.api.client.scripts;
 
 /**
  * NXSL script object
- *
  */
 public class Script
 {
