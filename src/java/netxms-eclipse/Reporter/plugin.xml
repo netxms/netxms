@@ -33,8 +33,7 @@
    <extension
          point="org.netxms.ui.eclipse.reporter.customfields">
       <customControlFactory
-            class="org.netxms.ui.eclipse.reporter.StandardTypesControlFactory"
-            priority="0">
+            class="org.netxms.ui.eclipse.reporter.StandardTypesControlFactory">
       </customControlFactory>
    </extension>
 

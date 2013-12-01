@@ -25,7 +25,7 @@ public class ReportResultLabelProvider extends LabelProvider implements ITableLa
 			case 0:
 				return dateFormat.format(reportResult.getExecutionTime());
 			case 1:
-				return reportResult.getUserName();
+				return String.valueOf(reportResult.getJobId());
 		}
 		return "<INTERNAL ERROR>";
 	}

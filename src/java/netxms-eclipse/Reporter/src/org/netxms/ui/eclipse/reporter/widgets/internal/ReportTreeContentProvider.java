@@ -5,9 +5,6 @@ import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.api.client.reporting.ReportDefinition;
 
-/**
- * Report tree content provider
- */
 public class ReportTreeContentProvider extends TreeNodeContentProvider
 {
 	private List<ReportDefinition> definitions;
