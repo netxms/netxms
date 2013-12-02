@@ -56,9 +56,9 @@
 #define DBEVENT_QUERY_FAILED           2
 
 
-//
-// Database syntax codes
-//
+/**
+ * Database syntax codes
+ */
 
 #define DB_SYNTAX_MYSQL    0
 #define DB_SYNTAX_PGSQL    1

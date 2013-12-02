@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2013 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2177,6 +2177,12 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
                     _T("event_severity,event_message,user_tag FROM event_log ")
                     _T("WHERE ROWNUM <= %u ORDER BY event_id DESC"), dwMaxRecords);
          break;
+      case DB_SYNTAX_DB2:
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT event_id,event_code,event_timestamp,event_source,")
+                    _T("event_severity,event_message,user_tag FROM event_log ")
+                    _T("ORDER BY event_id DESC FETCH FIRST %u ROWS ONLY"), dwMaxRecords);
+         break;
       default:
          szQuery[0] = 0;
          break;
@@ -3515,8 +3521,12 @@ static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 			_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC LIMIT %d"),
 						  (int)nodeId, condition, (int)maxRows);
 			break;
+		case DB_SYNTAX_DB2:
+		   _sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+		      (int)nodeId, condition, (int)maxRows);
+		   break;
 		default:
-			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareTDataSelect"));
+			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareIDataSelect"));
 			return NULL;	// Unsupported database
 	}
 	return DBPrepare(hdb, query);
@@ -3551,8 +3561,14 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC LIMIT %d"),
 			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
 			break;
+		case DB_SYNTAX_DB2:
+			_sntprintf(query, 512, _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d, tdata_records_%d rec, tdata_rows_%d r")
+			                       _T(" WHERE d.item_id=? AND rec.record_id=d.record_id AND rec.instance=? AND r.row_id=rec.row_id")
+										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
+			break;
 		default:
-			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareIDataSelect"));
+			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareTDataSelect"));
 			return NULL;	// Unsupported database
 	}
 	return DBPrepare(hdb, query);
@@ -7637,6 +7653,12 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
                     _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
                     _T("WHERE ROWNUM <= %u ORDER BY msg_id DESC"), dwMaxRecords);
          break;
+      case DB_SYNTAX_DB2:
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
+                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
+                    _T("ORDER BY msg_id DESC FETCH FIRST %u ROWS ONLY"), dwMaxRecords);
+         break;
       default:
          szQuery[0] = 0;
          break;
@@ -7765,6 +7787,12 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
                        _T("SELECT trap_id,trap_timestamp,ip_addr,object_id,")
                        _T("trap_oid,trap_varlist FROM snmp_trap_log ")
                        _T("WHERE ROWNUM <= %u ORDER BY trap_id DESC"),
+                       dwMaxRecords);
+         case DB_SYNTAX_DB2:
+            _sntprintf(szQuery, 1024,
+                       _T("SELECT trap_id,trap_timestamp,ip_addr,object_id,")
+                       _T("trap_oid,trap_varlist FROM snmp_trap_log ")
+                       _T("ORDER BY trap_id DESC FETCH FIRST %u ROWS ONLY"),
                        dwMaxRecords);
             break;
          default:
