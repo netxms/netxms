@@ -6,9 +6,9 @@ Bundle-Version: 1.2.10
 Bundle-Activator: org.netxms.ui.eclipse.filemanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
- org.eclipse.rap.ui;bundle-version="2.0.0",
+ org.eclipse.rap.ui;bundle-version="2.2.0",
  org.netxms.webui.core;bundle-version="1.2.10",
- org.eclipse.rap.rwt.supplemental.filedialog;bundle-version="2.0.0"
+ org.eclipse.rap.addons.filedialog;bundle-version="0.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.filemanager.widgets

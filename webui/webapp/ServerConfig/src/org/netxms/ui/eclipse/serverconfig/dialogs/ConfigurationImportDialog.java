@@ -92,8 +92,6 @@ public class ConfigurationImportDialog extends Dialog
 			{
 				FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
 				fd.setText(Messages.get().ConfigurationImportDialog_SelectFile);
-				fd.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-				fd.setFilterNames(new String[] { Messages.get().ConfigurationImportDialog_FileTypeXML, Messages.get().ConfigurationImportDialog_FileTypeAll });
 				String selected = fd.open();
 				if (selected != null)
 					textFileName.setText(selected);

@@ -364,12 +364,13 @@ CTabFolder {
   background-color: #f0f0f0;
   border-color: #A4A4A4;
   border-radius: 2px;
+  border: 1px;
 }
 
 CTabItem {
   font: 12px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   color: #4a4a4a;
-  background-color: white;
+  background-color: #f0f0f0;
   background-image: none;
   padding: 3px 6px 3px 5px;
   spacing: 4px;

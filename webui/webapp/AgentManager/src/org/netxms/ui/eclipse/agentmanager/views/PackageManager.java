@@ -297,8 +297,6 @@ public class PackageManager extends ViewPart
 	{
 		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
 		fd.setText(Messages.get().PackageManager_SelectFile);
-		fd.setFilterExtensions(new String[] { "*.npi", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-		fd.setFilterNames(new String[] { Messages.get().PackageManager_FileTypePackage, Messages.get().PackageManager_FileTypeAll });
 		String npiName = fd.open();
 		if (npiName != null)
 		{

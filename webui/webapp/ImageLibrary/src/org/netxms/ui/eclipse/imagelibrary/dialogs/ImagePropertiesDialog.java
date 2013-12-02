@@ -81,8 +81,6 @@ public class ImagePropertiesDialog extends Dialog
 					{
 						FileDialog dialog = new FileDialog(shell, SWT.OPEN);
 						dialog.setText(Messages.get().ImagePropertiesDialog_Title);
-						dialog.setFilterNames(new String[] { Messages.get().ImagePropertiesDialog_ImageFiles, Messages.get().ImagePropertiesDialog_AllFiles });
-						dialog.setFilterExtensions(new String[] { "*.jpg;*.jpeg;*.png;*.bmp", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
 						final String selectedFile = dialog.open();
 						if (selectedFile != null)
 						{

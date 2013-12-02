@@ -56,8 +56,6 @@ public class LocalFileSelector extends AbstractSelector
 	{
 		FileDialog fd = new FileDialog(getShell(), selectorType);
 		fd.setText(Messages.get().LocalFileSelector_SelectFile);
-		fd.setFilterExtensions(filterExtensions);
-		fd.setFilterNames(filterNames);
 		String selected = fd.open();
 		if (selected != null)
 			setFile(new File(selected));

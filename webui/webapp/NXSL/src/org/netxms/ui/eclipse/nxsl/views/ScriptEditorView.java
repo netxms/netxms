@@ -33,7 +33,6 @@ import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;

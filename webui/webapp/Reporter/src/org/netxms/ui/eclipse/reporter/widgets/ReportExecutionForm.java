@@ -347,9 +347,6 @@ public class ReportExecutionForm extends Composite
 		nameTemplate.append(format.getExtension());
 
 		FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
-		fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
-		fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" });
-		fileDialog.setFileName(nameTemplate.toString());
 		final String fileName = fileDialog.open();
 
 		if (fileName != null)
