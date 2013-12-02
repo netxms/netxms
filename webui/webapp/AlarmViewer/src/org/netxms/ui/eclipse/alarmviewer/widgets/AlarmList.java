@@ -475,7 +475,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().AcknowledgeAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get(getDisplay()).AcknowledgeAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -510,7 +510,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().AlarmList_ResolveAlarm, alarms.length);
+				monitor.beginTask(Messages.get(getDisplay()).AlarmList_ResolveAlarm, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -544,7 +544,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().TerminateAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get(getDisplay()).TerminateAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
