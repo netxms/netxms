@@ -188,12 +188,24 @@
       </context>
    </extension>
    <extension
+         point="org.eclipse.ui.presentationFactories">
+      <factory
+            class="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
+            id="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
+            name="NetXMS Console Presentation Factory">
+      </factory>
+   </extension>
+   <extension
          point="org.eclipse.rap.ui.branding">
       <branding
             favicon="icons/favicon.png"
             id="org.netxms.webui.design.branding.classic"
             themeId="org.netxms.webui.design.theme.classic"
             title="NetXMS Management Console">
+         <presentationFactory
+               id="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
+               viewActionsVisible="true">
+         </presentationFactory>
       </branding>
    </extension>
    <extension

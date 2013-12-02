@@ -267,5 +267,13 @@
             splashId="org.netxms.ui.eclipse.console.SplashHandler">
       </splashHandlerProductBinding>
    </extension>
+   <extension
+         point="org.eclipse.ui.presentationFactories">
+      <factory
+            class="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
+            id="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
+            name="NetXMS Console Presentation Factory">
+      </factory>
+   </extension>
 
 </plugin>
