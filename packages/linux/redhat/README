@@ -11,6 +11,7 @@ Required tool packages (the list is not comprehensive yet):
 > gcc-c++
 > bison-devel
 > flex-devel
+> rpmdevtools
 
 Required development packages:
 > openssl-devel
