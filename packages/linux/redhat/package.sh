@@ -46,8 +46,7 @@ function check_ver {
     [[ "$($1 --version)" =~ ([0-9].[0-9]*.[0-9]*) ]] && \
         ver="${BASH_REMATCH[1]}" || return 1
         
-    compare_ver "$ver" "$2"
-    return $?
+    return $(compare_ver "$ver" "$2")
 }
 
 function compare_ver {
@@ -164,8 +163,7 @@ fi
 
 cd "$build_dir/$source"
 
-if [ !$(compare_ver "$ver" 1.2.10) ]
-then
+$(compare_ver "$ver" 1.2.10) || \
     #Macro hacks
     sed -i \
         -e 's;-DPREFIX=\(L\?\)["\${}a-zA-Z_]*;-DPREFIX=\1\\\\\\"/usr\\\\\\";' \
@@ -174,7 +172,6 @@ then
         -e 's;-DLIBDIR=\(L\?\)["\${}a-zA-Z_]*;-DLIBDIR=\1\\\\\\"/usr/lib\\\\\\";' \
         -e 's;-DPKGLIBDIR=\(L\?\)["\${}a-zA-Z_]*;-DPKGLIBDIR=\1\\\\\\"/usr/lib/netxms\\\\\\"";' \
         configure.ac
-fi
 
 echo -n "Configuring sources..."
 ./reconf &> /dev/null
