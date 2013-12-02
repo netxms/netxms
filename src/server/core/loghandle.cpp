@@ -145,6 +145,7 @@ bool LogHandle::queryInternal(INT64 *rowCount)
 		case DB_SYNTAX_SQLITE:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_MYSQL:
+		case DB_SYNTAX_DB2:
 			query.addFormattedString(_T("SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 	}

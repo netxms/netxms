@@ -1013,6 +1013,11 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
                                  _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
                        m_pNode->Id(), m_dwId, dwRequiredSize);
                break;
+            case DB_SYNTAX_DB2:
+               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+                  _T("WHERE item_id=%d ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+                  m_pNode->Id(), m_dwId, dwRequiredSize);
+               break;
             default:
                _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                                  _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
