@@ -61,13 +61,11 @@ struct NETIF
 	IPADDR ipAddrList[MAX_IPADDR_COUNT];
 };
 
-
-//
-// Find interface name by interface index
-//
-
 #if HAVE_DECL_SIOCGIFNAME
 
+/**
+ * Find interface name by interface index
+ */
 static char *IfIndexToName(int index, char *buffer)
 {
 	int fd;
@@ -91,13 +89,11 @@ static char *IfIndexToName(int index, char *buffer)
 
 #endif
 
-
-//
-// Find interface index by name
-//
-
 #if HAVE_DECL_SIOCGIFINDEX
 
+/**
+ * Find interface index by name
+ */
 static int IfNameToIndex(const char *name)
 {
 	int fd, index = -1;
@@ -119,11 +115,9 @@ static int IfNameToIndex(const char *name)
 
 #endif
 
-
-//
-// Get interface list
-//
-
+/**
+ * Get interface list
+ */
 static int GetInterfaceList(NETIF **iflist)
 {
 	nmapi_iftable ift[1024];
@@ -228,11 +222,9 @@ static int GetInterfaceList(NETIF **iflist)
 	return ifcount;
 }
 
-
-//
-// Handler for Net.InterfaceList enum
-//
-
+/**
+ * Handler for Net.InterfaceList enum
+ */
 LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int i, j, ifCount;
@@ -269,11 +261,9 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for Net.ArpCache enum
-//
-
+/**
+ * Handler for Net.ArpCache enum
+ */
 LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int i, mib;
@@ -310,11 +300,9 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for Net.IP.Forwarding parameter
-//
-
+/**
+ * Handler for Net.IP.Forwarding parameter
+ */
 LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 {
 	int ipVer = CAST_FROM_POINTER(pArg, int);

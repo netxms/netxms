@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -25,13 +25,14 @@
 
 #include <nms_util.h>
 
-
-//
-// Queue class
-//
-
+/**
+ * Comparator for queue search
+ */
 typedef bool (*QUEUE_COMPARATOR)(void *key, void *object);
 
+/**
+ * Queue class
+ */
 class LIBNETXMS_EXPORTABLE Queue
 {
 private:
@@ -45,9 +46,9 @@ private:
    UINT32 m_dwBufferIncrement;
 	BOOL m_bShutdownFlag;
 
-	void CommonInit();
-   void Lock() { MutexLock(m_mutexQueueAccess); }
-   void Unlock() { MutexUnlock(m_mutexQueueAccess); }
+	void commonInit();
+   void lock() { MutexLock(m_mutexQueueAccess); }
+   void unlock() { MutexUnlock(m_mutexQueueAccess); }
 
 public:
    Queue();

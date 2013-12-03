@@ -23,21 +23,17 @@
 #ifndef _nxlog_h_
 #define _nxlog_h_
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define MAX_OBJECT_NAME          64
 #define MAX_LOG_MSG_LENGTH       1024
 #define MAX_SYSLOG_HOSTNAME_LEN  128
 #define MAX_SYSLOG_TAG_LEN       33
 
-
-//
-// Syslog severity codes
-//
-
+/**
+ * Syslog severity codes
+ */
 #define SYSLOG_SEVERITY_EMERGENCY      0
 #define SYSLOG_SEVERITY_ALERT          1
 #define SYSLOG_SEVERITY_CRITICAL       2
@@ -47,30 +43,25 @@
 #define SYSLOG_SEVERITY_INFORMATIONAL  6
 #define SYSLOG_SEVERITY_DEBUG          7
 
-
-//
-// Policy flags
-//
-
+/**
+ * Policy flags
+ */
 #define NX_LPPF_WINDOWS_EVENT_LOG      0x0001
 #define NX_LPPF_REPORT_UNMATCHED       0x0002
 
-
-//
-// Syslog message structure
-//
-
+/**
+ * Syslog message structure
+ */
 typedef struct
 {
-   QWORD qwMsgId;       // NetXMS internal message ID
+   UINT64 qwMsgId;       // NetXMS internal message ID
    time_t tmTimeStamp;
-   int nFacility;
-   int nSeverity;
+   INT32 nFacility;
+   INT32 nSeverity;
    UINT32 dwSourceObject;
    char szHostName[MAX_SYSLOG_HOSTNAME_LEN];
    char szTag[MAX_SYSLOG_TAG_LEN];
    char szMessage[MAX_LOG_MSG_LENGTH];
 } NX_SYSLOG_RECORD;
-
 
 #endif

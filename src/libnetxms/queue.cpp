@@ -30,7 +30,7 @@ Queue::Queue(UINT32 dwInitialSize, UINT32 dwBufferIncrement)
 {
    m_dwBufferSize = dwInitialSize;
    m_dwBufferIncrement = dwBufferIncrement;
-	CommonInit();
+	commonInit();
 }
 
 /**
@@ -40,15 +40,13 @@ Queue::Queue()
 {
    m_dwBufferSize = 256;
    m_dwBufferIncrement = 32;
-	CommonInit();
+	commonInit();
 }
 
-
-//
-// Common initialization (used by all constructors)
-//
-
-void Queue::CommonInit()
+/**
+ * Common initialization (used by all constructors)
+ */
+void Queue::commonInit()
 {
    m_mutexQueueAccess = MutexCreate();
    m_condWakeup = ConditionCreate(FALSE);
@@ -59,11 +57,9 @@ void Queue::CommonInit()
 	m_bShutdownFlag = FALSE;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 Queue::~Queue()
 {
    MutexDestroy(m_mutexQueueAccess);
@@ -71,14 +67,12 @@ Queue::~Queue()
    safe_free(m_pElements);
 }
 
-
-//
-// Put new element into queue
-//
-
+/**
+ * Put new element into queue
+ */
 void Queue::Put(void *pElement)
 {
-   Lock();
+   lock();
    if (m_dwNumElements == m_dwBufferSize)
    {
       // Extend buffer
@@ -95,17 +89,15 @@ void Queue::Put(void *pElement)
       m_dwLast = 0;
    m_dwNumElements++;
    ConditionSet(m_condWakeup);
-   Unlock();
+   unlock();
 }
 
-
-//
-// Insert new element into the beginning of a queue
-//
-
+/**
+ * Insert new element into the beginning of a queue
+ */
 void Queue::Insert(void *pElement)
 {
-   Lock();
+   lock();
    if (m_dwNumElements == m_dwBufferSize)
    {
       // Extend buffer
@@ -122,19 +114,17 @@ void Queue::Insert(void *pElement)
    m_pElements[--m_dwFirst] = pElement;
    m_dwNumElements++;
    ConditionSet(m_condWakeup);
-   Unlock();
+   unlock();
 }
 
-
-//
-// Get object from queue. Return NULL if queue is empty
-//
-
+/**
+ * Get object from queue. Return NULL if queue is empty
+ */
 void *Queue::Get()
 {
    void *pElement = NULL;
 
-   Lock();
+   lock();
 	if (m_bShutdownFlag)
 	{
 		pElement = INVALID_POINTER_VALUE;
@@ -149,15 +139,13 @@ void *Queue::Get()
 			m_dwNumElements--;
 		}
    }
-   Unlock();
+   unlock();
    return pElement;
 }
 
-
-//
-// Get object from queue or block if queue if empty
-//
-
+/**
+ * Get object from queue or block if queue if empty
+ */
 void *Queue::GetOrBlock()
 {
    void *pElement;
@@ -176,47 +164,41 @@ void *Queue::GetOrBlock()
    return pElement;
 }
 
-
-//
-// Clear queue
-//
-
+/**
+ * Clear queue
+ */
 void Queue::Clear()
 {
-   Lock();
+   lock();
    m_dwNumElements = 0;
    m_dwFirst = 0;
    m_dwLast = 0;
-   Unlock();
+   unlock();
 }
 
-
-//
-// Set shutdown flag
-// When this flag is set, Get() always return INVALID_POINTER_VALUE
-//
-
+/**
+ * Set shutdown flag
+ * When this flag is set, Get() always return INVALID_POINTER_VALUE
+ */
 void Queue::SetShutdownMode()
 {
-	Lock();
+	lock();
 	m_bShutdownFlag = TRUE;
 	ConditionSet(m_condWakeup);
-	Unlock();
+	unlock();
 }
 
-
-//
-// Find element in queue using given key and comparator
-// Returns pointer to element or NULL if element was not found.
-// Element remains in the queue
-//
-
+/**
+ * Find element in queue using given key and comparator
+ * Returns pointer to element or NULL if element was not found.
+ * Element remains in the queue
+ */
 void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
 {
 	void *element = NULL;
 	UINT32 i, pos;
 
-	Lock();
+	lock();
 	for(i = 0, pos = m_dwFirst; i < m_dwNumElements; i++)
 	{
 		if ((m_pElements[pos] != NULL) && comparator(key, m_pElements[pos]))
@@ -228,23 +210,20 @@ void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
 		if (pos == m_dwBufferSize)
 			pos = 0;
 	}
-	Unlock();
+	unlock();
 	return element;
 }
 
-
-//
-// Find element in queue using given key and comparator
-// Returns pointer to element or NULL if element was not found.
-// Element remains in the queue
-//
-
+/**
+ * Find element in queue using given key and comparator and remove it.
+ * Returns true if element was removed.
+ */
 bool Queue::remove(void *key, QUEUE_COMPARATOR comparator)
 {
 	bool success = false;
 	UINT32 i, pos;
 
-	Lock();
+	lock();
 	for(i = 0, pos = m_dwFirst; i < m_dwNumElements; i++)
 	{
 		if ((m_pElements[pos] != NULL) && comparator(key, m_pElements[pos]))
@@ -257,6 +236,6 @@ bool Queue::remove(void *key, QUEUE_COMPARATOR comparator)
 		if (pos == m_dwBufferSize)
 			pos = 0;
 	}
-	Unlock();
+	unlock();
 	return success;
 }
