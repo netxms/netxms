@@ -50,7 +50,7 @@ const TCHAR *g_pszSqlType[6][3] =
 /**
  * Static data
  */
-static char m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE_A;
+static char m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");

@@ -1932,57 +1932,6 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
-AC_MSG_CHECKING(whether iconv supports ISO8859-1)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
-#if HAVE_ICONV_H
-#include <iconv.h>
-#endif
-     ], [
-     return iconv_open("UTF-8","ISO8859-1")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_ISO8859_1, 1, Define to 1 if iconv supports ISO8859-1)
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
-
-AC_MSG_CHECKING(whether iconv supports ISO-8859-1)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
-#if HAVE_ICONV_H
-#include <iconv.h>
-#endif
-     ], [
-     return iconv_open("UTF-8","ISO-8859-1")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_ISO_8859_1, 1, Define to 1 if iconv supports ISO-8859-1)
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
-
-AC_MSG_CHECKING(whether iconv supports ASCII)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
-#if HAVE_ICONV_H
-#include <iconv.h>
-#endif
-     ], [
-     return iconv_open("UTF-8","ASCII")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_ASCII, 1, Define to 1 if iconv supports ASCII)
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
-
 AC_MSG_CHECKING(whether iconv supports //IGNORE)
 AC_RUN_IFELSE(
   [AC_LANG_PROGRAM([

@@ -51,8 +51,7 @@
 // Windows always use UCS-2
 #define UNICODE_UCS2				1
 
-#define ICONV_DEFAULT_CODEPAGE_A    "ACP"
-#define ICONV_DEFAULT_CODEPAGE_W    L"ACP"
+#define ICONV_DEFAULT_CODEPAGE    "ACP"
 
 #ifdef UNICODE
 
@@ -61,16 +60,12 @@
 
 #define _ERR_error_tstring		ERR_error_string_W
 
-#define ICONV_DEFAULT_CODEPAGE      ICONV_DEFAULT_CODEPAGE_W
-
 #else	/* !UNICODE */
 
 #define _tcstoll  strtoll
 #define _tcstoull strtoull
 
 #define _ERR_error_tstring		ERR_error_string
-
-#define ICONV_DEFAULT_CODEPAGE      ICONV_DEFAULT_CODEPAGE_A
 
 #endif	/* UNICODE */
 
@@ -343,25 +338,7 @@
 #define WC_DEFAULTCHAR     0x00000004
 
 // Default codepage for iconv()
-#if HAVE_ICONV_ISO_8859_1
-#define ICONV_DEFAULT_CODEPAGE_A "ISO-8859-1"
-#define ICONV_DEFAULT_CODEPAGE_W L"ISO-8859-1"
-#elif HAVE_ICONV_ISO8859_1
-#define ICONV_DEFAULT_CODEPAGE_A "ISO8859-1"
-#define ICONV_DEFAULT_CODEPAGE_W L"ISO8859-1"
-#elif HAVE_ICONV_ASCII
-#define ICONV_DEFAULT_CODEPAGE_A "ASCII"
-#define ICONV_DEFAULT_CODEPAGE_W L"ASCII"
-#else
-#define ICONV_DEFAULT_CODEPAGE_A ""
-#define ICONV_DEFAULT_CODEPAGE_W L""
-#endif
-
-#ifdef UNICODE
-#define ICONV_DEFAULT_CODEPAGE ICONV_DEFAULT_CODEPAGE_W
-#else
-#define ICONV_DEFAULT_CODEPAGE ICONV_DEFAULT_CODEPAGE_A
-#endif
+#define ICONV_DEFAULT_CODEPAGE "ASCII"
 
 #endif	/* _WIN32 */
 

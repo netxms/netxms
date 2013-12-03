@@ -37,4 +37,6 @@ BEGIN TRANSACTION;
 // End transaction
 #if defined(DB_POSTGRESQL) || defined(DB_SQLITE)
 COMMIT TRANSACTION;
+#elif defined(DB_DB2)
+COMMIT;
 #endif
