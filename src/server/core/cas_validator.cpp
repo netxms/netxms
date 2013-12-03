@@ -156,7 +156,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    SSL *ssl = NULL;
    X509 *s_cert = NULL;
    char buf[4096];
-   char *full_request, *str;
+   char *full_request = NULL, *str;
    char netid[14];
    char parsebuf[128];
 
@@ -279,6 +279,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    /* cleanup and return */
 
 end:
+   safe_free(full_request);
    if (ssl) SSL_shutdown(ssl);
    if (s != INVALID_SOCKET) closesocket(s);
    if (ssl) SSL_free(ssl);

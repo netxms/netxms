@@ -114,7 +114,7 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 	msg->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
 	msg->GetVariableStr(VID_VALUE, value, MAX_RESULT_LENGTH);
 
-   Node *sender;
+   Node *sender = NULL;
 	if (m_nodeId != 0)
 		sender = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (sender == NULL)
