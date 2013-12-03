@@ -529,7 +529,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                memset(cfgTemplate[i].buffer, 0, cfgTemplate[i].bufferSize);
                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, cfgTemplate[i].bufferSize - 1, NULL, NULL);
 #else
-               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, cfgTemplate[i].dwBufferSize);
+               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, cfgTemplate[i].bufferSize);
 #endif
                break;
             case CT_STRING_LIST:
