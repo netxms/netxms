@@ -143,34 +143,23 @@ int GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
  */
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
 {
-   CSCPMessage msg;
-   UINT32 graphId;
-   TCHAR szQuery[16384];
+   TCHAR szQuery[256];
    GRAPH_ACL_ENTRY *pACL = NULL;
-   int nACLSize;
    DB_RESULT hResult;
    GRAPH_ACL_AND_ID result;
    result.graphId = 0;
 
    // Check existence and access rights
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id FROM graphs WHERE name='%s'"), graphName);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id FROM graphs WHERE name=%s"), 
+              (const TCHAR *)DBPrepareString(g_hCoreDB, graphName));
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         graphId = DBGetFieldULong(hResult, 0, 0);
-         pACL = LoadGraphACL(graphId, &nACLSize);
-         if (nACLSize != -1)
-         {
-            result.graphId = graphId;
-            result.status = RCC_OBJECT_ALREADY_EXISTS;
-         }
-         else
-         {
-            result.status = RCC_DB_FAILURE;
-         }
+         result.graphId = DBGetFieldULong(hResult, 0, 0);
+         result.status = RCC_OBJECT_ALREADY_EXISTS;
       }
       else
       {

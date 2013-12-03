@@ -29,7 +29,7 @@ Table::Table() : RefCountObject()
 {
    m_nNumRows = 0;
    m_nNumCols = 0;
-   m_ppData = NULL;
+   m_data = NULL;
 	m_title = NULL;
    m_source = DS_INTERNAL;
    m_columns = new ObjectArray<TableColumnDefinition>(8, 8, true);
@@ -51,9 +51,9 @@ Table::Table(Table *src) : RefCountObject()
 {
    m_nNumRows = src->m_nNumRows;
    m_nNumCols = src->m_nNumCols;
-   m_ppData = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * m_nNumCols);
+   m_data = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * m_nNumCols);
 	for(int i = 0; i < m_nNumCols * m_nNumRows; i++)
-      m_ppData[i] = _tcsdup(CHECK_NULL_EX(src->m_ppData[i]));
+      m_data[i] = _tcsdup(CHECK_NULL_EX(src->m_data[i]));
    m_title = (src->m_title != NULL) ? _tcsdup(src->m_title) : NULL;
    m_source = src->m_source;
    m_columns = new ObjectArray<TableColumnDefinition>(m_nNumCols, 8, true);
@@ -80,8 +80,8 @@ void Table::destroy()
    m_columns->clear();
 
    for(i = 0; i < m_nNumRows * m_nNumCols; i++)
-      safe_free(m_ppData[i]);
-   safe_free(m_ppData);
+      safe_free(m_data[i]);
+   safe_free(m_data);
 
 	safe_free(m_title);
 }
@@ -117,9 +117,9 @@ void Table::createFromMessage(CSCPMessage *msg)
       }
    }
 
-	m_ppData = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols * m_nNumRows);
+	m_data = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols * m_nNumRows);
 	for(i = 0, dwId = VID_TABLE_DATA_BASE; i < m_nNumCols * m_nNumRows; i++)
-		m_ppData[i] = msg->GetVariableStr(dwId++);
+		m_data[i] = msg->GetVariableStr(dwId++);
 }
 
 /**
@@ -157,7 +157,7 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 	{
 		for(col = 0; col < m_nNumCols; col++) 
 		{
-			TCHAR *tmp = m_ppData[i++];
+			TCHAR *tmp = m_data[i++];
 			msg.SetVariable(id++, CHECK_NULL_EX(tmp));
 		}
 	}
@@ -182,13 +182,13 @@ int Table::addColumn(const TCHAR *name, INT32 dataType, const TCHAR *displayName
       ppNewData = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * (m_nNumCols + 1));
       for(i = 0, nPosOld = 0, nPosNew = 0; i < m_nNumRows; i++)
       {
-         memcpy(&ppNewData[nPosNew], &m_ppData[nPosOld], sizeof(TCHAR *) * m_nNumCols);
+         memcpy(&ppNewData[nPosNew], &m_data[nPosOld], sizeof(TCHAR *) * m_nNumCols);
          ppNewData[nPosNew + m_nNumCols] = NULL;
          nPosOld += m_nNumCols;
          nPosNew += m_nNumCols + 1;
       }
-      safe_free(m_ppData);
-      m_ppData = ppNewData;
+      safe_free(m_data);
+      m_data = ppNewData;
    }
 
    m_nNumCols++;
@@ -216,8 +216,8 @@ int Table::addRow()
 {
    if (m_nNumCols > 0)
    {
-      m_ppData = (TCHAR **)realloc(m_ppData, sizeof(TCHAR *) * (m_nNumRows + 1) * m_nNumCols);
-      memset(&m_ppData[m_nNumRows * m_nNumCols], 0, sizeof(TCHAR *) * m_nNumCols);
+      m_data = (TCHAR **)realloc(m_data, sizeof(TCHAR *) * (m_nNumRows + 1) * m_nNumCols);
+      memset(&m_data[m_nNumRows * m_nNumCols], 0, sizeof(TCHAR *) * m_nNumCols);
    }
    m_nNumRows++;
 	return m_nNumRows - 1;
@@ -232,9 +232,9 @@ void Table::deleteRow(int row)
       return;
 
    for(int i = 0; i < m_nNumCols; i++)
-      safe_free(m_ppData[row * m_nNumCols + i]);
+      safe_free(m_data[row * m_nNumCols + i]);
    m_nNumRows--;
-   memmove(&m_ppData[row * m_nNumCols], &m_ppData[(row + 1) * m_nNumCols], sizeof(TCHAR *) * (m_nNumRows - row) * m_nNumCols);
+   memmove(&m_data[row * m_nNumCols], &m_data[(row + 1) * m_nNumCols], sizeof(TCHAR *) * (m_nNumRows - row) * m_nNumCols);
 }
 
 /**
@@ -253,17 +253,19 @@ void Table::deleteColumn(int col)
       {
          if (j == col)
          {
-            safe_free(m_ppData[spos]);
+            safe_free(m_data[spos]);
          }
          else
          {
-            data[dpos++] = m_ppData[spos];
+            data[dpos++] = m_data[spos];
          }
          spos++;
       }
    }
    m_columns->remove(col);
    m_nNumCols--;
+   safe_free(m_data);
+   m_data = data;
 }
 
 /**
@@ -275,8 +277,8 @@ void Table::setAt(int nRow, int nCol, const TCHAR *pszData)
        (nCol < 0) || (nCol >= m_nNumCols))
       return;
 
-   safe_free(m_ppData[nRow * m_nNumCols + nCol]);
-   m_ppData[nRow * m_nNumCols + nCol] = _tcsdup(pszData);
+   safe_free(m_data[nRow * m_nNumCols + nCol]);
+   m_data[nRow * m_nNumCols + nCol] = _tcsdup(pszData);
 }
 
 /**
@@ -288,8 +290,8 @@ void Table::setPreallocatedAt(int nRow, int nCol, TCHAR *pszData)
        (nCol < 0) || (nCol >= m_nNumCols))
       return;
 
-   safe_free(m_ppData[nRow * m_nNumCols + nCol]);
-   m_ppData[nRow * m_nNumCols + nCol] = pszData;
+   safe_free(m_data[nRow * m_nNumCols + nCol]);
+   m_data[nRow * m_nNumCols + nCol] = pszData;
 }
 
 /**
@@ -356,7 +358,7 @@ const TCHAR *Table::getAsString(int nRow, int nCol)
        (nCol < 0) || (nCol >= m_nNumCols))
       return NULL;
 
-   return m_ppData[nRow * m_nNumCols + nCol];
+   return m_data[nRow * m_nNumCols + nCol];
 }
 
 INT32 Table::getAsInt(int nRow, int nCol)
@@ -410,15 +412,15 @@ void Table::addAll(Table *src)
    if (m_nNumCols != src->m_nNumCols)
       return;
 
-   m_ppData = (TCHAR **)realloc(m_ppData, sizeof(TCHAR *) * (m_nNumRows + src->m_nNumRows) * m_nNumCols);
+   m_data = (TCHAR **)realloc(m_data, sizeof(TCHAR *) * (m_nNumRows + src->m_nNumRows) * m_nNumCols);
    int dpos = m_nNumRows * m_nNumCols;
    int spos = 0;
    for(int i = 0; i < src->m_nNumRows; i++)
    {
       for(int j = 0; j < m_nNumCols; j++)
       {
-         const TCHAR *value = src->m_ppData[spos++];
-         m_ppData[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
+         const TCHAR *value = src->m_data[spos++];
+         m_data[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
       }
    }
    m_nNumRows += src->m_nNumRows;
@@ -435,13 +437,13 @@ void Table::copyRow(Table *src, int row)
    if ((row < 0) || (row >= src->m_nNumRows))
       return;
 
-   m_ppData = (TCHAR **)realloc(m_ppData, sizeof(TCHAR *) * (m_nNumRows + 1) * m_nNumCols);
+   m_data = (TCHAR **)realloc(m_data, sizeof(TCHAR *) * (m_nNumRows + 1) * m_nNumCols);
    int dpos = m_nNumRows * m_nNumCols;
    int spos = row * src->m_nNumCols;
    for(int i = 0; i < m_nNumCols; i++)
    {
-      const TCHAR *value = src->m_ppData[spos++];
-      m_ppData[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
+      const TCHAR *value = src->m_data[spos++];
+      m_data[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
    }
    m_nNumRows++;
 }
@@ -457,7 +459,7 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
       return;
    }
 
-   TCHAR **data = m_ppData + row * m_nNumCols;
+   TCHAR **data = m_data + row * m_nNumCols;
    String instance;
    bool first = true;
    for(int i = 0; i < m_nNumCols; i++)

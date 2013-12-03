@@ -558,7 +558,7 @@ class LIBNETXMS_EXPORTABLE Table : public RefCountObject
 private:
    int m_nNumRows;
    int m_nNumCols;
-   TCHAR **m_ppData;
+   TCHAR **m_data;
    ObjectArray<TableColumnDefinition> *m_columns;
 	TCHAR *m_title;
    int m_source;

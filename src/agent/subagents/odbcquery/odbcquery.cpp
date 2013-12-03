@@ -160,7 +160,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 
 static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 {
-   TCHAR *ptr, *pszLine, *pszName = NULL;
+   TCHAR *ptr, *pszLine = NULL, *pszName = NULL;
 	TCHAR *pszSrc = NULL, *pszQuery = NULL, *pszPollInterval = NULL;
 	DWORD dwPollInterval = 0;
    BOOL bResult = FALSE;
@@ -254,7 +254,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 	AgentWriteDebugLog(1, _T("ODBC: query \"%s\" successfully registered"), pszQuery);
 
 finish_add_query:
-   free(pszLine);
+   safe_free(pszLine);
    return bResult;
 }
 

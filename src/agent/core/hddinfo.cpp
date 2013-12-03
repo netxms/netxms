@@ -194,12 +194,12 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
             case _T('M'):   // Model
 #if defined UNICODE
 				memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40); // has bug
-				pbValue[40] = 0;
-               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 40);
+				pbValue[41] = 0;
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 41);
                StrStrip(pValue);
 #else
 			   memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40); //
-               pValue[40] = 0;
+               pValue[41] = 0;
                StrStrip(pValue);
 #endif
                nRet = SYSINFO_RC_SUCCESS;
@@ -207,12 +207,12 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
             case _T('N'):   // Serial number
 #if defined UNICODE
 			   memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20); // has bug
-			   pbValue[20] = 0;
-               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 20);
+			   pbValue[21] = 0;
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 21);
                StrStrip(pValue); 
 #else
 			   memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20); //
-               pValue[20] = 0;
+               pValue[21] = 0;
                StrStrip(pValue);
 #endif
                nRet = SYSINFO_RC_SUCCESS;

@@ -2146,16 +2146,13 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
+         dwNumRows = 0;
          hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM event_log"));
          if (hTempResult != NULL)
          {
             if (DBGetNumRows(hTempResult) > 0)
             {
                dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
-            }
-            else
-            {
-               dwNumRows = 0;
             }
             DBFreeResult(hTempResult);
          }
@@ -7622,16 +7619,13 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
+         dwNumRows = 0;
          hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM syslog"));
          if (hTempResult != NULL)
          {
             if (DBGetNumRows(hTempResult) > 0)
             {
                dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
-            }
-            else
-            {
-               dwNumRows = 0;
             }
             DBFreeResult(hTempResult);
          }
@@ -7757,16 +7751,13 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
          case DB_SYNTAX_MYSQL:
          case DB_SYNTAX_PGSQL:
          case DB_SYNTAX_SQLITE:
+            dwNumRows = 0;
             hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM snmp_trap_log"));
             if (hTempResult != NULL)
             {
                if (DBGetNumRows(hTempResult) > 0)
                {
                   dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
-               }
-               else
-               {
-                  dwNumRows = 0;
                }
                DBFreeResult(hTempResult);
             }
