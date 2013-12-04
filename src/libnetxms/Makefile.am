@@ -10,9 +10,9 @@ SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp dirw_unix.c \
 lib_LTLIBRARIES = libnetxms.la
 
 if HPUX_HPPA
-libnetxms_la_SOURCES = $(SOURCES)
-else
 libnetxms_la_SOURCES = ldcw.s $(SOURCES)
+else
+libnetxms_la_SOURCES = $(SOURCES)
 endif
 libnetxms_la_CPPFLAGS=-I@top_srcdir@/include
 if USE_INTERNAL_EXPAT
