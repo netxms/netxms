@@ -506,7 +506,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR 
    size_t count, inbytes, outbytes;
 
    cd = iconv_open(UCS4_CODEPAGE_NAME, UCS2_CODEPAGE_NAME);
-   if (cd != (iconv_t) (-1))
+   if (cd == (iconv_t) (-1))
    {
       return __internal_ucs2_to_ucs4(src, srcLen, dst, dstLen);
    }
