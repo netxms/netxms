@@ -648,6 +648,7 @@ if test "x$CXX" = "xg++"; then
 		AC_MSG_ERROR([*** FATAL: Cannot find any usable C++ compiler])
 	fi
 fi
+AM_PROG_AS
 AC_PROG_INSTALL
 AC_PROG_LEX
 AC_CHECK_PROGS(YACC,bison byacc,yacc)
