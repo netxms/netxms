@@ -52,12 +52,13 @@ Table::Table(Table *src) : RefCountObject()
    m_nNumRows = src->m_nNumRows;
    m_nNumCols = src->m_nNumCols;
    m_data = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * m_nNumCols);
-	for(int i = 0; i < m_nNumCols * m_nNumRows; i++)
+	int i;
+   for(i = 0; i < m_nNumCols * m_nNumRows; i++)
       m_data[i] = _tcsdup(CHECK_NULL_EX(src->m_data[i]));
    m_title = (src->m_title != NULL) ? _tcsdup(src->m_title) : NULL;
    m_source = src->m_source;
    m_columns = new ObjectArray<TableColumnDefinition>(m_nNumCols, 8, true);
-	for(int i = 0; i < m_nNumCols; i++)
+	for(i = 0; i < m_nNumCols; i++)
       m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
 }
 
