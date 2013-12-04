@@ -100,11 +100,9 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 
 #endif   /* __DISABLE_ICONV */
 
-
 /**
  * Set application's default codepage
  */
-
 BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
 {
 	BOOL rc;
@@ -129,13 +127,11 @@ BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
 	return rc;
 }
 
+#if !UNICODE_UCS2 || !HAVE_WCSLEN
 
 /**
  * Calculate length of wide character string
  */
-
-#if !UNICODE_UCS2 || !HAVE_WCSLEN
-
 int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr)
 {
    int iLen = 0;
@@ -148,13 +144,11 @@ int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr)
 
 #endif
 
+#if !UNICODE_UCS2 || !HAVE_WCSDUP
 
 /**
  * Duplicate wide character string
  */
-
-#if !UNICODE_UCS2 || !HAVE_WCSDUP
-
 UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *pStr)
 {
 	return (UCS2CHAR *)nx_memdup(pStr, (ucs2_strlen(pStr) + 1) * sizeof(UCS2CHAR));
@@ -162,13 +156,11 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *pStr)
 
 #endif
 
+#if !UNICODE_UCS2 || !HAVE_WCSNCPY
 
 /**
  * Copy wide character string with length limitation
  */
-
-#if !UNICODE_UCS2 || !HAVE_WCSNCPY
-
 UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen)
 {
 	int nLen;
@@ -185,7 +177,6 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc
 /**
  * Convert UNICODE string to single-byte string
  */
-
 inline int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
    int cchWideChar, char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
@@ -370,7 +361,6 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const
 /**
  * UNICODE version of inet_addr()
  */
-
 UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
 {
    char szBuffer[256];
@@ -384,7 +374,6 @@ UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
  * Convert multibyte string to wide string using current codepage and
  * allocating wide string dynamically
  */
-
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
 {
    WCHAR *pwszOut;
@@ -397,9 +386,8 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
 }
 
 /**
- * Convert UTF8 string to wide string allocating wide string dynamically
+ * Convert wide string to UTF8 string allocating wide string dynamically
  */
-
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
 {
    WCHAR *pwszOut;
@@ -415,7 +403,6 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
  * Convert wide string to multibyte string using current codepage and
  * allocating multibyte string dynamically
  */
-
 char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
 {
    char *pszOut;
@@ -423,15 +410,13 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
 
    nLen = (int)wcslen(pwszString) + 1;
    pszOut = (char *)malloc(nLen);
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       pwszString, -1, pszOut, nLen, NULL, NULL);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, pszOut, nLen, NULL, NULL);
    return pszOut;
 }
 
 /**
  * Convert wide string to UTF8 string allocating UTF8 string dynamically
  */
-
 char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString)
 {
    char *pszOut;
@@ -470,7 +455,6 @@ WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer)
 /**
  * Convert UCS-2 to UCS-4 - internal dumb method
  */
-
 static size_t __internal_ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
 	int i, len;
@@ -484,11 +468,9 @@ static size_t __internal_ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *ds
 	return len;
 }
 
-
 /**
  * Convert UCS-4 to UCS-2 - internal dumb method
  */
-
 static size_t __internal_ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
 	int i, len;
@@ -508,7 +490,6 @@ static size_t __internal_ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *ds
 /**
  * Convert UCS-2 to UCS-4
  */
-
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
 	iconv_t cd;
@@ -552,11 +533,9 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR 
 	return count;
 }
 
-
 /**
  * Convert UCS-4 to UCS-2
  */
-
 size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
 	iconv_t cd;
@@ -608,21 +587,17 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR 
 
 #else   /* __DISABLE_ICONV */
 
-
 /**
  * Convert UCS-2 to UCS-4
  */
-
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
 	return __internal_ucs2_to_ucs4(src, srcLen, dst, dstLen);
 }
 
-
 /**
  * Convert UCS-4 to UCS-2
  */
-
 size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
 	return __internal_ucs4_to_ucs2(src, srcLen, dst, dstLen);
@@ -633,7 +608,6 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR 
 /**
  * Convert UCS-4 string to UCS-2 string allocating UCS-2 string dynamically
  */
-
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString)
 {
    UCS2CHAR *pszOut;
@@ -645,11 +619,9 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString)
    return pszOut;
 }
 
-
 /**
  * Convert UCS-2 string to UCS-4 string allocating UCS-4 string dynamically
  */
-
 WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString)
 {
    WCHAR *pwszOut;
@@ -661,11 +633,9 @@ WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString)
    return pwszOut;
 }
 
-
 /**
  * Convert UCS-2 to UTF-8
  */
-
 size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
@@ -734,7 +704,6 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *
 /**
  * Convert UCS-2 to multibyte
  */
-
 inline size_t ucs2_to_mb_simple_copy(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
    const UCS2CHAR *psrc;
@@ -803,7 +772,6 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *ds
 /**
  * Convert multibyte to UCS-2
  */
-
 inline size_t mb_to_ucs2_simple_copy(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
    const char *psrc;
