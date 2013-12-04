@@ -130,9 +130,9 @@ BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
 }
 
 
-//
-// Calculate length of wide character string
-//
+/**
+ * Calculate length of wide character string
+ */
 
 #if !UNICODE_UCS2 || !HAVE_WCSLEN
 
@@ -186,15 +186,9 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc
  * Convert UNICODE string to single-byte string
  */
 
-inline int LIBNETXMS_EXPORTABLE WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
-   int cchWideChar,
-   char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
+inline int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
+   int cchWideChar, char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
-   if (cchByteChar == 0)
-   {
-      return wcslen(pWideCharStr) + 1;
-   }
-
    const WCHAR *pSrc;
    char *pDest;
    int iPos, iSize;
@@ -209,7 +203,7 @@ inline int LIBNETXMS_EXPORTABLE WideCharToMultiByteSimpleCopy(int iCodePage, DWO
    return iSize;
 }
 
-inline int LIBNETXMS_EXPORTABLE WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, int cchWideChar,
+inline int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, int cchWideChar,
    char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
    iconv_t cd;
@@ -219,18 +213,11 @@ inline int LIBNETXMS_EXPORTABLE WideCharToMultiByteIconv(int iCodePage, DWORD dw
    size_t inbytes, outbytes;
    char cp[MAX_CODEPAGE_LEN + 16];
 
-   // Calculate required length. Because iconv cannot calculate
-   // resulting multibyte string length, assume the worst case - 3 bytes
-   // per character for UTF-8 and 2 bytes per character for other encodings
-   if (cchByteChar == 0)
-   {
-      return wcslen(pWideCharStr) * (iCodePage == CP_UTF8 ? 3 : 2) + 1;
-   }
-
    strcpy(cp, m_cpDefault);
 #if HAVE_ICONV_IGNORE
    strcat(cp, "//IGNORE");
 #endif /* HAVE_ICONV_IGNORE */
+
    cd = iconv_open(iCodePage == CP_UTF8 ? "UTF-8" : cp, UNICODE_CODEPAGE_NAME);
    if (cd == (iconv_t) (-1))
    {
@@ -271,8 +258,21 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const
    char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
+   // Calculate required length. Because iconv cannot calculate
+   // resulting multibyte string length, assume the worst case - 3 bytes
+   // per character for UTF-8 and 2 bytes per character for other encodings
+   if (cchByteChar == 0)
+   {
+      return wcslen(pWideCharStr) * (iCodePage == CP_UTF8 ? 3 : 2) + 1;
+   }
+
    return WideCharToMultiByteIconv(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
 #else
+   if (cchByteChar == 0)
+   {
+      return wcslen(pWideCharStr) + 1;
+   }
+
    return WideCharToMultiByteCopy(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
 #endif
 }
@@ -281,86 +281,88 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const
 /**
  * Convert single-byte to UNICODE string
  */
-int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr,
-                                             int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
+
+inline int MultiByteToWideCharSimpleCopy(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar,
+   WCHAR *pWideCharStr, int cchWideChar)
 {
+   const char *pSrc;
+   WCHAR *pDest;
+   int iPos, iSize;
+
+   iSize = (cchByteChar == -1) ? strlen(pByteStr) : cchByteChar;
+   if (iSize >= cchWideChar)
+      iSize = cchWideChar - 1;
+   for(pSrc = pByteStr, iPos = 0, pDest = pWideCharStr; iPos < iSize; iPos++, pSrc++, pDest++)
+      *pDest = (WCHAR) (*pSrc);
+   *pDest = 0;
+
+   return iSize;
+}
+
+inline int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar,
+   WCHAR *pWideCharStr, int cchWideChar)
+{
+   iconv_t cd;
+   int nRet;
+   const char *inbuf;
+   char *outbuf;
+   size_t inbytes, outbytes;
+
+   cd = iconv_open(UNICODE_CODEPAGE_NAME, iCodePage == CP_UTF8 ? "UTF-8" : m_cpDefault);
+   if (cd == (iconv_t) (-1))
+   {
+      return MultiByteToWideCharSimpleCopy(iCodePage, dwFlags, pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+   }
+
+   inbuf = pByteStr;
+   inbytes = (cchByteChar == -1) ? strlen(pByteStr) + 1 : cchByteChar;
+   outbuf = (char *) pWideCharStr;
+   outbytes = cchWideChar * sizeof(WCHAR);
+   nRet = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   iconv_close(cd);
+   if (nRet == -1)
+   {
+      if (errno == EILSEQ)
+      {
+         nRet = (cchWideChar * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
+      }
+      else
+      {
+         nRet = 0;
+      }
+   }
+   else
+   {
+      nRet = (cchWideChar * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
+   }
+   if (((char *) outbuf - (char *) pWideCharStr > sizeof(WCHAR)) && (*pWideCharStr == 0xFEFF))
+   {
+      // Remove UNICODE byte order indicator if presented
+      memmove(pWideCharStr, &pWideCharStr[1], (char *) outbuf - (char *) pWideCharStr - sizeof(WCHAR));
+      outbuf -= sizeof(WCHAR);
+      nRet--;
+   }
+   if ((cchByteChar == -1) && (outbytes >= sizeof(WCHAR)))
+   {
+      *((WCHAR *) outbuf) = 0;
+   }
+
+   return nRet;
+}
+
+int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar,
+   WCHAR *pWideCharStr, int cchWideChar)
+{
+   if (cchWideChar == 0)
+   {
+      return strlen(pByteStr) + 1;
+   }
+
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-	iconv_t cd;
-	int nRet;
-	const char *inbuf;
-	char *outbuf;
-	size_t inbytes, outbytes;
-
-	if (cchWideChar == 0)
-	{
-		return strlen(pByteStr) + 1;
-	}
-
-	cd = iconv_open(UNICODE_CODEPAGE_NAME, iCodePage == CP_UTF8 ? "UTF-8" : m_cpDefault);
-	if (cd != (iconv_t)(-1))
-	{
-		inbuf = pByteStr;
-		inbytes = (cchByteChar == -1) ? strlen(pByteStr) + 1 : cchByteChar;
-		outbuf = (char *)pWideCharStr;
-		outbytes = cchWideChar * sizeof(WCHAR);
-		nRet = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
-		iconv_close(cd);
-		if (nRet == -1)
-		{
-			if (errno == EILSEQ)
-			{
-				nRet = (cchWideChar * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
-			}
-			else
-			{
-				nRet = 0;
-			}
-		}
-		else
-		{
-			nRet = (cchWideChar * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
-		}
-		if (((char *)outbuf - (char *)pWideCharStr > sizeof(WCHAR)) && (*pWideCharStr == 0xFEFF))
-		{
-			// Remove UNICODE byte order indicator if presented
-			memmove(pWideCharStr, &pWideCharStr[1], (char *)outbuf - (char *)pWideCharStr - sizeof(WCHAR));
-			outbuf -= sizeof(WCHAR);
-			nRet--;
-		}
-		if ((cchByteChar == -1) && (outbytes >= sizeof(WCHAR)))
-		{
-			*((WCHAR *)outbuf) = 0;
-		}
-	}
-	else
-	{
-		goto fallback;
-	}
-	return nRet;
-
-fallback:
-
+   return MultiByteToWideCharIconv(iCodePage, dwFlags, pByteStr, cchByteChar, pWideCharStr, cchWideChar);
 #else
-
-	if (cchWideChar == 0)
-	{
-		return strlen(pByteStr) + 1;
-	}
-
+   return MultiByteToWideCharSimpleCopy(iCodePage, dwFlags, pByteStr, cchByteChar, pWideCharStr, cchWideChar);
 #endif
-
-	const char *pSrc;
-	WCHAR *pDest;
-	int iPos, iSize;
-
-	iSize = (cchByteChar == -1) ? strlen(pByteStr) : cchByteChar;
-	if (iSize >= cchWideChar)
-		iSize = cchWideChar - 1;
-	for(pSrc = pByteStr, iPos = 0, pDest = pWideCharStr; iPos < iSize; iPos++, pSrc++, pDest++)
-		*pDest = (WCHAR)(*pSrc);
-	*pDest = 0;
-
-	return iSize;
 }
 
 #endif   /* not _WIN32 */
@@ -368,6 +370,7 @@ fallback:
 /**
  * UNICODE version of inet_addr()
  */
+
 UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
 {
    char szBuffer[256];
@@ -381,6 +384,7 @@ UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
  * Convert multibyte string to wide string using current codepage and
  * allocating wide string dynamically
  */
+
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
 {
    WCHAR *pwszOut;
@@ -392,10 +396,9 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
    return pwszOut;
 }
 
-
-//
-// Convert UTF8 string to wide string allocating wide string dynamically
-//
+/**
+ * Convert UTF8 string to wide string allocating wide string dynamically
+ */
 
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
 {
@@ -408,11 +411,10 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
    return pwszOut;
 }
 
-
-//
-// Convert wide string to multibyte string using current codepage and
-// allocating multibyte string dynamically
-//
+/**
+ * Convert wide string to multibyte string using current codepage and
+ * allocating multibyte string dynamically
+ */
 
 char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
 {
@@ -426,10 +428,9 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
    return pszOut;
 }
 
-
-//
-// Convert wide string to UTF8 string allocating UTF8 string dynamically
-//
+/**
+ * Convert wide string to UTF8 string allocating UTF8 string dynamically
+ */
 
 char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString)
 {
@@ -443,10 +444,10 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString)
 }
 
 
-//
-// Get OpenSSL error string as UNICODE string
-// Buffer must be at least 256 character long
-//
+/**
+ * Get OpenSSL error string as UNICODE string
+ * Buffer must be at least 256 character long
+ */
 
 #ifdef _WITH_ENCRYPTION
 
@@ -466,9 +467,9 @@ WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer)
 #ifdef UNICODE_UCS4
 
 
-//
-// Convert UCS-2 to UCS-4 - internal dumb method
-//
+/**
+ * Convert UCS-2 to UCS-4 - internal dumb method
+ */
 
 static size_t __internal_ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
@@ -484,9 +485,9 @@ static size_t __internal_ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *ds
 }
 
 
-//
-// Convert UCS-4 to UCS-2 - internal dumb method
-//
+/**
+ * Convert UCS-4 to UCS-2 - internal dumb method
+ */
 
 static size_t __internal_ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
@@ -504,9 +505,9 @@ static size_t __internal_ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *ds
 
 #ifndef __DISABLE_ICONV
 
-//
-// Convert UCS-2 to UCS-4
-//
+/**
+ * Convert UCS-2 to UCS-4
+ */
 
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
@@ -552,9 +553,9 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR 
 }
 
 
-//
-// Convert UCS-4 to UCS-2
-//
+/**
+ * Convert UCS-4 to UCS-2
+ */
 
 size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
@@ -608,9 +609,9 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR 
 #else   /* __DISABLE_ICONV */
 
 
-//
-// Convert UCS-2 to UCS-4
-//
+/**
+ * Convert UCS-2 to UCS-4
+ */
 
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
@@ -618,9 +619,9 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR 
 }
 
 
-//
-// Convert UCS-4 to UCS-2
-//
+/**
+ * Convert UCS-4 to UCS-2
+ */
 
 size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
@@ -629,9 +630,9 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR 
 
 #endif 	/* __DISABLE_ICONV */
 
-//
-// Convert UCS-4 string to UCS-2 string allocating UCS-2 string dynamically
-//
+/**
+ * Convert UCS-4 string to UCS-2 string allocating UCS-2 string dynamically
+ */
 
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString)
 {
@@ -645,9 +646,9 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString)
 }
 
 
-//
-// Convert UCS-2 string to UCS-4 string allocating UCS-4 string dynamically
-//
+/**
+ * Convert UCS-2 string to UCS-4 string allocating UCS-4 string dynamically
+ */
 
 WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString)
 {
@@ -661,9 +662,9 @@ WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString)
 }
 
 
-//
-// Convert UCS-2 to UTF-8
-//
+/**
+ * Convert UCS-2 to UTF-8
+ */
 
 size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
@@ -730,82 +731,107 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *
 
 #if !defined(_WIN32)
 
-//
-// Convert UCS-2 to multibyte
-//
+/**
+ * Convert UCS-2 to multibyte
+ */
 
-size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+inline size_t ucs2_to_mb_simple_copy(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
-#if HAVE_ICONV && !defined(__DISABLE_ICONV)
-	iconv_t cd;
-	const char *inbuf;
-	char *outbuf;
-	size_t count, inbytes, outbytes;
-	
-	cd = iconv_open(m_cpDefault, UCS2_CODEPAGE_NAME);
-	if (cd != (iconv_t)(-1))
-	{
-		inbuf = (const char *)src;
-		inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : (size_t)srcLen) * sizeof(UCS2CHAR);
-		outbuf = (char *)dst;
-		outbytes = (size_t)dstLen;
-		count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
-		iconv_close(cd);
-		if (count == (size_t)-1)
-		{
-			if (errno == EILSEQ)
-			{
-				count = (dstLen * sizeof(char) - outbytes) / sizeof(char);
-			}
-			else
-			{
-				count = 0;
-			}
-		}
-		if ((srcLen == -1) && (outbytes >= sizeof(char)))
-		{
-			*((char *)outbuf) = 0;
-		}
-	}
-	else
-	{
-		*dst = 0;
-		count = 0;
-	}
-	return count;
-	
-#else
-
    const UCS2CHAR *psrc;
    char *pdst;
    int pos, size;
 
-   size = (srcLen == -1) ? (int)ucs2_strlen(src) : srcLen;
+   size = (srcLen == -1) ? (int) ucs2_strlen(src) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
+
    for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 256) ? (char)(*psrc) : '?';
+      *pdst = (*psrc < 256) ? (char) (*psrc) : '?';
    *pdst = 0;
+
    return size;
+}
+
+inline size_t ucs2_to_mb_iconv(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+{
+   iconv_t cd;
+   const char *inbuf;
+   char *outbuf;
+   size_t count, inbytes, outbytes;
+
+   cd = iconv_open(m_cpDefault, UCS2_CODEPAGE_NAME);
+   if (cd == (iconv_t) (-1))
+   {
+      return ucs2_to_mb_simple_copy(src, srcLen, dst, dstLen);
+   }
+
+   inbuf = (const char *) src;
+   inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : (size_t) srcLen) * sizeof(UCS2CHAR);
+   outbuf = (char *) dst;
+   outbytes = (size_t) dstLen;
+   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   iconv_close(cd);
+
+   if (count == (size_t) - 1)
+   {
+      if (errno == EILSEQ)
+      {
+         count = (dstLen * sizeof(char) - outbytes) / sizeof(char);
+      }
+      else
+      {
+         count = 0;
+      }
+   }
+   if ((srcLen == -1) && (outbytes >= sizeof(char)))
+   {
+      *((char *) outbuf) = 0;
+   }
+
+   return count;
+}
+
+size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+{
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
+	return ucs2_to_mb_iconv(src, srcLen, dst, dstLen);
+#else
+	return ucs2_to_mb_iconv_simple_copy(src, srcLen, dst, dstLen);
 #endif
 }
 
 /**
  * Convert multibyte to UCS-2
  */
-size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+
+inline size_t mb_to_ucs2_simple_copy(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
-#if HAVE_ICONV && !defined(__DISABLE_ICONV)
-	iconv_t cd;
-	const char *inbuf;
-	char *outbuf;
-	size_t count, inbytes, outbytes;
-	
-	cd = iconv_open(UCS2_CODEPAGE_NAME, m_cpDefault);
+   const char *psrc;
+   UCS2CHAR *pdst;
+   int pos, size;
+
+   size = (srcLen == -1) ? (int) strlen(src) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
+      *pdst = (UCS2CHAR) (*psrc);
+   *pdst = 0;
+
+   return size;
+}
+
+inline size_t mb_to_ucs2_iconv(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+   iconv_t cd;
+   const char *inbuf;
+   char *outbuf;
+   size_t count, inbytes, outbytes;
+
+   cd = iconv_open(UCS2_CODEPAGE_NAME, m_cpDefault);
    if (cd == (iconv_t) (-1))
    {
-      *dst = 0;
-      return 0;
+      return mb_to_ucs2_simple_copy(src, srcLen, dst, dstLen);
    }
 
    inbuf = (const char *) src;
@@ -814,6 +840,7 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *ds
    outbytes = (size_t) dstLen * sizeof(UCS2CHAR);
    count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
    iconv_close(cd);
+
    if (count == (size_t) - 1)
    {
       if (errno == EILSEQ)
@@ -836,22 +863,15 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *ds
       *((UCS2CHAR *) outbuf) = 0;
    }
 
-	return count;
-	
+   return count;
+}
+
+size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
+   return mb_to_ucs2_iconv(src, srcLen, dst, dstLen);
 #else
-
-	const char *psrc;
-	UCS2CHAR *pdst;
-	int pos, size;
-
-	size = (srcLen == -1) ? (int)strlen(src) : srcLen;
-	if (size >= dstLen)
-		size = dstLen - 1;
-	for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-		*pdst = (UCS2CHAR)(*psrc);
-	*pdst = 0;
-
-	return size;
+   mb_to_ucs2_simple_copy(src, srcLen, dst, dstLen);
 #endif
 }
 
@@ -884,14 +904,15 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString)
 	ucs2_to_mb(pszString, -1, pszOut, nLen);
 	return pszOut;
 }
-#endif
+
+#endif /* !UNICODE_UCS2 */
 
 #endif	/* !defined(_WIN32) */
 
 
-//
-// UNIX UNICODE specific wrapper functions
-//
+/**
+ * UNIX UNICODE specific wrapper functions
+ */
 
 #if !defined(_WIN32)
 
@@ -906,13 +927,13 @@ int wstat(const WCHAR *_path, struct stat *_sbuf)
 	return stat(path, _sbuf);
 }
 
-#endif
+#endif /* !HAVE_WSTAT */
 
 #if defined(UNICODE)
 
-//
-// Wide character version of some libc functions
-//
+/**
+ * Wide character version of some libc functions
+ */
 
 #define DEFINE_PATH_FUNC(func) \
 int w##func(const WCHAR *_path) \
@@ -1110,11 +1131,11 @@ int putws(const WCHAR *s)
 	putwc(L'\n', stdout);
 #else
 	printf("%S\n", s);
-#endif
+#endif /* HAVE_FPUTWS */
 	return 1;
 }
 
-#endif
+#endif /* !HAVE_PUTWS */
 
 #if !HAVE_WCSERROR && HAVE_STRERROR
 
@@ -1126,7 +1147,7 @@ WCHAR *wcserror(int errnum)
 	return value;
 }
 
-#endif
+#endif /* !HAVE_WCSERROR && HAVE_STRERROR */
 
 #if !HAVE_WCSERROR_R && HAVE_STRERROR_R
 
@@ -1134,12 +1155,12 @@ WCHAR *wcserror(int errnum)
 int wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 #else
 WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
-#endif
+#endif /* HAVE_POSIX_STRERROR_R */
 {
 	char *mbbuf;
 #if HAVE_POSIX_STRERROR_R
 	int err;
-#endif
+#endif /* HAVE_POSIX_STRERROR_R */
 
 	mbbuf = (char *)malloc(buflen);
 	if (mbbuf != NULL)
@@ -1164,17 +1185,18 @@ WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 #endif
 }
 
-#endif
-#endif
+#endif /* !HAVE_WCSERROR_R && HAVE_STRERROR_R */
+
+#endif /* defined(UNICODE) */
 
 
-//
-// Wrappers for wprintf/wscanf family
-//
-// All these wrappers replaces %s with %S and %c with %C
-// because in POSIX version of wprintf functions %s and %c
-// means "multibyte string/char" instead of expected "UNICODE string/char"
-//
+/**
+ * Wrappers for wprintf/wscanf family
+ *
+ * All these wrappers replaces %s with %S and %c with %C
+ * because in POSIX version of wprintf functions %s and %c
+ * means "multibyte string/char" instead of expected "UNICODE string/char"
+ */
 
 int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...)
 {
