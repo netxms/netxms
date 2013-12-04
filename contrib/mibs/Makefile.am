@@ -20,6 +20,7 @@ mibs_DATA = \
 	ARP-Spoofing-Prevent-MIB.txt \
 	ASTARO-MIB.txt \
 	ASTERISK-MIB.txt \
+	AtiL2-MIB.txt \
 	ATM-TC-MIB.txt \
 	AUTH-MIB.txt \
 	BAY-STACK-ADAC-MIB.txt \
