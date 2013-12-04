@@ -78,6 +78,7 @@ LTINIT_CC=""
 LTINIT_CXX=""
 SQLFLAGS=""
 RUNTIME_PREFIX=""
+HPUX_HPPA="no"
 
 
 #--------------------------------------------------------------------
@@ -681,6 +682,9 @@ case "$PLATFORM" in
 	 CFLAGS="$CFLAGS -AC99"
          CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
          LDFLAGS="$LDFLAGS -mt"
+      fi
+      if test `uname -m` != 'ia64'; then
+         HPUX_HPPA="yes"
       fi
       ;;
    SunOS)
@@ -2160,6 +2164,7 @@ AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"])
+AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 
 
 #--------------------------------------------------------------------

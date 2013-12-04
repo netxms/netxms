@@ -939,6 +939,11 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 
 typedef volatile uint32_t VolatileCounter;
 
+#if defined(__hppa) && !HAVE_ATOMIC_H
+VolatileCounter parisc_atomic_inc(VolatileCounter *v);
+VolatileCounter parisc_atomic_dec(VolatileCounter *v);
+#endif
+
 /**
  * Atomically increment 32-bit value by 1
  */
@@ -947,8 +952,12 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 #if HAVE_ATOMIC_H
    return atomic_inc_32(v) + 1;
 #else
+#ifdef __hppa
+   return parisc_atomic_inc(v);
+#else
    _Asm_mf(_DFLT_FENCE);
    return (uint32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
+#endif
 #endif
 }
 
@@ -960,8 +969,12 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 #if HAVE_ATOMIC_H
    return atomic_dec_32(v) - 1;
 #else
+#ifdef __hppa
+   return parisc_atomic_inc(v);
+#else
    _Asm_mf(_DFLT_FENCE);
    return (uint32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
+#endif
 #endif
 }
 
