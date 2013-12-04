@@ -361,6 +361,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V297 to V298
+ */
+static BOOL H_UpgradeFromV297(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateConfigParam(_T("AgentDefaultSharedSecret"), _T("netxms"), 1, 0));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='298' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V296 to V297
  */
 static BOOL H_UpgradeFromV296(int currVersion, int newVersion)
@@ -7255,6 +7265,7 @@ static struct
    { 294, 295, H_UpgradeFromV294 },
    { 295, 296, H_UpgradeFromV295 },
    { 296, 297, H_UpgradeFromV296 },
+   { 297, 298, H_UpgradeFromV297 },
    { 0, 0, NULL }
 };
 

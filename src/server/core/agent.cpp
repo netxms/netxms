@@ -190,6 +190,18 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 }
 
 /**
+ * Print message.
+ */
+void AgentConnectionEx::printMsg(const TCHAR *format, ...)
+{
+   va_list args;
+
+   va_start(args, format);
+   DbgPrintf2(6, format, args);
+   va_end(args);
+}
+
+/**
  * Deploy policy to agent
  */
 UINT32 AgentConnectionEx::deployPolicy(AgentPolicy *policy)

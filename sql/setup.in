@@ -7,6 +7,7 @@
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ActiveDiscoveryInterval','7200',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ActiveNetworkDiscovery','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AgentCommandTimeout','4000',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AgentDefaultSharedSecret','netxms',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AgentUpgradeWaitTime','600',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AlarmHistoryRetentionTime','180',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AllowDirectSMS','0',1,0);
@@ -19,7 +20,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('BeaconPollingInterval','1000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('BeaconTimeout','1000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('BlockInactiveUserAccounts','0',1,0);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('CapabilityExpirationTime','604800',1,0);  // In seconds
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('CapabilityExpirationTime','604800',1,0);  /* in seconds */
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('CheckTrustedNodes','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ClientListenerPort','4701',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConditionPollingInterval','60',1,1);

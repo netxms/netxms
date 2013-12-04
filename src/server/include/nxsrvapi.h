@@ -463,7 +463,7 @@ protected:
    UINT32 getIpAddr() { return ntohl(m_dwAddr); }
 	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
 
-   virtual void printMsg(const TCHAR *pszFormat, ...);
+   virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(CSCPMessage *pMsg);
 	virtual void onDataPush(CSCPMessage *msg);
 	virtual bool processCustomMessage(CSCPMessage *pMsg);
@@ -520,7 +520,7 @@ public:
    void setProxy(UINT32 dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void setPort(WORD wPort) { m_wPort = wPort; }
-   void setAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); m_szSecret[MAX_SECRET_LENGTH - 1] = 0; }
+   void setAuthData(int method, const TCHAR *secret);
 	void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
 };
 

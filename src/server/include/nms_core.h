@@ -278,6 +278,7 @@ class AgentConnectionEx : public AgentConnection
 protected:
 	UINT32 m_nodeId;
 
+   virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(CSCPMessage *msg);
    virtual void onDataPush(CSCPMessage *msg);
 

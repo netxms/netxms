@@ -152,12 +152,12 @@ AgentConnection::~AgentConnection()
  * Print message. This method is virtual and can be overrided in
  * derived classes. Default implementation will print message to stdout.
  */
-void AgentConnection::printMsg(const TCHAR *pszFormat, ...)
+void AgentConnection::printMsg(const TCHAR *format, ...)
 {
    va_list args;
 
-   va_start(args, pszFormat);
-   _vtprintf(pszFormat, args);
+   va_start(args, format);
+   _vtprintf(format, args);
    va_end(args);
    _tprintf(_T("\n"));
 }
@@ -511,11 +511,9 @@ connect_cleanup:
    return bSuccess;
 }
 
-
-//
-// Disconnect from agent
-//
-
+/**
+ * Disconnect from agent
+ */
 void AgentConnection::disconnect()
 {
    lock();
@@ -535,11 +533,23 @@ void AgentConnection::disconnect()
    unlock();
 }
 
+/**
+ * Set authentication data
+ */
+void AgentConnection::setAuthData(int method, const TCHAR *secret)
+{ 
+   m_iAuthMethod = method;
+#ifdef UNICODE
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
+	m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
+#else
+   nx_strncpy(m_szSecret, secret, MAX_SECRET_LENGTH);
+#endif
+}
 
-//
-// Destroy command execuion results data
-//
-
+/**
+ * Destroy command execuion results data
+ */
 void AgentConnection::destroyResultData()
 {
    UINT32 i;

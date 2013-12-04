@@ -1814,10 +1814,30 @@ bool Node::confPollAgent(UINT32 dwRqId)
 	bool hasChanges = false;
 
 	sendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
-   AgentConnection *pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   AgentConnection *pAgentConn = new AgentConnectionEx(m_dwId, htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
    setAgentProxy(pAgentConn);
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_szName);
-   if (pAgentConn->connect(g_pServerKey))
+
+   // Try to connect to agent
+   UINT32 rcc;
+   if (!pAgentConn->connect(g_pServerKey, FALSE, &rcc))
+   {
+      // If there are authentication problem, try default shared secret
+      if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
+      {
+         TCHAR secret[MAX_SECRET_LENGTH];
+         ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
+         pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
+         if (pAgentConn->connect(g_pServerKey, FALSE, &rcc))
+         {
+            m_wAuthMethod = AUTH_SHA1_HASH;
+            nx_strncpy(m_szSharedSecret, secret, MAX_SECRET_LENGTH);
+            DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_szName);
+         }
+      }
+   }
+
+   if (rcc == ERR_SUCCESS)
    {
       DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_szName);
       LockData();
@@ -1948,7 +1968,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
    }
 	else
 	{
-      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect"), m_szName);
+      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_szName, rcc);
 	}
    delete pAgentConn;
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_szName);
@@ -2929,14 +2949,7 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
 		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_szName, m_dwId);
 	}
    m_pAgentConnection->setPort(m_wAgentPort);
-#ifdef UNICODE
-	char mbSecret[MAX_SECRET_LENGTH];
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, m_szSharedSecret, -1, mbSecret, MAX_SECRET_LENGTH, NULL, NULL);
-	mbSecret[MAX_SECRET_LENGTH - 1] = 0;
-   m_pAgentConnection->setAuthData(m_wAuthMethod, mbSecret);
-#else
    m_pAgentConnection->setAuthData(m_wAuthMethod, m_szSharedSecret);
-#endif
    setAgentProxy(m_pAgentConnection);
 	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_szName, m_dwId, (int)m_wAgentPort);
    bRet = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
