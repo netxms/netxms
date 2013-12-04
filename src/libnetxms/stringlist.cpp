@@ -241,12 +241,12 @@ TCHAR *StringList::join(const TCHAR *separator)
    if (m_count == 0)
       return _tcsdup(_T(""));
 
-   int len = 0;
-   for(int i = 0; i < m_count; i++)
+   int i, len = 0;
+   for(i = 0; i < m_count; i++)
       len += (int)_tcslen(m_values[i]);
    TCHAR *result = (TCHAR *)malloc((len + _tcslen(separator) * (m_count - 1) + 1) * sizeof(TCHAR));
    _tcscpy(result, m_values[0]);
-   for(int i = 1; i < m_count; i++)
+   for(i = 1; i < m_count; i++)
    {
       _tcscat(result, separator);
       _tcscat(result, m_values[i]);
