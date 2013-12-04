@@ -12,6 +12,8 @@
 - nxapush can push data on behalf of other nodes
 - Transformation script can be run on aggregated DCIs
 - Unknown SNMP trap sources can be automatically added as nodes
+- Syslog processing optinmized for performance
+- Default shared secret for agents can be configured
 - Management console:
 	- New command line option -fullscreen
 	- Option to draw borders around each value in "gauge" dashboard elements

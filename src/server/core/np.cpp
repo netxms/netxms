@@ -339,7 +339,7 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
 		return true;
 
 	// *** NetXMS agent ***
-   AgentConnection *pAgentConn = new AgentConnection(htonl(ipAddr), AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+   AgentConnection *pAgentConn = new AgentConnectionEx(0, htonl(ipAddr), AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
 	if (agentProxy != 0)
 	{
 		Node *proxyNode = (Node *)g_idxNodeById.get(agentProxy);
@@ -349,7 +349,19 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
                               proxyNode->getAuthMethod(), proxyNode->getSharedSecret());
       }
 	}
-   if (pAgentConn->connect(g_pServerKey))
+   UINT32 rcc;
+   if (!pAgentConn->connect(g_pServerKey, FALSE, &rcc))
+   {
+      // If there are authentication problem, try default shared secret
+      if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
+      {
+         TCHAR secret[MAX_SECRET_LENGTH];
+         ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
+         pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
+         pAgentConn->connect(g_pServerKey, FALSE, &rcc);
+      }
+   }
+   if (rcc == ERR_SUCCESS)
    {
 		if (agentConn != NULL)
 		{
