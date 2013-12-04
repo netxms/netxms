@@ -10575,11 +10575,9 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 	sendMessage(&msg);
 }
 
-
-//
-// Update SNMP v3 USM credentials
-//
-
+/**
+ * Update SNMP v3 USM credentials
+ */
 void ClientSession::updateUsmCredentials(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -10590,55 +10588,48 @@ void ClientSession::updateUsmCredentials(CSCPMessage *request)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		if (hdb != NULL)
+		if (DBBegin(hdb))
 		{
-			if (DBBegin(hdb))
+			TCHAR query[4096];
+			UINT32 id;
+			int i = -1;
+			int count = (int)request->GetVariableLong(VID_NUM_RECORDS);
+
+			if (DBQuery(hdb, _T("DELETE FROM usm_credentials")))
 			{
-				TCHAR query[4096];
-				UINT32 id;
-				int i = -1;
-				int count = (int)request->GetVariableLong(VID_NUM_RECORDS);
-
-				if (DBQuery(hdb, _T("DELETE FROM usm_credentials")))
+				for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
 				{
-					for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
-					{
-						TCHAR name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
+					TCHAR name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
 
-						request->GetVariableStr(id++, name, MAX_DB_STRING);
-						int authMethod = (int)request->GetVariableShort(id++);
-						int privMethod = (int)request->GetVariableShort(id++);
-						request->GetVariableStr(id++, authPasswd, MAX_DB_STRING);
-						request->GetVariableStr(id++, privPasswd, MAX_DB_STRING);
-						_sntprintf(query, 4096, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password) VALUES(%d,%s,%d,%d,%s,%s)"),
-									  i + 1, (const TCHAR *)DBPrepareString(g_hCoreDB, name), authMethod, privMethod,
-									  (const TCHAR *)DBPrepareString(g_hCoreDB, authPasswd), (const TCHAR *)DBPrepareString(g_hCoreDB, privPasswd));
-						if (!DBQuery(hdb, query))
-							break;
-					}
+					request->GetVariableStr(id++, name, MAX_DB_STRING);
+					int authMethod = (int)request->GetVariableShort(id++);
+					int privMethod = (int)request->GetVariableShort(id++);
+					request->GetVariableStr(id++, authPasswd, MAX_DB_STRING);
+					request->GetVariableStr(id++, privPasswd, MAX_DB_STRING);
+					_sntprintf(query, 4096, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password) VALUES(%d,%s,%d,%d,%s,%s)"),
+								  i + 1, (const TCHAR *)DBPrepareString(g_hCoreDB, name), authMethod, privMethod,
+								  (const TCHAR *)DBPrepareString(g_hCoreDB, authPasswd), (const TCHAR *)DBPrepareString(g_hCoreDB, privPasswd));
+					if (!DBQuery(hdb, query))
+						break;
 				}
+			}
 
-				if (i == count)
-				{
-					DBCommit(hdb);
-					msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				}
-				else
-				{
-					DBRollback(hdb);
-					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-				}
+			if (i == count)
+			{
+				DBCommit(hdb);
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
+				DBRollback(hdb);
 				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 			}
-			DBConnectionPoolReleaseConnection(hdb);
 		}
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 		}
+		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{

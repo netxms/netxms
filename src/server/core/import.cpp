@@ -238,8 +238,6 @@ static UINT32 ImportEvent(ConfigEntry *event)
 		return RCC_INTERNAL_ERROR;
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	if (hdb == NULL)
-		return RCC_DB_FAILURE;
 
 	UINT32 code = event->getSubEntryValueUInt(_T("code"), 0, 0);
 	if ((code == 0) || (code >= FIRST_USER_EVENT_ID))

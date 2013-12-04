@@ -301,11 +301,9 @@ void ServerJob::fillMessage(CSCPMessage *msg)
 		msg->SetVariable(VID_FAILURE_MESSAGE, CHECK_NULL_EX(m_failureMessage));
 }
 
-
-//
-// Create record in job history table
-//
-
+/**
+ * Create record in job history table
+ */
 void ServerJob::createHistoryRecord()
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -328,11 +326,9 @@ void ServerJob::createHistoryRecord()
 	DBConnectionPoolReleaseConnection(hdb);
 }
 
-
-//
-// Update job history record
-//
-
+/**
+ * Update job history record
+ */
 void ServerJob::updateHistoryRecord(bool onStart)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -363,11 +359,9 @@ void ServerJob::updateHistoryRecord(bool onStart)
 	DBConnectionPoolReleaseConnection(hdb);
 }
 
-
-//
-// Get additional info for logging
-//
-
+/**
+ * Get additional info for logging
+ */
 const TCHAR *ServerJob::getAdditionalInfo()
 {
 	return _T("");

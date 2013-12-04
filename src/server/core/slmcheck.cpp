@@ -453,11 +453,9 @@ void SlmCheck::execute()
 	UnlockData();
 }
 
-
-//
-// Insert ticket for this check into slm_tickets
-//
-
+/**
+ * Insert ticket for this check into slm_tickets
+ */
 bool SlmCheck::insertTicket()
 {
 	DbgPrintf(4, _T("SlmCheck::insertTicket() called for %s [%d], reason='%s'"), m_szName, (int)m_dwId, m_reason);
@@ -484,11 +482,9 @@ bool SlmCheck::insertTicket()
 	return success;
 }
 
-
-//
-// Close current ticket
-//
-
+/**
+ * Close current ticket
+ */
 void SlmCheck::closeTicket()
 {
 	DbgPrintf(4, _T("SlmCheck::closeTicket() called for %s [%d], ticketId=%d"), m_szName, (int)m_dwId, (int)m_currentTicketId);
@@ -505,11 +501,9 @@ void SlmCheck::closeTicket()
 	m_currentTicketId = 0;
 }
 
-
-//
-// Get ID of owning SLM object (business service or node link)
-//
-
+/**
+ * Get ID of owning SLM object (business service or node link)
+ */
 UINT32 SlmCheck::getOwnerId()
 {
 	UINT32 ownerId = 0;
