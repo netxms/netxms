@@ -166,15 +166,27 @@ public class AlarmList extends Composite
          @Override
          public void mouseHover(MouseEvent e)
          {
+            if (!Activator.getDefault().getPreferenceStore().getBoolean("SHOW_ALARM_TOOLTIPS"))
+               return;
+            
             Point p = new Point(e.x, e.y);
             TableItem item = alarmViewer.getTable().getItem(p);
             if (item == null)
                return;
             toolTipObject = (Alarm)item.getData();
-            p.x += 3;
-            p.y += 3;
+            p.x -= 10;
+            p.y -= 10;
             toolTipLocation = p;
             getDisplay().timerExec(300, toolTipTimer);
+         }
+
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.MouseTrackAdapter#mouseExit(org.eclipse.swt.events.MouseEvent)
+          */
+         @Override
+         public void mouseExit(MouseEvent e)
+         {
+            getDisplay().timerExec(-1, toolTipTimer);
          }
 		});
 		

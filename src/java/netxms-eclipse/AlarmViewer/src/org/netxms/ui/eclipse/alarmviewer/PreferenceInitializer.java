@@ -36,5 +36,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		store.setDefault("BLINK_OUTSTANDING_ALARMS", false); //$NON-NLS-1$
 		store.setDefault("SHOW_TRAY_POPUPS", true); //$NON-NLS-1$
 		store.setDefault("OUTSTANDING_ALARMS_REMINDER", false); //$NON-NLS-1$
+      store.setDefault("SHOW_ALARM_TOOLTIPS", false); //$NON-NLS-1$
 	}
 }
