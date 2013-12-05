@@ -60,7 +60,7 @@ public class ObjectStatusMapView extends ViewPart
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		rootObjectId = Long.parseLong(site.getSecondaryId());
 		final AbstractObject object = session.findObjectById(rootObjectId);
-		setPartName(Messages.get().ObjectStatusMapView_PartName + ((object != null) ? object.getObjectName() : ("[" + rootObjectId + "]"))); //$NON-NLS-1$ //$NON-NLS-2$
+		setPartName(String.format(Messages.get().ObjectStatusMapView_PartName, (object != null) ? object.getObjectName() : ("[" + rootObjectId + "]"))); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
