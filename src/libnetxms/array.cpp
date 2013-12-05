@@ -52,6 +52,20 @@ Array::Array(int initial, int grow, bool owner)
 }
 
 /**
+ * Constructor for struct arrays
+ */
+Array::Array(void *data, int initial, int grow, size_t elementSize)
+{
+	m_size = initial;
+	m_grow = (grow > 0) ? grow : 16;
+	m_allocated = (initial >= 0) ? initial : 16;
+   m_elementSize = elementSize;
+	m_data = (data != NULL) ? (void **)malloc(m_elementSize * m_allocated) : NULL;
+	m_objectOwner = false;
+	m_objectDestructor = ObjectDestructor;
+}
+
+/**
  * Destructor
  */
 Array::~Array()

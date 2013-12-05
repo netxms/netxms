@@ -393,7 +393,7 @@ private:
 	int m_size;
 	int m_allocated;
 	int m_grow;
-   int m_elementSize;
+   size_t m_elementSize;
 	void **m_data;
 	bool m_objectOwner;
 
@@ -403,7 +403,7 @@ private:
 protected:
 	void (*m_objectDestructor)(void *);
 
-   Array(void *data, int initial, int grow, int elementSize);
+   Array(void *data, int initial, int grow, size_t elementSize);
 
 public:
 	Array(int initial = 0, int grow = 16, bool owner = false);
