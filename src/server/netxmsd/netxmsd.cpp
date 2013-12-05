@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
    const TCHAR *configEnv = _tgetenv(_T("NETXMSD_CONFIG"));
    if ((configEnv != NULL) && (*configEnv != 0))
    {
-      nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
+      nx_strncpy(g_szConfigFile, configEnv, MAX_PATH);
    }
 #endif
 

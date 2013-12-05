@@ -649,7 +649,7 @@ int main(int argc, char *argv[])
          _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
 		   if (_taccess(config, 4) == 0)
 		   {
-			   _tcscpy(g_szConfigFile, config);
+			   _tcscpy(szConfigFile, config);
             goto stop_search;
 		   }
       }
