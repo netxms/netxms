@@ -287,7 +287,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask(Messages.get().ImageLibrary_UpdateImage, (int)workTotal);
+						monitor.beginTask(Messages.get(getDisplay()).ImageLibrary_UpdateImage, (int)workTotal);
 					}
 					
 					@Override
@@ -349,7 +349,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask(Messages.get().ImageLibrary_UploadImage, (int)workTotal);
+						monitor.beginTask(Messages.get(getDisplay()).ImageLibrary_UploadImage, (int)workTotal);
 					}
 					
 					@Override

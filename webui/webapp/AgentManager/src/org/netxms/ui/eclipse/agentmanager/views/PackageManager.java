@@ -315,7 +315,7 @@ public class PackageManager extends ViewPart
 							@Override
 							public void setTotalWorkAmount(long amount)
 							{
-								monitor.beginTask(Messages.get().PackageManager_UploadPackage, (int)amount);
+								monitor.beginTask(Messages.get(getDisplay()).PackageManager_UploadPackage, (int)amount);
 							}
 							
 							@Override

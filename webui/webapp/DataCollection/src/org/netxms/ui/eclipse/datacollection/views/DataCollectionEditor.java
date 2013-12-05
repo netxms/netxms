@@ -819,7 +819,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().DataCollectionEditor_ConvertJob_TaskName, 4);
+				monitor.beginTask(Messages.get(getDisplay()).DataCollectionEditor_ConvertJob_TaskName, 4);
 				
 				boolean needApply = true;
 				for(long id : template.getChildIdList())

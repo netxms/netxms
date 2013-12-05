@@ -70,7 +70,7 @@ public class ClearCollectedData implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().ClearCollectedData_TaskName, dciToClear.size());
+				monitor.beginTask(Messages.get(getDisplay()).ClearCollectedData_TaskName, dciToClear.size());
 				for(DCI d : dciToClear)
 				{
 					session.clearCollectedData(d.nodeId, d.dciId);

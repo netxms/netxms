@@ -92,7 +92,7 @@ public class LoginJob implements IRunnableWithProgress
    @Override
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
-      monitor.beginTask(Messages.get().LoginJob_connecting, 100);
+      monitor.beginTask(Messages.get(display).LoginJob_connecting, 100);
       try
       {
          final String hostName;

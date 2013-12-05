@@ -121,7 +121,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					InterfaceDciInfo[] dciInfo = dlg.getDciInfo();
-					monitor.beginTask(Messages.get().CreateInterfraceDci_TaskName, ifaces.size() * dciInfo.length);
+					monitor.beginTask(Messages.get(getDisplay()).CreateInterfraceDci_TaskName, ifaces.size() * dciInfo.length);
 					for(int i = 0; i < ifaces.size(); i++)
 					{
 						for(int j = 0; j < dciInfo.length; j++)

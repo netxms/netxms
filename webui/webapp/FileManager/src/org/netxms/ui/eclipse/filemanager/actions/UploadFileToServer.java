@@ -76,7 +76,7 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 						@Override
 						public void setTotalWorkAmount(long workTotal)
 						{
-							monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + dlg.getLocalFile().getAbsolutePath(), (int)workTotal);
+							monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + dlg.getLocalFile().getAbsolutePath(), (int)workTotal);
 						}
 						
 						@Override

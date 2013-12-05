@@ -122,7 +122,7 @@ public class CreateSnmpDci implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().CreateSnmpDci_TaskTitle, values.size());
+				monitor.beginTask(Messages.get(getDisplay()).CreateSnmpDci_TaskTitle, values.size());
 				for(SnmpValue v : values)
 				{
 					final String description = dlg.getDescription().replaceAll("@@instance@@", Long.toString(v.getObjectId().getIdFromPos(v.getObjectId().getLength() - 1))); //$NON-NLS-1$
