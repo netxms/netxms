@@ -499,28 +499,23 @@ int main(int argc, char *argv[])
    BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE, bReplaceValue = TRUE;
    int ch;
    TCHAR szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
-#ifdef _WIN32
-   HKEY hKey;
-   DWORD dwSize;
-#else
-   TCHAR *pszEnv;
-#endif
 
    InitThreadLibrary();
 
    // Check for alternate config file location
 #ifdef _WIN32
+   HKEY hKey;
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
                     KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
-      dwSize = MAX_PATH * sizeof(TCHAR);
+      DWORD dwSize = MAX_PATH * sizeof(TCHAR);
       RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)szConfigFile, &dwSize);
       RegCloseKey(hKey);
    }
 #else
-   pszEnv = _tgetenv(_T("NETXMSD_CONFIG"));
-   if (pszEnv != NULL)
-      nx_strncpy(szConfigFile, pszEnv, MAX_PATH);
+   const TCHAR *env = _tgetenv(_T("NETXMSD_CONFIG"));
+   if ((env != NULL) && (*env != 0))
+      nx_strncpy(szConfigFile, env, MAX_PATH);
 #endif
 
    // Parse command line
@@ -647,6 +642,17 @@ int main(int argc, char *argv[])
 #if !defined(_WIN32) && !defined(_NETWARE)
 	if (!_tcscmp(szConfigFile, _T("{search}")))
 	{
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if ((homeDir != NULL) && (*homeDir != 0))
+      {
+         TCHAR config[MAX_PATH];
+         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
+		   if (_taccess(config, 4) == 0)
+		   {
+			   _tcscpy(g_szConfigFile, config);
+            goto stop_search;
+		   }
+      }
 		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
 		{
 			_tcscpy(szConfigFile, PREFIX _T("/etc/netxmsd.conf"));
@@ -659,6 +665,8 @@ int main(int argc, char *argv[])
 		{
 			_tcscpy(szConfigFile, _T("/etc/netxmsd.conf"));
 		}
+stop_search:
+      ;
 	}
 #endif
 

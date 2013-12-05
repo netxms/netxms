@@ -87,6 +87,17 @@ BOOL NXCORE_EXPORTABLE LoadConfig()
 #if !defined(_WIN32) && !defined(_NETWARE)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if ((homeDir != NULL) && (*homeDir != 0))
+      {
+         TCHAR config[MAX_PATH];
+         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
+		   if (_taccess(config, 4) == 0)
+		   {
+			   _tcscpy(g_szConfigFile, config);
+            goto stop_search;
+		   }
+      }
 		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
 		{
 			_tcscpy(g_szConfigFile, PREFIX _T("/etc/netxmsd.conf"));
@@ -99,6 +110,8 @@ BOOL NXCORE_EXPORTABLE LoadConfig()
 		{
 			_tcscpy(g_szConfigFile, _T("/etc/netxmsd.conf"));
 		}
+stop_search:
+      ;
 	}
 #endif
 

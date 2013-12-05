@@ -317,7 +317,6 @@ int main(int argc, char* argv[])
 #else
    int i;
    FILE *fp;
-   TCHAR *pszEnv;
 #endif
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
@@ -344,9 +343,11 @@ int main(int argc, char* argv[])
       RegCloseKey(hKey);
    }
 #else
-   pszEnv = _tgetenv(_T("NETXMSD_CONFIG"));
-   if (pszEnv != NULL)
+   const TCHAR *configEnv = _tgetenv(_T("NETXMSD_CONFIG"));
+   if ((configEnv != NULL) && (*configEnv != 0))
+   {
       nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
+   }
 #endif
 
    if (!ParseCommandLine(argc, argv))

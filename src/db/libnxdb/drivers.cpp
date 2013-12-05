@@ -108,7 +108,15 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	TCHAR fullName[MAX_PATH];
 	if (_tcschr(module, _T('/')) == NULL)
 	{
-		_sntprintf(fullName, MAX_PATH, _T("%s/dbdrv/%s"), PKGLIBDIR, module);
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if ((homeDir != NULL) && (*homeDir != 0))
+      {
+         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/dbdrv/%s"), homeDir, module);
+      }
+      else
+      {
+		   _sntprintf(fullName, MAX_PATH, _T("%s/dbdrv/%s"), PKGLIBDIR, module);
+      }
 	}
 	else
 	{
