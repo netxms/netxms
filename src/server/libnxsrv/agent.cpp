@@ -68,18 +68,18 @@ THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
 /**
  * Constructor for AgentConnection
  */
-AgentConnection::AgentConnection(UINT32 dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
+AgentConnection::AgentConnection(UINT32 ipAddr, WORD port, int authMethod, const TCHAR *secret)
 {
-   m_dwAddr = dwAddr;
-   m_wPort = wPort;
-   m_iAuthMethod = iAuthMethod;
-   if (pszSecret != NULL)
+   m_dwAddr = ipAddr;
+   m_wPort = port;
+   m_iAuthMethod = authMethod;
+   if (secret != NULL)
    {
 #ifdef UNICODE
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pszSecret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
+		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
 		m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-      nx_strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH);
+      nx_strncpy(m_szSecret, secret, MAX_SECRET_LENGTH);
 #endif
    }
    else

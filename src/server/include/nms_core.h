@@ -283,9 +283,8 @@ protected:
    virtual void onDataPush(CSCPMessage *msg);
 
 public:
-   AgentConnectionEx(UINT32 nodeId, UINT32 ipAddr, WORD wPort = AGENT_LISTEN_PORT,
-                     int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL) :
-            AgentConnection(ipAddr, wPort, iAuthMethod, pszSecret) { m_nodeId = nodeId; }
+   AgentConnectionEx(UINT32 nodeId, UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
+            AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
    virtual ~AgentConnectionEx();
 
 	UINT32 deployPolicy(AgentPolicy *policy);

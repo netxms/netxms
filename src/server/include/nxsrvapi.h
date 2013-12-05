@@ -474,8 +474,7 @@ protected:
 	NXCPEncryptionContext *acquireEncryptionContext();
 
 public:
-   AgentConnection(UINT32 dwAddr, WORD wPort = AGENT_LISTEN_PORT,
-                   int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
+   AgentConnection(UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
    BOOL connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
