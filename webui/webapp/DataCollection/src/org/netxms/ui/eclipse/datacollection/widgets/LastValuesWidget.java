@@ -91,6 +91,7 @@ public class LastValuesWidget extends Composite
 	private FilterText filterText;
 	private SortableTableViewer dataViewer;
 	private LastValuesLabelProvider labelProvider;
+	private LastValuesComparator comparator;
 	private LastValuesFilter filter;
 	private boolean autoRefreshEnabled = false;
 	private int autoRefreshInterval = 30000;	// in milliseconds
@@ -159,10 +160,11 @@ public class LastValuesWidget extends Composite
 		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
 		labelProvider = new LastValuesLabelProvider();
+		comparator = new LastValuesComparator();
 		filter = new LastValuesFilter();
 		dataViewer.setLabelProvider(labelProvider);
 		dataViewer.setContentProvider(new ArrayContentProvider());
-		dataViewer.setComparator(new LastValuesComparator());
+		dataViewer.setComparator(comparator);
 		dataViewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(dataViewer, ds, configPrefix);
 		
@@ -219,9 +221,15 @@ public class LastValuesWidget extends Composite
 		else
 			labelProvider.setUseMultipliers(true);
 		if (ds.get(configPrefix + ".showErrors") != null) //$NON-NLS-1$
+		{
 			labelProvider.setShowErrors(ds.getBoolean(configPrefix + ".showErrors")); //$NON-NLS-1$
+			comparator.setShowErrors(ds.getBoolean(configPrefix + ".showErrors")); //$NON-NLS-1$
+		}
 		else
+		{
 			labelProvider.setShowErrors(true);
+			comparator.setShowErrors(true);
+		}
 		filter.setShowDisabled(ds.getBoolean(configPrefix + ".showDisabled")); //$NON-NLS-1$
 		filter.setShowUnsupported(ds.getBoolean(configPrefix + ".showUnsupported")); //$NON-NLS-1$
 		
@@ -509,6 +517,7 @@ public class LastValuesWidget extends Composite
 	public void setShowErrors(boolean show)
 	{
 		labelProvider.setShowErrors(show);
+		comparator.setShowErrors(show);
 		if (dataViewer != null)
 		{
 			dataViewer.refresh(true);

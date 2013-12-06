@@ -21,7 +21,9 @@ package org.netxms.ui.eclipse.datacollection.widgets.internal;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -30,7 +32,9 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class LastValuesComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
+   private boolean showErrors = true;
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
 	@Override
@@ -50,7 +54,7 @@ public class LastValuesComparator extends ViewerComparator
 				result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
 				break;
 			case LastValuesWidget.COLUMN_VALUE:
-				result = v1.getValue().compareToIgnoreCase(v2.getValue());
+				result = compareValue(v1, v2);
 				break;
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				result = v1.getTimestamp().compareTo(v2.getTimestamp());
@@ -61,4 +65,90 @@ public class LastValuesComparator extends ViewerComparator
 		}
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
+	
+	/**
+	 * Compare DCI values taking data type into consideration
+	 * 
+	 * @param v1
+	 * @param v2
+	 * @return
+	 */
+	private int compareValue(DciValue dci1, DciValue dci2)
+	{
+	   int dt1, dt2;
+	   String v1, v2;
+
+	   if (showErrors && (dci1.getErrorCount() > 0))
+	   {
+	      dt1 = DataCollectionObject.DT_STRING;
+	      v1 = Messages.get().LastValuesLabelProvider_Error;
+	   }
+	   else if (dci1.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
+	   {
+         dt1 = DataCollectionObject.DT_STRING;
+         v1 = Messages.get().LastValuesLabelProvider_Table;
+	   }
+	   else
+	   {
+	      dt1 = dci1.getDataType();
+	      v1 = dci1.getValue();
+	   }
+	   
+      if (showErrors && (dci2.getErrorCount() > 0))
+      {
+         dt2 = DataCollectionObject.DT_STRING;
+         v2 = Messages.get().LastValuesLabelProvider_Error;
+      }
+      else if (dci2.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
+      {
+         dt2 = DataCollectionObject.DT_STRING;
+         v2 = Messages.get().LastValuesLabelProvider_Table;
+      }
+      else
+      {
+         dt2 = dci2.getDataType();
+         v2 = dci2.getValue();
+      }
+      
+	   int dataType = Math.max(dt1, dt2);
+	   try
+	   {
+   	   switch(dataType)
+   	   {
+   	      case DataCollectionObject.DT_INT:
+   	         return Integer.signum(Integer.parseInt(v1) - Integer.parseInt(v2));
+            case DataCollectionObject.DT_UINT:
+            case DataCollectionObject.DT_INT64:
+            case DataCollectionObject.DT_UINT64:
+               return Long.signum(Long.parseLong(v1) - Long.parseLong(v2));
+            case DataCollectionObject.DT_FLOAT:
+               // Maybe combination of String/Float because DT_FLOAT > DT_STRING
+               if ((dt1 == DataCollectionObject.DT_STRING) || (dt2 == DataCollectionObject.DT_STRING))
+                  return v1.compareToIgnoreCase(v2);
+               return (int)Math.signum(Double.parseDouble(v1) - Double.parseDouble(v2));
+   	      default:
+   	         return v1.compareToIgnoreCase(v2);
+   	   }
+	   }
+	   catch(NumberFormatException e)
+	   {
+	      return v1.compareToIgnoreCase(v2);
+	   }
+	}
+
+   /**
+    * @return the showErrors
+    */
+   public boolean isShowErrors()
+   {
+      return showErrors;
+   }
+
+   /**
+    * @param showErrors the showErrors to set
+    */
+   public void setShowErrors(boolean showErrors)
+   {
+      this.showErrors = showErrors;
+   }
 }
