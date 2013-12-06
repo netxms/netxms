@@ -106,7 +106,7 @@ public class EventSelectionDialog extends Dialog
 		
 		new Label(dialogArea, SWT.NONE).setText(Messages.get().EventSelectionDialog_Filter);
 		
-		filterText = new Text(dialogArea, SWT.NONE);
+		filterText = new Text(dialogArea, SWT.BORDER);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
