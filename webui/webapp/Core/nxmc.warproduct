@@ -141,6 +141,8 @@
       <plugin id="org.eclipse.osgi.services.nl_es" fragment="true"/>
       <plugin id="org.eclipse.osgi.services.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.osgi.services.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.rap.addons.filedialog"/>
+      <plugin id="org.eclipse.rap.addons.fileupload"/>
       <plugin id="org.eclipse.rap.draw2d"/>
       <plugin id="org.eclipse.rap.draw2d.compatibility"/>
       <plugin id="org.eclipse.rap.jface"/>
@@ -162,8 +164,6 @@
       <plugin id="org.eclipse.rap.rwt.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.rap.rwt.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.rap.rwt.osgi"/>
-      <plugin id="org.eclipse.rap.rwt.supplemental.filedialog"/>
-      <plugin id="org.eclipse.rap.rwt.supplemental.fileupload"/>
       <plugin id="org.eclipse.rap.ui"/>
       <plugin id="org.eclipse.rap.ui.forms"/>
       <plugin id="org.eclipse.rap.ui.forms.nl_cs" fragment="true"/>
@@ -182,8 +182,10 @@
       <plugin id="org.eclipse.rap.ui.workbench.nl_es" fragment="true"/>
       <plugin id="org.eclipse.rap.ui.workbench.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.rap.ui.workbench.nl_zh" fragment="true"/>
-      <plugin id="org.eclipse.zest"/>
       <plugin id="org.mozilla.javascript"/>
+      <plugin id="org.netxms.gef4.zest.core"/>
+      <plugin id="org.netxms.gef4.zest.jface"/>
+      <plugin id="org.netxms.gef4.zest.layouts"/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
@@ -205,6 +207,7 @@
       <plugin id="org.netxms.ui.eclipse.objectview"/>
       <plugin id="org.netxms.ui.eclipse.osm"/>
       <plugin id="org.netxms.ui.eclipse.perfview"/>
+      <plugin id="org.netxms.ui.eclipse.policymanager"/>
       <plugin id="org.netxms.ui.eclipse.reporter"/>
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
@@ -252,19 +255,21 @@
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi.services" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.addons.filedialog" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.addons.fileupload" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.draw2d" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.draw2d.compatibility" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.jface" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.jface.databinding" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.rwt" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.rwt.osgi" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.rap.rwt.supplemental.filedialog" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.rap.rwt.supplemental.fileupload" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui.forms" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui.workbench" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.zest" autoStart="true" startLevel="0" />
       <plugin id="org.mozilla.javascript" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.gef4.zest.core" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.gef4.zest.jface" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.gef4.zest.layouts" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.nebula.widgets.gallery" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.actionmanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.agentmanager" autoStart="true" startLevel="0" />
@@ -285,6 +290,7 @@
       <plugin id="org.netxms.ui.eclipse.objectview" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.osm" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.perfview" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.policymanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.reporter" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.serverconfig" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.serverjobmanager" autoStart="true" startLevel="0" />
