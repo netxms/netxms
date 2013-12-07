@@ -181,6 +181,7 @@ public:
    virtual const TCHAR *getName();
    virtual const TCHAR *getVersion();
 
+   virtual const TCHAR *getCustomTestOID();
    virtual int isPotentialDevice(const TCHAR *oid);
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
    virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData);

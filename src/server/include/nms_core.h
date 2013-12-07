@@ -801,7 +801,7 @@ bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, 
 
 void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
-SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext, const TCHAR *customTestOid);
+SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext, StringList *customTestOids);
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 
 void InitLocalNetInfo();
@@ -817,6 +817,7 @@ ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport)
 void LoadNetworkDeviceDrivers();
 NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport);
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
+void AddDriverSpecificOids(StringList *list);
 
 void WatchdogInit();
 UINT32 WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval);

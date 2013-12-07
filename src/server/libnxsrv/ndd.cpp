@@ -80,10 +80,23 @@ const TCHAR *NetworkDeviceDriver::getName()
 
 /**
  * Get driver version
+ *
+ * @return driver version
  */
 const TCHAR *NetworkDeviceDriver::getVersion()
 {
 	return NETXMS_VERSION_STRING;
+}
+
+/**
+ * Get custom OID that should be used to test SNMP connectivity. Default
+ * implementation always returns NULL.
+ *
+ * @return OID that should be used to test SNMP connectivity or NULL.
+ */
+const TCHAR *NetworkDeviceDriver::getCustomTestOID()
+{
+	return NULL;
 }
 
 /**

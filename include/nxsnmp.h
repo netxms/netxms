@@ -77,11 +77,9 @@
 #define OID_SHORTER        2
 #define OID_LONGER         3
 
-
-//
-// libnxsnmp error codes
-//
-
+/**
+ * libnxsnmp error codes
+ */
 #define SNMP_ERR_SUCCESS            0     /* success */
 #define SNMP_ERR_TIMEOUT            1     /* request timeout */
 #define SNMP_ERR_PARAM              2     /* invalid parameters passed to function */

@@ -2004,7 +2004,14 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 		return false;
 	}
 
-   SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity, m_customAttributes.get(_T("snmp.testoid")));
+   StringList oids;
+   const TCHAR *customOid = m_customAttributes.get(_T("snmp.testoid"));
+   if (customOid != NULL)
+      oids.add(customOid);
+   oids.add(_T(".1.3.6.1.2.1.1.2.0"));
+   oids.add(_T(".1.3.6.1.2.1.1.1.0"));
+   AddDriverSpecificOids(&oids);
+   SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity, &oids);
 	if (newCtx != NULL)
    {
       LockData();

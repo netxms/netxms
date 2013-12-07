@@ -177,6 +177,19 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 }
 
 /**
+ * Add all custom test OIDs specified by drivers to OID list
+ */
+void AddDriverSpecificOids(StringList *list)
+{
+	for(int i = 0; i < s_numDrivers; i++)
+	{
+      const TCHAR *oid = s_drivers[i]->getCustomTestOID();
+      if (oid != NULL)
+         list->add(oid);
+	}
+}
+
+/**
  * Find device driver by name. Will return default driver if name is empty
  * or driver with given name does not exist.
  *
