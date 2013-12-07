@@ -62,7 +62,7 @@
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console&#x0A;&#x0A;Version 1.2.10-M3&#x0A;Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein">
+               value="NetXMS Management Console&#x0A;&#x0A;Version 1.2.10&#x0A;Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein">
          </property>
          <property
                name="startupForegroundColor"
