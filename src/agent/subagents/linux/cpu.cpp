@@ -168,7 +168,7 @@ static void CpuUsageCollector()
 	MutexUnlock(m_cpuUsageMutex);
 
 	fclose(hStat);
-	m_maxCPU = maxCpu - 1;
+	m_maxCPU = maxCpu;
 }
 
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
@@ -378,6 +378,6 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 
 LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
-	ret_uint(pValue, (m_maxCPU > 0) ? m_maxCPU : 1);
+	ret_uint(pValue, m_maxCPU);
 	return SYSINFO_RC_SUCCESS;
 }
