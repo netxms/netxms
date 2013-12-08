@@ -2354,6 +2354,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/lib/cisco/Makefile
 	src/server/drivers/netscreen/Makefile
 	src/server/drivers/ntws/Makefile
+	src/server/drivers/ping3/Makefile
 	src/server/drivers/procurve/Makefile
 	src/server/drivers/symbol-ws/Makefile
 	src/server/include/Makefile
