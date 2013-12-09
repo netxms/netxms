@@ -1,5 +1,4 @@
 #!/bin/sh
 
-if test -x /etc/init.d/netxmsd; then
-        /etc/init.d/netxmsd start
-fi
+svccfg import /var/svc/manifest/application/management/nxagentd.xml
+svccfg import /var/svc/manifest/application/management/netxmsd.xml

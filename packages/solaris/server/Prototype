@@ -66,6 +66,7 @@ f none /opt/netxms/lib/netxms/ndd/dell-pwc.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/dlink.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/ers8000.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/netscreen.ndd 0755 root other
+f none /opt/netxms/lib/netxms/ndd/ping3.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/procurve.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/symbol_ws.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/ntws.ndd 0755 root other
