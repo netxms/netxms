@@ -27,6 +27,8 @@ Var
   SubagentSelectionPage: TInputOptionWizardPage;
   serverName, sbECS, sbLogWatch, sbPing, sbPortCheck, sbWinPerf, sbWMI, sbUPS, sbDownloadConfig: String;
 
+#include "..\..\install\windows\firewall.iss"
+
 Procedure StopService;
 Var
   strExecName : String;
@@ -240,3 +242,16 @@ Begin
     Result := '';
 End;
 
+Procedure CurStepChanged(CurStep: TSetupStep);
+Begin
+  If CurStep=ssPostInstall Then Begin
+     SetFirewallException('NetXMS Agent', ExpandConstant('{app}')+'\bin\nxagentd.exe');
+  End;
+End;
+
+Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+Begin
+  If CurUninstallStep=usPostUninstall Then Begin
+     RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
+  End;
+End;

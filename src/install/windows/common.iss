@@ -42,6 +42,8 @@ Var
   HttpdSettingsPage: TInputQueryWizardPage;
   flagStartConsole: Boolean;
 
+#include "firewall.iss"
+
 Function InitializeSetup(): Boolean;
 Var
   i, nCount : Integer;
@@ -110,4 +112,20 @@ End;
 Function GetMasterServer(Param: String): String;
 Begin
   Result := HttpdSettingsPage.Values[0];
+End;
+
+Procedure CurStepChanged(CurStep: TSetupStep);
+Begin
+  If CurStep=ssPostInstall Then Begin
+     SetFirewallException('NetXMS Server', ExpandConstant('{app}')+'\bin\netxmsd.exe');
+     SetFirewallException('NetXMS Agent', ExpandConstant('{app}')+'\bin\nxagentd.exe');
+  End;
+End;
+
+Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+Begin
+  If CurUninstallStep=usPostUninstall Then Begin
+     RemoveFirewallException(ExpandConstant('{app}')+'\bin\netxmsd.exe');
+     RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
+  End;
 End;

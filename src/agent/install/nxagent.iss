@@ -3,7 +3,7 @@
 
 [Setup]
 #include "setup.iss"
-OutputBaseFilename=nxagent-1.2.9
+OutputBaseFilename=nxagent-1.2.10
 
 [Files]
 Source: "..\..\..\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
@@ -26,8 +26,8 @@ Source: "..\..\..\Release\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversio
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
 Source: "..\..\..\release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\release\libtre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\..\install\windows\files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\..\install\windows\files\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion
+Source: "..\..\install\files\windows\x86\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\install\files\windows\x86\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion
 ; Command-line tools
 Source: "..\..\..\Release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\Release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion

@@ -14,6 +14,8 @@ Filename: "{app}\WebUI\prunsrv.exe"; Parameters: "//DS//nxWebUI"; WorkingDir: "{
 var
   DetailsPage : TInputQueryWizardPage;
 
+#include "firewall.iss"
+
 Procedure InitializeWizard;
 begin
   DetailsPage := CreateInputQueryPage(wpSelectComponents,
@@ -57,3 +59,16 @@ Begin
   Exec('net.exe', 'stop nxWebUI', ExpandConstant('{app}\WebUI'), 0, ewWaitUntilTerminated, iResult);
 End;
 
+Procedure CurStepChanged(CurStep: TSetupStep);
+Begin
+  If CurStep=ssPostInstall Then Begin
+     SetFirewallException('NetXMS WebUI', ExpandConstant('{app}')+'\WebUI\prunsrv.exe');
+  End;
+End;
+
+Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+Begin
+  If CurUninstallStep=usPostUninstall Then Begin
+     RemoveFirewallException(ExpandConstant('{app}')+'\WebUI\prunsrv.exe');
+  End;
+End;

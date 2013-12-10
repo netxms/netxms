@@ -3,7 +3,7 @@
 
 [Setup]
 #include "setup.iss"
-OutputBaseFilename=nxagent-1.2.9-x64
+OutputBaseFilename=nxagent-1.2.10-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
@@ -28,8 +28,8 @@ Source: "..\..\..\x64\Release\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
 Source: "..\..\..\x64\release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\x64\release\libtre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\..\install\windows\files-x64\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\..\install\windows\files-x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion
+Source: "..\..\install\files\windows\x64\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\install\files\windows\x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion
 ; Command-line tools
 Source: "..\..\..\x64\release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\x64\release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
@@ -44,4 +44,3 @@ Function GetCustomCmdLine(Param: String): String;
 Begin
   Result := '';
 End;
-
