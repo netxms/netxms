@@ -93,11 +93,6 @@
       <plugin id="org.eclipse.equinox.common.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.common.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.equinox.console"/>
-      <plugin id="org.eclipse.equinox.http.jetty.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.equinox.http.jetty.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.equinox.http.jetty.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.equinox.http.jetty.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.equinox.http.jetty.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.equinox.http.registry"/>
       <plugin id="org.eclipse.equinox.http.registry.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.equinox.http.registry.nl_de" fragment="true"/>
