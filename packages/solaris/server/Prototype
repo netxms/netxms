@@ -58,6 +58,7 @@ f none /opt/netxms/lib/netxms/dbdrv/pgsql.ddr 0755 root other
 f none /opt/netxms/lib/netxms/dbdrv/sqlite.ddr 0755 root other
 f none /opt/netxms/lib/netxms/ecs.nsm 0755 root other
 f none /opt/netxms/lib/netxms/logwatch.nsm 0755 root other
+f none /opt/netxms/lib/netxms/ndd/at.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/baystack.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/cat2900xl.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/catalyst.ndd 0755 root other
