@@ -85,6 +85,13 @@
             name="%tab.name.Interfaces"
             order="60">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.NodesTab"
+            icon="icons/nodes.png"
+            id="org.netxms.ui.eclipse.objectview.objecttabs.NodesTab"
+            name="%tab.name.Nodes"
+            order="50">
+      </tab>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
