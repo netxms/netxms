@@ -56,8 +56,8 @@
 
                 <property_group name='netxms' type='application'>
                         <propval name='bin' type='astring' value='/opt/netxms/bin' />
-                        <!-- <propval name='server_config' type='astring' value='' /> -->
-                        <!-- <propval name='server_debuglevel' type='integer' value='' /> -->
+                        <propval name='server_config' type='astring' value='' />
+                        <propval name='server_debuglevel' type='integer' value='' />
                         <propval name='value_authorization' type='astring' value='solaris.smf.value.netxms' />
                 </property_group>
         </instance>

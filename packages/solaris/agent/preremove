@@ -1,0 +1,7 @@
+#!/bin/sh
+
+svcs nxagentd >/dev/null 2>&1
+if [ $? = 0 ]; then
+	svcadm disable nxagentd
+	svccfg delete nxagentd
+fi

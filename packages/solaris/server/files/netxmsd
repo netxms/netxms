@@ -14,8 +14,8 @@ getproparg() {
 }
 
 NXBIN=`getproparg netxms/bin`
-CONFIGFILE=`getproparg netxms/agent_config`
-DEBUGLEVEL=`getproparg netxms/agent_debuglevel`
+CONFIGFILE=`getproparg netxms/server_config`
+DEBUGLEVEL=`getproparg netxms/server_debuglevel`
 
 ARGS=
 
