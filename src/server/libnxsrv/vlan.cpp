@@ -85,6 +85,19 @@ VlanInfo *VlanList::findById(int id)
 }
 
 /**
+ * Find VLAN by name
+ *
+ * @param name VLAN name
+ */
+VlanInfo *VlanList::findByName(const TCHAR *name)
+{
+	for(int i = 0; i < m_size; i++)
+		if (!_tcsicmp(m_vlans[i]->getName(), name))
+			return m_vlans[i];
+	return NULL;
+}
+
+/**
  * Fill NXCP  message with vlans data
  */
 void VlanList::fillMessage(CSCPMessage *msg)

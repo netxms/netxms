@@ -14,13 +14,14 @@
 - Unknown SNMP trap sources can be automatically added as nodes
 - Syslog processing optinmized for performance
 - Default shared secret for agents can be configured
-- Added driver for Ping3 devices
+- Driver for Ping3 devices
+- Driver for Allied Telesis switches
 - Management console:
 	- New command line option -fullscreen
 	- Option to draw borders around each value in "gauge" dashboard elements
 	- Sorting by value in "Last Values" view takes data type into consideration 
 	- Czech and Russian localization
-- Fixed issues: #150, #226, #307, #330, #362, #363, #364, #366, #373, #378, 
+- Fixed issues: #150, #226, #307, #330, #362, #363, #364, #366, #367, #373, #378, 
                 #384, #387, #390, $401, #410, #414, #416, #419, #439, #440
 
 

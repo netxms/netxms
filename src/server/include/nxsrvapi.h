@@ -300,6 +300,7 @@ public:
 	int getSize() { return m_size; }
 	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : NULL; }
 	VlanInfo *findById(int id);
+	VlanInfo *findByName(const TCHAR *name);
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
