@@ -19,6 +19,10 @@ DEBUGLEVEL=`getproparg netxms/agent_debuglevel`
 
 ARGS=
 
+if [ -f $NXBIN/nxenv ]; then
+	. $NXBIN/nxenv
+fi
+
 if [ -z $SMF_FMRI ]; then
 	echo "Error: SMF framework variables are not initialized"
 	exit $SMF_EXIT_ERR
