@@ -171,6 +171,13 @@
             name="%tab.name.Ports"
             order="70">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.topology.objecttabs.AddressMap"
+            icon="icons/address_map.png"
+            id="org.netxms.ui.eclipse.topology.objecttabs.AddressMap"
+            name="%tab.name.AddressMap"
+            order="100">
+      </tab>
    </extension>
 
 </plugin>

@@ -42,6 +42,35 @@ public class Subnet extends GenericObject
 	}
 	
 	/**
+	 * Get number of bits in subnet mask
+	 * 
+	 * @return
+	 */
+	public int getMaskBits()
+	{
+	   byte[] addr = subnetMask.getAddress();
+	   int bits = 0;
+	   for(int i = 0; i < addr.length; i++)
+	   {
+	      if (addr[i] == (byte)0xFF)
+	      {
+	         bits += 8;
+	      }
+	      else
+	      {
+	         for(int j = 0x80; j > 0; j >>= 1)
+	         {
+	            if ((addr[i] & j) == 0)
+	               break;
+	            bits++;
+	         }
+	         break;
+	      }
+	   }
+	   return bits;
+	}
+	
+	/**
 	 * @return Subnet mask
 	 */
 	public InetAddress getSubnetMask()

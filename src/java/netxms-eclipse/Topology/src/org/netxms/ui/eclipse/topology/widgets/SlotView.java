@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	 */
 	public SlotView(Composite parent, int style, String slotName)
 	{
-		super(parent, style | SWT.BORDER);
+		super(parent, style | SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		this.slotName = slotName;
 		
 		colors = new ColorCache(this);

@@ -19,9 +19,11 @@
 package org.netxms.client;
 
 import java.net.InetAddress;
+import java.util.Set;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Subnet;
 
 /**
  * @author Victor
@@ -167,5 +169,24 @@ public class ObjectTest extends SessionTest
 		printObject(object, 0);
 		
 		session.disconnect();
+	}
+	
+	public void testSubnetMaskBits() throws Exception
+	{
+      final NXCSession session = connect();
+      
+      session.syncObjects();
+
+      AbstractObject object = session.findObjectById(1, EntireNetwork.class);
+      assertNotNull(object);
+      assertEquals(1, object.getObjectId());
+
+      Set<AbstractObject> subnets = object.getAllChilds(AbstractObject.OBJECT_SUBNET);
+      for(AbstractObject s : subnets)
+      {
+         System.out.println(s.getObjectName() + ": " + ((Subnet)s).getSubnetMask().getHostAddress() + " " + ((Subnet)s).getMaskBits());
+      }
+      
+      session.disconnect();
 	}
 }

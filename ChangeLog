@@ -22,6 +22,7 @@
 	- Option to draw borders around each value in "gauge" dashboard elements
 	- Sorting by value in "Last Values" view takes data type into consideration
 	- "Nodes" tab in object details view for subnets and containers
+	- "Address Map" tab in object details view for subnets
 	- Czech and Russian localization
 - Fixed issues: #150, #226, #307, #330, #362, #363, #364, #366, #367, #373, #378, 
                 #384, #387, #390, $401, #410, #414, #416, #419, #439, #440

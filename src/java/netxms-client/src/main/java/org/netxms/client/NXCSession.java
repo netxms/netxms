@@ -6752,7 +6752,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
    
    /**
-    * Get address map for subnet.
+    * Get address map for subnet. Returned array contains one entry for each IP address
+    * in a subnet. Element value could be eithet ID of the node with that IP address,
+    * 0 for unused addresses, and 0xFFFFFFFF for subnet and broadcast addresses.
     * 
     * @param subnetId
     * @return
