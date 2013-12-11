@@ -101,11 +101,9 @@ static TCHAR *GetObjectName(DWORD dwId, TCHAR *pszBuffer)
 	return pszBuffer;
 }
 
-
-//
-// Check that given node is inside at least one container or cluster
-//
-
+/**
+ * Check that given node is inside at least one container or cluster
+ */
 static bool NodeInContainer(DWORD id)
 {
 	TCHAR query[256];
@@ -134,11 +132,9 @@ static bool NodeInContainer(DWORD id)
 	return result;
 }
 
-
-//
-// Find subnet for unlinked node
-//
-
+/**
+ * Find subnet for unlinked node
+ */
 static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 {
 	DB_RESULT hResult, hResult2;
@@ -260,11 +256,9 @@ static void CheckZones()
    EndStage();
 }
 
-
-//
-// Check node objects
-//
-
+/**
+ * Check node objects
+ */
 static void CheckNodes()
 {
    DB_RESULT hResult, hResult2;
@@ -349,11 +343,9 @@ static void CheckNodes()
    EndStage();
 }
 
-
-//
-// Check if node exists
-//
-
+/**
+ * Check if node exists
+ */
 BOOL IsNodeExist(DWORD dwId)
 {
 	TCHAR szQuery[256];
@@ -370,11 +362,9 @@ BOOL IsNodeExist(DWORD dwId)
 	return bRet;
 }
 
-
-//
-// Check node component objects
-//
-
+/**
+ * Check node component objects
+ */
 static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 {
    DB_RESULT hResult, hResult2;
@@ -464,11 +454,9 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
    EndStage();
 }
 
-
-//
-// Check common object properties
-//
-
+/**
+ * Check common object properties
+ */
 static void CheckObjectProperties()
 {
    DB_RESULT hResult;
@@ -503,11 +491,9 @@ static void CheckObjectProperties()
    EndStage();
 }
 
-
-//
-// Check cluster objects
-//
-
+/**
+ * Check cluster objects
+ */
 static void CheckClusters()
 {
    DB_RESULT hResult;
@@ -542,11 +528,9 @@ static void CheckClusters()
    EndStage();
 }
 
-
-//
-// Returns TRUE if SELECT returns non-empty set
-//
-
+/**
+ * Returns TRUE if SELECT returns non-empty set
+ */
 static BOOL CheckResultSet(TCHAR *pszQuery)
 {
    DB_RESULT hResult;
@@ -561,11 +545,9 @@ static BOOL CheckResultSet(TCHAR *pszQuery)
    return bResult;
 }
 
-
-//
-// Check event processing policy
-//
-
+/**
+ * Check event processing policy
+ */
 static void CheckEPP()
 {
    DB_RESULT hResult;

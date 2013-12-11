@@ -86,9 +86,16 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	public void setSubnet(Subnet subnet)
 	{
 	   this.subnet = subnet;
-      rowCount = ((1 << (32 - subnet.getMaskBits())) + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW;
-      if (rowCount > MAX_ROWS)
-         rowCount = MAX_ROWS;
+	   if (subnet != null)
+	   {
+         rowCount = ((1 << (32 - subnet.getMaskBits())) + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW;
+         if (rowCount > MAX_ROWS)
+            rowCount = MAX_ROWS;
+	   }
+	   else
+	   {
+	      rowCount = 0;
+	   }
 	   refresh();
 	}
 	
