@@ -2774,11 +2774,9 @@ static BOOL H_UpgradeFromV209(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V208 to V209
-//
-
+/**
+ * Upgrade from V208 to V209
+ */
 static BOOL H_UpgradeFromV208(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 

@@ -52,14 +52,13 @@
 
 void CheckDatabase();
 void InitDatabase(const char *pszInitFile);
-void ReindexDatabase();
-void ReindexIData();
 BOOL ClearDatabase();
 void ExportDatabase(const char *file);
 void ImportDatabase(const char *file);
 void MigrateDatabase(const TCHAR *sourceConfig);
 void UpgradeDatabase();
 void UnlockDatabase();
+void ReindexIData();
 DB_RESULT SQLSelect(const TCHAR *pszQuery);
 DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery);
 BOOL SQLExecute(DB_STATEMENT hStmt);

@@ -1,4 +1,3 @@
-/* $Id$ */
 /* 
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
@@ -202,11 +201,9 @@ static void DropAllIndexesFromTable(const TCHAR *table)
 	}
 }
 
-
-//
-// Reindex IDATA_xx tables
-//
-
+/**
+ * Reindex IDATA_xx tables
+ */
 void ReindexIData()
 {
 	TCHAR table[32], query[256], queryTemplate[256];
@@ -237,29 +234,4 @@ void ReindexIData()
 	}
 
 	DBFreeResult(hResult);
-}
-
-
-//
-// Reindex database
-//
-
-void ReindexDatabase()
-{
-	if (!ValidateDatabase())
-		return;
-
-	if (g_iSyntax != DB_SYNTAX_ORACLE)
-		RecreateIndex(_T("idx_raw_dci_values_item_id"), _T("raw_dci_values"), _T("item_id"));
-	RecreateIndex(_T("idx_event_log_event_timestamp"), _T("event_log"), _T("event_timestamp"));
-	RecreateIndex(_T("idx_thresholds_item_id"), _T("thresholds"), _T("item_id"));
-	RecreateIndex(_T("idx_thresholds_sequence"), _T("thresholds"), _T("sequence_number"));
-	RecreateIndex(_T("idx_alarm_notes_alarm_id"), _T("alarm_notes"), _T("alarm_id"));
-	RecreateIndex(_T("idx_syslog_msg_timestamp"), _T("syslog"), _T("msg_timestamp"));
-	RecreateIndex(_T("idx_snmp_trap_log_trap_timestamp"), _T("snmp_trap_log"), _T("trap_timestamp"));
-	RecreateIndex(_T("idx_address_lists_list_type"), _T("address_lists"), _T("list_type"));
-
-	ReindexIData();
-
-	_tprintf(_T("Database reindexing complete.\n"));
 }

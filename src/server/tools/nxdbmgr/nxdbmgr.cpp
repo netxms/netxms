@@ -544,11 +544,11 @@ int main(int argc, char *argv[])
                      _T("   get <name>         : Get value of server configuration variable\n")
                      _T("   import <file>      : Import database from file\n")
                      _T("   init <file>        : Initialize database\n")
-				         _T("   reindex            : Reindex database\n")
+				         _T("   migrate <source>   : Migrate database from given source\n")
+                     _T("   resetadmin         : Unlock user \"admin\" and reset password to default (\"netxms\")\n")
                      _T("   set <name> <value> : Set value of server configuration variable\n")
                      _T("   unlock             : Forced database unlock\n")
                      _T("   upgrade            : Upgrade database to new version\n")
-                     _T("   resetadmin         : Unlock user \"admin\" and reset password to default (\"netxms\")\n")
                      _T("Valid options are:\n")
                      _T("   -c <config> : Use alternate configuration file. Default is ") DEFAULT_CONFIG_FILE _T("\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
@@ -633,7 +633,6 @@ int main(int argc, char *argv[])
        strcmp(argv[optind], "import") && 
        strcmp(argv[optind], "init") &&
        strcmp(argv[optind], "migrate") &&
-       strcmp(argv[optind], "reindex") &&
        strcmp(argv[optind], "resetadmin") &&
        strcmp(argv[optind], "set") &&
        strcmp(argv[optind], "unlock") &&
@@ -747,8 +746,6 @@ stop_search:
          UpgradeDatabase();
       else if (!strcmp(argv[optind], "unlock"))
          UnlockDatabase();
-      else if (!strcmp(argv[optind], "reindex"))
-         ReindexDatabase();
       else if (!strcmp(argv[optind], "export"))
          ExportDatabase(argv[optind + 1]);
       else if (!strcmp(argv[optind], "import"))
