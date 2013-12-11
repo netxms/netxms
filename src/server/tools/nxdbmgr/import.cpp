@@ -109,34 +109,14 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 }
 
 /**
- * Import idata_xx tables
+ * Import data tables
  */
-static BOOL ImportIData(sqlite3 *db)
+static BOOL ImportDataTables(sqlite3 *db)
 {
-	DB_RESULT hResult;
-	int i, j, count;
-	DWORD id;
-	TCHAR buffer[1024], queryTemplate[5][MAX_DB_STRING];
+	int i, count;
+	TCHAR buffer[1024];
 
-	// Query for idata tables creation should be stored already in
-	// target database metadata table
-	if (!MetaDataReadStr(_T("IDataTableCreationCommand"), queryTemplate[0], MAX_DB_STRING, _T("")))
-	{
-		_tprintf(_T("ERROR: unable to determine correct query for idata tables creation\n"));
-		return FALSE;
-	}
-
-	// There can be up to 4 index creation queries for idata tables
-	for(i = 1; i < 5; i++)
-	{
-		_sntprintf(buffer, 1024, _T("IDataIndexCreationCommand_%d"), i - 1);
-		if (!MetaDataReadStr(buffer, queryTemplate[i], MAX_DB_STRING, _T("")))
-			break;
-	}
-	for(; i < 5; i++)
-		queryTemplate[i][0] = 0;
-
-	hResult = SQLSelect(_T("SELECT id FROM nodes"));
+	DB_RESULT hResult = SQLSelect(_T("SELECT id FROM nodes"));
 	if (hResult == NULL)
 		return FALSE;
 
@@ -144,25 +124,30 @@ static BOOL ImportIData(sqlite3 *db)
 	count = DBGetNumRows(hResult);
 	for(i = 0; i < count; i++)
 	{
-		id = DBGetFieldULong(hResult, i, 0);
-		_sntprintf(buffer, 1024, queryTemplate[0], id);
-		if (!SQLQuery(buffer))
+		DWORD id = DBGetFieldULong(hResult, i, 0);
+		if (!CreateIDataTable(id))
 			break;	// Failed to create idata_xx table
 
-		// Create indexes
-		for(j = 1; (j < 5) && (queryTemplate[j][0] != 0); j++)
-		{
-			_sntprintf(buffer, 1024, queryTemplate[j], id, id);
-			if (!SQLQuery(buffer))
-				goto cleanup;	// Failed to create index for idata_xx table
-		}
+		_sntprintf(buffer, 1024, _T("idata_%d"), id);
+		if (!ImportTable(db, buffer))
+			break;
 
-		_sntprintf(buffer, 1024, _T("idata_%d"), DBGetFieldULong(hResult, i, 0));
+      if (!CreateTDataTables(id))
+			break;	// Failed to create tdata tables
+
+		_sntprintf(buffer, 1024, _T("tdata_%d"), id);
+		if (!ImportTable(db, buffer))
+			break;
+
+      _sntprintf(buffer, 1024, _T("tdata_records_%d"), id);
+		if (!ImportTable(db, buffer))
+			break;
+
+      _sntprintf(buffer, 1024, _T("tdata_rows_%d"), id);
 		if (!ImportTable(db, buffer))
 			break;
 	}
 
-cleanup:
 	DBFreeResult(hResult);
 	return i == count;
 }
@@ -217,7 +202,7 @@ void ImportDatabase(const char *file)
 		if (!ImportTable(db, g_tables[i]))
 			goto cleanup;
 	}
-	if (!ImportIData(db))
+	if (!ImportDataTables(db))
 		goto cleanup;
 
 	success = TRUE;

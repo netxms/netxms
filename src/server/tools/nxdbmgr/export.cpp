@@ -188,7 +188,7 @@ static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 void ExportDatabase(const char *file)
 {
 	sqlite3 *db;
-	char *errmsg, buffer[MAX_PATH], queryTemplate[MAX_DB_STRING], *data;
+	char *errmsg, buffer[MAX_PATH], queryTemplate[11][MAX_DB_STRING], *data;
 	TCHAR idataTable[128];
    int i, rowCount, version = 0;
 	DB_RESULT hResult;
@@ -302,13 +302,28 @@ void ExportDatabase(const char *file)
 	}
 
 	// Export tables with collected DCI data
+   memset(queryTemplate, 0, sizeof(queryTemplate));
+
 	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='IDataTableCreationCommand'",
-	                 GetIDataQueryCB, queryTemplate, &errmsg) != SQLITE_OK)
+	                 GetIDataQueryCB, queryTemplate[0], &errmsg) != SQLITE_OK)
 	{
-		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
+		_tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
+
+   for(int i = 0; i < 10; i++)
+   {
+      sprintf(buffer, "SELECT var_value FROM metadata WHERE var_name='TDataTableCreationCommand_%d'", i);
+	   if (sqlite3_exec(db, buffer, GetIDataQueryCB, queryTemplate[i + 1], &errmsg) != SQLITE_OK)
+	   {
+		   _tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
+		   sqlite3_free(errmsg);
+		   goto cleanup;
+	   }
+      if (queryTemplate[i + 1][0] == 0)
+         break;
+   }
 
 	hResult = SQLSelect(_T("SELECT id FROM nodes"));
 	if (hResult == NULL)
@@ -317,16 +332,45 @@ void ExportDatabase(const char *file)
 	rowCount = DBGetNumRows(hResult);
 	for(i = 0; i < rowCount; i++)
 	{
-		snprintf(buffer, MAX_PATH, queryTemplate, DBGetFieldLong(hResult, i, 0));
-		if (sqlite3_exec(db, buffer, NULL, NULL, &errmsg) != SQLITE_OK)
+      UINT32 id = DBGetFieldLong(hResult, i, 0);
+
+      for(int j = 0; j < 11; j++)
+      {
+         if (queryTemplate[j][0] == 0)
+            break;
+
+		   snprintf(buffer, MAX_PATH, queryTemplate[j], id, id);
+		   if (sqlite3_exec(db, buffer, NULL, NULL, &errmsg) != SQLITE_OK)
+		   {
+            _tprintf(_T("ERROR: SQLite query failed: %hs (%hs)\n"), buffer, errmsg);
+			   sqlite3_free(errmsg);
+			   DBFreeResult(hResult);
+			   goto cleanup;
+		   }
+      }
+
+		_sntprintf(idataTable, 128, _T("idata_%d"), id);
+		if (!ExportTable(db, idataTable))
 		{
-			_tprintf(_T("ERROR: SQL query failed: %hs (%hs)\n"), buffer, errmsg);
-			sqlite3_free(errmsg);
 			DBFreeResult(hResult);
 			goto cleanup;
 		}
 
-		_sntprintf(idataTable, 128, _T("idata_%d"), DBGetFieldLong(hResult, i, 0));
+		_sntprintf(idataTable, 128, _T("tdata_%d"), id);
+		if (!ExportTable(db, idataTable))
+		{
+			DBFreeResult(hResult);
+			goto cleanup;
+		}
+
+		_sntprintf(idataTable, 128, _T("tdata_records_%d"), id);
+		if (!ExportTable(db, idataTable))
+		{
+			DBFreeResult(hResult);
+			goto cleanup;
+		}
+
+		_sntprintf(idataTable, 128, _T("tdata_rows_%d"), id);
 		if (!ExportTable(db, idataTable))
 		{
 			DBFreeResult(hResult);

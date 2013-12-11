@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ extern const TCHAR *g_tables[];
 /**
  * Delete idata_xx tables
  */
-static BOOL DeleteIData()
+static BOOL DeleteDataTables()
 {
 	DB_RESULT hResult;
 	TCHAR query[256];
@@ -42,10 +42,15 @@ static BOOL DeleteIData()
 		count = DBGetNumRows(hResult);
 		for(i = 0; i < count; i++)
 		{
-			_sntprintf(query, 256, _T("DROP TABLE idata_%d"), DBGetFieldULong(hResult, i, 0));
-			if (!SQLQuery(query))
-				if (!g_bIgnoreErrors)
-					return FALSE;
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+			_sntprintf(query, 256, _T("DROP TABLE idata_%d"), id);
+			CHK_EXEC(SQLQuery(query));
+			_sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), id);
+			CHK_EXEC(SQLQuery(query));
+			_sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), id);
+			CHK_EXEC(SQLQuery(query));
+			_sntprintf(query, 256, _T("DROP TABLE tdata_%d"), id);
+			CHK_EXEC(SQLQuery(query));
 		}
 		DBFreeResult(hResult);
 	}
@@ -69,9 +74,7 @@ static BOOL ClearTables()
 	for(i = 0; g_tables[i] != NULL; i++)
 	{
 		_sntprintf(query, 256, _T("DELETE FROM %s"), g_tables[i]);
-		if (!SQLQuery(query))
-			if (!g_bIgnoreErrors)
-				return FALSE;
+		CHK_EXEC(SQLQuery(query));
 	}
 	return TRUE;
 }
@@ -92,7 +95,7 @@ BOOL ClearDatabase()
 
 	if (DBBegin(g_hCoreDB))
 	{
-		if (DeleteIData() &&	ClearTables())
+		if (DeleteDataTables() &&	ClearTables())
 		{
 			success = DBCommit(g_hCoreDB);
 			_tprintf(success ? _T("Database successfully cleared\n") : _T("ERROR: cannot commit transaction\n"));
