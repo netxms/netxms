@@ -758,11 +758,9 @@ BOOL LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
 	return hResult->m_driver->m_fpDrvFetch(hResult->m_data);
 }
 
-
-//
-// Get field's value from asynchronous SELECT result
-//
-
+/**
+ * Get field's value from asynchronous SELECT result
+ */
 TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize)
 {
 #ifdef UNICODE
@@ -1035,6 +1033,14 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
    hStmt->m_driver->m_fpDrvFreeStatement(hStmt->m_statement);
    safe_free(hStmt->m_query);
 	free(hStmt);
+}
+
+/**
+ * Get source query for prepared statement
+ */
+const TCHAR LIBNXDB_EXPORTABLE *DBGetStatementSource(DB_STATEMENT hStmt)
+{
+   return hStmt->m_query;
 }
 
 /**

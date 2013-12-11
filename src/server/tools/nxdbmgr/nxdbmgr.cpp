@@ -62,7 +62,6 @@ static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
-   { _T("CreateCrashDumps"), CT_IGNORE, 0, 0, 0, 0, NULL },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
    { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
@@ -71,11 +70,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
-   { _T("DataDirectory"), CT_IGNORE, 0, 0, 0, 0, NULL },
-   { _T("DumpDirectory"), CT_IGNORE, 0, 0, 0, 0, NULL },
-   { _T("LogFailedSQLQueries"), CT_IGNORE, 0, 0, 0, 0, NULL },
-   { _T("LogFile"), CT_IGNORE, 0, 0, 0, 0, NULL },
-   { _T("Module"), CT_IGNORE, 0, 0, 0, 0, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 static BOOL m_bForce = FALSE;
@@ -186,6 +180,22 @@ DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery)
    if (hResult == NULL)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
    return hResult;
+}
+
+/**
+ * Execute prepared statement and print error message on screen if query failed
+ */
+BOOL SQLExecute(DB_STATEMENT hStmt)
+{
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+
+   if (g_bTrace)
+      ShowQuery(DBGetStatementSource(hStmt));
+
+   BOOL result = DBExecuteEx(hStmt, errorText);
+   if (!result)
+      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, DBGetStatementSource(hStmt));
+   return result;
 }
 
 /**
@@ -622,16 +632,17 @@ int main(int argc, char *argv[])
        strcmp(argv[optind], "get") && 
        strcmp(argv[optind], "import") && 
        strcmp(argv[optind], "init") &&
+       strcmp(argv[optind], "migrate") &&
        strcmp(argv[optind], "reindex") &&
+       strcmp(argv[optind], "resetadmin") &&
        strcmp(argv[optind], "set") &&
        strcmp(argv[optind], "unlock") &&
-       strcmp(argv[optind], "upgrade") &&
-       strcmp(argv[optind], "resetadmin"))
+       strcmp(argv[optind], "upgrade"))
    {
       _tprintf(_T("Invalid command \"%hs\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
       return 1;
    }
-   if (((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import") || !strcmp(argv[optind], "get")) && (argc - optind < 2)) ||
+   if (((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import") || !strcmp(argv[optind], "get") || !strcmp(argv[optind], "migrate")) && (argc - optind < 2)) ||
        (!strcmp(argv[optind], "set") && (argc - optind < 3)))
    {
       _tprintf(_T("Required command argument(s) missing\n"));
@@ -742,6 +753,18 @@ stop_search:
          ExportDatabase(argv[optind + 1]);
       else if (!strcmp(argv[optind], "import"))
          ImportDatabase(argv[optind + 1]);
+      else if (!strcmp(argv[optind], "migrate"))
+		{
+#ifdef UNICODE
+			WCHAR *sourceConfig = WideStringFromMBString(argv[optind + 1]);
+#else
+			char *sourceConfig = argv[optind + 1];
+#endif
+         MigrateDatabase(sourceConfig);
+#ifdef UNICODE
+			free(sourceConfig);
+#endif
+		}
       else if (!strcmp(argv[optind], "get"))
 		{
 #ifdef UNICODE

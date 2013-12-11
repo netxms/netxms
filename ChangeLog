@@ -17,6 +17,7 @@
 - Driver for Ping3 devices
 - Driver for Allied Telesis switches
 - Agent installer on Windows automatically adds firewall exception
+- Database migration tool
 - Management console:
 	- New command line option -fullscreen
 	- Option to draw borders around each value in "gauge" dashboard elements

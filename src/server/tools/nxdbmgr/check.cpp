@@ -43,7 +43,7 @@ static void StartStage(const TCHAR *pszMsg)
       safe_free(m_pszStageMsg);
       m_pszStageMsg = _tcsdup(pszMsg);
    }
-   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-67s"), m_pszStageMsg, stdout);
+   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-67s"), m_pszStageMsg);
 #ifndef _WIN32
    fflush(stdout);
 #endif

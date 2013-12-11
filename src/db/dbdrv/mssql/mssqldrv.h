@@ -90,6 +90,8 @@ typedef struct
    MSSQL_CONN *pConn;
    BOOL bNoMoreRows;
 	char **columnNames;
+   WCHAR **data;
+   BYTE *dataBuffer;
 } MSSQL_ASYNC_QUERY_RESULT;
 
 

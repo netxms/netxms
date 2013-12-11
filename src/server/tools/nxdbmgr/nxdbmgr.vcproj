@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\migrate.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\mm.cpp"
 				>
 			</File>
