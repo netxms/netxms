@@ -8,6 +8,7 @@
 	- New functions: GetDCIValues
 - Server's ICMP ping timeout can be configured
 - DB/2 monitoring subagent
+- DB/2 supported as backend database
 - Table DCIs can be used in condition objects
 - nxapush can push data on behalf of other nodes
 - Transformation script can be run on aggregated DCIs
