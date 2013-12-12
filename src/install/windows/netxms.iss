@@ -179,19 +179,19 @@ Source: "..\..\..\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversio
 Source: "..\..\..\Release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\Release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 ; Third party files
-Source: "Files\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
-Source: "Files\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files\libintl-8.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
-Source: "Files\oraociei11.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
-Source: "Files\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "Files\jre\*"; DestDir: "{app}\bin\jre"; Flags: ignoreversion recursesubdirs; Components: jre
+Source: "..\files\windows\x86\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
+Source: "..\files\windows\x86\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "..\files\windows\x86\libintl-8.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "..\files\windows\x86\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "..\files\windows\x86\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
+Source: "..\files\windows\x86\oraociei11.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
+Source: "..\files\windows\x86\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "..\files\windows\x86\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "..\files\windows\x86\jre\*"; DestDir: "{app}\bin\jre"; Flags: ignoreversion recursesubdirs; Components: jre
 ; Install-time files
-Source: "Files\vcredist_x86.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
-Source: "Files\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
-Source: "Files\sqlncli.msi"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\mssql
+Source: "..\files\windows\x86\vcredist_x86.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
+Source: "..\files\windows\x86\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
+Source: "..\files\windows\x86\sqlncli.msi"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\mssql
 
 #include "icons.iss"
 #include "run-full.iss"

@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Management Console
-AppVerName=NetXMS Management Console 1.2.9
-AppVersion=1.2.9
+AppVerName=NetXMS Management Console 1.2.10
+AppVersion=1.2.10
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName={pf}\NetXMS Management Console
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\GPL.txt
-OutputBaseFilename=netxms-console-1.2.9
+OutputBaseFilename=netxms-console-1.2.10
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -68,9 +68,9 @@ Source: "..\..\..\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversi
 Source: "..\..\..\Release\libnxsl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools and pdb
 Source: "..\..\..\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 ; Third party files
-Source: "..\..\install\windows\Files\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion; Components: console
-Source: "..\..\install\windows\Files\Microsoft.VC80.MFC\*"; DestDir: "{app}\bin\Microsoft.VC80.MFC"; Flags: ignoreversion; Components: console
-Source: "..\..\install\windows\Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "..\..\install\files\windows\x86\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion; Components: console
+Source: "..\..\install\files\windows\x86\Microsoft.VC80.MFC\*"; DestDir: "{app}\bin\Microsoft.VC80.MFC"; Flags: ignoreversion; Components: console
+Source: "..\..\install\files\windows\x86\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 
 [Icons]
 Name: "{group}\Alarm Notifier"; Filename: "{app}\bin\nxnotify.exe"; Components: console

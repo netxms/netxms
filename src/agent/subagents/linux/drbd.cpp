@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2006-2010 Victor Kirhenshtein
+** Copyright (C) 2006-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,19 +21,15 @@
 #include <linux_subagent.h>
 #include <regex.h>
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define MAX_DEVICE_COUNT        64
 #define STATUS_FIELD_LEN        64
 
-
-//
-// DRBD device structure
-//
-
+/**
+ * DRBD device structure
+ */
 typedef struct
 {
 	int id;
@@ -45,25 +41,21 @@ typedef struct
 	char remoteDataState[STATUS_FIELD_LEN];
 } DRBD_DEVICE;
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static DRBD_DEVICE s_devices[MAX_DEVICE_COUNT];
 static MUTEX s_deviceAccess = INVALID_MUTEX_HANDLE;
 static MUTEX s_versionAccess = INVALID_MUTEX_HANDLE;
 static char s_drbdVersion[32] = "0.0.0";
 static int s_apiVersion = 0;
-static char s_protocolVersion = 0;
+static char s_protocolVersion[32] = "0";
 static CONDITION s_stopCondition = INVALID_CONDITION_HANDLE;
 static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
 
-
-//
-// Read and parse /proc/drbd file
-//
-
+/**
+ * Read and parse /proc/drbd file
+ */
 static bool ParseDrbdStatus()
 {
 	char line[1024];
@@ -73,9 +65,9 @@ static bool ParseDrbdStatus()
 	DRBD_DEVICE device;
 	bool rc = false;
 
-	if (regcomp(&pregVersion, "version: (.*) \\(api\\:([0-9]+)\\/proto\\:([0-9]+)\\)", REG_EXTENDED) != 0)
+	if (regcomp(&pregVersion, "version: (.*) \\(api\\:([0-9]+)\\/proto\\:([0-9\\-]+)\\)", REG_EXTENDED) != 0)
 		return false;
-	if (regcomp(&pregDevice, "^[[:space:]]*([0-9]+)\\: cs\\:(.*) st\\:(.*)\\/(.*) ds\\:(.*)\\/(.*) ([A-Z]).*", REG_EXTENDED) != 0)
+	if (regcomp(&pregDevice, "^[[:space:]]*([0-9]+)\\: cs\\:(.*) (st|ro)\\:(.*)\\/(.*) ds\\:(.*)\\/(.*) ([A-Z]).*", REG_EXTENDED) != 0)
 	{
 		regfree(&pregVersion);
 		return false;
@@ -99,12 +91,12 @@ static bool ParseDrbdStatus()
 
 				memset(&device, 0, sizeof(DRBD_DEVICE));
 				device.id = strtol(&line[pmatch[1].rm_so], NULL, 10);
-				device.protocol = line[pmatch[7].rm_so];
+				device.protocol = line[pmatch[8].rm_so];
 				nx_strncpy_mb(device.connState, &line[pmatch[2].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy_mb(device.localDeviceState, &line[pmatch[3].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy_mb(device.remoteDeviceState, &line[pmatch[4].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy_mb(device.localDataState, &line[pmatch[5].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy_mb(device.remoteDataState, &line[pmatch[6].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.localDeviceState, &line[pmatch[4].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.remoteDeviceState, &line[pmatch[5].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.localDataState, &line[pmatch[6].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.remoteDataState, &line[pmatch[7].rm_so], STATUS_FIELD_LEN);
 
 				if ((device.id >= 0) && (device.id < MAX_DEVICE_COUNT))
 				{
@@ -119,7 +111,7 @@ static bool ParseDrbdStatus()
 				MutexLock(s_versionAccess);
 				nx_strncpy_mb(s_drbdVersion, &line[pmatch[1].rm_so], 32);
 				s_apiVersion = strtol(&line[pmatch[2].rm_so], NULL, 10);
-				s_protocolVersion = strtol(&line[pmatch[3].rm_so], NULL, 10);
+				nx_strncpy_mb(s_protocolVersion, &line[pmatch[3].rm_so], 32);
 				MutexUnlock(s_versionAccess);
 			}
 		}
@@ -140,11 +132,9 @@ static bool ParseDrbdStatus()
 	return rc;
 }
 
-
-//
-// DRBD stat collector thread
-//
-
+/**
+ * DRBD stat collector thread
+ */
 static THREAD_RESULT THREAD_CALL CollectorThread(void *arg)
 {
 	if (!ParseDrbdStatus())
@@ -158,11 +148,9 @@ static THREAD_RESULT THREAD_CALL CollectorThread(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Initialize DRBD stat collector
-//
-
+/**
+ * Initialize DRBD stat collector
+ */
 void InitDrbdCollector()
 {
 	s_deviceAccess = MutexCreate();
@@ -171,11 +159,9 @@ void InitDrbdCollector()
 	s_collectorThread = ThreadCreateEx(CollectorThread, 0, NULL);
 }
 
-
-//
-// Stop DRBD stat collector
-//
-
+/**
+ * Stop DRBD stat collector
+ */
 void StopDrbdCollector()
 {
 	ConditionSet(s_stopCondition);
@@ -185,11 +171,9 @@ void StopDrbdCollector()
 	MutexDestroy(s_versionAccess);
 }
 
-
-//
-// Get list of configured DRBD devices
-//
-
+/**
+ * Get list of configured DRBD devices
+ */
 LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue)
 {
 	TCHAR szBuffer[1024];
@@ -210,11 +194,9 @@ LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Get DRBD version
-//
-
+/**
+ * Get DRBD version
+ */
 LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
@@ -227,7 +209,7 @@ LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 			ret_int(pValue, s_apiVersion);
 			break;
 		case 'p':	// Protocol version
-			ret_int(pValue, s_protocolVersion);
+			ret_mbstring(pValue, s_protocolVersion);
 			break;
 		default:
 			nRet = SYSINFO_RC_UNSUPPORTED;
@@ -236,11 +218,9 @@ LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
-
-//
-// Get information for specific DRBD device
-//
-
+/**
+ * Get information for specific DRBD device
+ */
 LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nDev;
