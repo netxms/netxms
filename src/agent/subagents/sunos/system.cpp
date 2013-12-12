@@ -271,6 +271,98 @@ LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
 }
 
 /**
+ * Read vminfo structure from kstat
+ */
+static bool ReadVMInfo(kstat_ctl_t *kc, struct vminfo *info)
+{
+	kstat_t *kp;
+	int i;
+	uint_t *pData;
+   bool success = false;
+
+	kstat_lock();
+   kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"vminfo");
+   if (kp != NULL)
+   {
+      if (kstat_read(kc, kp, NULL) != -1)
+      {
+         memcpy(info, kp->ks_data, sizeof(struct vminfo));
+         success = true;
+      }
+      else 
+      {
+         AgentWriteDebugLog(6, _T("SunOS: kstat_read failed in ReadVMInfo"));
+      }
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("SunOS: kstat_lookup failed in ReadVMInfo"));
+   }
+	kstat_unlock();
+   return success;
+}
+
+/**
+ * Last swap info update time
+ */
+static time_t s_lastSwapInfoUpdate = 0;
+static MUTEX s_swapInfoMutex = MutexCreate();
+static UINT64 s_swapUsed = 0;
+static UINT64 s_swapFree = 0;
+static UINT64 s_swapTotal = 0;
+
+/**
+ * Update swap info
+ */
+static void UpdateSwapInfo()
+{
+	kstat_lock();
+	kstat_ctl_t *kc = kstat_open();
+	if (kc != NULL)
+   {
+      kstat_unlock();
+      
+      struct vminfo v1, v2;
+      if (ReadVMInfo(kc, &v1))
+      {
+         ThreadSleep(1);
+         if (ReadVMInfo(kc, &v2))
+         {
+            s_swapUsed = v2.swap_alloc - v1.swap_alloc;
+            s_swapFree = v2.swap_free - v1.swap_free;
+            s_swapTotal = s_swapUsed + s_swapFree;
+         }
+      }
+      
+      kstat_lock();
+      kstat_close(kc);
+   }
+   else
+	{
+      AgentWriteDebugLog(6, _T("SunOS: kstat_open failed in UpdateSwapInfo"));
+      return;
+   }
+	kstat_unlock();
+}
+
+/**
+ * Get swap info counter, calling update if needed
+ */
+static UINT64 GetSwapCounter(UINT64 *cnt)
+{
+   MutexLock(s_swapInfoMutex);
+   time_t now = time(NULL);
+   if (now - s_lastSwapInfoUpdate > 10)   // older then 10 seconds
+   {
+      UpdateSwapInfo();
+      s_lastSwapInfoUpdate = now;
+   }
+   INT64 result = *cnt;
+   MutexUnlock(s_swapInfoMutex);
+   return result;
+}
+
+/**
  * Handler for System.Memory.* parameters
  */
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
@@ -312,6 +404,52 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 			if (nRet == SYSINFO_RC_SUCCESS)
 			{
 				ret_double(pValue, (double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * 100.0 /  (double)sysconf(_SC_PHYS_PAGES));
+			}
+			break;
+		case MEMINFO_SWAP_TOTAL:
+			ret_uint64(pValue, GetSwapCounter(&s_swapTotal) * qwPageSize);
+			break;
+		case MEMINFO_SWAP_FREE:
+         ret_uint64(pValue, GetSwapCounter(&s_swapFree) * qwPageSize);
+			break;
+		case MEMINFO_SWAP_FREEPCT:
+         ret_double(pValue, (double)GetSwapCounter(&s_swapFree) * 100.0 / (double)GetSwapCounter(&s_swapTotal));
+			break;
+		case MEMINFO_SWAP_USED:
+         ret_uint64(pValue, GetSwapCounter(&s_swapUsed) * qwPageSize);
+			break;
+		case MEMINFO_SWAP_USEDPCT:
+         ret_double(pValue, (double)GetSwapCounter(&s_swapUsed) * 100.0 / (double)GetSwapCounter(&s_swapTotal));
+			break;
+		case MEMINFO_VIRTUAL_TOTAL:
+			ret_uint64(pValue, ((QWORD)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal)) * qwPageSize);
+			break;
+		case MEMINFO_VIRTUAL_FREE:
+			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+			if (nRet == SYSINFO_RC_SUCCESS)
+			{
+				ret_uint64(pValue, ((QWORD)kn.value.ul + GetSwapCounter(&s_swapFree)) * qwPageSize);
+			}
+			break;
+		case MEMINFO_VIRTUAL_FREEPCT:
+			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+			if (nRet == SYSINFO_RC_SUCCESS)
+			{
+				ret_double(pValue, ((double)kn.value.ul + (double)GetSwapCounter(&s_swapFree)) * 100.0 / ((double)sysconf(_SC_PHYS_PAGES) + (double)GetSwapCounter(&s_swapTotal)));
+			}
+			break;
+		case MEMINFO_VIRTUAL_USED:
+			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+			if (nRet == SYSINFO_RC_SUCCESS)
+			{
+				ret_uint64(pValue, ((QWORD)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) + GetSwapCounter(&s_swapUsed)) * qwPageSize);
+			}
+			break;
+		case MEMINFO_VIRTUAL_USEDPCT:
+			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+			if (nRet == SYSINFO_RC_SUCCESS)
+			{
+				ret_double(pValue, ((double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) + (double)GetSwapCounter(&s_swapUsed)) * 100.0 /  ((double)sysconf(_SC_PHYS_PAGES) + (double)GetSwapCounter(&s_swapTotal)));
 			}
 			break;
 		default:

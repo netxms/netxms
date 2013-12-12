@@ -30,12 +30,14 @@
 LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
 LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
 LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table);
 LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
 LONG H_IOStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
 LONG H_IOStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
 LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
 LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue);
 LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
 LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
@@ -102,11 +104,9 @@ static NX_CFG_TEMPLATE s_cfgTemplate[] =
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-
-//
-// Initalization callback
-//
-
+/**
+ * Initalization callback
+ */
 static BOOL SubAgentInit(Config *config)
 {
 	if (!config->parseTemplate(_T("SunOS"), s_cfgTemplate))
@@ -119,11 +119,9 @@ static BOOL SubAgentInit(Config *config)
 	return TRUE;
 }
 
-
-//
-// Called by master agent at unload
-//
-
+/**
+ * Called by master agent at unload
+ */
 static void SubAgentShutdown()
 {
 	g_bShutdown = TRUE;
@@ -132,11 +130,9 @@ static void SubAgentShutdown()
 	MutexDestroy(s_kstatLock);
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Parameters provided by subagent
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Agent.SourcePackageSupport"), H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
@@ -230,19 +226,41 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.Memory.Physical.Used"), H_MemoryInfo, (const TCHAR *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
 	{ _T("System.Memory.Physical.UsedPerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_PHYSICAL_USEDPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
 	{ _T("System.Memory.Swap.Free"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
+	{ _T("System.Memory.Swap.FreePerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_FREEPCT, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_FREE_PCT },
 	{ _T("System.Memory.Swap.Total"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
 	{ _T("System.Memory.Swap.Used"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_USED },
+	{ _T("System.Memory.Swap.UsedPerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_USEDPCT, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_USED_PCT },
+	{ _T("System.Memory.Virtual.Free"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
+	{ _T("System.Memory.Virtual.FreePerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_FREEPCT, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
+	{ _T("System.Memory.Virtual.Total"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
+	{ _T("System.Memory.Virtual.Used"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+	{ _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_USEDPCT, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
 	{ _T("System.ProcessCount"), H_SysProcCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.Uname"), H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
 	{ _T("System.Uptime"), H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
 
-static NETXMS_SUBAGENT_LIST m_enums[] =
+/**
+ * Subagent's lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
+   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
 	{ _T("Net.InterfaceList"), H_NetIfList, NULL },
 	{ _T("System.ProcessList"), H_ProcessList, NULL }
 };
 
+/**
+ * Subagent's tables
+ */
+static NETXMS_SUBAGENT_TABLE m_tables[] =
+{
+   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES }
+};
+
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -252,9 +270,10 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NULL, // command handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
-	0, NULL,	// tables
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
+   sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+   m_tables,
    0, NULL,	// actions
 	0, NULL	// push parameters
 };

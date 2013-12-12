@@ -96,7 +96,6 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
 /**
  * Handler for FileSystem.Volumes table
  */

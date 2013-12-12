@@ -55,19 +55,15 @@ struct IO_STATS
 	DWORD histQueue[HISTORY_SIZE];
 };
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static IO_STATS s_data[MAX_DEVICES + 1];
 static int s_currSlot = 0;	// current history slot
 
-
-//
-// Process stats for single device
-//
-
+/**
+ * Process stats for single device
+ */
 static void ProcessDeviceStats(const char *dev, kstat_io_t *kio)
 {
 	int i;
@@ -103,11 +99,9 @@ static void ProcessDeviceStats(const char *dev, kstat_io_t *kio)
 	s_data[i].currQueue = kio->wcnt + kio->rcnt;
 }
 
-
-//
-// Calculate total values for all devices
-//
-
+/**
+ * Calculate total values for all devices
+ */
 static void CalculateTotals()
 {
 	QWORD br = 0, bw = 0;
@@ -129,11 +123,9 @@ static void CalculateTotals()
 	s_data[0].histQueue[s_currSlot] = q;
 }
 
-
-//
-// I/O stat collector
-//
-
+/**
+ * I/O stat collector
+ */
 THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 {
 	kstat_ctl_t *kc;
@@ -179,11 +171,9 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Calculate average value for 32bit series
-//
-
+/**
+ * Calculate average value for 32bit series
+ */
 static double CalculateAverage32(DWORD *series)
 {
 	double sum = 0;
@@ -192,11 +182,9 @@ static double CalculateAverage32(DWORD *series)
 	return sum / (double)HISTORY_SIZE;
 }
 
-
-//
-// Calculate min value for 32bit series
-//
-
+/**
+ * Calculate min value for 32bit series
+ */
 static DWORD CalculateMin32(DWORD *series)
 {
 	DWORD val = series[0];
@@ -206,11 +194,9 @@ static DWORD CalculateMin32(DWORD *series)
 	return val;
 }
 
-
-//
-// Calculate max value for 32bit series
-//
-
+/**
+ * Calculate max value for 32bit series
+ */
 static DWORD CalculateMax32(DWORD *series)
 {
 	DWORD val = series[0];
@@ -220,11 +206,9 @@ static DWORD CalculateMax32(DWORD *series)
 	return val;
 }
 
-
-//
-// Calculate average value for 64bit series
-//
-
+/**
+ * Calculate average value for 64bit series
+ */
 static QWORD CalculateAverage64(QWORD *series)
 {
 	QWORD sum = 0;
@@ -233,11 +217,9 @@ static QWORD CalculateAverage64(QWORD *series)
 	return sum / HISTORY_SIZE;
 }
 
-
-//
-// Calculate min value for 64bit series
-//
-
+/**
+ * Calculate min value for 64bit series
+ */
 static QWORD CalculateMin64(QWORD *series)
 {
 	QWORD val = series[0];
@@ -247,11 +229,9 @@ static QWORD CalculateMin64(QWORD *series)
 	return val;
 }
 
-
-//
-// Calculate max value for 64bit series
-//
-
+/**
+ * Calculate max value for 64bit series
+ */
 static QWORD CalculateMax64(QWORD *series)
 {
 	QWORD val = series[0];
@@ -261,11 +241,9 @@ static QWORD CalculateMax64(QWORD *series)
 	return val;
 }
 
-
-//
-// Get total I/O stat value
-//
-
+/**
+ * Get total I/O stat value
+ */
 LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
