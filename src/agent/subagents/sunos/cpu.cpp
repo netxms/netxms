@@ -71,11 +71,9 @@ static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
 	kstat_unlock();
 }
 
-
-//
-// CPU usage statistics collector thread
-//
-
+/**
+ * CPU usage statistics collector thread
+ */
 THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 {
 	kstat_ctl_t *kc;

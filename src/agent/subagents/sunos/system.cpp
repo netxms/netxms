@@ -21,6 +21,7 @@
  **/
 
 #include "sunos_subagent.h"
+#include <sys/sysinfo.h>
 #include <sys/systeminfo.h>
 
 /**
