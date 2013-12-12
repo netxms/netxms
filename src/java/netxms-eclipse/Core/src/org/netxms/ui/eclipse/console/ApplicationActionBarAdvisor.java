@@ -81,6 +81,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private Action actionOpenProgressView;
 	private Action actionFullScreen;
 	private Action actionLangChinese;
+   private Action actionLangCzech;
 	private Action actionLangEnglish;
 	private Action actionLangRussian;
 	private Action actionLangSpanish;
@@ -214,6 +215,12 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				setLanguage("zh"); //$NON-NLS-1$
 			}
 		};
+      actionLangCzech = new Action("Czech", Activator.getImageDescriptor("icons/lang/cs.png")) { //$NON-NLS-1$
+         public void run()
+         {
+            setLanguage("cs"); //$NON-NLS-1$
+         }
+      };
 		actionLangEnglish = new Action(Messages.get().ApplicationActionBarAdvisor_LangEnglish, Activator.getImageDescriptor("icons/lang/gb.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
@@ -263,6 +270,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		// Language selection
 		final MenuManager langMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Language); //$NON-NLS-1$
 		langMenu.add(actionLangChinese);
+      langMenu.add(actionLangCzech);
 		langMenu.add(actionLangEnglish);
 		langMenu.add(actionLangRussian);
 		langMenu.add(actionLangSpanish);
