@@ -23,12 +23,10 @@
 #include "ups.h"
 #include <setupapi.h>
 
-
-//
-// Get serial number of USB device
-// Buffer provided to this function should be 256 characters long
-//
-
+/**
+ * Get serial number of USB device
+ * Buffer provided to this function should be 256 characters long
+ */
 static BOOL GetDeviceSerialNumber(HANDLE hDev, TCHAR *pszSerial)
 {
 #ifdef UNICODE
@@ -48,13 +46,10 @@ static BOOL GetDeviceSerialNumber(HANDLE hDev, TCHAR *pszSerial)
 #endif
 }
 
-
-//
-// Find appropriate report for given usage
-//
-
-static BYTE FindReport(HIDP_VALUE_CAPS *pCaps, DWORD dwCapSize,
-                       USAGE uPage, USAGE uUsage)
+/**
+ * Find appropriate report for given usage
+ */
+static BYTE FindReport(HIDP_VALUE_CAPS *pCaps, DWORD dwCapSize, USAGE uPage, USAGE uUsage)
 {
    DWORD i;
 
@@ -70,35 +65,28 @@ static BYTE FindReport(HIDP_VALUE_CAPS *pCaps, DWORD dwCapSize,
    return 0;
 }
 
-
-//
-// Constructor
-//
-
-USBInterface::USBInterface(TCHAR *pszDevice)
-             :UPSInterface(pszDevice)
+/**
+ * Constructor
+ */
+USBInterface::USBInterface(TCHAR *pszDevice) : UPSInterface(pszDevice)
 {
    m_hDev = INVALID_HANDLE_VALUE;
    m_pPreparsedData = NULL;
    m_pFeatureValueCaps = NULL;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 USBInterface::~USBInterface()
 {
    Close();
 }
 
-
-//
-// Open device
-//
-
-BOOL USBInterface::Open(void)
+/**
+ * Open device
+ */
+BOOL USBInterface::Open()
 {
    GUID hidGuid;
    HDEVINFO hInfo;
@@ -108,24 +96,27 @@ BOOL USBInterface::Open(void)
    DWORD dwLen, dwTemp;
    WORD wSize;
    BOOL bSuccess = FALSE;
+   TCHAR errorText[256];
 
    HidD_GetHidGuid(&hidGuid);
-   hInfo = SetupDiGetClassDevs(&hidGuid, NULL, NULL,
-                               DIGCF_INTERFACEDEVICE | DIGCF_PRESENT);
+   hInfo = SetupDiGetClassDevs(&hidGuid, NULL, NULL, DIGCF_INTERFACEDEVICE | DIGCF_PRESENT);
    if (hInfo != INVALID_HANDLE_VALUE)
    {
       for(nIndex = 0; ; nIndex++)
       {
          data.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-         if (!SetupDiEnumDeviceInterfaces(hInfo, NULL, &hidGuid,
-                                          nIndex, &data))
+         if (!SetupDiEnumDeviceInterfaces(hInfo, NULL, &hidGuid, nIndex, &data))
+         {
+            AgentWriteDebugLog(7, _T("UPS: SetupDiEnumDeviceInterfaces failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
             break;
+         }
 
          SetupDiGetDeviceInterfaceDetail(hInfo, &data, NULL, 0, &dwLen, NULL);
          pDetails = (SP_DEVICE_INTERFACE_DETAIL_DATA *)malloc(dwLen);
          pDetails->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
          if (!SetupDiGetDeviceInterfaceDetail(hInfo, &data, pDetails, dwLen, &dwTemp, NULL))
          {
+            AgentWriteDebugLog(7, _T("UPS: SetupDiGetDeviceInterfaceDetail failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
             free(pDetails);
             continue;
          }
@@ -136,6 +127,7 @@ BOOL USBInterface::Open(void)
                              OPEN_EXISTING, 0, NULL);
          if (m_hDev == INVALID_HANDLE_VALUE)
          {
+            AgentWriteDebugLog(7, _T("UPS: CreateFile failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
             free(pDetails);
             continue;
          }
@@ -144,6 +136,7 @@ BOOL USBInterface::Open(void)
          // Get preparsed data of a top-level HID collection
          if (!HidD_GetPreparsedData(m_hDev, &m_pPreparsedData))
          {
+            AgentWriteDebugLog(7, _T("UPS: HidD_GetPreparsedData failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
             CloseHandle(m_hDev);
             m_hDev = INVALID_HANDLE_VALUE;
             continue;
@@ -155,8 +148,13 @@ BOOL USBInterface::Open(void)
             TCHAR szSerial[256];
 
             // Get device serial number
-            if (!GetDeviceSerialNumber(m_hDev, szSerial))
+            if (GetDeviceSerialNumber(m_hDev, szSerial))
             {
+               AgentWriteDebugLog(7, _T("UPS: read serial number \"%s\""), szSerial);
+            }
+            else
+            {
+               AgentWriteDebugLog(7, _T("UPS: GetDeviceSerialNumber failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
                szSerial[0] = 0;
             }
 
@@ -169,14 +167,26 @@ BOOL USBInterface::Open(void)
                // Get value capabilities
                wSize = m_deviceCaps.NumberFeatureValueCaps;
                m_pFeatureValueCaps = (HIDP_VALUE_CAPS *)malloc(sizeof(HIDP_VALUE_CAPS) * wSize);
-               if (HidP_GetValueCaps(HidP_Feature, m_pFeatureValueCaps, &wSize,
-                                     m_pPreparsedData) == HIDP_STATUS_SUCCESS)
+               if (HidP_GetValueCaps(HidP_Feature, m_pFeatureValueCaps, &wSize, m_pPreparsedData) == HIDP_STATUS_SUCCESS)
                {
+                  AgentWriteDebugLog(7, _T("UPS: found matching device"));
                   bSuccess = TRUE;
                   break;
                }
+               else
+               {
+                  AgentWriteDebugLog(7, _T("UPS: HidP_GetValueCaps failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
+               }
                safe_free_and_null(m_pFeatureValueCaps);
             }
+            else
+            {
+               AgentWriteDebugLog(7, _T("UPS: device not matched (page=0x%02X usage=0x%02X serial=%s)"), m_deviceCaps.UsagePage, m_deviceCaps.Usage, szSerial);
+            }
+         }
+         else
+         {
+            AgentWriteDebugLog(7, _T("UPS: HidP_GetCaps failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
          }
 
          CloseHandle(m_hDev);
@@ -184,17 +194,19 @@ BOOL USBInterface::Open(void)
       }
       SetupDiDestroyDeviceInfoList(hInfo);
    }
+   else
+   {
+      AgentWriteDebugLog(7, _T("UPS: SetupDiGetClassDevs failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
+   }
    if (bSuccess)
       SetConnected();
    return bSuccess;
 }
 
-
-//
-// Close device
-//
-
-void USBInterface::Close(void)
+/**
+ * Close device
+ */
+void USBInterface::Close()
 {
    if (m_hDev != INVALID_HANDLE_VALUE)
    {
