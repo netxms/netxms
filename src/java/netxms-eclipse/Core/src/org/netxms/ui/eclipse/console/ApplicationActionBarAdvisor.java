@@ -209,31 +209,31 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
 		ConsoleSharedData.setProperty("FullScreenAction", actionFullScreen); //$NON-NLS-1$
 		
-		actionLangChinese = new Action(Messages.get().ApplicationActionBarAdvisor_LangChinese, Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$
+		actionLangChinese = new Action("C&hinese", Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("zh"); //$NON-NLS-1$
 			}
 		};
-      actionLangCzech = new Action("Czech", Activator.getImageDescriptor("icons/lang/cs.png")) { //$NON-NLS-1$
+      actionLangCzech = new Action("&Czech", Activator.getImageDescriptor("icons/lang/cs.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          public void run()
          {
             setLanguage("cs"); //$NON-NLS-1$
          }
       };
-		actionLangEnglish = new Action(Messages.get().ApplicationActionBarAdvisor_LangEnglish, Activator.getImageDescriptor("icons/lang/gb.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+		actionLangEnglish = new Action("&English", Activator.getImageDescriptor("icons/lang/gb.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("en"); //$NON-NLS-1$
 			}
 		};
-		actionLangRussian = new Action(Messages.get().ApplicationActionBarAdvisor_LangRussian, Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+		actionLangRussian = new Action("&Russian", Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("ru"); //$NON-NLS-1$
 			}
 		};
-		actionLangSpanish = new Action(Messages.get().ApplicationActionBarAdvisor_LangSpanish, Activator.getImageDescriptor("icons/lang/es.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+		actionLangSpanish = new Action("&Spanish", Activator.getImageDescriptor("icons/lang/es.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("es"); //$NON-NLS-1$
@@ -267,8 +267,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 			menuBar.add(windowMenu);
 		menuBar.add(helpMenu);
 		
-		// Language selection
-		final MenuManager langMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Language); //$NON-NLS-1$
+		// Language selection (intentionally left in English only)
+		final MenuManager langMenu = new MenuManager("&Language"); //$NON-NLS-1$
 		langMenu.add(actionLangChinese);
       langMenu.add(actionLangCzech);
 		langMenu.add(actionLangEnglish);
