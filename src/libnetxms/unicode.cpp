@@ -191,6 +191,8 @@ inline int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCH
    return iSize;
 }
 
+#ifndef __DISABLE_ICONV
+
 /**
  * Convert UNICODE string to single-byte string using iconv
  */
@@ -245,6 +247,8 @@ inline int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *p
    return nRet;
 }
 
+#endif
+
 /**
  * Convert UNICODE string to single-byte string
  */
@@ -268,7 +272,7 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const
       return wcslen(pWideCharStr) + 1;
    }
 
-   return WideCharToMultiByteCopy(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
+   return WideCharToMultiByteSimpleCopy(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
 #endif
 }
 
@@ -290,6 +294,8 @@ inline int MultiByteToWideCharSimpleCopy(int iCodePage, DWORD dwFlags, const cha
 
    return iSize;
 }
+
+#ifndef __DISABLE_ICONV
 
 /**
  * Convert single-byte to UNICODE string using iconv
@@ -344,6 +350,8 @@ inline int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pB
 
    return nRet;
 }
+
+#endif
 
 /**
  * Convert single-byte to UNICODE string
@@ -653,6 +661,8 @@ inline size_t ucs2_to_utf8_simple_copy(const UCS2CHAR *src, int srcLen, char *ds
    return size;
 }
 
+#ifndef __DISABLE_ICONV
+
 inline size_t ucs2_to_utf8_iconv(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
    iconv_t cd;
@@ -696,6 +706,8 @@ inline size_t ucs2_to_utf8_iconv(const UCS2CHAR *src, int srcLen, char *dst, int
    return count;
 }
 
+#endif
+
 size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
@@ -728,6 +740,8 @@ inline size_t ucs2_to_mb_simple_copy(const UCS2CHAR *src, int srcLen, char *dst,
 
    return size;
 }
+
+#ifndef __DISABLE_ICONV
 
 inline size_t ucs2_to_mb_iconv(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
@@ -768,12 +782,14 @@ inline size_t ucs2_to_mb_iconv(const UCS2CHAR *src, int srcLen, char *dst, int d
    return count;
 }
 
+#endif
+
 size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    return ucs2_to_mb_iconv(src, srcLen, dst, dstLen);
 #else
-   return ucs2_to_mb_iconv_simple_copy(src, srcLen, dst, dstLen);
+   return ucs2_to_mb_simple_copy(src, srcLen, dst, dstLen);
 #endif
 }
 
@@ -796,6 +812,8 @@ inline size_t mb_to_ucs2_simple_copy(const char *src, int srcLen, UCS2CHAR *dst,
 
    return size;
 }
+
+#ifndef __DISABLE_ICONV
 
 inline size_t mb_to_ucs2_iconv(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
@@ -841,6 +859,8 @@ inline size_t mb_to_ucs2_iconv(const char *src, int srcLen, UCS2CHAR *dst, int d
 
    return count;
 }
+
+#endif
 
 size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
