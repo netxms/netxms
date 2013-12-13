@@ -1128,14 +1128,28 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 		[
 			AC_DEFINE(WITH_OPENSSL,,[with openssl])
 			AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
-							 [], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
+							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
 			AC_CHECK_LIB(crypto, EVP_bf_cbc,
-							 [], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
+							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
 			AC_CHECK_LIB(crypto, EVP_idea_cbc,
-							 [], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
+							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
 			AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
-							 [], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
+							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
 			SERVER_LIBS="$SERVER_LIBS -lssl"
+			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
+				if test "x$BUILD_STATIC_AGENT" = "xyes"; then
+#					LIBS="$LIBS -Wl,-Bstatic -lcrypto -Wl,-Bdynamic"
+					LIBS="$LIBS -lcrypto"
+				else
+					LIBS="$LIBS -lcrypto"
+				fi	
+			else
+				if test "x$REQUIRE_ENCRYPTION" = "xyes"; then
+					AC_MSG_ERROR(libcrypto does not provide any suitable encryption algorithm)
+				else
+					AC_MSG_RESULT(libcrypto does not provide any suitable encryption algorithm)
+				fi
+			fi
 		],
 		[
 			if test "x$REQUIRE_ENCRYPTION" = "xyes"; then
