@@ -397,7 +397,11 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
 		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(ipAddr), 161);
 	}
 	int version;
-   SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL, NULL);
+   StringList oids;
+   oids.add(_T(".1.3.6.1.2.1.1.2.0"));
+   oids.add(_T(".1.3.6.1.2.1.1.1.0"));
+   AddDriverSpecificOids(&oids);
+   SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL, &oids);
 	if (ctx != NULL)
 	{
 		delete ctx;
