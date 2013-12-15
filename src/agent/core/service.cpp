@@ -137,6 +137,8 @@ void InstallService(TCHAR *execName, TCHAR *confFile)
       return;
    }
 
+   if (g_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
+      g_debugLevel = 0;
    _sntprintf(cmdLine, 8192, _T("\"%s\" -d -c \"%s\" -n \"%s\" -e \"%s\" -D %d"),
 	           execName, confFile, g_windowsServiceName, g_windowsEventSourceName, g_debugLevel);
 	
