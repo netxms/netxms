@@ -454,6 +454,7 @@ public:
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
+	ObjectArray<NetObj> *getParentList(int typeFilter);
 	ObjectArray<NetObj> *getChildList(int typeFilter);
 	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly, bool updateRefCount);
 

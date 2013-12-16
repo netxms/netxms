@@ -1537,6 +1537,26 @@ ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
 }
 
 /**
+ * Get list of parent objects (direct only). Returned array is
+ * dynamically allocated and must be deleted by the caller.
+ *
+ * @param typeFilter Only return objects with class ID equals given value.
+ *                   Set to -1 to disable filtering.
+ */
+ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
+{
+    LockParentList(FALSE);
+    ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_dwParentCount, 16, false);
+    for(UINT32 i = 0; i < m_dwParentCount; i++)
+    {
+        if ((typeFilter == -1) || (typeFilter == m_pParentList[i]->Type()))
+            list->add(m_pParentList[i]);
+    }
+    UnlockParentList();
+    return list;
+}
+
+/**
  * Called by client session handler to check if threshold summary should
  * be shown for this object. Default implementation always returns false.
  */
