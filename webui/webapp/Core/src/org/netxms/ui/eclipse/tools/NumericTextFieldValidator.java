@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.tools;
 
+import org.netxms.ui.eclipse.console.Messages;
+
 /**
  * Concrete implementation of TextFieldValidator interface
  * for validating numeric fields 
@@ -36,7 +38,7 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	{
 		this.min = min;
 		this.max = max;
-		range = Long.toString(min) + ".." + Long.toString(max);
+		range = Long.toString(min) + Messages.get().NumericTextFieldValidator_RangeSeparator + Long.toString(max);
 	}
 	
 	/* (non-Javadoc)
@@ -62,6 +64,6 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return "Please enter number in range " + range + " in field \"" + label + "\"";
+		return String.format(Messages.get().NumericTextFieldValidator_ErrorMessage, range, label);
 	}
 }

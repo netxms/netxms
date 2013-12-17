@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.console.resources;
 
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Data collection display information
@@ -26,20 +28,36 @@ import org.netxms.client.datacollection.DataCollectionItem;
  */
 public class DataCollectionDisplayInfo
 {
-	private static String dciDataTypes[] = new String[7];
+	private String dciDataTypes[] = new String[7];
 	
-	/**
+   /**
+    * Get status display instance for current display
+    * 
+    * @return
+    */
+   private static DataCollectionDisplayInfo getInstance()
+   {
+      DataCollectionDisplayInfo instance = (DataCollectionDisplayInfo)ConsoleSharedData.getProperty("DataCollectionDisplayInfo");
+      if (instance == null)
+      {
+         instance = new DataCollectionDisplayInfo();
+         ConsoleSharedData.setProperty("DataCollectionDisplayInfo", instance);
+      }
+      return instance;
+   }
+
+   /**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
-	public static void init()
+	private DataCollectionDisplayInfo()
 	{
-		dciDataTypes[DataCollectionItem.DT_INT] = "Integer";
-		dciDataTypes[DataCollectionItem.DT_UINT] = "Unsigned Integer";
-		dciDataTypes[DataCollectionItem.DT_INT64] = "Integer 64-bit";
-		dciDataTypes[DataCollectionItem.DT_UINT64] = "Unsigned Integer 64-bit";
-		dciDataTypes[DataCollectionItem.DT_FLOAT] = "Float";
-		dciDataTypes[DataCollectionItem.DT_STRING] = "String";
-		dciDataTypes[DataCollectionItem.DT_NULL] = "Null";
+		dciDataTypes[DataCollectionItem.DT_INT] = Messages.get().DataCollectionDisplayInfo_Integer;
+		dciDataTypes[DataCollectionItem.DT_UINT] = Messages.get().DataCollectionDisplayInfo_UInteger;
+		dciDataTypes[DataCollectionItem.DT_INT64] = Messages.get().DataCollectionDisplayInfo_Integer64;
+		dciDataTypes[DataCollectionItem.DT_UINT64] = Messages.get().DataCollectionDisplayInfo_UInteger64;
+		dciDataTypes[DataCollectionItem.DT_FLOAT] = Messages.get().DataCollectionDisplayInfo_Float;
+		dciDataTypes[DataCollectionItem.DT_STRING] = Messages.get().DataCollectionDisplayInfo_String;
+		dciDataTypes[DataCollectionItem.DT_NULL] = Messages.get().DataCollectionDisplayInfo_Null;
 	}
 
 	/**
@@ -51,11 +69,11 @@ public class DataCollectionDisplayInfo
 	{
 		try
 		{
-			return dciDataTypes[dt];
+			return getInstance().dciDataTypes[dt];
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
-			return "Unknown";
+			return Messages.get().DataCollectionDisplayInfo_Unknown;
 		}
 	}
 }

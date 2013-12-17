@@ -98,8 +98,8 @@ public class SharedIcons
 	 */
 	public static void init()
 	{
-		ALARM = Activator.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
 		ADD_OBJECT = Activator.getImageDescriptor("icons/add_obj.gif"); //$NON-NLS-1$
+		ALARM = Activator.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png"); //$NON-NLS-1$
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
 		CLEAR = Activator.getImageDescriptor("icons/clear.gif"); //$NON-NLS-1$

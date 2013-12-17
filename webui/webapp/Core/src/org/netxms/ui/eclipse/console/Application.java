@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.netxms.api.client.Session;
-import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -70,9 +68,7 @@ public class Application implements IApplication
 		});
 		
 		SharedIcons.init(display);
-		StatusDisplayInfo.init(display);
 		ColorManager.create();
-		DataCollectionDisplayInfo.init();
 		WorkbenchAdvisor advisor = new ApplicationWorkbenchAdvisor();
 		return PlatformUI.createAndRunWorkbench(display, advisor);
 	}

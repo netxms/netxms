@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,12 +30,10 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Abstract selector widget
+ * Status selector widget
  */
 public class StatusSelector extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	private Label label;
 	private Combo combo;
 	

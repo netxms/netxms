@@ -45,8 +45,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class FilterText extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text text;
 	private Composite buttonArea;
 	private List<Button> attrButtons = new ArrayList<Button>(4);

@@ -56,6 +56,11 @@ public abstract class AbstractTraceWidget extends Composite
 	private Action actionShowFilter;
 	private Action actionCopy;
 	
+	/**
+	 * @param parent
+	 * @param style
+	 * @param viewPart
+	 */
 	public AbstractTraceWidget(Composite parent, int style, IViewPart viewPart)
 	{
 		super(parent, style);

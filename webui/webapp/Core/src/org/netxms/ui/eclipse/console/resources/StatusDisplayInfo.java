@@ -24,31 +24,65 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Status display information
  */
 public final class StatusDisplayInfo
 {
-	private static String[] statusText = new String[9];
-	private static ImageDescriptor[] statusImageDesc = new ImageDescriptor[9];
-	private static Image[] statusImage = new Image[9];
-	private static String[] statusColor = new String[9];
-	
+   private static String[] statusColor = new String[9];
+   
+   private String[] statusText = new String[9];
+   private ImageDescriptor[] statusImageDesc = new ImageDescriptor[9];
+   private Image[] statusImage = new Image[9];
+   
+   static
+   {
+      statusColor[Severity.NORMAL] = SharedColors.STATUS_NORMAL;
+      statusColor[Severity.WARNING] = SharedColors.STATUS_WARNING;
+      statusColor[Severity.MINOR] = SharedColors.STATUS_MINOR;
+      statusColor[Severity.MAJOR] = SharedColors.STATUS_MAJOR;
+      statusColor[Severity.CRITICAL] = SharedColors.STATUS_CRITICAL;
+      statusColor[Severity.UNKNOWN] = SharedColors.STATUS_UNKNOWN;
+      statusColor[Severity.UNMANAGED] = SharedColors.STATUS_UNMANAGED;
+      statusColor[Severity.DISABLED] = SharedColors.STATUS_DISABLED;
+      statusColor[Severity.TESTING] = SharedColors.STATUS_TESTING;
+   }
+      
+   /**
+    * Get status display instance for current display
+    * 
+    * @return
+    */
+   private static StatusDisplayInfo getInstance()
+   {
+      StatusDisplayInfo instance = (StatusDisplayInfo)ConsoleSharedData.getProperty("StatusDisplayInfo");
+      if (instance == null)
+      {
+         instance = new StatusDisplayInfo(Display.getCurrent());
+         ConsoleSharedData.setProperty("StatusDisplayInfo", instance);
+      }
+      return instance;
+   }
+   
 	/**
-	 * Initialize static members. Intended to be called once by library activator.
+	 * Private constructor to create per-display instance
+	 * 
+	 * @param display
 	 */
-	public static void init(Display display)
+	private StatusDisplayInfo(Display display)
 	{
-		statusText[Severity.NORMAL] = "Normal";
-		statusText[Severity.WARNING] = "Warning";
-		statusText[Severity.MINOR] = "Minor";
-		statusText[Severity.MAJOR] = "Major";
-		statusText[Severity.CRITICAL] = "Critical";
-		statusText[Severity.UNKNOWN] = "Unknown";
-		statusText[Severity.UNMANAGED] = "Unmanaged";
-		statusText[Severity.DISABLED] = "Disabled";
-		statusText[Severity.TESTING] = "Testing";
+		statusText[Severity.NORMAL] = Messages.get(display).StatusDisplayInfo_Normal;
+		statusText[Severity.WARNING] = Messages.get(display).StatusDisplayInfo_Warning;
+		statusText[Severity.MINOR] = Messages.get(display).StatusDisplayInfo_Minor;
+		statusText[Severity.MAJOR] = Messages.get(display).StatusDisplayInfo_Major;
+		statusText[Severity.CRITICAL] = Messages.get(display).StatusDisplayInfo_Critical;
+		statusText[Severity.UNKNOWN] = Messages.get(display).StatusDisplayInfo_Unknown;
+		statusText[Severity.UNMANAGED] = Messages.get(display).StatusDisplayInfo_Unmanaged;
+		statusText[Severity.DISABLED] = Messages.get(display).StatusDisplayInfo_Disabled;
+		statusText[Severity.TESTING] = Messages.get(display).StatusDisplayInfo_Testing;
 
 		statusImageDesc[Severity.NORMAL] = Activator.getImageDescriptor("icons/status/normal.png"); //$NON-NLS-1$
 		statusImageDesc[Severity.WARNING] = Activator.getImageDescriptor("icons/status/warning.png"); //$NON-NLS-1$
@@ -62,16 +96,15 @@ public final class StatusDisplayInfo
 		
 		for(int i = 0; i < statusImageDesc.length; i++)
 			statusImage[i] = statusImageDesc[i].createImage(display);
-
-		statusColor[Severity.NORMAL] = SharedColors.STATUS_NORMAL;
-		statusColor[Severity.WARNING] = SharedColors.STATUS_WARNING;
-		statusColor[Severity.MINOR] = SharedColors.STATUS_MINOR;
-		statusColor[Severity.MAJOR] = SharedColors.STATUS_MAJOR;
-		statusColor[Severity.CRITICAL] = SharedColors.STATUS_CRITICAL;
-		statusColor[Severity.UNKNOWN] = SharedColors.STATUS_UNKNOWN;
-		statusColor[Severity.UNMANAGED] = SharedColors.STATUS_UNMANAGED;
-		statusColor[Severity.DISABLED] = SharedColors.STATUS_DISABLED;
-		statusColor[Severity.TESTING] = SharedColors.STATUS_TESTING;
+		
+		display.disposeExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            for(int i = 0; i < statusImageDesc.length; i++)
+               statusImage[i].dispose();
+         }
+      });
 	}
 	
 	/**
@@ -84,7 +117,7 @@ public final class StatusDisplayInfo
 	{
 		try
 		{
-			return statusText[severity];
+			return getInstance().statusText[severity];
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
@@ -102,7 +135,7 @@ public final class StatusDisplayInfo
 	{
 		try
 		{
-			return statusImageDesc[severity];
+			return getInstance().statusImageDesc[severity];
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
@@ -121,7 +154,7 @@ public final class StatusDisplayInfo
 	{
 		try
 		{
-			return statusImage[severity];
+			return getInstance().statusImage[severity];
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{

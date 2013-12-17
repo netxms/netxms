@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
 
@@ -82,7 +83,7 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void createActions()
 	{
-		actionClear = new Action("Clear", SharedIcons.CLEAR_LOG) {
+		actionClear = new Action(Messages.get().AbstractTraceView_Clear, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{

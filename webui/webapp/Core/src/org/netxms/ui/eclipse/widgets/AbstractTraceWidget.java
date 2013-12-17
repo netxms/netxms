@@ -31,6 +31,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
 
@@ -130,7 +131,7 @@ public abstract class AbstractTraceWidget extends Composite
 	{
 		final IHandlerService handlerService = (IHandlerService)PlatformUI.getWorkbench().getService(IHandlerService.class);
 		
-		actionPause = new Action("Pause", Action.AS_CHECK_BOX) {
+		actionPause = new Action(Messages.get().AbstractTraceView_Pause, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -142,7 +143,7 @@ public abstract class AbstractTraceWidget extends Composite
 		final ActionHandler pauseHandler = new ActionHandler(actionPause);
 		handlerService.activateHandler(actionPause.getActionDefinitionId(), pauseHandler);
 		
-      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.get().AbstractTraceView_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

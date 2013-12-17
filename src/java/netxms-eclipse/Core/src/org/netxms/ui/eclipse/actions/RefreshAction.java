@@ -30,12 +30,15 @@ import org.netxms.ui.eclipse.console.Messages;
  */
 public class RefreshAction extends Action
 {
+   public static final String ID = "org.netxms.ui.eclipse.library.actions.refresh";
+
 	/**
 	 * Create default refresh action
 	 */
 	public RefreshAction()
 	{
 		super(Messages.get().RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
+      setId(ID);
 	}
 
 	/**
@@ -46,6 +49,8 @@ public class RefreshAction extends Action
 	public RefreshAction(IViewPart viewPart)
 	{
 		super(Messages.get().RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
+
+		setId(ID);
 
 		final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);
       setActionDefinitionId("org.netxms.ui.eclipse.library.commands.refresh"); //$NON-NLS-1$
