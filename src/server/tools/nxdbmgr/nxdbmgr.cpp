@@ -35,6 +35,8 @@ BOOL g_bIgnoreErrors = FALSE;
 BOOL g_bTrace = FALSE;
 bool g_isGuiMode = false;
 bool g_checkData = false;
+bool g_dataOnlyMigration = false;
+bool g_skipDataMigration = false;
 int g_iSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
 const TCHAR *g_pszSqlType[6][3] = 
@@ -530,7 +532,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:dfGhIMNqtvX")) != -1)
+   while((ch = getopt(argc, argv, "c:dDfGhIMNqstvX")) != -1)
    {
       switch(ch)
       {
@@ -552,6 +554,7 @@ int main(int argc, char *argv[])
                      _T("Valid options are:\n")
                      _T("   -c <config> : Use alternate configuration file. Default is ") DEFAULT_CONFIG_FILE _T("\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
+                     _T("   -D          : Migrate only collected data.\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
 #ifdef _WIN32
 				         _T("   -G          : GUI mode.\n")
@@ -561,6 +564,7 @@ int main(int argc, char *argv[])
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
+                     _T("   -s          : Skip collected data during migration.\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
@@ -582,6 +586,9 @@ int main(int argc, char *argv[])
 			case 'd':
 				g_checkData = true;
 				break;
+         case 'D':
+            g_dataOnlyMigration = true;
+            break;
          case 'f':
             m_bForce = TRUE;
             break;
@@ -593,6 +600,9 @@ int main(int argc, char *argv[])
             break;
          case 'q':
             bQuiet = TRUE;
+            break;
+         case 's':
+            g_skipDataMigration = true;
             break;
          case 't':
             g_bTrace = TRUE;

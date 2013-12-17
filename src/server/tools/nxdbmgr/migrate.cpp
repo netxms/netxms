@@ -213,27 +213,39 @@ static bool MigrateDataTables()
 	for(i = 0; i < count; i++)
 	{
 		DWORD id = DBGetFieldULong(hResult, i, 0);
-		if (!CreateIDataTable(id))
-			break;	// Failed to create idata_xx table
+      if (!g_dataOnlyMigration)
+      {
+		   if (!CreateIDataTable(id))
+			   break;	// Failed to create idata_xx table
+      }
 
-		_sntprintf(buffer, 1024, _T("idata_%d"), id);
-		if (!MigrateTable(buffer))
-			break;
+      if (!g_skipDataMigration)
+      {
+		   _sntprintf(buffer, 1024, _T("idata_%d"), id);
+		   if (!MigrateTable(buffer))
+			   break;
+      }
 
-      if (!CreateTDataTables(id))
-			break;	// Failed to create tdata tables
+      if (!g_dataOnlyMigration)
+      {
+         if (!CreateTDataTables(id))
+			   break;	// Failed to create tdata tables
+      }
 
-		_sntprintf(buffer, 1024, _T("tdata_%d"), id);
-		if (!MigrateTable(buffer))
-			break;
+      if (!g_skipDataMigration)
+      {
+		   _sntprintf(buffer, 1024, _T("tdata_%d"), id);
+		   if (!MigrateTable(buffer))
+			   break;
 
-      _sntprintf(buffer, 1024, _T("tdata_records_%d"), id);
-		if (!MigrateTable(buffer))
-			break;
+         _sntprintf(buffer, 1024, _T("tdata_records_%d"), id);
+		   if (!MigrateTable(buffer))
+			   break;
 
-      _sntprintf(buffer, 1024, _T("tdata_rows_%d"), id);
-		if (!MigrateTable(buffer))
-			break;
+         _sntprintf(buffer, 1024, _T("tdata_rows_%d"), id);
+		   if (!MigrateTable(buffer))
+			   break;
+      }
 	}
 
 	DBFreeResult(hResult);
@@ -264,15 +276,19 @@ void MigrateDatabase(const TCHAR *sourceConfig)
    if (!ConnectToSource())
       goto cleanup;
 
-	if (!ClearDatabase())
-		goto cleanup;
+   if (!g_dataOnlyMigration)
+   {
+	   if (!ClearDatabase())
+		   goto cleanup;
 
-	// Migrate tables
-	for(int i = 0; g_tables[i] != NULL; i++)
-	{
-		if (!MigrateTable(g_tables[i]))
-			goto cleanup;
-	}
+	   // Migrate tables
+	   for(int i = 0; g_tables[i] != NULL; i++)
+	   {
+		   if (!MigrateTable(g_tables[i]))
+			   goto cleanup;
+	   }
+   }
+
 	if (!MigrateDataTables())
 		goto cleanup;
 
