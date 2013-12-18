@@ -99,6 +99,10 @@ target
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
 /src/client/nxalarm/nxalarm
+/src/client/nxcproxy/messages.c
+/src/client/nxcproxy/messages.h
+/src/client/nxcproxy/MSG00001.bin
+/src/client/nxcproxy/nxcproxy
 /src/client/nxevent/nxevent
 /src/client/nxpush/nxpush
 /src/client/nxsms/nxsms

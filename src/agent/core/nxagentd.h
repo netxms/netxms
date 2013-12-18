@@ -64,11 +64,9 @@
 #endif
 #define AGENT_VERSION_STRING  NETXMS_VERSION_STRING DEBUG_SUFFIX
 
-
-//
-// Default files
-//
-
+/**
+ * Default files
+ */
 #if defined(_WIN32)
 #define AGENT_DEFAULT_CONFIG     _T("C:\\nxagentd.conf")
 #define AGENT_DEFAULT_CONFIG_D   _T("C:\\nxagentd.conf.d")

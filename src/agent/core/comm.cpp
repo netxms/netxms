@@ -105,11 +105,9 @@ void UnregisterSession(UINT32 dwIndex)
    MutexUnlock(g_hSessionListAccess);
 }
 
-
-//
-// TCP/IP Listener
-// 
-
+/**
+ * TCP/IP Listener
+ */ 
 THREAD_RESULT THREAD_CALL ListenerThread(void *)
 {
    SOCKET hSocket, hClientSocket;
@@ -253,11 +251,9 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    return THREAD_OK;
 }
 
-
-//
-// Session watchdog thread
-//
-
+/**
+ * Session watchdog thread
+ */
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 {
    UINT32 i;

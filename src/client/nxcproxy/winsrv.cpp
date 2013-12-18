@@ -20,7 +20,7 @@
 **
 **/
 
-#include "netxmsd.h"
+#include "nxcproxy.h"
 
 /**
  * Service handle
@@ -50,10 +50,7 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
          status.dwWaitHint = 60000;
          SetServiceStatus(s_serviceHandle, &status);
 
-         if (ctrlCode == SERVICE_CONTROL_SHUTDOWN)
-            FastShutdown();
-         else
-            Shutdown();
+         Shutdown();
 
          status.dwCurrentState = SERVICE_STOPPED;
          status.dwWaitHint = 0;
@@ -68,11 +65,11 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
 /**
  * Service main
  */
-static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
+static VOID WINAPI ProxyServiceMain(DWORD argc, LPTSTR *argv)
 {
    SERVICE_STATUS status;
 
-   s_serviceHandle = RegisterServiceCtrlHandler(CORE_SERVICE_NAME, ServiceCtrlHandler);
+   s_serviceHandle = RegisterServiceCtrlHandler(NXCPROXY_SERVICE_NAME, ServiceCtrlHandler);
 
    // Now we start service initialization
    status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -87,13 +84,6 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    // Actual initialization
    if (!Initialize())
    {
-      // Remove database lock
-      if (g_dwFlags & AF_DB_LOCKED)
-      {
-         UnlockDB();
-         ShutdownDB();
-      }
-
       // Now service is stopped
       status.dwCurrentState = SERVICE_STOPPED;
       status.dwWaitHint = 0;
@@ -108,7 +98,7 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
 
    SetProcessShutdownParameters(0x3FF, 0);
 
-   Main(NULL);
+   Main();
 }
 
 /**
@@ -116,7 +106,7 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
  */
 void InitService()
 {
-   static SERVICE_TABLE_ENTRY serviceTable[2] = { { CORE_SERVICE_NAME, CoreServiceMain }, { NULL, NULL } };
+   static SERVICE_TABLE_ENTRY serviceTable[2] = { { NXCPROXY_SERVICE_NAME, ProxyServiceMain }, { NULL, NULL } };
 	TCHAR errorText[1024];
 
    if (!StartServiceCtrlDispatcher(serviceTable))
@@ -126,7 +116,7 @@ void InitService()
 /**
  * Create service
  */
-void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName, const TCHAR *pszLogin, const TCHAR *pszPassword)
+void InstallService(const TCHAR *pszExecName, const TCHAR *pszLogin, const TCHAR *pszPassword)
 {
    SC_HANDLE hMgr, hService;
    TCHAR szCmdLine[MAX_PATH * 2], errorText[1024];
@@ -139,9 +129,8 @@ void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName, const TCH
       return;
    }
 
-   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), pszExecName, g_szConfigFile,
-              g_bCheckDB ? _T(" --check-db") : _T(""));
-   hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
+   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), pszExecName, g_configFile);
+   hService = CreateService(hMgr, NXCPROXY_SERVICE_NAME, _T("NetXMS Client Proxy"),
                             GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
                             SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
                             szCmdLine, NULL, NULL, NULL, pszLogin, pszPassword);
@@ -150,19 +139,19 @@ void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName, const TCH
       DWORD code = GetLastError();
 
       if (code == ERROR_SERVICE_EXISTS)
-         _tprintf(_T("ERROR: Service named '") CORE_SERVICE_NAME _T("' already exist\n"));
+         _tprintf(_T("ERROR: Service named '") NXCPROXY_SERVICE_NAME _T("' already exist\n"));
       else
          _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, errorText, 1024));
    }
    else
    {
-      _tprintf(_T("NetXMS Core service created successfully\n"));
+      _tprintf(_T("NetXMS Client Proxy service created successfully\n"));
       CloseServiceHandle(hService);
    }
 
    CloseServiceHandle(hMgr);
 
-   InstallEventSource(pszDllName);
+   InstallEventSource(pszExecName);
 }
 
 /**
@@ -180,18 +169,18 @@ void RemoveService()
       return;
    }
 
-   service = OpenService(mgr, CORE_SERVICE_NAME, DELETE);
+   service = OpenService(mgr, NXCPROXY_SERVICE_NAME, DELETE);
    if (service == NULL)
    {
-      _tprintf(_T("ERROR: Cannot open service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
+      _tprintf(_T("ERROR: Cannot open service named '") NXCPROXY_SERVICE_NAME _T("' (%s)\n"),
              GetSystemErrorText(GetLastError(), errorText, 1024));
    }
    else
    {
       if (DeleteService(service))
-         _tprintf(_T("NetXMS Core service deleted successfully\n"));
+         _tprintf(_T("NetXMS Client Proxy service deleted successfully\n"));
       else
-         _tprintf(_T("ERROR: Cannot remove service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
+         _tprintf(_T("ERROR: Cannot remove service named '") NXCPROXY_SERVICE_NAME _T("' (%s)\n"),
                 GetSystemErrorText(GetLastError(), errorText, 1024));
 
       CloseServiceHandle(service);
@@ -203,62 +192,12 @@ void RemoveService()
 }
 
 /**
- * Check if -d switch is given on command line
+ * Start service
  */
-static BOOL IsDSwitchPresent(TCHAR *cmdLine)
-{
-	int state;
-	TCHAR *ptr;
-
-	for(ptr = cmdLine, state = 0; *ptr != 0; ptr++)
-	{
-		switch(state)
-		{
-			case 0:
-			case 4:
-				if (*ptr == ' ')
-					state = 2;
-				else if (*ptr == '"')
-					state++;
-				break;
-			case 2:
-				switch(*ptr)
-				{
-					case ' ':
-						break;
-					case '"':
-						state++;
-						break;
-					case '-':
-						if (*(ptr + 1) == 'd')
-							return TRUE;
-					default:
-						state = 4;
-						break;
-				}
-				break;
-			case 1:
-			case 3:
-			case 5:
-				if (*ptr == '"')
-					state--;
-				break;
-		}
-	}
-	return FALSE;
-}
-
-/**
- * Check service configuration
- * Things to check:
- *   1. Versions 0.2.20 and above requires -d switch
- */
-void CheckServiceConfig()
+void StartProxyService()
 {
    SC_HANDLE mgr, service;
-	QUERY_SERVICE_CONFIG *cfg;
-	TCHAR *cmdLine, errorText[1024];
-	DWORD bytes, error;
+	TCHAR errorText[1024];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
@@ -267,89 +206,18 @@ void CheckServiceConfig()
       return;
    }
 
-   service = OpenService(mgr, CORE_SERVICE_NAME, SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG);
-   if (service != NULL)
-	{
-		QueryServiceConfig(service, NULL, 0, &bytes);
-		error = GetLastError();
-		if (error == ERROR_INSUFFICIENT_BUFFER)
-		{
-			cfg = (QUERY_SERVICE_CONFIG *)malloc(bytes);
-			if (QueryServiceConfig(service, cfg, bytes, &bytes))
-			{
-				if (!IsDSwitchPresent(cfg->lpBinaryPathName))
-				{
-					cmdLine = (TCHAR *)malloc(sizeof(TCHAR) * _tcslen(cfg->lpBinaryPathName) + 8);
-					_tcscpy(cmdLine, cfg->lpBinaryPathName);
-					_tcscat(cmdLine, _T(" -d"));
-					if (ChangeServiceConfig(service, cfg->dwServiceType, cfg->dwStartType,
-													cfg->dwErrorControl, cmdLine, NULL, NULL,
-													NULL, NULL, NULL, NULL))
-					{
-						_tprintf(_T("INFO: Service configuration successfully updated\n"));
-					}
-					else
-					{
-						_tprintf(_T("ERROR: Cannot update configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
-								 GetSystemErrorText(GetLastError(), errorText, 1024));
-					}
-					free(cmdLine);
-				}
-				else
-				{
-					_tprintf(_T("INFO: Service configuration is valid\n"));
-				}
-			}
-			else
-			{
-				_tprintf(_T("ERROR: Cannot query configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
-						 GetSystemErrorText(GetLastError(), errorText, 1024));
-			}
-			free(cfg);
-		}
-		else
-		{
-			_tprintf(_T("ERROR: Cannot query configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
-					 GetSystemErrorText(error, errorText, 1024));
-		}
-      CloseServiceHandle(service);
-	}
-	else
-   {
-      _tprintf(_T("ERROR: Cannot open service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
-             GetSystemErrorText(GetLastError(), errorText, 1024));
-   }
-
-   CloseServiceHandle(mgr);
-}
-
-/**
- * Start service
- */
-void StartCoreService()
-{
-   SC_HANDLE mgr,service;
-	TCHAR errorText[1024];
-
-   mgr = OpenSCManager(NULL,NULL,GENERIC_WRITE);
-   if (mgr == NULL)
-   {
-      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
-      return;
-   }
-
-   service = OpenService(mgr, CORE_SERVICE_NAME, SERVICE_START);
+   service = OpenService(mgr, NXCPROXY_SERVICE_NAME, SERVICE_START);
    if (service == NULL)
    {
-      _tprintf(_T("ERROR: Cannot open service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
+      _tprintf(_T("ERROR: Cannot open service named '") NXCPROXY_SERVICE_NAME _T("' (%s)\n"),
              GetSystemErrorText(GetLastError(), errorText, 1024));
    }
    else
    {
       if (StartService(service, 0, NULL))
-         _tprintf(_T("NetXMS Core service started successfully\n"));
+         _tprintf(_T("NetXMS Client Proxy service started successfully\n"));
       else
-         _tprintf(_T("ERROR: Cannot start service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
+         _tprintf(_T("ERROR: Cannot start service named '") NXCPROXY_SERVICE_NAME _T("' (%s)\n"),
                 GetSystemErrorText(GetLastError(), errorText, 1024));
 
       CloseServiceHandle(service);
@@ -361,7 +229,7 @@ void StartCoreService()
 /**
  * Stop service
  */
-void StopCoreService()
+void StopProxyService()
 {
    SC_HANDLE mgr,service;
 	TCHAR errorText[1024];
@@ -373,10 +241,10 @@ void StopCoreService()
       return;
    }
 
-   service = OpenService(mgr, CORE_SERVICE_NAME, SERVICE_STOP);
+   service = OpenService(mgr, NXCPROXY_SERVICE_NAME, SERVICE_STOP);
    if (service == NULL)
    {
-      _tprintf(_T("ERROR: Cannot open service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
+      _tprintf(_T("ERROR: Cannot open service named '") NXCPROXY_SERVICE_NAME _T("' (%s)\n"),
              GetSystemErrorText(GetLastError(), errorText, 1024));
    }
    else
@@ -384,9 +252,9 @@ void StopCoreService()
       SERVICE_STATUS status;
 
       if (ControlService(service, SERVICE_CONTROL_STOP, &status))
-         _tprintf(_T("NetXMS Core service stopped successfully\n"));
+         _tprintf(_T("NetXMS Client Proxy service stopped successfully\n"));
       else
-         _tprintf(_T("ERROR: Cannot stop service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
+         _tprintf(_T("ERROR: Cannot stop service named '") NXCPROXY_SERVICE_NAME _T("' (%s)\n"),
                 GetSystemErrorText(GetLastError(), errorText, 1024));
 
       CloseServiceHandle(service);
@@ -405,7 +273,7 @@ void InstallEventSource(const TCHAR *path)
 	TCHAR errorText[1024];
 
    if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-         _T("System\\CurrentControlSet\\Services\\EventLog\\System\\") CORE_EVENT_SOURCE,
+         _T("System\\CurrentControlSet\\Services\\EventLog\\System\\") NXCPROXY_EVENT_SOURCE,
          0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL))
    {
       _tprintf(_T("Unable to create registry key: %s\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
@@ -416,7 +284,7 @@ void InstallEventSource(const TCHAR *path)
    RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ,(BYTE *)path, (DWORD)((_tcslen(path) + 1) * sizeof(TCHAR)));
 
    RegCloseKey(hKey);
-   _tprintf(_T("Event source \"") CORE_EVENT_SOURCE _T("\" installed successfully\n"));
+   _tprintf(_T("Event source \"") NXCPROXY_EVENT_SOURCE _T("\" installed successfully\n"));
 }
 
 /**
@@ -427,13 +295,13 @@ void RemoveEventSource()
 	TCHAR errorText[1024];
 
    if (ERROR_SUCCESS == RegDeleteKey(HKEY_LOCAL_MACHINE,
-         _T("System\\CurrentControlSet\\Services\\EventLog\\System\\") CORE_EVENT_SOURCE))
+         _T("System\\CurrentControlSet\\Services\\EventLog\\System\\") NXCPROXY_EVENT_SOURCE))
    {
-      _tprintf(_T("Event source \"") CORE_EVENT_SOURCE _T("\" uninstalled successfully\n"));
+      _tprintf(_T("Event source \"") NXCPROXY_EVENT_SOURCE _T("\" uninstalled successfully\n"));
    }
    else
    {
-      _tprintf(_T("Unable to uninstall event source \"") CORE_EVENT_SOURCE _T("\": %s\n"),
+      _tprintf(_T("Unable to uninstall event source \"") NXCPROXY_EVENT_SOURCE _T("\": %s\n"),
              GetSystemErrorText(GetLastError(), errorText, 1024));
    }
 }

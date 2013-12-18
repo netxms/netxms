@@ -56,44 +56,36 @@ THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Client communication write thread
-//
-
+/**
+ * Client communication write thread
+ */
 THREAD_RESULT THREAD_CALL CommSession::writeThreadStarter(void *pArg)
 {
    ((CommSession *)pArg)->writeThread();
    return THREAD_OK;
 }
 
-
-//
-// Received message processing thread
-//
-
+/**
+ * Received message processing thread
+ */
 THREAD_RESULT THREAD_CALL CommSession::processingThreadStarter(void *pArg)
 {
    ((CommSession *)pArg)->processingThread();
    return THREAD_OK;
 }
 
-
-//
-// Client communication write thread
-//
-
+/**
+ * Client communication write thread
+ */
 THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
 {
    ((CommSession *)pArg)->proxyReadThread();
    return THREAD_OK;
 }
 
-
-//
-// Client session class constructor
-//
-
+/**
+ * Client session class constructor
+ */
 CommSession::CommSession(SOCKET hSocket, UINT32 dwHostAddr,
                          BOOL bMasterServer, BOOL bControlServer)
 {
@@ -117,11 +109,9 @@ CommSession::CommSession(SOCKET hSocket, UINT32 dwHostAddr,
 	m_socketWriteMutex = MutexCreate();
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 CommSession::~CommSession()
 {
    shutdown(m_hSocket, SHUT_RDWR);
@@ -138,11 +128,9 @@ CommSession::~CommSession()
 	MutexDestroy(m_socketWriteMutex);
 }
 
-
-//
-// Start all threads
-//
-
+/**
+ * Start all threads
+ */
 void CommSession::run()
 {
    m_hWriteThread = ThreadCreateEx(writeThreadStarter, 0, this);
@@ -150,11 +138,9 @@ void CommSession::run()
    ThreadCreate(readThreadStarter, 0, this);
 }
 
-
-//
-// Disconnect session
-//
-
+/**
+ * Disconnect session
+ */
 void CommSession::disconnect()
 {
 	DebugPrintf(m_dwIndex, 5, _T("CommSession::disconnect()"));
@@ -366,11 +352,9 @@ BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx
    return bResult;
 }
 
-
-//
-// Writing thread
-//
-
+/**
+ * Writing thread
+ */
 void CommSession::writeThread()
 {
    CSCP_MESSAGE *pMsg;
@@ -387,11 +371,9 @@ void CommSession::writeThread()
    m_pSendQueue->Clear();
 }
 
-
-//
-// Message processing thread
-//
-
+/**
+ * Message processing thread
+ */
 void CommSession::processingThread()
 {
    CSCPMessage *pMsg;
@@ -637,11 +619,9 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Get parameter's value
-//
-
+/**
+ * Get parameter's value
+ */
 void CommSession::getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
@@ -938,11 +918,9 @@ void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Setup proxy connection
-//
-
+/**
+ * Setup proxy connection
+ */
 UINT32 CommSession::setupProxyConnection(CSCPMessage *pRequest)
 {
    UINT32 dwResult, dwAddr;
@@ -1013,11 +991,9 @@ UINT32 CommSession::setupProxyConnection(CSCPMessage *pRequest)
    return dwResult;
 }
 
-
-//
-// Proxy reading thread
-//
-
+/**
+ * Proxy reading thread
+ */
 void CommSession::proxyReadThread()
 {
    fd_set rdfs;

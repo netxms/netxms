@@ -23,11 +23,9 @@
 #include "nxagentd.h"
 #include <stdarg.h>
 
-
-//
-// Print message to the console if allowed to do so
-//
-
+/**
+ * Print message to the console if allowed to do so
+ */
 void ConsolePrintf(const TCHAR *pszFormat, ...)
 {
    if (!(g_dwFlags & AF_DAEMON))
@@ -61,11 +59,9 @@ void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
    }
 }
 
-
-//
-// Build full path for file in file store
-//
-
+/**
+ * Build full path for file in file store
+ */
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
 {
    int i, nLen;
@@ -86,11 +82,9 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
    nx_strncpy(&pszFullPath[nLen], &pszFileName[i + 1], MAX_PATH - nLen);
 }
 
-
-//
-// Wait for specific process
-//
-
+/**
+ * Wait for specific process
+ */
 BOOL WaitForProcess(const TCHAR *name)
 {
 	TCHAR param[MAX_PATH], value[MAX_RESULT_LENGTH];
@@ -129,10 +123,9 @@ done:
 
 #ifdef _WIN32
 
-//
-// Get error text for PDH functions
-//
-
+/**
+ * Get error text for PDH functions
+ */
 TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize)
 {
    TCHAR *msgBuf;
