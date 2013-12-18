@@ -70,6 +70,13 @@ target
 /eclipse
 /libtool
 /m4
+/packages/linux/debian/netxms-agent
+/packages/linux/debian/netxms-base
+/packages/linux/debian/netxms-server
+/packages/linux/debian/netxms-server-mysql
+/packages/linux/debian/netxms-server-odbc
+/packages/linux/debian/netxms-server-pgsql
+/packages/linux/debian/output
 /packages/osx/*.dmg
 /packages/osx/dist/
 /packages/osx/out/
@@ -99,10 +106,6 @@ target
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
 /src/client/nxalarm/nxalarm
-/src/client/nxcproxy/messages.c
-/src/client/nxcproxy/messages.h
-/src/client/nxcproxy/MSG00001.bin
-/src/client/nxcproxy/nxcproxy
 /src/client/nxevent/nxevent
 /src/client/nxpush/nxpush
 /src/client/nxsms/nxsms
@@ -142,6 +145,10 @@ target
 /src/libnxsl/parser.tab.cpp
 /src/libnxsl/parser.tab.hpp
 /src/libtre/x64
+/src/nxcproxy/messages.c
+/src/nxcproxy/messages.h
+/src/nxcproxy/MSG00001.bin
+/src/nxcproxy/nxcproxy
 /src/nxlptest/nxlptest
 /src/nxscript/nxscript
 /src/server/core/lex.nxmp_parser.cpp

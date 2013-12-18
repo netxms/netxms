@@ -116,6 +116,12 @@ AC_ARG_WITH(client,
 	COMPONENTS="$COMPONENTS client"
 ])
 
+AC_ARG_WITH(client-proxy,
+[AS_HELP_STRING(--with-client-proxy,build client proxy)],
+[
+	COMPONENTS="$COMPONENTS client-proxy"
+])
+
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
@@ -381,7 +387,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools"
+	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images"
@@ -536,6 +542,11 @@ if test $? = 0; then
 	NEED_ZLIB="yes"
 	MODULES="$MODULES libnxmap libnxcl client"
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
+fi
+
+check_substr "$COMPONENTS" "client-proxy"
+if test $? = 0; then
+	MODULES="$MODULES nxcproxy"
 fi
 
 check_substr "$COMPONENTS" "agent"
@@ -2306,8 +2317,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
-    src/agent/subagents/wmi/Makefile
-    src/agent/subagents/db2/Makefile
+   src/agent/subagents/wmi/Makefile
+   src/agent/subagents/db2/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
@@ -2352,6 +2363,7 @@ AC_CONFIG_FILES([
 	src/libnxsl/Makefile
 	src/libtre/Makefile
 	src/libtre/win32/Makefile
+	src/nxcproxy/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
 	src/server/core/Makefile

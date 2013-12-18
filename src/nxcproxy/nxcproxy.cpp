@@ -262,7 +262,7 @@ void Shutdown()
    
    // Remove PID file
 #if !defined(_WIN32)
-   _tremove(g_szPidFile);
+   _tremove(g_pidFile);
 #endif
 }
 
@@ -385,10 +385,10 @@ int main(int argc, char *argv[])
 #if !defined(_WIN32)
          case 'p':   // PID file
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPidFile, MAX_PATH);
-				g_szPidFile[MAX_PATH - 1] = 0;
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_pidFile, MAX_PATH);
+				g_pidFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_szPidFile, optarg, MAX_PATH);
+            nx_strncpy(g_pidFile, optarg, MAX_PATH);
 #endif
             break;
 #endif
@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
 							FILE *fp;
 
 							// Write PID file
-							fp = _tfopen(g_szPidFile, _T("w"));
+							fp = _tfopen(g_pidFile, _T("w"));
 							if (fp != NULL)
 							{
 								_ftprintf(fp, _T("%d"), m_pid);
