@@ -700,9 +700,18 @@ case "$PLATFORM" in
       fi
       ;;
    SunOS)
-      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -O2"
+      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS"
       LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
       export LD_LIBRARY_PATH
+      AC_MSG_CHECKING(whether C compiler accepts -O2)
+      OLD_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS -O2"
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+         [ AC_MSG_RESULT(yes) ],
+         [
+            CPPFLAGS="$OLD_CPPFLAGS"
+            AC_MSG_RESULT(no)
+         ])
       ;;
    Linux)
       CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE -O2"
