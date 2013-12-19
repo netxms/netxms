@@ -123,7 +123,7 @@ static BOOL SubAgentInit(Config *config)
       { _T("DBName"),            CT_STRING, 0, 0, MAX_STR,       0, info.dsn },
       { _T("DBLogin"),           CT_STRING, 0, 0, MAX_USERNAME,  0, info.username },
       { _T("DBPassword"),        CT_STRING, 0, 0, MAX_PASSWORD,  0, info.password },
-      { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, dbPassEncrypted },
+      { _T("DBPasswordEncrypted"), CT_STRING, 0, 0, MAX_DB_STRING, 0, dbPassEncrypted },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
    };
 
