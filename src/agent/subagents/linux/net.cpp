@@ -263,31 +263,6 @@ static int ReceiveMessage(int socket, char* replyBuffer)
    return recvmsg(socket, &reply, 0);
 }
 
-template<typename T> int nxffs(T t)
-{
-   int pos = 0;
-   unsigned char* p = (unsigned char*) &t;
-   int size = sizeof(t) * 8;
-   unsigned char byte;
-   unsigned char mask;
-
-   while(pos < size)
-   {
-      byte = ~(*p);
-      mask = 1;
-      while(mask > 0)
-      {
-         if ((mask & byte) == 0)
-            return pos;
-         mask <<= 1;
-         pos++;
-      }
-      p++;
-   }
-
-   return -1;
-}
-
 static IFINFO* ParseMessage(nlmsghdr* messageHeader)
 {
    ifinfomsg* interface;
@@ -315,7 +290,7 @@ static IFINFO* ParseMessage(nlmsghdr* messageHeader)
 
    // TODO: replace these calls with netlink (if possible)
    int inetSocket;
-   ifreq ifr = {};
+   struct ifreq ifr = {};
 
    inetSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -323,12 +298,12 @@ static IFINFO* ParseMessage(nlmsghdr* messageHeader)
    strncpy(ifr.ifr_name, interfaceInfo->name, IFNAMSIZ - 1);
 
    ioctl(inetSocket, SIOCGIFADDR, &ifr);
-   sockaddr_in* socketAddress = (sockaddr_in*) &(ifr.ifr_addr);
-   inet_ntop(AF_INET, &(socketAddress->sin_addr), interfaceInfo->addr, 24);
+   sockaddr_in *socketAddress = (sockaddr_in *)&ifr.ifr_addr;
+   inet_ntop(AF_INET, &socketAddress->sin_addr, interfaceInfo->addr, 24);
 
    ioctl(inetSocket, SIOCGIFNETMASK, &ifr);
-   sockaddr_in* socketMask = (sockaddr_in*) &(ifr.ifr_addr);
-   interfaceInfo->mask = (BYTE) (32 - nxffs(htonl(socketMask->sin_addr.s_addr)));
+   sockaddr_in *socketMask = (sockaddr_in *)&ifr.ifr_addr;
+   interfaceInfo->mask = (BYTE)BitsInMask(ntohl(socketMask->sin_addr.s_addr));
 
    close(inetSocket);
 
