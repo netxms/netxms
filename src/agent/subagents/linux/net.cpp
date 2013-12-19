@@ -328,7 +328,7 @@ static IFINFO* ParseMessage(nlmsghdr* messageHeader)
 
    ioctl(inetSocket, SIOCGIFNETMASK, &ifr);
    sockaddr_in* socketMask = (sockaddr_in*) &(ifr.ifr_addr);
-   interfaceInfo->mask = (BYTE) nxffs(~(socketMask->sin_addr.s_addr));
+   interfaceInfo->mask = (BYTE) (32 - nxffs(htonl(socketMask->sin_addr.s_addr)));
 
    close(inetSocket);
 
@@ -442,6 +442,8 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
       pValue->add(infoString);
 
       curInterface = curInterface->next;
+
+      AgentWriteDebugLog(9, _T("H_NetIfList: got interface (%s)"), infoString);
    }
 
    FreeInterfaceInfo(interfaceInfo);
