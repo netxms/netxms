@@ -290,7 +290,7 @@ static IFINFO* ParseMessage(nlmsghdr* messageHeader)
 
    // TODO: replace these calls with netlink (if possible)
    int inetSocket;
-   struct ifreq ifr;
+   struct ifreq ifr = {};
 
    inetSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
