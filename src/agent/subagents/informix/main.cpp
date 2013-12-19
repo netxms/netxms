@@ -127,11 +127,6 @@ static BOOL SubAgentInit(Config *config)
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
    };
 
-   if (*dbPassEncrypted != '\0')
-   {
-      DecryptPassword(info.username, dbPassEncrypted, info.password);
-   }
-
 	// Init db driver
 	g_driverHandle = DBLoadDriver(_T("informix.ddr"), NULL, TRUE, NULL, NULL);
 	if (g_driverHandle == NULL)
@@ -158,6 +153,11 @@ static BOOL SubAgentInit(Config *config)
 			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
 			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
 		}
+
+	   if (*dbPassEncrypted != '\0')
+	   {
+	      DecryptPassword(info.username, dbPassEncrypted, info.password);
+	   }
 	}
 
 	// Load configuration
@@ -165,6 +165,7 @@ static BOOL SubAgentInit(Config *config)
 	{
 		TCHAR section[MAX_STR];
 		memset(&info, 0, sizeof(info));
+		dbPassEncrypted = _T("");
 		_sntprintf(section, MAX_STR, _T("informix/databases/database#%d"), i);
 		if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
 		{
@@ -178,11 +179,20 @@ static BOOL SubAgentInit(Config *config)
 			_tcscpy(info.id, info.dsn);
 		memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
 
-		if (info.username[0] == '\0' || info.password[0] == '\0')
+		if (info.username[0] == '\0')
 		{
-			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username and/or password for "), MYNAMESTR);
+			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username for "), MYNAMESTR);
 			result = FALSE;
 		}
+      if (*dbPassEncrypted != '\0')
+      {
+         result = DecryptPassword(info.username, dbPassEncrypted, info.password);
+      }
+      if (info.password[0] == '\0')
+      {
+         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting password for "), MYNAMESTR);
+         result = FALSE;
+      }
 		if (result && (g_dbInfo[g_dbCount].accessMutex = MutexCreate()) == NULL)
 		{
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to create mutex (%d)"), MYNAMESTR, i);
