@@ -116,14 +116,21 @@ static BOOL SubAgentInit(Config *config)
 	BOOL result = TRUE;
 	static DatabaseInfo info;
 	int i;
-	static NX_CFG_TEMPLATE configTemplate[] = 
-	{
-		{ _T("Id"),					CT_STRING,	0, 0, MAX_STR, 0,	info.id },	
-		{ _T("DBName"),				CT_STRING,	0, 0, MAX_STR, 0,	info.dsn },	
-		{ _T("DBLogin"),			CT_STRING,	0, 0, MAX_USERNAME, 0,	info.username },	
-		{ _T("DBPassword"),			CT_STRING,	0, 0, MAX_PASSWORD, 0,	info.password },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-	};
+	TCHAR dbPassEncrypted[MAX_DB_STRING] = _T("");
+   static NX_CFG_TEMPLATE configTemplate[] =
+   {
+      { _T("Id"),                CT_STRING, 0, 0, MAX_STR,       0, info.id },
+      { _T("DBName"),            CT_STRING, 0, 0, MAX_STR,       0, info.dsn },
+      { _T("DBLogin"),           CT_STRING, 0, 0, MAX_USERNAME,  0, info.username },
+      { _T("DBPassword"),        CT_STRING, 0, 0, MAX_PASSWORD,  0, info.password },
+      { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, dbPassEncrypted },
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   };
+
+   if (*dbPassEncrypted != '\0')
+   {
+      DecryptPassword(info.username, dbPassEncrypted, info.password);
+   }
 
 	// Init db driver
 	g_driverHandle = DBLoadDriver(_T("informix.ddr"), NULL, TRUE, NULL, NULL);

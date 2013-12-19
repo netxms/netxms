@@ -11,6 +11,7 @@ int g_dbCount;
 DB_DRIVER g_driverHandle = NULL;
 DatabaseInfo g_dbInfo[MAX_DATABASES];
 DatabaseData g_dbData[MAX_DATABASES];
+TCHAR g_dbPassEncrypted[MAX_DB_STRING] = _T("");
 
 THREAD_RESULT THREAD_CALL queryThread(void *arg);
 
@@ -157,9 +158,9 @@ LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
 }
 
 
-//
-// Subagent initialization
-//
+/*
+ * Subagent initialization
+ */
 
 static BOOL SubAgentInit(Config *config)
 {
@@ -168,13 +169,19 @@ static BOOL SubAgentInit(Config *config)
 	int i;
 	static NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("Id"),					CT_STRING,	0, 0, MAX_STR, 0,	info.id },	
-		{ _T("Name"),				CT_STRING,	0, 0, MAX_STR, 0,	info.name },	
-		{ _T("TnsName"),			CT_STRING,	0, 0, MAX_STR, 0,	info.name },	
-		{ _T("UserName"),			CT_STRING,	0, 0, MAX_USERNAME, 0,	info.username },	
-		{ _T("Password"),			CT_STRING,	0, 0, MAX_PASSWORD, 0,	info.password },
+		{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, info.id },
+		{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, info.name },
+		{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, info.name },
+		{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, info.username },
+		{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, info.password },
+	   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, g_dbPassEncrypted },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
+
+	if (*g_dbPassEncrypted != '\0')
+   {
+      DecryptPassword(info.username, g_dbPassEncrypted, info.password);
+   }
 
 	// Init db driver
 #ifdef _WIN32
