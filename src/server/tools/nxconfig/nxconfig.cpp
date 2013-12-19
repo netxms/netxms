@@ -237,11 +237,15 @@ void CNxconfigApp::CreateAgentConfig()
    if (fp != NULL)
    {
       currTime = time(NULL);
-      _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by server installer at %s#\n\n"),
-                _tctime(&currTime));
-      _ftprintf(fp, _T("LogFile = {syslog}\nServers = 127.0.0.1\n"));
+      _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by server installer at %s#\n\n"), _tctime(&currTime));
       if (szAddrList[0] != 0)
-         _ftprintf(fp, _T("InstallationServers = %s\n"), szAddrList);
+      {
+         _ftprintf(fp, _T("LogFile = {syslog}\nMasterServers = 127.0.0.1, %s\n"), szAddrList);
+      }
+      else
+      {
+         _ftprintf(fp, _T("LogFile = {syslog}\nMasterServers = 127.0.0.1\n"));
+      }
       _ftprintf(fp, _T("FileStore = %s\\var\n"), m_szInstallDir);
       _ftprintf(fp, _T("RequireAuthentication = no\n"));
       _ftprintf(fp, _T("SubAgent = winperf.nsm\nSubAgent = portcheck.nsm\n"));
