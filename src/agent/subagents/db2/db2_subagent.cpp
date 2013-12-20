@@ -808,6 +808,7 @@ static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, cons
 
    const PDB2_INFO db2Info = new DB2_INFO();
    BOOL noErr = TRUE;
+   TCHAR dbPassEncrypted[MAX_DB_STRING] = _T("");
 
    db2Info->db2Id = configEntry->getId();
 
@@ -817,8 +818,9 @@ static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, cons
       { _T("DBAlias"),           CT_STRING,      0, 0, DB2_DB_MAX_NAME,   0, db2Info->db2DbAlias },
       { _T("UserName"),          CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, db2Info->db2UName },
       { _T("Password"),          CT_STRING,      0, 0, STR_MAX,           0, db2Info->db2UPass },
-      { _T("ReconnectInterval"), CT_LONG,        0, 0, sizeof(LONG),      0, &(db2Info->db2ReconnectInterval) },
-      { _T("QueryInterval"),     CT_LONG,        0, 0, sizeof(LONG),      0, &(db2Info->db2QueryInterval) },
+      { _T("EncryptedPassword"), CT_STRING,      0, 0, MAX_DB_STRING,     0, dbPassEncrypted },
+      { _T("ReconnectInterval"), CT_LONG,        0, 0, sizeof(LONG),      0, &db2Info->db2ReconnectInterval },
+      { _T("QueryInterval"),     CT_LONG,        0, 0, sizeof(LONG),      0, &db2Info->db2QueryInterval },
       { _T(""),                  CT_END_OF_LIST, 0, 0, 0,                 0, NULL }
    };
 
@@ -828,9 +830,16 @@ static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, cons
       noErr = FALSE;
    }
 
+   if (*dbPassEncrypted != '\0')
+   {
+      noErr = DecryptPassword(db2Info->db2UName, dbPassEncrypted, db2Info->db2UPass);
+      if(!noErr)
+         AgentWriteDebugLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to decrypt password"), SUBAGENT_NAME);
+   }
+
    if (noErr)
    {
-      if (db2Info->db2DbName[0] == '\0')
+      if (*db2Info->db2DbName == '\0')
       {
          AgentWriteDebugLog(7, _T("%s: no DBName in '%s'"), SUBAGENT_NAME, entryName);
          noErr = FALSE;
@@ -840,7 +849,7 @@ static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, cons
          AgentWriteDebugLog(9, _T("%s: got DBName entry with value '%s'"), SUBAGENT_NAME, db2Info->db2DbName);
       }
 
-      if (db2Info->db2DbAlias[0] == '\0')
+      if (*db2Info->db2DbAlias == '\0')
       {
          AgentWriteDebugLog(7, _T("%s: no DBAlias in '%s'"), SUBAGENT_NAME, entryName);
          noErr = FALSE;
@@ -850,7 +859,7 @@ static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, cons
          AgentWriteDebugLog(9, _T("%s: got DBAlias entry with value '%s'"), SUBAGENT_NAME, db2Info->db2DbAlias);
       }
 
-      if (db2Info->db2UName[0] == '\0')
+      if (*db2Info->db2UName == '\0')
       {
          AgentWriteDebugLog(7, _T("%s: no UserName in '%s'"), SUBAGENT_NAME, entryName);
          noErr = FALSE;
@@ -860,14 +869,14 @@ static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, cons
          AgentWriteDebugLog(9, _T("%s: got UserName entry with value '%s'"), SUBAGENT_NAME, db2Info->db2UName);
       }
 
-      if (db2Info->db2UPass[0] == '\0')
+      if (*db2Info->db2UPass == '\0')
       {
          AgentWriteDebugLog(7, _T("%s: no Password in '%s'"), SUBAGENT_NAME, entryName);
          noErr = FALSE;
       }
       else
       {
-         AgentWriteDebugLog(9, _T("%s: got Password entry with value '%s'"), SUBAGENT_NAME, db2Info->db2UPass);
+         AgentWriteDebugLog(9, _T("%s: got Password entry."), SUBAGENT_NAME);
       }
 
       if (db2Info->db2ReconnectInterval == 0)

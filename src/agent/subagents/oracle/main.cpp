@@ -157,22 +157,24 @@ LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
 }
 
 
-//
-// Subagent initialization
-//
+/*
+ * Subagent initialization
+ */
 
 static BOOL SubAgentInit(Config *config)
 {
 	BOOL result = TRUE;
 	static DatabaseInfo info;
 	int i;
+	TCHAR dbPassEncrypted[MAX_DB_STRING] = _T("");
 	static NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("Id"),					CT_STRING,	0, 0, MAX_STR, 0,	info.id },	
-		{ _T("Name"),				CT_STRING,	0, 0, MAX_STR, 0,	info.name },	
-		{ _T("TnsName"),			CT_STRING,	0, 0, MAX_STR, 0,	info.name },	
-		{ _T("UserName"),			CT_STRING,	0, 0, MAX_USERNAME, 0,	info.username },	
-		{ _T("Password"),			CT_STRING,	0, 0, MAX_PASSWORD, 0,	info.password },
+		{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, info.id },
+		{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, info.name },
+		{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, info.name },
+		{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, info.username },
+		{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, info.password },
+	   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, dbPassEncrypted },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
@@ -206,6 +208,11 @@ static BOOL SubAgentInit(Config *config)
 			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
 			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
 		}
+
+	   if (*dbPassEncrypted != '\0')
+	   {
+	      DecryptPassword(info.username, dbPassEncrypted, info.password);
+	   }
 	}
 
 	// Load full-featured XML configuration
@@ -216,6 +223,8 @@ static BOOL SubAgentInit(Config *config)
 			TCHAR section[MAX_STR];
 			memset((void*)&info, 0, sizeof(info));
 			_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
+			dbPassEncrypted = _T("");
+
 			if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
 			{
 				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration template"), MYNAMESTR);
@@ -225,11 +234,21 @@ static BOOL SubAgentInit(Config *config)
 				memcpy((void*)&g_dbInfo[++g_dbCount], (void*)&info, sizeof(info));
 			else
 				continue;
-			if (info.username[0] == '\0' || info.password[0] == '\0')
+			if (info.username[0] == '\0')
 			{
-				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username and/or password for "), MYNAMESTR);
+				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username for "), MYNAMESTR);
 				result = FALSE;
 			}
+         if (*dbPassEncrypted != '\0')
+         {
+            result = DecryptPassword(info.username, dbPassEncrypted, info.password);
+         }
+         if (info.password[0] == '\0')
+         {
+            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting password for "), MYNAMESTR);
+            result = FALSE;
+         }
+
 			if (result && (g_dbInfo[g_dbCount].accessMutex = MutexCreate()) == NULL)
 			{
 				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to create mutex (%d)"), MYNAMESTR, i);
