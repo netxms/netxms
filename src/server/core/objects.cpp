@@ -1876,6 +1876,12 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
              (iChildClass == OBJECT_TEMPLATE))
             return true;
          break;
+      case OBJECT_TEMPLATE:
+         if ((iChildClass == OBJECT_NODE) || 
+             (iChildClass == OBJECT_CLUSTER) ||
+             (iChildClass == OBJECT_MOBILEDEVICE))
+            return true;
+         break;
       case OBJECT_NETWORKMAPROOT:
       case OBJECT_NETWORKMAPGROUP:
          if ((iChildClass == OBJECT_NETWORKMAPGROUP) || 
