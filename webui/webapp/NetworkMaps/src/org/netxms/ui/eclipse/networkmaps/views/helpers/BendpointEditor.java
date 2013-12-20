@@ -204,7 +204,7 @@ public class BendpointEditor
 	private boolean isLineContainsPoint(int x1, int y1, int x2, int y2, int px, int py)
 	{
 		int tolerance = 7;
-		Rectangle rect = Rectangle.SINGLETON;
+		Rectangle rect = Rectangle.getSINGLETON();
 		rect.setSize(0, 0);
 		rect.setLocation(x1, y1);
 		rect.union(x2, y2);
