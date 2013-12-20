@@ -28,7 +28,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			syncer.cpp syslogd.cpp template.cpp tools.cpp \
 			tracert.cpp uniroot.cpp upload_job.cpp uptimecalc.cpp \
 			userdb.cpp userdb_objects.cpp vpnconn.cpp vrrp.cpp \
-			watchdog.cpp winperf.cpp zone.cpp 
+			watchdog.cpp winperf.cpp xmpp.cpp zone.cpp 
 libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcore_la_LIBADD = \
@@ -40,6 +40,12 @@ libnxcore_la_LIBADD = \
 	../../libnxsl/libnxsl.la \
 	../../libnetxms/libnetxms.la \
 	@SERVER_LIBS@
+if XMPP_SUPPORT
+libnxcore_la_LIBADD += @top_srcdir@/src/libstrophe/libstrophe.la
+endif
+if USE_INTERNAL_EXPAT
+libnxcore_la_LIBADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
+endif
 if USE_INTERNAL_LIBTRE
 libnxcore_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
 endif

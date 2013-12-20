@@ -284,6 +284,8 @@ typedef unsigned __int64 uint64_t;
 #define HAVE_LIBEXPAT 1
 #endif
 
+#define XMPP_SUPPORTED 1
+
 // Use Win32 API instead of msvcrt for memory allocation
 #ifdef USE_WIN32_HEAP
 

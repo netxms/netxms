@@ -21,6 +21,9 @@
 **/
 
 #include "nxcore.h"
+
+#if XMPP_SUPPORTED
+
 #include <strophe.h>
 
 /**
@@ -325,3 +328,5 @@ bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message)
 
    return true;
 }
+
+#endif

@@ -73,7 +73,10 @@ void InitMobileDeviceListeners();
 void InitCertificates();
 void InitUsers();
 void CleanupUsers();
+
+#if XMPP_SUPPORTED
 void StopXMPPConnector();
+#endif
 
 /**
  * Thread functions
@@ -96,7 +99,10 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
+
+#if XMPP_SUPPORTED
 THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *);
+#endif
 
 /**
  * Global variables
@@ -147,7 +153,9 @@ static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
+#if XMPP_SUPPORTED
 static THREAD m_thXMPPConnector = INVALID_THREAD_HANDLE;
+#endif
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 
 #ifndef _WIN32
@@ -837,10 +845,12 @@ retry_db_lock:
 			g_pModuleList[i].pfServerStarted();
 	}
 
+#if XMPP_SUPPORTED
    if (ConfigReadInt(_T("EnableXMPPConnector"), 1))
    {
       m_thXMPPConnector = ThreadCreateEx(XMPPConnectionManager, 0, NULL);
    }
+#endif
 
 	g_dwFlags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));
@@ -859,7 +869,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
+#if XMPP_SUPPORTED
    StopXMPPConnector();
+#endif
 
 #ifndef _WIN32
 	if (IsStandalone() && (m_nShutdownReason != SHUTDOWN_BY_SIGNAL))
@@ -890,7 +902,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	ThreadJoin(m_thPollManager);
 	ThreadJoin(m_thSyncer);
 	ThreadJoin(m_thSyslogDaemon);
+#if XMPP_SUPPORTED
    ThreadJoin(m_thXMPPConnector);
+#endif
 
 	SaveObjects(g_hCoreDB);
 	DbgPrintf(2, _T("All objects saved to database"));

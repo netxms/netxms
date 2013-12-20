@@ -79,6 +79,7 @@ LTINIT_CXX=""
 SQLFLAGS=""
 RUNTIME_PREFIX=""
 HPUX_HPPA="no"
+XMPP_SUPPORT="yes"
 
 
 #--------------------------------------------------------------------
@@ -337,7 +338,6 @@ AC_ARG_WITH(openssl,
 			CPPFLAGS="$CPPFLAGS -I/opt/openssl/include"
 		fi
 	fi
-	REQUIRE_ENCRYPTION="yes"
 ])
 
 AC_ARG_ENABLE(iconv,
@@ -350,12 +350,19 @@ AC_ARG_ENABLE(encryption,
 [AS_HELP_STRING(--disable-encryption,disable encryption support)],
 [
 	DISABLE_ENCRYPTION="yes"
+	XMPP_SUPPORT="no"
 ])
 
 AC_ARG_ENABLE(lmsensors,
 [AS_HELP_STRING(--disable-lmsensors,disable lmsensors support)],
 [
 	DISABLE_LMSENSORS="yes"
+])
+
+AC_ARG_ENABLE(xmpp,
+[AS_HELP_STRING(--disable-xmpp,disable XMPP support)],
+[
+	XMPP_SUPPORT="no"
 ])
 
 AC_ARG_ENABLE(unicode,
@@ -387,7 +394,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
+	MODULES="libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images"
@@ -534,6 +541,10 @@ if test $? = 0; then
 	MODULES="$MODULES libnxmap libnxsl libnxlp db server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
+	if test "x$XMPP_SUPPORT" = "xyes"; then
+		MODULES="libstrophe $MODULES"
+		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
+	fi
 fi
 
 check_substr "$COMPONENTS" "client"
@@ -1164,19 +1175,11 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 					LIBS="$LIBS -lcrypto"
 				fi	
 			else
-				if test "x$REQUIRE_ENCRYPTION" = "xyes"; then
-					AC_MSG_ERROR(libcrypto does not provide any suitable encryption algorithm)
-				else
-					AC_MSG_RESULT(libcrypto does not provide any suitable encryption algorithm)
-				fi
+				AC_MSG_ERROR(libcrypto does not provide any suitable encryption algorithm)
 			fi
 		],
 		[
-			if test "x$REQUIRE_ENCRYPTION" = "xyes"; then
-				AC_MSG_ERROR(libcrypto is required for encryption support)
-			else
-				AC_MSG_RESULT(libcrypto is required for encryption support)
-			fi
+			AC_MSG_ERROR(libcrypto is required for encryption support)
 		])
 fi
 
@@ -1457,8 +1460,10 @@ AC_MSG_RESULT(no)
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
 AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
 
-# sockets/resolver (probably for solaris)
+# sockets/resolver
+AC_CHECK_HEADERS([arpa/nameser_compat.h])
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
+AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
 AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
 AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
 
@@ -2200,6 +2205,7 @@ AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
+AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 
 
 #--------------------------------------------------------------------
@@ -2370,6 +2376,7 @@ AC_CONFIG_FILES([
 	src/libnxlp/Makefile
 	src/libnxmap/Makefile
 	src/libnxsl/Makefile
+	src/libstrophe/Makefile
 	src/libtre/Makefile
 	src/libtre/win32/Makefile
 	src/nxcproxy/Makefile
@@ -2460,6 +2467,11 @@ echo
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
+	if test "x${XMPP_SUPPORT}" = "xyes"; then
+		echo "XMPP support            : YES"
+	else
+		echo "XMPP support            : NO"
+	fi
 else
 	echo "Build Server            : NO"
 fi
