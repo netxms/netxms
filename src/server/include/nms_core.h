@@ -89,6 +89,7 @@ struct __console_ctx
 	MUTEX socketMutex;
    CSCPMessage *pMsg;
 	ClientSession *session;
+   String *output;
 };
 
 typedef __console_ctx * CONSOLE_CTX;
@@ -911,6 +912,8 @@ GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
 int GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
+
+bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message);
 
 /**
  * Global variables

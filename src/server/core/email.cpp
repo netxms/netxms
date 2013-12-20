@@ -22,28 +22,22 @@
 
 #include "nxcore.h"
 
-
-//
-// Receive buffer size
-//
-
+/**
+ * Receive buffer size
+ */
 #define SMTP_BUFFER_SIZE            1024
 
-
-//
-// Sender errors
-//
-
+/**
+ * Sender errors
+ */
 #define SMTP_ERR_SUCCESS            0
 #define SMTP_ERR_BAD_SERVER_NAME    1
 #define SMTP_ERR_COMM_FAILURE       2
 #define SMTP_ERR_PROTOCOL_FAILURE   3
 
-
-//
-// Mail sender states
-//
-
+/**
+ * Mail sender states
+ */
 #define STATE_INITIAL      0
 #define STATE_HELLO        1
 #define STATE_FROM         2
@@ -54,11 +48,9 @@
 #define STATE_FINISHED     7
 #define STATE_ERROR        8
 
-
-//
-// Mail envelope structure
-//
-
+/**
+ * Mail envelope structure
+ */
 typedef struct
 {
    char szRcptAddr[MAX_RCPT_ADDR_LEN];
@@ -67,11 +59,9 @@ typedef struct
    int nRetryCount;
 } MAIL_ENVELOPE;
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static TCHAR m_szSmtpServer[MAX_PATH] = _T("localhost");
 static WORD m_wSmtpPort = 25;
 static char m_szFromAddr[MAX_PATH] = "netxms@localhost";
@@ -79,11 +69,9 @@ static char m_szFromName[MAX_PATH] = "NetXMS Server";
 static Queue *m_pMailerQueue = NULL;
 static THREAD m_hThread = INVALID_THREAD_HANDLE;
 
-
-//
-// Find end-of-line character
-//
-
+/**
+ * Find end-of-line character
+ */
 static char *FindEOL(char *pszBuffer, int nLen)
 {
    int i;
@@ -94,11 +82,9 @@ static char *FindEOL(char *pszBuffer, int nLen)
    return NULL;
 }
 
-
-//
-// Read line from socket
-//
-
+/**
+ * Read line from socket
+ */
 static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, int *pnBufPos, char *pszLine)
 {
    char *ptr;

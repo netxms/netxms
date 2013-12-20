@@ -26,13 +26,11 @@
  **  UserDatabaseObject
  ****************************************************************************/
 
-
-//
-// Constructor for generic user database object - create from database
-// Expects fields in the following order:
-//    id,name,system_access,flags,description,guid
-//
-
+/**
+ * Constructor for generic user database object - create from database
+ * Expects fields in the following order:
+ *    id,name,system_access,flags,description,guid
+ */
 UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
 {
 	m_id = DBGetFieldULong(hResult, row, 0);
@@ -40,24 +38,19 @@ UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
 	m_systemRights = DBGetFieldULong(hResult, row, 2);
 	m_flags = DBGetFieldULong(hResult, row, 3);
 	DBGetField(hResult, row, 4, m_description, MAX_USER_DESCR);
-	DecodeSQLString(m_description);
 	DBGetFieldGUID(hResult, row, 5, m_guid);
 }
 
-
-//
-// Default constructor for generic object
-//
-
+/**
+ * Default constructor for generic object
+ */
 UserDatabaseObject::UserDatabaseObject()
 {
 }
 
-
-//
-// Condtructor for generic object - create new object with given id and name
-//
-
+/**
+ * Condtructor for generic object - create new object with given id and name
+ */
 UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 {
 	m_id = id;
@@ -68,40 +61,32 @@ UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 	m_flags = UF_MODIFIED;
 }
 
-
-//
-// Destructor for generic user database object
-//
-
+/**
+ * Destructor for generic user database object
+ */
 UserDatabaseObject::~UserDatabaseObject()
 {
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 bool UserDatabaseObject::saveToDatabase(DB_HANDLE hdb)
 {
 	return false;
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 bool UserDatabaseObject::deleteFromDatabase(DB_HANDLE hdb)
 {
 	return false;
 }
 
-
-//
-// Fill NXCP message with object data
-//
-
+/**
+ * Fill NXCP message with object data
+ */
 void UserDatabaseObject::fillMessage(CSCPMessage *msg)
 {
 	UINT32 i, varId;
@@ -120,11 +105,9 @@ void UserDatabaseObject::fillMessage(CSCPMessage *msg)
 	}
 }
 
-
-//
-// Modify object from NXCP message
-//
-
+/**
+ * Modify object from NXCP message
+ */
 void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 {
 	UINT32 flags, fields;
@@ -172,11 +155,9 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 	m_flags |= UF_MODIFIED;
 }
 
-
-//
-// Load custom attributes from database
-//
-
+/**
+ * Load custom attributes from database
+ */
 bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 {
 	DB_RESULT hResult;
@@ -191,15 +172,11 @@ bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 		for(int i = 0; i < count; i++)
 		{
 			attrName = DBGetField(hResult, i, 0, NULL, 0);
-			if (attrName != NULL)
-				DecodeSQLString(attrName);
-			else
+			if (attrName == NULL)
 				attrName = _tcsdup(_T(""));
 
 			attrValue = DBGetField(hResult, i, 1, NULL, 0);
-			if (attrValue != NULL)
-				DecodeSQLString(attrValue);
-			else
+			if (attrValue == NULL)
 				attrValue = _tcsdup(_T(""));
 
 			m_attributes.setPreallocated(attrName, attrValue);
@@ -210,41 +187,39 @@ bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 	return success;
 }
 
-
-//
-// Save custom attributes to database
-//
-
+/**
+ * Save custom attributes to database
+ */
 bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 {
-	TCHAR query[8192], *escName, *escValue;
+	TCHAR query[256];
 	UINT32 i;
 	bool success = false;
 
 	_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
 	if (DBQuery(hdb, query))
 	{
-		for(i = 0; i < m_attributes.getSize(); i++)
-		{
-			escName = EncodeSQLString(m_attributes.getKeyByIndex(i));
-			escValue = EncodeSQLString(m_attributes.getValueByIndex(i));
-			_sntprintf(query, 8192, _T("INSERT INTO userdb_custom_attributes (object_id,attr_name,attr_value) VALUES (%d,'%s','%s')"),
-			           m_id, escName, escValue);
-			free(escName);
-			free(escValue);
-			if (!DBQuery(hdb, query))
-				break;
-		}
-		success = (i == m_attributes.getSize());
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO userdb_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+		   for(i = 0; i < m_attributes.getSize(); i++)
+		   {
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_attributes.getKeyByIndex(i), DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_attributes.getValueByIndex(i), DB_BIND_STATIC);
+			   if (!DBExecute(hStmt))
+				   break;
+		   }
+		   success = (i == m_attributes.getSize());
+         DBFreeStatement(hStmt);
+      }
 	}
 	return success;
 }
 
-
-//
-// Get custom attribute as UINT32
-//
-
+/**
+ * Get custom attribute as UINT32
+ */
 UINT32 UserDatabaseObject::getAttributeAsULong(const TCHAR *name)
 {
 	const TCHAR *value = getAttribute(name);
@@ -256,18 +231,15 @@ UINT32 UserDatabaseObject::getAttributeAsULong(const TCHAR *name)
  **  User
  ****************************************************************************/
 
-
-//
-// Constructor for user object - create from database
-// Expects fields in the following order:
-//    id,name,system_access,flags,description,guid,password,full_name,
-//    grace_logins,auth_method,cert_mapping_method,cert_mapping_data,
-//    auth_failures,last_passwd_change,min_passwd_length,disabled_until,
-//    last_login
-//
-
-User::User(DB_RESULT hResult, int row)
-     :UserDatabaseObject(hResult, row)
+/**
+ * Constructor for user object - create from database
+ * Expects fields in the following order:
+ *    id,name,system_access,flags,description,guid,password,full_name,
+ *    grace_logins,auth_method,cert_mapping_method,cert_mapping_data,
+ *    auth_failures,last_passwd_change,min_passwd_length,disabled_until,
+ *    last_login,xmpp_id
+ */
+User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
 {
 	TCHAR buffer[256];
 
@@ -278,21 +250,16 @@ User::User(DB_RESULT hResult, int row)
 	}
 
 	DBGetField(hResult, row, 7, m_fullName, MAX_USER_FULLNAME);
-	DecodeSQLString(m_fullName);
-
 	m_graceLogins = DBGetFieldLong(hResult, row, 8);
 	m_authMethod = DBGetFieldLong(hResult, row, 9);
 	m_certMappingMethod = DBGetFieldLong(hResult, row, 10);
-	
 	m_certMappingData = DBGetField(hResult, row, 11, NULL, 0);
-	if (m_certMappingData != NULL)
-		DecodeSQLString(m_certMappingData);
-
 	m_authFailures = DBGetFieldLong(hResult, row, 12);
 	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 13);
 	m_minPasswordLength = DBGetFieldLong(hResult, row, 14);
 	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 15);
 	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 16);
+   DBGetField(hResult, row, 17, m_xmppId, MAX_XMPP_ID_LEN);
 
 	// Set full system access for superuser
 	if (m_id == 0)
@@ -301,11 +268,9 @@ User::User(DB_RESULT hResult, int row)
 	loadCustomAttributes(g_hCoreDB);
 }
 
-
-//
-// Constructor for user object - create default superuser
-//
-
+/**
+ * Constructor for user object - create default superuser
+ */
 User::User()
 {
 	m_id = 0;
@@ -325,15 +290,13 @@ User::User()
 	m_minPasswordLength = -1;	// Use system-wide default
 	m_disabledUntil = 0;
 	m_lastLogin = 0;
+   m_xmppId[0] = 0;
 }
 
-
-//
-// Constructor for user object - new user
-//
-
-User::User(UINT32 id, const TCHAR *name)
-     : UserDatabaseObject(id, name)
+/**
+ * Constructor for user object - new user
+ */
+User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 {
 	m_fullName[0] = 0;
 	m_graceLogins = MAX_GRACE_LOGINS;
@@ -346,76 +309,70 @@ User::User(UINT32 id, const TCHAR *name)
 	m_minPasswordLength = -1;	// Use system-wide default
 	m_disabledUntil = 0;
 	m_lastLogin = 0;
+   m_xmppId[0] = 0;
 }
 
-
-//
-// Destructor for user object
-//
-
+/**
+ * Destructor for user object
+ */
 User::~User()
 {
 	safe_free(m_certMappingData);
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 bool User::saveToDatabase(DB_HANDLE hdb)
 {
-   DB_RESULT hResult;
-	TCHAR query[4096], password[SHA1_DIGEST_SIZE * 2 + 1], guidText[64], *escData, *escFullName, *escDescr;
-   bool userExists = false;
+	TCHAR password[SHA1_DIGEST_SIZE * 2 + 1], guidText[64];
 
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
 
-   // Check if user record exists in database
-   _sntprintf(query, 4096, _T("SELECT id FROM users WHERE id=%d"), m_id);
-   hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) != 0)
-         userExists = true;
-      DBFreeResult(hResult);
-   }
-
    // Create or update record in database
    BinToStr(m_passwordHash, SHA1_DIGEST_SIZE, password);
-	escData = EncodeSQLString(CHECK_NULL_EX(m_certMappingData));
-	escFullName = EncodeSQLString(m_fullName);
-	escDescr = EncodeSQLString(m_description);
-   if (userExists)
-      _sntprintf(query, 4096, _T("UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,")
-                              _T("full_name='%s',description='%s',grace_logins=%d,guid='%s',")
-							         _T("auth_method=%d,cert_mapping_method=%d,cert_mapping_data='%s',")
-										_T("auth_failures=%d,last_passwd_change=%d,min_passwd_length=%d,")
-										_T("disabled_until=%d,last_login=%d WHERE id=%d"),
-              m_name, password, m_systemRights, m_flags, escFullName,
-              escDescr, m_graceLogins, uuid_to_string(m_guid, guidText),
-              m_authMethod, m_certMappingMethod, escData, m_authFailures, (int)m_lastPasswordChange,
-				  m_minPasswordLength, (int)m_disabledUntil, (int)m_lastLogin, m_id);
+   DB_STATEMENT hStmt;
+   if (IsDatabaseRecordExist(hdb, _T("users"), _T("id"), m_id))
+   {
+      hStmt = DBPrepare(hdb,
+         _T("UPDATE users SET name=?,password=?,system_access=?,flags=?,full_name=?,description=?,grace_logins=?,guid=?,")
+			_T("  auth_method=?,cert_mapping_method=?,cert_mapping_data=?,auth_failures=?,last_passwd_change=?,")
+         _T("  min_passwd_length=?,disabled_until=?,last_login=?,xmpp_id=? WHERE id=?"));
+   }
    else
-      _sntprintf(query, 4096, _T("INSERT INTO users (id,name,password,system_access,flags,full_name,")
-		                        _T("description,grace_logins,guid,auth_method,cert_mapping_method,")
-                              _T("cert_mapping_data,password_history,auth_failures,last_passwd_change,")
-										_T("min_passwd_length,disabled_until,last_login) VALUES ")
-										_T("(%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d,%d,'%s','%s',%d,%d,%d,%d,%d)"),
-              m_id, m_name, password, m_systemRights, m_flags,
-              escFullName, escDescr, m_graceLogins, uuid_to_string(m_guid, guidText),
-              m_authMethod, m_certMappingMethod, escData, password,
-				  m_authFailures, (int)m_lastPasswordChange, m_minPasswordLength,
-				  (int)m_disabledUntil, (int)m_lastLogin);
-	free(escData);
-	free(escFullName);
-	free(escDescr);
+   {
+      hStmt = DBPrepare(hdb,
+         _T("INSERT INTO users (name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method,")
+         _T("  cert_mapping_method,cert_mapping_data,password_history,auth_failures,last_passwd_change,min_passwd_length,")
+         _T("  disabled_until,last_login,xmpp_id,id VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+   }
+   if (hStmt == NULL)
+      return false;
 
-	BOOL rc = DBBegin(hdb);
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, password, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_systemRights);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_flags);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_fullName, DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_graceLogins);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_authMethod);
+   DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_certMappingMethod);
+   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_certMappingData, DB_BIND_STATIC);
+   DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_authFailures);
+   DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_lastPasswordChange);
+   DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_minPasswordLength);
+   DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_disabledUntil);
+   DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_lastLogin);
+   DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmppId, DB_BIND_STATIC);
+   DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
+
+   BOOL rc = DBBegin(hdb);
 	if (rc)
 	{
-		rc = DBQuery(hdb, query);
+		rc = DBExecute(hStmt);
 		if (rc)
 		{
 			rc = saveCustomAttributes(hdb);
@@ -425,14 +382,13 @@ bool User::saveToDatabase(DB_HANDLE hdb)
 		else
 			DBRollback(hdb);
 	}
+   DBFreeStatement(hStmt);
 	return rc ? true : false;
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 bool User::deleteFromDatabase(DB_HANDLE hdb)
 {
 	TCHAR query[256];
@@ -461,12 +417,10 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
 	return rc ? true : false;
 }
 
-
-//
-// Validate user's password
-// For non-UNICODE build, password must be UTF-8 encoded
-//
-
+/**
+ * Validate user's password
+ * For non-UNICODE build, password must be UTF-8 encoded
+ */
 bool User::validatePassword(const TCHAR *password)
 {
    BYTE hash[SHA1_DIGEST_SIZE];
@@ -482,6 +436,9 @@ bool User::validatePassword(const TCHAR *password)
 	return !memcmp(hash, m_passwordHash, SHA1_DIGEST_SIZE);
 }
 
+/**
+ * Validate user's password in hashed form
+ */
 bool User::validateHashedPassword(const BYTE *password)
 {
 	return !memcmp(password, m_passwordHash, SHA1_DIGEST_SIZE);
@@ -523,6 +480,7 @@ void User::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_MIN_PASSWORD_LENGTH, (WORD)m_minPasswordLength);
 	msg->SetVariable(VID_DISABLED_UNTIL, (UINT32)m_disabledUntil);
 	msg->SetVariable(VID_AUTH_FAILURES, (UINT32)m_authFailures);
+   msg->SetVariable(VID_XMPP_ID, m_xmppId);
 }
 
 /**
@@ -548,6 +506,8 @@ void User::modifyFromMessage(CSCPMessage *msg)
 		safe_free(m_certMappingData);
 		m_certMappingData = msg->GetVariableStr(VID_CERT_MAPPING_DATA);
 	}
+	if (fields & USER_MODIFY_XMPP_ID)
+		msg->GetVariableStr(VID_XMPP_ID, m_xmppId, MAX_XMPP_ID_LEN);
 }
 
 /**
@@ -584,13 +544,11 @@ void User::enable()
  **  Group
  ****************************************************************************/
 
-
-//
-// Constructor for group object - create from database
-// Expects fields in the following order:
-//    id,name,system_access,flags,description,guid
-//
-
+/**
+ * Constructor for group object - create from database
+ * Expects fields in the following order:
+ *    id,name,system_access,flags,description,guid
+ */
 Group::Group(DB_RESULT hr, int row)
       :UserDatabaseObject(hr, row)
 {
@@ -618,11 +576,9 @@ Group::Group(DB_RESULT hr, int row)
 	loadCustomAttributes(g_hCoreDB);
 }
 
-
-//
-// Constructor for group object - create "Everyone" group
-//
-
+/**
+ * Constructor for group object - create "Everyone" group
+ */
 Group::Group()
 {
 	m_id = GROUP_EVERYONE;
@@ -635,92 +591,93 @@ Group::Group()
 	m_members = NULL;
 }
 
-
-//
-// Constructor for group object - create new group
-//
-
-Group::Group(UINT32 id, const TCHAR *name)
-      :UserDatabaseObject(id, name)
+/**
+ * Constructor for group object - create new group
+ */
+Group::Group(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 {
 	m_memberCount = 0;
 	m_members = NULL;
 }
 
-
-//
-// Destructor for group object
-//
-
+/**
+ * Destructor for group object
+ */
 Group::~Group()
 {
 	safe_free(m_members);
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 bool Group::saveToDatabase(DB_HANDLE hdb)
 {
-   DB_RESULT hResult;
-	TCHAR query[4096], guidText[64], *escDescr;
-   bool groupExists = false;
-	BOOL rc;
+	TCHAR guidText[64];
 
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
 
-   // Check if group record exists in database
-   _sntprintf(query, 4096, _T("SELECT name FROM user_groups WHERE id=%d"), m_id);
-   hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   DB_STATEMENT hStmt;
+   if (IsDatabaseRecordExist(hdb, _T("user_groups"), _T("id"), m_id))
    {
-      if (DBGetNumRows(hResult) != 0)
-         groupExists = true;
-      DBFreeResult(hResult);
+      hStmt = DBPrepare(hdb, _T("UPDATE user_groups SET name=?,system_access=?,flags=?,description=?,guid=? WHERE id=?"));
    }
-
-   // Create or update record in database
-   escDescr = EncodeSQLString(m_description);
-   if (groupExists)
-      _sntprintf(query, 4096, _T("UPDATE user_groups SET name='%s',system_access=%d,flags=%d,")
-                              _T("description='%s',guid='%s' WHERE id=%d"),
-              m_name, m_systemRights, m_flags, escDescr,
-              uuid_to_string(m_guid, guidText), m_id);
    else
-      _sntprintf(query, 4096, _T("INSERT INTO user_groups (id,name,system_access,flags,description,guid) ")
-                              _T("VALUES (%d,'%s',%d,%d,'%s','%s')"),
-              m_id, m_name, m_systemRights, m_flags, escDescr,
-              uuid_to_string(m_guid, guidText));
-   free(escDescr);
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,id) VALUES (?,?,?,?,?,?)"));
+   }
+   if (hStmt == NULL)
+      return false;
 
-   rc = DBBegin(hdb);
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_systemRights);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
+
+   BOOL rc = DBBegin(hdb);
 	if (rc)
 	{
-		rc = DBQuery(hdb,query);
+      rc = DBExecute(hStmt);
 		if (rc)
 		{
-			if (groupExists)
+         DBFreeStatement(hStmt);
+         hStmt = DBPrepare(hdb, _T("DELETE FROM user_group_members WHERE group_id=?"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            rc = DBExecute(hStmt);
+         }
+         else
+         {
+            rc = FALSE;
+         }
+
+			if (rc && (m_memberCount > 0))
 			{
-				_sntprintf(query, 4096, _T("DELETE FROM user_group_members WHERE group_id=%d"), m_id);
-				rc = DBQuery(hdb, query);
+            DBFreeStatement(hStmt);
+            hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"));
+            if (hStmt != NULL)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+				   for(int i = 0; (i < m_memberCount) && rc; i++)
+				   {
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members[i]);
+                  rc = DBExecute(hStmt);
+				   }
+            }
+            else
+            {
+               rc = FALSE;
+            }
 			}
 
-			if (rc)
-			{
-				for(int i = 0; (i < m_memberCount) && rc; i++)
-				{
-					_sntprintf(query, 4096, _T("INSERT INTO user_group_members (group_id, user_id) VALUES (%d, %d)"),
-							     m_id, m_members[i]);
-					rc = DBQuery(hdb, query);
-					if (rc)
-					{
-						rc = saveCustomAttributes(hdb);
-					}
-				}
-			}
+		   if (rc)
+		   {
+			   rc = saveCustomAttributes(hdb);
+		   }
 		}
 		if (rc)
 			DBCommit(hdb);
@@ -728,14 +685,15 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
 			DBRollback(hdb);
 	}
 
-	return rc ? true : false;
+   if (hStmt != NULL)
+      DBFreeStatement(hStmt);
+	
+   return rc ? true : false;
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 bool Group::deleteFromDatabase(DB_HANDLE hdb)
 {
 	TCHAR query[256];
@@ -764,11 +722,9 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 	return rc ? true : false;
 }
 
-
-//
-// Check if given user is a member
-//
-
+/**
+ * Check if given user is a member
+ */
 bool Group::isMember(UINT32 userId)
 {
 	int i;

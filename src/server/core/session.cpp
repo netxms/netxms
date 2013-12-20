@@ -11429,6 +11429,7 @@ void ClientSession::openConsole(UINT32 rqId)
 		m_console->pMsg = new CSCPMessage;
 		m_console->pMsg->SetCode(CMD_ADM_MESSAGE);
 		m_console->session = this;
+      m_console->output = NULL;
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
 	}
 	else
@@ -11439,11 +11440,9 @@ void ClientSession::openConsole(UINT32 rqId)
 	sendMessage(&msg);
 }
 
-
-//
-// Close server console
-//
-
+/**
+ * Close server console
+ */
 void ClientSession::closeConsole(UINT32 rqId)
 {
 	CSCPMessage msg;

@@ -456,6 +456,27 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                }
                bSuccess = TRUE;
                break;
+            case ACTION_XMPP_MESSAGE:
+               if (pszExpandedRcpt[0] != 0)
+               {
+                  DbgPrintf(3, _T("*actions* Sending XMPP message to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
+					   curr = pszExpandedRcpt;
+					   do
+					   {
+						   next = _tcschr(curr, _T(';'));
+						   if (next != NULL)
+							   *next = 0;
+						   StrStrip(curr);
+	                  SendXMPPMessage(curr, pszExpandedData);
+						   curr = next + 1;
+					   } while(next != NULL);
+               }
+               else
+               {
+                  DbgPrintf(3, _T("*actions* Empty recipients list - XMPP message will not be sent"));
+               }
+               bSuccess = TRUE;
+               break;
             case ACTION_REMOTE:
                if (pszExpandedRcpt[0] != 0)
                {

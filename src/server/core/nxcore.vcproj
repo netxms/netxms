@@ -849,6 +849,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\xmpp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\zone.cpp"
 				>
 			</File>

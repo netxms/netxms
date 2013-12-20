@@ -29,6 +29,11 @@
 #define MAX_GRACE_LOGINS      5
 
 /**
+ * Maximum length of XMPP ID
+ */
+#define MAX_XMPP_ID_LEN          128
+
+/**
  * Authentication methods
  */
 enum UserAuthMethod
@@ -104,6 +109,7 @@ protected:
 	time_t m_lastLogin;
 	int m_minPasswordLength;
 	int m_authFailures;
+   TCHAR m_xmppId[MAX_XMPP_ID_LEN];
 
 public:
 	User();
@@ -128,6 +134,7 @@ public:
 	bool canChangePassword() { return (m_flags & UF_CANNOT_CHANGE_PASSWORD) == 0; }
 	int getMinMasswordLength() { return m_minPasswordLength; }
 	time_t getReEnableTime() { return m_disabledUntil; }
+   const TCHAR *getXmppId() { return m_xmppId; }
 
 	bool validatePassword(const TCHAR *password);
 	bool validateHashedPassword(const BYTE *password);
@@ -212,6 +219,8 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
                         BYTE *pChallenge, UINT32 *pdwId, UINT32 *pdwSystemRights,
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth);
+bool AuthenticateUserForXMPPCommands(const char *xmppId);
+bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 
 UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId);

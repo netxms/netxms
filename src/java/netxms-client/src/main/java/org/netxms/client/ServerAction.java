@@ -33,6 +33,7 @@ public class ServerAction
 	public static final int SEND_SMS = 3;
 	public static final int FORWARD_EVENT = 4;
 	public static final int EXEC_NXSL_SCRIPT = 5;
+   public static final int XMPP_MESSAGE = 6;
 	
 	private long id;
 	private int type;

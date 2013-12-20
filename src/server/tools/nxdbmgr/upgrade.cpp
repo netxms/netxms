@@ -361,6 +361,36 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V299 to V300
+ */
+static BOOL H_UpgradeFromV299(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateConfigParam(_T("EnableXMPPConnector"), _T("0"), 1, 1));
+	CHK_EXEC(CreateConfigParam(_T("XMPPLogin"), _T("netxms@localhost"), 1, 1));
+	CHK_EXEC(CreateConfigParam(_T("XMPPPassword"), _T("netxms"), 1, 1));
+	CHK_EXEC(CreateConfigParam(_T("XMPPServer"), _T("localhost"), 1, 1));
+	CHK_EXEC(CreateConfigParam(_T("XMPPPort"), _T("5222"), 1, 1));
+
+   SetColumnNullable(_T("users"), _T("full_name"));
+   SetColumnNullable(_T("users"), _T("description"));
+   SetColumnNullable(_T("users"), _T("cert_mapping_data"));
+   SetColumnNullable(_T("user_groups"), _T("description"));
+   SetColumnNullable(_T("userdb_custom_attributes"), _T("attr_value"));
+
+   ConvertStrings(_T("users"), _T("id"), _T("full_name"));
+   ConvertStrings(_T("users"), _T("id"), _T("description"));
+   ConvertStrings(_T("users"), _T("id"), _T("cert_mapping_data"));
+   ConvertStrings(_T("user_groups"), _T("id"), _T("description"));
+   ConvertStrings(_T("userdb_custom_attributes"), _T("object_id"), _T("attr_name"), _T("attr_name"), true);
+   ConvertStrings(_T("userdb_custom_attributes"), _T("object_id"), _T("attr_name"), _T("attr_value"), true);
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE users ADD xmpp_id varchar(127)")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='300' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V298 to V299
  */
 static BOOL H_UpgradeFromV298(int currVersion, int newVersion)
@@ -7290,6 +7320,7 @@ static struct
    { 296, 297, H_UpgradeFromV296 },
    { 297, 298, H_UpgradeFromV297 },
    { 298, 299, H_UpgradeFromV298 },
+   { 299, 300, H_UpgradeFromV299 },
    { 0, 0, NULL }
 };
 

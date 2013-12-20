@@ -621,8 +621,9 @@ enum
 #define SYSTEM_ACCESS_MANAGE_MAPPING_TBLS 0x00800000
 #define SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS 0x01000000
 #define SYSTEM_ACCESS_REPORTING_SERVER    0x02000000
+#define SYSTEM_ACCESS_XMPP_COMMANDS       0x04000000
 
-#define SYSTEM_ACCESS_FULL                0x03FFFFFF
+#define SYSTEM_ACCESS_FULL                0x07FFFFFF
 
 #endif	/* LIBNXCL_CUSTOM_USER_RIGHTS */
 
@@ -664,11 +665,9 @@ enum
 #define UF_INTRUDER_LOCKOUT         0x0020
 #define UF_PASSWORD_NEVER_EXPIRES   0x0040
 
-
-//
-// Fields for NXCModifyUserEx
-//
-
+/**
+ * Fields for NXCModifyUserEx
+ */
 #define USER_MODIFY_LOGIN_NAME         0x00000001
 #define USER_MODIFY_DESCRIPTION        0x00000002
 #define USER_MODIFY_FULL_NAME          0x00000004
@@ -680,20 +679,17 @@ enum
 #define USER_MODIFY_PASSWD_LENGTH      0x00000100
 #define USER_MODIFY_TEMP_DISABLE       0x00000200
 #define USER_MODIFY_CUSTOM_ATTRIBUTES  0x00000400
+#define USER_MODIFY_XMPP_ID            0x00000800
 
-
-//
-// User certificate mapping methods
-//
-
+/**
+ * User certificate mapping methods
+ */
 #define USER_MAP_CERT_BY_SUBJECT		0
 #define USER_MAP_CERT_BY_PUBKEY		1
 
-
-//
-// User database change notification types
-//
-
+/**
+ * User database change notification types
+ */
 #define USER_DB_CREATE              0
 #define USER_DB_DELETE              1
 #define USER_DB_MODIFY              2
@@ -861,17 +857,16 @@ enum
 #define RF_SEVERITY_MAJOR        0x0800
 #define RF_SEVERITY_CRITICAL     0x1000
 
-
-//
-// Action types
-//
-
+/**
+ * Action types
+ */
 #define ACTION_EXEC           0
 #define ACTION_REMOTE         1
 #define ACTION_SEND_EMAIL     2
 #define ACTION_SEND_SMS       3
 #define ACTION_FORWARD_EVENT  4
 #define ACTION_NXSL_SCRIPT    5
+#define ACTION_XMPP_MESSAGE   6
 
 /**
  * Network map types

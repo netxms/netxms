@@ -64,9 +64,32 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 	szBuffer[8191] = 0;
    va_end(args);
 
-	if ((pCtx->hSocket == -1) && (pCtx->session == NULL))
+	if ((pCtx->hSocket == -1) && (pCtx->session == NULL) && (pCtx->output == NULL))
    {
 		WriteToTerminal(szBuffer);
+   }
+   else if (pCtx->output != NULL)
+   {
+      // remove possible escape sequences
+      for(int i = 0; szBuffer[i] != 0; i++)
+      {
+         if (szBuffer[i] == 27)
+         {
+            int start = i++;
+            if (szBuffer[i] == '[')
+            {
+               for(i++; (szBuffer[i] != 0) && (szBuffer[i] != 'm'); i++);
+               if (szBuffer[i] == 'm')
+                  i++;
+            }
+            memmove(&szBuffer[start], &szBuffer[i], (_tcslen(&szBuffer[i]) + 1) * sizeof(TCHAR));
+            i = start - 1;
+         }
+      }
+
+      MutexLock(pCtx->socketMutex);
+      *pCtx->output += szBuffer;
+      MutexUnlock(pCtx->socketMutex);
    }
    else
    {

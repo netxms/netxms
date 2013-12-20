@@ -49,6 +49,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 	ctx.socketMutex = MutexCreate();
    ctx.pMsg = &response;
 	ctx.session = NULL;
+   ctx.output = NULL;
 
    while(1)
    {

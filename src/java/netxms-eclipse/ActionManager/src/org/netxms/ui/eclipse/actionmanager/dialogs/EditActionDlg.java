@@ -53,6 +53,7 @@ public class EditActionDlg extends Dialog
 	private Button typeExecScript;
 	private Button typeEMail;
 	private Button typeSMS;
+	private Button typeXMPP;
 	private Button typeForward;
 	private Button markDisabled;
 
@@ -144,6 +145,11 @@ public class EditActionDlg extends Dialog
 		typeSMS.setSelection(action.getType() == ServerAction.SEND_SMS);
 		typeSMS.addSelectionListener(new TypeButtonSelectionListener());
 		
+      typeXMPP = new Button(typeGroup, SWT.RADIO);
+      typeXMPP.setText("Send XMPP message");
+      typeXMPP.setSelection(action.getType() == ServerAction.XMPP_MESSAGE);
+      typeXMPP.addSelectionListener(new TypeButtonSelectionListener());
+      
 		typeForward = new Button(typeGroup, SWT.RADIO);
 		typeForward.setText(Messages.get().EditActionDlg_ForwardEvent);
 		typeForward.setSelection(action.getType() == ServerAction.FORWARD_EVENT);
@@ -205,6 +211,8 @@ public class EditActionDlg extends Dialog
 				return Messages.get().EditActionDlg_RemoteHost;
 			case ServerAction.SEND_SMS:
 				return Messages.get().EditActionDlg_PhoneNumber;
+         case ServerAction.XMPP_MESSAGE:
+            return "Jabber/XMPP ID";
 			case ServerAction.FORWARD_EVENT:
 				return Messages.get().EditActionDlg_RemoteServer;
 			case ServerAction.EXEC_NXSL_SCRIPT:
@@ -247,6 +255,8 @@ public class EditActionDlg extends Dialog
 			action.setType(ServerAction.SEND_EMAIL);
 		else if (typeSMS.getSelection())
 			action.setType(ServerAction.SEND_SMS);
+      else if (typeXMPP.getSelection())
+         action.setType(ServerAction.XMPP_MESSAGE);
 		else if (typeForward.getSelection())
 			action.setType(ServerAction.FORWARD_EVENT);
 		
@@ -276,6 +286,8 @@ public class EditActionDlg extends Dialog
 			type = ServerAction.SEND_EMAIL;
 		else if (typeSMS.getSelection())
 			type = ServerAction.SEND_SMS;
+      else if (typeXMPP.getSelection())
+         type = ServerAction.XMPP_MESSAGE;
 		else if (typeForward.getSelection())
 			type = ServerAction.FORWARD_EVENT;
 		
@@ -287,6 +299,8 @@ public class EditActionDlg extends Dialog
 				data.setEnabled(true);
 				break;
 			case ServerAction.EXEC_REMOTE:
+         case ServerAction.SEND_SMS:
+         case ServerAction.XMPP_MESSAGE:
 				recipient.setEnabled(true);
 				subject.setEnabled(false);
 				data.setEnabled(true);
@@ -296,16 +310,7 @@ public class EditActionDlg extends Dialog
 				subject.setEnabled(true);
 				data.setEnabled(true);
 				break;
-			case ServerAction.SEND_SMS:
-				recipient.setEnabled(true);
-				subject.setEnabled(false);
-				data.setEnabled(true);
-				break;
 			case ServerAction.FORWARD_EVENT:
-				recipient.setEnabled(true);
-				subject.setEnabled(false);
-				data.setEnabled(false);
-				break;
 			case ServerAction.EXEC_NXSL_SCRIPT:
 				recipient.setEnabled(true);
 				subject.setEnabled(false);

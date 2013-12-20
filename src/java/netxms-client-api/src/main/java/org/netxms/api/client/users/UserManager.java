@@ -39,6 +39,7 @@ public interface UserManager
 	public static final int USER_MODIFY_PASSWD_LENGTH     = 0x00000100;
 	public static final int USER_MODIFY_TEMP_DISABLE      = 0x00000200;
 	public static final int USER_MODIFY_CUSTOM_ATTRIBUTES = 0x00000400;
+   public static final int USER_MODIFY_XMPP_ID           = 0x00000800;
 
 	/**
 	 * Synchronize user database

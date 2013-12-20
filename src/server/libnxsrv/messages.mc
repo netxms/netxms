@@ -908,4 +908,22 @@ Language=English
 Failed to execute filter script for network map object %1 "%2": %3
 .
 
+MessageId=
+SymbolicName=MSG_XMPP_ERROR
+Language=English
+XMPP: %1 %2
+.
+
+MessageId=
+SymbolicName=MSG_XMPP_WARNING
+Language=English
+XMPP: %1 %2
+.
+
+MessageId=
+SymbolicName=MSG_XMPP_INFO
+Language=English
+XMPP: %1 %2
+.
+
 ;#endif

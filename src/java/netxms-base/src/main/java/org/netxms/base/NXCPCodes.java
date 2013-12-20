@@ -774,6 +774,7 @@ public class NXCPCodes
    public static final long VID_BOOT_TIME = 454;
    public static final long VID_REQUEST_ID = 455;
    public static final long VID_ADDRESS_MAP = 456;
+   public static final long VID_XMPP_ID = 457;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -73,6 +73,7 @@ void InitMobileDeviceListeners();
 void InitCertificates();
 void InitUsers();
 void CleanupUsers();
+void StopXMPPConnector();
 
 /**
  * Thread functions
@@ -95,6 +96,7 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
+THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *);
 
 /**
  * Global variables
@@ -145,6 +147,7 @@ static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
+static THREAD m_thXMPPConnector = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 
 #ifndef _WIN32
@@ -319,8 +322,6 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_RESOLVE_NODE_NAMES;
 	if (ConfigReadInt(_T("SyncNodeNamesWithDNS"), 0))
 		g_dwFlags |= AF_SYNC_NODE_NAMES_WITH_DNS;
-	if (ConfigReadInt(_T("InternalCA"), 0))
-		g_dwFlags |= AF_INTERNAL_CA;
 	if (ConfigReadInt(_T("CheckTrustedNodes"), 1))
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
 	if (ConfigReadInt(_T("EnableNXSLContainerFunctions"), 1))
@@ -836,6 +837,11 @@ retry_db_lock:
 			g_pModuleList[i].pfServerStarted();
 	}
 
+   if (ConfigReadInt(_T("EnableXMPPConnector"), 1))
+   {
+      m_thXMPPConnector = ThreadCreateEx(XMPPConnectionManager, 0, NULL);
+   }
+
 	g_dwFlags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));
 	return TRUE;
@@ -852,6 +858,8 @@ void NXCORE_EXPORTABLE Shutdown()
 	nxlog_write(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
 	g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
+
+   StopXMPPConnector();
 
 #ifndef _WIN32
 	if (IsStandalone() && (m_nShutdownReason != SHUTDOWN_BY_SIGNAL))
@@ -882,6 +890,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	ThreadJoin(m_thPollManager);
 	ThreadJoin(m_thSyncer);
 	ThreadJoin(m_thSyslogDaemon);
+   ThreadJoin(m_thXMPPConnector);
 
 	SaveObjects(g_hCoreDB);
 	DbgPrintf(2, _T("All objects saved to database"));
@@ -1708,6 +1717,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 		ctx.socketMutex = INVALID_MUTEX_HANDLE;
 		ctx.pMsg = NULL;
 		ctx.session = NULL;
+      ctx.output = NULL;
 		WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" Ready\n")
 				          _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
 				          _T("System Console\n\n"));

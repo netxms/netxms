@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,16 +37,17 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * User's "general" property page
- *
  */
 public class General extends PropertyPage
 {
 	private Text textName;
 	private Text textFullName;
 	private Text textDescription;
+	private Text textXmppId;
 	private String initialName;
 	private String initialFullName;
 	private String initialDescription;
+   private String initialXmppId;
 	private AbstractUserObject object;
 	private Session session;
 	
@@ -88,10 +89,15 @@ public class General extends PropertyPage
 	      initialFullName = new String(((User)object).getFullName());
 	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_FullName,
 	      		                                        initialFullName, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+         initialXmppId = new String(((User)object).getXmppId());
+         textXmppId = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "XMPP ID",
+                                                       initialXmppId, WidgetHelper.DEFAULT_LAYOUT_DATA);
       }
       else
       {
       	initialFullName = ""; //$NON-NLS-1$
+      	initialXmppId = "";
       }
       
 		// Description
@@ -111,11 +117,13 @@ public class General extends PropertyPage
 	{
 		final String newName = new String(textName.getText());
 		final String newDescription = new String(textDescription.getText());
-		final String newFullName = (object instanceof User) ? new String(textFullName.getText()) : ""; //$NON-NLS-1$
+		final String newFullName = (object instanceof User) ? textFullName.getText() : ""; //$NON-NLS-1$
+      final String newXmppId = (object instanceof User) ? textXmppId.getText() : ""; //$NON-NLS-1$
 		
 		if (newName.equals(initialName) && 
 		    newDescription.equals(initialDescription) &&
-		    newFullName.equals(initialFullName))
+		    newFullName.equals(initialFullName) &&
+		    newXmppId.equals(initialXmppId))
 			return;		// Nothing to apply
 		
 		if (isApply)
@@ -128,6 +136,7 @@ public class General extends PropertyPage
 				initialName = newName;
 				initialFullName = newFullName;
 				initialDescription = newDescription;
+				initialXmppId = newXmppId;
 				
 				int fields = UserManager.USER_MODIFY_LOGIN_NAME | UserManager.USER_MODIFY_DESCRIPTION;
 				object.setName(newName);
@@ -135,7 +144,8 @@ public class General extends PropertyPage
 				if (object instanceof User)
 				{
 					((User)object).setFullName(newFullName);
-					fields |= UserManager.USER_MODIFY_FULL_NAME;
+               ((User)object).setXmppId(newXmppId);
+					fields |= UserManager.USER_MODIFY_FULL_NAME | UserManager.USER_MODIFY_XMPP_ID;
 				}
 				((UserManager)session).modifyUserDBObject(object, fields);
 			}

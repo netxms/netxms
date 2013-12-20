@@ -119,7 +119,7 @@ BOOL LoadUsers()
 							 _T("password,full_name,grace_logins,auth_method,")
 							 _T("cert_mapping_method,cert_mapping_data,auth_failures,")
 							 _T("last_passwd_change,min_passwd_length,disabled_until,")
-							 _T("last_login FROM users"));
+							 _T("last_login,xmpp_id FROM users"));
    if (hResult == NULL)
       return FALSE;
 
@@ -764,11 +764,9 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
    return dwResult;
 }
 
-
-//
-// Open user database
-//
-
+/**
+ * Open user database
+ */
 UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count)
 {
    MutexLock(m_mutexUserDatabaseAccess);
@@ -776,21 +774,17 @@ UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count)
 	return m_users;
 }
 
-
-//
-// Close user database
-//
-
+/**
+ * Close user database
+ */
 void NXCORE_EXPORTABLE CloseUserDatabase()
 {
    MutexUnlock(m_mutexUserDatabaseAccess);
 }
 
-
-//
-// Get custom attribute's value
-//
-
+/**
+ * Get custom attribute's value
+ */
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 {
 	const TCHAR *value = NULL;
@@ -808,6 +802,9 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 	return value;
 }
 
+/**
+ * Get custom attribute's value as unsigned integer
+ */
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name)
 {
 	const TCHAR *value = GetUserDbObjectAttr(id, name);
@@ -829,4 +826,100 @@ void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const T
       }
 
    MutexUnlock(m_mutexUserDatabaseAccess);
+}
+
+/**
+ * Authenticate user for XMPP subscription
+ */
+bool AuthenticateUserForXMPPSubscription(const char *xmppId)
+{
+   if (*xmppId == 0)
+      return false;
+
+   bool success = false;
+
+#ifdef UNICODE
+   WCHAR *_xmppId = WideStringFromUTF8String(xmppId);
+#else
+   char *_xmppId = strdup(xmppId);
+#endif
+
+   // Remove possible resource at the end
+   TCHAR *sep = _tcschr(_xmppId, _T('/'));
+   if (sep != NULL)
+      *sep = 0;
+
+   MutexLock(m_mutexUserDatabaseAccess);
+   for(int i = 0; i < m_userCount; i++)
+   {
+		if (!(m_users[i]->getId() & GROUP_FLAG) &&
+          !m_users[i]->isDisabled() && !m_users[i]->isDeleted() &&
+			 !_tcsicmp(_xmppId, ((User *)m_users[i])->getXmppId()))
+      {
+         DbgPrintf(4, _T("User %s authenticated for XMPP subscription"), m_users[i]->getName());
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, 0, _T("User authenticated for XMPP subscription"));
+         success = true;
+         break;
+      }
+   }
+   MutexUnlock(m_mutexUserDatabaseAccess);
+
+   free(_xmppId);
+   return success;
+}
+
+/**
+ * Authenticate user for XMPP commands
+ */
+bool AuthenticateUserForXMPPCommands(const char *xmppId)
+{
+   if (*xmppId == 0)
+      return false;
+
+   bool success = false;
+
+#ifdef UNICODE
+   WCHAR *_xmppId = WideStringFromUTF8String(xmppId);
+#else
+   char *_xmppId = strdup(xmppId);
+#endif
+
+   // Remove possible resource at the end
+   TCHAR *sep = _tcschr(_xmppId, _T('/'));
+   if (sep != NULL)
+      *sep = 0;
+
+   MutexLock(m_mutexUserDatabaseAccess);
+   for(int i = 0; i < m_userCount; i++)
+   {
+		if (!(m_users[i]->getId() & GROUP_FLAG) &&
+          !m_users[i]->isDisabled() && !m_users[i]->isDeleted() &&
+			 !_tcsicmp(_xmppId, ((User *)m_users[i])->getXmppId()))
+      {
+         UINT32 systemRights = m_users[i]->getSystemRights();
+
+         // Collect system rights from groups this user belongs to
+         for(int j = 0; j < m_userCount; j++)
+				if ((m_users[j]->getId() & GROUP_FLAG) &&
+					 (((Group *)m_users[j])->isMember(m_users[i]->getId())))
+					systemRights |= ((Group *)m_users[j])->getSystemRights();
+
+         if (systemRights & SYSTEM_ACCESS_XMPP_COMMANDS)
+         {
+            DbgPrintf(4, _T("User %s authenticated for XMPP commands"), m_users[i]->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, 0, _T("User authenticated for XMPP commands"));
+            success = true;
+         }
+         else
+         {
+            DbgPrintf(4, _T("Access to XMPP commands denied for user %s"), m_users[i]->getName());
+            WriteAuditLog(AUDIT_SECURITY, FALSE, m_users[i]->getId(), NULL, 0, _T("Access to XMPP commands denied"));
+         }
+         break;
+      }
+   }
+   MutexUnlock(m_mutexUserDatabaseAccess);
+
+   free(_xmppId);
+   return success;
 }

@@ -875,7 +875,7 @@ extern "C"
 	void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *arg,
 												 int (*compare)(const void *, const void *, void *));
 
-   INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
+   INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs();
 
 	UINT64 LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
 	UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);

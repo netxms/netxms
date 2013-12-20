@@ -64,6 +64,7 @@ CREATE TABLE users
 	disabled_until integer not null,
 	last_login integer not null,
 	password_history SQL_TEXT null,
+   xmpp_id varchar(127) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

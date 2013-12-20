@@ -49,6 +49,7 @@ public class User extends AbstractUserObject
 	private int minPasswordLength;
 	private Date disabledUntil = null;
 	private int authFailures;
+	private String xmppId;
 
 	/**
 	 * Default constructor
@@ -57,6 +58,7 @@ public class User extends AbstractUserObject
 	{
 		super(name);
 		fullName = "";
+		xmppId = "";
 	}
 	
 	/**
@@ -75,6 +77,7 @@ public class User extends AbstractUserObject
 		this.minPasswordLength = src.minPasswordLength;
 		this.disabledUntil = src.disabledUntil;
 		this.authFailures = src.authFailures;
+		this.xmppId = src.xmppId;
 	}
 	
 	/**
@@ -92,6 +95,7 @@ public class User extends AbstractUserObject
 		minPasswordLength = msg.getVariableAsInteger(NXCPCodes.VID_MIN_PASSWORD_LENGTH);
 		disabledUntil = msg.getVariableAsDate(NXCPCodes.VID_DISABLED_UNTIL);
 		authFailures = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_FAILURES);
+		xmppId = msg.getVariableAsString(NXCPCodes.VID_XMPP_ID);
 	}
 	
 	/**
@@ -106,6 +110,7 @@ public class User extends AbstractUserObject
 		msg.setVariable(NXCPCodes.VID_CERT_MAPPING_DATA, certMappingData);
 		msg.setVariableInt16(NXCPCodes.VID_MIN_PASSWORD_LENGTH, minPasswordLength);
 		msg.setVariableInt32(NXCPCodes.VID_DISABLED_UNTIL, (disabledUntil != null) ? (int)(disabledUntil.getTime() / 1000) : 0);
+		msg.setVariable(NXCPCodes.VID_XMPP_ID, xmppId);
 	}
 
 	/**
@@ -236,4 +241,20 @@ public class User extends AbstractUserObject
 	{
 		return authFailures;
 	}
+
+   /**
+    * @return the xmppId
+    */
+   public String getXmppId()
+   {
+      return xmppId;
+   }
+
+   /**
+    * @param xmppId the xmppId to set
+    */
+   public void setXmppId(String xmppId)
+   {
+      this.xmppId = xmppId;
+   }
 }

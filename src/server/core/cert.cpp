@@ -267,32 +267,20 @@ void ReloadCertificates()
 	MutexUnlock(m_mutexStoreAccess);
 }
 
-
-//
-// Certificate stuff initialization
-//
-
+/**
+ * Certificate stuff initialization
+ */
 void InitCertificates()
 {
 	m_mutexStoreAccess = MutexCreate();
-
-	// Create self-signed root certificate if needed
-	if (g_dwFlags & AF_INTERNAL_CA)
-	{
-		/* TODO: implement generation of self-signed certificate */
-	}
-
 	ReloadCertificates();
 }
 
-
 #else		/* _WITH_ENCRYPTION */
 
-
-//
-// Stub for certificate initialization
-//
-
+/**
+ * Stub for certificate initialization
+ */
 void InitCertificates()
 {
 }

@@ -947,6 +947,7 @@ typedef struct
 #define VID_BOOT_TIME               ((UINT32)454)
 #define VID_REQUEST_ID              ((UINT32)455)
 #define VID_ADDRESS_MAP             ((UINT32)456)
+#define VID_XMPP_ID                 ((UINT32)457)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
