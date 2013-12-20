@@ -223,7 +223,7 @@ static BOOL SubAgentInit(Config *config)
 			TCHAR section[MAX_STR];
 			memset((void*)&info, 0, sizeof(info));
 			_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
-			dbPassEncrypted = _T("");
+			dbPassEncrypted[0] = _T('\0');
 
 			if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
 			{
@@ -239,7 +239,7 @@ static BOOL SubAgentInit(Config *config)
 				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username for "), MYNAMESTR);
 				result = FALSE;
 			}
-         if (*dbPassEncrypted != '\0')
+         if (*dbPassEncrypted != _T('\0'))
          {
             result = DecryptPassword(info.username, dbPassEncrypted, info.password);
          }

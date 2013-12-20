@@ -165,7 +165,7 @@ static BOOL SubAgentInit(Config *config)
 	{
 		TCHAR section[MAX_STR];
 		memset(&info, 0, sizeof(info));
-		dbPassEncrypted = _T("");
+		dbPassEncrypted[0] = _T('\0');
 		_sntprintf(section, MAX_STR, _T("informix/databases/database#%d"), i);
 		if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
 		{
