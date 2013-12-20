@@ -47,6 +47,7 @@ include_HEADERS = \
 	nxtools.h \
 	nxwinui.h \
 	rwlock.h \
+	strophe.h \
 	unicode.h \
 	uthash.h \
 	uuid.h

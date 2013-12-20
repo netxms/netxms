@@ -459,6 +459,7 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
             case ACTION_XMPP_MESSAGE:
                if (pszExpandedRcpt[0] != 0)
                {
+#if XMPP_SUPPORTED
                   DbgPrintf(3, _T("*actions* Sending XMPP message to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
 					   curr = pszExpandedRcpt;
 					   do
@@ -470,6 +471,9 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 	                  SendXMPPMessage(curr, pszExpandedData);
 						   curr = next + 1;
 					   } while(next != NULL);
+#else
+                  DbgPrintf(3, _T("*actions* cannot send XMPP message to %s (server compiled without XMPP support)"), pszExpandedRcpt);
+#endif
                }
                else
                {

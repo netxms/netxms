@@ -1461,9 +1461,11 @@ AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
 AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
 
 # sockets/resolver
-AC_CHECK_HEADERS([arpa/nameser_compat.h])
+if test "$BUILD_SERVER-$XMPP_SUPPORT" = "yes-yes"; then
+	AC_CHECK_HEADERS([arpa/nameser_compat.h])
+	AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
+fi
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
-AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
 AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
 AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
 
