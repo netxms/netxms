@@ -551,7 +551,6 @@ void NetObj::deleteObject()
  */
 void NetObj::onObjectDelete(UINT32 dwObjectId)
 {
-   PostEvent(EVENT_SUBNET_DELETED, dwObjectId, NULL);
 }
 
 /**

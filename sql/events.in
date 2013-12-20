@@ -31,10 +31,13 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	(
 		EVENT_SUBNET_ADDED, 'SYS_SUBNET_ADDED',
 		EVENT_SEVERITY_NORMAL, 0,
-		'Subnet added',
+		'Subnet %2 added',
 		'Generated when new subnet object added to the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   1) Subnet object ID' CONCAT CRLF CONCAT
+		'   2) Subnet name' CONCAT CRLF CONCAT
+		'   3) IP address' CONCAT CRLF CONCAT
+		'   4) Network mask'
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
@@ -279,10 +282,13 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	(
 		EVENT_SUBNET_DELETED, 'SYS_SUBNET_DELETED',
 		EVENT_SEVERITY_NORMAL, 0,
-		'Subnet deleted',
+		'Subnet %2 deleted',
 		'Generated when subnet object deleted from the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   1) Subnet object ID' CONCAT CRLF CONCAT
+		'   2) Subnet name' CONCAT CRLF CONCAT
+		'   3) IP address' CONCAT CRLF CONCAT
+		'   4) Network mask'
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(

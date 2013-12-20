@@ -385,7 +385,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 						g_idxSubnetByAddr.put(pObject->IpAddr(), pObject);
 					}
                if (bNewObject)
-                  PostEvent(EVENT_SUBNET_ADDED, pObject->Id(), NULL);
+                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isaa", pObject->Id(), pObject->Name(), pObject->IpAddr(), ((Subnet *)pObject)->getIpNetMask());
             }
             break;
          case OBJECT_INTERFACE:

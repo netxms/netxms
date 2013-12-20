@@ -33,8 +33,8 @@ static void DeleteEmptySubnets()
 		NetObj *object = subnets->get(i);
 		if (object->isEmpty())
 		{
-		   DbgPrintf(9, _T("Before call to delete: Object(%d) has %d refs, children: %d, parents: %d\n"),
-		      object->Id(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+		   DbgPrintf(5, _T("DeleteEmptySubnets: subnet %s [%d] has %d refs, children: %d, parents: %d"),
+            object->Id(), object->Name(), object->getRefCount(), object->getChildCount(), object->getParentCount());
 			object->deleteObject();
 		}
       object->decRefCount();

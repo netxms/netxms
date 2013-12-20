@@ -361,6 +361,31 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V298 to V299
+ */
+static BOOL H_UpgradeFromV298(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET message='Subnet %2 added',description='")
+      _T("Generated when subnet object added to the database.\r\n")
+		_T("Parameters:\r\n")
+      _T("   1) Subnet object ID\r\n")
+      _T("   2) Subnet name\r\n")
+      _T("   3) IP address\r\n")
+      _T("   4) Network mask")
+      _T("' WHERE event_code=2")));
+	CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET message='Subnet %2 deleted',description='")
+      _T("Generated when subnet object deleted from the database.\r\n")
+		_T("Parameters:\r\n")
+      _T("   1) Subnet object ID\r\n")
+      _T("   2) Subnet name\r\n")
+      _T("   3) IP address\r\n")
+      _T("   4) Network mask")
+      _T("' WHERE event_code=19")));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='299' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V297 to V298
  */
 static BOOL H_UpgradeFromV297(int currVersion, int newVersion)
@@ -7264,6 +7289,7 @@ static struct
    { 295, 296, H_UpgradeFromV295 },
    { 296, 297, H_UpgradeFromV296 },
    { 297, 298, H_UpgradeFromV297 },
+   { 298, 299, H_UpgradeFromV298 },
    { 0, 0, NULL }
 };
 

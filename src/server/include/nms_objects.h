@@ -1331,7 +1331,9 @@ protected:
    UINT32 m_zoneId;
 	bool m_bSyntheticMask;
 
-	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes);
+   virtual void prepareForDeletion();
+
+   void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes);
 
 public:
    Subnet();

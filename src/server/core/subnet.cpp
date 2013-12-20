@@ -295,3 +295,12 @@ UINT32 *Subnet::buildAddressMap(int *length)
 
    return map;
 }
+
+/**
+ * Prepare node object for deletion
+ */
+void Subnet::prepareForDeletion()
+{
+   PostEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isaa", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask);
+   NetObj::prepareForDeletion();
+}
