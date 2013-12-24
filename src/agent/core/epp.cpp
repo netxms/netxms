@@ -109,7 +109,7 @@ void ParamProvider::poll()
 	   DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): started command \"%s\""), m_command);
 		while(!feof(hPipe))
 		{
-			TCHAR *line = _fgetts(buffer, 1024, hPipe);
+			TCHAR *line = safe_fgetts(buffer, 1024, hPipe);
 			if (line == NULL)
 			{
 				if (!feof(hPipe))

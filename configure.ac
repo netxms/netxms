@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.10], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.11], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -1761,6 +1761,36 @@ else
 	ac_found_iconv=no
 	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
 fi
+
+AC_MSG_CHECKING(whether fgetws can be used with popen)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#include <stdio.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+     ], [[
+    int rc = 1;
+    wchar_t line[4096];
+    FILE *f = popen("echo test", "r");
+    if(f!=NULL)
+    {
+        fgetws(line, 4096, f);
+        pclose(f);
+        rc = 0;
+    }
+	return rc;
+     ]])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(SAFE_FGETWS_WITH_POPEN, 1, Define to 1 if fgetws can be used with popen)
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
 
 AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)
 AC_RUN_IFELSE(

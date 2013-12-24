@@ -1221,10 +1221,12 @@ extern "C"
    int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent **b);
 #endif
 
+TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
+
 #ifdef UNDER_CE
-   int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...);
-   int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes);
-   int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
+int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...);
+int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes);
+int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
 #endif
 
 BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,

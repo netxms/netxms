@@ -318,27 +318,10 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	{
 		TCHAR *pTmp;
 
-#if defined(_WIN32) || !defined(UNICODE)
 		data->value[0] = 0;
-		TCHAR *ret = _fgetts(data->value, MAX_RESULT_LENGTH, hPipe);
+		TCHAR *ret = safe_fgetts(data->value, MAX_RESULT_LENGTH, hPipe);
       if ((ret == NULL) && feof(hPipe))
          ret = data->value;
-#else
-      char buffer[MAX_RESULT_LENGTH] = "";
-		char *mbret = fgets(buffer, MAX_RESULT_LENGTH, hPipe);
-      if ((mbret == NULL) && feof(hPipe))
-         mbret = buffer;
-      TCHAR *ret;
-      if (mbret != NULL)
-      {
-         ret = data->value;
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, ret, MAX_RESULT_LENGTH);
-      }
-      else
-      {
-         ret = NULL;
-      }
-#endif
 		pclose(hPipe);
 	   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
 		if (ret != NULL)

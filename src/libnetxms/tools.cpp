@@ -2120,3 +2120,26 @@ int LIBNETXMS_EXPORTABLE wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src)
 RefCountObject::~RefCountObject()
 {
 }
+
+/**
+ * Safe _fgetts implementation which will work
+ * with handles opened by popen
+ */
+TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
+{
+#ifdef UNICODE
+#if SAFE_FGETWS_WITH_POPEN
+	return fgetws(buffer, len, f);
+#else
+	char *mbBuffer = (char *)alloca(len);
+	char *s = fgets(mbBuffer, len, f);
+	if (s == NULL)
+		return NULL;
+	mbBuffer[len - 1] = 0;
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbBuffer, -1, buffer, len);
+	return buffer;
+#endif
+#else
+	return fgets(buffer, len, f);
+#endif
+}

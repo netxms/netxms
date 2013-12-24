@@ -159,6 +159,8 @@ typedef int bool;
 #define USE_BUNDLED_LIBTRE      1
 #define USE_BUNDLED_GETOPT      1
 
+#define SAFE_FGETWS_WITH_POPEN  1
+
 #define FS_PATH_SEPARATOR       _T("\\")
 #define FS_PATH_SEPARATOR_A     "\\"
 #define FS_PATH_SEPARATOR_W     L"\\"
