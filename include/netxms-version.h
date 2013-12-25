@@ -37,7 +37,7 @@
 /**
  * Current client-server protocol version
  */
-#define CLIENT_PROTOCOL_VERSION           40
+#define CLIENT_PROTOCOL_VERSION           41
 
 /**
  * Current mobile device protocol version

@@ -120,12 +120,12 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
 
    m_wndListCtrl.SetItemData(iItem, dwIndex);
 
-   switch(m_pItem->pThresholdList[dwIndex].wFunction)
+   switch(m_pItem->pThresholdList[dwIndex].function)
    {
       case F_AVERAGE:
       case F_DEVIATION:
       case F_ERROR:
-         _sntprintf_s(szArgs, 256, _TRUNCATE, _T("%d"), m_pItem->pThresholdList[dwIndex].dwArg1);
+         _sntprintf_s(szArgs, 256, _TRUNCATE, _T("%d"), m_pItem->pThresholdList[dwIndex].sampleCount);
          break;
       default:
          szArgs[0] = 0;
@@ -133,19 +133,19 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
    }
 
    // Threshold expression
-   if (m_pItem->pThresholdList[dwIndex].wFunction == F_ERROR)
+   if (m_pItem->pThresholdList[dwIndex].function == F_ERROR)
       _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s(%s)"),
-                   g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs);
+                   g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].function], szArgs);
    else
       _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s(%s) %s %s"),
-                   g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs,
-                   g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].wOperation], 
-						 m_pItem->pThresholdList[dwIndex].szValue);
+                   g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].function], szArgs,
+                   g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].operation], 
+						 m_pItem->pThresholdList[dwIndex].value);
    m_wndListCtrl.SetItemText(iItem, 0, szBuffer);
 
    // Event
    m_wndListCtrl.SetItemText(iItem, 1, 
-      NXCGetEventName(g_hSession, m_pItem->pThresholdList[dwIndex].dwEvent));
+      NXCGetEventName(g_hSession, m_pItem->pThresholdList[dwIndex].activationEvent));
 }
 
 
@@ -158,13 +158,13 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
    CThresholdDlg dlg;
    BOOL bResult = FALSE;
 
-   dlg.m_iFunction = pThreshold->wFunction;
-   dlg.m_iOperation = pThreshold->wOperation;
-   dlg.m_dwArg1 = pThreshold->dwArg1;
-   dlg.m_dwEventId = pThreshold->dwEvent;
-   dlg.m_dwRearmEventId = pThreshold->dwRearmEvent;
-	dlg.m_strValue = pThreshold->szValue;
-	switch(pThreshold->nRepeatInterval)
+   dlg.m_iFunction = pThreshold->function;
+   dlg.m_iOperation = pThreshold->operation;
+   dlg.m_dwArg1 = pThreshold->sampleCount;
+   dlg.m_dwEventId = pThreshold->activationEvent;
+   dlg.m_dwRearmEventId = pThreshold->rearmEvent;
+	dlg.m_strValue = pThreshold->value;
+	switch(pThreshold->repeatInterval)
 	{
 		case -1:
 			dlg.m_nRepeat = 0;
@@ -176,31 +176,31 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
 			break;
 		default:
 			dlg.m_nRepeat = 2;
-			dlg.m_nSeconds = pThreshold->nRepeatInterval;
+			dlg.m_nSeconds = pThreshold->repeatInterval;
 			break;
 	}
    if (dlg.DoModal() == IDOK)
    {
-      pThreshold->dwArg1 = dlg.m_dwArg1;
-      pThreshold->wFunction = (WORD)dlg.m_iFunction;
-      pThreshold->wOperation = (WORD)dlg.m_iOperation;
-      pThreshold->dwEvent = dlg.m_dwEventId;
-      pThreshold->dwRearmEvent = dlg.m_dwRearmEventId;
-		nx_strncpy(pThreshold->szValue, dlg.m_strValue, MAX_STRING_VALUE);
+      pThreshold->sampleCount = dlg.m_dwArg1;
+      pThreshold->function = (WORD)dlg.m_iFunction;
+      pThreshold->operation = (WORD)dlg.m_iOperation;
+      pThreshold->activationEvent = dlg.m_dwEventId;
+      pThreshold->rearmEvent = dlg.m_dwRearmEventId;
+		nx_strncpy(pThreshold->value, dlg.m_strValue, MAX_STRING_VALUE);
 		if (g_nCurrentDCIDataType != DCI_DT_STRING)
 		{
-			StrStrip(pThreshold->szValue);
+			StrStrip(pThreshold->value);
 		}
 		switch(dlg.m_nRepeat)
 		{
 			case 0:
-				pThreshold->nRepeatInterval = -1;
+				pThreshold->repeatInterval = -1;
 				break;
 			case 1:
-				pThreshold->nRepeatInterval = 0;
+				pThreshold->repeatInterval = 0;
 				break;
 			case 2:
-				pThreshold->nRepeatInterval = dlg.m_nSeconds;
+				pThreshold->repeatInterval = dlg.m_nSeconds;
 				break;
 		}
       bResult = TRUE;
@@ -220,10 +220,10 @@ void CDCIThresholdsPage::OnButtonAdd()
 
    // Create default threshold structure
    memset(&dct, 0, sizeof(NXC_DCI_THRESHOLD));
-   dct.dwArg1 = 1;
-   dct.dwEvent = EVENT_THRESHOLD_REACHED;
-   dct.dwRearmEvent = EVENT_THRESHOLD_REARMED;
-	dct.nRepeatInterval = -1;
+   dct.sampleCount = 1;
+   dct.activationEvent = EVENT_THRESHOLD_REACHED;
+   dct.rearmEvent = EVENT_THRESHOLD_REARMED;
+	dct.repeatInterval = -1;
 
    // Call threshold configuration dialog
    if (EditThreshold(&dct))

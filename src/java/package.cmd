@@ -4,6 +4,7 @@ del /q /s /f netxms-base\target\*
 del /q /s /f netxms-client-api\target\*
 del /q /s /f netxms-client\target\*
 del /q /s /f mobile-agent\target\*
+del /q /s /f certificate-manager\target\*
 
 call mvn -N versions:update-child-modules
 call mvn clean

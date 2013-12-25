@@ -51,21 +51,17 @@ String::String(const TCHAR *init)
    m_pszBuffer = _tcsdup(init);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 String::~String()
 {
    safe_free(m_pszBuffer);
 }
 
-
-//
-// Operator =
-//
-
+/**
+ * Operator =
+ */
 const String& String::operator =(const TCHAR *pszStr)
 {
    safe_free(m_pszBuffer);
@@ -74,6 +70,9 @@ const String& String::operator =(const TCHAR *pszStr)
    return *this;
 }
 
+/**
+ * Operator =
+ */
 const String& String::operator =(const String &src)
 {
 	if (&src == this)
@@ -87,25 +86,37 @@ const String& String::operator =(const String &src)
 /**
  * Append given string to the end
  */
-const String& String::operator +=(const TCHAR *pszStr)
+const String& String::operator +=(const TCHAR *str)
 {
-   UINT32 dwLen;
-
-	if (pszStr != NULL)
+	if (str != NULL)
 	{
-   	dwLen = (UINT32)_tcslen(pszStr);
+   	UINT32 dwLen = (UINT32)_tcslen(str);
    	m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwLen) * sizeof(TCHAR));
-   	_tcscpy(&m_pszBuffer[m_dwBufSize - 1], pszStr);
+   	_tcscpy(&m_pszBuffer[m_dwBufSize - 1], str);
    	m_dwBufSize += dwLen;
 	}
    return *this;
 }
 
+/**
+ * Append given string to the end
+ */
+const String& String::operator +=(const String &str)
+{
+   UINT32 dwLen = str.m_dwBufSize;
+   if (dwLen > 1)
+   {
+      dwLen--;
+	   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwLen) * sizeof(TCHAR));
+      _tcscpy(&m_pszBuffer[m_dwBufSize - 1], str.m_pszBuffer);
+	   m_dwBufSize += dwLen;
+   }
+   return *this;
+}
 
-//
-// Add formatted string to the end of buffer
-//
-
+/**
+ * Add formatted string to the end of buffer
+ */
 void String::addFormattedString(const TCHAR *format, ...)
 {
    va_list args;
@@ -192,11 +203,9 @@ void String::addString(const TCHAR *pStr, UINT32 dwSize)
 	m_pszBuffer[m_dwBufSize - 1] = 0;
 }
 
-
-//
-// Add multibyte string to the end of buffer
-//
-
+/**
+ * Add multibyte string to the end of buffer
+ */
 void String::addMultiByteString(const char *pStr, UINT32 dwSize, int nCodePage)
 {
 #ifdef UNICODE
@@ -208,11 +217,9 @@ void String::addMultiByteString(const char *pStr, UINT32 dwSize, int nCodePage)
 #endif
 }
 
-
-//
-// Add widechar string to the end of buffer
-//
-
+/**
+ * Add widechar string to the end of buffer
+ */
 void String::addWideCharString(const WCHAR *pStr, UINT32 dwSize)
 {
 #ifdef UNICODE
@@ -335,11 +342,9 @@ TCHAR *String::subStr(int nStart, int nLen, TCHAR *pszBuffer)
 	return pszOut;
 }
 
-
-//
-// Find substring in a string
-//
-
+/**
+ * Find substring in a string
+ */
 int String::find(const TCHAR *pszStr, int nStart)
 {
 	TCHAR *p;
@@ -351,11 +356,9 @@ int String::find(const TCHAR *pszStr, int nStart)
 	return (p != NULL) ? (int)(((char *)p - (char *)m_pszBuffer) / sizeof(TCHAR)) : npos;
 }
 
-
-//
-// Strip leading and trailing spaces, tabs, newlines
-//
-
+/**
+ * Strip leading and trailing spaces, tabs, newlines
+ */
 void String::trim()
 {
 	if (m_pszBuffer != NULL)
@@ -365,11 +368,9 @@ void String::trim()
 	}
 }
 
-
-//
-// Shring string by removing trailing characters
-//
-
+/**
+ * Shring string by removing trailing characters
+ */
 void String::shrink(int chars)
 {
 	if (m_dwBufSize > 1)
@@ -380,11 +381,9 @@ void String::shrink(int chars)
 	}
 }
 
-
-//
-// Get content as dynamically allocated UTF-8 string
-//
-
+/**
+ * Get content as dynamically allocated UTF-8 string
+ */
 char *String::getUTF8String()
 {
 #ifdef UNICODE

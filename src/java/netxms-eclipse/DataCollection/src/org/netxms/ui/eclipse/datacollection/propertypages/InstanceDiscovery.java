@@ -112,7 +112,7 @@ public class InstanceDiscovery extends PropertyPage
 			@Override
 			public Control createControl(Composite parent, int style)
 			{
-				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL);
+				return new ScriptEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL);
 			}
       };
       filterScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,

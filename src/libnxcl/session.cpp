@@ -427,25 +427,23 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
          (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
       for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
       {
-			m_pItemList->pItems[i].pThresholdList[j].dwId = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].dwEvent = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].dwRearmEvent = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].wFunction = pMsg->GetVariableShort(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].wOperation = pMsg->GetVariableShort(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].dwArg1 = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].dwArg2 = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].nRepeatInterval = (LONG)pMsg->GetVariableLong(dwId++);
-			pMsg->GetVariableStr(dwId++, m_pItemList->pItems[i].pThresholdList[j].szValue, MAX_STRING_VALUE);
+			m_pItemList->pItems[i].pThresholdList[j].id = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].activationEvent = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].rearmEvent = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].function = pMsg->GetVariableShort(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].operation = pMsg->GetVariableShort(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].sampleCount = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].script = pMsg->GetVariableStr(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].repeatInterval = (LONG)pMsg->GetVariableLong(dwId++);
+			pMsg->GetVariableStr(dwId++, m_pItemList->pItems[i].pThresholdList[j].value, MAX_STRING_VALUE);
       }
    }
 }
 
-
-//
-// Load data collection items list for specified node
-// This function is NOT REENTRANT
-//
-
+/**
+ * Load data collection items list for specified node
+ * This function is NOT REENTRANT
+ */
 UINT32 NXCL_Session::OpenNodeDCIList(UINT32 dwNodeId, NXC_DCI_LIST **ppItemList)
 {
    CSCPMessage msg;
@@ -489,11 +487,9 @@ UINT32 NXCL_Session::OpenNodeDCIList(UINT32 dwNodeId, NXC_DCI_LIST **ppItemList)
    return dwRetCode;
 }
 
-
-//
-// Load event configuration database
-//
-
+/**
+ * Load event configuration database
+ */
 UINT32 NXCL_Session::LoadEventDB()
 {
    CSCPMessage msg;

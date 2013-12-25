@@ -278,7 +278,7 @@ bool DCItem::loadThresholdsFromDB()
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
 	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
-              _T("check_operation,parameter_1,parameter_2,event_code,current_state,")
+              _T("check_operation,sample_count,script,event_code,current_state,")
               _T("rearm_event_code,repeat_interval,current_severity,")
 				  _T("last_event_timestamp FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
@@ -437,7 +437,7 @@ void DCItem::checkThresholds(ItemValue &value)
    for(int i = 0; i < m_thresholds->size(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
-      ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue);
+      ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue, m_pNode, this);
       switch(result)
       {
          case ACTIVATED:
@@ -903,7 +903,7 @@ void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpan
 	if (dwNewId != 0)
 	{
 		for(int i = 0; i < getThresholdCount(); i++)
-			m_thresholds->get(i)->bindToItem(m_dwId);
+         m_thresholds->get(i)->bindToItem(m_dwId, m_pNode->Id());
 	}
 
 	if (doMacroExpansion)
@@ -1289,7 +1289,7 @@ void DCItem::updateFromTemplate(DCObject *src)
    {
       Threshold *t = new Threshold(item->m_thresholds->get(i));
       t->createId();
-      t->bindToItem(m_dwId);
+      t->bindToItem(m_dwId, m_pNode->Id());
 		m_thresholds->add(t);
    }
 

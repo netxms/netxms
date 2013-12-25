@@ -33,6 +33,7 @@ public class Threshold
 	public static final int F_DIFF      = 3;
 	public static final int F_ERROR     = 4;
 	public static final int F_SUM       = 5;
+   public static final int F_SCRIPT    = 6;
 	
 	public static final int OP_LE       = 0;
 	public static final int OP_LE_EQ    = 1;
@@ -46,10 +47,10 @@ public class Threshold
 	private long id;
 	private int fireEvent;
 	private int rearmEvent;
-	private int arg1;
-	private int arg2;
+	private int sampleCount;
 	private int function;
 	private int operation;
+	private String script;
 	private int repeatInterval;
 	private String value;
 	private boolean active;
@@ -70,8 +71,8 @@ public class Threshold
 		rearmEvent = msg.getVariableAsInteger(varId++);
 		function = msg.getVariableAsInteger(varId++);
 		operation = msg.getVariableAsInteger(varId++);
-		arg1 = msg.getVariableAsInteger(varId++);
-		arg2 = msg.getVariableAsInteger(varId++);
+		sampleCount = msg.getVariableAsInteger(varId++);
+		script = msg.getVariableAsString(varId++);
 		repeatInterval = msg.getVariableAsInteger(varId++);
 		value = msg.getVariableAsString(varId++);
 		active = msg.getVariableAsBoolean(varId++);
@@ -87,8 +88,8 @@ public class Threshold
 		id = 0;
 		fireEvent = 17;
 		rearmEvent = 18;
-		arg1 = 1;
-		arg2 = 0;
+		sampleCount = 1;
+		script = null;
 		function = F_LAST;
 		operation = OP_LE;
 		repeatInterval = -1;
@@ -108,8 +109,8 @@ public class Threshold
 		id = src.id;
 		fireEvent = src.fireEvent;
 		rearmEvent = src.rearmEvent;
-		arg1 = src.arg1;
-		arg2 = src.arg2;
+		sampleCount = src.sampleCount;
+		script = src.script;
 		function = src.function;
 		operation = src.operation;
 		repeatInterval = src.repeatInterval;
@@ -134,8 +135,8 @@ public class Threshold
 		msg.setVariableInt32(varId++, rearmEvent);
 		msg.setVariableInt16(varId++, function);
 		msg.setVariableInt16(varId++, operation);
-		msg.setVariableInt32(varId++, arg1);
-		msg.setVariableInt32(varId++, arg2);
+		msg.setVariableInt32(varId++, sampleCount);
+		msg.setVariable(varId++, script);
 		msg.setVariableInt32(varId++, repeatInterval);
 		msg.setVariable(varId++, value);
 	}
@@ -173,35 +174,21 @@ public class Threshold
 	}
 
 	/**
-	 * @return the arg1
+	 * @return sample count
 	 */
-	public int getArg1()
+	public int getSampleCount()
 	{
-		return arg1;
+		return sampleCount;
 	}
 
 	/**
-	 * @param arg1 the arg1 to set
+	 * Set sample count for threshold
+	 * 
+	 * @param new sample count
 	 */
-	public void setArg1(int arg1)
+	public void setSampleCount(int sampleCount)
 	{
-		this.arg1 = arg1;
-	}
-
-	/**
-	 * @return the arg2
-	 */
-	public int getArg2()
-	{
-		return arg2;
-	}
-
-	/**
-	 * @param arg2 the arg2 to set
-	 */
-	public void setArg2(int arg2)
-	{
-		this.arg2 = arg2;
+		this.sampleCount = sampleCount;
 	}
 
 	/**
@@ -302,4 +289,20 @@ public class Threshold
 	{
 		return lastEventTimestamp;
 	}
+
+   /**
+    * @return the script
+    */
+   public String getScript()
+   {
+      return script;
+   }
+
+   /**
+    * @param script the script to set
+    */
+   public void setScript(String script)
+   {
+      this.script = script;
+   }
 }

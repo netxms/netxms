@@ -808,6 +808,7 @@ enum
 #define F_DIFF       3
 #define F_ERROR      4
 #define F_SUM        5
+#define F_SCRIPT     6
 
 /**
  * Threshold operations
@@ -1453,29 +1454,25 @@ typedef struct
 	TCHAR *pszCertMappingData;	// Only for users
 } NXC_USER;
 
-
-//
-// Data collection item threshold structure
-//
-
+/**
+ * Data collection item threshold structure
+ */
 typedef struct
 {
-   UINT32 dwId;
-   UINT32 dwEvent;
-   UINT32 dwRearmEvent;
-   WORD wFunction;
-   WORD wOperation;
-   UINT32 dwArg1;
-   UINT32 dwArg2;
-	LONG nRepeatInterval;
-   TCHAR szValue[MAX_STRING_VALUE];
+   UINT32 id;
+   UINT32 activationEvent;
+   UINT32 rearmEvent;
+   WORD function;
+   WORD operation;
+   UINT32 sampleCount;
+   TCHAR *script;
+	LONG repeatInterval;
+   TCHAR value[MAX_STRING_VALUE];
 } NXC_DCI_THRESHOLD;
 
-
-//
-// Data collection item structure
-//
-
+/**
+ * Data collection item structure
+ */
 typedef struct
 {
    UINT32 dwId;

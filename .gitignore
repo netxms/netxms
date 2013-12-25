@@ -22,6 +22,7 @@
 .DS_Store
 Makefile
 Makefile.in
+pom.xml.versionsBackup
 
 Debug
 Debug64
@@ -41,10 +42,9 @@ target
 /aclocal.m4
 /android/src/agent/bin
 /android/src/agent/gen
-/android/src/agent/res/values/build_number.xml
 /android/src/console/bin
+/android/src/console/dist
 /android/src/console/gen
-/android/src/console/res/values/build_number.xml
 /autom4te.cache
 /bin64
 /config

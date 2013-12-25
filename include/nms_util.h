@@ -222,7 +222,8 @@ public:
 
    const String& operator =(const TCHAR *pszStr);
 	const String& operator =(const String &src);
-   const String&  operator +=(const TCHAR *pszStr);
+   const String&  operator +=(const TCHAR *str);
+   const String&  operator +=(const String &str);
    operator const TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
 
 	char *getUTF8String();

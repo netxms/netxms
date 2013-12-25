@@ -361,6 +361,24 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V300 to V301
+ */
+static BOOL H_UpgradeFromV300(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE thresholds ADD script $SQL:TEXT\n")
+      _T("ALTER TABLE thresholds ADD sample_count integer\n")
+      _T("UPDATE thresholds SET sample_count=parameter_1\n")
+      _T("ALTER TABLE thresholds DROP COLUMN parameter_1\n")
+      _T("ALTER TABLE thresholds DROP COLUMN parameter_2\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='301' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V299 to V300
  */
 static BOOL H_UpgradeFromV299(int currVersion, int newVersion)
@@ -4312,11 +4330,9 @@ static BOOL H_UpgradeFromV65(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V64 to V65
-//
-
+/**
+ * Upgrade from V64 to V65
+ */
 static BOOL H_UpgradeFromV64(int currVersion, int newVersion)
 {
    static TCHAR m_szPGSQLBatch[] =
@@ -7321,6 +7337,7 @@ static struct
    { 297, 298, H_UpgradeFromV297 },
    { 298, 299, H_UpgradeFromV298 },
    { 299, 300, H_UpgradeFromV299 },
+   { 300, 301, H_UpgradeFromV300 },
    { 0, 0, NULL }
 };
 

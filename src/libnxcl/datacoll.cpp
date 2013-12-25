@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,12 +23,10 @@
 
 #include "libnxcl.h"
 
-
-//
-// Load data collection items list for specified node
-// This function is NOT REENTRANT
-//
-
+/**
+ * Load data collection items list for specified node
+ * This function is NOT REENTRANT
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, UINT32 dwNodeId, 
                                             NXC_DCI_LIST **ppItemList)
 {
@@ -59,6 +57,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST
          for(j = 0; j < pItemList->pItems[i].dwNumSchedules; j++)
             free(pItemList->pItems[i].ppScheduleList[j]);
          safe_free(pItemList->pItems[i].ppScheduleList);
+         for(j = 0; j < pItemList->pItems[i].dwNumThresholds; j++)
+            free(pItemList->pItems[i].pThresholdList[j].script);
          safe_free(pItemList->pItems[i].pThresholdList);
          safe_free(pItemList->pItems[i].pszFormula);
 			safe_free(pItemList->pItems[i].pszCustomUnitName);
@@ -124,11 +124,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pI
    return dwRetCode;
 }
 
-
-//
-// Update data collection item
-//
-
+/**
+ * Update data collection item
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, UINT32 dwNodeId, NXC_DCI *pItem)
 {
    UINT32 i, dwId, dwRqId, dwRetCode;
@@ -178,15 +176,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, UINT32 dwNodeId, NX
    msg.SetVariable(VID_NUM_THRESHOLDS, pItem->dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < pItem->dwNumThresholds; i++, dwId++)
    {
-		msg.SetVariable(dwId++, pItem->pThresholdList[i].dwId);
-      msg.SetVariable(dwId++, pItem->pThresholdList[i].dwEvent);
-      msg.SetVariable(dwId++, pItem->pThresholdList[i].dwRearmEvent);
-      msg.SetVariable(dwId++, pItem->pThresholdList[i].wFunction);
-      msg.SetVariable(dwId++, pItem->pThresholdList[i].wOperation);
-      msg.SetVariable(dwId++, pItem->pThresholdList[i].dwArg1);
-      msg.SetVariable(dwId++, pItem->pThresholdList[i].dwArg2);
-		msg.SetVariable(dwId++, (UINT32)pItem->pThresholdList[i].nRepeatInterval);
-      msg.SetVariable(dwId++, pItem->pThresholdList[i].szValue);
+		msg.SetVariable(dwId++, pItem->pThresholdList[i].id);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].activationEvent);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].rearmEvent);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].function);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].operation);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].sampleCount);
+      msg.SetVariable(dwId++, CHECK_NULL_EX(pItem->pThresholdList[i].script));
+		msg.SetVariable(dwId++, (UINT32)pItem->pThresholdList[i].repeatInterval);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].value);
    }
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
@@ -207,7 +205,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, UINT32 dwNodeId, NX
             pResponse->GetVariableBinary(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(UINT32) * dwNumMaps);
             pResponse->GetVariableBinary(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(UINT32) * dwNumMaps);
             for(i = 0; i < dwNumMaps; i++)
-               pItem->pThresholdList[ntohl(pdwMapIndex[i])].dwId = ntohl(pdwMapId[i]);
+               pItem->pThresholdList[ntohl(pdwMapIndex[i])].id = ntohl(pdwMapId[i]);
             free(pdwMapId);
             free(pdwMapIndex);
          }
@@ -222,11 +220,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, UINT32 dwNodeId, NX
    return dwRetCode;
 }
 
-
-//
-// Delete data collection item
-//
-
+/**
+ * Delete data collection item
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, UINT32 dwItemId)
 {
    UINT32 i, j, dwRqId, dwResult = RCC_INVALID_DCI_ID;
@@ -253,6 +249,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItem
             for(j = 0; j < pItemList->pItems[i].dwNumSchedules; j++)
                free(pItemList->pItems[i].ppScheduleList[j]);
             safe_free(pItemList->pItems[i].ppScheduleList);
+            for(j = 0; j < pItemList->pItems[i].dwNumThresholds; j++)
+               free(pItemList->pItems[i].pThresholdList[j].script);
             safe_free(pItemList->pItems[i].pThresholdList);
             safe_free(pItemList->pItems[i].pszFormula);
 				safe_free(pItemList->pItems[i].pszCustomUnitName);
@@ -266,11 +264,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItem
    return dwResult;
 }
 
-
-//
-// Set status for multiple DCIs
-//
-
+/**
+ * Set status for multiple DCIs
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwNumItems, 
                                          UINT32 *pdwItemList, int iStatus)
 {
@@ -291,11 +287,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, UINT32 dwNodeId,
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Find item in list by id and return it's index
-//
-
+/**
+ * Find item in list by id and return it's index
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, UINT32 dwItemId)
 {
    UINT32 i;
@@ -372,15 +366,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId,
 				*thresholds = (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * (*numThresholds));
 				for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < *numThresholds; i++, dwId++)
 				{
-					(*thresholds)[i].dwId = response->GetVariableLong(dwId++);
-					(*thresholds)[i].dwEvent = response->GetVariableLong(dwId++);
-					(*thresholds)[i].dwRearmEvent = response->GetVariableLong(dwId++);
-					(*thresholds)[i].wFunction = response->GetVariableShort(dwId++);
-					(*thresholds)[i].wOperation = response->GetVariableShort(dwId++);
-					(*thresholds)[i].dwArg1 = response->GetVariableLong(dwId++);
-					(*thresholds)[i].dwArg2 = response->GetVariableLong(dwId++);
-					(*thresholds)[i].nRepeatInterval = (LONG)response->GetVariableLong(dwId++);
-					response->GetVariableStr(dwId++, (*thresholds)[i].szValue, MAX_STRING_VALUE);
+					(*thresholds)[i].id = response->GetVariableLong(dwId++);
+					(*thresholds)[i].activationEvent = response->GetVariableLong(dwId++);
+					(*thresholds)[i].rearmEvent = response->GetVariableLong(dwId++);
+					(*thresholds)[i].function = response->GetVariableShort(dwId++);
+					(*thresholds)[i].operation = response->GetVariableShort(dwId++);
+					(*thresholds)[i].sampleCount = response->GetVariableLong(dwId++);
+					(*thresholds)[i].script = response->GetVariableStr(dwId++);
+					(*thresholds)[i].repeatInterval = (LONG)response->GetVariableLong(dwId++);
+					response->GetVariableStr(dwId++, (*thresholds)[i].value, MAX_STRING_VALUE);
 				}
 			}
 
@@ -479,7 +473,11 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId,
       safe_free((*ppData)->pRows);
       free(*ppData);
 		if (thresholds != NULL)
+      {
+         for(UINT32 i = 0; i < *numThresholds; i++)
+            safe_free((*thresholds)[i].script);
 			safe_free(*thresholds);
+      }
    }
 
    return dwResult;
@@ -519,6 +517,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCAddThresholdToItem(NXC_DCI *pItem, NXC_DCI_THRESHOL
    pItem->pThresholdList = (NXC_DCI_THRESHOLD *)realloc(pItem->pThresholdList,
                                     sizeof(NXC_DCI_THRESHOLD) * pItem->dwNumThresholds);
    memcpy(&pItem->pThresholdList[dwIndex], pThreshold, sizeof(NXC_DCI_THRESHOLD));
+   if (pThreshold->script != NULL)
+      pItem->pThresholdList[dwIndex].script = _tcsdup(pThreshold->script);
    return dwIndex;
 }
 
@@ -533,18 +533,19 @@ BOOL LIBNXCL_EXPORTABLE NXCDeleteThresholdFromItem(NXC_DCI *pItem, UINT32 dwInde
    {
       pItem->dwNumThresholds--;
       if (pItem->dwNumThresholds > 0)
+      {
+         safe_free(pItem->pThresholdList[dwIndex].script);
          memmove(&pItem->pThresholdList[dwIndex], &pItem->pThresholdList[dwIndex + 1],
                  sizeof(NXC_DCI_THRESHOLD) * (pItem->dwNumThresholds - dwIndex));
+      }
       bResult = TRUE;
    }
    return bResult;
 }
 
-
-//
-// Swap two threshold items
-//
-
+/**
+ * Swap two threshold items
+ */
 BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, UINT32 dwIndex1, UINT32 dwIndex2)
 {
    BOOL bResult = FALSE;
@@ -655,15 +656,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIThresholds(NXC_SESSION hSession, UINT32 dwNod
 			*ppList = (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * (*pdwSize));
 			for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < *pdwSize; i++, dwId++)
 			{
-				(*ppList)[i].dwId = pResponse->GetVariableLong(dwId++);
-				(*ppList)[i].dwEvent = pResponse->GetVariableLong(dwId++);
-				(*ppList)[i].dwRearmEvent = pResponse->GetVariableLong(dwId++);
-				(*ppList)[i].wFunction = pResponse->GetVariableShort(dwId++);
-				(*ppList)[i].wOperation = pResponse->GetVariableShort(dwId++);
-				(*ppList)[i].dwArg1 = pResponse->GetVariableLong(dwId++);
-				(*ppList)[i].dwArg2 = pResponse->GetVariableLong(dwId++);
-				(*ppList)[i].nRepeatInterval = (LONG)pResponse->GetVariableLong(dwId++);
-				pResponse->GetVariableStr(dwId++, (*ppList)[i].szValue, MAX_STRING_VALUE);
+				(*ppList)[i].id = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].activationEvent = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].rearmEvent = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].function = pResponse->GetVariableShort(dwId++);
+				(*ppList)[i].operation = pResponse->GetVariableShort(dwId++);
+				(*ppList)[i].sampleCount = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].script = pResponse->GetVariableStr(dwId++);
+				(*ppList)[i].repeatInterval = (LONG)pResponse->GetVariableLong(dwId++);
+				pResponse->GetVariableStr(dwId++, (*ppList)[i].value, MAX_STRING_VALUE);
 			}
 		}
       delete pResponse;
@@ -675,11 +676,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIThresholds(NXC_SESSION hSession, UINT32 dwNod
    return dwResult;
 }
 
-
-//
-// Get last values for all DCIs of selected node
-//
-
+/**
+ * Get last values for all DCIs of selected node
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCGetLastValues(NXC_SESSION hSession, UINT32 dwNodeId,
                                           UINT32 *pdwNumItems, NXC_DCI_VALUE **ppValueList)
 {

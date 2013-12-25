@@ -87,6 +87,7 @@ public:
 
 
 class DCItem;
+class DataCollectionTarget;
 
 /**
  * Threshold definition class
@@ -95,7 +96,8 @@ class NXCORE_EXPORTABLE Threshold
 {
 private:
    UINT32 m_id;             // Unique threshold id
-   UINT32 m_itemId;         // Related item id
+   UINT32 m_itemId;         // Parent item id
+   UINT32 m_targetId;       // Parent data collection target ID
    UINT32 m_eventCode;      // Event code to be generated
    UINT32 m_rearmEventCode;
    ItemValue m_value;
@@ -103,8 +105,9 @@ private:
    BYTE m_operation;         // Comparision operation code
    BYTE m_dataType;          // Related item data type
 	BYTE m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
-   int m_param1;             // Function's parameter #1
-   int m_param2;             // Function's parameter #2
+   int m_sampleCount;        // Number of samples to calculate function on
+   TCHAR *m_scriptSource;
+   NXSL_Program *m_script;
    BOOL m_isReached;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
@@ -115,6 +118,7 @@ private:
    void calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
    void calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
    void calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
+   void setScript(TCHAR *script);
 
 public:
 	Threshold();
@@ -124,15 +128,14 @@ public:
 	Threshold(ConfigEntry *config, DCItem *parentItem);
    ~Threshold();
 
-   void bindToItem(UINT32 dwItemId) { m_itemId = dwItemId; }
+   void bindToItem(UINT32 itemId, UINT32 targetId) { m_itemId = itemId; m_targetId = targetId; }
 
    UINT32 getId() { return m_id; }
    UINT32 getEventCode() { return m_eventCode; }
    UINT32 getRearmEventCode() { return m_rearmEventCode; }
 	int getFunction() { return m_function; }
 	int getOperation() { return m_operation; }
-	int getParam1() { return m_param1; }
-	int getParam2() { return m_param2; }
+	int getSampleCount() { return m_sampleCount; }
    const TCHAR *getStringValue() { return m_value.getString(); }
    BOOL isReached() { return m_isReached; }
 	
@@ -142,14 +145,14 @@ public:
 	void markLastEvent(int severity);
 
    BOOL saveToDB(DB_HANDLE hdb, UINT32 dwIndex);
-   ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
+   ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, NetObj *target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
    void createMessage(CSCPMessage *msg, UINT32 baseId);
    void updateFromMessage(CSCPMessage *msg, UINT32 baseId);
 
    void createId();
-   UINT32 getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_param1; }
+   UINT32 getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_sampleCount; }
 
    BOOL compare(Threshold *pThr);
 
@@ -160,8 +163,7 @@ public:
 	void setOperation(int nOp) { m_operation = nOp; }
 	void setEvent(UINT32 dwEvent) { m_eventCode = dwEvent; }
 	void setRearmEvent(UINT32 dwEvent) { m_rearmEventCode = dwEvent; }
-	void setParam1(int nVal) { m_param1 = nVal; }
-	void setParam2(int nVal) { m_param2 = nVal; }
+	void setSampleCount(int nVal) { m_sampleCount = nVal; }
 	void setValue(const TCHAR *value) { m_value = value; }
 };
 

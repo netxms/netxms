@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,13 +29,15 @@ Threshold::Threshold(DCItem *pRelatedItem)
 {
    m_id = 0;
    m_itemId = pRelatedItem->getId();
+   m_targetId = pRelatedItem->getTarget()->Id();
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
    m_function = F_LAST;
    m_operation = OP_EQ;
    m_dataType = pRelatedItem->getDataType();
-   m_param1 = 1;
-   m_param2 = 0;
+   m_sampleCount = 1;
+   m_scriptSource = NULL;
+   m_script = NULL;
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
@@ -50,13 +52,15 @@ Threshold::Threshold()
 {
    m_id = 0;
    m_itemId = 0;
+   m_targetId = 0;
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
    m_function = F_LAST;
    m_operation = OP_EQ;
    m_dataType = 0;
-   m_param1 = 1;
-   m_param2 = 0;
+   m_sampleCount = 1;
+   m_scriptSource = NULL;
+   m_script = NULL;
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
@@ -71,14 +75,17 @@ Threshold::Threshold(Threshold *src)
 {
    m_id = src->m_id;
    m_itemId = src->m_itemId;
+   m_targetId = src->m_targetId;
    m_eventCode = src->m_eventCode;
    m_rearmEventCode = src->m_rearmEventCode;
    m_value = src->m_value;
    m_function = src->m_function;
    m_operation = src->m_operation;
    m_dataType = src->m_dataType;
-   m_param1 = src->m_param1;
-   m_param2 = src->m_param2;
+   m_sampleCount = src->m_sampleCount;
+   m_scriptSource = NULL;
+   m_script = NULL;
+   setScript((src->m_scriptSource != NULL) ? _tcsdup(src->m_scriptSource) : NULL);
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = src->m_repeatInterval;
@@ -86,21 +93,20 @@ Threshold::Threshold(Threshold *src)
 	m_numMatches = 0;
 }
 
-
-//
-// Constructor for creating object from database
-// This constructor assumes that SELECT query look as following:
-// SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
-//        parameter_1,parameter_2,event_code,current_state,rearm_event_code,
-//        repeat_interval,current_severity,last_event_timestamp FROM thresholds
-//
-
+/**
+ * Constructor for creating object from database
+ * This constructor assumes that SELECT query look as following:
+ * SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
+ *        sample_count,script,event_code,current_state,rearm_event_code,
+ *        repeat_interval,current_severity,last_event_timestamp FROM thresholds
+ */
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 {
    TCHAR szBuffer[MAX_DB_STRING];
 
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_itemId = pRelatedItem->getId();
+   m_targetId = pRelatedItem->getTarget()->Id();
    m_eventCode = DBGetFieldULong(hResult, iRow, 7);
    m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
@@ -108,10 +114,12 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_function = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_operation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
    m_dataType = pRelatedItem->getDataType();
-   m_param1 = DBGetFieldLong(hResult, iRow, 5);
-	if ((m_function == F_LAST) && (m_param1 < 1))
-		m_param1 = 1;
-   m_param2 = DBGetFieldLong(hResult, iRow, 6);
+   m_sampleCount = DBGetFieldLong(hResult, iRow, 5);
+	if ((m_function == F_LAST) && (m_sampleCount < 1))
+		m_sampleCount = 1;
+   m_scriptSource = NULL;
+   m_script = NULL;
+   setScript(DBGetField(hResult, iRow, 6, NULL, 0));
    m_isReached = DBGetFieldLong(hResult, iRow, 8);
 	m_repeatInterval = DBGetFieldLong(hResult, iRow, 10);
 	m_currentSeverity = (BYTE)DBGetFieldLong(hResult, iRow, 11);
@@ -126,14 +134,18 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
 {
    createId();
    m_itemId = parentItem->getId();
+   m_targetId = parentItem->getTarget()->Id();
    m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
    m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
    m_function = (BYTE)config->getSubEntryValueInt(_T("function"), 0, F_LAST);
    m_operation = (BYTE)config->getSubEntryValueInt(_T("condition"), 0, OP_EQ);
    m_dataType = parentItem->getDataType();
 	m_value = config->getSubEntryValue(_T("value"), 0, _T(""));
-   m_param1 = config->getSubEntryValueInt(_T("param1"), 0, 1);
-   m_param2 = config->getSubEntryValueInt(_T("param2"), 0, 1);
+   m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != NULL) ? config->getSubEntryValueInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueInt(_T("param1"), 0, 1);
+   m_scriptSource = NULL;
+   m_script = NULL;
+   const TCHAR *script = config->getSubEntryValue(_T("script"));
+   setScript((script != NULL) ? _tcsdup(script) : NULL);
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = config->getSubEntryValueInt(_T("repeatInterval"), 0, -1);
@@ -141,20 +153,18 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
 	m_numMatches = 0;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 Threshold::~Threshold()
 {
+   safe_free(m_scriptSource);
+   delete m_script;
 }
 
-
-//
-// Create new unique id for object
-//
-
+/**
+ * Create new unique id for object
+ */
 void Threshold::createId()
 {
    m_id = CreateUniqueId(IDG_THRESHOLD); 
@@ -171,7 +181,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	{
 		hStmt = DBPrepare(hdb, 		              
 			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
-			_T("check_function,check_operation,parameter_1,parameter_2,event_code,")
+			_T("check_function,check_operation,sample_count,script,event_code,")
 			_T("sequence_number,current_state,rearm_event_code,repeat_interval,")
 			_T("current_severity,last_event_timestamp,threshold_id) ")
 			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
@@ -180,7 +190,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	{
 		hStmt = DBPrepare(hdb, 		              
 			_T("UPDATE thresholds SET item_id=?,fire_value=?,rearm_value=?,check_function=?,")
-         _T("check_operation=?,parameter_1=?,parameter_2=?,event_code=?,")
+         _T("check_operation=?,sample_count=?,script=?,event_code=?,")
          _T("sequence_number=?,current_state=?,rearm_event_code=?,")
 			_T("repeat_interval=?,current_severity=?,last_event_timestamp=? WHERE threshold_id=?"));
 	}
@@ -192,8 +202,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_function);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_operation);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_param1);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_param2);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_scriptSource, DB_BIND_STATIC);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_eventCode);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, dwIndex);
 	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)(m_isReached ? 1 : 0));
@@ -215,7 +225,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
  *    THRESHOLD_REARMED - when item's value doesn't match the threshold condition while previous check do
  *    NO_ACTION - when there are no changes in item's value match to threshold's condition
  */
-ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue)
+ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, NetObj *target, DCItem *dci)
 {
    BOOL bMatch = FALSE;
    int iDataType = m_dataType;
@@ -224,6 +234,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    switch(m_function)
    {
       case F_LAST:         // Check last value only
+      case F_SCRIPT:
          fvalue = value;
          break;
       case F_AVERAGE:      // Check average value for last n polls
@@ -253,6 +264,40 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
       // Threshold::Check() can be called only for valid values, which
       // means that error thresholds cannot be active
       bMatch = FALSE;
+   }
+   else if (m_function == F_SCRIPT)
+   {
+      if (m_script != NULL)
+      {
+         NXSL_Value *nxslValue = new NXSL_Value(value.getString());
+         NXSL_ServerEnv *env = new NXSL_ServerEnv;
+         m_script->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, target)));
+         if (target->Type() == OBJECT_NODE)
+         {
+            m_script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, target)));
+         }
+         m_script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
+         m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->Type() == OBJECT_CLUSTER) ? 1 : 0));
+         if (m_script->run(env, 1, &nxslValue) == 0)
+         {
+            nxslValue = m_script->getResult();
+            if (nxslValue != NULL)
+            {
+               bMatch = (nxslValue->getValueAsInt32() != 0);
+            }
+         }
+         else
+         {
+            TCHAR buffer[1024];
+            _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->Name(), dci->getId(), m_id);
+            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_script->getErrorText(), dci->getId());
+         }
+      }
+      else
+      {
+         DbgPrintf(7, _T("Script not compiled for threshold %d of DCI %d of data collection target %s [%d]"),
+                   m_id, dci->getId(), target->Name(), target->Id());
+      }
    }
    else
    {
@@ -400,12 +445,12 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    }
 
 	// Check for number of consecutive matches
-	if (m_function == F_LAST)
+	if ((m_function == F_LAST) || (m_function == F_SCRIPT))
 	{
 		if (bMatch)
 		{
 			m_numMatches++;
-			if (m_numMatches < m_param1)
+			if (m_numMatches < m_sampleCount)
 				bMatch = FALSE;
 		}
 		else
@@ -451,7 +496,7 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
    if (m_function != F_ERROR)
       return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
 
-   BOOL bMatch = ((UINT32)m_param1 <= dwErrorCount);
+   BOOL bMatch = ((UINT32)m_sampleCount <= dwErrorCount);
    ThresholdCheckResult result = (bMatch & !m_isReached) ? ACTIVATED : ((!bMatch & m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
    m_isReached = bMatch;
    if (result == ACTIVATED || result == DEACTIVATED)
@@ -476,8 +521,8 @@ void Threshold::createMessage(CSCPMessage *msg, UINT32 baseId)
 	msg->SetVariable(varId++, m_rearmEventCode);
 	msg->SetVariable(varId++, (WORD)m_function);
 	msg->SetVariable(varId++, (WORD)m_operation);
-	msg->SetVariable(varId++, (UINT32)m_param1);
-	msg->SetVariable(varId++, (UINT32)m_param2);
+	msg->SetVariable(varId++, (UINT32)m_sampleCount);
+	msg->SetVariable(varId++, CHECK_NULL_EX(m_scriptSource));
 	msg->SetVariable(varId++, (UINT32)m_repeatInterval);
 	msg->SetVariable(varId++, m_value.getString());
 	msg->SetVariable(varId++, (WORD)m_isReached);
@@ -497,22 +542,20 @@ void Threshold::updateFromMessage(CSCPMessage *msg, UINT32 baseId)
 	m_rearmEventCode = msg->GetVariableLong(varId++);
    m_function = (BYTE)msg->GetVariableShort(varId++);
    m_operation = (BYTE)msg->GetVariableShort(varId++);
-   m_param1 = (int)msg->GetVariableLong(varId++);
-   m_param2 = (int)msg->GetVariableLong(varId++);
+   m_sampleCount = (int)msg->GetVariableLong(varId++);
+   setScript(msg->GetVariableStr(varId++));
 	m_repeatInterval = (int)msg->GetVariableLong(varId++);
 	m_value = msg->GetVariableStr(varId++, buffer, MAX_DCI_STRING_VALUE);
 }
 
-
-//
-// Calculate average value for parameter
-//
-
+/**
+ * Calculate average value for parameter
+ */
 #define CALC_AVG_VALUE(vtype) \
 { \
    vtype var; \
    var = (vtype)lastValue; \
-   for(i = 1, nValueCount = 1; i < m_param1; i++) \
+   for(i = 1, nValueCount = 1; i < m_sampleCount; i++) \
    { \
       if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
       { \
@@ -561,7 +604,7 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
 { \
    vtype var; \
    var = (vtype)lastValue; \
-   for(i = 1; i < m_param1; i++) \
+   for(i = 1; i < m_sampleCount; i++) \
    { \
       if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
          var += (vtype)(*ppPrevValues[i - 1]); \
@@ -605,7 +648,7 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
 { \
    vtype mean, dev; \
    mean = (vtype)lastValue; \
-   for(i = 1, nValueCount = 1; i < m_param1; i++) \
+   for(i = 1, nValueCount = 1; i < m_sampleCount; i++) \
    { \
       if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
       { \
@@ -615,7 +658,7 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
    } \
    mean /= (vtype)nValueCount; \
    dev = ABS((vtype)lastValue - mean); \
-   for(i = 1, nValueCount = 1; i < m_param1; i++) \
+   for(i = 1, nValueCount = 1; i < m_sampleCount; i++) \
    { \
       if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
       { \
@@ -705,8 +748,8 @@ BOOL Threshold::compare(Threshold *pThr)
           (pThr->m_dataType == m_dataType) &&
           (pThr->m_function == m_function) &&
           (pThr->m_operation == m_operation) &&
-          (pThr->m_param1 == m_param1) &&
-          (pThr->m_param2 == m_param2) &&
+          (pThr->m_sampleCount == m_sampleCount) &&
+          !_tcscmp(CHECK_NULL_EX(pThr->m_scriptSource), CHECK_NULL_EX(m_scriptSource)) &&
 			 (pThr->m_repeatInterval == m_repeatInterval);
 }
 
@@ -725,15 +768,18 @@ void Threshold::createNXMPRecord(String &str, int index)
                           _T("\t\t\t\t\t\t\t<value>%s</value>\n")
                           _T("\t\t\t\t\t\t\t<activationEvent>%s</activationEvent>\n")
                           _T("\t\t\t\t\t\t\t<deactivationEvent>%s</deactivationEvent>\n")
-                          _T("\t\t\t\t\t\t\t<param1>%d</param1>\n")
-                          _T("\t\t\t\t\t\t\t<param2>%d</param2>\n")
-                          _T("\t\t\t\t\t\t\t<repeatInterval>%d</repeatInterval>\n")
-                          _T("\t\t\t\t\t\t</threshold>\n"),
+                          _T("\t\t\t\t\t\t\t<sampleCount>%d</sampleCount>\n")
+                          _T("\t\t\t\t\t\t\t<repeatInterval>%d</repeatInterval>\n"),
 								  index, m_function, m_operation,
 								  (const TCHAR *)EscapeStringForXML2(m_value.getString()),
                           (const TCHAR *)EscapeStringForXML2(activationEvent),
 								  (const TCHAR *)EscapeStringForXML2(deactivationEvent),
-								  m_param1, m_param2, m_repeatInterval);
+								  m_sampleCount, m_repeatInterval);
+   if (m_scriptSource != NULL)
+   {
+      str += EscapeStringForXML2(m_scriptSource);
+   }
+   str += _T("\t\t\t\t\t\t</threshold>\n");
 }
 
 /**
@@ -742,5 +788,35 @@ void Threshold::createNXMPRecord(String &str, int index)
 void Threshold::associate(DCItem *pItem)
 {
    m_itemId = pItem->getId();
+   m_targetId = pItem->getTarget()->Id();
    m_dataType = pItem->getDataType();
+}
+
+/**
+ * Set new script. Script source must be dynamically allocated
+ * and will be deallocated by threshold object
+ */
+void Threshold::setScript(TCHAR *script)
+{
+   safe_free(m_scriptSource);
+   delete m_script;
+   if (script != NULL)
+   {
+      m_scriptSource = script;
+      StrStrip(m_scriptSource);
+      if (m_scriptSource[0] != 0)
+      {
+			/* TODO: add compilation error handling */
+         m_script = (NXSL_Program *)NXSLCompile(m_scriptSource, NULL, 0);
+      }
+      else
+      {
+         m_script = NULL;
+      }
+   }
+   else
+   {
+      m_scriptSource = NULL;
+      m_script = NULL;
+   }
 }

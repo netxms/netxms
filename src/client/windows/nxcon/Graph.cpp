@@ -589,7 +589,7 @@ void CGraph::DrawThresholds(CDC &dc, NXC_DCI_THRESHOLD *thresholds, DWORD numThr
 	{
 	   double scale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
 		                  (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / (m_dCurrMaxValue - m_dCurrMinValue);
-		int y = (int)(m_nZeroLine - _tcstod(thresholds[i].szValue, NULL) * scale - 1);
+		int y = (int)(m_nZeroLine - _tcstod(thresholds[i].value, NULL) * scale - 1);
 
 		dc.MoveTo(m_rectGraph.left, y);
 		dc.LineTo(m_rectGraph.right, y);
@@ -892,7 +892,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 				{
 					for(j = 0; j < m_numThresholds[i]; j++)
 					{
-						dCurrValue = _tcstod(m_thresholds[i][j].szValue, NULL);
+						dCurrValue = _tcstod(m_thresholds[i][j].value, NULL);
 						if (dCurrValue > 0)
 						{
 							if (dCurrValue > m_dCurrMaxValue)
