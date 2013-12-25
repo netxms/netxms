@@ -4,7 +4,7 @@
 
 - Thresholds can be defined as NXSL scripts
 - XMPP messaging support
-- Fixed issues: #16
+- Fixed issues: #16, #464
 
 
 *
