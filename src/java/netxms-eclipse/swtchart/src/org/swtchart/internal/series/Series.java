@@ -319,7 +319,7 @@ abstract public class Series implements ISeries
 		compressor.setXSeries(xSeries);
 		compressor.setYSeries(ySeries);
 
-		if (minX <= 0)
+		if (minX < 0)
 		{
 			IAxis axis = chart.getAxisSet().getXAxis(xAxisId);
 			if (axis != null)
@@ -327,7 +327,7 @@ abstract public class Series implements ISeries
 				axis.enableLogScale(false);
 			}
 		}
-		if (minY <= 0)
+		if (minY < 0)
 		{
 			IAxis axis = chart.getAxisSet().getYAxis(yAxisId);
 			if (axis != null)
@@ -410,8 +410,7 @@ abstract public class Series implements ISeries
 	public boolean isValidStackSeries()
 	{
 		return stackEnabled && stackSeries != null && stackSeries.length > 0
-				&& !chart.getAxisSet().getYAxis(yAxisId).isLogScaleEnabled()
-				&& ((Axis)chart.getAxisSet().getXAxis(xAxisId)).isValidCategoryAxis();
+				&& !chart.getAxisSet().getYAxis(yAxisId).isLogScaleEnabled();
 	}
 
 	/**
@@ -445,8 +444,7 @@ abstract public class Series implements ISeries
 	{
 		double min = minY;
 		double max = maxY;
-		Axis xAxis = (Axis)chart.getAxisSet().getXAxis(xAxisId);
-		if (isValidStackSeries() && xAxis.isValidCategoryAxis())
+		if (isValidStackSeries())
 		{
 			for(int i = 0; i < stackSeries.length; i++)
 			{

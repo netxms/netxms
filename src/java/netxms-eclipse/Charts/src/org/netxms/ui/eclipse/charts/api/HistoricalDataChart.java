@@ -99,4 +99,18 @@ public interface HistoricalDataChart extends DataChart
 	 * Zoom out
 	 */
 	public abstract void zoomOut();
+	
+	/**
+	 * Set stacked mode
+	 * 
+	 * @param stacked
+	 */
+	public abstract void setStacked(boolean stacked);
+	
+	/**
+	 * Get current settings for "stacked" mode
+	 * 
+	 * @return
+	 */
+	public abstract boolean isStacked();
 }

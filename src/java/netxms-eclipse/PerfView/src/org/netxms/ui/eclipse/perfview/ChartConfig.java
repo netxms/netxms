@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,6 +64,9 @@ public class ChartConfig
 
 	@Element(required = false)
 	private boolean logScale = false;
+
+   @Element(required = false)
+   private boolean stacked = false;
 
 	@Element(required = false)
 	private int refreshRate = 30;
@@ -630,4 +633,20 @@ public class ChartConfig
 	{
 		this.showGrid = showGrid;
 	}
+
+   /**
+    * @return the stacked
+    */
+   public boolean isStacked()
+   {
+      return stacked;
+   }
+
+   /**
+    * @param stacked the stacked to set
+    */
+   public void setStacked(boolean stacked)
+   {
+      this.stacked = stacked;
+   }
 }

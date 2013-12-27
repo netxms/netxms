@@ -87,6 +87,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean showToolTips;
 	private boolean zoomEnabled;
 	private boolean gridVisible;
+	private boolean stacked;
 	private boolean selectionActive = false;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
@@ -386,6 +387,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
+		
+	   series.enableStack(stacked);
 		
 		return series;
 	}
@@ -943,4 +946,23 @@ public class LineChart extends Chart implements HistoricalDataChart
 			y += h + 5;
 		}
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setStacked(boolean)
+    */
+   @Override
+   public void setStacked(boolean stacked)
+   {
+      this.stacked = stacked;
+      redraw();
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#isStacked()
+    */
+   @Override
+   public boolean isStacked()
+   {
+      return stacked;
+   }
 }
