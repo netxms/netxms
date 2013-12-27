@@ -33,6 +33,7 @@ Widget-ToolTip {
   opacity: 1;
   animation: fadeIn 200ms linear, fadeOut 600ms ease-out;
   box-shadow: 3px 4px 2px rgba( 0, 0, 0, 0.3 );
+  text-align: left;
 }
 
 Display {

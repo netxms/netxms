@@ -4,6 +4,8 @@
 
 - Thresholds can be defined as NXSL scripts
 - XMPP messaging support
+- Management console:
+	- Stacked line charts implemented
 - Fixed issues: #16, #464
 
 
