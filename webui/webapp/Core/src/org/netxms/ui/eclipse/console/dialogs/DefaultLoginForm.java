@@ -105,7 +105,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		
 		parent.setBackground(colors.create(50, 99, 134));
 		
-		final Canvas content = new Canvas(parent, SWT.NONE);
+		final Canvas content = new Canvas(parent, SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.marginWidth = 10;
@@ -206,7 +206,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		okButton.setLayoutData(gd);
 		
 		final Image setupImage = Activator.getImageDescriptor("icons/app_settings.png").createImage(); //$NON-NLS-1$
-		ImageHyperlink setupLink = new ImageHyperlink(loginArea, SWT.NONE);
+		final ImageHyperlink setupLink = new ImageHyperlink(loginArea, SWT.NONE);
 		setupLink.setText(Messages.get().LoginForm_Options);
 		setupLink.setImage(setupImage);
 		gd = new GridData();
@@ -216,6 +216,20 @@ public class DefaultLoginForm extends Window implements LoginForm
 		setupLink.setLayoutData(gd);
 		setupLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
+         public void linkEntered(HyperlinkEvent e)
+         {
+            super.linkEntered(e);
+            setupLink.setUnderlined(true);
+         }
+
+         @Override
+         public void linkExited(HyperlinkEvent e)
+         {
+            super.linkExited(e);
+            setupLink.setUnderlined(false);
+         }
+
+         @Override
 			public void linkActivated(HyperlinkEvent e)
 			{
 				if (advancedSettingsEnabled)

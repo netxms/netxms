@@ -42,7 +42,7 @@ public class LabeledText extends Composite
 	 */
 	public LabeledText(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
 		toolkit = null;
 		createContent(SWT.SINGLE | SWT.BORDER);
 	}
@@ -54,7 +54,7 @@ public class LabeledText extends Composite
 	 */
 	public LabeledText(Composite parent, int style, int textStyle)
 	{
-		super(parent, style);
+		super(parent, style | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
 		toolkit = null;
 		createContent(textStyle);
 	}
@@ -67,7 +67,7 @@ public class LabeledText extends Composite
 	 */
 	public LabeledText(Composite parent, int style, int textStyle, FormToolkit toolkit)
 	{
-		super(parent, style);
+		super(parent, style | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
 		this.toolkit = toolkit;
 		toolkit.adapt(this);
 		createContent(textStyle);
