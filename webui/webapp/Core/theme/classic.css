@@ -82,7 +82,8 @@ Composite {
 Composite[BORDER] {
   background-color: white;
   background-image: none;
-  border: 1px solid #979797;
+  border: 1px solid #a4a4a4;
+  border-radius: 2px;
 }
 
 /* Button default theme */

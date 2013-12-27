@@ -33,6 +33,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -98,12 +99,23 @@ public class AbstractSelector extends Composite
 			label.setLayoutData(gd);
 		}
 		
-		text = ((options & USE_TEXT) != 0) ? new Text(this, SWT.BORDER | SWT.READ_ONLY) : new CLabel(this, SWT.BORDER);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		text.setLayoutData(gd);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.TOP;
+		if ((options & USE_TEXT) != 0)
+		{
+	      text = new Text(this, SWT.BORDER | SWT.READ_ONLY);
+	      text.setLayoutData(gd);
+		}
+		else
+		{
+		   // wrapper composite is needed because RAP ignores SWT.BORDER flag for CLabel
+		   Composite wrapper = new Composite(this, SWT.BORDER);
+		   wrapper.setLayout(new FillLayout());
+         wrapper.setLayoutData(gd);
+	      text = new CLabel(wrapper, SWT.NONE);
+		}
 		
 		if ((options & USE_HYPERLINK) != 0)
 		{
