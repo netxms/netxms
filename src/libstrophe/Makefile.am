@@ -5,6 +5,7 @@ libstrophe_la_SOURCES = auth.c conn.c ctx.c event.c handler.c hash.c jid.c \
 libstrophe_la_CPPFLAGS=-I@top_srcdir@/include
 libstrophe_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 if USE_INTERNAL_EXPAT
+libstrophe_la_CPPFLAGS+=-I@top_srcdir@/src/libexpat/libexpat
 libstrophe_la_LIBADD = ../libexpat/libexpat/libnxexpat.la
 endif
 
