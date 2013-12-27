@@ -14,6 +14,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -119,7 +120,7 @@ public class Chart extends Composite implements Listener
 	 * 
 	 * @return the plot area
 	 */
-	public Composite getPlotArea()
+	public Canvas getPlotArea()
 	{
 		return plotArea;
 	}

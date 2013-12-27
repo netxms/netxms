@@ -22,6 +22,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.swtchart.Chart;
@@ -36,8 +37,8 @@ import org.swtchart.internal.series.Series;
 /**
  * A legend for chart.
  */
-public class Legend extends Composite implements ILegend, PaintListener {
-
+public class Legend extends Canvas implements ILegend, PaintListener 
+{
     /** the plot chart */
     private Chart chart;
 

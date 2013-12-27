@@ -11,7 +11,8 @@ import org.swtchart.Chart;
 /**
  * A chart title.
  */
-public class ChartTitle extends Title {
+public class ChartTitle extends Title
+{
 
     /** the default text */
     private static final String DEFAULT_TEXT = "Chart Title";

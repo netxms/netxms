@@ -23,34 +23,32 @@ import org.swtchart.internal.ChartLayoutData;
  */
 public class AxisTickMarks implements PaintListener
 {
-	private static final long serialVersionUID = 1L;
+   /** the chart */
+   private Chart chart;
 
-	/** the chart */
-	private Chart chart;
+   /** the axis */
+   private Axis axis;
 
-	/** the axis */
-	private Axis axis;
+   /** the foreground color */
+   private Color foreground;
 
-	/** the foreground color */
-	private Color foreground;
+   /** the width hint of tick marks area */
+   private int widthHint;
 
-	/** the width hint of tick marks area */
-	private int widthHint;
+   /** the height hint of tick marks area */
+   private int heightHint;
 
-	/** the height hint of tick marks area */
-	private int heightHint;
+   /** the bounds of tick marks area */
+   private Rectangle bounds;
 
-	/** the bounds of tick marks area */
-	private Rectangle bounds;
+   /** the line width */
+   protected static final int LINE_WIDTH = 1;
 
-	/** the line width */
-	protected static final int LINE_WIDTH = 1;
+   /** the tick length */
+   public static final int TICK_LENGTH = 5;
 
-	/** the tick length */
-	public static final int TICK_LENGTH = 5;
-
-	/** the default foreground */
-	private static final int DEFAULT_FOREGROUND = SWT.COLOR_BLUE;
+   /** the default foreground */
+   private static final int DEFAULT_FOREGROUND = SWT.COLOR_BLUE;
 
 	/**
 	 * Constructor.

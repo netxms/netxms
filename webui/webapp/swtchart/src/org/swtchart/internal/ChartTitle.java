@@ -13,9 +13,8 @@ import org.swtchart.Chart;
  */
 public class ChartTitle extends Title
 {
-	private static final long serialVersionUID = 1L;
 
-	/** the default text */
+    /** the default text */
     private static final String DEFAULT_TEXT = "Chart Title";
 
     /**

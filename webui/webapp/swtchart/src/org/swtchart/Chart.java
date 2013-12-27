@@ -27,8 +27,6 @@ import org.swtchart.internal.axis.AxisSet;
  */
 public class Chart extends Canvas implements Listener
 {
-	private static final long serialVersionUID = 1L;
-
 	/** cached tick step on Y axis */
 	protected double cachedTickStep = 0;
 
@@ -49,7 +47,7 @@ public class Chart extends Canvas implements Listener
 
 	/** the state indicating if compressing series is enabled */
 	private boolean compressEnabled;
-
+	
 	/**
 	 * Constructor.
 	 * 

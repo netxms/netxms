@@ -26,13 +26,12 @@ import org.swtchart.ITitle;
  */
 public class Title extends Canvas implements ITitle, PaintListener
 {
-	private static final long serialVersionUID = 1L;
 
-	/** the chart */
-	protected Chart chart;
+    /** the chart */
+    protected Chart chart;
 
-	/** the title text */
-	protected String text;
+    /** the title text */
+    protected String text;
 
 	/** the visibility state of axis */
 	protected boolean isVisible;

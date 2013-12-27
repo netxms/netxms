@@ -33,8 +33,6 @@ import org.swtchart.internal.Util;
  */
 public class AxisTickLabels implements PaintListener
 {
-	private static final long serialVersionUID = 1L;
-
 	/** the chart */
 	private Chart chart;
 
@@ -89,10 +87,8 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Constructor.
 	 * 
-	 * @param chart
-	 *           the chart
-	 * @param axis
-	 *           the axis
+	 * @param chart the chart
+	 * @param axis the axis
 	 */
 	protected AxisTickLabels(Chart chart, Axis axis)
 	{
@@ -137,8 +133,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Sets the foreground color.
 	 * 
-	 * @param color
-	 *           the foreground color
+	 * @param color the foreground color
 	 */
 	public void setForeground(Color color)
 	{
@@ -169,8 +164,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Updates the tick labels.
 	 * 
-	 * @param length
-	 *           the axis length
+	 * @param length the axis length
 	 */
 	protected void update(int length)
 	{
@@ -202,8 +196,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Updates tick label for date axis.
 	 * 
-	 * @param length
-	 *           the length of axis
+	 * @param length the length of axis
 	 */
 	private void updateTickLabelForDateAxis(int length)
 	{
@@ -237,16 +230,12 @@ public class AxisTickLabels implements PaintListener
 	}
 
 	/**
-	 * Updates the tick label for month or year. The month and year are handled
-	 * differently from other units of time, since 1 month and 1 year can be
-	 * different depending on which time to start counting.
+	 * Updates the tick label for month or year. The month and year are handled differently from other units of time, since 1 month
+	 * and 1 year can be different depending on which time to start counting.
 	 * 
-	 * @param length
-	 *           the length of axis
-	 * @param gridStepHint
-	 *           the grid step hint
-	 * @param tickStepUnit
-	 *           the tick step unit of time
+	 * @param length the length of axis
+	 * @param gridStepHint the grid step hint
+	 * @param tickStepUnit the tick step unit of time
 	 */
 	private void updateTickLabelForMonthOrYear(int length, double gridStepHint, int tickStepUnit)
 	{
@@ -318,8 +307,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Updates tick label for category axis.
 	 * 
-	 * @param length
-	 *           the length of axis
+	 * @param length the length of axis
 	 */
 	private void updateTickLabelForCategoryAxis(int length)
 	{
@@ -347,8 +335,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Updates tick label for log scale.
 	 * 
-	 * @param length
-	 *           the length of axis
+	 * @param length the length of axis
 	 */
 	private void updateTickLabelForLogScale(int length)
 	{
@@ -405,8 +392,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Updates tick label for normal scale.
 	 * 
-	 * @param length
-	 *           axis length (>0)
+	 * @param length axis length (>0)
 	 */
 	private void updateTickLabelForLinearScale(int length)
 	{
@@ -418,10 +404,8 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Updates tick label for normal scale.
 	 * 
-	 * @param length
-	 *           axis length (>0)
-	 * @param tickStep
-	 *           the tick step
+	 * @param length axis length (>0)
+	 * @param tickStep the tick step
 	 */
 	private void updateTickLabelForLinearScale(int length, BigDecimal tickStep)
 	{
@@ -543,8 +527,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Gets the tick step unit.
 	 * 
-	 * @param gridStepHint
-	 *           the grid step hint
+	 * @param gridStepHint the grid step hint
 	 * @return the tick step unit.
 	 */
 	private int getTimeUnit(double gridStepHint)
@@ -564,13 +547,10 @@ public class AxisTickLabels implements PaintListener
 	}
 
 	/**
-	 * Gets the period in milliseconds of given unit of date and amount. The
-	 * period is calculated based on UTC of January 1, 1970.
+	 * Gets the period in milliseconds of given unit of date and amount. The period is calculated based on UTC of January 1, 1970.
 	 * 
-	 * @param unit
-	 *           the unit of time like <tt>Calendar.YEAR<tt>.
-	 * @param amount
-	 *           the amount of period.
+	 * @param unit the unit of time like <tt>Calendar.YEAR<tt>.
+	 * @param amount the amount of period.
 	 * @return the period in milliseconds
 	 */
 	private long getPeriodInMillis(int unit, int amount)
@@ -584,8 +564,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Formats the given object.
 	 * 
-	 * @param obj
-	 *           the object
+	 * @param obj the object
 	 * @return the formatted string
 	 */
 	private String format(Object obj, double tickStep)
@@ -633,8 +612,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Checks if the tick label is major (...,0.01,0.1,1,10,100,...).
 	 * 
-	 * @param tickValue
-	 *           the tick label value
+	 * @param tickValue the tick label value
 	 * @return true if the tick label is major
 	 */
 	private boolean isMajorTick(double tickValue)
@@ -655,12 +633,9 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Returns the state indicating if there is a space to draw tick label.
 	 * 
-	 * @param previousPosition
-	 *           the previously drawn tick label position.
-	 * @param tickLabelPosition
-	 *           the tick label position.
-	 * @param tickLabel
-	 *           the tick label text
+	 * @param previousPosition the previously drawn tick label position.
+	 * @param tickLabelPosition the tick label position.
+	 * @param tickLabel the tick label text
 	 * @return true if there is a space to draw tick label
 	 */
 	private boolean hasSpaceToDraw(int previousPosition, int tickLabelPosition, String tickLabel)
@@ -701,13 +676,10 @@ public class AxisTickLabels implements PaintListener
 	}
 
 	/**
-	 * Calculates the value of the first argument raised to the power of the
-	 * second argument.
+	 * Calculates the value of the first argument raised to the power of the second argument.
 	 * 
-	 * @param base
-	 *           the base
-	 * @param expornent
-	 *           the exponent
+	 * @param base the base
+	 * @param expornent the exponent
 	 * @return the value <tt>a<sup>b</sup></tt> in <tt>BigDecimal</tt>
 	 */
 	private BigDecimal pow(double base, int expornent)
@@ -727,12 +699,9 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Gets the grid step.
 	 * 
-	 * @param lengthInPixels
-	 *           axis length in pixels
-	 * @param min
-	 *           minimum value
-	 * @param max
-	 *           maximum value
+	 * @param lengthInPixels axis length in pixels
+	 * @param min minimum value
+	 * @param max maximum value
 	 * @return rounded value.
 	 */
 	private BigDecimal getGridStep(int lengthInPixels, double min, double max)
@@ -818,8 +787,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Sets the font.
 	 * 
-	 * @param font
-	 *           the font
+	 * @param font the font
 	 */
 	protected void setFont(Font font)
 	{
@@ -860,14 +828,10 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Sets the bounds on chart panel.
 	 * 
-	 * @param x
-	 *           the x coordinate
-	 * @param y
-	 *           the y coordinate
-	 * @param width
-	 *           the width
-	 * @param height
-	 *           the height
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param width the width
+	 * @param height the height
 	 */
 	public void setBounds(int x, int y, int width, int height)
 	{
@@ -948,8 +912,7 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Draw the X tick.
 	 * 
-	 * @param gc
-	 *           the graphics context
+	 * @param gc the graphics context
 	 */
 	private void drawXTick(GC gc)
 	{
@@ -992,46 +955,20 @@ public class AxisTickLabels implements PaintListener
 	/**
 	 * Draws the rotated text.
 	 * 
-	 * @param gc
-	 *           the graphics context
-	 * @param text
-	 *           the text
-	 * @param x
-	 *           the x coordinate
-	 * @param y
-	 *           the y coordinate
-	 * @param angle
-	 *           the angle
+	 * @param gc the graphics context
+	 * @param text the text
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param angle the angle
 	 */
 	private void drawRotatedText(GC gc, String text, float x, float y, int angle)
 	{
-		/*
-		 * int textWidth = gc.textExtent(text).x; int textHeight =
-		 * gc.textExtent(text).y;
-		 * 
-		 * // create image to draw text Image image = new
-		 * Image(Display.getCurrent(), textWidth, textHeight); GC tmpGc = new
-		 * GC(image); tmpGc.setForeground(getForeground());
-		 * tmpGc.setBackground(gc.getBackground()); tmpGc.setFont(getFont());
-		 * tmpGc.drawText(text, 0, 0);
-		 * 
-		 * // set transform to rotate Transform transform = new
-		 * Transform(gc.getDevice()); transform.translate(x, y);
-		 * transform.rotate(360 - angle); gc.setTransform(transform);
-		 * 
-		 * // draw the image on the rotated graphics context gc.drawImage(image,
-		 * 0, 0);
-		 * 
-		 * // dispose resources tmpGc.dispose(); transform.dispose();
-		 * image.dispose(); gc.setTransform(null);
-		 */
 	}
 
 	/**
 	 * Draw the Y tick.
 	 * 
-	 * @param gc
-	 *           the graphics context
+	 * @param gc the graphics context
 	 */
 	private void drawYTick(GC gc)
 	{
@@ -1062,14 +999,12 @@ public class AxisTickLabels implements PaintListener
 	}
 
 	/**
-	 * Sets the format for axis tick label. <tt>DecimalFormat</tt> and
-	 * <tt>DateFormat</tt> should be used for <tt>double[]</tt> series and
-	 * <tt>Data[]</tt> series respectively.
+	 * Sets the format for axis tick label. <tt>DecimalFormat</tt> and <tt>DateFormat</tt> should be used for <tt>double[]</tt>
+	 * series and <tt>Data[]</tt> series respectively.
 	 * <p>
 	 * If <tt>null</tt> is set, default format will be used.
 	 * 
-	 * @param format
-	 *           the format
+	 * @param format the format
 	 */
 	protected void setFormat(Format format)
 	{

@@ -43,6 +43,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
@@ -737,7 +738,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	public void setZoomEnabled(boolean enableZoom)
 	{
 		this.zoomEnabled = enableZoom;
-		final Composite plotArea = getPlotArea();
+		final Canvas plotArea = getPlotArea();
 		if (enableZoom)
 		{
 			plotArea.addMouseListener(zoomMouseListener);

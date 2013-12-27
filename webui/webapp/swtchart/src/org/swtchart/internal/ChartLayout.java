@@ -29,9 +29,8 @@ import org.swtchart.internal.axis.AxisTitle;
  */
 public class ChartLayout extends Layout
 {
-	private static final long serialVersionUID = 1L;
 
-	/** the title height */
+    /** the title height */
     private int titleHeight;
 
     /** the title width */

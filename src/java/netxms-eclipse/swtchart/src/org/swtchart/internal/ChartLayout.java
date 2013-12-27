@@ -27,7 +27,8 @@ import org.swtchart.internal.axis.AxisTitle;
 /**
  * Manages the layout on plot chart panel.
  */
-public class ChartLayout extends Layout {
+public class ChartLayout extends Layout
+{
 
     /** the title height */
     private int titleHeight;

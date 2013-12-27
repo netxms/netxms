@@ -34,7 +34,6 @@ import org.swtchart.internal.series.SeriesSet;
  */
 public class PlotArea extends Canvas implements PaintListener, IPlotArea
 {
-	private static final long serialVersionUID = 1L;
 
 	/** the chart */
 	protected Chart chart;
@@ -51,10 +50,8 @@ public class PlotArea extends Canvas implements PaintListener, IPlotArea
 	/**
 	 * Constructor.
 	 * 
-	 * @param chart
-	 *           the chart
-	 * @param style
-	 *           the style
+	 * @param chart the chart
+	 * @param style the style
 	 */
 	public PlotArea(Chart chart, int style)
 	{
@@ -68,8 +65,6 @@ public class PlotArea extends Canvas implements PaintListener, IPlotArea
 		setBackground(Display.getDefault().getSystemColor(DEFAULT_BACKGROUND));
 		addPaintListener(this);
 		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

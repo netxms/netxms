@@ -103,6 +103,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionAdjustY;
    private Action actionAdjustBoth;
    private Action actionLogScale;
+   private Action actionStacked;
    private Action actionShowLegend;
    private Action actionLegendLeft;
    private Action actionLegendRight;
@@ -307,6 +308,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       chart.setGridVisible(config.isShowGrid());
       chart.setLegendVisible(config.isShowLegend());
       chart.setLegendPosition(config.getLegendPosition());
+      chart.setStacked(config.isStacked());
 
       // Data
       final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
@@ -552,11 +554,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
       actionAdjustX = new Action() {
-         /*
-          * (non-Javadoc)
-          * 
-          * @see org.eclipse.jface.action.Action#run()
-          */
          @Override
          public void run()
          {
@@ -567,11 +564,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       actionAdjustX.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png"));
 
       actionAdjustY = new Action() {
-         /*
-          * (non-Javadoc)
-          * 
-          * @see org.eclipse.jface.action.Action#run()
-          */
          @Override
          public void run()
          {
@@ -582,11 +574,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       actionAdjustY.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png"));
 
       actionAdjustBoth = new Action() {
-         /*
-          * (non-Javadoc)
-          * 
-          * @see org.eclipse.jface.action.Action#run()
-          */
          @Override
          public void run()
          {
@@ -657,6 +644,16 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       };
 
+      actionStacked = new Action("S&tacked", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            config.setStacked(actionStacked.isChecked());
+            configureGraphFromSettings();
+         }
+      };
+      actionStacked.setChecked(config.isStacked());
+
       presetActions = new Action[presetRanges.length];
       for(int i = 0; i < presetRanges.length; i++)
       {
@@ -711,6 +708,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(new Separator());
+      manager.add(actionStacked);
       manager.add(actionLogScale);
       manager.add(actionAutoRefresh);
       manager.add(legend);
@@ -749,6 +747,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(new Separator());
+      manager.add(actionStacked);
       manager.add(actionLogScale);
       manager.add(actionAutoRefresh);
       manager.add(legend);

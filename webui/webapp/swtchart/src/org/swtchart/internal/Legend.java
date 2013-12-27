@@ -39,9 +39,7 @@ import org.swtchart.internal.series.Series;
  */
 public class Legend extends Canvas implements ILegend, PaintListener 
 {
-	private static final long serialVersionUID = 1L;
-
-	/** the plot chart */
+    /** the plot chart */
     private Chart chart;
 
     /** the state indicating the legend visibility */
@@ -101,8 +99,6 @@ public class Legend extends Canvas implements ILegend, PaintListener
         setBackground(DEFAULT_BACKGROUND);
         addPaintListener(this);
         addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

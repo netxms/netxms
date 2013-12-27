@@ -19,8 +19,8 @@ import org.swtchart.internal.axis.Axis;
 /**
  * A grid.
  */
-public class Grid implements IGrid {
-
+public class Grid implements IGrid 
+{
     /** the axis */
     private Axis axis;
 

@@ -29,7 +29,8 @@ import org.swtchart.ITitle;
 /**
  * A base class for title.
  */
-public class Title extends Canvas implements ITitle, PaintListener {
+public class Title extends Canvas implements ITitle, PaintListener
+{
 
     /** the chart */
     protected Chart chart;

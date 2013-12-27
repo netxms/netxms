@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
@@ -34,7 +33,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -84,10 +82,11 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean showToolTips;
 	private boolean zoomEnabled;
 	private boolean gridVisible;
+	private boolean stacked;
 	private boolean selectionActive = false;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
-	private MouseMoveListener moveListener;
+	//private MouseMoveListener moveListener;
 	private IPreferenceStore preferenceStore;
 	private MouseListener zoomMouseListener = null;
 	private PaintListener zoomPaintListener = null;
@@ -251,6 +250,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		//selection.setStartPoint(e.x, e.y);
 		//selection.setEndPoint(e.x, e.y);
 		
+      /*
 		final Composite plotArea = getPlotArea();
 		moveListener = new MouseMoveListener() {
 			@Override
@@ -260,6 +260,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 				plotArea.redraw();
 			}
 		};
+		*/
 		//plotArea.addMouseMoveListener(moveListener);
 	}
 	
@@ -386,6 +387,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
+		
+	   series.enableStack(stacked);
 		
 		return series;
 	}
@@ -943,4 +946,23 @@ public class LineChart extends Chart implements HistoricalDataChart
 			y += h + 5;
 		}
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setStacked(boolean)
+    */
+   @Override
+   public void setStacked(boolean stacked)
+   {
+      this.stacked = stacked;
+      redraw();
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#isStacked()
+    */
+   @Override
+   public boolean isStacked()
+   {
+      return stacked;
+   }
 }
