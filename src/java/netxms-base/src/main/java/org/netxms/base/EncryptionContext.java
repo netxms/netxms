@@ -39,8 +39,8 @@ import javax.crypto.spec.IvParameterSpec;
 public final class EncryptionContext
 {
 	// Ciphers
-	private static final String[] CIPHERS = { "AES", "Blowfish", null, null, "AES" };
-	private static int[] KEY_LENGTHS = { 256, 256, 0, 0, 128 };
+	private static final String[] CIPHERS = { "AES", "Blowfish", null, null, "AES", "Blowfish" };
+	private static int[] KEY_LENGTHS = { 256, 256, 0, 0, 128, 128 };
 	private static final String CIPHER_MODE = "/CBC/PKCS5Padding";
 
 	private int cipher;
@@ -112,13 +112,14 @@ public final class EncryptionContext
 		keyGen.init(KEY_LENGTHS[cipher]);
 		key = keyGen.generateKey();
 		
-		byte[] ivBytes = new byte[16];
-		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-		random.nextBytes(ivBytes);
-		iv = new IvParameterSpec(ivBytes);
-		
 		encryptor = Cipher.getInstance(CIPHERS[cipher] + CIPHER_MODE);
 		decryptor = Cipher.getInstance(CIPHERS[cipher] + CIPHER_MODE);
+      
+		int blockSize = encryptor.getBlockSize();
+      byte[] ivBytes = new byte[(blockSize > 0) ? blockSize : 16];
+      SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+      random.nextBytes(ivBytes);
+      iv = new IvParameterSpec(ivBytes);
 	}
 
 	/**
@@ -136,7 +137,6 @@ public final class EncryptionContext
 		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 		return cipher.doFinal(key.getEncoded());
 	}
-
 
 	/**
 	 * Encrypt initialization vector with public key from encryption setup message.

@@ -105,7 +105,7 @@
 #define MAX_DNS_NAME             256
 #define GROUP_FLAG               ((UINT32)0x80000000)
 
-#define NETXMS_MAX_CIPHERS       5
+#define NETXMS_MAX_CIPHERS       6
 #define NETXMS_RSA_KEYLEN        2048
 
 #ifndef LLONG_MAX

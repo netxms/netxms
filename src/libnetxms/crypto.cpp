@@ -40,7 +40,8 @@ static UINT32 m_dwSupportedCiphers =
    CSCP_SUPPORT_AES_128 |
 #endif
 #ifndef OPENSSL_NO_BF
-   CSCP_SUPPORT_BLOWFISH |
+   CSCP_SUPPORT_BLOWFISH_256 |
+   CSCP_SUPPORT_BLOWFISH_128 |
 #endif
 #ifndef OPENSSL_NO_IDEA
    CSCP_SUPPORT_IDEA |
@@ -80,7 +81,12 @@ static CIPHER_FUNC m_pfCipherList[NETXMS_MAX_CIPHERS] =
    NULL,
 #endif
 #ifndef OPENSSL_NO_AES
-   EVP_aes_128_cbc
+   EVP_aes_128_cbc,
+#else
+   NULL,
+#endif
+#ifndef OPENSSL_NO_BF
+   EVP_bf_cbc
 #else
    NULL
 #endif
@@ -590,14 +596,19 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
       ctx->m_cipher = CSCP_CIPHER_AES_256;
       ctx->m_keyLength = 32;
    }
-   else if (ciphers & CSCP_SUPPORT_BLOWFISH)
+   else if (ciphers & CSCP_SUPPORT_BLOWFISH_256)
    {
-      ctx->m_cipher = CSCP_CIPHER_BLOWFISH;
+      ctx->m_cipher = CSCP_CIPHER_BLOWFISH_256;
       ctx->m_keyLength = 32;
    }
    else if (ciphers & CSCP_SUPPORT_AES_128)
    {
       ctx->m_cipher = CSCP_CIPHER_AES_128;
+      ctx->m_keyLength = 16;
+   }
+   else if (ciphers & CSCP_SUPPORT_BLOWFISH_128)
+   {
+      ctx->m_cipher = CSCP_CIPHER_BLOWFISH_128;
       ctx->m_keyLength = 16;
    }
    else if (ciphers & CSCP_SUPPORT_IDEA)
