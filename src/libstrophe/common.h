@@ -130,18 +130,18 @@ struct _xmpp_handlist_t {
 	struct {
 	    unsigned long period;
 	    uint64_t last_stamp;
-	};
+	} timed;
 	/* id handlers */
 	struct {
 	    char *id;
-	};
+	} id;
 	/* normal handlers */
 	struct {
 	    char *ns;
 	    char *name;
 	    char *type;
-	};
-    };
+	} normal;
+    } data;
 };
 
 #define SASL_MASK_PLAIN 0x01
