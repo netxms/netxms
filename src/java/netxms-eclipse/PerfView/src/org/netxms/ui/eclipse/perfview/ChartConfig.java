@@ -68,6 +68,9 @@ public class ChartConfig
    @Element(required = false)
    private boolean stacked = false;
 
+   @Element(required = false)
+   private boolean translucent = true;
+
 	@Element(required = false)
 	private int refreshRate = 30;
 
@@ -648,5 +651,21 @@ public class ChartConfig
    public void setStacked(boolean stacked)
    {
       this.stacked = stacked;
+   }
+
+   /**
+    * @return the translucent
+    */
+   public boolean isTranslucent()
+   {
+      return translucent;
+   }
+
+   /**
+    * @param translucent the translucent to set
+    */
+   public void setTranslucent(boolean translucent)
+   {
+      this.translucent = translucent;
    }
 }

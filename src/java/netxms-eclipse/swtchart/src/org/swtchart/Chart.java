@@ -35,6 +35,9 @@ public class Chart extends Composite implements Listener
 {
 	/** cached tick step on Y axis */
 	protected double cachedTickStep = 0;
+	
+	/** translucent areas flag */
+	protected boolean translucent = true;
 
 	/** the title */
 	private Title title;
@@ -398,4 +401,20 @@ public class Chart extends Composite implements Listener
 	{
 		this.cachedTickStep = cachedTickStep;
 	}
+
+   /**
+    * @return the translucent
+    */
+   public boolean isTranslucent()
+   {
+      return translucent;
+   }
+
+   /**
+    * @param translucent the translucent to set
+    */
+   public void setTranslucent(boolean translucent)
+   {
+      this.translucent = translucent;
+   }
 }

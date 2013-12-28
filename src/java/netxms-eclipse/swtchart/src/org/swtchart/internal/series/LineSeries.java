@@ -501,7 +501,6 @@ public class LineSeries extends Series implements ILineSeries
 	 */
 	private void drawLineAndArea(GC gc, int width, int height, Axis xAxis, Axis yAxis)
 	{
-
 		// get x and y series
 		double[] xseries = compressor.getCompressedXSeries();
 		double[] yseries = compressor.getCompressedYSeries();
@@ -597,7 +596,7 @@ public class LineSeries extends Series implements ILineSeries
 	private void drawArea(GC gc, int[] p, boolean isHorizontal)
 	{
 		int alpha = gc.getAlpha();
-		gc.setAlpha(ALPHA);
+		gc.setAlpha(chart.isTranslucent() ? ALPHA : 255);
 		gc.setBackground(getLineColor());
 
 		int[] pointArray;

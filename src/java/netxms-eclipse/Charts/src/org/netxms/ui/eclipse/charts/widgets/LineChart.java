@@ -610,6 +610,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void setTranslucent(boolean translucent)
 	{
+	   super.setTranslucent(translucent);
 	}
 
 	/* (non-Javadoc)
@@ -618,7 +619,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public boolean isTranslucent()
 	{
-		return false;
+		return super.isTranslucent();
 	}
 
 	/* (non-Javadoc)

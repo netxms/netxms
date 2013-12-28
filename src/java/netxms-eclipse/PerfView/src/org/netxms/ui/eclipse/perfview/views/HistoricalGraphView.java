@@ -104,6 +104,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionAdjustBoth;
    private Action actionLogScale;
    private Action actionStacked;
+   private Action actionTranslucent;
    private Action actionShowLegend;
    private Action actionLegendLeft;
    private Action actionLegendRight;
@@ -308,6 +309,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       chart.setLegendVisible(config.isShowLegend());
       chart.setLegendPosition(config.getLegendPosition());
       chart.setStacked(config.isStacked());
+      chart.setTranslucent(config.isTranslucent());
 
       // Data
       final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
@@ -635,7 +637,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       };
 
-      actionStacked = new Action("S&tacked", Action.AS_CHECK_BOX) {
+      actionStacked = new Action("Sta&cked", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -644,6 +646,16 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       };
       actionStacked.setChecked(config.isStacked());
+
+      actionTranslucent = new Action("&Translucent", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            config.setTranslucent(actionTranslucent.isChecked());
+            configureGraphFromSettings();
+         }
+      };
+      actionTranslucent.setChecked(config.isTranslucent());
 
       presetActions = new Action[presetRanges.length];
       for(int i = 0; i < presetRanges.length; i++)
@@ -701,6 +713,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(new Separator());
       manager.add(actionStacked);
       manager.add(actionLogScale);
+      manager.add(actionTranslucent);
       manager.add(actionAutoRefresh);
       manager.add(legend);
       manager.add(new Separator());
@@ -740,6 +753,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(new Separator());
       manager.add(actionStacked);
       manager.add(actionLogScale);
+      manager.add(actionTranslucent);
       manager.add(actionAutoRefresh);
       manager.add(legend);
       manager.add(new Separator());
