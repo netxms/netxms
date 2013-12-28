@@ -39,8 +39,8 @@ import javax.crypto.spec.IvParameterSpec;
 public final class EncryptionContext
 {
 	// Ciphers
-	private static final String[] CIPHERS = { "AES", "Blowfish", null, null, "AES", "Blowfish" };
-	private static int[] KEY_LENGTHS = { 256, 256, 0, 0, 128, 128 };
+	private static final String[] CIPHERS = { "AES", null, null, null, "AES", "Blowfish" };
+	private static int[] KEY_LENGTHS = { 256, 0, 0, 0, 128, 128 };
 	private static final String CIPHER_MODE = "/CBC/PKCS5Padding";
 
 	private int cipher;
@@ -73,9 +73,6 @@ public final class EncryptionContext
 				{
 					selectedCipher = i;
 					break;
-				}
-				else
-				{
 				}
 			}
 			catch(Exception e)

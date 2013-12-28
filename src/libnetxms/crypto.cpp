@@ -280,26 +280,29 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
       {
 			BYTE *pBufPos, ucKeyBuffer[KEY_BUFFER_SIZE];
 			RSA *pServerKey;
-			UINT32 dwKeySize;
 
 			*ppCtx = NXCPEncryptionContext::create(dwCiphers);
 
          // Encrypt key
-         dwKeySize = pMsg->GetVariableBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
+         int size = pMsg->GetVariableBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
          pBufPos = ucKeyBuffer;
-         pServerKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, dwKeySize);
+         pServerKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, size);
          if (pServerKey != NULL)
          {
             (*ppResponse)->SetVariable(VID_RCC, RCC_SUCCESS);
-            dwKeySize = RSA_public_encrypt((*ppCtx)->getKeyLength(), (*ppCtx)->getSessionKey(),
-                                           ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
-            (*ppResponse)->SetVariable(VID_SESSION_KEY, ucKeyBuffer, dwKeySize);
-            dwKeySize = RSA_public_encrypt(EVP_MAX_IV_LENGTH, (*ppCtx)->getIV(),
-                                           ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
-            (*ppResponse)->SetVariable(VID_SESSION_IV, ucKeyBuffer, dwKeySize);
-            (*ppResponse)->SetVariable(VID_CIPHER, (WORD)(*ppCtx)->getCipher());
+            
+            size = RSA_public_encrypt((*ppCtx)->getKeyLength(), (*ppCtx)->getSessionKey(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
+            (*ppResponse)->SetVariable(VID_SESSION_KEY, ucKeyBuffer, (UINT32)size);
             (*ppResponse)->SetVariable(VID_KEY_LENGTH, (WORD)(*ppCtx)->getKeyLength());
-            (*ppResponse)->SetVariable(VID_IV_LENGTH, (WORD)EVP_MAX_IV_LENGTH);
+            
+            int ivLength = EVP_CIPHER_iv_length(m_pfCipherList[(*ppCtx)->getCipher()]());
+            if ((ivLength <= 0) || (ivLength > EVP_MAX_IV_LENGTH))
+               ivLength = EVP_MAX_IV_LENGTH;
+            size = RSA_public_encrypt(ivLength, (*ppCtx)->getIV(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
+            (*ppResponse)->SetVariable(VID_SESSION_IV, ucKeyBuffer, (UINT32)size);
+            (*ppResponse)->SetVariable(VID_IV_LENGTH, (WORD)ivLength);
+
+            (*ppResponse)->SetVariable(VID_CIPHER, (WORD)(*ppCtx)->getCipher());
             RSA_free(pServerKey);
             dwResult = RCC_SUCCESS;
          }
