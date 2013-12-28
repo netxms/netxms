@@ -237,7 +237,7 @@ int xmpp_conn_release(xmpp_conn_t * const conn)
 	    while (hlitem) {
 		thli = hlitem;
 		hlitem = hlitem->next;
-		xmpp_free(conn->ctx, thli->id);
+		xmpp_free(conn->ctx, thli->data.id.id);
 		xmpp_free(conn->ctx, thli);
 	    }
 	}
@@ -249,9 +249,9 @@ int xmpp_conn_release(xmpp_conn_t * const conn)
 	    thli = hlitem;
 	    hlitem = hlitem->next;
 
-	    if (thli->ns) xmpp_free(ctx, thli->ns);
-	    if (thli->name) xmpp_free(ctx, thli->name);
-	    if (thli->type) xmpp_free(ctx, thli->type);
+	    if (thli->data.normal.ns) xmpp_free(ctx, thli->data.normal.ns);
+	    if (thli->data.normal.name) xmpp_free(ctx, thli->data.normal.name);
+	    if (thli->data.normal.type) xmpp_free(ctx, thli->data.normal.type);
 	    xmpp_free(ctx, thli);
 	}
 
