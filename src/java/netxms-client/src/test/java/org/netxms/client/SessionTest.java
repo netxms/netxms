@@ -29,7 +29,7 @@ import junit.framework.TestCase;
  */
 public class SessionTest extends TestCase
 {
-	private static final String serverAddress = "127.0.0.1";
+	private static final String serverAddress = "10.5.0.162"; //"127.0.0.1";
 	private static final int serverPort = NXCSession.DEFAULT_CONN_PORT;
 	private static final String loginName = "admin";
 	private static final String password = "";

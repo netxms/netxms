@@ -232,7 +232,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          catch(InvocationTargetException e)
          {
             if ((e.getCause() instanceof NXCException)
-                  && (((NXCException)e.getCause()).getErrorCode() == RCC.NO_ENCRYPTION_SUPPORT) && encrypt)
+                  && ((((NXCException)e.getCause()).getErrorCode() == RCC.NO_ENCRYPTION_SUPPORT) ||
+                      (((NXCException)e.getCause()).getErrorCode() == RCC.NO_CIPHERS)) && encrypt)
             {
                boolean alwaysAllow = settings.getBoolean("Connect.AllowUnencrypted." + settings.get("Connect.Server")); //$NON-NLS-1$ //$NON-NLS-2$
                int action = getAction(settings, alwaysAllow);
