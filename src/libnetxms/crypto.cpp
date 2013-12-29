@@ -57,7 +57,7 @@ static UINT32 m_dwSupportedCiphers =
  */
 #ifdef _WITH_ENCRYPTION
 
-typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
+extern "C" typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
 static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
 {
 #ifndef OPENSSL_NO_AES
@@ -99,6 +99,9 @@ static void (*s_debugCallback)(int, const TCHAR *, va_list args) = NULL;
 /**
  * Locking callback for CRYPTO library
  */
+#if defined(__SUNPRO_CC)
+extern "C"
+#endif
 static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int nLine)
 {
    if (nMode & CRYPTO_LOCK)
@@ -112,6 +115,9 @@ static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int
  */
 #ifndef _WIN32
 
+#if defined(__SUNPRO_CC)
+extern "C"
+#endif
 static unsigned long CryptoIdCallback()
 {
    return (unsigned long)GetCurrentThreadId();
