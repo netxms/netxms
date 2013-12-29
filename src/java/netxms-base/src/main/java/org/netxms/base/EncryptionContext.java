@@ -39,8 +39,8 @@ import javax.crypto.spec.IvParameterSpec;
 public final class EncryptionContext
 {
 	// Ciphers
-	private static final String[] CIPHERS = { "AES", null, null, null, "AES", "Blowfish" };
-	private static int[] KEY_LENGTHS = { 256, 0, 0, 0, 128, 128 };
+	private static final String[] CIPHERS = { "AES", "Blowfish", null, null, "AES", "Blowfish" };
+	private static int[] KEY_LENGTHS = { 256, 256, 0, 0, 128, 128 };
 	private static final String CIPHER_MODE = "/CBC/PKCS5Padding";
 
 	private int cipher;
@@ -49,6 +49,24 @@ public final class EncryptionContext
 	private Cipher decryptor;
 	private SecretKey key;
 	private IvParameterSpec iv;
+	
+	/**
+	 * Get cipher name
+	 * 
+	 * @param cipher cipher ID
+	 * @return cipher name or null if ID is invalid or cipher is not supported
+	 */
+	public static String getCipherName(int cipher)
+	{
+	   try
+	   {
+	      return CIPHERS[cipher] + "-" + Integer.toString(KEY_LENGTHS[cipher]);
+	   }
+	   catch(ArrayIndexOutOfBoundsException e)
+	   {
+	      return null;
+	   }
+	}
 	
 	/**
 	 * Create encryption context based on information from session key request message.
@@ -68,8 +86,8 @@ public final class EncryptionContext
 			
 			try
 			{
-				Cipher.getInstance(CIPHERS[i]);
-				if (Cipher.getMaxAllowedKeyLength(CIPHERS[i]) >= KEY_LENGTHS[i])
+				Cipher.getInstance(CIPHERS[i] + CIPHER_MODE);
+				if (Cipher.getMaxAllowedKeyLength(CIPHERS[i] + CIPHER_MODE) >= KEY_LENGTHS[i])
 				{
 					selectedCipher = i;
 					break;

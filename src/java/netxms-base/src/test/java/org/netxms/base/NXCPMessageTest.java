@@ -49,4 +49,43 @@ public class NXCPMessageTest extends TestCase
 		assertEquals(123456789L, msg2.findVariable(4).getAsInteger().longValue());
 		assertEquals(true, Arrays.equals(byteTest, msg2.findVariable(5).getAsBinary()));
 	}
+	
+	private void doEncryptionTest(int cipher) throws Exception
+	{
+	   System.out.println("==== " + EncryptionContext.getCipherName(cipher) + " ====");
+	   
+      final NXCPMessage msg1 = new NXCPMessage(1, 2);
+      msg1.setVariableInt32(3, 20);
+      final byte[] bytes = msg1.createNXCPMessage();
+      System.out.println("   Message encoded into " + bytes.length + " bytes");
+      
+	   EncryptionContext ctx = new EncryptionContext(cipher);
+	   byte[] encryptedBytes = ctx.encryptMessage(msg1);
+      System.out.println("   Message encrypted into " + encryptedBytes.length + " bytes");
+      
+      final NXCPMessage msg2 = new NXCPMessage(bytes, ctx);
+      assertEquals(1, msg2.getMessageCode());
+      assertEquals(2L, msg2.getMessageId());
+      assertEquals(20, msg2.findVariable(3).getAsInteger().intValue());
+	}
+	
+	public void testEncryptionAES256() throws Exception
+	{
+	   doEncryptionTest(0);
+	}
+   
+   public void testEncryptionAES128() throws Exception
+   {
+      doEncryptionTest(4);
+   }
+
+   public void testEncryptionBlowfish256() throws Exception
+   {
+      doEncryptionTest(1);
+   }
+   
+   public void testEncryptionBlowfish128() throws Exception
+   {
+      doEncryptionTest(5);
+   }
 }
