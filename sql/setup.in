@@ -11,7 +11,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AgentUpgradeWaitTime','600',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AlarmHistoryRetentionTime','180',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AllowDirectSMS','0',1,0);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AllowedCiphers','31',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AllowedCiphers','63',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AllowTrapVarbindsConversion','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AnonymousFileAccess','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ApplyDCIFromTemplateToDisabledDCI','0',1,1);

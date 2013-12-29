@@ -160,21 +160,26 @@ BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCal
 #endif   /* _WIN32 */
 
    // validate supported ciphers
+   CryptoDbgPrintf(1, _T("Validating ciphers"));
    m_dwSupportedCiphers &= dwEnabledCiphers;
    UINT32 cipherBit = 1;
    for(i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
       if ((m_dwSupportedCiphers & cipherBit) == 0)
+      {
+         CryptoDbgPrintf(1, _T("   %s disabled (config)"), s_cipherNames[i]);
          continue;
+      }
       NXCPEncryptionContext *ctx = NXCPEncryptionContext::create(cipherBit);
       if (ctx != NULL)
       {
          delete ctx;
+         CryptoDbgPrintf(1, _T("   %s enabled"), s_cipherNames[i]);
       }
       else
       {
          m_dwSupportedCiphers &= ~cipherBit;
-         CryptoDbgPrintf(1, _T("Cipher %s disabled"), s_cipherNames[i]);
+         CryptoDbgPrintf(1, _T("   %s disabled (validation failed)"), s_cipherNames[i]);
       }
    }
 
