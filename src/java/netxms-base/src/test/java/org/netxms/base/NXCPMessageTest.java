@@ -1,8 +1,29 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.base;
 
 import java.util.Arrays;
 import junit.framework.TestCase;
 
+/**
+ * Tests for NXCPMessage class
+ */
 public class NXCPMessageTest extends TestCase
 {
 	public void testMessageSetAndGet()
@@ -54,8 +75,8 @@ public class NXCPMessageTest extends TestCase
 	{
 	   System.out.println("==== " + EncryptionContext.getCipherName(cipher) + " ====");
 	   
-      final NXCPMessage msg1 = new NXCPMessage(1, 2);
-      msg1.setVariableInt32(3, 20);
+      final NXCPMessage msg1 = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, 2);
+      msg1.setVariableInt32(NXCPCodes.VID_RCC, 0);
       final byte[] bytes = msg1.createNXCPMessage();
       System.out.println("   Message encoded into " + bytes.length + " bytes");
       
@@ -63,10 +84,10 @@ public class NXCPMessageTest extends TestCase
 	   byte[] encryptedBytes = ctx.encryptMessage(msg1);
       System.out.println("   Message encrypted into " + encryptedBytes.length + " bytes");
       
-      final NXCPMessage msg2 = new NXCPMessage(bytes, ctx);
-      assertEquals(1, msg2.getMessageCode());
+      final NXCPMessage msg2 = new NXCPMessage(encryptedBytes, ctx);
+      assertEquals(NXCPCodes.CMD_REQUEST_COMPLETED, msg2.getMessageCode());
       assertEquals(2L, msg2.getMessageId());
-      assertEquals(20, msg2.findVariable(3).getAsInteger().intValue());
+      assertEquals(0, msg2.findVariable(NXCPCodes.VID_RCC).getAsInteger().intValue());
 	}
 	
 	public void testEncryptionAES256() throws Exception

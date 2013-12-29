@@ -106,8 +106,10 @@ static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pV
          _tcscat(pValue, _T("AES-256 "));
       if (dwCiphers & CSCP_SUPPORT_AES_128)
          _tcscat(pValue, _T("AES-128 "));
-      if (dwCiphers & CSCP_SUPPORT_BLOWFISH)
-         _tcscat(pValue, _T("BLOWFISH "));
+      if (dwCiphers & CSCP_SUPPORT_BLOWFISH_256)
+         _tcscat(pValue, _T("BF-256 "));
+      if (dwCiphers & CSCP_SUPPORT_BLOWFISH_128)
+         _tcscat(pValue, _T("BF-128 "));
       if (dwCiphers & CSCP_SUPPORT_IDEA)
          _tcscat(pValue, _T("IDEA "));
       if (dwCiphers & CSCP_SUPPORT_3DES)

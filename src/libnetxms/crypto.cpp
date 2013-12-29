@@ -158,92 +158,15 @@ UINT32 LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers()
  */
 CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg)
 {
-#ifdef _WITH_ENCRYPTION
-   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
-   CSCP_ENCRYPTED_PAYLOAD_HEADER header;
-   int nSize;
-   EVP_CIPHER_CTX cipher;
-   UINT32 dwMsgSize;
-
-   if (pMsg->wFlags & m_wNoEncryptionFlag)
-      return (CSCP_ENCRYPTED_MESSAGE *)nx_memdup(pMsg, ntohl(pMsg->dwSize));
-
-   if (m_pfCipherList[pCtx->getCipher()] == NULL)
-      return NULL;   // Unsupported cipher
-
-   EVP_EncryptInit(&cipher, m_pfCipherList[pCtx->getCipher()](), pCtx->getSessionKey(), pCtx->getIV());
-   EVP_CIPHER_CTX_set_key_length(&cipher, pCtx->getKeyLength());
-
-   dwMsgSize = ntohl(pMsg->dwSize);
-   pEnMsg = (CSCP_ENCRYPTED_MESSAGE *)malloc(dwMsgSize + CSCP_ENCRYPTION_HEADER_SIZE + 
-                     EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(&cipher)) + 8);
-   pEnMsg->wCode = htons(CMD_ENCRYPTED_MESSAGE);
-   pEnMsg->nReserved = 0;
-
-   header.dwChecksum = htonl(CalculateCRC32((BYTE *)pMsg, dwMsgSize, 0));
-   header.dwReserved = 0;
-   EVP_EncryptUpdate(&cipher, pEnMsg->data, &nSize, (BYTE *)&header, CSCP_EH_ENCRYPTED_BYTES);
-   dwMsgSize = nSize;
-   EVP_EncryptUpdate(&cipher, pEnMsg->data + dwMsgSize, &nSize, (BYTE *)pMsg, ntohl(pMsg->dwSize));
-   dwMsgSize += nSize;
-   EVP_EncryptFinal(&cipher, pEnMsg->data + dwMsgSize, &nSize);
-   dwMsgSize += nSize + CSCP_EH_UNENCRYPTED_BYTES;
-   EVP_CIPHER_CTX_cleanup(&cipher);
-
-   if (dwMsgSize % 8 != 0)
-   {
-      pEnMsg->nPadding = (BYTE)(8 - (dwMsgSize % 8));
-      dwMsgSize += pEnMsg->nPadding;
-   }
-   else
-   {
-      pEnMsg->nPadding = 0;
-   }
-   pEnMsg->dwSize = htonl(dwMsgSize);
-
-   return pEnMsg;
-#else    /* _WITH_ENCRYPTION */
-   return NULL;
-#endif
+   return (pCtx != NULL) ? pCtx->encryptMessage(pMsg) : NULL;
 }
 
 /**
  * Decrypt message
  */
-BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
-                                             CSCP_ENCRYPTED_MESSAGE *pMsg,
-                                             BYTE *pDecryptionBuffer)
+BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx, CSCP_ENCRYPTED_MESSAGE *pMsg, BYTE *pDecryptionBuffer)
 {
-#ifdef _WITH_ENCRYPTION
-   int nSize;
-   EVP_CIPHER_CTX cipher;
-   UINT32 dwChecksum, dwMsgSize;
-   CSCP_MESSAGE *pClearMsg;
-
-   if (m_pfCipherList[pCtx->getCipher()] == NULL)
-      return FALSE;   // Unsupported cipher
-
-   pMsg->dwSize = ntohl(pMsg->dwSize);
-   EVP_DecryptInit(&cipher, m_pfCipherList[pCtx->getCipher()](), pCtx->getSessionKey(), pCtx->getIV());
-   EVP_CIPHER_CTX_set_key_length(&cipher, pCtx->getKeyLength());
-   EVP_DecryptUpdate(&cipher, pDecryptionBuffer, &nSize, pMsg->data,
-                     pMsg->dwSize - CSCP_EH_UNENCRYPTED_BYTES - pMsg->nPadding);
-   EVP_DecryptFinal(&cipher, pDecryptionBuffer + nSize, &nSize);
-   EVP_CIPHER_CTX_cleanup(&cipher);
-
-   pClearMsg = (CSCP_MESSAGE *)(pDecryptionBuffer + CSCP_EH_ENCRYPTED_BYTES);
-   dwMsgSize = ntohl(pClearMsg->dwSize);
-   if (dwMsgSize > pMsg->dwSize)
-      return FALSE;  // Message decrypted incorrectly, because it can't be larger than encrypted
-   dwChecksum = CalculateCRC32((BYTE *)pClearMsg, dwMsgSize, 0);
-   if (dwChecksum != ntohl(((CSCP_ENCRYPTED_PAYLOAD_HEADER *)pDecryptionBuffer)->dwChecksum))
-      return FALSE;  // Bad checksum
-
-   memcpy(pMsg, pClearMsg, dwMsgSize);
-   return TRUE;
-#else    /* _WITH_ENCRYPTION */
-   return FALSE;
-#endif
+   return (pCtx != NULL) ? pCtx->decryptMessage(pMsg, pDecryptionBuffer) : NULL;
 }
 
 /**
@@ -527,6 +450,8 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, c
 NXCPEncryptionContext::NXCPEncryptionContext()
 {
 	m_sessionKey = NULL;
+   EVP_CIPHER_CTX_init(&m_encryptor);
+   EVP_CIPHER_CTX_init(&m_decryptor);
 }
 
 /**
@@ -535,6 +460,8 @@ NXCPEncryptionContext::NXCPEncryptionContext()
 NXCPEncryptionContext::~NXCPEncryptionContext()
 {
 	safe_free(m_sessionKey);
+   EVP_CIPHER_CTX_cleanup(&m_encryptor);
+   EVP_CIPHER_CTX_cleanup(&m_decryptor);
 }
 
 /**
@@ -548,27 +475,40 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *priv
    int nSize, nIVLen;
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
-   ctx->m_cipher = msg->GetVariableShort(VID_CIPHER);
-   ctx->m_keyLength = msg->GetVariableShort(VID_KEY_LENGTH);
-   ctx->m_sessionKey = (BYTE *)malloc(ctx->m_keyLength);
-
-   // Decrypt session key
-   dwKeySize = msg->GetVariableBinary(VID_SESSION_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
-   nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
-   if (nSize == ctx->m_keyLength)
+   int cipher = (int)msg->GetVariableShort(VID_CIPHER);
+   if (ctx->initCipher(cipher))
    {
-      memcpy(ctx->m_sessionKey, ucSessionKey, nSize);
-
-      // Decrypt session IV
-      nIVLen = msg->GetVariableShort(VID_IV_LENGTH);
-      if (nIVLen == 0)  // Versions prior to 0.2.13 don't send IV length, assume 16
-         nIVLen = 16;
-      dwKeySize = msg->GetVariableBinary(VID_SESSION_IV, ucKeyBuffer, KEY_BUFFER_SIZE);
-      nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
-      if ((nSize == nIVLen) &&
-          (nIVLen <= EVP_CIPHER_iv_length(m_pfCipherList[ctx->m_cipher]())))
+      if (ctx->m_keyLength == (int)msg->GetVariableShort(VID_KEY_LENGTH))
       {
-         memcpy(ctx->m_iv, ucSessionKey, min(EVP_MAX_IV_LENGTH, nIVLen));
+         ctx->m_sessionKey = (BYTE *)malloc(ctx->m_keyLength);
+
+         // Decrypt session key
+         dwKeySize = msg->GetVariableBinary(VID_SESSION_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
+         nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
+         if (nSize == ctx->m_keyLength)
+         {
+            memcpy(ctx->m_sessionKey, ucSessionKey, nSize);
+
+            // Decrypt session IV
+            nIVLen = msg->GetVariableShort(VID_IV_LENGTH);
+            if (nIVLen == 0)  // Versions prior to 0.2.13 don't send IV length, assume 16
+               nIVLen = 16;
+            dwKeySize = msg->GetVariableBinary(VID_SESSION_IV, ucKeyBuffer, KEY_BUFFER_SIZE);
+            nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
+            if ((nSize == nIVLen) &&
+                (nIVLen <= EVP_CIPHER_iv_length(m_pfCipherList[ctx->m_cipher]())))
+            {
+               memcpy(ctx->m_iv, ucSessionKey, min(EVP_MAX_IV_LENGTH, nIVLen));
+            }
+            else
+            {
+               delete_and_null(ctx);
+            }
+         }
+         else
+         {
+            delete_and_null(ctx);
+         }
       }
       else
       {
@@ -586,6 +526,54 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *priv
 }
 
 /**
+ * Initialize cipher
+ */
+bool NXCPEncryptionContext::initCipher(int cipher)
+{
+#ifdef _WITH_ENCRYPTION
+   if (m_pfCipherList[cipher] == NULL)
+      return false;   // Unsupported cipher
+
+   if (!EVP_EncryptInit_ex(&m_encryptor, m_pfCipherList[cipher](), NULL, NULL, NULL))
+      return false;
+   if (!EVP_DecryptInit_ex(&m_decryptor, m_pfCipherList[cipher](), NULL, NULL, NULL))
+      return false;
+
+   switch(cipher)
+   {
+      case CSCP_CIPHER_AES_256:
+         m_keyLength = 32;
+         break;
+      case CSCP_CIPHER_AES_128:
+         m_keyLength = 16;
+         break;
+      case CSCP_CIPHER_BLOWFISH_256:
+         m_keyLength = 32;
+         break;
+      case CSCP_CIPHER_BLOWFISH_128:
+         m_keyLength = 16;
+         break;
+      case CSCP_CIPHER_IDEA:
+         m_keyLength = 16;
+         break;
+      case CSCP_CIPHER_3DES:
+         m_keyLength = 24;
+         break;
+      default:
+         return false;
+   }
+
+   if (!EVP_CIPHER_CTX_set_key_length(&m_encryptor, m_keyLength) || !EVP_CIPHER_CTX_set_key_length(&m_decryptor, m_keyLength))
+      return false;
+
+   m_cipher = cipher;
+   return true;
+#else
+   return false;
+#endif
+}
+
+/**
  * Create encryption context from CMD_REQUEST_SESSION_KEY NXCP message
  */
 NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
@@ -594,35 +582,42 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
 
 #ifdef _WITH_ENCRYPTION
    // Select cipher
+   bool selected = false;
+
    if (ciphers & CSCP_SUPPORT_AES_256)
    {
-      ctx->m_cipher = CSCP_CIPHER_AES_256;
-      ctx->m_keyLength = 32;
+      selected = ctx->initCipher(CSCP_CIPHER_AES_256);
    }
-   else if (ciphers & CSCP_SUPPORT_BLOWFISH_256)
+   
+   if (!selected && (ciphers & CSCP_SUPPORT_BLOWFISH_256))
    {
-      ctx->m_cipher = CSCP_CIPHER_BLOWFISH_256;
-      ctx->m_keyLength = 32;
+      selected = ctx->initCipher(CSCP_CIPHER_BLOWFISH_256);
    }
-   else if (ciphers & CSCP_SUPPORT_AES_128)
+   
+   if (!selected && (ciphers & CSCP_SUPPORT_AES_128))
    {
-      ctx->m_cipher = CSCP_CIPHER_AES_128;
-      ctx->m_keyLength = 16;
+      selected = ctx->initCipher(CSCP_CIPHER_AES_128);
    }
-   else if (ciphers & CSCP_SUPPORT_BLOWFISH_128)
+   
+   if (!selected && (ciphers & CSCP_SUPPORT_BLOWFISH_128))
    {
-      ctx->m_cipher = CSCP_CIPHER_BLOWFISH_128;
-      ctx->m_keyLength = 16;
+      selected = ctx->initCipher(CSCP_CIPHER_BLOWFISH_128);
    }
-   else if (ciphers & CSCP_SUPPORT_IDEA)
+   
+   if (!selected && (ciphers & CSCP_SUPPORT_IDEA))
    {
-      ctx->m_cipher = CSCP_CIPHER_IDEA;
-      ctx->m_keyLength = 16;
+      selected = ctx->initCipher(CSCP_CIPHER_IDEA);
    }
-   else if (ciphers & CSCP_SUPPORT_3DES)
+   
+   if (!selected && (ciphers & CSCP_SUPPORT_3DES))
    {
-      ctx->m_cipher = CSCP_CIPHER_3DES;
-      ctx->m_keyLength = 24;
+      selected = ctx->initCipher(CSCP_CIPHER_3DES);
+   }
+
+   if (!selected)
+   {
+      delete ctx;
+      return NULL;
    }
 
    // Generate key
@@ -632,4 +627,81 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
 #endif
 
 	return ctx;
+}
+
+/**
+ * Encrypt message
+ */
+CSCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(CSCP_MESSAGE *msg)
+{
+   if (msg->wFlags & m_wNoEncryptionFlag)
+      return (CSCP_ENCRYPTED_MESSAGE *)nx_memdup(msg, ntohl(msg->dwSize));
+
+#ifdef _WITH_ENCRYPTION
+   if (!EVP_EncryptInit_ex(&m_encryptor, NULL, NULL, m_sessionKey, m_iv))
+      return NULL;
+
+   UINT32 msgSize = ntohl(msg->dwSize);
+   CSCP_ENCRYPTED_MESSAGE *emsg = 
+      (CSCP_ENCRYPTED_MESSAGE *)malloc(msgSize + CSCP_ENCRYPTION_HEADER_SIZE + EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(&m_encryptor)) + 8);
+   emsg->wCode = htons(CMD_ENCRYPTED_MESSAGE);
+   emsg->nReserved = 0;
+
+   CSCP_ENCRYPTED_PAYLOAD_HEADER header;
+   header.dwChecksum = htonl(CalculateCRC32((BYTE *)msg, msgSize, 0));
+   header.dwReserved = 0;
+
+   int dataSize;
+   EVP_EncryptUpdate(&m_encryptor, emsg->data, &dataSize, (BYTE *)&header, CSCP_EH_ENCRYPTED_BYTES);
+   msgSize = dataSize;
+   EVP_EncryptUpdate(&m_encryptor, emsg->data + msgSize, &dataSize, (BYTE *)msg, ntohl(msg->dwSize));
+   msgSize += dataSize;
+   EVP_EncryptFinal_ex(&m_encryptor, emsg->data + msgSize, &dataSize);
+   msgSize += dataSize + CSCP_EH_UNENCRYPTED_BYTES;
+
+   if (msgSize % 8 != 0)
+   {
+      emsg->nPadding = (BYTE)(8 - (msgSize % 8));
+      msgSize += emsg->nPadding;
+   }
+   else
+   {
+      emsg->nPadding = 0;
+   }
+   emsg->dwSize = htonl(msgSize);
+
+   return emsg;
+#else    /* _WITH_ENCRYPTION */
+   return NULL;
+#endif
+}
+
+/**
+ * Decrypt message
+ */
+bool NXCPEncryptionContext::decryptMessage(CSCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer)
+{
+#ifdef _WITH_ENCRYPTION
+   if (!EVP_DecryptInit_ex(&m_decryptor, NULL, NULL, m_sessionKey, m_iv))
+      return false;
+
+   msg->dwSize = ntohl(msg->dwSize);
+   int dataSize;
+   EVP_DecryptUpdate(&m_decryptor, decryptionBuffer, &dataSize, msg->data,
+                     msg->dwSize - CSCP_EH_UNENCRYPTED_BYTES - msg->nPadding);
+   EVP_DecryptFinal(&m_decryptor, decryptionBuffer + dataSize, &dataSize);
+
+   CSCP_MESSAGE *clearMsg = (CSCP_MESSAGE *)(decryptionBuffer + CSCP_EH_ENCRYPTED_BYTES);
+   UINT32 msgSize = ntohl(clearMsg->dwSize);
+   if (msgSize > msg->dwSize)
+      return false;  // Message decrypted incorrectly, because it can't be larger than encrypted
+   UINT32 crc32 = CalculateCRC32((BYTE *)clearMsg, msgSize, 0);
+   if (crc32 != ntohl(((CSCP_ENCRYPTED_PAYLOAD_HEADER *)decryptionBuffer)->dwChecksum))
+      return false;  // Bad checksum
+
+   memcpy(msg, clearMsg, msgSize);
+   return true;
+#else    /* _WITH_ENCRYPTION */
+   return false;
+#endif
 }

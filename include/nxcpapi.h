@@ -181,14 +181,20 @@ private:
 	BYTE *m_sessionKey;
 	int m_keyLength;
 	BYTE m_iv[EVP_MAX_IV_LENGTH];
+   EVP_CIPHER_CTX m_encryptor;
+   EVP_CIPHER_CTX m_decryptor;
 
 	NXCPEncryptionContext();
+   bool initCipher(int cipher);
 
 public:
 	static NXCPEncryptionContext *create(CSCPMessage *msg, RSA *privateKey);
 	static NXCPEncryptionContext *create(UINT32 ciphers);
 
 	virtual ~NXCPEncryptionContext();
+
+   CSCP_ENCRYPTED_MESSAGE *encryptMessage(CSCP_MESSAGE *msg);
+   bool decryptMessage(CSCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer);
 
 	int getCipher() { return m_cipher; }
 	BYTE *getSessionKey() { return m_sessionKey; }

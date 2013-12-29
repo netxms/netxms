@@ -100,7 +100,7 @@ public class NXCPMessage
 				payload = ectx.decryptMessage(inputStream, msgLen - padding - ENCRYPTION_HEADER_SIZE);
 			}
 			catch(GeneralSecurityException e)
-			{
+			{		   
 				throw new NXCPException(NXCPException.DECRYPTION_ERROR, e);
 			}
 
