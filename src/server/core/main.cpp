@@ -370,7 +370,7 @@ static BOOL InitCryptografy()
 	UINT32 dwLen;
 	BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
 
-	if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x1F)))
+   if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F), DbgPrintf2))
 		return FALSE;
 
    SSL_library_init();

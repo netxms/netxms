@@ -232,7 +232,7 @@ bool Initialize()
 #endif
 
    // Initialize cryptografy
-   if (!InitCryptoLib(0xFFFF))
+   if (!InitCryptoLib(0xFFFF, DebugPrintf2))
    {
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return false;

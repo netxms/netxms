@@ -372,6 +372,7 @@ void Shutdown();
 void Main();
 void ConsolePrintf(const TCHAR *pszFormat, ...);
 void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...);
+void DebugPrintfCallback(int level, const TCHAR *pszFormat, va_list args);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 

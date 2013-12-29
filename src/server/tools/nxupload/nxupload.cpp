@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
 #ifdef _WITH_ENCRYPTION
       if ((iEncryptionPolicy != ENCRYPTION_DISABLED) && bStart)
       {
-         if (InitCryptoLib(0xFFFF))
+         if (InitCryptoLib(0xFFFF, NULL))
          {
             pServerKey = LoadRSAKeys(szKeyFile);
             if (pServerKey == NULL)

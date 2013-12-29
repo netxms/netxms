@@ -33,11 +33,11 @@ NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
  */
 void DebugPrintf(const TCHAR *format, ...)
 {
-   va_list args;
-   TCHAR buffer[4096];
-
    if (g_pDebugCallBack == NULL)
       return;
+
+   va_list args;
+   TCHAR buffer[4096];
 
    va_start(args, format);
    _vsntprintf(buffer, 4096, format, args);
@@ -46,11 +46,24 @@ void DebugPrintf(const TCHAR *format, ...)
 }
 
 /**
+ * Debug callback for crypto lib
+ */
+static void CryptoLibDebugCallback(int level, const TCHAR *format, va_list args)
+{
+   if (g_pDebugCallBack == NULL)
+      return;
+
+   TCHAR buffer[4096];
+   _vsntprintf(buffer, 4096, format, args);
+   g_pDebugCallBack(buffer);
+}
+
+/**
  * Initialization function
  */
 BOOL LIBNXCL_EXPORTABLE NXCInitialize()
 {
-   return InitCryptoLib(0xFFFF);
+   return InitCryptoLib(0xFFFF, CryptoLibDebugCallback);
 }
 
 /**

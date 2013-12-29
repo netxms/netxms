@@ -58,7 +58,7 @@ static UINT32 m_dwSupportedCiphers =
 #ifdef _WITH_ENCRYPTION
 
 typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
-static CIPHER_FUNC m_pfCipherList[NETXMS_MAX_CIPHERS] =
+static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
 {
 #ifndef OPENSSL_NO_AES
    EVP_aes_256_cbc,
@@ -91,8 +91,10 @@ static CIPHER_FUNC m_pfCipherList[NETXMS_MAX_CIPHERS] =
    NULL
 #endif
 };
-static WORD m_wNoEncryptionFlag = 0;
-static MUTEX *m_pCryptoMutexList = NULL;
+static const TCHAR *s_cipherNames[NETXMS_MAX_CIPHERS] = { _T("AES-256"), _T("Blowfish-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("Blowfish-128") };
+static WORD s_noEncryptionFlag = 0;
+static MUTEX *s_cryptoMutexList = NULL;
+static void (*s_debugCallback)(int, const TCHAR *, va_list args) = NULL;
 
 /**
  * Locking callback for CRYPTO library
@@ -100,9 +102,9 @@ static MUTEX *m_pCryptoMutexList = NULL;
 static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int nLine)
 {
    if (nMode & CRYPTO_LOCK)
-      MutexLock(m_pCryptoMutexList[nLock]);
+      MutexLock(s_cryptoMutexList[nLock]);
    else
-      MutexUnlock(m_pCryptoMutexList[nLock]);
+      MutexUnlock(s_cryptoMutexList[nLock]);
 }
 
 /**
@@ -120,10 +122,26 @@ static unsigned long CryptoIdCallback()
 #endif   /* _WITH_ENCRYPTION */
 
 /**
+ * Debug output
+ */
+static void CryptoDbgPrintf(int level, const TCHAR *format, ...)
+{
+   if (s_debugCallback == NULL)
+      return;
+
+   va_list args;
+   va_start(args, format);
+   s_debugCallback(level, format, args);
+   va_end(args);
+}
+
+/**
  * Initialize OpenSSL library
  */
-BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
+BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args))
 {
+   s_debugCallback = debugCallback;
+
 #ifdef _WITH_ENCRYPTION
    BYTE random[8192];
    int i;
@@ -132,15 +150,38 @@ BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    ERR_load_CRYPTO_strings();
    OpenSSL_add_all_algorithms();
    RAND_seed(random, 8192);
-   m_dwSupportedCiphers &= dwEnabledCiphers;
-   m_wNoEncryptionFlag = htons(MF_DONT_ENCRYPT);
-   m_pCryptoMutexList = (MUTEX *)malloc(sizeof(MUTEX) * CRYPTO_num_locks());
+   s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
+   s_cryptoMutexList = (MUTEX *)malloc(sizeof(MUTEX) * CRYPTO_num_locks());
    for(i = 0; i < CRYPTO_num_locks(); i++)
-      m_pCryptoMutexList[i] = MutexCreate();
+      s_cryptoMutexList[i] = MutexCreate();
    CRYPTO_set_locking_callback(CryptoLockingCallback);
 #ifndef _WIN32
    CRYPTO_set_id_callback(CryptoIdCallback);
 #endif   /* _WIN32 */
+
+   // validate supported ciphers
+   m_dwSupportedCiphers &= dwEnabledCiphers;
+   UINT32 cipherBit = 1;
+   for(i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
+   {
+      if ((m_dwSupportedCiphers & cipherBit) == 0)
+         continue;
+      NXCPEncryptionContext *ctx = NXCPEncryptionContext::create(cipherBit);
+      if (ctx != NULL)
+      {
+         delete ctx;
+      }
+      else
+      {
+         m_dwSupportedCiphers &= ~cipherBit;
+         CryptoDbgPrintf(1, _T("Cipher %s disabled"), s_cipherNames[i]);
+      }
+   }
+
+   CryptoDbgPrintf(1, _T("Crypto library initialized"));
+
+#else
+   CryptoDbgPrintf(1, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
 #endif   /* _WITH_ENCRYPTION */
    return TRUE;
 }
@@ -218,7 +259,7 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
             (*ppResponse)->SetVariable(VID_SESSION_KEY, ucKeyBuffer, (UINT32)size);
             (*ppResponse)->SetVariable(VID_KEY_LENGTH, (WORD)(*ppCtx)->getKeyLength());
             
-            int ivLength = EVP_CIPHER_iv_length(m_pfCipherList[(*ppCtx)->getCipher()]());
+            int ivLength = EVP_CIPHER_iv_length(s_ciphers[(*ppCtx)->getCipher()]());
             if ((ivLength <= 0) || (ivLength > EVP_MAX_IV_LENGTH))
                ivLength = EVP_MAX_IV_LENGTH;
             size = RSA_public_encrypt(ivLength, (*ppCtx)->getIV(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
@@ -370,8 +411,7 @@ BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, UINT32 dwMsgLen, const
 	HCRYPTHASH hHash;
 	BYTE *pTemp;
 
-	if (CryptAcquireCertificatePrivateKey(pCert, CRYPT_ACQUIRE_COMPARE_KEY_FLAG,
-		                                   NULL, &hProv, &dwKeySpec, &bFreeProv))
+	if (CryptAcquireCertificatePrivateKey(pCert, CRYPT_ACQUIRE_COMPARE_KEY_FLAG, NULL, &hProv, &dwKeySpec, &bFreeProv))
 	{
 		if (CryptCreateHash(hProv, CALG_SHA1, NULL, 0, &hHash))
 		{
@@ -496,27 +536,31 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *priv
             dwKeySize = msg->GetVariableBinary(VID_SESSION_IV, ucKeyBuffer, KEY_BUFFER_SIZE);
             nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
             if ((nSize == nIVLen) &&
-                (nIVLen <= EVP_CIPHER_iv_length(m_pfCipherList[ctx->m_cipher]())))
+                (nIVLen <= EVP_CIPHER_iv_length(s_ciphers[ctx->m_cipher]())))
             {
                memcpy(ctx->m_iv, ucSessionKey, min(EVP_MAX_IV_LENGTH, nIVLen));
             }
             else
             {
+               CryptoDbgPrintf(6, _T("NXCPEncryptionContext::create: IV decryption failed"));
                delete_and_null(ctx);
             }
          }
          else
          {
+            CryptoDbgPrintf(6, _T("NXCPEncryptionContext::create: session key decryption failed"));
             delete_and_null(ctx);
          }
       }
       else
       {
+         CryptoDbgPrintf(6, _T("NXCPEncryptionContext::create: key length mismatch (remote: %d local: %d)"), (int)msg->GetVariableShort(VID_KEY_LENGTH), ctx->m_keyLength);
          delete_and_null(ctx);
       }
    }
    else
    {
+      CryptoDbgPrintf(6, _T("NXCPEncryptionContext::create: initCipher(%d) call failed"), cipher);
       delete_and_null(ctx);
    }
 	return ctx;
@@ -531,12 +575,12 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *priv
 bool NXCPEncryptionContext::initCipher(int cipher)
 {
 #ifdef _WITH_ENCRYPTION
-   if (m_pfCipherList[cipher] == NULL)
+   if (s_ciphers[cipher] == NULL)
       return false;   // Unsupported cipher
 
-   if (!EVP_EncryptInit_ex(&m_encryptor, m_pfCipherList[cipher](), NULL, NULL, NULL))
+   if (!EVP_EncryptInit_ex(&m_encryptor, s_ciphers[cipher](), NULL, NULL, NULL))
       return false;
-   if (!EVP_DecryptInit_ex(&m_decryptor, m_pfCipherList[cipher](), NULL, NULL, NULL))
+   if (!EVP_DecryptInit_ex(&m_decryptor, s_ciphers[cipher](), NULL, NULL, NULL))
       return false;
 
    switch(cipher)
@@ -564,6 +608,11 @@ bool NXCPEncryptionContext::initCipher(int cipher)
    }
 
    if (!EVP_CIPHER_CTX_set_key_length(&m_encryptor, m_keyLength) || !EVP_CIPHER_CTX_set_key_length(&m_decryptor, m_keyLength))
+      return false;
+
+   // This check is needed because at least some OpenSSL versions return no error
+   // from EVP_CIPHER_CTX_set_key_length but still not change key length
+   if ((EVP_CIPHER_CTX_key_length(&m_encryptor) != m_keyLength) || (EVP_CIPHER_CTX_key_length(&m_decryptor) != m_keyLength))
       return false;
 
    m_cipher = cipher;
@@ -634,7 +683,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
  */
 CSCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(CSCP_MESSAGE *msg)
 {
-   if (msg->wFlags & m_wNoEncryptionFlag)
+   if (msg->wFlags & s_noEncryptionFlag)
       return (CSCP_ENCRYPTED_MESSAGE *)nx_memdup(msg, ntohl(msg->dwSize));
 
 #ifdef _WITH_ENCRYPTION

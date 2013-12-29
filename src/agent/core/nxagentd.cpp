@@ -550,20 +550,6 @@ static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file,
 }
 
 /**
- * Debug callback for DB library
- */
-static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
-{
-	if (level <= (int)g_debugLevel)
-	{
-      TCHAR buffer[4096];
-
-      _vsntprintf(buffer, 4096, format, args);
-      nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
-	}
-}
-
-/**
  * Parser server list
  */
 static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
@@ -699,7 +685,7 @@ BOOL Initialize()
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
-   if (!InitCryptoLib(m_dwEnabledCiphers))
+   if (!InitCryptoLib(m_dwEnabledCiphers, DebugPrintfCallback))
    {
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;
@@ -742,7 +728,7 @@ BOOL Initialize()
 	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", m_szProcessToWait);
 	}
 
-	DBSetDebugPrintCallback(DBLibraryDebugCallback);
+	DBSetDebugPrintCallback(DebugPrintfCallback);
 	DBInit(MSG_DB_LIBRARY, MSG_SQL_ERROR);
 
 	// Load other subagents

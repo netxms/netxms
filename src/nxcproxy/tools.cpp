@@ -54,3 +54,16 @@ void DebugPrintf(int level, const TCHAR *pszFormat, ...)
       nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
    }
 }
+
+/**
+ * Print debug messages
+ */
+void DebugPrintf2(int level, const TCHAR *pszFormat, va_list args)
+{
+   if (level <= (int)g_debugLevel)
+   {
+      TCHAR szBuffer[4096];
+      _vsntprintf(szBuffer, 4096, pszFormat, args);
+      nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
+   }
+}

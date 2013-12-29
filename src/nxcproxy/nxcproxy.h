@@ -96,6 +96,7 @@ void Shutdown();
 
 void ConsolePrintf(const TCHAR *pszFormat, ...);
 void DebugPrintf(int level, const TCHAR *pszFormat, ...);
+void DebugPrintf2(int level, const TCHAR *pszFormat, va_list args);
 
 #ifdef _WIN32
 

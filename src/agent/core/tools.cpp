@@ -60,6 +60,19 @@ void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
 }
 
 /**
+ * Print debug messages - callback for libraries
+ */
+void DebugPrintfCallback(int level, const TCHAR *pszFormat, va_list args)
+{
+   if (level <= (int)g_debugLevel)
+   {
+      TCHAR szBuffer[4096];
+      _vsntprintf(szBuffer, 4096, pszFormat, args);
+      nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
+   }
+}
+
+/**
  * Build full path for file in file store
  */
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
