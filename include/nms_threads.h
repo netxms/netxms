@@ -281,7 +281,7 @@ extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
 // Inline functions
 //
 
-inline void InitThreadLibrary(void)
+inline void InitThreadLibrary()
 {
    if (!pth_init())
    {

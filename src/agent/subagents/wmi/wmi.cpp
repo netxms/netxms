@@ -388,8 +388,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 /**
  * Entry point for NetXMS agent
  */
-extern "C" BOOL __declspec(dllexport) __cdecl 
-   NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+DECLARE_SUBAGENT_ENTRY_POINT(WMI)
 {
    *ppInfo = &m_info;
    return TRUE;
