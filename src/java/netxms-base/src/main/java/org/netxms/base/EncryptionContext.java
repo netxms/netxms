@@ -27,6 +27,7 @@ import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.zip.CRC32;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -42,6 +43,8 @@ public final class EncryptionContext
 	private static final String[] CIPHERS = { "AES", "Blowfish", null, null, "AES", "Blowfish" };
 	private static int[] KEY_LENGTHS = { 256, 256, 0, 0, 128, 128 };
 	private static final String CIPHER_MODE = "/CBC/PKCS5Padding";
+	private static final byte[] TEST_BYTES = "Test String".getBytes();
+	private static final boolean[] cipherTests;
 
 	private int cipher;
 	private int keyLength;
@@ -49,6 +52,13 @@ public final class EncryptionContext
 	private Cipher decryptor;
 	private SecretKey key;
 	private IvParameterSpec iv;
+	
+	static
+	{
+	   cipherTests = new boolean[CIPHERS.length];
+	   for(int i = 0; i < CIPHERS.length; i++)
+	      cipherTests[i] = testCipher(i);
+	}
 	
 	/**
 	 * Get cipher name
@@ -69,6 +79,63 @@ public final class EncryptionContext
 	}
 	
 	/**
+	 * @param bs
+	 * @param bytes
+	 * @throws IOException
+	 */
+	private static void safeWriteBytes(ByteArrayOutputStream bs, byte[] bytes) throws IOException
+	{
+	   if (bytes != null)
+	      bs.write(bytes);
+	}
+	
+	/**
+	 * Test cipher with given ID
+	 * 
+	 * @param cipherId
+	 * @return
+	 */
+	public static boolean testCipher(int cipherId)
+	{
+	   if (CIPHERS[cipherId] == null)
+	      return false;
+	   
+	   try
+	   {
+         KeyGenerator keyGen = KeyGenerator.getInstance(CIPHERS[cipherId]);
+         keyGen.init(KEY_LENGTHS[cipherId]);
+         SecretKey key = keyGen.generateKey();
+         
+         Cipher cipher = Cipher.getInstance(CIPHERS[cipherId] + CIPHER_MODE);
+         
+         int blockSize = cipher.getBlockSize();
+         byte[] ivBytes = new byte[(blockSize > 0) ? blockSize : 16];
+         SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+         random.nextBytes(ivBytes);
+         IvParameterSpec iv = new IvParameterSpec(ivBytes);
+         
+         ByteArrayOutputStream bs = new ByteArrayOutputStream(128);
+	   
+         cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+         safeWriteBytes(bs, cipher.update(TEST_BYTES));
+         safeWriteBytes(bs, cipher.doFinal());
+         byte[] encryptedBytes = bs.toByteArray();
+         
+         bs.reset();
+         cipher = Cipher.getInstance(CIPHERS[cipherId] + CIPHER_MODE);
+         cipher.init(Cipher.DECRYPT_MODE, key, iv);
+         safeWriteBytes(bs, cipher.update(encryptedBytes));
+         safeWriteBytes(bs, cipher.doFinal());
+         
+         return Arrays.equals(TEST_BYTES, bs.toByteArray());
+	   }
+	   catch(Exception e)
+	   {
+	      return false;
+	   }
+	}
+	
+	/**
 	 * Create encryption context based on information from session key request message.
 	 * 
 	 * @param request session key request message
@@ -81,7 +148,7 @@ public final class EncryptionContext
 		int selectedCipher = -1;
 		for(int i = 0; i < CIPHERS.length; i++)
 		{
-			if ((CIPHERS[i] == null) || ((serverCiphers & (1 << i)) == 0))  // not supported by client or server
+			if ((CIPHERS[i] == null) || !cipherTests[i] || ((serverCiphers & (1 << i)) == 0))  // not supported by client or server
 				continue;
 			
 			try

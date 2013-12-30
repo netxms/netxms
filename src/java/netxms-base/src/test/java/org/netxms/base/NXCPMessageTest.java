@@ -71,9 +71,18 @@ public class NXCPMessageTest extends TestCase
 		assertEquals(true, Arrays.equals(byteTest, msg2.findVariable(5).getAsBinary()));
 	}
 	
+	/**
+	 * Do encryption test for given cipher ID
+	 * 
+	 * @param cipher cipher ID
+	 * @throws Exception
+	 */
 	private void doEncryptionTest(int cipher) throws Exception
 	{
 	   System.out.println("==== " + EncryptionContext.getCipherName(cipher) + " ====");
+	   
+	   assertTrue(EncryptionContext.testCipher(cipher));
+	   System.out.println("   Cipher test passed");
 	   
       final NXCPMessage msg1 = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, 2);
       msg1.setVariableInt32(NXCPCodes.VID_RCC, 0);
