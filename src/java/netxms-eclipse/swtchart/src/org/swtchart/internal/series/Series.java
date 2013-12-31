@@ -29,7 +29,6 @@ import org.swtchart.internal.compress.ICompress;
  */
 abstract public class Series implements ISeries
 {
-
 	/** the default series type */
 	protected static final SeriesType DEFAULT_SERIES_TYPE = SeriesType.LINE;
 
@@ -755,4 +754,20 @@ abstract public class Series implements ISeries
 	{
 		return (name != null) ? name : id;
 	}
+
+   /**
+    * @return the minY
+    */
+   public double getMinY()
+   {
+      return minY;
+   }
+
+   /**
+    * @return the maxY
+    */
+   public double getMaxY()
+   {
+      return maxY;
+   }
 }
