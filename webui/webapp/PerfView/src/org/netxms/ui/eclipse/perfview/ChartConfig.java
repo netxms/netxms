@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +49,9 @@ public class ChartConfig
 	
 	@Element(required = false)
 	private boolean showLegend = true;
+	
+	@Element(required = false)
+	private boolean extendedLegend = true;
 	
 	@Element(required = false)
 	private boolean showTitle = false;
@@ -667,5 +670,21 @@ public class ChartConfig
    public void setTranslucent(boolean translucent)
    {
       this.translucent = translucent;
+   }
+
+   /**
+    * @return the extendedLegend
+    */
+   public boolean isExtendedLegend()
+   {
+      return extendedLegend;
+   }
+
+   /**
+    * @param extendedLegend the extendedLegend to set
+    */
+   public void setExtendedLegend(boolean extendedLegend)
+   {
+      this.extendedLegend = extendedLegend;
    }
 }

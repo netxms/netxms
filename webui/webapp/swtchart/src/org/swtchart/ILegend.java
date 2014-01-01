@@ -112,4 +112,14 @@ public interface ILegend {
      * @return the rectangle associated with the given series id in pixels.
      */
     Rectangle getBounds(String seriesId);
+    
+    /**
+    * @return
+    */
+   public boolean isExtended();
+    
+   /**
+    * @param extended
+    */
+   public void setExtended(boolean extended);
 }

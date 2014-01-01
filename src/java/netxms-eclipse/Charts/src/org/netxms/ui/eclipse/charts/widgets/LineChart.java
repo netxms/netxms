@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -965,5 +965,28 @@ public class LineChart extends Chart implements HistoricalDataChart
    public boolean isStacked()
    {
       return stacked;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setExtendedLegend(boolean)
+    */
+   @Override
+   public void setExtendedLegend(boolean extended)
+   {
+      getLegend().setExtended(extended);
+      if (isLegendVisible())
+      {
+         updateLayout();
+         redraw();
+      }
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#isExtendedLegend()
+    */
+   @Override
+   public boolean isExtendedLegend()
+   {
+      return getLegend().isExtended();
    }
 }

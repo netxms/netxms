@@ -148,7 +148,7 @@ public class Chart extends Composite implements Listener
 
 		for(Control child : getChildren())
 		{
-			if (!(child instanceof PlotArea) && !(child instanceof Legend))
+			if (!(child instanceof PlotArea))
 			{
 				child.setBackground(color);
 			}

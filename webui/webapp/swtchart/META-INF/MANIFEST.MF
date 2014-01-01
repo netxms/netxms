@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SWTChart Plug-in
 Bundle-SymbolicName: org.swtchart;singleton:=true
-Bundle-Version: 0.7.10
+Bundle-Version: 0.7.11
 Require-Bundle: org.eclipse.rap.rwt;bundle-version="2.0.0"
 Export-Package: org.swtchart
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

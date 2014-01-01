@@ -142,7 +142,7 @@ public class Chart extends Canvas implements Listener
 
 		for(Control child : getChildren())
 		{
-			if (!(child instanceof PlotArea) && !(child instanceof Legend))
+			if (!(child instanceof PlotArea))
 			{
 				child.setBackground(color);
 			}

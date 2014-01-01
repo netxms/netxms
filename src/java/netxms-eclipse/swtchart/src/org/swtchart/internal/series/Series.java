@@ -50,6 +50,9 @@ abstract public class Series implements ISeries
 	/** the maximum value of y series */
 	protected double maxY;
 
+   /** the average value of y series */
+   protected double avgY;
+
 	/** the series id */
 	protected String id;
 
@@ -286,9 +289,10 @@ abstract public class Series implements ISeries
 			return;
 		}
 
-		// find the min and max value of y series
+		// find the min, max, and average value of y series
 		minY = ySeries[0];
 		maxY = ySeries[0];
+		double sum = ySeries[0];
 		for(int i = 1; i < ySeries.length; i++)
 		{
 			if (minY > ySeries[i])
@@ -299,7 +303,9 @@ abstract public class Series implements ISeries
 			{
 				maxY = ySeries[i];
 			}
+			sum += ySeries[i];
 		}
+		avgY = sum / ySeries.length;
 
 		if (xSeries == null || xSeries.length != series.length)
 		{
@@ -769,5 +775,13 @@ abstract public class Series implements ISeries
    public double getMaxY()
    {
       return maxY;
+   }
+
+   /**
+    * @return the avgY
+    */
+   public double getAvgY()
+   {
+      return avgY;
    }
 }

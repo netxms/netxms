@@ -30,7 +30,6 @@ import org.swtchart.IBarSeries;
 import org.swtchart.ILegend;
 import org.swtchart.ILineSeries;
 import org.swtchart.ISeries;
-import org.swtchart.internal.series.LineSeries;
 import org.swtchart.internal.series.Series;
 
 /**
@@ -52,9 +51,6 @@ public class Legend extends Canvas implements ILegend, PaintListener
 
    /** the width of area to draw symbol */
    private static final int SYMBOL_WIDTH = 20;
-
-   /** the line width */
-   private static final int LINE_WIDTH = 2;
 
    /** the default foreground */
    private static final Color DEFAULT_FOREGROUND = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
@@ -421,6 +417,13 @@ public class Legend extends Canvas implements ILegend, PaintListener
       gc.drawRectangle(x, y, size, size);
    }
    
+   /**
+    * Draw extended info (min, max, average value)
+    * 
+    * @param gc
+    * @param series
+    * @param r
+    */
    private void drawExtendedInfo(GC gc, Series series, Rectangle r)
    {
       int shift = Util.getExtentInGC(getFont(), "Max: 000000.000000").x;
@@ -429,7 +432,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
       gc.drawText(String.format("Max: %1.2f", series.getMaxY()), x, r.y, true);
       x += shift;
 
-      gc.drawText("Avg: 0.000", x, r.y, true);
+      gc.drawText(String.format("Avg: %1.2f", series.getAvgY()), x, r.y, true);
       x += shift;
 
       gc.drawText(String.format("Min: %1.2f", series.getMinY()), x, r.y, true);
@@ -452,14 +455,6 @@ public class Legend extends Canvas implements ILegend, PaintListener
       {
          return;
       }
-
-      // draw frame
-      /*
-      gc.setLineStyle(SWT.LINE_SOLID);
-      gc.setLineWidth(1);
-      gc.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_GRAY));
-      gc.drawRectangle(0, 0, getSize().x - 1, getSize().y - 1);
-      */
 
       // draw content
       for(int i = 0; i < seriesArray.length; i++)

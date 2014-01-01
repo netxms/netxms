@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -113,4 +113,18 @@ public interface HistoricalDataChart extends DataChart
 	 * @return
 	 */
 	public abstract boolean isStacked();
+	
+	/**
+	 * Set extended legend mode (when legend shows min, max, and average values)
+	 * 
+	 * @param extended
+	 */
+	public void setExtendedLegend(boolean extended);
+	
+	/**
+	 * Get current settings for extended legend mode
+	 * 
+	 * @return
+	 */
+	public boolean isExtendedLegend();
 }

@@ -28,7 +28,6 @@ import org.swtchart.internal.axis.AxisTitle;
  */
 public class ChartLayout extends Layout
 {
-
    /** the title height */
    private int titleHeight;
 

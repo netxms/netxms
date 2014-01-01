@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,6 +106,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionStacked;
    private Action actionTranslucent;
    private Action actionShowLegend;
+   private Action actionExtendedLegend;
    private Action actionLegendLeft;
    private Action actionLegendRight;
    private Action actionLegendTop;
@@ -590,13 +591,22 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            config.setShowLegend(!config.isShowLegend());
-            setChecked(config.isShowLegend());
+            config.setShowLegend(actionShowLegend.isChecked());
             chart.setLegendVisible(config.isShowLegend());
          }
       };
       actionShowLegend.setChecked(config.isShowLegend());
 
+      actionExtendedLegend = new Action("&Extended legend") {
+         @Override
+         public void run()
+         {
+            config.setExtendedLegend(actionExtendedLegend.isChecked());
+            chart.setExtendedLegend(config.isExtendedLegend());
+         }
+      };
+      actionExtendedLegend.setChecked(config.isExtendedLegend());
+      
       actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
@@ -705,6 +715,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       MenuManager legend = new MenuManager("&Legend");
       legend.add(actionShowLegend);
+      legend.add(actionExtendedLegend);
       legend.add(new Separator());
       legend.add(actionLegendLeft);
       legend.add(actionLegendRight);
@@ -745,6 +756,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       MenuManager legend = new MenuManager("&Legend");
       legend.add(actionShowLegend);
+      legend.add(actionExtendedLegend);
       legend.add(new Separator());
       legend.add(actionLegendLeft);
       legend.add(actionLegendRight);

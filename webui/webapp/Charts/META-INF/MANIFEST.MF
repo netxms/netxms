@@ -10,7 +10,7 @@ Require-Bundle: org.netxms.webui.core;bundle-version="1.2.11",
  org.eclipse.birt.chart.engine;bundle-version="3.7.2",
  org.eclipse.birt.chart.device.extension;bundle-version="3.7.2",
  org.eclipse.birt.chart.engine.extension;bundle-version="3.7.2",
- org.swtchart;bundle-version="0.7.10",
+ org.swtchart;bundle-version="0.7.11",
  org.netxms.rap.draw2d;bundle-version="1.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
