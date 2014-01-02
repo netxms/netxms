@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,8 +68,7 @@ public class NetworkMapElement extends ElementWidget
 		{
 			mapWidget = new NetworkMapWidget(this, SWT.NONE);
 			mapWidget.setContent(mapObject);
+	      mapWidget.zoomTo((double)config.getZoomLevel() / 100.0);
 		}
-		
-		mapWidget.zoomTo((double)config.getZoomLevel() / 100.0);
 	}
 }
