@@ -46,6 +46,10 @@
 
 #include "sock.h"
 
+#ifndef T_SRV
+#define T_SRV (33)
+#endif
+
 void sock_initialize(void)
 {
 #ifdef _WIN32
