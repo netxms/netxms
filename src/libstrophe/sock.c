@@ -133,7 +133,8 @@ int sock_set_blocking(const sock_t sock)
     u_long block = 0;
     return ioctlsocket(sock, FIONBIO, &block);
 #else
-    return fcntl(sock, F_SETFL, 0);
+   int f = fcntl(sock, F_GETFL);
+   return (f != -1) ? fcntl(sock, F_SETFL, f & ~O_NONBLOCK) : -1;
 #endif
 }
 
@@ -143,7 +144,8 @@ int sock_set_nonblocking(const sock_t sock)
     u_long nonblock = 1;
     return ioctlsocket(sock, FIONBIO, &nonblock);
 #else
-    return fcntl(sock, F_SETFL, O_NONBLOCK);
+   int f = fcntl(sock, F_GETFL);
+   return (f != -1) ? fcntl(sock, F_SETFL, f | O_NONBLOCK) : -1;
 #endif
 }
 
