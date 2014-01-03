@@ -22,6 +22,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nxstat.h>
 
 #ifdef _WIN32
 #define read	_read
@@ -499,13 +500,11 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *msgBuffer
 	                         (decryptionBuffer != NULL) ? &db : NULL, dwTimeout, bufferSize);
 }
 
-
-//
-// Create CSCP message with raw data (MF_BINARY flag)
-// If pBuffer is NULL, new buffer is allocated with malloc()
-// Buffer should be of dwDataSize + CSCP_HEADER_SIZE + 8 bytes.
-//
-
+/**
+ * Create NXCP message with raw data (MF_BINARY flag)
+ * If pBuffer is NULL, new buffer is allocated with malloc()
+ * Buffer should be of dwDataSize + CSCP_HEADER_SIZE + 8 bytes.
+ */
 CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId, WORD wFlags,
                                                         UINT32 dwDataSize, void *pData, 
                                                         CSCP_MESSAGE *pBuffer)
@@ -552,14 +551,9 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
    {
       if(sizeLimit > 0)
       {
-         #ifdef _WIN32
-                  struct _stat fs;
-         #else
-                  struct stat st;
-         #endif
-         //debug
-         fstat(hFile, &st);
-         fileSize = st.st_size;
+         NX_STAT_STRUCT st;
+         NX_FSTAT(hFile, &st);
+         fileSize = (long)st.st_size;
          sendFileSize = (fileSize - offset) > fileSize ? (0 - offset) : (fileSize - offset);
          offset = sendFileSize > sizeLimit ?  - sizeLimit : offset;
       }

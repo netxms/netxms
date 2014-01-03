@@ -461,7 +461,7 @@ struct MONITORED_FILE
    int monitoringCount;
 };
 
-struct FolowData
+struct FollowData
 {
    const TCHAR *pszFile;
    long offset;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,15 @@
 **/
 
 #include "nxagentd.h"
+#include <nxstat.h>
+
+#ifdef _WIN32
+#include <share.h>
+
+#define read _read
+#define close _close
+
+#endif
 
 /**
  * Max NXCP message size
@@ -114,24 +123,20 @@ void MonitoredFileList::Unlock()
    MutexUnlock(m_mutex);
 };
 
-THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void* args)
+THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 {
-   FolowData* flData = (reinterpret_cast<FolowData*>(args));
+   FollowData *flData = (reinterpret_cast<FollowData*>(args));
    int hFile, threadSleepTime = 1;
    BYTE* readBytes = NULL;
    BOOL bResult = FALSE;
    CSCPMessage *pMsg;
-   UINT32 readSize, rcc;
+   UINT32 readSize;
 
    bool follow = true;
    hFile = _topen(flData->pszFile, O_RDONLY | O_BINARY);
-   #ifdef _WIN32
-            struct _stat fs;
-   #else
-            struct stat st;
-   #endif
-   fstat(hFile, &st);
-   flData->offset = st.st_size;
+   NX_STAT_STRUCT st;
+   NX_FSTAT(hFile, &st);
+   flData->offset = (long)st.st_size;
    ThreadSleep(threadSleepTime);
    int headerSize = CSCP_HEADER_SIZE + MAX_PATH*2;
 
@@ -143,8 +148,8 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void* args)
    }
    while (follow)
    {
-      fstat(hFile, &st);
-      long newOffset = st.st_size;
+      NX_FSTAT(hFile, &st);
+      long newOffset = (long)st.st_size;
       if(flData->offset < newOffset)
       {
          readSize = newOffset - flData->offset;
@@ -176,7 +181,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void* args)
             flData->offset = newOffset;
 
             MutexLock(g_hSessionListAccess);
-            for(int i = 0; i < g_dwMaxSessions; i++)
+            for(UINT32 i = 0; i < g_dwMaxSessions; i++)
             {
                if (g_pSessionList[i] != NULL)
                {

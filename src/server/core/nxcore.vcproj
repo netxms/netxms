@@ -569,6 +569,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\filemonitoring.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\graph.cpp"
 				>
 			</File>

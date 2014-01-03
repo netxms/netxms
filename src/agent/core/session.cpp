@@ -716,7 +716,7 @@ void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
       {
          TCHAR* fName = _tcsdup(fileName);
          g_monitorFileList.addMonitoringFile(fName);
-         FolowData *flData = new FolowData();
+         FollowData *flData = new FollowData();
          flData->cbArg = this;
          flData->pszFile = fName;
          flData->offset = 0;
