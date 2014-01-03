@@ -43,7 +43,7 @@ void FileMonitoringList::addMonitoringFile(MONITORED_FILE *fileForAdd)
    unlock();
 };
 
-bool FileMonitoringList::checkDublicate(MONITORED_FILE *fileForAdd)
+bool FileMonitoringList::checkDuplicate(MONITORED_FILE *fileForAdd)
 {
    bool result = false;
    lock();
@@ -61,7 +61,7 @@ bool FileMonitoringList::checkDublicate(MONITORED_FILE *fileForAdd)
    return result;
 };
 
-ObjectArray<ClientSession>* FileMonitoringList::findClientByFNameAndNodID(const TCHAR *fileName, UINT32 nodeID)
+ObjectArray<ClientSession>* FileMonitoringList::findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID)
 {
    lock();
    ObjectArray<ClientSession> *result = new ObjectArray<ClientSession>;

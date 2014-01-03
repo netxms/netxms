@@ -93,7 +93,7 @@ bool FileDownloadJob::run()
    newFile->nodeID = m_node->Id();
    newFile->session = m_session;
 
-   if(g_monitoringList.checkDublicate(newFile))
+   if(g_monitoringList.checkDuplicate(newFile))
    {
       m_follow = false;
    }

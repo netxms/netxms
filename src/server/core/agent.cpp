@@ -218,7 +218,7 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 	if (object != NULL)
 	{
       pMsg->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
-      ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodID(remoteFile, object->Id());
+      ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->Id());
       for(int i = 0; i < result->size(); i++)
       {
          result->get(i)->sendMessage(pMsg);

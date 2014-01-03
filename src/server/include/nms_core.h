@@ -941,8 +941,8 @@ public:
    FileMonitoringList();
    ~FileMonitoringList();
    void addMonitoringFile(MONITORED_FILE *fileForAdd);
-   bool checkDublicate(MONITORED_FILE *fileForAdd);
-   ObjectArray<ClientSession>* findClientByFNameAndNodID(const TCHAR *fileName, UINT32 nodeID);
+   bool checkDuplicate(MONITORED_FILE *fileForAdd);
+   ObjectArray<ClientSession>* findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID);
    bool removeMonitoringFile(MONITORED_FILE *fileForRemove);
    void removeDisconectedNode(UINT32 nodeId);
 
