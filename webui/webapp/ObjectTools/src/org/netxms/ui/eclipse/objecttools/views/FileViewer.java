@@ -24,22 +24,20 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * File viewer
@@ -54,7 +52,7 @@ public class FileViewer extends ViewPart
 	private Text textViewer;
 	private final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	private boolean follow;
-	private ConsoleJob job;
+	private ConsoleJob monitorJob;
 	
 
 	/* (non-Javadoc)
@@ -115,13 +113,14 @@ public class FileViewer extends ViewPart
 		currentFile = file;
 		textViewer.setText(loadFile(currentFile));
 		this.follow = follow;
-		if(follow){
-   		job = new ConsoleJob("Download file updates from agent", null, Activator.PLUGIN_ID, null) {
-   
+		if (follow)
+		{
+   		monitorJob = new ConsoleJob("Download file updates from agent", null, Activator.PLUGIN_ID, null) {
    		   private boolean continueWork = true;
    		   
    		   @Override
-   		   protected void canceling() {
+   		   protected void canceling() 
+   		   {
    		      continueWork = false;
    		   }
    		   
@@ -131,19 +130,18 @@ public class FileViewer extends ViewPart
                while(continueWork)
                {
                   final String s = session.waitForFileTail(remoteFileName, 3000);
-                  if(s!=null)
+                  if (s != null)
                   {
                      runInUIThread(new Runnable() {                  
                         @Override
                         public void run()
                         {
-                           if(!textViewer.isDisposed())
+                           if (!textViewer.isDisposed())
                            {
                               textViewer.append(s); 
                            }
                         }
-                     }); 
-
+                     });
                   }                    
                }
             }
@@ -153,30 +151,42 @@ public class FileViewer extends ViewPart
             {
                return String.format(Messages.get().ObjectToolsDynamicMenu_DownloadError, remoteFileName, nodeId);
             }
-   		
    		};
-   		job.start();
+   		monitorJob.setUser(false);
+   		monitorJob.setSystem(true);
+   		monitorJob.start();
 		}
       
 	}
    
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
    @Override
    public void dispose()
    {
-      if(follow){
-         try
-         {
-            session.cancelFileMonitoring(nodeId, remoteFileName);
-         }
-         catch(Exception e)
-         {
-            e.printStackTrace();
-         }
-         job.cancel();
+      if (follow)
+      {
+         monitorJob.cancel();
+         final ConsoleJob job = new ConsoleJob("Stop file monitor", null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               session.cancelFileMonitoring(nodeId, remoteFileName);
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot stop file monitor";
+            }
+         };
+         job.setUser(false);
+         job.setSystem(true);
+         job.start();
       }
       super.dispose();
    }
-   
 	
 	/**
 	 * @param file
