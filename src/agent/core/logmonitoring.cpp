@@ -170,13 +170,12 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             readSize = read(hFile, readBytes, readSize);
             DebugPrintf(INVALID_INDEX, 6, _T("SendFileUpdatesOverNXCP: %d bytes will be sent."), readSize);
 #ifdef UNICODE
-            TCHAR* text;
-            text = WideStringFromMBString((char*)readBytes);
+            TCHAR *text = WideStringFromMBString((char *)readBytes);
             pMsg->SetVariable(VID_FILE_DATA, text, readSize);
+            free(text);
 #else
-            pMsg->SetVariable(VID_FILE_DATA, (TCHAR*)readBytes, readSize);
+            pMsg->SetVariable(VID_FILE_DATA, (char *)readBytes, readSize);
 #endif
-
 
             flData->offset = newOffset;
 

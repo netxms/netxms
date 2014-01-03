@@ -149,6 +149,8 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
          char line[256];
          if (fgets(line, 256, in) == NULL)
             break;
+         if (!strncmp(line, "rootfs /", 8))
+            continue;
 
          table->addRow();
 
@@ -223,6 +225,8 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
          char line[256];
          if (fgets(line, 256, in) == NULL)
             break;
+         if (!strncmp(line, "rootfs /", 8))
+            continue;
          char *ptr = strchr(line, ' ');
          if (ptr != NULL)
          {
