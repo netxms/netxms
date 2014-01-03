@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -27,11 +27,6 @@
 #define read	_read
 #define close	_close
 #endif
-
-/**
- * Constants
- */
-#define FILE_BUFFER_SIZE      32768
 
 /**
  * Get symbolic name for message code
@@ -323,10 +318,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_QUERY_SUMMARY_TABLE"),
       _T("CMD_SHUTDOWN"),
       _T("CMD_SNMP_TRAP"),
-      _T("CMD_GET_SUBNET_ADDRESS_MAP")
+      _T("CMD_GET_SUBNET_ADDRESS_MAP"),
+      _T("CMD_FILE_MONITORING"),
+      _T("CMD_CANCEL_FILE_MONITORING")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_SUBNET_ADDRESS_MAP))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_CANCEL_FILE_MONITORING))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);
@@ -538,11 +535,12 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId,
  * Send file over CSCP
  */
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
-                                           NXCPEncryptionContext *pCtx, long offset,
+                                           NXCPEncryptionContext *pCtx, long offset, long sizeLimit,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex)
 {
    int hFile, iBytes;
+   long fileSize, sendFileSize;
 	INT64 bytesTransferred = 0;
    UINT32 dwPadding;
    BOOL bResult = FALSE;
@@ -552,6 +550,19 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
    hFile = _topen(pszFile, O_RDONLY | O_BINARY);
    if (hFile != -1)
    {
+      if(sizeLimit > 0)
+      {
+         #ifdef _WIN32
+                  struct _stat fs;
+         #else
+                  struct stat st;
+         #endif
+         //debug
+         fstat(hFile, &st);
+         fileSize = st.st_size;
+         sendFileSize = (fileSize - offset) > fileSize ? (0 - offset) : (fileSize - offset);
+         offset = sendFileSize > sizeLimit ?  - sizeLimit : offset;
+      }
 		if (lseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) != -1)
 		{
 			// Allocate message and prepare it's header

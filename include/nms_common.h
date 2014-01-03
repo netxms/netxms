@@ -128,6 +128,8 @@
 #define MD5_DIGEST_SIZE       16
 #define SHA1_DIGEST_SIZE      20
 
+#define FILE_BUFFER_SIZE      32768
+
 /**
  * Compatibility defines for C sources
  */

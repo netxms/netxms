@@ -328,6 +328,7 @@ private:
    void action(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void cancelFileMonitoring(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg);
    UINT32 upgrade(CSCPMessage *pRequest);
    UINT32 setupProxyConnection(CSCPMessage *pRequest);
@@ -351,7 +352,7 @@ public:
 
    void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
    void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
-	bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
+	bool sendFile(UINT32 requestId, const TCHAR *file, long offset, long sizeLimit);
 
 	UINT32 getServerAddress() { return m_dwHostAddr; }
 
@@ -451,6 +452,43 @@ void StartStorageDiscoveryConnector();
 void StartControlConnector();
 bool SendControlMessage(CSCPMessage *msg);
 
+/**
+ * File monitoring
+ */
+struct MONITORED_FILE
+{
+   TCHAR fileName[MAX_PATH];
+   int monitoringCount;
+};
+
+struct FolowData
+{
+   const TCHAR *pszFile;
+   long offset;
+	void *cbArg;
+};
+
+class MonitoredFileList
+{
+private:
+   MUTEX m_mutex;
+   ObjectArray<MONITORED_FILE>  m_monitoredFiles;
+   MONITORED_FILE* m_newFile;
+
+public:
+   MonitoredFileList();
+   ~MonitoredFileList();
+   void addMonitoringFile(const TCHAR *fileName);
+   bool checkFileMonitored(const TCHAR *fileName);
+   bool removeMonitoringFile(const TCHAR *fileName);
+
+private:
+   void Lock();
+   void Unlock();
+};
+
+THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *arg);
+
 #ifdef _WIN32
 
 void InitService();
@@ -501,6 +539,7 @@ extern UINT32 g_dwRejectedConnections;
 
 extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
+extern MonitoredFileList g_monitorFileList;
 
 #ifdef _WIN32
 extern TCHAR g_windowsEventSourceName[];

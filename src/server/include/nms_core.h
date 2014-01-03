@@ -282,6 +282,7 @@ protected:
    virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(CSCPMessage *msg);
    virtual void onDataPush(CSCPMessage *msg);
+   virtual void onFileMonitoringData(CSCPMessage *msg);
 
 public:
    AgentConnectionEx(UINT32 nodeId, UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
@@ -438,6 +439,7 @@ private:
 	DECLARE_THREAD_STARTER(createObject)
 	DECLARE_THREAD_STARTER(getServerFile)
 	DECLARE_THREAD_STARTER(getAgentFile)
+	DECLARE_THREAD_STARTER(cancelFileMonitoring)
 	DECLARE_THREAD_STARTER(queryServerLog)
 	DECLARE_THREAD_STARTER(getServerLogQueryData)
 	DECLARE_THREAD_STARTER(executeAction)
@@ -599,6 +601,7 @@ private:
 	void getConfigCLOB(CSCPMessage *pRequest);
 	void registerAgent(CSCPMessage *pRequest);
 	void getServerFile(CSCPMessage *pRequest);
+	void cancelFileMonitoring(CSCPMessage *request);
 	void getAgentFile(CSCPMessage *pRequest);
 	void testDCITransformation(CSCPMessage *pRequest);
 	void sendJobList(UINT32 dwRqId);
@@ -666,7 +669,7 @@ public:
    void sendMessage(CSCPMessage *pMsg);
    void sendRawMessage(CSCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
-	BOOL sendFile(const TCHAR *file, UINT32 dwRqId);
+	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long sizeLimit);
 
    UINT32 getIndex() { return m_dwIndex; }
    void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
@@ -918,6 +921,37 @@ bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message);
 #endif
 
 /**
+ * File monitoring
+ */
+struct MONITORED_FILE
+{
+   TCHAR fileName[MAX_PATH];
+   ClientSession *session;
+   UINT32 nodeID;
+};
+
+class FileMonitoringList
+{
+private:
+   MUTEX m_mutex;
+   ObjectArray<MONITORED_FILE>  m_monitoredFiles;
+   MONITORED_FILE* m_monitoredFile;
+
+public:
+   FileMonitoringList();
+   ~FileMonitoringList();
+   void addMonitoringFile(MONITORED_FILE *fileForAdd);
+   bool checkDublicate(MONITORED_FILE *fileForAdd);
+   ObjectArray<ClientSession>* findClientByFNameAndNodID(const TCHAR *fileName, UINT32 nodeID);
+   bool removeMonitoringFile(MONITORED_FILE *fileForRemove);
+   void removeDisconectedNode(UINT32 nodeId);
+
+private:
+   void lock();
+   void unlock();
+};
+
+/**
  * Global variables
  */
 extern TCHAR NXCORE_EXPORTABLE g_szConfigFile[];
@@ -961,5 +995,6 @@ extern Queue *g_pLazyRequestQueue;
 extern Queue *g_pIDataInsertQueue;
 
 extern int NXCORE_EXPORTABLE g_nDBSyntax;
+extern FileMonitoringList g_monitoringList;
 
 #endif   /* _nms_core_h_ */

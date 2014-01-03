@@ -125,6 +125,7 @@ UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
 UINT32 g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 Config *g_config;
+MonitoredFileList g_monitorFileList;
 #ifdef _WIN32
 UINT32 g_dwIdleTimeout = 60;   // Session idle timeout
 #else
@@ -541,12 +542,11 @@ static void LoadPlatformSubagent()
 /**
  * Send file to server (subagent API)
  */
-static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
+static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, long sizeLimit)
 {
 	if (session == NULL)
 		return false;
-
-	return ((CommSession *)session)->sendFile(requestId, file, offset);
+	return ((CommSession *)session)->sendFile(requestId, file, offset, sizeLimit);
 }
 
 /**

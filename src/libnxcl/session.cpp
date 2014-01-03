@@ -848,9 +848,9 @@ UINT32 NXCL_Session::LoadUserDB(void)
 // Send file to server
 //
 
-UINT32 NXCL_Session::SendFile(UINT32 dwRqId, TCHAR *pszFileName)
+UINT32 NXCL_Session::SendFile(UINT32 dwRqId, TCHAR *pszFileName, long sizeLimit)
 {
-   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, 0, NULL, NULL, m_mutexSendMsg) ? RCC_SUCCESS : RCC_IO_ERROR;
+   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, 0, sizeLimit, NULL, NULL, m_mutexSendMsg) ? RCC_SUCCESS : RCC_IO_ERROR;
 }
 
 

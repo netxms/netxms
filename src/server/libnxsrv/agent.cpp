@@ -299,6 +299,10 @@ void AgentConnection::receiverThread()
 				case CMD_REQUEST_COMPLETED:
 					m_pMsgWaitQueue->put(pMsg);
 					break;
+            case CMD_FILE_MONITORING:
+               onFileMonitoringData(pMsg);
+					delete pMsg;
+               break;
 				default:
 					if (processCustomMessage(pMsg))
 						delete pMsg;
@@ -523,7 +527,7 @@ void AgentConnection::disconnect()
 		m_hCurrFile = -1;
 		onFileDownload(FALSE);
 	}
-	
+
    if (m_hSocket != -1)
    {
       shutdown(m_hSocket, SHUT_RDWR);
@@ -848,6 +852,14 @@ void AgentConnection::onDataPush(CSCPMessage *pMsg)
 }
 
 /**
+ * Monitoring data handler. Should be overriden in derived classes to implement
+ * actual monitoring data processing. Default implementation do nothing.
+ */
+void AgentConnection::onFileMonitoringData(CSCPMessage *pMsg)
+{
+}
+
+/**
  * Custom message handler
  * If returns true, message considered as processed and will not be placed in wait queue
  */
@@ -1064,7 +1076,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    {
 		m_fileUploadInProgress = true;
 		NXCPEncryptionContext *ctx = acquireEncryptionContext();
-      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, 0, progressCallback, cbArg, m_mutexSocketWrite))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;

@@ -167,6 +167,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
    // Received files
    private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
+   
+   // Received file updates(for file monitoring)
+   private Map<String, String> recievdUpdates = new HashMap<String, String>();
 
    // Server information
    private String serverVersion = "(unknown)";
@@ -552,6 +555,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                   case NXCPCodes.CMD_FILE_DATA:
                      processFileData(msg);
                      break;
+                  case NXCPCodes.CMD_FILE_MONITORING:
+                     processFileTail(msg);
+                     break;
                   case NXCPCodes.CMD_ABORT_FILE_TRANSFER:
                      processFileTransferError(msg);
                      break;
@@ -688,6 +694,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
          long data = msg.getVariableAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
          sendNotification(new NXCNotification(code, data));
+      }
+      
+      /**
+       * Process CMD_FILE_MONITORING message
+       *
+       * @param msg NXCP message
+       */
+      private void processFileTail(final NXCPMessage msg)
+      {
+         String fileName = msg.getVariableAsString(NXCPCodes.VID_FILE_NAME);
+         String fileContent = msg.getVariableAsString(NXCPCodes.VID_FILE_DATA);
+         
+         synchronized(recievdUpdates)
+         {
+            recievdUpdates.put(fileName, fileContent);
+            recievdUpdates.notifyAll();
+         }
       }
 
       /**
@@ -1280,6 +1303,43 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          }
       }
       return file;
+   }
+   
+   /**
+    * Wait for specific file tail to arrive
+    *
+    * @param fileName      Waiting file name
+    * @param timeout       Wait timeout in milliseconds
+    * @return Received tail string or null in case of failure
+    */
+   public String waitForFileTail(String fileName, final int timeout)
+   {
+      int timeRemaining = timeout;
+      String tail = null;
+
+      while(timeRemaining > 0)
+      {
+         synchronized(recievdUpdates)
+         {
+            tail = recievdUpdates.get(fileName);
+            if (tail != null)
+            {
+               recievdUpdates.remove(fileName);
+               break;
+            }
+
+            long startTime = System.currentTimeMillis();
+            try
+            {
+               recievdUpdates.wait(timeRemaining);
+            }
+            catch(InterruptedException e)
+            {
+            }
+            timeRemaining -= System.currentTimeMillis() - startTime;
+         }
+      }
+      return tail;
    }
 
    /**
@@ -5769,15 +5829,34 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public File downloadFileFromAgent(long nodeId, String remoteFileName) throws IOException, NXCException
+   public File downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariable(NXCPCodes.VID_FILE_NAME, remoteFileName);
+      msg.setVariableInt32(NXCPCodes.VID_FILE_SIZE_LIMIT , (int)maxFileSize);
+      msg.setVariableInt16(NXCPCodes.VID_FILE_FOLLOW, follow ? 1 : 0);
       sendMessage(msg);
       waitForRCC(msg.getMessageId()); // first confirmation - server job started
       waitForRCC(msg.getMessageId()); // second confirmation - file downloaded to server
       return waitForFile(msg.getMessageId(), 3600000);
+   }
+   
+   /**
+    * Cancel file monitoring
+    *
+    * @param nodeId         node object ID
+    * @param remoteFileName fully qualified file name on remote system
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void cancelFileMonitoring(long nodeId, String remoteFileName) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_FILE_MONITORING);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setVariable(NXCPCodes.VID_FILE_NAME, remoteFileName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**

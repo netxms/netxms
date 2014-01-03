@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -29,7 +29,7 @@
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
-static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
+static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, long) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32) = NULL;
 
 /**
@@ -38,7 +38,7 @@ static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32) = NULL;
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
 														void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
 														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
+														bool (* sendFile)(void *, UINT32, const TCHAR *, long, long),
 														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32))
 {
    s_fpWriteLog = writeLog;
@@ -253,11 +253,11 @@ BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, W
 /**
  * Send file to server
  */
-BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
+BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, long sizeLimit)
 {
 	if ((s_fpSendFile == NULL) || (session == NULL) || (file == NULL))
 		return FALSE;
-	return s_fpSendFile(session, requestId, file, offset);
+	return s_fpSendFile(session, requestId, file, offset, sizeLimit);
 }
 
 /**

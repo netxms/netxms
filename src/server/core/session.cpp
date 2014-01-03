@@ -144,6 +144,7 @@ DEFINE_THREAD_STARTER(sendSyslog)
 DEFINE_THREAD_STARTER(createObject)
 DEFINE_THREAD_STARTER(getServerFile)
 DEFINE_THREAD_STARTER(getAgentFile)
+DEFINE_THREAD_STARTER(cancelFileMonitoring)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(getServerLogQueryData)
 DEFINE_THREAD_STARTER(executeAction)
@@ -1187,6 +1188,9 @@ void ClientSession::processingThread()
 			case CMD_GET_AGENT_FILE:
 				CALL_IN_NEW_THREAD(getAgentFile, pMsg);
 				break;
+         case CMD_CANCEL_FILE_MONITORING:
+				CALL_IN_NEW_THREAD(cancelFileMonitoring, pMsg);
+				break;
 			case CMD_TEST_DCI_TRANSFORMATION:
 				testDCITransformation(pMsg);
 				break;
@@ -1493,9 +1497,9 @@ void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
 /**
  * Send file to client
  */
-BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId)
+BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long sizeLimit)
 {
-	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite);
+	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, sizeLimit, NULL, NULL, m_mutexSocketWrite);
 }
 
 /**
@@ -4106,7 +4110,7 @@ void ClientSession::sendMib(CSCPMessage *request)
    // Send compiled MIB file
    _tcscpy(szBuffer, g_szDataDir);
    _tcscat(szBuffer, DFILE_COMPILED_MIB);
-	sendFile(szBuffer, request->GetId());
+	sendFile(szBuffer, request->GetId(), 0);
 }
 
 
@@ -10108,7 +10112,7 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 		if (_taccess(fname, 0) == 0)
 		{
 			debugPrintf(5, _T("Sending file %s"), name);
-			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite))
+			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, 0, NULL, NULL, m_mutexSocketWrite))
 			{
 				debugPrintf(5, _T("File %s was succesfully sent"), name);
 		      msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -10153,7 +10157,8 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 			{
 				request->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
 				FileDownloadJob::buildServerFileName(object->Id(), remoteFile, localFile, MAX_PATH);
-				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, this, request->GetId());
+				bool follow = request->GetVariableShort(VID_FILE_FOLLOW);
+				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->GetVariableLong(VID_FILE_SIZE_LIMIT), follow, this, request->GetId());
 				msg.SetVariable(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
 			}
 			else
@@ -10171,6 +10176,72 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
+   sendMessage(&msg);
+}
+
+/**
+ * Get file from agent
+ */
+void ClientSession::cancelFileMonitoring(CSCPMessage *request)
+{
+   CSCPMessage msg;
+   CSCPMessage* response;
+	TCHAR remoteFile[MAX_PATH];
+	UINT32 rcc = 0xFFFFFFFF;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+	if (object != NULL)
+	{
+      if (object->Type() == OBJECT_NODE)
+      {
+         request->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
+
+         MONITORED_FILE * newFile = new MONITORED_FILE();
+         _tcscpy(newFile->fileName, remoteFile);
+         newFile->nodeID = object->Id();
+         newFile->session = this;
+         g_monitoringList.removeMonitoringFile(newFile);
+         delete newFile;
+
+         Node *node = (Node *)object;
+         node->incRefCount();
+         AgentConnection *conn = node->createAgentConnection();
+         if(conn != NULL)
+         {
+            request->SetId(conn->generateRequestId());
+            response = conn->customRequest(request);
+            if (response != NULL)
+            {
+               rcc = response->GetVariableLong(VID_RCC);
+               msg.SetVariable(VID_RCC, rcc);
+               debugPrintf(6, _T("File monitoring canceled sucessfully"));
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+            }
+            delete response;
+            delete conn;
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+            debugPrintf(6, _T("Connection with node have been lost"));
+         }
+         node->decRefCount();
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
    sendMessage(&msg);
 }
 
@@ -10912,7 +10983,7 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 	sendMessage(&msg);
 
 	if (rcc == RCC_SUCCESS)
-		sendFile(absFileName, request->GetId());
+		sendFile(absFileName, request->GetId(), 0);
 }
 
 void ClientSession::onLibraryImageChange(uuid_t *guid, bool removed)
@@ -11911,7 +11982,7 @@ void ClientSession::renderReport(CSCPMessage *request)
 
 	if (ret == 0)
 	{
-		sendFile(outputFileName, request->GetId());
+		sendFile(outputFileName, request->GetId(), 0);
 	}
 }
 

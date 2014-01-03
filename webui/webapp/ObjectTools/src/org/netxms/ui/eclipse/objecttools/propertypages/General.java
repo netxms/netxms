@@ -32,6 +32,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -44,10 +45,12 @@ public class General extends PropertyPage
 	private LabeledText textName;
 	private LabeledText textDescription;
 	private LabeledText textData;
+	private LabeledText maxFileLenght;
 	private LabeledText textParameter;
 	private LabeledText textRegexp;
 	private Button checkOutput;
 	private Button checkConfirmation;
+	private Button follow;
 	private LabeledText textConfirmation;
 	private Button radioIndexOID;
 	private Button radioIndexValue;
@@ -119,7 +122,23 @@ public class General extends PropertyPage
 				textData.setLabel(Messages.get().General_URL);
 				break;
 			case ObjectTool.TYPE_FILE_DOWNLOAD:
+			   String[] parameters = objectTool.getData().split("\u007F"); //$NON-NLS-1$
+			   
 				textData.setLabel(Messages.get().General_RemoteFileName);
+				textData.setText((parameters.length > 0) ? parameters[0] : ""); //$NON-NLS-1$
+				
+		      maxFileLenght  = new LabeledText(dialogArea, SWT.NONE);
+		      maxFileLenght.setLayoutData(gd);
+				maxFileLenght.setLabel("Maximum file download size");
+				maxFileLenght.setText((parameters.length > 1) ? parameters[1] : ""); //$NON-NLS-1$
+							
+				follow = new Button(dialogArea, SWT.CHECK);
+				follow.setText("Get file updates");
+				if(parameters.length > 2) //$NON-NLS-1$
+				{
+				   follow.setSelection( parameters[2].equals("true") ? true : false);  //$NON-NLS-1$
+				}	
+				
 				break;
 			case ObjectTool.TYPE_TABLE_SNMP:
 				textData.setLabel(Messages.get().General_Title);
@@ -241,7 +260,15 @@ public class General extends PropertyPage
 		}
 		else
 		{
-			objectTool.setData(textData.getText());
+		   if(objectTool.getType() == ObjectTool.TYPE_FILE_DOWNLOAD)
+   		{
+		      String tmp = maxFileLenght.getText() == "" ? "0" : maxFileLenght.getText(); //$NON-NLS-1$ //$NON-NLS-2$
+		      objectTool.setData(textData.getText() + "\u007F" + tmp + "\u007F" + follow.getSelection()); //$NON-NLS-1$ //$NON-NLS-2$
+   		}
+		   else
+		   {
+		      objectTool.setData(textData.getText());
+		   }
 		}
 		
 		if (checkConfirmation.getSelection())
@@ -296,6 +323,19 @@ public class General extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
+	   if(objectTool.getType() == ObjectTool.TYPE_FILE_DOWNLOAD && maxFileLenght.getText() != "")
+	   {
+	      try
+	      {
+	         int n = Integer.parseInt(maxFileLenght.getText());
+	      }
+	      catch(NumberFormatException e)
+	      {
+	         MessageDialogHelper.openWarning(getShell(), Messages.get().EditColumnDialog_Warning, "As maximum lenght should be given integre value in bytes.");
+	         return false;
+	      }
+	   }
+	   
 		applyChanges(false);
 		return true;
 	}

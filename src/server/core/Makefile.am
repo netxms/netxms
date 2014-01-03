@@ -12,7 +12,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			dcobject.cpp dcst.cpp dctable.cpp dctarget.cpp \
 			dctcolumn.cpp dctthreshold.cpp debug.cpp \
 			download_job.cpp ef.cpp email.cpp entirenet.cpp \
-			epp.cpp events.cpp evproc.cpp fdb.cpp graph.cpp hk.cpp \
+			epp.cpp events.cpp evproc.cpp fdb.cpp filemonitoring.cpp graph.cpp hk.cpp \
 			id.cpp import.cpp index.cpp interface.cpp isc.cpp job.cpp \
 			jobmgr.cpp jobqueue.cpp layer2.cpp lln.cpp lldp.cpp \
 			locks.cpp logfilter.cpp loghandle.cpp logs.cpp \

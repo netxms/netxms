@@ -1,9 +1,11 @@
 *.aps
 *.bak
+*.cbp
 *.iml
 *.ipr
 *.iws
 *.la
+*.layout
 *.lo
 *.ncb
 *.nlm

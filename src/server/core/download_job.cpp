@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -25,7 +25,7 @@
 /**
  * Constructor for download job
  */
-FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, ClientSession *session, UINT32 requestId)
+FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId)
                 : ServerJob(_T("DOWNLOAD_FILE"), _T("Download file"), node->Id(), session->getUserId(), false)
 {
 	m_session = session;
@@ -49,6 +49,9 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, ClientSess
 	m_info = _tcsdup(buffer);
 
 	setAutoCancelDelay(60);
+
+	m_maxFileSize = maxFileSize;
+	m_follow = follow;
 }
 
 /**
@@ -84,6 +87,16 @@ bool FileDownloadJob::run()
 	AgentConnection *conn;
 	UINT32 rcc = 0xFFFFFFFF;
 	bool success = false;
+
+   MONITORED_FILE * newFile = new MONITORED_FILE();
+   _tcscpy(newFile->fileName, m_remoteFile);
+   newFile->nodeID = m_node->Id();
+   newFile->session = m_session;
+
+   if(g_monitoringList.checkDublicate(newFile))
+   {
+      m_follow = false;
+   }
 
 	conn = m_node->createAgentConnection();
 	if (conn != NULL)
@@ -129,6 +142,11 @@ bool FileDownloadJob::run()
 						DbgPrintf(5, _T("FileDownloadJob: File %s already exist, requesting download from offset %u"), m_localFile, (UINT32)fs.st_size);
 					}
 				}
+
+            //default - get parameters
+
+            msg.SetVariable(VID_FILE_SIZE_LIMIT, m_maxFileSize);
+            msg.SetVariable(VID_FILE_FOLLOW, (INT16)m_follow);
 
 				response = conn->customRequest(&msg, m_localFile, appendFile, progressCallback, this);
 				if (response != NULL)
@@ -182,7 +200,11 @@ bool FileDownloadJob::run()
 	{
 	   response.SetVariable(VID_RCC, RCC_SUCCESS);
 		m_session->sendMessage(&response);
-		m_session->sendFile(m_localFile, m_requestId);
+		m_session->sendFile(m_localFile, m_requestId, m_maxFileSize);
+		if(m_follow)
+		{
+         g_monitoringList.addMonitoringFile(newFile);
+		}
 	}
 	else
 	{

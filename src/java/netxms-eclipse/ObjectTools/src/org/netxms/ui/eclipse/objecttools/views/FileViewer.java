@@ -25,16 +25,21 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * File viewer
@@ -46,7 +51,11 @@ public class FileViewer extends ViewPart
 	private long nodeId;
 	private String remoteFileName;
 	private File currentFile;
-	private StyledText textViewer;
+	private Text textViewer;
+	private final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+	private boolean follow;
+	private ConsoleJob job;
+	
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -62,7 +71,7 @@ public class FileViewer extends ViewPart
 			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		nodeId = Long.parseLong(parts[0]);
-		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
+		AbstractObject object = session.findObjectById(nodeId);
 		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
 			throw new PartInitException(Messages.get().FileViewer_InvalidObjectID);
 		
@@ -84,7 +93,7 @@ public class FileViewer extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		textViewer = new StyledText(parent, SWT.H_SCROLL | SWT.V_SCROLL);
+		textViewer = new Text(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 		textViewer.setEditable(false);
 		textViewer.setFont(JFaceResources.getTextFont());
 	}
@@ -101,11 +110,73 @@ public class FileViewer extends ViewPart
 	/**
 	 * @param file
 	 */
-	public void showFile(File file)
+	public void showFile(File file, boolean follow)
 	{
 		currentFile = file;
 		textViewer.setText(loadFile(currentFile));
+		this.follow = follow;
+		if(follow){
+   		job = new ConsoleJob("Download file updates from agent", null, Activator.PLUGIN_ID, null) {
+   
+   		   private boolean continueWork = true;
+   		   
+   		   @Override
+   		   protected void canceling() {
+   		      continueWork = false;
+   		   }
+   		   
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               while(continueWork)
+               {
+                  final String s = session.waitForFileTail(remoteFileName, 3000);
+                  if(s!=null)
+                  {
+                     runInUIThread(new Runnable() {                  
+                        @Override
+                        public void run()
+                        {
+                           if(!textViewer.isDisposed())
+                           {
+                              textViewer.append(s); 
+                           }
+                        }
+                     }); 
+
+                  }                    
+               }
+            }
+   
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format(Messages.get().ObjectToolsDynamicMenu_DownloadError, remoteFileName, nodeId);
+            }
+   		
+   		};
+   		job.start();
+		}
+      
 	}
+   
+   @Override
+   public void dispose()
+   {
+      if(follow){
+         try
+         {
+            session.cancelFileMonitoring(nodeId, remoteFileName);
+         }
+         catch(Exception e)
+         {
+            e.printStackTrace();
+         }
+         job.cancel();
+      }
+      super.dispose();
+   }
+   
 	
 	/**
 	 * @param file

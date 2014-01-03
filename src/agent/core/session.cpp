@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -225,7 +225,7 @@ void CommSession::readThread()
 
                         close(m_hCurrFile);
                         m_hCurrFile = -1;
-                  
+
                         msg.SetCode(CMD_REQUEST_COMPLETED);
                         msg.SetId(pRawMsg->dwId);
                         msg.SetVariable(VID_RCC, ERR_SUCCESS);
@@ -239,7 +239,7 @@ void CommSession::readThread()
 
                      close(m_hCurrFile);
                      m_hCurrFile = -1;
-               
+
                      msg.SetCode(CMD_REQUEST_COMPLETED);
                      msg.SetId(pRawMsg->dwId);
                      msg.SetVariable(VID_RCC, ERR_IO_FAILURE);
@@ -431,6 +431,9 @@ void CommSession::processingThread()
                break;
             case CMD_GET_AGENT_FILE:
                getLocalFile(pMsg, &msg);
+               break;
+            case CMD_CANCEL_FILE_MONITORING:
+               cancelFileMonitoring(pMsg, &msg);
                break;
             case CMD_GET_FILE_DETAILS:
                getFileDetails(pMsg, &msg);
@@ -708,7 +711,17 @@ void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 	{
 		TCHAR fileName[MAX_PATH];
 		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
-		sendFile(pRequest->GetId(), fileName, pRequest->GetVariableLong(VID_FILE_OFFSET));
+		bool result = sendFile(pRequest->GetId(), fileName, pRequest->GetVariableLong(VID_FILE_OFFSET), pRequest->GetVariableLong(VID_FILE_SIZE_LIMIT));
+		if(pRequest->GetVariableShort(VID_FILE_FOLLOW) != 0 && result)
+      {
+         TCHAR* fName = _tcsdup(fileName);
+         g_monitorFileList.addMonitoringFile(fName);
+         FolowData *flData = new FolowData();
+         flData->cbArg = this;
+         flData->pszFile = fName;
+         flData->offset = 0;
+         ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void*)flData);
+      }
 		pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
 	}
 	else
@@ -717,6 +730,29 @@ void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 	}
 }
 
+/**
+ * Cancel file monitoring
+ */
+void CommSession::cancelFileMonitoring(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+	if (m_bMasterServer)
+	{
+		TCHAR fileName[MAX_PATH];
+		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+      if(g_monitorFileList.removeMonitoringFile(fileName))
+      {
+         pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
+      }
+      else
+      {
+         pMsg->SetVariable(VID_RCC, ERR_BAD_ARGUMENTS);
+      }
+	}
+	else
+	{
+		pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+	}
+}
 
 //
 // Get local file details
@@ -813,9 +849,9 @@ static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 	((CommSession *)cbArg)->updateTimeStamp();
 }
 
-bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset)
+bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, long sizeLimit)
 {
-	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
+	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, sizeLimit, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
 }
 
 
@@ -855,7 +891,7 @@ void CommSession::getConfig(CSCPMessage *pMsg)
 {
    if (m_bMasterServer)
    {
-      pMsg->SetVariable(VID_RCC, 
+      pMsg->SetVariable(VID_RCC,
          pMsg->SetVariableFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
    }
    else

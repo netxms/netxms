@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** NXCP API
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
@@ -230,7 +230,7 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId,
                                                         CSCP_MESSAGE *pBuffer);
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
-                                           NXCPEncryptionContext *pCtx, long offset,
+                                           NXCPEncryptionContext *pCtx, long offset, long sizeLimit,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex);
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);

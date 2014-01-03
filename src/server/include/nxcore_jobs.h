@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
@@ -191,6 +191,8 @@ private:
 	TCHAR *m_info;
 	INT64 m_fileSize;
 	SOCKET m_socket;
+	UINT32 m_maxFileSize;
+	bool m_follow;
 
 protected:
 	virtual bool run();
@@ -200,7 +202,7 @@ protected:
 	static void progressCallback(size_t size, void *arg);
 
 public:
-	FileDownloadJob(Node *node, const TCHAR *remoteName, ClientSession *session, UINT32 requestId);
+	FileDownloadJob(Node *node, const TCHAR *remoteName, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId);
 	virtual ~FileDownloadJob();
 
 	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);

@@ -64,4 +64,5 @@ typedef struct
    char szMessage[MAX_LOG_MSG_LENGTH];
 } NX_SYSLOG_RECORD;
 
+
 #endif

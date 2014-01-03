@@ -308,6 +308,8 @@ public class NXCPCodes
 	public static final int CMD_SHUTDOWN = 0x011A;
 	public static final int CMD_SNMP_TRAP = 0x011B;
 	public static final int CMD_GET_SUBNET_ADDRESS_MAP = 0x011C;
+	public static final int CMD_FILE_MONITORING = 0x011D;
+	public static final int CMD_CANCEL_FILE_MONITORING = 0x011E;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -775,6 +777,9 @@ public class NXCPCodes
    public static final long VID_REQUEST_ID = 455;
    public static final long VID_ADDRESS_MAP = 456;
    public static final long VID_XMPP_ID = 457;
+   public static final long VID_FILE_SIZE_LIMIT = 458;
+   public static final long VID_FILE_FOLLOW = 459;
+   public static final long VID_FILE_DATA = 460;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

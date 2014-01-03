@@ -190,7 +190,7 @@ public:
    CSCP_MESSAGE *WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut = 0);
    UINT32 WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut = 0);
    UINT32 CreateRqId(void) { return m_dwMsgId++; }
-   UINT32 SendFile(UINT32 dwRqId, TCHAR *pszFileName);
+   UINT32 SendFile(UINT32 dwRqId, TCHAR *pszFileName, long sizeLimit);
    UINT32 SimpleCommand(WORD wCmd);
 
    void callEventHandler(UINT32 dwEvent, UINT32 dwCode, void *pArg);

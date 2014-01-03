@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -92,7 +92,7 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 						 pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
 						 pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
 						 pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
-	      
+
 			// Cleanup
 			for(i = 0; i < iNumArgs; i++)
 				free(pszArgList[i]);
@@ -199,6 +199,35 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
    va_start(args, format);
    DbgPrintf2(6, format, args);
    va_end(args);
+}
+
+/*
+ * Recieve file monitoring information and resend to all required user sessions
+ */
+void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
+{
+   UINT32 rqId, rcc;
+	TCHAR remoteFile[MAX_PATH], localFile[MAX_PATH];
+	BYTE *pConfig;
+   UINT32 dwSize;
+
+   rqId = pMsg->GetId();
+	NetObj *object = NULL;
+	if (m_nodeId != 0)
+		object = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+	if (object != NULL)
+	{
+      pMsg->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
+      ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodID(remoteFile, object->Id());
+      for(int i = 0; i < result->size(); i++)
+      {
+         result->get(i)->sendMessage(pMsg);
+      }
+	}
+	else
+	{
+		g_monitoringList.removeDisconectedNode(m_nodeId);
+	}
 }
 
 /**

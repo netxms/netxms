@@ -467,6 +467,7 @@ protected:
    virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(CSCPMessage *pMsg);
 	virtual void onDataPush(CSCPMessage *msg);
+	virtual void onFileMonitoringData(CSCPMessage *msg);
 	virtual bool processCustomMessage(CSCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
 

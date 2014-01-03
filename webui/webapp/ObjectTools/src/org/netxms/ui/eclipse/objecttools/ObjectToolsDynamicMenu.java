@@ -399,7 +399,11 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	private void executeFileDownload(final AbstractNode node, final ObjectTool tool)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final String fileName = substituteMacros(tool.getData(), node);
+		String[] parameters = tool.getData().split("\u007F");
+		
+		final String fileName = substituteMacros(parameters[0], node);
+		final int maxFileSize = Integer.parseInt(parameters[1]);
+		final boolean follow = parameters[2].equals("true") ? true : false;
 		
 		ConsoleJob job = new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
 			@Override
@@ -411,7 +415,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final File file = session.downloadFileFromAgent(node.getObjectId(), fileName);
+				final File file = session.downloadFileFromAgent(node.getObjectId(), fileName, maxFileSize, follow); 
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -421,7 +425,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 						{
 							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
 							FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-							view.showFile(file);
+							view.showFile(file, follow);
 						}
 						catch(Exception e)
 						{

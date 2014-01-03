@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Client Library
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
@@ -172,7 +172,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_IN
    // If everything is OK, send package file to server
    if (dwResult == RCC_SUCCESS)
    {
-      dwResult = ((NXCL_Session *)hSession)->SendFile(dwRqId, pszFullPkgPath);
+      dwResult = ((NXCL_Session *)hSession)->SendFile(dwRqId, pszFullPkgPath, 0);
       if (dwResult == RCC_SUCCESS)
       {
          // Wait for final confirmation
