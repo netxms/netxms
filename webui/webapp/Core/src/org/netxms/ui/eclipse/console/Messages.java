@@ -73,11 +73,6 @@ public class Messages extends NLS
 	public String ApplicationActionBarAdvisor_AboutText;
 	public String ApplicationActionBarAdvisor_ConfirmRestart;
 	public String ApplicationActionBarAdvisor_FullScreen;
-	public String ApplicationActionBarAdvisor_LangChinese;
-	public String ApplicationActionBarAdvisor_LangEnglish;
-	public String ApplicationActionBarAdvisor_LangRussian;
-	public String ApplicationActionBarAdvisor_LangSpanish;
-	public String ApplicationActionBarAdvisor_Language;
 	public String ApplicationActionBarAdvisor_Configuration;
 	public String ApplicationActionBarAdvisor_File;
 	public String ApplicationActionBarAdvisor_Help;

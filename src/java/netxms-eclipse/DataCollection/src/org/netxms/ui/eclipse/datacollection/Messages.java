@@ -207,9 +207,12 @@ public class Messages extends NLS
 	public static String EditThresholdDialog_NE;
 	public static String EditThresholdDialog_Never;
 	public static String EditThresholdDialog_NOTLIKE;
-	public static String EditThresholdDialog_RepeatEvent;
+	public static String EditThresholdDialog_OpenScriptEditor;
+   public static String EditThresholdDialog_Operation;
+   public static String EditThresholdDialog_RepeatEvent;
 	public static String EditThresholdDialog_RepeatInterval;
 	public static String EditThresholdDialog_Samples;
+   public static String EditThresholdDialog_Script;
 	public static String EditThresholdDialog_Seconds;
 	public static String EditThresholdDialog_Sum;
 	public static String EditThresholdDialog_Title;
@@ -231,6 +234,7 @@ public class Messages extends NLS
 	public static String General_FixedIntervals;
 	public static String General_InterpretRawValue;
 	public static String General_None;
+   public static String General_NoStorage;
 	public static String General_NotSupported;
 	public static String General_Origin;
 	public static String General_Parameter;
@@ -268,6 +272,7 @@ public class Messages extends NLS
 	public static String GeneralTable_Disabled;
 	public static String GeneralTable_FixedIntervals;
 	public static String GeneralTable_None;
+   public static String GeneralTable_NoStorage;
 	public static String GeneralTable_NotSupported;
 	public static String GeneralTable_Origin;
 	public static String GeneralTable_Parameter;

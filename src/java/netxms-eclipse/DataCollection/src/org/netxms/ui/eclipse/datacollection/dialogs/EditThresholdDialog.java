@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@ public class EditThresholdDialog extends Dialog
 		function.add(Messages.get().EditThresholdDialog_Diff);
 		function.add(Messages.get().EditThresholdDialog_DCError);
 		function.add(Messages.get().EditThresholdDialog_Sum);
-      function.add("Script");
+      function.add(Messages.get().EditThresholdDialog_Script);
 		function.select(threshold.getFunction());
 		function.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -211,7 +211,7 @@ public class EditThresholdDialog extends Dialog
 	 */
 	private void createOperGroup()
 	{
-      operation = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, "Operation", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      operation = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().EditThresholdDialog_Operation, WidgetHelper.DEFAULT_LAYOUT_DATA);
       operation.add(Messages.get().EditThresholdDialog_LT);
       operation.add(Messages.get().EditThresholdDialog_LE);
       operation.add(Messages.get().EditThresholdDialog_EQ);
@@ -252,7 +252,7 @@ public class EditThresholdDialog extends Dialog
       scriptGroup.setLayout(scriptLayout);
       
       script = new LabeledText(scriptGroup, SWT.NONE);
-      script.setLabel("Script");
+      script.setLabel(Messages.get().EditThresholdDialog_Script);
       script.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       script.setText(savedScript != null ? savedScript : threshold.getScript());
       
@@ -263,7 +263,7 @@ public class EditThresholdDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.heightHint = script.getTextControl().computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
       editButton.setLayoutData(gd);
-      editButton.setToolTipText("Open script editor (Ctrl+E)");
+      editButton.setToolTipText(Messages.get().EditThresholdDialog_OpenScriptEditor);
       editButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

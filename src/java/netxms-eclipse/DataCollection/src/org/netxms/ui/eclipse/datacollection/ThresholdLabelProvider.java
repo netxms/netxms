@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] FUNCTIONS = { "last(", "average(", "deviation(", "diff()", "error(", "sum(", "script(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	private static final String[] FUNCTIONS = { "last(", "average(", "deviation(", "diff()", "error(", "sum(", "script(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 	private static final String[] OPERATIONS = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
 	
 	private WorkbenchLabelProvider eventLabelProvider = new WorkbenchLabelProvider();

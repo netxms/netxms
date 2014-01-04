@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -40,6 +41,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
@@ -53,6 +55,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.WinPerfCounterSelectionDialo
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -85,9 +88,10 @@ public class General extends PropertyPage
 	private Spinner customSnmpPort;
 	private ObjectSelector proxyNode;
 	private Combo schedulingMode;
-	private Spinner pollingInterval;
-	private Spinner retentionTime;
-	private Spinner sampleCount;
+	private Button checkNoStorage;
+	private LabeledSpinner pollingInterval;
+	private LabeledSpinner retentionTime;
+	private LabeledSpinner sampleCount;
 	private Button statusActive;
 	private Button statusDisabled;
 	private Button statusUnsupported;
@@ -286,13 +290,16 @@ public class General extends PropertyPage
       fd.top = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       customSnmpPort.setLayoutData(fd);
       
+      sampleCount = new LabeledSpinner(groupData, SWT.NONE);
+      sampleCount.setLabel(Messages.get().General_SampleCountForAvg);
+      sampleCount.setRange(0, 65535);
+      sampleCount.setSelection(dci.getSampleCount());
+		sampleCount.setEnabled(dci.getOrigin() == DataCollectionItem.WINPERF);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
-      sampleCount = WidgetHelper.createLabeledSpinner(groupData, SWT.BORDER, Messages.get().General_SampleCountForAvg, 0, 65535, fd);
-      sampleCount.setSelection(dci.getSampleCount());
-		sampleCount.setEnabled(dci.getOrigin() == DataCollectionItem.WINPERF);
+      sampleCount.setLayoutData(fd);
       
       proxyNode = new ObjectSelector(groupData, SWT.NONE, true);
       proxyNode.setLabel(Messages.get().General_ProxyNode);
@@ -341,13 +348,16 @@ public class General extends PropertyPage
 			}
       });
       
+      pollingInterval = new LabeledSpinner(groupPolling, SWT.NONE);
+      pollingInterval.setLabel(Messages.get().General_PollingInterval);
+      pollingInterval.setRange(1, 99999);
+      pollingInterval.setSelection(dci.getPollingInterval());
+      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
       fd = new FormData();
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(0, 0);
-      pollingInterval = WidgetHelper.createLabeledSpinner(groupPolling, SWT.BORDER, Messages.get().General_PollingInterval, 1, 99999, fd);
-      pollingInterval.setSelection(dci.getPollingInterval());
-      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
+      pollingInterval.setLayoutData(fd);
       
       /** status **/
       Group groupStatus = new Group(dialogArea, SWT.NONE);
@@ -380,14 +390,31 @@ public class General extends PropertyPage
       gd.verticalAlignment = SWT.FILL;
       gd.horizontalSpan = 2;
       groupStorage.setLayoutData(gd);
-      FillLayout storageLayout = new FillLayout();
-      storageLayout.marginWidth = WidgetHelper.OUTER_SPACING;
-      storageLayout.marginHeight = WidgetHelper.OUTER_SPACING;
+      GridLayout storageLayout = new GridLayout();
+      storageLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       groupStorage.setLayout(storageLayout);
       
-      retentionTime = WidgetHelper.createLabeledSpinner(groupStorage, SWT.BORDER, Messages.get().General_RetentionTime, 1, 99999, null);
+      retentionTime = new LabeledSpinner(groupStorage, SWT.NONE);
+      retentionTime.setLabel(Messages.get().General_RetentionTime);
+      retentionTime.setRange(1, 99999);
       retentionTime.setSelection(dci.getRetentionTime());
+      retentionTime.setEnabled((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) == 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      retentionTime.setLayoutData(gd);
       
+      checkNoStorage = new Button(groupStorage, SWT.CHECK);
+      checkNoStorage.setText(Messages.get().General_NoStorage);
+      checkNoStorage.setSelection((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0);
+      checkNoStorage.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            retentionTime.setEnabled(!checkNoStorage.getSelection());
+         }
+      });
+            
       return dialogArea;
 	}
 
@@ -466,13 +493,13 @@ public class General extends PropertyPage
 		dci.setSampleCount(sampleCount.getSelection());
 		dci.setProxyNode(proxyNode.getObjectId());
 		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
-		dci.setPollingInterval(Integer.parseInt(pollingInterval.getText()));
-		dci.setRetentionTime(Integer.parseInt(retentionTime.getText()));
+		dci.setPollingInterval(pollingInterval.getSelection());
+		dci.setRetentionTime(retentionTime.getSelection());
 		dci.setSnmpRawValueInOctetString(checkInterpretRawSnmpValue.getSelection());
 		dci.setSnmpRawValueType(snmpRawType.getSelectionIndex());
 		if (checkUseCustomSnmpPort.getSelection())
 		{
-			dci.setSnmpPort(Integer.parseInt(customSnmpPort.getText()));
+			dci.setSnmpPort(customSnmpPort.getSelection());
 		}
 		else
 		{
@@ -486,6 +513,11 @@ public class General extends PropertyPage
 		else if (statusUnsupported.getSelection())
 			dci.setStatus(DataCollectionItem.NOT_SUPPORTED);
 		
+      if (checkNoStorage.getSelection())
+         dci.setFlags(dci.getFlags() | DataCollectionObject.DCF_NO_STORAGE);
+      else
+         dci.setFlags(dci.getFlags() & ~DataCollectionObject.DCF_NO_STORAGE);
+      
 		editor.modify();
 		return true;
 	}

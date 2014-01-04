@@ -700,7 +700,8 @@ void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
 		free((void *)values[0]);
 
 	// Save transformed value to database
-	QueueIDataInsert(tmTimeStamp, m_pNode->Id(), m_dwId, pValue->getString());
+   if ((m_flags & DCF_NO_STORAGE) == 0)
+	   QueueIDataInsert(tmTimeStamp, m_pNode->Id(), m_dwId, pValue->getString());
 
    // Check thresholds and add value to cache
    checkThresholds(*pValue);

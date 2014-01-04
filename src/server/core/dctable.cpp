@@ -322,98 +322,101 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 	// Copy required fields into local variables
 	UINT32 tableId = m_dwId;
 	UINT32 nodeId = m_pNode->Id();
+   bool save = (m_flags & DCF_NO_STORAGE) == 0;
 
    unlock();
 
 	// Save data to database
 	// Object is unlocked, so only local variables can be used
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   if (!DBBegin(hdb))
+   if (save)
    {
-   	DBConnectionPoolReleaseConnection(hdb);
-      return;
-   }
+	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      if (!DBBegin(hdb))
+      {
+   	   DBConnectionPoolReleaseConnection(hdb);
+         return;
+      }
 
-   INT64 recordId = ((INT64)time(NULL) << 30) | (((INT64)tableId & 0xFFFF) << 14);
-   BOOL success = FALSE;
-	Table *data = (Table *)value;
+      INT64 recordId = ((INT64)time(NULL) << 30) | (((INT64)tableId & 0xFFFF) << 14);
+      BOOL success = FALSE;
+	   Table *data = (Table *)value;
 
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,record_id) VALUES (?,?,?)"), (int)nodeId);
-	DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)nTimeStamp);
-		DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, recordId);
-	   success = DBExecute(hStmt);
-		DBFreeStatement(hStmt);
-	}
-
-   if (success)
-   {
-	   _sntprintf(query, 256, _T("INSERT INTO tdata_records_%d (record_id,row_id,instance) VALUES (?,?,?)"), (int)nodeId);
+	   TCHAR query[256];
+	   _sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,record_id) VALUES (?,?,?)"), (int)nodeId);
 	   DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	   if (hStmt != NULL)
 	   {
-         DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId);
-         for(int row = 0; row < data->getNumRows(); row++)
-         {
-            TCHAR instance[MAX_RESULT_LENGTH];
-            data->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
-            DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
-		      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, instance, DB_BIND_STATIC);
-	         success = DBExecute(hStmt);
-            if (!success)
-               break;
-         }
-	      DBFreeStatement(hStmt);
+		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
+		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)nTimeStamp);
+		   DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, recordId);
+	      success = DBExecute(hStmt);
+		   DBFreeStatement(hStmt);
 	   }
-   }
 
-   if (success)
-   {
-	   _sntprintf(query, 256, _T("INSERT INTO tdata_rows_%d (row_id,column_id,value) VALUES (?,?,?)"), (int)nodeId);
-	   DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	   if (hStmt != NULL)
-	   {
-		   for(int col = 0; col < data->getNumColumns(); col++)
-		   {
-			   INT32 colId = columnIdFromName(data->getColumnName(col));
-			   if (colId == 0)
-				   continue;	// cannot get column ID
-
-			   for(int row = 0; row < data->getNumRows(); row++)
-			   {
-               DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
-				   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, colId);
-               const TCHAR *s = data->getAsString(row, col);
-               if ((s == NULL) || (_tcslen(s) < MAX_DB_STRING))
-               {
-				      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, s, DB_BIND_STATIC);
-               }
-               else
-               {
-                  TCHAR *sp = (TCHAR *)nx_memdup(s, MAX_DB_STRING * sizeof(TCHAR));
-                  sp[MAX_DB_STRING - 1] = 0;
-				      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, sp, DB_BIND_DYNAMIC);
-               }
-				   success = DBExecute(hStmt);
+      if (success)
+      {
+	      _sntprintf(query, 256, _T("INSERT INTO tdata_records_%d (record_id,row_id,instance) VALUES (?,?,?)"), (int)nodeId);
+	      DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	      if (hStmt != NULL)
+	      {
+            DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId);
+            for(int row = 0; row < data->getNumRows(); row++)
+            {
+               TCHAR instance[MAX_RESULT_LENGTH];
+               data->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
+               DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
+		         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, instance, DB_BIND_STATIC);
+	            success = DBExecute(hStmt);
                if (!success)
                   break;
-			   }
-		   }
-	      DBFreeStatement(hStmt);
+            }
+	         DBFreeStatement(hStmt);
+	      }
       }
+
+      if (success)
+      {
+	      _sntprintf(query, 256, _T("INSERT INTO tdata_rows_%d (row_id,column_id,value) VALUES (?,?,?)"), (int)nodeId);
+	      DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	      if (hStmt != NULL)
+	      {
+		      for(int col = 0; col < data->getNumColumns(); col++)
+		      {
+			      INT32 colId = columnIdFromName(data->getColumnName(col));
+			      if (colId == 0)
+				      continue;	// cannot get column ID
+
+			      for(int row = 0; row < data->getNumRows(); row++)
+			      {
+                  DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
+				      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, colId);
+                  const TCHAR *s = data->getAsString(row, col);
+                  if ((s == NULL) || (_tcslen(s) < MAX_DB_STRING))
+                  {
+				         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, s, DB_BIND_STATIC);
+                  }
+                  else
+                  {
+                     TCHAR *sp = (TCHAR *)nx_memdup(s, MAX_DB_STRING * sizeof(TCHAR));
+                     sp[MAX_DB_STRING - 1] = 0;
+				         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, sp, DB_BIND_DYNAMIC);
+                  }
+				      success = DBExecute(hStmt);
+                  if (!success)
+                     break;
+			      }
+		      }
+	         DBFreeStatement(hStmt);
+         }
+      }
+
+      if (success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+
+	   DBConnectionPoolReleaseConnection(hdb);
    }
-
-   if (success)
-      DBCommit(hdb);
-   else
-      DBRollback(hdb);
-
-	DBConnectionPoolReleaseConnection(hdb);
-
    checkThresholds((Table *)value);
 }
 

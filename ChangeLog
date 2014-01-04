@@ -4,9 +4,10 @@
 
 - Thresholds can be defined as NXSL scripts
 - XMPP messaging support
+- "Do not save collected data to database" option for data collection items
 - Management console:
 	- Stacked line charts implemented
-- Fixed issues: #16, #464, #469
+- Fixed issues: #16, #385, #464, #469
 
 
 *
