@@ -239,7 +239,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 /**
  * Connect to server
  */
-#ifdef __HP_aCC
+#if defined(__HP_aCC) || defined(__SUNPRO_CC)
 extern "C"
 #endif
 UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, const TCHAR *pszLogin, 

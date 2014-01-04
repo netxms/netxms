@@ -412,6 +412,17 @@ AC_ARG_WITH(rpi-agent,
 
 
 #--------------------------------------------------------------------
+# Set LD_LIBRARY_PATH from LD_RUN_PATH because on some systems
+# LD_RUN_PATH ignored by linker and some tests may fail
+#--------------------------------------------------------------------
+
+if test "x$LD_RUN_PATH" != "x"; then
+	LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}${LD_RUN_PATH}"
+	export LD_LIBRARY_PATH
+fi
+
+
+#--------------------------------------------------------------------
 # Validate command line parameters and set various checking options
 #--------------------------------------------------------------------
 
@@ -712,12 +723,10 @@ case "$PLATFORM" in
       ;;
    SunOS)
       CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS"
-      LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-      export LD_LIBRARY_PATH
       AC_MSG_CHECKING(whether C compiler accepts -O2)
       OLD_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS -O2"
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+      AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
          [ AC_MSG_RESULT(yes) ],
          [
             CPPFLAGS="$OLD_CPPFLAGS"
