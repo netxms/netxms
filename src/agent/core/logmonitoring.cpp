@@ -107,7 +107,7 @@ bool MonitoredFileList::removeMonitoringFile(const TCHAR *fileName)
 
    if(!alreadyMonitored)
    {
-      DebugPrintf(INVALID_INDEX, 6, _T("MonitoredFileList::removeMonitoringFile: Tryed to delete not existing file %s."), fileName);
+      DebugPrintf(INVALID_INDEX, 6, _T("MonitoredFileList::removeMonitoringFile: attempt to delete non-existing file %s"), fileName);
    }
    Unlock();
    return alreadyMonitored;
