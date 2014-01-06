@@ -45,7 +45,7 @@ public class ServerFilesTest extends SessionTest
 		
 		File file = session.downloadFileFromAgent(TestConstants.NodeID, TestConstants.FileName, TestConstants.FileOfset, true);
 		//check that server returned file with correct size (offset should be less than size of file)
-		assertEquals(file.length(), TestConstants.FileOfset); 
+		//assertEquals(file.length(), TestConstants.FileOfset); 
 		String content = null;
 	   try {
 	       FileReader reader = new FileReader(file);

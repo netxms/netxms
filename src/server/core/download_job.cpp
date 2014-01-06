@@ -52,6 +52,8 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 
 	m_maxFileSize = maxFileSize;
 	m_follow = follow;
+
+   DbgPrintf(5, _T("FileDownloadJob: job created for file %s at node %s, follow = %s"), m_remoteFile, m_node->Name(), m_follow ? _T("true") : _T("false"));
 }
 
 /**
@@ -77,11 +79,9 @@ void FileDownloadJob::progressCallback(size_t size, void *arg)
 		((FileDownloadJob *)arg)->markProgress(90);
 }
 
-
-//
-// Job implementation
-//
-
+/**
+ * Job implementation
+ */
 bool FileDownloadJob::run()
 {
 	AgentConnection *conn;
@@ -93,8 +93,9 @@ bool FileDownloadJob::run()
    newFile->nodeID = m_node->Id();
    newFile->session = m_session;
 
-   if(g_monitoringList.checkDuplicate(newFile))
+   if (g_monitoringList.checkDuplicate(newFile))
    {
+      DbgPrintf(6, _T("FileDownloadJob: follow flag cancelled by checkDuplicate()"));
       m_follow = false;
    }
 
@@ -146,7 +147,7 @@ bool FileDownloadJob::run()
             //default - get parameters
 
             msg.SetVariable(VID_FILE_SIZE_LIMIT, m_maxFileSize);
-            msg.SetVariable(VID_FILE_FOLLOW, (INT16)m_follow);
+            msg.SetVariable(VID_FILE_FOLLOW, (INT16)(m_follow ? 1 : 0));
 
 				response = conn->customRequest(&msg, m_localFile, appendFile, progressCallback, this);
 				if (response != NULL)

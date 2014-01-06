@@ -10157,7 +10157,7 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 			{
 				request->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
 				FileDownloadJob::buildServerFileName(object->Id(), remoteFile, localFile, MAX_PATH);
-				bool follow = request->GetVariableShort(VID_FILE_FOLLOW);
+            bool follow = request->GetVariableShort(VID_FILE_FOLLOW) ? true : false;
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->GetVariableLong(VID_FILE_SIZE_LIMIT), follow, this, request->GetId());
 				msg.SetVariable(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
 			}

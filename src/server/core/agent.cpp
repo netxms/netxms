@@ -206,19 +206,16 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
  */
 void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 {
-   UINT32 rqId, rcc;
-	TCHAR remoteFile[MAX_PATH], localFile[MAX_PATH];
-	BYTE *pConfig;
-   UINT32 dwSize;
-
-   rqId = pMsg->GetId();
+   UINT32 rqId = pMsg->GetId();
 	NetObj *object = NULL;
 	if (m_nodeId != 0)
 		object = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 	if (object != NULL)
 	{
+	   TCHAR remoteFile[MAX_PATH];
       pMsg->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
       ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->Id());
+      DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->Name(), object->Id());
       for(int i = 0; i < result->size(); i++)
       {
          result->get(i)->sendMessage(pMsg);
@@ -227,6 +224,7 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 	else
 	{
 		g_monitoringList.removeDisconectedNode(m_nodeId);
+      DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: node object not found"));
 	}
 }
 
