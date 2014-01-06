@@ -115,7 +115,7 @@ public class FileViewer extends ViewPart
 		this.follow = follow;
 		if (follow)
 		{
-   		monitorJob = new ConsoleJob("Download file updates from agent", null, Activator.PLUGIN_ID, null) {
+   		monitorJob = new ConsoleJob(Messages.get().FileViewer_Download_File_Updates, null, Activator.PLUGIN_ID, null) {
    		   private boolean continueWork = true;
    		   
    		   @Override
@@ -168,7 +168,7 @@ public class FileViewer extends ViewPart
       if (follow)
       {
          monitorJob.cancel();
-         final ConsoleJob job = new ConsoleJob("Stop file monitor", null, Activator.PLUGIN_ID, null) {
+         final ConsoleJob job = new ConsoleJob(Messages.get().FileViewer_Stop_File_Monitoring, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -178,7 +178,7 @@ public class FileViewer extends ViewPart
             @Override
             protected String getErrorMessage()
             {
-               return "Cannot stop file monitor";
+               return Messages.get().FileViewer_Cannot_Stop_File_Monitoring;
             }
          };
          job.setUser(false);

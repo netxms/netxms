@@ -40,7 +40,10 @@ public class Messages extends NLS
    public String EditColumnDialog_SNMP_OID;
    public String EditColumnDialog_SubstrIndex;
    public String EditColumnDialog_Warning;
+   public String FileViewer_Cannot_Stop_File_Monitoring;
+   public String FileViewer_Download_File_Updates;
    public String FileViewer_InvalidObjectID;
+   public String FileViewer_Stop_File_Monitoring;
    public String Filter_AgentNeeded;
    public String Filter_OIDShouldMatch;
    public String Filter_SNMPNeeded;

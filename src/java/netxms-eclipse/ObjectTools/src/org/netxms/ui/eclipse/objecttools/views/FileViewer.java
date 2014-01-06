@@ -25,10 +25,13 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
@@ -49,12 +52,34 @@ public class FileViewer extends ViewPart
 	private long nodeId;
 	private String remoteFileName;
 	private File currentFile;
-	private Text textViewer;
+	private StyledText textViewer;
 	private final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	private boolean follow;
 	private ConsoleJob monitorJob;
+	private Action actionScrollLock;
 	
 
+	/**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionScrollLock = new Action("Lock Scroll", Action.AS_CHECK_BOX)//$NON-NLS-2$ 
+      { 
+         @Override
+         public void run()
+         {
+         }
+      };
+      actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif"));
+      actionScrollLock.setChecked(false);
+   }
+   
+   private void fillLocalPullDown(IToolBarManager manager)
+   {
+      manager.add(actionScrollLock);
+   }
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
@@ -91,9 +116,13 @@ public class FileViewer extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		textViewer = new Text(parent, SWT.H_SCROLL | SWT.V_SCROLL);
+		textViewer = new StyledText(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 		textViewer.setEditable(false);
 		textViewer.setFont(JFaceResources.getTextFont());
+		//action creation
+		createActions();
+		IActionBars bars = getViewSite().getActionBars();
+      fillLocalPullDown(bars.getToolBarManager());
 	}
 
 	/* (non-Javadoc)
@@ -112,10 +141,11 @@ public class FileViewer extends ViewPart
 	{
 		currentFile = file;
 		textViewer.setText(loadFile(currentFile));
+      	textViewer.setTopIndex(textViewer.getLineCount());
 		this.follow = follow;
 		if (follow)
 		{
-   		monitorJob = new ConsoleJob("Download file updates from agent", null, Activator.PLUGIN_ID, null) {
+   		monitorJob = new ConsoleJob(Messages.get().FileViewer_Download_File_Updates, null, Activator.PLUGIN_ID, null) {
    		   private boolean continueWork = true;
    		   
    		   @Override
@@ -138,7 +168,11 @@ public class FileViewer extends ViewPart
                         {
                            if (!textViewer.isDisposed())
                            {
-                              textViewer.append(s); 
+                              textViewer.append(s);                               
+                              if(!actionScrollLock.isChecked())
+                              {
+                                 textViewer.setTopIndex(textViewer.getLineCount() - 1);
+                              }
                            }
                         }
                      });
@@ -168,7 +202,7 @@ public class FileViewer extends ViewPart
       if (follow)
       {
          monitorJob.cancel();
-         final ConsoleJob job = new ConsoleJob("Stop file monitor", null, Activator.PLUGIN_ID, null) {
+         final ConsoleJob job = new ConsoleJob(Messages.get().FileViewer_Stop_File_Monitoring, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -178,7 +212,7 @@ public class FileViewer extends ViewPart
             @Override
             protected String getErrorMessage()
             {
-               return "Cannot stop file monitor";
+               return Messages.get().FileViewer_Cannot_Stop_File_Monitoring;
             }
          };
          job.setUser(false);
