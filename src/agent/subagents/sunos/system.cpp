@@ -23,6 +23,8 @@
 #include "sunos_subagent.h"
 #include <sys/sysinfo.h>
 #include <sys/systeminfo.h>
+#include <sys/swap.h>
+#include <sys/param.h>
 
 /**
  * Handler for System.Uname parameter
@@ -316,6 +318,53 @@ static UINT64 s_swapTotal = 0;
  * Update swap info
  */
 static void UpdateSwapInfo()
+{
+   swaptable* swapTable;
+   swapent* swapEntry;
+   char* path;
+   int i;
+   static char METHOD_NAME[16] = "UpdateSwapInfo";
+
+   int num = swapctl(SC_GETNSWP, NULL);
+   if (num == -1)
+   {
+      AgentWriteDebugLog(6, _T("%s: %s: call to swapctl(SC_GETNSWP) failed"), AGENT_NAME, METHOD_NAME);
+      return;
+   }
+
+   swapTable = (swaptable*) malloc(num * sizeof(swapent_t) + sizeof(int));
+   if (swapTable == NULL)   {
+      AgentWriteDebugLog(6, _T("%s: %s: failed to allocate the swap table"), AGENT_NAME, METHOD_NAME);
+      return;
+   }
+   swapTable->swt_n = num;
+
+   swapEntry = swapTable->swt_ent;
+
+   int ret = swapctl(SC_LIST, swapTable);
+   if (ret == -1)
+   {
+      AgentWriteDebugLog(6, _T("%s: %s: call to swapctl(SC_LIST) failed"), AGENT_NAME, METHOD_NAME);
+      delete swapEntry;
+      return;
+   }
+
+   UINT64 free, total = 0;
+   int bytesPerPage = (int) ((sysconf(_SC_PAGESIZE) >> DEV_BSHIFT) * DEV_BSIZE);
+
+   for(i = 0; i < num; i++) {
+      total += swapEntry[i].ste_pages * bytesPerPage;
+      free += swapEntry[i].ste_free * bytesPerPage;
+   }
+
+   delete swapEntry;
+
+   s_swapTotal = total;
+   s_swapFree = free;
+   s_swapUsed = total - free;
+}
+
+static void UpdateSwapInfo2()
 {
 	kstat_lock();
 	kstat_ctl_t *kc = kstat_open();

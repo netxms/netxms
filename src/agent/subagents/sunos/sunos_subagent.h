@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2011 Victor Kirhenshtein
+ ** Copyright (C) 2004-2014 NetXMS Team
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 #include <fcntl.h>
 #include <kstat.h>
 
+
+#define AGENT_NAME _T("SunOS")
 
 //
 // Subagent flags
