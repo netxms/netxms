@@ -149,6 +149,15 @@ AC_ARG_WITH(sdk,
 	BUILD_SDK="yes"
 ])
 
+AC_ARG_WITH(static-sdk,
+[AS_HELP_STRING(--with-static-sdk,build and install files necessary for extension development (static libs only))],
+[
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES include"
+	SERVER_INCLUDE="include"
+	BUILD_SDK="yes"
+	STATIC_BUILD="yes"
+])
+
 AC_ARG_WITH(mdebug,
 [AS_HELP_STRING(--with-mdebug,use debug version of memory allocation functions)],
 [
