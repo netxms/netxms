@@ -90,6 +90,16 @@
             id="org.netxms.ui.eclipse.objecttools.commands.copy"
             name="%command.name.Copy">
       </command>
+      <command
+            description="Scroll lock"
+            id="org.netxms.ui.eclipse.objecttools.commands.scroll_lock"
+            name="Scroll lock">
+      </command>
+      <command
+            description="Clear output"
+            id="org.netxms.ui.eclipse.objecttools.commands.clear_output"
+            name="Clear output">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -170,6 +180,11 @@
             name="LocalCommandResults"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.objecttools.context.FileViewer"
+            name="FileViewer"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -177,19 +192,55 @@
             commandId="org.netxms.ui.eclipse.objecttools.commands.copy"
             contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="CTRL+C">
+            sequence="M1+C">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.copy"
+            contextId="org.netxms.ui.eclipse.objecttools.context.FileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+C">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.select_all"
             contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="CTRL+A">
+            sequence="M1+A">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.select_all"
+            contextId="org.netxms.ui.eclipse.objecttools.context.FileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+A">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.terminate_process"
             contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="CTRL+BREAK">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.scroll_lock"
+            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="PAUSE">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.scroll_lock"
+            contextId="org.netxms.ui.eclipse.objecttools.context.FileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="PAUSE">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.clear_output"
+            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="CTRL+L">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.clear_output"
+            contextId="org.netxms.ui.eclipse.objecttools.context.FileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="CTRL+L">
       </key>
    </extension>
    <extension

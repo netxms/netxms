@@ -152,6 +152,8 @@ public class LocalCommandResults extends ViewPart
 				console.clearConsole();
 			}
 		};
+		actionClear.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.clear_output"); //$NON-NLS-1$
+      handlerService.activateHandler(actionClear.getActionDefinitionId(), new ActionHandler(actionClear));
 
 		actionScrollLock = new Action(Messages.get().LocalCommandResults_ScrollLock, Action.AS_CHECK_BOX) {
 			@Override
@@ -161,6 +163,8 @@ public class LocalCommandResults extends ViewPart
 		};
 		actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
 		actionScrollLock.setChecked(false);
+		actionScrollLock.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.scroll_lock"); //$NON-NLS-1$
+      handlerService.activateHandler(actionScrollLock.getActionDefinitionId(), new ActionHandler(actionScrollLock));
 		
 		actionTerminate = new Action(Messages.get().LocalCommandResults_Terminate, SharedIcons.TERMINATE) {
 			@Override
@@ -261,8 +265,7 @@ public class LocalCommandResults extends ViewPart
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

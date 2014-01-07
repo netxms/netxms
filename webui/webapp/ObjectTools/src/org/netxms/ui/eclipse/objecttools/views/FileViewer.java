@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,15 +25,26 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
@@ -53,8 +64,9 @@ public class FileViewer extends ViewPart
 	private final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	private boolean follow;
 	private ConsoleJob monitorJob;
+   private Action actionClear;
+	private Action actionScrollLock;
 	
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
@@ -94,9 +106,120 @@ public class FileViewer extends ViewPart
 		textViewer = new Text(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 		textViewer.setEditable(false);
 		textViewer.setFont(JFaceResources.getTextFont());
+		
+      createActions();
+      contributeToActionBars();
+      createPopupMenu();
+      activateContext();
 	}
+	
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.objecttools.context.FileViewer"); //$NON-NLS-1$
+      }
+   }
 
-	/* (non-Javadoc)
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
+      actionClear = new Action("&Clear output", SharedIcons.CLEAR_LOG) {
+         @Override
+         public void run()
+         {
+            textViewer.setText("");
+         }
+      };
+      actionClear.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.clear_output"); //$NON-NLS-1$
+      handlerService.activateHandler(actionClear.getActionDefinitionId(), new ActionHandler(actionClear));
+
+      actionScrollLock = new Action("&Scroll lock", Action.AS_CHECK_BOX) { 
+         @Override
+         public void run()
+         {
+         }
+      };
+      actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif"));
+      actionScrollLock.setChecked(false);
+      actionScrollLock.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.scroll_lock"); //$NON-NLS-1$
+      handlerService.activateHandler(actionScrollLock.getActionDefinitionId(), new ActionHandler(actionScrollLock));
+   }
+   
+   /**
+    * Contribute actions to action bar
+    */
+   private void contributeToActionBars()
+   {
+      IActionBars bars = getViewSite().getActionBars();
+      fillLocalPullDown(bars.getMenuManager());
+      fillLocalToolBar(bars.getToolBarManager());
+   }
+
+   /**
+    * Fill local pull-down menu
+    * 
+    * @param manager
+    *           Menu manager for pull-down menu
+    */
+   private void fillLocalPullDown(IMenuManager manager)
+   {
+      manager.add(actionClear);
+      manager.add(actionScrollLock);
+   }
+
+   /**
+    * Fill local tool bar
+    * 
+    * @param manager
+    *           Menu manager for local toolbar
+    */
+   private void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionClear);
+      manager.add(actionScrollLock);
+   }
+
+   /**
+    * Create pop-up menu
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu
+      Menu menu = menuMgr.createContextMenu(textViewer);
+      textViewer.setMenu(menu);
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param mgr Menu manager
+    */
+   private void fillContextMenu(final IMenuManager manager)
+   {
+      manager.add(actionClear);
+      manager.add(actionScrollLock);
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -156,7 +279,6 @@ public class FileViewer extends ViewPart
    		monitorJob.setSystem(true);
    		monitorJob.start();
 		}
-      
 	}
    
    /* (non-Javadoc)

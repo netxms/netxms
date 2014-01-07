@@ -217,7 +217,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	 */
 	private void createActions()
 	{
-		actionClear = new Action(Messages.get().ServerConsole_ClearTerminal) { //$NON-NLS-1$
+		actionClear = new Action(Messages.get().ServerConsole_ClearTerminal, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
@@ -225,9 +225,8 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 				writeToTerminal("\u001b[33mnetxmsd:\u001b[0m "); //$NON-NLS-1$
 			}
 		};
-		actionClear.setImageDescriptor(SharedIcons.CLEAR_LOG);
 
-		actionScrollLock = new Action(Messages.get().ServerConsole_ScrollLock, Action.AS_CHECK_BOX) { //$NON-NLS-1$
+		actionScrollLock = new Action(Messages.get().ServerConsole_ScrollLock, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

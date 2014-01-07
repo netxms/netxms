@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,8 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -45,7 +45,7 @@ public class General extends PropertyPage
 	private LabeledText textName;
 	private LabeledText textDescription;
 	private LabeledText textData;
-	private LabeledText maxFileLenght;
+	private LabeledSpinner maxFileSize;
 	private LabeledText textParameter;
 	private LabeledText textRegexp;
 	private Button checkOutput;
@@ -127,18 +127,40 @@ public class General extends PropertyPage
 				textData.setLabel(Messages.get().General_RemoteFileName);
 				textData.setText((parameters.length > 0) ? parameters[0] : ""); //$NON-NLS-1$
 				
-		      maxFileLenght  = new LabeledText(dialogArea, SWT.NONE);
-		      maxFileLenght.setLayoutData(gd);
-				maxFileLenght.setLabel("Maximum file download size");
-				maxFileLenght.setText((parameters.length > 1) ? parameters[1] : ""); //$NON-NLS-1$
+				Group fileOptionsGoup = new Group(dialogArea, SWT.NONE);
+				fileOptionsGoup.setText("File Options");
+            gd = new GridData();
+            gd.horizontalAlignment = SWT.FILL;
+            gd.grabExcessHorizontalSpace = true;
+            fileOptionsGoup.setLayoutData(gd);
+
+				GridLayout fileGroupLayout = new GridLayout();
+				fileGroupLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+				fileGroupLayout.numColumns = 1;
+				fileOptionsGoup.setLayout(fileGroupLayout);
+				
+		      maxFileSize  = new LabeledSpinner(fileOptionsGoup, SWT.NONE);
+		      gd = new GridData();
+		      gd.horizontalAlignment = SWT.FILL;
+		      gd.grabExcessHorizontalSpace = true;
+		      maxFileSize.setLayoutData(gd);
+				maxFileSize.setLabel("Limit initial download size (in bytes, 0 for unlimited)");
+				maxFileSize.setRange(0, 0x7FFFFFFF);
+				try
+				{
+				   maxFileSize.setSelection((parameters.length > 1) ? Integer.parseInt(parameters[1]) : 0);
+				}
+				catch(NumberFormatException e)
+				{
+				   maxFileSize.setSelection(0);
+				}
 							
-				follow = new Button(dialogArea, SWT.CHECK);
-				follow.setText("Get file updates");
+				follow = new Button(fileOptionsGoup, SWT.CHECK);
+				follow.setText("Follow file changes");
 				if(parameters.length > 2) //$NON-NLS-1$
 				{
 				   follow.setSelection( parameters[2].equals("true") ? true : false);  //$NON-NLS-1$
 				}	
-				
 				break;
 			case ObjectTool.TYPE_TABLE_SNMP:
 				textData.setLabel(Messages.get().General_Title);
@@ -262,8 +284,7 @@ public class General extends PropertyPage
 		{
 		   if(objectTool.getType() == ObjectTool.TYPE_FILE_DOWNLOAD)
    		{
-		      String tmp = maxFileLenght.getText() == "" ? "0" : maxFileLenght.getText(); //$NON-NLS-1$ //$NON-NLS-2$
-		      objectTool.setData(textData.getText() + "\u007F" + tmp + "\u007F" + follow.getSelection()); //$NON-NLS-1$ //$NON-NLS-2$
+		      objectTool.setData(textData.getText() + "\u007F" + maxFileSize.getSelection() + "\u007F" + follow.getSelection()); //$NON-NLS-1$ //$NON-NLS-2$
    		}
 		   else
 		   {
@@ -323,19 +344,6 @@ public class General extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-	   if(objectTool.getType() == ObjectTool.TYPE_FILE_DOWNLOAD && maxFileLenght.getText() != "")
-	   {
-	      try
-	      {
-	         int n = Integer.parseInt(maxFileLenght.getText());
-	      }
-	      catch(NumberFormatException e)
-	      {
-	         MessageDialogHelper.openWarning(getShell(), Messages.get().EditColumnDialog_Warning, "As maximum lenght should be given integre value in bytes.");
-	         return false;
-	      }
-	   }
-	   
 		applyChanges(false);
 		return true;
 	}
