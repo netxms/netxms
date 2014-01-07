@@ -362,7 +362,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_certMappingMethod);
    DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_certMappingData, DB_BIND_STATIC);
    DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_authFailures);
-   DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_lastPasswordChange);
+   DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_lastPasswordChange);
    DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_minPasswordLength);
    DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_disabledUntil);
    DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_lastLogin);
