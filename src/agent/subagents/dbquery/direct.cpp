@@ -27,7 +27,27 @@
  */
 LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
-   return SYSINFO_RC_ERROR;
+   TCHAR dbid[64], query[256];
+   AgentGetParameterArg(param, 1, dbid, 64);
+   AgentGetParameterArg(param, 2, query, 64);
+
+   DB_HANDLE hdb = GetConnectionHandle(dbid);
+   if (hdb == NULL)
+   {
+      AgentWriteDebugLog(4, _T("DBQUERY: H_DirectQuery: no connection handle for database %s"), dbid);
+      return SYSINFO_RC_ERROR;
+   }
+
+   LONG rc = SYSINFO_RC_ERROR;
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      *value = 0;
+      DBGetField(hResult, 0, 0, value, MAX_RESULT_LENGTH);
+      DBFreeResult(hResult);
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   return rc;
 }
 
 /**
