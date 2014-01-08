@@ -144,6 +144,7 @@ AC_ARG_WITH(ipso-agent,
 AC_ARG_WITH(sdk,
 [AS_HELP_STRING(--with-sdk,build and install files necessary for extension development)],
 [
+	COMPONENTS="$COMPONENTS sqlite sdk"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES include"
 	SERVER_INCLUDE="include"
 	BUILD_SDK="yes"
@@ -152,6 +153,7 @@ AC_ARG_WITH(sdk,
 AC_ARG_WITH(static-sdk,
 [AS_HELP_STRING(--with-static-sdk,build and install files necessary for extension development (static libs only))],
 [
+	COMPONENTS="$COMPONENTS sqlite sdk"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES include"
 	SERVER_INCLUDE="include"
 	BUILD_SDK="yes"
@@ -664,6 +666,12 @@ check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS java"
 fi
+
+check_substr "$COMPONENTS" "sdk"
+if test $? = 0; then
+	MODULES="$MODULES libnxmap libnxcl libnxsl libnxlp db nxscript"
+fi
+
 
 #--------------------------------------------------------------------
 # Check for programs
