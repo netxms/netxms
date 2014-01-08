@@ -14,5 +14,5 @@ SUBDIRS = m4 contrib src doc tools
 SUBDIRS += @TOP_LEVEL_MODULES@
 
 install-exec-hook:
-	if test "x@BUILD_SERVER@" = "xyes"; then LD_LIBRARY_PATH="$(DESTDIR)$(libdir)" $(DESTDIR)$(bindir)/nxmibc -d $(DESTDIR)$(pkgdatadir)/mibs -o $(DESTDIR)$(pkgdatadir)/mibs/netxms.mib; fi
+	if test "x@BUILD_SERVER@" = "xyes"; then LD_LIBRARY_PATH="$(DESTDIR)$(libdir):${LD_LIBRARY_PATH}" $(DESTDIR)$(bindir)/nxmibc -d $(DESTDIR)$(pkgdatadir)/mibs -o $(DESTDIR)$(pkgdatadir)/mibs/netxms.mib; fi
 	if test "x@BUILD_SDK@" = "xyes"; then cp config.h $(DESTDIR)$(includedir); fi
