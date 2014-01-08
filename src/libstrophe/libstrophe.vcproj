@@ -394,10 +394,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\thread.c"
-				>
-			</File>
-			<File
 				RelativePath=".\tls_openssl.c"
 				>
 			</File>
