@@ -159,7 +159,6 @@ typedef void (*xmpp_log_handler)(void * const userdata,
 struct _xmpp_log_t {
     xmpp_log_handler handler;
     void *userdata;
-    /* mutex_t lock; */
 };
 
 /* return a default logger filtering at a given level */
