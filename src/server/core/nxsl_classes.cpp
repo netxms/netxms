@@ -110,6 +110,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(pNode->getComments());
    }
+   else if (!_tcscmp(pszAttr, _T("driver")))
+   {
+      pValue = new NXSL_Value(pNode->getDriverName());
+   }
    else if (!_tcscmp(pszAttr, _T("flags")))
    {
 		pValue = new NXSL_Value(pNode->getFlags());
