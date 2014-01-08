@@ -6,6 +6,7 @@
 - XMPP messaging support
 - "Do not save collected data to database" option for data collection items
 - Added "follow" option to "download file" object tools
+- New attribute "driver" for NXSL class "Node"
 - Management console:
 	- Stacked line charts implemented
 - Fixed issues: #16, #385, #464, #469
