@@ -66,9 +66,7 @@ int CatalystDriver::isPotentialDevice(const TCHAR *oid)
 bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	UINT32 value = 0;
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.2.14.0"), NULL, 0, &value, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
-		return false;
-	return value >= 0;	// Catalyst 3550 can return 0 as number of slots
+	return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.2.14.0"), NULL, 0, &value, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS;
 }
 
 /**
