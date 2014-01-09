@@ -18,6 +18,11 @@
 
 #include <nms_common.h>
 #include <strophe.h>
+
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+
 #include "common.h"
 #include "util.h"
 
