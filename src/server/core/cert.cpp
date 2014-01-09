@@ -34,19 +34,15 @@
 # define OPENSSL_CONST
 #endif
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static X509_STORE *m_pTrustedCertStore = NULL;
 static MUTEX m_mutexStoreAccess = INVALID_MUTEX_HANDLE;
 
-
-//
-// Create X509 certificate structure from login message
-//
-
+/**
+ * Create X509 certificate structure from login message
+ */
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
 {
 	UINT32 dwLen;

@@ -64,6 +64,8 @@ import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
@@ -139,6 +141,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private String clientAddress = null;
    private int authType = AUTH_TYPE_PASSWORD;
    private boolean ignoreProtocolVersion = false;
+   private Certificate connCertificate = null;
    private Signature connSignature = null;
 
    // Information about logged in user
@@ -196,10 +199,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    // Event templates
    private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
    private boolean eventTemplatesNeedSync = false;
-
-   //
-   // Constructors
-   //
 
    /**
     * @param connAddress
@@ -1456,12 +1455,20 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          }
          else if (authType == AUTH_TYPE_CERTIFICATE)
          {
-         	if ((serverChallenge == null) || (connSignature == null))
+         	if ((serverChallenge == null) || (connSignature == null) || (connCertificate == null))
          	{
          		throw new NXCException(RCC.ENCRYPTION_ERROR);
          	}
             byte[] signedChallenge = signChallenge(serverChallenge);
             request.setVariable(NXCPCodes.VID_SIGNATURE, signedChallenge);
+            try
+            {
+               request.setVariable(NXCPCodes.VID_CERTIFICATE, connCertificate.getEncoded());
+            }
+            catch(CertificateEncodingException e)
+            {
+               throw new NXCException(RCC.ENCRYPTION_ERROR);
+            }
          }
 
          request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
@@ -6799,12 +6806,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
-    * Set the signature to use in the authentication process. Will set authentication type to CERTIFICATE.
+    * Set certificate and signature to use in the authentication process.
     *
     * @param signature signature to use
     */
-   public void setSignature(Signature signature)
+   public void setCertificate(Certificate certificate, Signature signature)
    {
+      connCertificate = certificate;
       connSignature = signature;
    }
 

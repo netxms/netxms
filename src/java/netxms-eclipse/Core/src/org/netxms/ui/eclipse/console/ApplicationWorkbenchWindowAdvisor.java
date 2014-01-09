@@ -220,7 +220,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
                job.setPassword(password);
                break;
             case NXCSession.AUTH_TYPE_CERTIFICATE:
-               job.setSignature(getSignature(certMgr, loginDialog.getCertificate()));
+               job.setCertificate(loginDialog.getCertificate(), getSignature(certMgr, loginDialog.getCertificate()));
                break;
          }
 
