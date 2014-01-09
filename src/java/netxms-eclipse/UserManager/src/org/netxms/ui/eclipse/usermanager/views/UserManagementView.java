@@ -239,11 +239,7 @@ public class UserManagementView extends ViewPart
 	 */
 	private void makeActions()
 	{
-		actionRefresh = new RefreshAction()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -251,11 +247,7 @@ public class UserManagementView extends ViewPart
 			}
 		};
 
-		actionAddUser = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionAddUser = new Action() {
 			@Override
 			public void run()
 			{
@@ -265,11 +257,7 @@ public class UserManagementView extends ViewPart
 		actionAddUser.setText(Messages.get().UserManagementView_CreateNewUser);
 		actionAddUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_add.png")); //$NON-NLS-1$
 
-		actionAddGroup = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionAddGroup = new Action() {
 			@Override
 			public void run()
 			{
@@ -284,11 +272,7 @@ public class UserManagementView extends ViewPart
 		actionEditUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_edit.png")); //$NON-NLS-1$
 		actionEditUser.setEnabled(false);
 
-		actionDeleteUser = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionDeleteUser = new Action() {
 			@Override
 			public void run()
 			{

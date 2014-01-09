@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -127,6 +127,7 @@ public class Authentication extends PropertyPage
 		comboMappingMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
 		comboMappingMethod.add(Messages.get().Authentication_Subject);
 		comboMappingMethod.add(Messages.get().Authentication_PublicKey);
+      comboMappingMethod.add("Common name");
 		comboMappingMethod.select(object.getCertMappingMethod());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;

@@ -283,7 +283,7 @@ User::User()
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_authMethod = AUTH_NETXMS_PASSWORD;
 	uuid_generate(m_guid);
-	m_certMappingMethod = 0;
+	m_certMappingMethod = USER_MAP_CERT_BY_CN;
 	m_certMappingData = NULL;
 	m_authFailures = 0;
 	m_lastPasswordChange = 0;
@@ -301,7 +301,7 @@ User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 	m_fullName[0] = 0;
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_authMethod = AUTH_NETXMS_PASSWORD;
-	m_certMappingMethod = USER_MAP_CERT_BY_SUBJECT;
+	m_certMappingMethod = USER_MAP_CERT_BY_CN;
 	m_certMappingData = NULL;
 	CalculateSHA1Hash((BYTE *)"", 0, m_passwordHash);
 	m_authFailures = 0;
@@ -345,7 +345,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
       hStmt = DBPrepare(hdb,
          _T("INSERT INTO users (name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method,")
          _T("  cert_mapping_method,cert_mapping_data,password_history,auth_failures,last_passwd_change,min_passwd_length,")
-         _T("  disabled_until,last_login,xmpp_id,id VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         _T("  disabled_until,last_login,xmpp_id,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
       return false;

@@ -684,8 +684,9 @@ enum
 /**
  * User certificate mapping methods
  */
-#define USER_MAP_CERT_BY_SUBJECT		0
-#define USER_MAP_CERT_BY_PUBKEY		1
+#define USER_MAP_CERT_BY_SUBJECT    0
+#define USER_MAP_CERT_BY_PUBKEY     1
+#define USER_MAP_CERT_BY_CN         2
 
 /**
  * User database change notification types

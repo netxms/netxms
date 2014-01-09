@@ -66,11 +66,9 @@ X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
 	return pCert;
 }
 
-
-//
-// Check public key
-//
-
+/**
+ * Check public key
+ */
 static BOOL CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
 {
 	int pkeyLen;
@@ -94,11 +92,41 @@ static BOOL CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
 	return valid;
 }
 
+/**
+ * Check ciertificate's CN
+ */
+static BOOL CheckCommonName(X509 *cert, const TCHAR *cn)
+{
+   TCHAR certCN[256];
 
-//
-// Validate user's certificate
-//
+   X509_NAME *subject = X509_get_subject_name(cert);
+   if (subject == NULL)
+      return FALSE;
 
+   int idx = X509_NAME_get_index_by_NID(subject, NID_commonName, -1);
+   if (idx == -1)
+      return FALSE;
+
+   X509_NAME_ENTRY *entry = X509_NAME_get_entry(subject, idx);
+   if (entry == NULL)
+      return FALSE;
+
+   ASN1_STRING *data = X509_NAME_ENTRY_get_data(entry);
+   if (data == NULL)
+      return FALSE;
+
+   unsigned char *utf8;
+   int length = ASN1_STRING_to_UTF8(&utf8, data);
+   printf( ">>> CN value: %s\n", utf8 );
+   printf( ">>> CN length: %d\n", length );
+   OPENSSL_free(utf8);
+
+   return TRUE;
+}
+
+/**
+ * Validate user's certificate
+ */
 BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature,
 									  UINT32 dwSigLen, int nMappingMethod, const TCHAR *pszMappingData)
 {
@@ -174,6 +202,9 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 				break;
 			case USER_MAP_CERT_BY_PUBKEY:
 				bValid = CheckPublicKey(pKey, CHECK_NULL_EX(pszMappingData));
+				break;
+			case USER_MAP_CERT_BY_CN:
+            bValid = CheckCommonName(pCert, ((pszMappingData != NULL) && (*pszMappingData != 0)) ? pszMappingData : pszLogin);
 				break;
 			default:
 				DbgPrintf(3, _T("Invalid certificate mapping method %d for user %s"), nMappingMethod, pszLogin);

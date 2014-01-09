@@ -37,8 +37,9 @@ public class User extends AbstractUserObject
 	public static final int AUTH_CERTIFICATE_OR_RADIUS = 4;
 	
 	// Certificate mapping methods
-	public static final int MAP_CERT_BY_SUBJECT		= 0;
-	public static final int MAP_CERT_BY_PUBKEY		= 1;
+	public static final int MAP_CERT_BY_SUBJECT = 0;
+	public static final int MAP_CERT_BY_PUBKEY  = 1;
+   public static final int MAP_CERT_BY_CN      = 2;
 	
 	private int authMethod;
 	private int certMappingMethod;
