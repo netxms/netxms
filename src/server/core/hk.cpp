@@ -43,15 +43,6 @@ static void DeleteEmptySubnets()
 }
 
 /**
- * Maintenance tasks specific to PostgreSQL
- */
-static void PGSQLMaintenance(DB_HANDLE hdb)
-{
-   if (!ConfigReadInt(_T("DisableVacuum"), 0))
-      DBQuery(hdb, _T("VACUUM ANALYZE"));
-}
-
-/**
  * Delete notes for alarm
  */
 void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId)
@@ -194,10 +185,6 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		g_idxNodeById.forEach(CleanDciData, NULL);
 		g_idxClusterById.forEach(CleanDciData, NULL);
 		g_idxMobileDeviceById.forEach(CleanDciData, NULL);
-
-      // Run DB-specific maintenance tasks
-      if (g_nDBSyntax == DB_SYNTAX_PGSQL)
-         PGSQLMaintenance(hdb);
 
 		DBConnectionPoolReleaseConnection(hdb);
 

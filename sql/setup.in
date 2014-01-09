@@ -43,7 +43,6 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DeleteEmptySubnets','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DeleteEventsOfDeletedObject','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DeleteUnreachableNodesPeriod','0',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DisableVacuum','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DiscoveryFilter','none',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DiscoveryFilterFlags','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DiscoveryPollingInterval','900',1,1);
