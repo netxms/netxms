@@ -31,6 +31,8 @@
 #include <tchar.h>
 #define snprintf _snprintf
 #else
+#include <config.h>
+
 #include <errno.h>
 #include <unistd.h>
 #include <sys/socket.h>
