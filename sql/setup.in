@@ -153,8 +153,8 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    disabled_until,last_login)
    VALUES (0,'admin',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', // Default password: netxms
-           65535,8,'#00','Built-in system administrator account',5,0,
-           '00000000-0000-0000-0000-000000000000',0,'#00',0,0,0,0,0
+           65535,8,'','Built-in system administrator account',5,0,
+           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0
           );
 
 
