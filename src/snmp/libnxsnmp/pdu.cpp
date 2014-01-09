@@ -589,7 +589,8 @@ BOOL SNMP_PDU::parsePdu(BYTE *pdu, UINT32 pduLength)
 	UINT32 length, idLength, type;
 	BOOL success;
 
-   if (success = BER_DecodeIdentifier(pdu, pduLength, &type, &length, &content, &idLength))
+   success = BER_DecodeIdentifier(pdu, pduLength, &type, &length, &content, &idLength);
+   if (success)
    {
       switch(type)
       {
