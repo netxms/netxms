@@ -218,7 +218,7 @@ CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionCo
  */
 BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx, CSCP_ENCRYPTED_MESSAGE *pMsg, BYTE *pDecryptionBuffer)
 {
-   return (pCtx != NULL) ? pCtx->decryptMessage(pMsg, pDecryptionBuffer) : NULL;
+   return (pCtx != NULL) ? pCtx->decryptMessage(pMsg, pDecryptionBuffer) : FALSE;
 }
 
 /**
