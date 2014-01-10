@@ -24,7 +24,7 @@ import org.netxms.base.NXCPMessage;
  * NetXMS object tool representation
  *
  */
-public class Certificate
+public class AuthCertificate
 {	
 	protected long id;
 	protected int type;
@@ -34,7 +34,7 @@ public class Certificate
 	/**
 	 * Default implicit constructor.
 	 */
-	public Certificate()
+	public AuthCertificate()
 	{
 	  id = 0;
 	  type = 0;
@@ -48,7 +48,7 @@ public class Certificate
 	 * @param msg NXCP message
 	 * @param baseId Base variable ID
 	 */
-	public Certificate(NXCPMessage msg, long baseId)
+	public AuthCertificate(NXCPMessage msg, long baseId)
 	{
 		id = msg.getVariableAsInt64(baseId);
 		type = msg.getVariableAsInteger(baseId + 1);
@@ -65,7 +65,7 @@ public class Certificate
 	 * @param subjec Subject of the certificate
 	 * @param comments Comments for certificate
 	 */
-	public Certificate(long id, int type, String certData, String subject, String comments)
+	public AuthCertificate(long id, int type, String certData, String subject, String comments)
 	{
 	   this.id = id;
 	   this.type = type;

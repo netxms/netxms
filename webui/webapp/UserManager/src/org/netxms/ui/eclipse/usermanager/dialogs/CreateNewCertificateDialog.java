@@ -25,6 +25,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.rap.rwt.widgets.FileUpload;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -93,10 +94,8 @@ public class CreateNewCertificateDialog extends Dialog
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
+        	FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
             fd.setText(Messages.get().CreateNewCertificateDialog_SelectFileHeader);
-            fd.setFilterExtensions(new String[] {"*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-            fd.setFilterNames(new String[] {Messages.get().CreateNewCertificateDialog_All });
             String selected = fd.open();
             if (selected != null)
                textFileName.setText(selected);
