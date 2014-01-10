@@ -305,7 +305,7 @@ public class General extends PropertyPage
       proxyNode.setLabel(Messages.get().General_ProxyNode);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(sampleCount.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       proxyNode.setLayoutData(fd);
       proxyNode.setObjectClass(Node.class);
