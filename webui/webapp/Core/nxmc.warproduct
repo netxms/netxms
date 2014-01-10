@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NXMC" uid="org.netxms.nxmc" version="1.2.10" useFeatures="false" includeLaunchers="false">
+<product name="NXMC" uid="org.netxms.nxmc" version="1.2.11" useFeatures="false" includeLaunchers="false">
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.xml"/>
@@ -138,8 +138,6 @@
       <plugin id="org.eclipse.osgi.services.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.rap.addons.filedialog"/>
       <plugin id="org.eclipse.rap.addons.fileupload"/>
-      <plugin id="org.eclipse.rap.draw2d"/>
-      <plugin id="org.eclipse.rap.draw2d.compatibility"/>
       <plugin id="org.eclipse.rap.jface"/>
       <plugin id="org.eclipse.rap.jface.databinding"/>
       <plugin id="org.eclipse.rap.jface.databinding.nl_cs" fragment="true"/>
@@ -182,6 +180,8 @@
       <plugin id="org.netxms.gef4.zest.jface"/>
       <plugin id="org.netxms.gef4.zest.layouts"/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
+      <plugin id="org.netxms.rap.draw2d"/>
+      <plugin id="org.netxms.rap.draw2d.compatibility"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
       <plugin id="org.netxms.ui.eclipse.alarmviewer"/>
@@ -252,8 +252,6 @@
       <plugin id="org.eclipse.osgi.services" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.addons.filedialog" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.addons.fileupload" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.rap.draw2d" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.rap.draw2d.compatibility" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.jface" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.jface.databinding" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.rwt" autoStart="true" startLevel="0" />
@@ -266,6 +264,8 @@
       <plugin id="org.netxms.gef4.zest.jface" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.gef4.zest.layouts" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.nebula.widgets.gallery" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.rap.draw2d" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.rap.draw2d.compatibility" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.actionmanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.agentmanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.alarmviewer" autoStart="true" startLevel="0" />

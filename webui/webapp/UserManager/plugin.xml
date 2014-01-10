@@ -5,18 +5,20 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="%view.UserManager.name"
-            icon="icons/user_manager.png"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.usermanager.views.UserManagementView"
-            id="org.netxms.ui.eclipse.usermanager.view.user_manager">
+            icon="icons/user_manager.png"
+            id="org.netxms.ui.eclipse.usermanager.view.user_manager"
+            name="%view.UserManager.name"
+            restorable="true">
       </view>
       <view
-            name="%view.CertificateManage.name"
-            icon="icons/certificate.png"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.usermanager.views.CertificateView"
-            id="org.netxms.ui.eclipse.usermanager.view.user_certificate">
+            icon="icons/certificate.png"
+            id="org.netxms.ui.eclipse.usermanager.view.user_certificate"
+            name="%view.CertificateManage.name"
+            restorable="true">
       </view>
    </extension>
    
@@ -43,9 +45,9 @@
             name="%command.ChangePasswd.name">
       </command>
       <command
-            description="%view.CertificateManage.name"
-            id="org.netxms.ui.eclipse.usermanager.actions.open_certificate_manager"
-            name="%view.CertificateManage.name">
+            description="%command.CertificateManager.description"
+            id="org.netxms.ui.eclipse.usermanager.commands.open_certificate_manager"
+            name="%command.CertificateManager.name">
       </command>
    </extension>
 
@@ -77,11 +79,11 @@
            definitionId="org.netxms.ui.eclipse.usermanager.commands.open_certificate_manager"
            icon="icons/certificate.png"
            id="org.netxms.ui.eclipse.usermanager.actions.certificate_manager"
-           label="%actionSet.CertificateManage.label"
+           label="%action.CertificateManager.label"
            menubarPath="config/additions"
            style="push"
            toolbarPath="config/additions"
-           tooltip="%action.UserManager.tooltip">
+           tooltip="%action.CertificateManager.tooltip">
      </action>
 	   </actionSet>
    </extension>
