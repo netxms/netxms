@@ -55,6 +55,9 @@ static UINT32 m_dwSupportedCiphers =
 /**
  * Static data
  */
+static void (*s_debugCallback)(int, const TCHAR *, va_list args) = NULL;
+static WORD s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
+
 #ifdef _WITH_ENCRYPTION
 
 extern "C" typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
@@ -92,9 +95,7 @@ static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
 #endif
 };
 static const TCHAR *s_cipherNames[NETXMS_MAX_CIPHERS] = { _T("AES-256"), _T("Blowfish-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("Blowfish-128") };
-static WORD s_noEncryptionFlag = 0;
 static MUTEX *s_cryptoMutexList = NULL;
-static void (*s_debugCallback)(int, const TCHAR *, va_list args) = NULL;
 
 /**
  * Locking callback for CRYPTO library
@@ -156,7 +157,6 @@ BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCal
    ERR_load_CRYPTO_strings();
    OpenSSL_add_all_algorithms();
    RAND_seed(random, 8192);
-   s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
    s_cryptoMutexList = (MUTEX *)malloc(sizeof(MUTEX) * CRYPTO_num_locks());
    for(i = 0; i < CRYPTO_num_locks(); i++)
       s_cryptoMutexList[i] = MutexCreate();
@@ -500,9 +500,11 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, c
  */
 NXCPEncryptionContext::NXCPEncryptionContext()
 {
-	m_sessionKey = NULL;
+   m_sessionKey = NULL;
+#ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX_init(&m_encryptor);
    EVP_CIPHER_CTX_init(&m_decryptor);
+#endif
 }
 
 /**
@@ -510,9 +512,11 @@ NXCPEncryptionContext::NXCPEncryptionContext()
  */
 NXCPEncryptionContext::~NXCPEncryptionContext()
 {
-	safe_free(m_sessionKey);
+   safe_free(m_sessionKey);
+#ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX_cleanup(&m_encryptor);
    EVP_CIPHER_CTX_cleanup(&m_decryptor);
+#endif
 }
 
 /**

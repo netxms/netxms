@@ -181,8 +181,10 @@ private:
 	BYTE *m_sessionKey;
 	int m_keyLength;
 	BYTE m_iv[EVP_MAX_IV_LENGTH];
+#ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX m_encryptor;
    EVP_CIPHER_CTX m_decryptor;
+#endif
 
 	NXCPEncryptionContext();
    bool initCipher(int cipher);
