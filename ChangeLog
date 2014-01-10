@@ -9,7 +9,8 @@
 - New attribute "driver" for NXSL class "Node"
 - Management console:
 	- Stacked line charts implemented
-- Fixed issues: #16, #385, #464, #469
+	- Authentication by certificates supported by Java console
+- Fixed issues: #16, #76, #385, #464, #469
 
 
 *

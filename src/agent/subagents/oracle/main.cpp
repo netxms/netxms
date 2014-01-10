@@ -179,11 +179,7 @@ static BOOL SubAgentInit(Config *config)
 	};
 
 	// Init db driver
-#ifdef _WIN32
 	g_driverHandle = DBLoadDriver(_T("oracle.ddr"), NULL, TRUE, NULL, NULL);
-#else
-	g_driverHandle = DBLoadDriver(LIBDIR _T("/netxms/dbdrv/oracle.ddr"), NULL, TRUE, NULL, NULL);
-#endif
 	if (g_driverHandle == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load db driver"), MYNAMESTR);
