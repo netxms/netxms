@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objecttools.views;
+package org.netxms.ui.eclipse.usermanager.views;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -47,47 +44,42 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
-import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
-import org.netxms.client.AccessListElement;
+import org.netxms.api.client.users.Certificate;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objecttools.Activator;
-import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.objecttools.ObjectToolsAdapterFactory;
-import org.netxms.ui.eclipse.objecttools.dialogs.CreateNewToolDialog;
-import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsComparator;
-import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.CertificateComparator;
+import org.netxms.ui.eclipse.usermanager.CertificateLabelProvider;
+import org.netxms.ui.eclipse.usermanager.dialogs.CreateNewCertificateDialog;
+import org.netxms.ui.eclipse.usermanager.dialogs.EditCertificateDialog;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Editor for object tools
+ * Editor for certificates
  */
 @SuppressWarnings("restriction")
-public class ObjectToolsEditor extends ViewPart implements SessionListener
+public class CertificateView extends ViewPart implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"; //$NON-NLS-1$
+   public static final String ID = "org.netxms.ui.eclipse.usermanager.view.user_certificate"; //$NON-NLS-1$
+   
+   private static final String TABLE_CONFIG_PREFIX = "CertificatesEditor"; //$NON-NLS-1$
 
-	private static final String TABLE_CONFIG_PREFIX = "ObjectToolsEditor"; //$NON-NLS-1$
+   // Columns
+   public static final int COLUMN_ID = 0;
+   public static final int COLUMN_TYPE = 1;
+   public static final int COLUMN_COMMENTS = 2;
+   public static final int COLUMN_SUBJECT = 3;
 	
-	public static final int COLUMN_ID = 0;
-	public static final int COLUMN_NAME = 1;
-	public static final int COLUMN_TYPE = 2;
-	public static final int COLUMN_DESCRIPTION = 3;
-	
-	private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
+	private Map<Long, Certificate> certificates = new HashMap<Long, Certificate>();
 	private SortableTableViewer viewer;
 	private NXCSession session;
 	private Action actionRefresh;
@@ -102,25 +94,16 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	public void createPartControl(Composite parent)
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
-
-		// Initiate loading of required plugins if they was not loaded yet
-		try
-		{
-			Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-		}
-		catch(Exception e)
-		{
-		}
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { Messages.get().ObjectToolsEditor_ColId, Messages.get().ObjectToolsEditor_ColName, Messages.get().ObjectToolsEditor_ColType, Messages.get().ObjectToolsEditor_ColDescr };
-		final int[] columnWidths = { 90, 200, 100, 200 };
-		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		final String[] columnNames = {"ID", "Type", "Comments", "Subject"};
+		final int[] columnWidths = { 30, 100, 200, 200 };
+		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new ObjectToolsLabelProvider());
-		viewer.setComparator(new ObjectToolsComparator());
+		viewer.setLabelProvider(new CertificateLabelProvider());
+		viewer.setComparator(new CertificateComparator());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
 		{
 			@Override
@@ -155,7 +138,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		
 		session.addListener(this);
 		
-		refreshToolList();
+		refreshCertificateList();
 	}
 
 	/**
@@ -167,49 +150,42 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			@Override
 			public void run()
 			{
-				refreshToolList();
+				refreshCertificateList();
 			}
 		};
 		
-		actionNew = new Action(Messages.get().ObjectToolsEditor_New) {
+		actionNew = new Action("Create new certificate") {
 			@Override
 			public void run()
 			{
-				createTool();
+				createCertificate();
 			}
 		};
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-		actionEdit = new PropertyDialogAction(getSite(), viewer) {
+		actionEdit = new Action("&Properties...") {
 			@Override
 			public void run()
 			{
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				if (selection.size() != 1)
 					return;
-				final long toolId = ((ObjectTool)selection.getFirstElement()).getId();
+				final long certId = ((Certificate)selection.getFirstElement()).getId(); 
 				
-				// Check if we have details loaded or can load before showing properties dialog
-				// If there will be error, adapter factory will show error message to user
-				if (Platform.getAdapterManager().getAdapter(selection.getFirstElement(), ObjectToolDetails.class) == null)
-					return;
-				
-				super.run();
-				
-				ObjectToolDetails details = ObjectToolsAdapterFactory.getDetailsFromCache(toolId);
-				if ((details != null) && details.isModified())
+				Certificate cert = certificates.get(certId);
+				if ((cert != null))
 				{
-					saveObjectTool(details);
+					saveCertificate(cert);
 				}
 			}
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
-		actionDelete = new Action(Messages.get().ObjectToolsEditor_Delete) {
+		actionDelete = new Action("Delete Certificate") {
 			@Override
 			public void run()
 			{
-				deleteTools();
+				deleteCertificate();
 			}
 		};
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
@@ -244,7 +220,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 * Fill local tool bar
 	 * 
 	 * @param manager
-	 *           Menu manager for local toolbar
+	 *           Menu manager for local tool bar
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
@@ -294,23 +270,25 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	}
 
 	/**
-	 * Refresh tool list
+	 * Refresh certificate list
 	 */
-	private void refreshToolList()
+	private void refreshCertificateList()
 	{
-		new ConsoleJob(Messages.get().ObjectToolsEditor_JobGetConfig, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob("Refresh certificate list", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<ObjectTool> tl = session.getObjectTools();
+				final List<Certificate> cl = session.getCertificateList();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						tools.clear();
-						for(ObjectTool t : tl)
-							tools.put(t.getId(), t);
-						viewer.setInput(tools.values().toArray());
+					   certificates.clear();
+						for(Certificate c : cl)
+						{
+						   certificates.put(c.getId(), c);
+						}
+						viewer.setInput(certificates.values().toArray());
 					}
 				});
 			}
@@ -318,65 +296,62 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().ObjectToolsEditor_JobGetConfigError;
+				return "Uncable to get certificate list";
 			}
 		}.start();
 	}
 	
 	/**
-	 * Create new tool
+	 * Create new certificate
 	 */
-	private void createTool()
+	private void createCertificate()
 	{
-		final CreateNewToolDialog dlg = new CreateNewToolDialog(getSite().getShell());
+		final CreateNewCertificateDialog dlg = new CreateNewCertificateDialog(getSite().getShell());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().ObjectToolsEditor_JobNewId, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob("Create new certificate", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					final long toolId = session.generateObjectToolId();
-					final ObjectToolDetails details = new ObjectToolDetails(toolId, dlg.getType(), dlg.getName());
-					session.modifyObjectTool(details);
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, details);
-							dlg.open();
-							if (details.isModified())
-								saveObjectTool(details);
-						}
-					});
+					final String comment = dlg.getComment();
+					final byte[] data = dlg.getFileContent();
+					if(data != null)
+					{
+					   session.createNewCertificate(data, comment);
+					}
+					else
+					{
+					   throw new Exception("Incorrect certificate file");
+					}
 				}
 
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.get().ObjectToolsEditor_JobNewIdError;
+					return "Could not create new certificate";
 				}
 			}.start();
 		}
 	}
 	
 	/**
-	 * Delete selected tools
+	 * Delete selected certificate
 	 */
-	private void deleteTools()
+	private void deleteCertificate()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 			return;
 		
-		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ObjectToolsEditor_Confirmation, Messages.get().ObjectToolsEditor_DeleteConfirmation))
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Confirmation", "Do you really want to delete selected certificate?"))
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob(Messages.get().ObjectToolsEditor_JobDelete, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob("Delete certificate", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().ObjectToolsEditor_JobDeleteError;
+				return "Unable to delete selected certificates.";
 			}
 
 			@Override
@@ -384,46 +359,38 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			{
 				for(int i = 0; i < objects.length; i++)
 				{
-					session.deleteObjectTool(((ObjectTool)objects[i]).getId());
+					session.deleteCertificate(((Certificate)objects[i]).getId());
 				}
 			}
 		}.start();
 	}
 	
 	/**
-	 * Save object tool configuration on server
+	 * Save certificate changes
 	 * 
-	 * @param details object tool details
+	 * @param cert selected certificate 
 	 */
-	private void saveObjectTool(final ObjectToolDetails details)
+	private void saveCertificate(final Certificate cert)
 	{
-		new ConsoleJob(Messages.get().ObjectToolsEditor_JobSave, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.modifyObjectTool(details);
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().ObjectToolsEditor_JobSaveError;
-			}
-
-			@Override
-			protected void jobFailureHandler()
-			{
-				// Was unable to save configuration on server, invalidate cache
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						ObjectToolsAdapterFactory.deleteFromCache(details.getId());
-					}
-				});
-			}
-		}.schedule();
+	   final EditCertificateDialog dlg = new EditCertificateDialog(getSite().getShell(), cert);
+	   if (dlg.open() == Window.OK)
+      {
+   		new ConsoleJob("Save modified certificate", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+   
+   			@Override
+   			protected void runInternal(IProgressMonitor monitor) throws Exception
+   			{
+   				session.updateCertificate(cert.getId(), dlg.getComments());
+   			}
+   
+   			@Override
+   			protected String getErrorMessage()
+   			{
+   				return "Could not save modified certificate.";
+   			}
+   
+   		}.schedule();
+      }
 	}
 
 	/* (non-Javadoc)
@@ -441,24 +408,10 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
-		switch(n.getCode())
-		{
-			case NXCNotification.OBJECT_TOOLS_CHANGED:
-				refreshToolList();
-				break;
-			case NXCNotification.OBJECT_TOOL_DELETED:
-				new UIJob(getSite().getShell().getDisplay(), "Delete object tool from list") { //$NON-NLS-1$
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						ObjectToolsAdapterFactory.deleteFromCache(n.getSubCode());
-						tools.remove(n.getSubCode());
-						viewer.setInput(tools.values().toArray());
-						return Status.OK_STATUS;
-					}
-				}.schedule();
-				break;
-		}
+	   if(n.getCode() == NXCNotification.DCI_CERTIFICATE_CHANGED)
+	   {
+	      refreshCertificateList();
+	   }
 	}
 
 	/* (non-Javadoc)
@@ -468,7 +421,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	public void dispose()
 	{
 		session.removeListener(this);
-		ObjectToolsAdapterFactory.clearCache();
 		super.dispose();
 	}
 }

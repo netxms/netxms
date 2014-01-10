@@ -9475,6 +9475,7 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 				_tcscat(pszQuery, _T("')"));
 				if (DBQuery(g_hCoreDB, pszQuery))
 				{
+               NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
 					ReloadCertificates();
 				}
@@ -9531,6 +9532,7 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 		if (DBQuery(g_hCoreDB, szQuery))
 		{
 			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
 			ReloadCertificates();
 		}
 		else
@@ -9584,6 +9586,7 @@ void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 					_sntprintf(pszQuery, qlen, _T("UPDATE certificates SET comments='%s' WHERE cert_id=%d"), pszEscComments, dwCertId);
 					if (DBQuery(g_hCoreDB, pszQuery))
 					{
+                  NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
 					}
 					else

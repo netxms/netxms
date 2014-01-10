@@ -32,6 +32,7 @@ import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.api.client.servermanager.ServerManager;
 import org.netxms.api.client.servermanager.ServerVariable;
 import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.Certificate;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
@@ -4958,6 +4959,84 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ACTION);
       msg.setVariableInt32(NXCPCodes.VID_ACTION_ID, (int) actionId);
       sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Get list of certificates
+    *
+    * @return List of certificates
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<Certificate> getCertificateList() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CERT_LIST);
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_CERTIFICATES);
+      final List<Certificate> list = new ArrayList<Certificate>(count);
+
+      long varId = NXCPCodes.VID_CERT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         list.add(new Certificate(response, varId));
+         varId += 10;
+      }
+
+      return list;
+   }
+   
+   /**
+    * Create new certificate
+    *
+    * @param data certificate file content
+    * @param comments comment for certificate
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void createNewCertificate(byte[] data, String comments) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_CA_CERTIFICATE);
+      msg.setVariable(NXCPCodes.VID_CERTIFICATE, data);
+      msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
+      sendMessage(msg);
+
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Delete certificate
+    *
+    * @param id the certificate id
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteCertificate(long id) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_CERTIFICATE);
+      msg.setVariableInt32(NXCPCodes.VID_CERTIFICATE_ID, (int)id);
+      sendMessage(msg);
+
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Update certificate
+    *
+    * @param id the certificate id
+    * @param comment the certificate comment
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateCertificate(long id, String comment) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_CERT_COMMENTS);
+      msg.setVariableInt32(NXCPCodes.VID_CERTIFICATE_ID, (int)id);
+      msg.setVariable(NXCPCodes.VID_COMMENTS, comment);
+      sendMessage(msg);
+
       waitForRCC(msg.getMessageId());
    }
 

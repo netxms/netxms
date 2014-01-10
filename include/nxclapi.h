@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Client Library API
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -401,28 +401,29 @@ enum
 /**
  * Notification codes
  */
-#define NX_NOTIFY_SHUTDOWN          1
-#define NX_NOTIFY_EVENTDB_CHANGED   2
-#define NX_NOTIFY_ALARM_DELETED     3
-#define NX_NOTIFY_NEW_ALARM         4
-#define NX_NOTIFY_ALARM_CHANGED     5
-#define NX_NOTIFY_ACTION_CREATED    6
-#define NX_NOTIFY_ACTION_MODIFIED   7
-#define NX_NOTIFY_ACTION_DELETED    8
-#define NX_NOTIFY_OBJTOOLS_CHANGED  9
-#define NX_NOTIFY_DBCONN_STATUS     10
-#define NX_NOTIFY_ALARM_TERMINATED  11
-#define NX_NOTIFY_GRAPHS_CHANGED		12
-#define NX_NOTIFY_ETMPL_CHANGED     13
-#define NX_NOTIFY_ETMPL_DELETED     14
-#define NX_NOTIFY_OBJTOOL_DELETED   15
-#define NX_NOTIFY_TRAPCFG_CREATED   16
-#define NX_NOTIFY_TRAPCFG_MODIFIED  17
-#define NX_NOTIFY_TRAPCFG_DELETED   18
-#define NX_NOTIFY_MAPTBL_CHANGED    19
-#define NX_NOTIFY_MAPTBL_DELETED    20
-#define NX_NOTIFY_DCISUMTBL_CHANGED 21
-#define NX_NOTIFY_DCISUMTBL_DELETED 22
+#define NX_NOTIFY_SHUTDOWN             1
+#define NX_NOTIFY_EVENTDB_CHANGED      2
+#define NX_NOTIFY_ALARM_DELETED        3
+#define NX_NOTIFY_NEW_ALARM            4
+#define NX_NOTIFY_ALARM_CHANGED        5
+#define NX_NOTIFY_ACTION_CREATED       6
+#define NX_NOTIFY_ACTION_MODIFIED      7
+#define NX_NOTIFY_ACTION_DELETED       8
+#define NX_NOTIFY_OBJTOOLS_CHANGED     9
+#define NX_NOTIFY_DBCONN_STATUS        10
+#define NX_NOTIFY_ALARM_TERMINATED     11
+#define NX_NOTIFY_GRAPHS_CHANGED       12
+#define NX_NOTIFY_ETMPL_CHANGED        13
+#define NX_NOTIFY_ETMPL_DELETED        14
+#define NX_NOTIFY_OBJTOOL_DELETED      15
+#define NX_NOTIFY_TRAPCFG_CREATED      16
+#define NX_NOTIFY_TRAPCFG_MODIFIED     17
+#define NX_NOTIFY_TRAPCFG_DELETED      18
+#define NX_NOTIFY_MAPTBL_CHANGED       19
+#define NX_NOTIFY_MAPTBL_DELETED       20
+#define NX_NOTIFY_DCISUMTBL_CHANGED    21
+#define NX_NOTIFY_DCISUMTBL_DELETED    22
+#define NX_NOTIFY_CERTIFICATE_CHANGED  23
 
 /**
  * Request completion codes
@@ -2031,7 +2032,7 @@ CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCo
 UINT32 LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, UINT32 dwRqId);
 
 /** Session management **/
-UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, const TCHAR *pszLogin, 
+UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, const TCHAR *pszLogin,
                                     const TCHAR *pszPassword, UINT32 dwCertLen,
                                     BOOL (* pfSign)(BYTE *, UINT32, BYTE *, UINT32 *, void *),
                                     void *pSignArg, NXC_SESSION *phSession, const TCHAR *pszClientInfo,
@@ -2082,11 +2083,11 @@ UINT32 LIBNXCL_EXPORTABLE NXCAddClusterNode(NXC_SESSION hSession, UINT32 cluster
 UINT32 LIBNXCL_EXPORTABLE NXCRemoveTemplate(NXC_SESSION hSession, UINT32 dwTemplateId,
                                            UINT32 dwNodeId, BOOL bRemoveDCI);
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, UINT32 dwObject);
-UINT32 LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, UINT32 dwObjectId, int iPollType, 
+UINT32 LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, UINT32 dwObjectId, int iPollType,
                                      void (* pCallback)(TCHAR *, void *), void *pArg);
 UINT32 LIBNXCL_EXPORTABLE NXCWakeUpNode(NXC_SESSION hSession, UINT32 dwObjectId);
 UINT32 LIBNXCL_EXPORTABLE NXCGetSupportedParameters(NXC_SESSION hSession, UINT32 dwNodeId,
-                                                   UINT32 *pdwNumParams, 
+                                                   UINT32 *pdwNumParams,
                                                    NXC_AGENT_PARAM **ppParamList);
 void LIBNXCL_EXPORTABLE NXCGetComparableObjectName(NXC_SESSION hSession, UINT32 dwObjectId,
                                                    TCHAR *pszName);
@@ -2169,16 +2170,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST
 UINT32 LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, UINT32 *pdwItemId);
 UINT32 LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, UINT32 dwNodeId, NXC_DCI *pItem);
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, UINT32 dwItemId);
-UINT32 LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwNumItems, 
+UINT32 LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwNumItems,
                                          UINT32 *pdwItemList, int iStatus);
-UINT32 LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, UINT32 dwSrcNodeId, UINT32 dwDstNodeId, 
+UINT32 LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, UINT32 dwSrcNodeId, UINT32 dwDstNodeId,
                                     UINT32 dwNumItems, UINT32 *pdwItemList, BOOL bMove);
 UINT32 LIBNXCL_EXPORTABLE NXCApplyTemplate(NXC_SESSION hSession, UINT32 dwTemplateId, UINT32 dwNodeId);
 UINT32 LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, UINT32 dwItemId);
 UINT32 LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId, UINT32 dwMaxRows,
                                        UINT32 dwTimeFrom, UINT32 dwTimeTo, NXC_DCI_DATA **ppData);
-UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId, 
-                                         UINT32 dwMaxRows, UINT32 dwTimeFrom, UINT32 dwTimeTo, 
+UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId,
+                                         UINT32 dwMaxRows, UINT32 dwTimeFrom, UINT32 dwTimeTo,
                                          NXC_DCI_DATA **ppData, NXC_DCI_THRESHOLD **thresholds, UINT32 *numThresholds);
 void LIBNXCL_EXPORTABLE NXCDestroyDCIData(NXC_DCI_DATA *pData);
 NXC_DCI_ROW LIBNXCL_EXPORTABLE *NXCGetRowPtr(NXC_DCI_DATA *pData, UINT32 dwRow);
@@ -2246,7 +2247,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *e);
 /** Packages **/
 UINT32 LIBNXCL_EXPORTABLE NXCLockPackageDB(NXC_SESSION hSession);
 UINT32 LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession);
-UINT32 LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, UINT32 *pdwNumPackages, 
+UINT32 LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, UINT32 *pdwNumPackages,
                                            NXC_PACKAGE_INFO **ppList);
 UINT32 LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INFO *pInfo,
                                            TCHAR *pszFullPkgPath);
@@ -2259,8 +2260,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, UINT32 dwPkgId,
 /** Server management **/
 UINT32 LIBNXCL_EXPORTABLE NXCResetServerComponent(NXC_SESSION hSession, UINT32 dwComponent);
 UINT32 LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STATS *pStats);
-UINT32 LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession, 
-                                               NXC_SERVER_VARIABLE **ppVarList, 
+UINT32 LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession,
+                                               NXC_SERVER_VARIABLE **ppVarList,
                                                UINT32 *pdwNumVars);
 UINT32 LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, const TCHAR *pszVarName,
                                               const TCHAR *pszValue);

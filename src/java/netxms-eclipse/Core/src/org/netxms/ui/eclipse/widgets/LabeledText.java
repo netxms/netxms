@@ -110,6 +110,26 @@ public class LabeledText extends Composite
 	}
 	
 	/**
+    * Sets the editable state.
+    * 
+    * @param editable the new editable state
+    */
+   public void setEditable(boolean editable)
+   {
+      text.setEditable(editable);
+   }
+   
+   /**
+    * Returns the editable state.
+    * 
+    * @return whether or not the receiver is editable
+    */
+   public boolean getEditable()
+   {
+      return text.getEditable();
+   }
+	
+	/**
 	 * Set label
 	 * 
 	 * @param newLabel New label

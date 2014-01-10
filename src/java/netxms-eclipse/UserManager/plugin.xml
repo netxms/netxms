@@ -11,6 +11,13 @@
             class="org.netxms.ui.eclipse.usermanager.views.UserManagementView"
             id="org.netxms.ui.eclipse.usermanager.view.user_manager">
       </view>
+      <view
+            name="%view.CertificateManage.name"
+            icon="icons/certificate.png"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.usermanager.views.CertificateView"
+            id="org.netxms.ui.eclipse.usermanager.view.user_certificate">
+      </view>
    </extension>
    
    <extension
@@ -34,6 +41,11 @@
             description="%command.ChangePasswd.description"
             id="org.netxms.ui.eclipse.usermanager.commands.change_password"
             name="%command.ChangePasswd.name">
+      </command>
+      <command
+            description="%view.CertificateManage.name"
+            id="org.netxms.ui.eclipse.usermanager.actions.open_certificate_manager"
+            name="%view.CertificateManage.name">
       </command>
    </extension>
 
@@ -59,6 +71,17 @@
            label="%action.ChangePasswd.label"
            menubarPath="tools/additions"
            tooltip="%action.ChangePasswd.tooltip">
+     </action>
+     <action
+           class="org.netxms.ui.eclipse.usermanager.actions.OpenCertificateManager"
+           definitionId="org.netxms.ui.eclipse.usermanager.commands.open_certificate_manager"
+           icon="icons/certificate.png"
+           id="org.netxms.ui.eclipse.usermanager.actions.certificate_manager"
+           label="%actionSet.CertificateManage.label"
+           menubarPath="config/additions"
+           style="push"
+           toolbarPath="config/additions"
+           tooltip="%action.UserManager.tooltip">
      </action>
 	   </actionSet>
    </extension>
