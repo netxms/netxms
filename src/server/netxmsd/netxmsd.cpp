@@ -23,6 +23,10 @@
 
 #include "netxmsd.h"
 
+#if HAVE_LOCALE_H
+#include <locale.h>
+#endif
+
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
@@ -331,7 +335,15 @@ int main(int argc, char* argv[])
    InitThreadLibrary();
 
 #ifdef NETXMS_MEMORY_DEBUG
-	InitMemoryDebugger();
+   InitMemoryDebugger();
+#endif
+
+   // Set locale to C. It shouldn't be needed, according to
+   // documentation, but I've seen the cases when agent formats
+   // floating point numbers by sprintf inserting comma in place
+   // of a dot, as set by system's regional settings.
+#if HAVE_SETLOCALE
+   setlocale(LC_NUMERIC, "C");
 #endif
 
    // Check for alternate config file location

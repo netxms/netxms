@@ -56,7 +56,7 @@ static UINT32 m_dwSupportedCiphers =
  * Static data
  */
 static void (*s_debugCallback)(int, const TCHAR *, va_list args) = NULL;
-static WORD s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
+static WORD s_noEncryptionFlag = 0;
 
 #ifdef _WITH_ENCRYPTION
 
@@ -148,6 +148,7 @@ static void CryptoDbgPrintf(int level, const TCHAR *format, ...)
 BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args))
 {
    s_debugCallback = debugCallback;
+   s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
 
 #ifdef _WITH_ENCRYPTION
    BYTE random[8192];

@@ -285,10 +285,13 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 #if !defined(UNDER_CE)
-#define HAVE_LIBEXPAT 1
+#define HAVE_LIBEXPAT  1
 #endif
 
 #define XMPP_SUPPORTED 1
+
+#define HAVE_LOCALE_H  1
+#define HAVE_SETLOCALE 1
 
 // Use Win32 API instead of msvcrt for memory allocation
 #ifdef USE_WIN32_HEAP

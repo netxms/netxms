@@ -1219,7 +1219,7 @@ AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
-AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h])
+AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
@@ -1403,7 +1403,7 @@ AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
 AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror])
-AC_CHECK_FUNCS([strrchr strlwr strtol strtoul strtoll strtoull])
+AC_CHECK_FUNCS([strrchr strlwr strtol strtoul strtoll strtoull setlocale])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 

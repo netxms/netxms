@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,10 +25,13 @@
 
 #if defined(_WIN32)
 #include <conio.h>
-#include <locale.h>
 #else
 #include <signal.h>
 #include <sys/wait.h>
+#endif
+
+#if HAVE_LOCALE_H
+#include <locale.h>
 #endif
 
 #if HAVE_SYS_UTSNAME_H
@@ -1141,8 +1144,8 @@ int main(int argc, char *argv[])
    // documentation, but I've seen the cases when agent formats
    // floating point numbers by sprintf inserting comma in place
    // of a dot, as set by system's regional settings.
-#ifdef _WIN32
-   setlocale(LC_ALL, "C");
+#if HAVE_SETLOCALE
+   setlocale(LC_NUMERIC, "C");
 #endif
 
    // Check for alternate config file location
