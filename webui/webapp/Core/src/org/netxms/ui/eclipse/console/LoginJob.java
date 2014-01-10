@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.console;
 
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
+import java.security.cert.Certificate;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -64,6 +65,7 @@ public class LoginJob implements IRunnableWithProgress
    private boolean ignoreProtocolVersion;
    private int authMethod;
    private String password;
+   private Certificate certificate;
    private Signature signature;
    private String clientAddress;
 
@@ -125,7 +127,7 @@ public class LoginJob implements IRunnableWithProgress
                session.setPassword(password);
                break;
             case NXCSession.AUTH_TYPE_CERTIFICATE:
-               session.setSignature(signature);
+               session.setCertificate(certificate, signature);
                break;
          }
          
@@ -265,12 +267,13 @@ public class LoginJob implements IRunnableWithProgress
    }
 
    /**
-    * Set signature for this login job
+    * Set certificate and signature for this login job
     * 
     * @param signature
     */
-   public void setSignature(Signature signature)
+   public void setCertificate(Certificate certificate, Signature signature)
    {
+      this.certificate = certificate;
       this.signature = signature;
       authMethod = NXCSession.AUTH_TYPE_CERTIFICATE;
    }
