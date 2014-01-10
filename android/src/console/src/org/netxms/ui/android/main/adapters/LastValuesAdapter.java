@@ -319,8 +319,8 @@ public class LastValuesAdapter extends BaseAdapter
 			int f = t.getFunction();
 			StringBuilder text = new StringBuilder(r.getString(fns[f]));
 			text.append("(");
-			if (f != Threshold.F_DIFF)
-				text.append(t.getArg1());
+			if ((f != Threshold.F_DIFF) && (f != Threshold.F_SCRIPT))
+				text.append(t.getSampleCount());
 			text.append(") ");
 			text.append(r.getString(ops[t.getOperation()]));
 			text.append(' ');

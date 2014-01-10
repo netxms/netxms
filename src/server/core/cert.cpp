@@ -93,8 +93,6 @@ static BOOL CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
  */
 static BOOL CheckCommonName(X509 *cert, const TCHAR *cn)
 {
-   TCHAR certCN[256];
-
    X509_NAME *subject = X509_get_subject_name(cert);
    if (subject == NULL)
       return FALSE;
@@ -111,13 +109,19 @@ static BOOL CheckCommonName(X509 *cert, const TCHAR *cn)
    if (data == NULL)
       return FALSE;
 
-   unsigned char *utf8;
-   int length = ASN1_STRING_to_UTF8(&utf8, data);
-   printf( ">>> CN value: %s\n", utf8 );
-   printf( ">>> CN length: %d\n", length );
-   OPENSSL_free(utf8);
-
-   return TRUE;
+   unsigned char *utf8CertCN;
+   int length = ASN1_STRING_to_UTF8(&utf8CertCN, data);
+#ifdef UNICODE
+   DbgPrintf(3, _T("Certificate CN=\"%hs\", user CN=\"%s\""), utf8CertCN, cn);
+   char *utf8UserCN = UTF8StringFromWideString(cn);
+   BOOL success = !stricmp((char *)utf8CertCN, utf8UserCN);
+   free(utf8UserCN);
+#else
+   DbgPrintf(3, _T("Certificate CN=\"%s\", user CN=\"%s\""), utf8CertCN, cn);
+   BOOL success = !stricmp((char *)utf8CertCN, cn);
+#endif
+   OPENSSL_free(utf8CertCN);
+   return success;
 }
 
 /**
