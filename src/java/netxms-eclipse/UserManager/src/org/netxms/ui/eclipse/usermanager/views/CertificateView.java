@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.usermanager.views;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -67,7 +68,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Editor for certificates
  */
-@SuppressWarnings("restriction")
 public class CertificateView extends ViewPart implements SessionListener
 {
    public static final String ID = "org.netxms.ui.eclipse.usermanager.view.user_certificate"; //$NON-NLS-1$

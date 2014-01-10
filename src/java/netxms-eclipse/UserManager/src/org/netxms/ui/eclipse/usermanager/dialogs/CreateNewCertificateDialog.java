@@ -60,6 +60,14 @@ public class CreateNewCertificateDialog extends Dialog
    {
       super(parentShell);
    }
+	
+	@Override
+   protected void configureShell(Shell newShell)
+   {
+      // TODO Auto-generated method stub
+      super.configureShell(newShell);
+      newShell.setText(Messages.get().CreateNewCertificateDialog_CreateNewCertificateDialogTitle);
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
@@ -78,7 +86,7 @@ public class CreateNewCertificateDialog extends Dialog
 		textFileName = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.get().CreateNewCertificateDialog_FileNameLabel, null, WidgetHelper.DEFAULT_LAYOUT_DATA);
       
       browseButton = new Button(dialogArea, SWT.PUSH);
-      browseButton.setText(Messages.get().CreateNewCertificateDialog_BrouseLabel);
+      browseButton.setText(Messages.get().CreateNewCertificateDialog_BrowseLabel);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;

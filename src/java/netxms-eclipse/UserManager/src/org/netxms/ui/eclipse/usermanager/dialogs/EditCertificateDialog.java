@@ -60,13 +60,21 @@ public class EditCertificateDialog extends Dialog
    }
 
    /**
-    * 
+    * Standard constructor
     * 
     * @param parentShell
     */
    public EditCertificateDialog(Shell parentShell)
    {
       super(parentShell);
+   }
+
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      // TODO Auto-generated method stub
+      super.configureShell(newShell);
+      newShell.setText(Messages.get().EditCertificateDialog_EditCertificateDialogTitle);
    }
 
    /*

@@ -48,8 +48,9 @@ public class Messages extends NLS
 	public static String ChangePasswordDialog_OldPassword;
 	public static String ChangePasswordDialog_Title;
 	public static String CreateNewCertificateDialog_All;
-   public static String CreateNewCertificateDialog_BrouseLabel;
+   public static String CreateNewCertificateDialog_BrowseLabel;
    public static String CreateNewCertificateDialog_CertificateCommentLabel;
+   public static String CreateNewCertificateDialog_CreateNewCertificateDialogTitle;
    public static String CreateNewCertificateDialog_FileNameLabel;
    public static String CreateNewCertificateDialog_SelectFileHeader;
    public static String CreateObjectDialog_DefAddProp;
@@ -62,6 +63,7 @@ public class Messages extends NLS
    public static String EditCertificateDialog_CertType_AC;
    public static String EditCertificateDialog_CertType_UC;
    public static String EditCertificateDialog_CertTypeLabel;
+   public static String EditCertificateDialog_EditCertificateDialogTitle;
    public static String General_Description;
 	public static String General_FullName;
 	public static String General_JobError;
