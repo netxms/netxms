@@ -350,3 +350,19 @@ void xmpp_stop(xmpp_ctx_t *ctx)
     if (ctx->loop_status == XMPP_LOOP_RUNNING)
 	ctx->loop_status = XMPP_LOOP_QUIT;
 }
+
+/**
+ * Set loop status
+ */
+void xmpp_set_loop_status(xmpp_ctx_t *ctx, xmpp_loop_status_t status)
+{
+   ctx->loop_status = status;
+}
+
+/**
+ * Get current loop status
+ */
+xmpp_loop_status_t xmpp_get_loop_status(xmpp_ctx_t *ctx)
+{
+   return ctx->loop_status;
+}

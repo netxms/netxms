@@ -35,12 +35,6 @@
 
 /** run-time context **/
 
-typedef enum {
-    XMPP_LOOP_NOTSTARTED,
-    XMPP_LOOP_RUNNING,
-    XMPP_LOOP_QUIT
-} xmpp_loop_status_t;
-
 typedef struct _xmpp_connlist_t {
     xmpp_conn_t *conn;
     struct _xmpp_connlist_t *next;

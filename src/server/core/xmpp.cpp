@@ -237,8 +237,9 @@ static void ConnectionHandler(xmpp_conn_t * const conn, const xmpp_conn_event_t 
 /**
  * XMPP context
  */
-xmpp_ctx_t *s_xmppContext = NULL;
-xmpp_conn_t *s_xmppConnection = NULL;
+static xmpp_ctx_t *s_xmppContext = NULL;
+static xmpp_conn_t *s_xmppConnection = NULL;
+static MUTEX s_xmppMutex = MutexCreate();
 
 /**
  * XMPP thread
@@ -262,8 +263,13 @@ THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
    // outer loop - try to reconnect after disconnect
    do
    {
-      // enter the event loop - connection handler will trigger an exit
-      xmpp_run(s_xmppContext);
+      xmpp_set_loop_status(s_xmppContext, XMPP_LOOP_RUNNING);
+      while(xmpp_get_loop_status(s_xmppContext) == XMPP_LOOP_RUNNING) 
+      {
+         MutexLock(s_xmppMutex);
+         xmpp_run_once(s_xmppContext, 100);
+         MutexUnlock(s_xmppMutex);
+      }
    } while(!SleepAndCheckForShutdown(30));
 
    xmpp_conn_release(s_xmppConnection);
@@ -280,6 +286,7 @@ THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
  */
 void StopXMPPConnector()
 {
+   MutexLock(s_xmppMutex);
    if (s_xmppContext != NULL)
    {
       if (s_xmppConnected)
@@ -287,6 +294,7 @@ void StopXMPPConnector()
       else
          xmpp_stop(s_xmppContext);
    }
+   MutexUnlock(s_xmppMutex);
 }
 
 /**
@@ -305,6 +313,8 @@ bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message)
    const char *_message = message;
 #endif
 
+   MutexLock(s_xmppMutex);
+
 	xmpp_stanza_t *msg = xmpp_stanza_new(s_xmppContext);
 	xmpp_stanza_set_name(msg, "message");
 	xmpp_stanza_set_type(msg, "chat");
@@ -320,6 +330,8 @@ bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message)
 	
 	xmpp_send(s_xmppConnection, msg);
 	xmpp_stanza_release(msg);
+
+   MutexUnlock(s_xmppMutex);
 
 #ifdef UNICODE
    free(_rcpt);

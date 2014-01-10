@@ -372,9 +372,17 @@ void xmpp_presence_new();
 */
 
 /** event loop **/
+typedef enum {
+    XMPP_LOOP_NOTSTARTED,
+    XMPP_LOOP_RUNNING,
+    XMPP_LOOP_QUIT
+} xmpp_loop_status_t;
+
 void LIBSTROPHE_EXPORTABLE xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long  timeout);
 void LIBSTROPHE_EXPORTABLE xmpp_run(xmpp_ctx_t *ctx);
 void LIBSTROPHE_EXPORTABLE xmpp_stop(xmpp_ctx_t *ctx);
+void LIBSTROPHE_EXPORTABLE xmpp_set_loop_status(xmpp_ctx_t *ctx, xmpp_loop_status_t status);
+xmpp_loop_status_t LIBSTROPHE_EXPORTABLE xmpp_get_loop_status(xmpp_ctx_t *ctx);
 
 #ifdef __cplusplus
 }
