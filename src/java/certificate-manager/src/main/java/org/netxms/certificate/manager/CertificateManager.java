@@ -129,42 +129,58 @@ public class CertificateManager
       return verified;
    }
 
+   /**
+    * @param cert
+    * @return
+    * @throws KeyStoreException
+    * @throws CertificateNotInKeyStoreException
+    * @throws CertificateHasNoPrivateKeyException
+    * @throws NoSuchAlgorithmException
+    * @throws UnrecoverableEntryException
+    */
    protected PrivateKey getPrivateKey(Certificate cert)
       throws KeyStoreException, CertificateNotInKeyStoreException, CertificateHasNoPrivateKeyException,
       NoSuchAlgorithmException, UnrecoverableEntryException
    {
       String alias = keyStore.getCertificateAlias(cert);
 
-      if (alias == null) throw new CertificateNotInKeyStoreException();
+      if (alias == null) 
+         throw new CertificateNotInKeyStoreException();
 
       KeyStore.PrivateKeyEntry pkEntry;
 
       try
       {
-         pkEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(alias, null);
+         pkEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(alias, new KeyStore.PasswordProtection("".toCharArray()));
       }
       catch(UnrecoverableEntryException uee)
       {
          String password = getEntryPassword();
-         KeyStore.ProtectionParameter parameter = new KeyStore.PasswordProtection(password.toCharArray());
-
-         pkEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(alias, parameter);
+         pkEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(alias, new KeyStore.PasswordProtection(password.toCharArray()));
       }
 
       PrivateKey pk = pkEntry.getPrivateKey();
 
-      if (pk == null) throw new CertificateHasNoPrivateKeyException();
+      if (pk == null) 
+         throw new CertificateHasNoPrivateKeyException();
 
       return pk;
    }
 
+   /**
+    * @return
+    */
    protected String getEntryPassword()
    {
-      if (entryListener == null) return "";
+      if (entryListener == null) 
+         return "";
 
       return entryListener.keyStoreEntryPasswordRequested();
    }
 
+   /**
+    * @throws KeyStoreLoaderException
+    */
    public void load() throws KeyStoreLoaderException
    {
       keyStore = loader.loadKeyStore();

@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.console.dialogs;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
@@ -240,6 +241,7 @@ public class LoginDialog extends Dialog
       {
       	authMethod = NXCSession.AUTH_TYPE_PASSWORD;
       }
+      comboAuth.select(authMethod);
       selectAuthenticationField(false);
             
       // Set initial focus
@@ -313,6 +315,8 @@ public class LoginDialog extends Dialog
       settings.put("Connect.ServerHistory", items.toArray(new String[items.size()])); //$NON-NLS-1$
       settings.put("Connect.Login", textLogin.getText()); //$NON-NLS-1$
       settings.put("Connect.AuthMethod", authMethod); //$NON-NLS-1$
+      if (certificate != null)
+         settings.put("Connect.Certificate", ((X509Certificate)certificate).getSubjectDN().toString());
 
       password = textPassword.getText();
       super.okPressed();
@@ -336,6 +340,17 @@ public class LoginDialog extends Dialog
       {
          certificate = certMgr.getCerts()[index];
       }
+   }
+   
+   /**
+    * @param c
+    * @return
+    */
+   private static String getCertificateDisplayName(Certificate c)
+   {
+      String subjString = ((X509Certificate)c).getSubjectDN().toString();
+      Subject subj = SubjectParser.parseSubject(subjString);
+      return String.format("%s (%s, %s, %s)", subj.getCommonName(), subj.getOrganization(), subj.getState(), subj.getCountry()); //$NON-NLS-1$
    }
 
    /**
@@ -363,23 +378,32 @@ public class LoginDialog extends Dialog
       }
 
       Certificate[] certs = certMgr.getCerts();
+      Arrays.sort(certs, new Comparator<Certificate>() {
+         @Override
+         public int compare(Certificate o1, Certificate o2)
+         {
+            return getCertificateDisplayName(o1).compareToIgnoreCase(getCertificateDisplayName(o2));
+         }
+      });
+      
       String[] subjectStrings = new String[certs.length];
+      
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      String lastSelected = settings.get("Connect.Certificate");
+      int selectionIndex = 0;
 
       for(int i = 0; i < certs.length; i++)
       {
-         X509Certificate x509 = (X509Certificate)certs[i];
-         String subjString = x509.getSubjectDN().toString();
-
-         Subject subj = SubjectParser.parseSubject(subjString);
-
-         subjectStrings[i] = String.format("%s (%s, %s, %s)", subj.getCommonName(), subj.getOrganization(), subj.getState(), //$NON-NLS-1$
-               subj.getCountry());
+         String subject = ((X509Certificate)certs[i]).getSubjectDN().toString();
+         if (subject.equals(lastSelected))
+            selectionIndex = i;
+         subjectStrings[i] = getCertificateDisplayName(certs[i]);
       }
 
       if (subjectStrings.length != 0)
       {
          comboCert.setItems(subjectStrings);
-         comboCert.select(0);
+         comboCert.select(selectionIndex);
          selectCertificate();
          return true;
       }

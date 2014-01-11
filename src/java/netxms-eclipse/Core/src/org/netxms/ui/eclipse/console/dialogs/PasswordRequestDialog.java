@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.console.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -57,7 +56,6 @@ public class PasswordRequestDialog extends Dialog
 	protected void configureShell(Shell shell) 
 	{
 	   super.configureShell(shell);
-	   
 	   shell.setText(title);
 	}
 	
@@ -67,36 +65,29 @@ public class PasswordRequestDialog extends Dialog
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
-		// TODO: Make this easier on the eyes
 		final Composite container = (Composite) super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-		
       container.setLayout(layout);
       
       lblMessage = new Label(container, SWT.NONE | SWT.WRAP);
       lblMessage.setText(message);
-      lblMessage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+      lblMessage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       
 		textPassword = new LabeledText(container, SWT.NONE, SWT.BORDER | SWT.PASSWORD);
 		textPassword.setLabel(Messages.get().LoginDialog_Passwd);
-		textPassword.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.widthHint = 400;
+		textPassword.setLayoutData(gd);
 		
 		return container;
 	}	
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#getInitialSize()
-	 */
-	@Override
-   protected Point getInitialSize()
-   {
-      return new Point(300, 210);
-   }
-
    /* (non-Javadoc)
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
