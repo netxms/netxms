@@ -266,7 +266,7 @@ public class AlarmList extends Composite
 				openAlarmDetailsView(AlarmComments.ID);
 			}
 		};
-		actionComments.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Comments");
+		actionComments.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Comments"); //$NON-NLS-1$
 
 		actionShowAlarmDetails = new Action(Messages.get().AlarmList_ActionAlarmDetails) {
 			@Override
@@ -275,7 +275,7 @@ public class AlarmList extends Composite
 				openAlarmDetailsView(AlarmDetails.ID);
 			}
 		};
-		actionShowAlarmDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.AlarmDetails");
+		actionShowAlarmDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.AlarmDetails"); //$NON-NLS-1$
 
 		actionAcknowledge = new Action(Messages.get().AlarmList_Acknowledge, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
 			@Override
@@ -284,7 +284,7 @@ public class AlarmList extends Composite
 				acknowledgeAlarms(false);
 			}
 		};
-		actionAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Acknowledge");
+		actionAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Acknowledge"); //$NON-NLS-1$
 
 		actionStickyAcknowledge = new Action(Messages.get().AlarmList_StickyAck, Activator.getImageDescriptor("icons/acknowledged_sticky.png")) { //$NON-NLS-1$
 			@Override
@@ -293,7 +293,7 @@ public class AlarmList extends Composite
 				acknowledgeAlarms(true);
 			}
 		};
-		actionStickyAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.StickyAcknowledge");
+		actionStickyAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.StickyAcknowledge"); //$NON-NLS-1$
 
 		actionResolve = new Action(Messages.get().AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
 			@Override
@@ -302,7 +302,7 @@ public class AlarmList extends Composite
 				resolveAlarms();
 			}
 		};
-		actionResolve.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Resolve");
+		actionResolve.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Resolve"); //$NON-NLS-1$
 
 		actionTerminate = new Action(Messages.get().AlarmList_Terminate, Activator.getImageDescriptor("icons/terminated.png")) { //$NON-NLS-1$
 			@Override
@@ -311,7 +311,7 @@ public class AlarmList extends Composite
 				terminateAlarms();
 			}
 		};
-		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate");
+		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
 		
 		actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
 			@Override
@@ -320,7 +320,7 @@ public class AlarmList extends Composite
 				showObjectDetails();
 			}
 		};
-		actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails");
+		actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails"); //$NON-NLS-1$
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
 	}

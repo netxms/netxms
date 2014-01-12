@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Action edit dialog
- *
  */
 public class EditActionDlg extends Dialog
 {
@@ -146,7 +145,7 @@ public class EditActionDlg extends Dialog
 		typeSMS.addSelectionListener(new TypeButtonSelectionListener());
 		
       typeXMPP = new Button(typeGroup, SWT.RADIO);
-      typeXMPP.setText("Send XMPP message");
+      typeXMPP.setText(Messages.get().EditActionDlg_SendXMPPMessage);
       typeXMPP.setSelection(action.getType() == ServerAction.XMPP_MESSAGE);
       typeXMPP.addSelectionListener(new TypeButtonSelectionListener());
       
@@ -212,7 +211,7 @@ public class EditActionDlg extends Dialog
 			case ServerAction.SEND_SMS:
 				return Messages.get().EditActionDlg_PhoneNumber;
          case ServerAction.XMPP_MESSAGE:
-            return "Jabber/XMPP ID";
+            return Messages.get().EditActionDlg_XMPPID;
 			case ServerAction.FORWARD_EVENT:
 				return Messages.get().EditActionDlg_RemoteServer;
 			case ServerAction.EXEC_NXSL_SCRIPT:
