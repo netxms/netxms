@@ -127,7 +127,7 @@ public class Authentication extends PropertyPage
 		comboMappingMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
 		comboMappingMethod.add(Messages.get().Authentication_Subject);
 		comboMappingMethod.add(Messages.get().Authentication_PublicKey);
-      comboMappingMethod.add("Common name");
+      comboMappingMethod.add(Messages.get().Authentication_CommonName);
 		comboMappingMethod.select(object.getCertMappingMethod());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;

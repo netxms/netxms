@@ -70,7 +70,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EPP, Messages.get().SystemRights_EditEPP);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, Messages.get().SystemRights_ManageScripts);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, Messages.get().SystemRights_ConfigureObjTools);
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS, "Manage DCI summary tables");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS, Messages.get().SystemRights_ManageDCISummaryTables);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, Messages.get().SystemRights_ConfigureTraps);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, Messages.get().SystemRights_ManageAgents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, Messages.get().SystemRights_ManagePackages);
@@ -82,7 +82,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, Messages.get().SystemRights_ReadFiles);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_FILES, Messages.get().SystemRights_ManageFiles);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, Messages.get().SystemRights_AccessConsole);
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, "Execute commands via XMPP");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, Messages.get().SystemRights_ExecuteXMPPCommands);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, Messages.get().SystemRights_ControlSessions);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, Messages.get().SystemRights_ManageUsers);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SEND_SMS, Messages.get().SystemRights_SendSMS);

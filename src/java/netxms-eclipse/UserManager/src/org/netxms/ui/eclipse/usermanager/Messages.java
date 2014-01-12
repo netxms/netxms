@@ -14,6 +14,7 @@ public class Messages extends NLS
 	public static String Authentication_CertificateOrPassword;
 	public static String Authentication_CertificateOrRADIUS;
 	public static String Authentication_CertMapping;
+   public static String Authentication_CommonName;
 	public static String Authentication_JobError;
 	public static String Authentication_JobTitle;
 	public static String Authentication_MappingData;
@@ -70,6 +71,7 @@ public class Messages extends NLS
 	public static String General_JobTitle;
 	public static String General_LoginName;
 	public static String General_ObjectID;
+   public static String General_XMPPID;
 	public static String Members_Add;
 	public static String Members_Delete;
 	public static String Members_JobError;
@@ -94,10 +96,12 @@ public class Messages extends NLS
 	public static String SystemRights_DeleteAlarms;
 	public static String SystemRights_EditEPP;
 	public static String SystemRights_EditServerConfig;
+   public static String SystemRights_ExecuteXMPPCommands;
 	public static String SystemRights_JobError;
 	public static String SystemRights_JobTitle;
 	public static String SystemRights_LoginAsMobile;
 	public static String SystemRights_ManageAgents;
+   public static String SystemRights_ManageDCISummaryTables;
 	public static String SystemRights_ManageFiles;
 	public static String SystemRights_ManageMappingTables;
 	public static String SystemRights_ManagePackages;

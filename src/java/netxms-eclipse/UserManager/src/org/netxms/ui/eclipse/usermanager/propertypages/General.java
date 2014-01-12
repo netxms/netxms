@@ -91,13 +91,13 @@ public class General extends PropertyPage
 	      		                                        initialFullName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
          initialXmppId = new String(((User)object).getXmppId());
-         textXmppId = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "XMPP ID",
+         textXmppId = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_XMPPID,
                                                        initialXmppId, WidgetHelper.DEFAULT_LAYOUT_DATA);
       }
       else
       {
       	initialFullName = ""; //$NON-NLS-1$
-      	initialXmppId = "";
+      	initialXmppId = ""; //$NON-NLS-1$
       }
       
 		// Description
