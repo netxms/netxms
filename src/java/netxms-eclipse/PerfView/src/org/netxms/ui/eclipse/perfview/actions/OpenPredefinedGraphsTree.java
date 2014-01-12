@@ -66,7 +66,7 @@ public class OpenPredefinedGraphsTree implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.OpenPredefinedGraphsTree_Error, String.format(Messages.OpenPredefinedGraphsTree_ErrorOpeningView, e.getMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenPredefinedGraphsTree_Error, String.format(Messages.get().OpenPredefinedGraphsTree_ErrorOpeningView, e.getMessage()));
 			}
 		}
 	}

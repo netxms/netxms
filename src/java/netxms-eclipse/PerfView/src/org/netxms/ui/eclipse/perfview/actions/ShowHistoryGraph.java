@@ -91,7 +91,7 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 				}
 				catch(UnsupportedEncodingException e)
 				{
-					description = Messages.ShowHistoryGraph_DescriptionUnavailable;
+					description = Messages.get().ShowHistoryGraph_DescriptionUnavailable;
 				}
 				
 				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -104,11 +104,11 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowHistoryGraph_Error, String.format(Messages.ShowHistoryGraph_ErrorOpeningView, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryGraph_Error, String.format(Messages.get().ShowHistoryGraph_ErrorOpeningView, e.getLocalizedMessage()));
 			}
 			catch(IllegalArgumentException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowHistoryGraph_Error, String.format(Messages.ShowHistoryGraph_ErrorOpeningView, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryGraph_Error, String.format(Messages.get().ShowHistoryGraph_ErrorOpeningView, e.getLocalizedMessage()));
 			}
 		}
 	}

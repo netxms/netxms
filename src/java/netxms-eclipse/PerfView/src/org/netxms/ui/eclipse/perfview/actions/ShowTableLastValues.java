@@ -70,7 +70,7 @@ public class ShowTableLastValues implements IObjectActionDelegate, DciOpenHandle
 			}
 			catch(Exception e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowTableLastValues_Error, String.format(Messages.ShowTableLastValues_ErrorOpeningView, e.getMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowTableLastValues_Error, String.format(Messages.get().ShowTableLastValues_ErrorOpeningView, e.getMessage()));
 			}
 		}
 	}

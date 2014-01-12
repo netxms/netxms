@@ -55,7 +55,7 @@ public class ShowLineChart implements DciOpenHandler
 		}
 		catch(UnsupportedEncodingException e)
 		{
-			description = Messages.ShowLineChart_DescriptionUnavailable;
+			description = Messages.get().ShowLineChart_DescriptionUnavailable;
 		}
 		
 		final String id = Long.toString(uniqueId++) + "&" + Long.toString(dci.getNodeId()) + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
@@ -69,7 +69,7 @@ public class ShowLineChart implements DciOpenHandler
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(window.getShell(), Messages.ShowLineChart_Error, String.format(Messages.ShowLineChart_ErrorOpeningView, e.getLocalizedMessage()));
+			MessageDialogHelper.openError(window.getShell(), Messages.get().ShowLineChart_Error, String.format(Messages.get().ShowLineChart_ErrorOpeningView, e.getLocalizedMessage()));
 		}
 		return true;
 	}

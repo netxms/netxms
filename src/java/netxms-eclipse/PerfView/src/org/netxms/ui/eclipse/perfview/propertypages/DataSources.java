@@ -109,7 +109,7 @@ public class DataSources extends PropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.DataSources_ColPosition, Messages.DataSources_ColNode, Messages.DataSources_ColParameter, Messages.DataSources_ColLabel, Messages.DataSources_ColColor };
+      final String[] columnNames = { Messages.get().DataSources_ColPosition, Messages.get().DataSources_ColNode, Messages.get().DataSources_ColParameter, Messages.get().DataSources_ColLabel, Messages.get().DataSources_ColColor };
       final int[] columnWidths = { 40, 130, 200, 150, 50 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -148,7 +148,7 @@ public class DataSources extends PropertyPage
       leftButtons.setLayoutData(gridData);
       
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText(Messages.DataSources_Up);
+      upButton.setText(Messages.get().DataSources_Up);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
@@ -168,7 +168,7 @@ public class DataSources extends PropertyPage
       upButton.setEnabled(false);
       
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText(Messages.DataSources_Down);
+      downButton.setText(Messages.get().DataSources_Down);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
@@ -200,7 +200,7 @@ public class DataSources extends PropertyPage
       rightButtons.setLayoutData(gridData);
 
       addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText(Messages.DataSources_Add);
+      addButton.setText(Messages.get().DataSources_Add);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -219,7 +219,7 @@ public class DataSources extends PropertyPage
       });
 		
       editButton = new Button(rightButtons, SWT.PUSH);
-      editButton.setText(Messages.DataSources_Modify);
+      editButton.setText(Messages.get().DataSources_Modify);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -239,7 +239,7 @@ public class DataSources extends PropertyPage
       editButton.setEnabled(false);
 		
       deleteButton = new Button(rightButtons, SWT.PUSH);
-      deleteButton.setText(Messages.DataSources_Delete);
+      deleteButton.setText(Messages.get().DataSources_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -397,7 +397,7 @@ public class DataSources extends PropertyPage
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.DataSources_JobName, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().DataSources_JobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -419,7 +419,7 @@ public class DataSources extends PropertyPage
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.DataSources_JobError;
+					return Messages.get().DataSources_JobError;
 				}
 			}.start();
 		}

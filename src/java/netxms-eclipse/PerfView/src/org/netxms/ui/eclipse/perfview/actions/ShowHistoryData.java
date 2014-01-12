@@ -66,7 +66,7 @@ public class ShowHistoryData implements IObjectActionDelegate
 			}
 			catch(Exception e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowHistoryData_Error, String.format(Messages.ShowHistoryData_ErrorOpeningView, e.getMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryData_Error, String.format(Messages.get().ShowHistoryData_ErrorOpeningView, e.getMessage()));
 			}
 		}
 	}

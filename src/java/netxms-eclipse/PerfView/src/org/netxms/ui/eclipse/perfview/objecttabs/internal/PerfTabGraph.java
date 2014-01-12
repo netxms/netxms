@@ -138,7 +138,7 @@ public class PerfTabGraph extends DashboardComposite
 		updateInProgress = true;
 		chart.clearErrors();
 		
-		ConsoleJob job = new ConsoleJob(Messages.PerfTabGraph_JobTitle, null, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().PerfTabGraph_JobTitle, null, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			private PerfTabDci currentDci;
 			
 			@Override
@@ -173,7 +173,7 @@ public class PerfTabGraph extends DashboardComposite
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.PerfTabGraph_JobError, currentDci.getId(), currentDci.getDescription());
+				return String.format(Messages.get().PerfTabGraph_JobError, currentDci.getId(), currentDci.getDescription());
 			}
 
 			@Override

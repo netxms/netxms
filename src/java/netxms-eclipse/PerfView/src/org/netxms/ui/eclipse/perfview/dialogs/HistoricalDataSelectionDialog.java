@@ -53,7 +53,7 @@ public class HistoricalDataSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.HistoricalDataSelectionDialog_Title);
+		newShell.setText(Messages.get().HistoricalDataSelectionDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -71,7 +71,7 @@ public class HistoricalDataSelectionDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		radioLastRecords = new Button(dialogArea, SWT.RADIO);
-		radioLastRecords.setText(Messages.HistoricalDataSelectionDialog_LastRecords);
+		radioLastRecords.setText(Messages.get().HistoricalDataSelectionDialog_LastRecords);
 		GridData gd = new GridData();
 		gd.horizontalSpan = 3;
 		radioLastRecords.setLayoutData(gd);
@@ -87,7 +87,7 @@ public class HistoricalDataSelectionDialog extends Dialog
 		spinnerRecords.setEnabled(radioLastRecords.getSelection());
 
 		radioTimeFrame = new Button(dialogArea, SWT.RADIO);
-		radioTimeFrame.setText(Messages.HistoricalDataSelectionDialog_TimeFrame);
+		radioTimeFrame.setText(Messages.get().HistoricalDataSelectionDialog_TimeFrame);
 		gd = new GridData();
 		gd.horizontalSpan = 3;
 		gd.verticalIndent = 5;

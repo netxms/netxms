@@ -92,7 +92,7 @@ public class HistoricalDataView extends ViewPart
 		nodeId = Long.parseLong(parts[0]);
 		AbstractObject object = session.findObjectById(nodeId);
 		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof MobileDevice) && !(object instanceof Cluster)))
-			throw new PartInitException(Messages.HistoricalDataView_InvalidObjectID);
+			throw new PartInitException(Messages.get().HistoricalDataView_InvalidObjectID);
 		nodeName = object.getObjectName();
 		
 		dciId = Long.parseLong(parts[1]);
@@ -106,7 +106,7 @@ public class HistoricalDataView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.HistoricalDataView_ColTimestamp, Messages.HistoricalDataView_ColValue };
+		final String[] names = { Messages.get().HistoricalDataView_ColTimestamp, Messages.get().HistoricalDataView_ColValue };
 		final int[] widths = { 150, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -132,7 +132,7 @@ public class HistoricalDataView extends ViewPart
 			}
 		};
 		
-		actionSelectRange = new Action(Messages.HistoricalDataView_8) {
+		actionSelectRange = new Action(Messages.get().HistoricalDataView_8) {
 			@Override
 			public void run()
 			{
@@ -233,7 +233,7 @@ public class HistoricalDataView extends ViewPart
 			return;
 		updateInProgress = true;
 		
-		new ConsoleJob(Messages.HistoricalDataView_9, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().HistoricalDataView_9, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -251,7 +251,7 @@ public class HistoricalDataView extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.HistoricalDataView_10 + nodeName + Messages.HistoricalDataView_11 + Long.toString(dciId) + Messages.HistoricalDataView_12;
+				return Messages.get().HistoricalDataView_10 + nodeName + Messages.get().HistoricalDataView_11 + Long.toString(dciId) + Messages.get().HistoricalDataView_12;
 			}
 		}.start();
 	}

@@ -87,7 +87,7 @@ public class General extends PropertyPage
       dialogArea.setLayout(layout);
       
       title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER);
-      title.setLabel(Messages.General_Title);
+      title.setLabel(Messages.get().General_Title);
       title.setText(config.getTitle());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -95,7 +95,7 @@ public class General extends PropertyPage
       title.setLayoutData(gd);
       
       Group optionsGroup = new Group(dialogArea, SWT.NONE);
-      optionsGroup.setText(Messages.General_Options);
+      optionsGroup.setText(Messages.get().General_Options);
       layout = new GridLayout();
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
@@ -109,35 +109,35 @@ public class General extends PropertyPage
       optionsGroup.setLayoutData(gd);
       
       checkShowGrid = new Button(optionsGroup, SWT.CHECK);
-      checkShowGrid.setText(Messages.General_ShowGridLines);
+      checkShowGrid.setText(Messages.get().General_ShowGridLines);
       checkShowGrid.setSelection(config.isShowGrid());
 
       checkAutoScale = new Button(optionsGroup, SWT.CHECK);
-      checkAutoScale.setText(Messages.General_Autoscale);
+      checkAutoScale.setText(Messages.get().General_Autoscale);
       //checkAutoScale.setSelection(settings.isAutoScale());
 
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
-      checkShowLegend.setText(Messages.General_ShowLegend);
+      checkShowLegend.setText(Messages.get().General_ShowLegend);
       checkShowLegend.setSelection(config.isShowLegend());
 
       checkShowRuler = new Button(optionsGroup, SWT.CHECK);
-      checkShowRuler.setText(Messages.General_ShowRuler);
+      checkShowRuler.setText(Messages.get().General_ShowRuler);
       checkShowRuler.setSelection(false);
 
       checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
-      checkShowHostNames.setText(Messages.General_ShowHostNames);
+      checkShowHostNames.setText(Messages.get().General_ShowHostNames);
       checkShowHostNames.setSelection(config.isShowHostNames());
 
       checkEnableZoom = new Button(optionsGroup, SWT.CHECK);
-      checkEnableZoom.setText(Messages.General_EnableZoom);
+      checkEnableZoom.setText(Messages.get().General_EnableZoom);
       checkEnableZoom.setSelection(false);
 
       checkAutoRefresh = new Button(optionsGroup, SWT.CHECK);
-      checkAutoRefresh.setText(Messages.General_Autorefresh);
+      checkAutoRefresh.setText(Messages.get().General_Autorefresh);
       checkAutoRefresh.setSelection(config.isAutoRefresh());
 
       checkLogScale = new Button(optionsGroup, SWT.CHECK);
-      checkLogScale.setText(Messages.General_LogScale);
+      checkLogScale.setText(Messages.get().General_LogScale);
       checkLogScale.setSelection(config.isLogScale());
       
       Composite refreshIntervalGroup = new Composite(optionsGroup, SWT.NONE);
@@ -155,7 +155,7 @@ public class General extends PropertyPage
       refreshIntervalGroup.setLayoutData(gd);
       
       Label label = new Label(refreshIntervalGroup, SWT.NONE);
-      label.setText(Messages.General_RefreshInterval);
+      label.setText(Messages.get().General_RefreshInterval);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;
@@ -202,7 +202,7 @@ public class General extends PropertyPage
 		});
       
       Group timeGroup = new Group(dialogArea, SWT.NONE);
-      timeGroup.setText(Messages.General_TimePeriod);
+      timeGroup.setText(Messages.get().General_TimePeriod);
       layout = new GridLayout();
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
@@ -233,12 +233,12 @@ public class General extends PropertyPage
 		};
 
       radioBackFromNow = new Button(timeGroup, SWT.RADIO);
-      radioBackFromNow.setText(Messages.General_TimePeriodBack);
+      radioBackFromNow.setText(Messages.get().General_TimePeriodBack);
       radioBackFromNow.setSelection(config.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW);
       radioBackFromNow.addSelectionListener(listener);
       
       radioFixedInterval = new Button(timeGroup, SWT.RADIO);
-      radioFixedInterval.setText(Messages.General_TimePeriodFixed);
+      radioFixedInterval.setText(Messages.get().General_TimePeriodFixed);
       radioFixedInterval.setSelection(config.getTimeFrameType() == GraphSettings.TIME_FRAME_FIXED);
       radioFixedInterval.addSelectionListener(listener);
       
@@ -255,14 +255,14 @@ public class General extends PropertyPage
       gd.verticalAlignment = SWT.TOP;
       timeBackGroup.setLayoutData(gd);
       
-		timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, Messages.General_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, Messages.get().General_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		timeRange.setSelection(config.getTimeRange());
 		timeRange.setEnabled(radioBackFromNow.getSelection());
 		
-		timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, Messages.General_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		timeUnits.add(Messages.General_TimeUnitMinutes);
-		timeUnits.add(Messages.General_TimeUnitHours);
-		timeUnits.add(Messages.General_TimeUnitDays);
+		timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, Messages.get().General_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		timeUnits.add(Messages.get().General_TimeUnitMinutes);
+		timeUnits.add(Messages.get().General_TimeUnitHours);
+		timeUnits.add(Messages.get().General_TimeUnitDays);
 		timeUnits.select(config.getTimeUnits());
 		timeUnits.setEnabled(radioBackFromNow.getSelection());
 
@@ -286,11 +286,11 @@ public class General extends PropertyPage
 			}
 		};
 		
-      timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.General_TimeFrom, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.get().General_TimeFrom, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeFrom.setValue(config.getTimeFrom());
       timeFrom.setEnabled(radioFixedInterval.getSelection());
 
-      timeTo = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.General_TimeTo, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeTo = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.get().General_TimeTo, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeTo.setValue(config.getTimeTo());
       timeTo.setEnabled(radioFixedInterval.getSelection());
       
@@ -355,7 +355,7 @@ public class General extends PropertyPage
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.General_JobName, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().General_JobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -372,7 +372,7 @@ public class General extends PropertyPage
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.General_JobError;
+					return Messages.get().General_JobError;
 				}
 			}.start();
 		}

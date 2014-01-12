@@ -91,7 +91,7 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 				}
 				catch(UnsupportedEncodingException e)
 				{
-					description = Messages.ShowDataComparisonChart_DescriptionUnavailable;
+					description = Messages.get().ShowDataComparisonChart_DescriptionUnavailable;
 				}
 
 				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + Integer.toString(source) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -104,11 +104,11 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowDataComparisonChart_Error, String.format(Messages.ShowDataComparisonChart_ErrorOpeningView, e.getMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowDataComparisonChart_Error, String.format(Messages.get().ShowDataComparisonChart_ErrorOpeningView, e.getMessage()));
 			}
 			catch(IllegalArgumentException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.ShowDataComparisonChart_14, String.format(Messages.ShowDataComparisonChart_15, e.getMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowDataComparisonChart_14, String.format(Messages.get().ShowDataComparisonChart_15, e.getMessage()));
 			}
 		}
 	}

@@ -91,7 +91,7 @@ public class PredefinedGraph extends PropertyPage
 		dialogArea.setLayout(layout);
 		
       name = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER);
-      name.setLabel(Messages.PredefinedGraph_Name);
+      name.setLabel(Messages.get().PredefinedGraph_Name);
       name.setText(config.getName());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -100,7 +100,7 @@ public class PredefinedGraph extends PropertyPage
       name.setLayoutData(gd);
       
 		Group users = new Group(dialogArea, SWT.NONE);
-		users.setText(Messages.PredefinedGraph_UsersAndGroups);
+		users.setText(Messages.get().PredefinedGraph_UsersAndGroups);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
@@ -111,7 +111,7 @@ public class PredefinedGraph extends PropertyPage
 		layout = new GridLayout();
 		users.setLayout(layout);
       
-      final String[] columnNames = { Messages.PredefinedGraph_LoginName, Messages.PredefinedGraph_Rights };
+      final String[] columnNames = { Messages.get().PredefinedGraph_LoginName, Messages.get().PredefinedGraph_Rights };
       final int[] columnWidths = { 150, 100 };
       userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
@@ -135,7 +135,7 @@ public class PredefinedGraph extends PropertyPage
       buttons.setLayoutData(gd);
       
       final Button addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.PredefinedGraph_Add);
+      addButton.setText(Messages.get().PredefinedGraph_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -158,7 +158,7 @@ public class PredefinedGraph extends PropertyPage
       });
 
       final Button deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.PredefinedGraph_Delete);
+      deleteButton.setText(Messages.get().PredefinedGraph_Delete);
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -183,7 +183,7 @@ public class PredefinedGraph extends PropertyPage
       });
       
       Group rights = new Group(dialogArea, SWT.NONE);
-      rights.setText(Messages.PredefinedGraph_AccessRights);
+      rights.setText(Messages.get().PredefinedGraph_AccessRights);
       rights.setLayout(new RowLayout(SWT.VERTICAL));
       gd = new GridData();
       gd.grabExcessVerticalSpace = true;
@@ -191,8 +191,8 @@ public class PredefinedGraph extends PropertyPage
       gd.verticalAlignment = SWT.FILL;
       rights.setLayoutData(gd);
       
-      createAccessCheck(rights, Messages.PredefinedGraph_Read, GraphSettings.ACCESS_READ);
-      createAccessCheck(rights, Messages.PredefinedGraph_Modify, GraphSettings.ACCESS_WRITE);
+      createAccessCheck(rights, Messages.get().PredefinedGraph_Read, GraphSettings.ACCESS_READ);
+      createAccessCheck(rights, Messages.get().PredefinedGraph_Modify, GraphSettings.ACCESS_WRITE);
       
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -287,7 +287,7 @@ public class PredefinedGraph extends PropertyPage
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.PredefinedGraph_JobName, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.get().PredefinedGraph_JobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -309,7 +309,7 @@ public class PredefinedGraph extends PropertyPage
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.PredefinedGraph_JobError;
+					return Messages.get().PredefinedGraph_JobError;
 				}
 			}.start();
 		}

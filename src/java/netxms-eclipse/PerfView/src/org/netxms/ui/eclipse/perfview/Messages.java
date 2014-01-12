@@ -130,7 +130,7 @@ public class Messages extends NLS
    public static String PerfTab_Type;
    public static String PerfTabGraph_JobError;
    public static String PerfTabGraph_JobTitle;
-   public static String PredefinedChartConfig_0;
+   public static String PredefinedChartConfig_Unnamed;
    public static String PredefinedGraph_AccessRights;
    public static String PredefinedGraph_Add;
    public static String PredefinedGraph_Delete;
@@ -190,6 +190,15 @@ public class Messages extends NLS
    }
 
    private Messages()
-   {
-   }
+	{
+ }
+
+
+	private static Messages instance = new Messages();
+
+	public static Messages get()
+	{
+		return instance;
+	}
+
 }

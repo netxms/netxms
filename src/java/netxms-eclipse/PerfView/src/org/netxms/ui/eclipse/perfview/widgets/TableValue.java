@@ -105,7 +105,7 @@ public class TableValue extends Composite
     */
    private void createActions()
    {
-      actionShowLineChart = new Action(Messages.TableValue_LineChart, Activator.getImageDescriptor("icons/chart_line.png")) { //$NON-NLS-1$
+      actionShowLineChart = new Action(Messages.get().TableValue_LineChart, Activator.getImageDescriptor("icons/chart_line.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -113,7 +113,7 @@ public class TableValue extends Composite
          }
       };
 
-      actionShowBarChart = new Action(Messages.TableValue_BarChart, Activator.getImageDescriptor("icons/chart_bar.png")) { //$NON-NLS-1$
+      actionShowBarChart = new Action(Messages.get().TableValue_BarChart, Activator.getImageDescriptor("icons/chart_bar.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -121,7 +121,7 @@ public class TableValue extends Composite
          }
       };
 
-      actionShowPieChart = new Action(Messages.TableValue_PieChart, Activator.getImageDescriptor("icons/chart_pie.png")) { //$NON-NLS-1$
+      actionShowPieChart = new Action(Messages.get().TableValue_PieChart, Activator.getImageDescriptor("icons/chart_pie.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -187,7 +187,7 @@ public class TableValue extends Composite
    public void refresh(final Runnable postRefreshHook)
    {
       viewer.setInput(null);
-      new ConsoleJob(String.format(Messages.TableValue_JobName, dciId), viewPart, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format(Messages.get().TableValue_JobName, dciId), viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -210,7 +210,7 @@ public class TableValue extends Composite
          @Override
          protected String getErrorMessage()
          {
-            return String.format(Messages.TableValue_JobError, dciId);
+            return String.format(Messages.get().TableValue_JobError, dciId);
          }
       }.start();
    }
@@ -298,8 +298,8 @@ public class TableValue extends Composite
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(page.getWorkbenchWindow().getShell(), Messages.TableValue_Error,
-               String.format(Messages.TableValue_ErrorOpeningView, e.getLocalizedMessage()));
+         MessageDialogHelper.openError(page.getWorkbenchWindow().getShell(), Messages.get().TableValue_Error,
+               String.format(Messages.get().TableValue_ErrorOpeningView, e.getLocalizedMessage()));
       }
    }
 
@@ -336,8 +336,8 @@ public class TableValue extends Composite
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(page.getWorkbenchWindow().getShell(), Messages.TableValue_Error,
-               String.format(Messages.TableValue_ErrorOpeningView, e.getLocalizedMessage()));
+         MessageDialogHelper.openError(page.getWorkbenchWindow().getShell(), Messages.get().TableValue_Error,
+               String.format(Messages.get().TableValue_ErrorOpeningView, e.getLocalizedMessage()));
       }
    }
 

@@ -70,7 +70,7 @@ public class TableLastValuesView extends ViewPart
 		objectId = Long.parseLong(parts[0]);
 		AbstractObject object = session.findObjectById(objectId);
 		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof Cluster) && !(object instanceof MobileDevice)))
-			throw new PartInitException(Messages.TableLastValuesView_InvalidObjectID);
+			throw new PartInitException(Messages.get().TableLastValuesView_InvalidObjectID);
 		
 		dciId = Long.parseLong(parts[1]);
 		

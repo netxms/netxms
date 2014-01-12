@@ -42,7 +42,7 @@ public class PredefinedChartConfig extends ChartConfig
 	{
 		id = 0;
 		ownerId = 0;
-		name = Messages.PredefinedChartConfig_0;
+		name = Messages.get().PredefinedChartConfig_Unnamed;
 		accessList = new ArrayList<AccessListElement>();
 	}
 

@@ -359,7 +359,7 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		
-		actionAutoRefresh = new Action(Messages.DataComparisonView_AutoRefresh) {
+		actionAutoRefresh = new Action(Messages.get().DataComparisonView_AutoRefresh) {
 			@Override
 			public void run()
 			{
@@ -370,7 +370,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionAutoRefresh.setChecked(autoRefreshEnabled);
 		
-		actionUseLogScale = new Action(Messages.DataComparisonView_LogScale) {
+		actionUseLogScale = new Action(Messages.get().DataComparisonView_LogScale) {
 			@Override
 			public void run()
 			{
@@ -381,7 +381,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionUseLogScale.setChecked(useLogScale);
 		
-		actionShowIn3D = new Action(Messages.DataComparisonView_3DView) {
+		actionShowIn3D = new Action(Messages.get().DataComparisonView_3DView) {
 			@Override
 			public void run()
 			{
@@ -393,7 +393,7 @@ public class DataComparisonView extends ViewPart
 		actionShowIn3D.setChecked(showIn3D);
 		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
 		
-		actionShowTranslucent = new Action(Messages.DataComparisonView_Translucent) {
+		actionShowTranslucent = new Action(Messages.get().DataComparisonView_Translucent) {
 			@Override
 			public void run()
 			{
@@ -404,7 +404,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionShowTranslucent.setChecked(translucent);
 		
-		actionShowLegend = new Action(Messages.DataComparisonView_ShowLegend) {
+		actionShowLegend = new Action(Messages.get().DataComparisonView_ShowLegend) {
 			@Override
 			public void run()
 			{
@@ -415,7 +415,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionShowLegend.setChecked(showLegend);
 		
-		actionLegendLeft = new Action(Messages.DataComparisonView_PlaceOnLeft, Action.AS_RADIO_BUTTON) {
+		actionLegendLeft = new Action(Messages.get().DataComparisonView_PlaceOnLeft, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -425,7 +425,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionLegendLeft.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
-		actionLegendRight = new Action(Messages.DataComparisonView_PlaceOnRight, Action.AS_RADIO_BUTTON) {
+		actionLegendRight = new Action(Messages.get().DataComparisonView_PlaceOnRight, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -435,7 +435,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionLegendRight.setChecked(legendPosition == GraphSettings.POSITION_RIGHT);
 		
-		actionLegendTop = new Action(Messages.DataComparisonView_PlaceOnTop, Action.AS_RADIO_BUTTON) {
+		actionLegendTop = new Action(Messages.get().DataComparisonView_PlaceOnTop, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -445,7 +445,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionLegendTop.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
-		actionLegendBottom = new Action(Messages.DataComparisonView_PlaceOnBottom, Action.AS_RADIO_BUTTON) {
+		actionLegendBottom = new Action(Messages.get().DataComparisonView_PlaceOnBottom, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -455,7 +455,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionLegendBottom.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
-		actionShowBarChart = new Action(Messages.DataComparisonView_BarChart, Action.AS_RADIO_BUTTON) {
+		actionShowBarChart = new Action(Messages.get().DataComparisonView_BarChart, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -465,7 +465,7 @@ public class DataComparisonView extends ViewPart
 		actionShowBarChart.setChecked(chart.getChartType() == DataComparisonChart.BAR_CHART);
 		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png")); //$NON-NLS-1$
 		
-		actionShowTubeChart = new Action(Messages.DataComparisonView_TubeChart, Action.AS_RADIO_BUTTON) {
+		actionShowTubeChart = new Action(Messages.get().DataComparisonView_TubeChart, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -475,7 +475,7 @@ public class DataComparisonView extends ViewPart
 		actionShowTubeChart.setChecked(chart.getChartType() == DataComparisonChart.TUBE_CHART);
 		actionShowTubeChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_tube.png")); //$NON-NLS-1$
 		
-		actionShowPieChart = new Action(Messages.DataComparisonView_PieChart, Action.AS_RADIO_BUTTON) {
+		actionShowPieChart = new Action(Messages.get().DataComparisonView_PieChart, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -485,7 +485,7 @@ public class DataComparisonView extends ViewPart
 		actionShowPieChart.setChecked(chart.getChartType() == DataComparisonChart.PIE_CHART);
 		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png")); //$NON-NLS-1$
 
-		actionHorizontal = new Action(Messages.DataComparisonView_ShowHorizontally, Action.AS_RADIO_BUTTON) {
+		actionHorizontal = new Action(Messages.get().DataComparisonView_ShowHorizontally, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -497,7 +497,7 @@ public class DataComparisonView extends ViewPart
 		actionHorizontal.setEnabled(chart.hasAxes());
 		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/bar_horizontal.png")); //$NON-NLS-1$
 		
-		actionVertical = new Action(Messages.DataComparisonView_ShowVertically, Action.AS_RADIO_BUTTON) {
+		actionVertical = new Action(Messages.get().DataComparisonView_ShowVertically, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -526,7 +526,7 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		MenuManager legend = new MenuManager(Messages.DataComparisonView_Legend);
+		MenuManager legend = new MenuManager(Messages.get().DataComparisonView_Legend);
 		legend.add(actionShowLegend);
 		legend.add(new Separator());
 		legend.add(actionLegendLeft);
@@ -556,7 +556,7 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
-		MenuManager legend = new MenuManager(Messages.DataComparisonView_Legend);
+		MenuManager legend = new MenuManager(Messages.get().DataComparisonView_Legend);
 		legend.add(actionShowLegend);
 		legend.add(new Separator());
 		legend.add(actionLegendLeft);
@@ -628,11 +628,11 @@ public class DataComparisonView extends ViewPart
 			return;
 		
 		updateInProgress = true;
-		ConsoleJob job = new ConsoleJob(Messages.DataComparisonView_JobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().DataComparisonView_JobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.DataComparisonView_JobError;
+				return Messages.get().DataComparisonView_JobError;
 			}
 
 			@Override

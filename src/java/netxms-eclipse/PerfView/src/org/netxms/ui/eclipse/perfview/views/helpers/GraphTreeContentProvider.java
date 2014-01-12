@@ -95,7 +95,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
 		parentFolders.clear();
-		rootFolder = new GraphFolder(Messages.GraphTreeContentProvider_Root, null);
+		rootFolder = new GraphFolder(Messages.get().GraphTreeContentProvider_Root, null);
 		
 		List<GraphSettings> gs = (List<GraphSettings>)newInput;
 		if (gs != null)

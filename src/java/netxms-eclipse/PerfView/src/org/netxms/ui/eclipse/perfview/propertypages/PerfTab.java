@@ -83,14 +83,14 @@ public class PerfTab extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkShow = new Button(dialogArea, SWT.CHECK);
-      checkShow.setText(Messages.PerfTab_ShowOnPerfTab);
+      checkShow.setText(Messages.get().PerfTab_ShowOnPerfTab);
       checkShow.setSelection(settings.isEnabled());
       GridData gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       checkShow.setLayoutData(gd);
       
       title = new LabeledText(dialogArea, SWT.NONE);
-      title.setLabel(Messages.PerfTab_Title);
+      title.setLabel(Messages.get().PerfTab_Title);
       title.setText(settings.getTitle());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -99,22 +99,22 @@ public class PerfTab extends PropertyPage
       
       Composite colors = new Composite(dialogArea, SWT.NONE);
       colors.setLayout(new RowLayout(SWT.VERTICAL));
-      new Label(colors, SWT.NONE).setText(Messages.PerfTab_Color);
+      new Label(colors, SWT.NONE).setText(Messages.get().PerfTab_Color);
       color = new ColorSelector(colors);
       color.setColorValue(ColorConverter.rgbFromInt(settings.getColorAsInt()));
       
-      type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.PerfTab_Type, new GridData(SWT.LEFT, SWT.CENTER, false, false));
-      type.add(Messages.PerfTab_Line);
-      type.add(Messages.PerfTab_Area);
+      type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().PerfTab_Type, new GridData(SWT.LEFT, SWT.CENTER, false, false));
+      type.add(Messages.get().PerfTab_Line);
+      type.add(Messages.get().PerfTab_Area);
       type.select(settings.getType());
       
-      orderNumber = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.PerfTab_Order, 0, 65535, new GridData(SWT.LEFT, SWT.CENTER, false, false));
+      orderNumber = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().PerfTab_Order, 0, 65535, new GridData(SWT.LEFT, SWT.CENTER, false, false));
       orderNumber.setSelection(settings.getOrder());
 
       parentDci = new DciSelector(dialogArea, SWT.NONE, false);
       parentDci.setDciId(dci.getNodeId(), settings.getParentDciId());
       parentDci.setFixedNode(true);
-      parentDci.setLabel(Messages.PerfTab_Attach);
+      parentDci.setLabel(Messages.get().PerfTab_Attach);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       gd.grabExcessHorizontalSpace = true;
@@ -122,7 +122,7 @@ public class PerfTab extends PropertyPage
       parentDci.setLayoutData(gd);
 
       name = new LabeledText(dialogArea, SWT.NONE);
-      name.setLabel(Messages.PerfTab_NameInLegend);
+      name.setLabel(Messages.get().PerfTab_NameInLegend);
       name.setText(settings.getName());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -131,7 +131,7 @@ public class PerfTab extends PropertyPage
       name.setLayoutData(gd);
       
       checkShowThresholds = new Button(dialogArea, SWT.CHECK);
-      checkShowThresholds.setText(Messages.PerfTab_ShowThresholds);
+      checkShowThresholds.setText(Messages.get().PerfTab_ShowThresholds);
       checkShowThresholds.setSelection(settings.isShowThresholds());
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;

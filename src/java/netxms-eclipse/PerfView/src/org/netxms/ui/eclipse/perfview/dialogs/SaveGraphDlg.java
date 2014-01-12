@@ -50,7 +50,7 @@ public class SaveGraphDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SaveGraphDlg_Title);
+		newShell.setText(Messages.get().SaveGraphDlg_Title);
 	}
 
 	/* (non-Javadoc)
@@ -67,7 +67,7 @@ public class SaveGraphDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		fieldName = new LabeledText(dialogArea, SWT.NONE);
-		fieldName.setLabel(Messages.SaveGraphDlg_Name);
+		fieldName.setLabel(Messages.get().SaveGraphDlg_Name);
 		fieldName.setText(name);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -83,7 +83,7 @@ public class SaveGraphDlg extends Dialog
          errorMessage.setText(ErrorMessage);
          
          checkOverwrite = new Button(dialogArea, SWT.CHECK);
-         checkOverwrite.setText(Messages.SaveGraphDlg_Overwrite);
+         checkOverwrite.setText(Messages.get().SaveGraphDlg_Overwrite);
       }   
 		
 		return dialogArea;
@@ -98,7 +98,7 @@ public class SaveGraphDlg extends Dialog
 		name = fieldName.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.SaveGraphDlg_Warning, Messages.SaveGraphDlg_WarningEmptyName);
+			MessageDialogHelper.openWarning(getShell(), Messages.get().SaveGraphDlg_Warning, Messages.get().SaveGraphDlg_WarningEmptyName);
 			return;
 		}
 		if (ErrorMessage != null && checkOverwrite.getSelection())
@@ -117,7 +117,7 @@ public class SaveGraphDlg extends Dialog
       name = fieldName.getText().trim();
       if (name.isEmpty())
       {
-         MessageDialogHelper.openWarning(getShell(), Messages.SaveGraphDlg_Warning, Messages.SaveGraphDlg_WarningEmptyName);
+         MessageDialogHelper.openWarning(getShell(), Messages.get().SaveGraphDlg_Warning, Messages.get().SaveGraphDlg_WarningEmptyName);
          return;
       }
       super.okPressed();

@@ -149,7 +149,7 @@ public class PredefinedGraphTree extends ViewPart
 			}
 		};
 		
-		actionDelete = new Action(Messages.PredefinedGraphTree_Delete, SharedIcons.DELETE_OBJECT) {
+		actionDelete = new Action(Messages.get().PredefinedGraphTree_Delete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -174,9 +174,9 @@ public class PredefinedGraphTree extends ViewPart
 				}
 			}
 		};
-		actionOpen.setText(Messages.PredefinedGraphTree_Open);
+		actionOpen.setText(Messages.get().PredefinedGraphTree_Open);
 
-		actionProperties = new Action(Messages.PredefinedGraphTree_Properties) {
+		actionProperties = new Action(Messages.get().PredefinedGraphTree_Properties) {
 			@Override
 			public void run()
 			{
@@ -269,11 +269,11 @@ public class PredefinedGraphTree extends ViewPart
 	 */
 	private void reloadGraphList()
 	{
-		new ConsoleJob(Messages.PredefinedGraphTree_LoadJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().PredefinedGraphTree_LoadJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.PredefinedGraphTree_LoadJobError;
+				return Messages.get().PredefinedGraphTree_LoadJobError;
 			}
 
 			@Override
@@ -316,7 +316,7 @@ public class PredefinedGraphTree extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.PredefinedGraphTree_Error, String.format(Messages.PredefinedGraphTree_ErrorOpeningView, e.getLocalizedMessage()));
+			MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.get().PredefinedGraphTree_Error, String.format(Messages.get().PredefinedGraphTree_ErrorOpeningView, e.getLocalizedMessage()));
 		}
 	}
 	
@@ -347,7 +347,7 @@ public class PredefinedGraphTree extends ViewPart
 				try
 				{
 					final GraphSettings s = config.createServerSettings();
-					new ConsoleJob(Messages.PredefinedGraphTree_UpdateJobName, null, Activator.PLUGIN_ID, null) {
+					new ConsoleJob(Messages.get().PredefinedGraphTree_UpdateJobName, null, Activator.PLUGIN_ID, null) {
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
@@ -357,7 +357,7 @@ public class PredefinedGraphTree extends ViewPart
 						@Override
 						protected String getErrorMessage()
 						{
-							return Messages.PredefinedGraphTree_UpdateJobError;
+							return Messages.get().PredefinedGraphTree_UpdateJobError;
 						}
 					}.start();
 				}
@@ -391,7 +391,7 @@ public class PredefinedGraphTree extends ViewPart
 		if (selection.size() == 0)
 			return;
 		
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.PredefinedGraphTree_DeletePromptTitle, Messages.PredefinedGraphTree_DeletePromptText))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().PredefinedGraphTree_DeletePromptTitle, Messages.get().PredefinedGraphTree_DeletePromptText))
 			return;
 		
 		final List<GraphSettings> list = new ArrayList<GraphSettings>((List<GraphSettings>)viewer.getInput());
@@ -400,7 +400,7 @@ public class PredefinedGraphTree extends ViewPart
 			if (!(o instanceof GraphSettings))
 				continue;
 			
-			new ConsoleJob(String.format(Messages.PredefinedGraphTree_DeleteJobName, ((GraphSettings)o).getShortName()), null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(String.format(Messages.get().PredefinedGraphTree_DeleteJobName, ((GraphSettings)o).getShortName()), null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -418,7 +418,7 @@ public class PredefinedGraphTree extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.PredefinedGraphTree_DeleteJobError;
+					return Messages.get().PredefinedGraphTree_DeleteJobError;
 				}
 			}.start();
 		}
