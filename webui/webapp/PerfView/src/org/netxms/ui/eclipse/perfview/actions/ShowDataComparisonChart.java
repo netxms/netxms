@@ -30,6 +30,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.DataComparisonView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -60,7 +61,7 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 	{
 		if (currentSelection != null)
 		{
-			String id = Long.toString(uniqueId++) + "&" + Integer.toString(getChartType());
+			String id = Long.toString(uniqueId++) + "&" + Integer.toString(getChartType()); //$NON-NLS-1$
 			for(int i = 0; i < currentSelection.length; i++)
 			{
 				long dciId = 0, nodeId = 0;
@@ -75,8 +76,8 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 						nodeId = ((DciValue) currentSelection[i]).getNodeId();
 						source = ((DciValue) currentSelection[i]).getSource();
 						dataType = ((DciValue) currentSelection[i]).getDataType();
-						name = URLEncoder.encode(((DciValue) currentSelection[i]).getName(), "UTF-8");
-						description = URLEncoder.encode(((DciValue) currentSelection[i]).getDescription(), "UTF-8");
+						name = URLEncoder.encode(((DciValue) currentSelection[i]).getName(), "UTF-8"); //$NON-NLS-1$
+						description = URLEncoder.encode(((DciValue) currentSelection[i]).getDescription(), "UTF-8"); //$NON-NLS-1$
 					}
 					else if (currentSelection[i] instanceof DataCollectionItem)
 					{
@@ -84,17 +85,17 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 						nodeId = ((DataCollectionItem) currentSelection[i]).getNodeId();
 						source = ((DataCollectionItem) currentSelection[i]).getOrigin();
 						dataType = ((DataCollectionItem) currentSelection[i]).getDataType();
-						name = URLEncoder.encode(((DataCollectionItem) currentSelection[i]).getName(), "UTF-8");
-						description = URLEncoder.encode(((DataCollectionItem) currentSelection[i]).getDescription(), "UTF-8");
+						name = URLEncoder.encode(((DataCollectionItem) currentSelection[i]).getName(), "UTF-8"); //$NON-NLS-1$
+						description = URLEncoder.encode(((DataCollectionItem) currentSelection[i]).getDescription(), "UTF-8"); //$NON-NLS-1$
 					}
 				}
 				catch(UnsupportedEncodingException e)
 				{
-					description = "<description unavailable>";
+					description = Messages.get().ShowDataComparisonChart_DescriptionUnavailable;
 				}
 
-				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + Integer.toString(source) + "@"
-						+ Integer.toString(dataType) + "@" + name + "@" + description;
+				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + Integer.toString(source) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+						+ Integer.toString(dataType) + "@" + name + "@" + description; //$NON-NLS-1$ //$NON-NLS-2$
 			}
 
 			try
@@ -103,11 +104,11 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowDataComparisonChart_Error, String.format(Messages.get().ShowDataComparisonChart_ErrorOpeningView, e.getMessage()));
 			}
 			catch(IllegalArgumentException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowDataComparisonChart_14, String.format(Messages.get().ShowDataComparisonChart_15, e.getMessage()));
 			}
 		}
 	}

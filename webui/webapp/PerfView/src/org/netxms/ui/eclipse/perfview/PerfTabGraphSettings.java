@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,13 +42,13 @@ public class PerfTabGraphSettings
 	private int type = GraphItemStyle.LINE;
 	
 	@Element(required=false)
-	private String color = "0x00C000";
+	private String color = "0x00C000"; //$NON-NLS-1$
 	
 	@Element(required=false)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 	
 	@Element(required=false)
-	private String name = "";
+	private String name = ""; //$NON-NLS-1$
 	
 	@Element(required=false)
 	private boolean showThresholds = false;
@@ -122,7 +122,7 @@ public class PerfTabGraphSettings
 	{
 		try
 		{
-			if (color.startsWith("0x"))
+			if (color.startsWith("0x")) //$NON-NLS-1$
 				return Integer.parseInt(color.substring(2), 16);
 			return Integer.parseInt(color, 10);
 		}
@@ -149,8 +149,8 @@ public class PerfTabGraphSettings
 	 */
 	public String getRuntimeTitle()
 	{
-		String t = ((title == null) || title.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : title;
-		return t.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : "");
+		String t = ((title == null) || title.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : title; //$NON-NLS-1$
+		return t.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : ""); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -282,8 +282,8 @@ public class PerfTabGraphSettings
 	 */
 	public String getRuntimeName()
 	{
-		String n = ((name == null) || name.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : name;
-		return n.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : "");
+		String n = ((name == null) || name.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : name; //$NON-NLS-1$
+		return n.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : ""); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.widgets.TableValue;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -43,7 +44,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class TableLastValuesView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TableLastValues";
+	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TableLastValues"; //$NON-NLS-1$
 	
 	private long objectId;
 	private long dciId;
@@ -62,18 +63,18 @@ public class TableLastValuesView extends ViewPart
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
 		// Secondary ID must by in form nodeId&dciId
-		String[] parts = site.getSecondaryId().split("&");
+		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length != 2)
-			throw new PartInitException("Internal error");
+			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		objectId = Long.parseLong(parts[0]);
 		AbstractObject object = session.findObjectById(objectId);
 		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof Cluster) && !(object instanceof MobileDevice)))
-			throw new PartInitException("Invalid object ID");
+			throw new PartInitException(Messages.get().TableLastValuesView_InvalidObjectID);
 		
 		dciId = Long.parseLong(parts[1]);
 		
-		setPartName(object.getObjectName() + ": [" + Long.toString(dciId) + "]");
+		setPartName(object.getObjectName() + ": [" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -160,7 +161,7 @@ public class TableLastValuesView extends ViewPart
 			@Override
 			public void run()
 			{
-				setPartName(viewer.getObjectName() + ": " + viewer.getTitle());
+				setPartName(viewer.getObjectName() + ": " + viewer.getTitle()); //$NON-NLS-1$
 			}
 		});
 	}

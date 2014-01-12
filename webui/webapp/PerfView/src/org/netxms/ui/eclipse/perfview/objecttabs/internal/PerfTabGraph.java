@@ -40,6 +40,7 @@ import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
@@ -79,7 +80,7 @@ public class PerfTabGraph extends DashboardComposite
 		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		
-		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName()));
+		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName())); //$NON-NLS-1$
 	}
 	
 	/**
@@ -101,7 +102,7 @@ public class PerfTabGraph extends DashboardComposite
 			else
 				styles.set(items.size() - 1, style);
 			chart.setItemStyles(styles);
-			chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName()));
+			chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName())); //$NON-NLS-1$
 		}
 	}
 	
@@ -137,7 +138,7 @@ public class PerfTabGraph extends DashboardComposite
 		updateInProgress = true;
 		chart.clearErrors();
 		
-		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", null, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().PerfTabGraph_JobTitle, null, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			private PerfTabDci currentDci;
 			
 			@Override
@@ -172,7 +173,7 @@ public class PerfTabGraph extends DashboardComposite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get value for DCI " + currentDci.getId() + " (" + currentDci.getDescription() + ")";
+				return String.format(Messages.get().PerfTabGraph_JobError, currentDci.getId(), currentDci.getDescription());
 			}
 
 			@Override

@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.DateTimeSelector;
 
@@ -52,7 +53,7 @@ public class HistoricalDataSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Data Range");
+		newShell.setText(Messages.get().HistoricalDataSelectionDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -70,7 +71,7 @@ public class HistoricalDataSelectionDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		radioLastRecords = new Button(dialogArea, SWT.RADIO);
-		radioLastRecords.setText("&Last n records");
+		radioLastRecords.setText(Messages.get().HistoricalDataSelectionDialog_LastRecords);
 		GridData gd = new GridData();
 		gd.horizontalSpan = 3;
 		radioLastRecords.setLayoutData(gd);
@@ -86,7 +87,7 @@ public class HistoricalDataSelectionDialog extends Dialog
 		spinnerRecords.setEnabled(radioLastRecords.getSelection());
 
 		radioTimeFrame = new Button(dialogArea, SWT.RADIO);
-		radioTimeFrame.setText("&Time frame:");
+		radioTimeFrame.setText(Messages.get().HistoricalDataSelectionDialog_TimeFrame);
 		gd = new GridData();
 		gd.horizontalSpan = 3;
 		gd.verticalIndent = 5;
@@ -97,7 +98,7 @@ public class HistoricalDataSelectionDialog extends Dialog
 		dtsFrom.setValue(timeFrom);
 		dtsFrom.setEnabled(radioTimeFrame.getSelection());
 		
-		new Label(dialogArea, SWT.NONE).setText("  -  ");
+		new Label(dialogArea, SWT.NONE).setText("  -  "); //$NON-NLS-1$
 		
 		dtsTo = new DateTimeSelector(dialogArea, SWT.NONE);
 		dtsTo.setValue(timeTo);

@@ -31,6 +31,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.propertypages.DataSources;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -113,14 +114,14 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case DataSources.COLUMN_NODE:
 				AbstractObject object = session.findObjectById(dci.nodeId);
-				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]");
+				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case DataSources.COLUMN_METRIC:
 				String name = dciNameCache.get(new NodeItemPair(dci.nodeId, dci.dciId));
-				return (name != null) ? name : "<unresolved>";
+				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
 			case DataSources.COLUMN_LABEL:
 				return dci.name;
 			case DataSources.COLUMN_COLOR:
-				return dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR) ? "auto" : dci.color;
+				return dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR) ? Messages.get().DciListLabelProvider_Auto : dci.color;
 		}
 		return null;
 	}
@@ -132,7 +133,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void resolveDciNames(final Collection<ChartDciConfig> dciList)
 	{
-		new ConsoleJob("Resolve DCI names", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DciListLabelProvider_ResolveJobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -163,7 +164,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot resolve DCI names";
+				return Messages.get().DciListLabelProvider_ResolveJobError;
 			}
 		}.runInForeground();
 	}

@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.SimpleDciValue;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.HistoricalDataView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -57,15 +58,15 @@ public class ShowHistoryData implements IObjectActionDelegate
 		{
 			final String id =
 					(currentSelection instanceof DataCollectionItem) ?
-							Long.toString(((DataCollectionItem)currentSelection).getNodeId()) + "&" + Long.toString(((DataCollectionItem)currentSelection).getId()) :
-							Long.toString(((SimpleDciValue)currentSelection).getNodeId()) + "&" + Long.toString(((SimpleDciValue)currentSelection).getId());
+							Long.toString(((DataCollectionItem)currentSelection).getNodeId()) + "&" + Long.toString(((DataCollectionItem)currentSelection).getId()) : //$NON-NLS-1$
+							Long.toString(((SimpleDciValue)currentSelection).getNodeId()) + "&" + Long.toString(((SimpleDciValue)currentSelection).getId()); //$NON-NLS-1$
 			try
 			{
 				window.getActivePage().showView(HistoricalDataView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(Exception e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryData_Error, String.format(Messages.get().ShowHistoryData_ErrorOpeningView, e.getMessage()));
 			}
 		}
 	}

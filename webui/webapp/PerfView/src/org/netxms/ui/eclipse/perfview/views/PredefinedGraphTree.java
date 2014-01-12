@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphFolder;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
@@ -68,7 +69,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 @SuppressWarnings("restriction")
 public class PredefinedGraphTree extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree";
+	public static final String ID = "org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"; //$NON-NLS-1$
 	
 	private TreeViewer viewer;
 	private NXCSession session;
@@ -148,7 +149,7 @@ public class PredefinedGraphTree extends ViewPart
 			}
 		};
 		
-		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+		actionDelete = new Action(Messages.get().PredefinedGraphTree_Delete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -173,9 +174,9 @@ public class PredefinedGraphTree extends ViewPart
 				}
 			}
 		};
-		actionOpen.setText("&Open");
+		actionOpen.setText(Messages.get().PredefinedGraphTree_Open);
 
-		actionProperties = new Action("Properties") {
+		actionProperties = new Action(Messages.get().PredefinedGraphTree_Properties) {
 			@Override
 			public void run()
 			{
@@ -268,11 +269,11 @@ public class PredefinedGraphTree extends ViewPart
 	 */
 	private void reloadGraphList()
 	{
-		new ConsoleJob("Load list of predefined graphs", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().PredefinedGraphTree_LoadJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get list of predefined graphs";
+				return Messages.get().PredefinedGraphTree_LoadJobError;
 			}
 
 			@Override
@@ -300,13 +301,13 @@ public class PredefinedGraphTree extends ViewPart
 		String encodedName;
 		try
 		{
-			encodedName = URLEncoder.encode(gs.getName(), "UTF-8");
+			encodedName = URLEncoder.encode(gs.getName(), "UTF-8"); //$NON-NLS-1$
 		}
 		catch(UnsupportedEncodingException e1)
 		{
-			encodedName = "___ERROR___";
+			encodedName = "___ERROR___"; //$NON-NLS-1$
 		}
-		String id = HistoricalGraphView.PREDEFINED_GRAPH_SUBID + "&" + encodedName;
+		String id = HistoricalGraphView.PREDEFINED_GRAPH_SUBID + "&" + encodedName; //$NON-NLS-1$
 		try
 		{
 			HistoricalGraphView g = (HistoricalGraphView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
@@ -315,7 +316,7 @@ public class PredefinedGraphTree extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Error opening graph view: " + e.getMessage());
+			MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), Messages.get().PredefinedGraphTree_Error, String.format(Messages.get().PredefinedGraphTree_ErrorOpeningView, e.getLocalizedMessage()));
 		}
 	}
 	
@@ -346,7 +347,7 @@ public class PredefinedGraphTree extends ViewPart
 				try
 				{
 					final GraphSettings s = config.createServerSettings();
-					new ConsoleJob("Update predefined graph", null, Activator.PLUGIN_ID, null) {
+					new ConsoleJob(Messages.get().PredefinedGraphTree_UpdateJobName, null, Activator.PLUGIN_ID, null) {
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
@@ -356,13 +357,13 @@ public class PredefinedGraphTree extends ViewPart
 						@Override
 						protected String getErrorMessage()
 						{
-							return "Cannot update predefined graph";
+							return Messages.get().PredefinedGraphTree_UpdateJobError;
 						}
 					}.start();
 				}
 				catch(Exception e)
 				{
-					MessageDialogHelper.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
+					MessageDialogHelper.openError(getSite().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 			settings.setName(config.getName());
@@ -374,7 +375,7 @@ public class PredefinedGraphTree extends ViewPart
 			}
 			catch(Exception e)
 			{
-				MessageDialogHelper.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getSite().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			viewer.update(settings, null);
 		}
@@ -390,7 +391,7 @@ public class PredefinedGraphTree extends ViewPart
 		if (selection.size() == 0)
 			return;
 		
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Predefined Graphs", "Selected predefined graphs will be deleted. Are you sure?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().PredefinedGraphTree_DeletePromptTitle, Messages.get().PredefinedGraphTree_DeletePromptText))
 			return;
 		
 		final List<GraphSettings> list = new ArrayList<GraphSettings>((List<GraphSettings>)viewer.getInput());
@@ -399,7 +400,7 @@ public class PredefinedGraphTree extends ViewPart
 			if (!(o instanceof GraphSettings))
 				continue;
 			
-			new ConsoleJob("Delete predefined graph \"" + ((GraphSettings)o).getShortName() + "\"", null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(String.format(Messages.get().PredefinedGraphTree_DeleteJobName, ((GraphSettings)o).getShortName()), null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -417,7 +418,7 @@ public class PredefinedGraphTree extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot delete predefined graph";
+					return Messages.get().PredefinedGraphTree_DeleteJobError;
 				}
 			}.start();
 		}

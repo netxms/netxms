@@ -84,8 +84,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY,
          GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY };
    private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
-   private static final String[] presetNames = { Messages.get().HistoricalGraphView_Preset10min, Messages.get().HistoricalGraphView_Preset30min, Messages.get().HistoricalGraphView_Preset1hour, Messages.get().HistoricalGraphView_Preset2hours, Messages.get().HistoricalGraphView_Preset4hours, Messages.get().HistoricalGraphView_Preset12hours, Messages.get().HistoricalGraphView_Preset1day,
-         Messages.get().HistoricalGraphView_Preset2days, Messages.get().HistoricalGraphView_Preset5days, Messages.get().HistoricalGraphView_PresetWeek, Messages.get().HistoricalGraphView_PresetMonth, Messages.get().HistoricalGraphView_PresetYear };
+   private static final String[] presetNames = 
+      { Messages.get().HistoricalGraphView_Preset10min, Messages.get().HistoricalGraphView_Preset30min, Messages.get().HistoricalGraphView_Preset1hour, Messages.get().HistoricalGraphView_Preset2hours, Messages.get().HistoricalGraphView_Preset4hours, Messages.get().HistoricalGraphView_Preset12hours, Messages.get().HistoricalGraphView_Preset1day,
+        Messages.get().HistoricalGraphView_Preset2days, Messages.get().HistoricalGraphView_Preset5days, Messages.get().HistoricalGraphView_PresetWeek, Messages.get().HistoricalGraphView_PresetMonth, Messages.get().HistoricalGraphView_PresetYear };
 
    private NXCSession session;
    private HistoricalDataChart chart = null;

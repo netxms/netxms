@@ -132,7 +132,7 @@ public class HistoricalDataView extends ViewPart
 			}
 		};
 		
-		actionSelectRange = new Action(Messages.get().HistoricalDataView_8) {
+		actionSelectRange = new Action(Messages.get().HistoricalDataView_SelectDataRange) {
 			@Override
 			public void run()
 			{
@@ -233,7 +233,7 @@ public class HistoricalDataView extends ViewPart
 			return;
 		updateInProgress = true;
 		
-		new ConsoleJob(Messages.get().HistoricalDataView_9, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().HistoricalDataView_RefreshJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -251,7 +251,7 @@ public class HistoricalDataView extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().HistoricalDataView_10 + nodeName + Messages.get().HistoricalDataView_11 + Long.toString(dciId) + Messages.get().HistoricalDataView_12;
+			   return String.format(Messages.get().HistoricalDataView_RefreshJobError, nodeName, dciId);
 			}
 		}.start();
 	}

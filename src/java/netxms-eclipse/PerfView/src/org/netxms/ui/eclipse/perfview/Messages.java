@@ -65,11 +65,9 @@ public class Messages extends NLS
    public static String HistoricalDataSelectionDialog_LastRecords;
    public static String HistoricalDataSelectionDialog_TimeFrame;
    public static String HistoricalDataSelectionDialog_Title;
-   public static String HistoricalDataView_10;
-   public static String HistoricalDataView_11;
-   public static String HistoricalDataView_12;
-   public static String HistoricalDataView_8;
-   public static String HistoricalDataView_9;
+   public static String HistoricalDataView_SelectDataRange;
+   public static String HistoricalDataView_RefreshJobError;
+   public static String HistoricalDataView_RefreshJobName;
    public static String HistoricalDataView_ColTimestamp;
    public static String HistoricalDataView_ColValue;
    public static String HistoricalDataView_InvalidObjectID;

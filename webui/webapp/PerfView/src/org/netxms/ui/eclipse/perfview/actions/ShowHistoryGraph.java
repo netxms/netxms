@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -75,8 +76,8 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 						nodeId = ((DciValue)currentSelection[i]).getNodeId();
 						source = ((DciValue)currentSelection[i]).getSource();
 						dataType = ((DciValue)currentSelection[i]).getDataType();
-						name = URLEncoder.encode(((DciValue)currentSelection[i]).getName(), "UTF-8");
-						description = URLEncoder.encode(((DciValue)currentSelection[i]).getDescription(), "UTF-8");
+						name = URLEncoder.encode(((DciValue)currentSelection[i]).getName(), "UTF-8"); //$NON-NLS-1$
+						description = URLEncoder.encode(((DciValue)currentSelection[i]).getDescription(), "UTF-8"); //$NON-NLS-1$
 					}
 					else if (currentSelection[i] instanceof DataCollectionItem)
 					{
@@ -84,17 +85,17 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 						nodeId = ((DataCollectionItem)currentSelection[i]).getNodeId();
 						source = ((DataCollectionItem)currentSelection[i]).getOrigin();
 						dataType = ((DataCollectionItem)currentSelection[i]).getDataType();
-						name = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getName(), "UTF-8");
-						description = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getDescription(), "UTF-8");
+						name = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getName(), "UTF-8"); //$NON-NLS-1$
+						description = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getDescription(), "UTF-8"); //$NON-NLS-1$
 					}
 				}
 				catch(UnsupportedEncodingException e)
 				{
-					description = "<description unavailable>";
+					description = Messages.get().ShowHistoryGraph_DescriptionUnavailable;
 				}
 				
-				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + 
-					Integer.toString(source) + "@" + Integer.toString(dataType) + "@" + name + "@" + description;
+				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					Integer.toString(source) + "@" + Integer.toString(dataType) + "@" + name + "@" + description; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 			
 			try
@@ -103,11 +104,11 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryGraph_Error, String.format(Messages.get().ShowHistoryGraph_ErrorOpeningView, e.getLocalizedMessage()));
 			}
 			catch(IllegalArgumentException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryGraph_Error, String.format(Messages.get().ShowHistoryGraph_ErrorOpeningView, e.getLocalizedMessage()));
 			}
 		}
 	}
