@@ -64,7 +64,9 @@ public class Messages extends NLS
 	public static String AlarmNotifier_ToolTip_Header;
 	public static String AlarmReminderDialog_Dismiss;
 	public static String AlarmReminderDialog_OutstandingAlarms;
-	public static String Alarms_Blinking;
+	public static String Alarms_Alarms_ShowDetailedTooltips;
+
+   public static String Alarms_Blinking;
 	public static String Alarms_ShowPopup;
 	public static String Alarms_ShowReminder;
 	public static String EditCommentDialog_Comment;

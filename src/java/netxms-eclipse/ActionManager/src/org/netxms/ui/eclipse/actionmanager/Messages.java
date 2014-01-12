@@ -49,7 +49,9 @@ public class Messages extends NLS
 	public static String EditActionDlg_ScriptName;
 	public static String EditActionDlg_SendSMS;
 	public static String EditActionDlg_SenMail;
+   public static String EditActionDlg_SendXMPPMessage;
 	public static String EditActionDlg_Type;
+   public static String EditActionDlg_XMPPID;
 	public static String OpenActionManager_Error;
 	public static String OpenActionManager_ErrorOpeningView;
 	static

@@ -167,7 +167,7 @@ public class AlarmList extends Composite
          @Override
          public void mouseHover(MouseEvent e)
          {
-            if (!Activator.getDefault().getPreferenceStore().getBoolean("SHOW_ALARM_TOOLTIPS"))
+            if (!Activator.getDefault().getPreferenceStore().getBoolean("SHOW_ALARM_TOOLTIPS")) //$NON-NLS-1$
                return;
             
             Point p = new Point(e.x, e.y);
@@ -343,7 +343,7 @@ public class AlarmList extends Composite
 				}
 			}
 		};
-      actionCopy.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Copy");
+      actionCopy.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Copy"); //$NON-NLS-1$
 
 		actionCopyMessage = new Action(Messages.get().AlarmList_CopyMsgToClipboard) {
 			@Override
@@ -364,7 +364,7 @@ public class AlarmList extends Composite
 				}
 			}
 		};
-		actionCopyMessage.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.CopyMessage");
+		actionCopyMessage.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.CopyMessage"); //$NON-NLS-1$
 		
 		actionComments = new Action(Messages.get().AlarmList_Comments, Activator.getImageDescriptor("icons/comments.png")) { //$NON-NLS-1$
 			@Override
@@ -373,7 +373,7 @@ public class AlarmList extends Composite
 				openAlarmDetailsView(AlarmComments.ID);
 			}
 		};
-		actionComments.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Comments");
+		actionComments.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Comments"); //$NON-NLS-1$
 
 		actionShowAlarmDetails = new Action(Messages.get().AlarmList_ActionAlarmDetails) {
 			@Override
@@ -382,7 +382,7 @@ public class AlarmList extends Composite
 				openAlarmDetailsView(AlarmDetails.ID);
 			}
 		};
-		actionShowAlarmDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.AlarmDetails");
+		actionShowAlarmDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.AlarmDetails"); //$NON-NLS-1$
 
 		actionAcknowledge = new Action(Messages.get().AlarmList_Acknowledge, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
 			@Override
@@ -391,7 +391,7 @@ public class AlarmList extends Composite
 				acknowledgeAlarms(false);
 			}
 		};
-		actionAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Acknowledge");
+		actionAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Acknowledge"); //$NON-NLS-1$
 
 		actionStickyAcknowledge = new Action(Messages.get().AlarmList_StickyAck, Activator.getImageDescriptor("icons/acknowledged_sticky.png")) { //$NON-NLS-1$
 			@Override
@@ -400,7 +400,7 @@ public class AlarmList extends Composite
 				acknowledgeAlarms(true);
 			}
 		};
-		actionStickyAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.StickyAcknowledge");
+		actionStickyAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.StickyAcknowledge"); //$NON-NLS-1$
 
 		actionResolve = new Action(Messages.get().AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
 			@Override
@@ -409,7 +409,7 @@ public class AlarmList extends Composite
 				resolveAlarms();
 			}
 		};
-		actionResolve.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Resolve");
+		actionResolve.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Resolve"); //$NON-NLS-1$
 
 		actionTerminate = new Action(Messages.get().AlarmList_Terminate, Activator.getImageDescriptor("icons/terminated.png")) { //$NON-NLS-1$
 			@Override
@@ -418,7 +418,7 @@ public class AlarmList extends Composite
 				terminateAlarms();
 			}
 		};
-		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate");
+		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
 		
 		actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
 			@Override
@@ -427,7 +427,7 @@ public class AlarmList extends Composite
 				showObjectDetails();
 			}
 		};
-		actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails");
+		actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails"); //$NON-NLS-1$
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
 	}

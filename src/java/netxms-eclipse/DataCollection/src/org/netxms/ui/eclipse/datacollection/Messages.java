@@ -167,7 +167,7 @@ public class Messages extends NLS
 	public static String DciSelector_JobError;
 	public static String DciSelector_JobTitle;
 	public static String DciSelector_None;
-	public static String EditColumnDialog_AggFunc;
+   public static String EditColumnDialog_AggFunc;
    public static String EditColumnDialog_ColumnDefinition;
 	public static String EditColumnDialog_DataType;
    public static String EditColumnDialog_DispName;
