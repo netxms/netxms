@@ -55,6 +55,7 @@ import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -63,17 +64,17 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DataComparisonView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.perfview.views.DataComparisionView";
+	public static final String ID = "org.netxms.ui.eclipse.perfview.views.DataComparisionView"; //$NON-NLS-1$
 	
-	private static final String KEY_CHART_TYPE = "chartType";
-	private static final String KEY_AUTO_REFRESH = "autoRefresh";
-	private static final String KEY_REFRESH_INTERVAL = "refreshInterval";
-	private static final String KEY_LOG_SCALE = "logScale";
-	private static final String KEY_3D_VIEW = "enable3DView";
-	private static final String KEY_TRANSPOSED = "isTransposed";
-	private static final String KEY_TRANSLUCENT = "isTRanslucent";
-	private static final String KEY_SHOW_LEGEND = "showLegend";
-	private static final String KEY_LEGEND_POSITION = "legendPosition";
+	private static final String KEY_CHART_TYPE = "chartType"; //$NON-NLS-1$
+	private static final String KEY_AUTO_REFRESH = "autoRefresh"; //$NON-NLS-1$
+	private static final String KEY_REFRESH_INTERVAL = "refreshInterval"; //$NON-NLS-1$
+	private static final String KEY_LOG_SCALE = "logScale"; //$NON-NLS-1$
+	private static final String KEY_3D_VIEW = "enable3DView"; //$NON-NLS-1$
+	private static final String KEY_TRANSPOSED = "isTransposed"; //$NON-NLS-1$
+	private static final String KEY_TRANSLUCENT = "isTRanslucent"; //$NON-NLS-1$
+	private static final String KEY_SHOW_LEGEND = "showLegend"; //$NON-NLS-1$
+	private static final String KEY_LEGEND_POSITION = "legendPosition"; //$NON-NLS-1$
 	
 	private DataComparisonChart chart;
 	protected NXCSession session;
@@ -117,18 +118,18 @@ public class DataComparisonView extends ViewPart
 
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		titleImages[0] = Activator.getImageDescriptor("icons/chart_bar.png").createImage();
-		titleImages[1] = Activator.getImageDescriptor("icons/chart_pie.png").createImage();
-		titleImages[2] = Activator.getImageDescriptor("icons/graph.png").createImage(); // TODO: add radar icon
-		titleImages[3] = Activator.getImageDescriptor("icons/chart_tube.png").createImage();
-		titleImages[4] = Activator.getImageDescriptor("icons/chart_dial.png").createImage();
+		titleImages[0] = Activator.getImageDescriptor("icons/chart_bar.png").createImage(); //$NON-NLS-1$
+		titleImages[1] = Activator.getImageDescriptor("icons/chart_pie.png").createImage(); //$NON-NLS-1$
+		titleImages[2] = Activator.getImageDescriptor("icons/graph.png").createImage(); // TODO: add radar icon //$NON-NLS-1$
+		titleImages[3] = Activator.getImageDescriptor("icons/chart_tube.png").createImage(); //$NON-NLS-1$
+		titleImages[4] = Activator.getImageDescriptor("icons/chart_dial.png").createImage(); //$NON-NLS-1$
 
 		// Extract information from view id
 		//   first field is unique ID
 		//   second is initial chart type
 		//   third is DCI list
 		String id = site.getSecondaryId();
-		String[] fields = id.split("&");
+		String[] fields = id.split("&"); //$NON-NLS-1$
 		if (!fields[0].equals(HistoricalGraphView.PREDEFINED_GRAPH_SUBID))
 		{
 			try
@@ -141,7 +142,7 @@ public class DataComparisonView extends ViewPart
 			}
 			for(int i = 2; i < fields.length; i++)
 			{
-				String[] subfields = fields[i].split("\\@");
+				String[] subfields = fields[i].split("\\@"); //$NON-NLS-1$
 				if (subfields.length == 6)
 				{
 					try
@@ -150,8 +151,8 @@ public class DataComparisonView extends ViewPart
 								Long.parseLong(subfields[1], 10), // DCI ID
 								Integer.parseInt(subfields[2], 10), // source
 								Integer.parseInt(subfields[3], 10), // data type
-								URLDecoder.decode(subfields[4], "UTF-8"), // name
-								URLDecoder.decode(subfields[5], "UTF-8"))); // description
+								URLDecoder.decode(subfields[4], "UTF-8"), // name //$NON-NLS-1$
+								URLDecoder.decode(subfields[5], "UTF-8"))); // description //$NON-NLS-1$
 					}
 					catch(NumberFormatException e)
 					{
@@ -170,10 +171,10 @@ public class DataComparisonView extends ViewPart
 								Long.parseLong(subfields[1], 10), // DCI ID
 								Integer.parseInt(subfields[2], 10), // source
 								Integer.parseInt(subfields[3], 10), // data type
-								URLDecoder.decode(subfields[4], "UTF-8"), // name
-								URLDecoder.decode(subfields[5], "UTF-8"),
-								URLDecoder.decode(subfields[6], "UTF-8"),
-								URLDecoder.decode(subfields[7], "UTF-8"))); // description
+								URLDecoder.decode(subfields[4], "UTF-8"), // name //$NON-NLS-1$
+								URLDecoder.decode(subfields[5], "UTF-8"), //$NON-NLS-1$
+								URLDecoder.decode(subfields[6], "UTF-8"), //$NON-NLS-1$
+								URLDecoder.decode(subfields[7], "UTF-8"))); // description //$NON-NLS-1$
 					}
 					catch(NumberFormatException e)
 					{
@@ -358,7 +359,7 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		
-		actionAutoRefresh = new Action("Refresh &automatically") {
+		actionAutoRefresh = new Action(Messages.DataComparisonView_AutoRefresh) {
 			@Override
 			public void run()
 			{
@@ -369,7 +370,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionAutoRefresh.setChecked(autoRefreshEnabled);
 		
-		actionUseLogScale = new Action("&Logarithmic scale") {
+		actionUseLogScale = new Action(Messages.DataComparisonView_LogScale) {
 			@Override
 			public void run()
 			{
@@ -380,7 +381,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionUseLogScale.setChecked(useLogScale);
 		
-		actionShowIn3D = new Action("&3D view") {
+		actionShowIn3D = new Action(Messages.DataComparisonView_3DView) {
 			@Override
 			public void run()
 			{
@@ -392,7 +393,7 @@ public class DataComparisonView extends ViewPart
 		actionShowIn3D.setChecked(showIn3D);
 		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
 		
-		actionShowTranslucent = new Action("T&ranslucent") {
+		actionShowTranslucent = new Action(Messages.DataComparisonView_Translucent) {
 			@Override
 			public void run()
 			{
@@ -403,7 +404,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionShowTranslucent.setChecked(translucent);
 		
-		actionShowLegend = new Action("&Show legend") {
+		actionShowLegend = new Action(Messages.DataComparisonView_ShowLegend) {
 			@Override
 			public void run()
 			{
@@ -414,7 +415,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionShowLegend.setChecked(showLegend);
 		
-		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
+		actionLegendLeft = new Action(Messages.DataComparisonView_PlaceOnLeft, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -424,7 +425,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionLegendLeft.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
-		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
+		actionLegendRight = new Action(Messages.DataComparisonView_PlaceOnRight, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -434,7 +435,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionLegendRight.setChecked(legendPosition == GraphSettings.POSITION_RIGHT);
 		
-		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
+		actionLegendTop = new Action(Messages.DataComparisonView_PlaceOnTop, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -444,7 +445,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionLegendTop.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
-		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
+		actionLegendBottom = new Action(Messages.DataComparisonView_PlaceOnBottom, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -454,7 +455,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionLegendBottom.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
-		actionShowBarChart = new Action("&Bar chart", Action.AS_RADIO_BUTTON) {
+		actionShowBarChart = new Action(Messages.DataComparisonView_BarChart, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -462,9 +463,9 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		actionShowBarChart.setChecked(chart.getChartType() == DataComparisonChart.BAR_CHART);
-		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png"));
+		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png")); //$NON-NLS-1$
 		
-		actionShowTubeChart = new Action("&Tube chart", Action.AS_RADIO_BUTTON) {
+		actionShowTubeChart = new Action(Messages.DataComparisonView_TubeChart, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -472,9 +473,9 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		actionShowTubeChart.setChecked(chart.getChartType() == DataComparisonChart.TUBE_CHART);
-		actionShowTubeChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_tube.png"));
+		actionShowTubeChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_tube.png")); //$NON-NLS-1$
 		
-		actionShowPieChart = new Action("&Pie chart", Action.AS_RADIO_BUTTON) {
+		actionShowPieChart = new Action(Messages.DataComparisonView_PieChart, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -482,9 +483,9 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		actionShowPieChart.setChecked(chart.getChartType() == DataComparisonChart.PIE_CHART);
-		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png"));
+		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png")); //$NON-NLS-1$
 
-		actionHorizontal = new Action("Show &horizontally", Action.AS_RADIO_BUTTON) {
+		actionHorizontal = new Action(Messages.DataComparisonView_ShowHorizontally, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -494,9 +495,9 @@ public class DataComparisonView extends ViewPart
 		};
 		actionHorizontal.setChecked(transposed);
 		actionHorizontal.setEnabled(chart.hasAxes());
-		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/bar_horizontal.png"));
+		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/bar_horizontal.png")); //$NON-NLS-1$
 		
-		actionVertical = new Action("Show &vertically", Action.AS_RADIO_BUTTON) {
+		actionVertical = new Action(Messages.DataComparisonView_ShowVertically, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -506,7 +507,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionVertical.setChecked(!transposed);
 		actionVertical.setEnabled(chart.hasAxes());
-		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/bar_vertical.png"));
+		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/bar_vertical.png")); //$NON-NLS-1$
 	}
 	
 	/**
@@ -525,7 +526,7 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		MenuManager legend = new MenuManager("&Legend");
+		MenuManager legend = new MenuManager(Messages.DataComparisonView_Legend);
 		legend.add(actionShowLegend);
 		legend.add(new Separator());
 		legend.add(actionLegendLeft);
@@ -555,7 +556,7 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
-		MenuManager legend = new MenuManager("&Legend");
+		MenuManager legend = new MenuManager(Messages.DataComparisonView_Legend);
 		legend.add(actionShowLegend);
 		legend.add(new Separator());
 		legend.add(actionLegendLeft);
@@ -627,11 +628,11 @@ public class DataComparisonView extends ViewPart
 			return;
 		
 		updateInProgress = true;
-		ConsoleJob job = new ConsoleJob("Get DCI values for chart", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.DataComparisonView_JobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI data";
+				return Messages.DataComparisonView_JobError;
 			}
 
 			@Override
@@ -679,7 +680,7 @@ public class DataComparisonView extends ViewPart
 					@Override
 					public void run()
 					{
-						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
+						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				});
 				return Status.OK_STATUS;

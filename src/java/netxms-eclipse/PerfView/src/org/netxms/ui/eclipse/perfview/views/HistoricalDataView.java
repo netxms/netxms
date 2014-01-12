@@ -47,6 +47,7 @@ import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.dialogs.HistoricalDataSelectionDialog;
 import org.netxms.ui.eclipse.perfview.views.helpers.HistoricalDataLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -57,7 +58,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class HistoricalDataView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoricalDataView";
+	public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoricalDataView"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private long nodeId;
@@ -84,19 +85,19 @@ public class HistoricalDataView extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		// Secondary ID must by in form nodeId&dciId
-		String[] parts = site.getSecondaryId().split("&");
+		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length != 2)
-			throw new PartInitException("Internal error");
+			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		nodeId = Long.parseLong(parts[0]);
 		AbstractObject object = session.findObjectById(nodeId);
 		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof MobileDevice) && !(object instanceof Cluster)))
-			throw new PartInitException("Invalid object ID");
+			throw new PartInitException(Messages.HistoricalDataView_InvalidObjectID);
 		nodeName = object.getObjectName();
 		
 		dciId = Long.parseLong(parts[1]);
 		
-		setPartName(nodeName + ": [" + Long.toString(dciId) + "]");
+		setPartName(nodeName + ": [" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -105,7 +106,7 @@ public class HistoricalDataView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Timestamp", "Value" };
+		final String[] names = { Messages.HistoricalDataView_ColTimestamp, Messages.HistoricalDataView_ColValue };
 		final int[] widths = { 150, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -131,7 +132,7 @@ public class HistoricalDataView extends ViewPart
 			}
 		};
 		
-		actionSelectRange = new Action("Select data &range...") {
+		actionSelectRange = new Action(Messages.HistoricalDataView_8) {
 			@Override
 			public void run()
 			{
@@ -232,7 +233,7 @@ public class HistoricalDataView extends ViewPart
 			return;
 		updateInProgress = true;
 		
-		new ConsoleJob("Read DCI data from server", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.HistoricalDataView_9, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -250,7 +251,7 @@ public class HistoricalDataView extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get data for DCI " + nodeName + ":[" + Long.toString(dciId) + "]";
+				return Messages.HistoricalDataView_10 + nodeName + Messages.HistoricalDataView_11 + Long.toString(dciId) + Messages.HistoricalDataView_12;
 			}
 		}.start();
 	}

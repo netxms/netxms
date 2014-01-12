@@ -33,6 +33,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -82,14 +83,14 @@ public class PerfTab extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkShow = new Button(dialogArea, SWT.CHECK);
-      checkShow.setText("&Show on performance tab");
+      checkShow.setText(Messages.PerfTab_ShowOnPerfTab);
       checkShow.setSelection(settings.isEnabled());
       GridData gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       checkShow.setLayoutData(gd);
       
       title = new LabeledText(dialogArea, SWT.NONE);
-      title.setLabel("Title");
+      title.setLabel(Messages.PerfTab_Title);
       title.setText(settings.getTitle());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -98,22 +99,22 @@ public class PerfTab extends PropertyPage
       
       Composite colors = new Composite(dialogArea, SWT.NONE);
       colors.setLayout(new RowLayout(SWT.VERTICAL));
-      new Label(colors, SWT.NONE).setText("Color");
+      new Label(colors, SWT.NONE).setText(Messages.PerfTab_Color);
       color = new ColorSelector(colors);
       color.setColorValue(ColorConverter.rgbFromInt(settings.getColorAsInt()));
       
-      type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Type", new GridData(SWT.LEFT, SWT.CENTER, false, false));
-      type.add("Line");
-      type.add("Area");
+      type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.PerfTab_Type, new GridData(SWT.LEFT, SWT.CENTER, false, false));
+      type.add(Messages.PerfTab_Line);
+      type.add(Messages.PerfTab_Area);
       type.select(settings.getType());
       
-      orderNumber = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Order", 0, 65535, new GridData(SWT.LEFT, SWT.CENTER, false, false));
+      orderNumber = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.PerfTab_Order, 0, 65535, new GridData(SWT.LEFT, SWT.CENTER, false, false));
       orderNumber.setSelection(settings.getOrder());
 
       parentDci = new DciSelector(dialogArea, SWT.NONE, false);
       parentDci.setDciId(dci.getNodeId(), settings.getParentDciId());
       parentDci.setFixedNode(true);
-      parentDci.setLabel("Attach to another DCI");
+      parentDci.setLabel(Messages.PerfTab_Attach);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       gd.grabExcessHorizontalSpace = true;
@@ -121,7 +122,7 @@ public class PerfTab extends PropertyPage
       parentDci.setLayoutData(gd);
 
       name = new LabeledText(dialogArea, SWT.NONE);
-      name.setLabel("Name in legend");
+      name.setLabel(Messages.PerfTab_NameInLegend);
       name.setText(settings.getName());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -130,7 +131,7 @@ public class PerfTab extends PropertyPage
       name.setLayoutData(gd);
       
       checkShowThresholds = new Button(dialogArea, SWT.CHECK);
-      checkShowThresholds.setText("&Show thresholds on graph");
+      checkShowThresholds.setText(Messages.PerfTab_ShowThresholds);
       checkShowThresholds.setSelection(settings.isShowThresholds());
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;

@@ -46,6 +46,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.AccessListComparator;
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.AccessListLabelProvider;
@@ -79,7 +80,7 @@ public class PredefinedGraph extends PropertyPage
 			acl.put(e.getUserId(), new AccessListElement(e));
 		
 		// Initiate loading of user manager plugin if it was not loaded before
-		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -90,7 +91,7 @@ public class PredefinedGraph extends PropertyPage
 		dialogArea.setLayout(layout);
 		
       name = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER);
-      name.setLabel("Name");
+      name.setLabel(Messages.PredefinedGraph_Name);
       name.setText(config.getName());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -99,7 +100,7 @@ public class PredefinedGraph extends PropertyPage
       name.setLayoutData(gd);
       
 		Group users = new Group(dialogArea, SWT.NONE);
-		users.setText("Users and Groups");
+		users.setText(Messages.PredefinedGraph_UsersAndGroups);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
@@ -110,7 +111,7 @@ public class PredefinedGraph extends PropertyPage
 		layout = new GridLayout();
 		users.setLayout(layout);
       
-      final String[] columnNames = { "Login Name", "Rights" };
+      final String[] columnNames = { Messages.PredefinedGraph_LoginName, Messages.PredefinedGraph_Rights };
       final int[] columnWidths = { 150, 100 };
       userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
@@ -134,7 +135,7 @@ public class PredefinedGraph extends PropertyPage
       buttons.setLayoutData(gd);
       
       final Button addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton.setText(Messages.PredefinedGraph_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -157,7 +158,7 @@ public class PredefinedGraph extends PropertyPage
       });
 
       final Button deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(Messages.PredefinedGraph_Delete);
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -182,7 +183,7 @@ public class PredefinedGraph extends PropertyPage
       });
       
       Group rights = new Group(dialogArea, SWT.NONE);
-      rights.setText("Access Rights");
+      rights.setText(Messages.PredefinedGraph_AccessRights);
       rights.setLayout(new RowLayout(SWT.VERTICAL));
       gd = new GridData();
       gd.grabExcessVerticalSpace = true;
@@ -190,8 +191,8 @@ public class PredefinedGraph extends PropertyPage
       gd.verticalAlignment = SWT.FILL;
       rights.setLayoutData(gd);
       
-      createAccessCheck(rights, "&Read", GraphSettings.ACCESS_READ);
-      createAccessCheck(rights, "&Modify", GraphSettings.ACCESS_WRITE);
+      createAccessCheck(rights, Messages.PredefinedGraph_Read, GraphSettings.ACCESS_READ);
+      createAccessCheck(rights, Messages.PredefinedGraph_Modify, GraphSettings.ACCESS_WRITE);
       
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -286,7 +287,7 @@ public class PredefinedGraph extends PropertyPage
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Update access control list for predefined graph", null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.PredefinedGraph_JobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -308,7 +309,7 @@ public class PredefinedGraph extends PropertyPage
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot change access control list";
+					return Messages.PredefinedGraph_JobError;
 				}
 			}.start();
 		}

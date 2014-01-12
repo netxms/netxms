@@ -31,6 +31,7 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.TableDciValue;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.TableLastValuesView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -61,15 +62,15 @@ public class ShowTableLastValues implements IObjectActionDelegate, DciOpenHandle
 		{
 			final String id =
 					(currentSelection instanceof DataCollectionTable) ?
-							Long.toString(((DataCollectionTable)currentSelection).getNodeId()) + "&" + Long.toString(((DataCollectionTable)currentSelection).getId()) :
-							Long.toString(((TableDciValue)currentSelection).getNodeId()) + "&" + Long.toString(((TableDciValue)currentSelection).getId());
+							Long.toString(((DataCollectionTable)currentSelection).getNodeId()) + "&" + Long.toString(((DataCollectionTable)currentSelection).getId()) : //$NON-NLS-1$
+							Long.toString(((TableDciValue)currentSelection).getNodeId()) + "&" + Long.toString(((TableDciValue)currentSelection).getId()); //$NON-NLS-1$
 			try
 			{
 				window.getActivePage().showView(TableLastValuesView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(Exception e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowTableLastValues_Error, String.format(Messages.ShowTableLastValues_ErrorOpeningView, e.getMessage()));
 			}
 		}
 	}

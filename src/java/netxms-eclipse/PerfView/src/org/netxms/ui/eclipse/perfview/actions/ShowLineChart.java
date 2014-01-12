@@ -26,6 +26,7 @@ import org.eclipse.ui.PlatformUI;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -49,17 +50,17 @@ public class ShowLineChart implements DciOpenHandler
 		String name = null, description = null;
 		try
 		{
-			name = URLEncoder.encode(dci.getName(), "UTF-8");
-			description = URLEncoder.encode(dci.getDescription(), "UTF-8");
+			name = URLEncoder.encode(dci.getName(), "UTF-8"); //$NON-NLS-1$
+			description = URLEncoder.encode(dci.getDescription(), "UTF-8"); //$NON-NLS-1$
 		}
 		catch(UnsupportedEncodingException e)
 		{
-			description = "<description unavailable>";
+			description = Messages.ShowLineChart_DescriptionUnavailable;
 		}
 		
-		final String id = Long.toString(uniqueId++) + "&" + Long.toString(dci.getNodeId()) + "@" + 
-				Long.toString(dci.getId()) + "@" + Integer.toString(dci.getSource()) + "@" + 
-				Integer.toString(dci.getDataType()) + "@" + name + "@" + description;
+		final String id = Long.toString(uniqueId++) + "&" + Long.toString(dci.getNodeId()) + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
+				Long.toString(dci.getId()) + "@" + Integer.toString(dci.getSource()) + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
+				Integer.toString(dci.getDataType()) + "@" + name + "@" + description; //$NON-NLS-1$ //$NON-NLS-2$
 		
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		try
@@ -68,7 +69,7 @@ public class ShowLineChart implements DciOpenHandler
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+			MessageDialogHelper.openError(window.getShell(), Messages.ShowLineChart_Error, String.format(Messages.ShowLineChart_ErrorOpeningView, e.getLocalizedMessage()));
 		}
 		return true;
 	}

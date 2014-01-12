@@ -26,6 +26,7 @@ import java.util.Map;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.perfview.Messages;
 
 /**
  * Content provider for predefined graph tree
@@ -94,7 +95,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
 		parentFolders.clear();
-		rootFolder = new GraphFolder("[root]", null);
+		rootFolder = new GraphFolder(Messages.GraphTreeContentProvider_Root, null);
 		
 		List<GraphSettings> gs = (List<GraphSettings>)newInput;
 		if (gs != null)
@@ -103,19 +104,19 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 				@Override
 				public int compare(GraphSettings arg0, GraphSettings arg1)
 				{
-					return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", ""));
+					return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 				}
 			});
 		
 			Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
 			for(int i = 0; i < gs.size(); i++)
 			{
-				String[] path = gs.get(i).getName().split("\\-\\>");
+				String[] path = gs.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
 			
 				GraphFolder root = rootFolder;
 				for(int j = 0; j < path.length - 1; j++)
 				{
-					String key = path[j].replace("&", "");
+					String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
 					GraphFolder curr = folders.get(key);
 					if (curr == null)
 					{

@@ -45,6 +45,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.objecttabs.internal.PerfTabGraph;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -109,7 +110,7 @@ public class PerformanceTab extends ObjectTab
 		waitingImage.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 2, 1));
 		try
 		{
-			waitingImage.setImage(new URL("platform:/plugin/org.netxms.ui.eclipse.library/icons/loading.gif"));
+			waitingImage.setImage(new URL("platform:/plugin/org.netxms.ui.eclipse.library/icons/loading.gif")); //$NON-NLS-1$
 		}
 		catch(MalformedURLException e)
 		{
@@ -117,14 +118,14 @@ public class PerformanceTab extends ObjectTab
 		updateChartAreaLayout();
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		Job job = new Job("Update performance tab") {
+		Job job = new Job(Messages.PerformanceTab_JobName) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
 				try
 				{
 					final PerfTabDci[] items = session.getPerfTabItems(object.getObjectId());
-					new UIJob(PerformanceTab.this.getClientArea().getDisplay(), "Update performance tab") {
+					new UIJob(PerformanceTab.this.getClientArea().getDisplay(), Messages.PerformanceTab_JobName) {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{

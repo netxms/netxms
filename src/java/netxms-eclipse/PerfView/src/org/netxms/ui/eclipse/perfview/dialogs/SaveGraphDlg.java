@@ -13,6 +13,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -49,7 +50,7 @@ public class SaveGraphDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Save Graph");
+		newShell.setText(Messages.SaveGraphDlg_Title);
 	}
 
 	/* (non-Javadoc)
@@ -66,7 +67,7 @@ public class SaveGraphDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		fieldName = new LabeledText(dialogArea, SWT.NONE);
-		fieldName.setLabel("Name");
+		fieldName.setLabel(Messages.SaveGraphDlg_Name);
 		fieldName.setText(name);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -82,7 +83,7 @@ public class SaveGraphDlg extends Dialog
          errorMessage.setText(ErrorMessage);
          
          checkOverwrite = new Button(dialogArea, SWT.CHECK);
-         checkOverwrite.setText("Overwrite existing graph");
+         checkOverwrite.setText(Messages.SaveGraphDlg_Overwrite);
       }   
 		
 		return dialogArea;
@@ -97,7 +98,7 @@ public class SaveGraphDlg extends Dialog
 		name = fieldName.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Predefined graph name must not be empty!");
+			MessageDialogHelper.openWarning(getShell(), Messages.SaveGraphDlg_Warning, Messages.SaveGraphDlg_WarningEmptyName);
 			return;
 		}
 		if (ErrorMessage != null && checkOverwrite.getSelection())
@@ -116,7 +117,7 @@ public class SaveGraphDlg extends Dialog
       name = fieldName.getText().trim();
       if (name.isEmpty())
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Predefined graph name must not be empty!");
+         MessageDialogHelper.openWarning(getShell(), Messages.SaveGraphDlg_Warning, Messages.SaveGraphDlg_WarningEmptyName);
          return;
       }
       super.okPressed();

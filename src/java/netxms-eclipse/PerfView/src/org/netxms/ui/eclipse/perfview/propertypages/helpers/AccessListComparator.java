@@ -37,13 +37,13 @@ public class AccessListComparator extends ViewerComparator
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		ITableLabelProvider lp = (ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider();
-		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		String text1 = lp.getColumnText(e1, column);
 		String text2 = lp.getColumnText(e2, column);
 		if (text1 == null)
-			text1 = "";
+			text1 = ""; //$NON-NLS-1$
 		if (text2 == null)
-			text2 = "";
+			text2 = ""; //$NON-NLS-1$
 		int result = text1.compareToIgnoreCase(text2);
 		return (((SortableTableViewer) viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}

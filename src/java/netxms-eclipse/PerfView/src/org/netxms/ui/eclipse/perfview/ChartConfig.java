@@ -42,7 +42,7 @@ public class ChartConfig
 	private ChartDciConfig[] dciList = new ChartDciConfig[0];
 	
 	@Element(required = false)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 	
 	@Element(required = false)
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
@@ -120,7 +120,7 @@ public class ChartConfig
 	{
 		// Compatibility mode: decode old predefined graph configuration
 		// should be removed in 1.2.2
-		if (!xml.startsWith("<chart>"))
+		if (!xml.startsWith("<chart>")) //$NON-NLS-1$
 		{
 			ChartConfig config = objectClass.newInstance();
 			config.parseLegacyConfig(xml);
@@ -148,7 +148,7 @@ public class ChartConfig
 		for(int i = 0; i < itemStyles.length; i++)
 			itemStyles[i] = new GraphItemStyle();
 		
-		String[] elements = settings.split("\u007F");
+		String[] elements = settings.split("\u007F"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			int index = elements[i].indexOf(':');
@@ -158,11 +158,11 @@ public class ChartConfig
 			final String name = elements[i].substring(0, index);
 			final String value = elements[i].substring(index + 1);
 			
-			if (name.equals("A"))
+			if (name.equals("A")) //$NON-NLS-1$
 			{
 				refreshRate = safeParseInt(value, 30);
 			}
-			else if (name.equals("F"))
+			else if (name.equals("F")) //$NON-NLS-1$
 			{
 				int flags = safeParseInt(value, 0);
 				if ((flags & GraphSettings.GF_AUTO_UPDATE) != 0)
@@ -176,94 +176,94 @@ public class ChartConfig
 				if ((flags & GraphSettings.GF_LOG_SCALE) != 0)
 					logScale = true;
 			}
-			else if (name.equals("N"))
+			else if (name.equals("N")) //$NON-NLS-1$
 			{
 				dciCount = safeParseInt(value, 0);
 				dciList = new ChartDciConfig[dciCount];
 				for(int j = 0; j < dciCount; j++)
 					dciList[j] = new ChartDciConfig();
 			}
-			else if (name.equals("TFT"))
+			else if (name.equals("TFT")) //$NON-NLS-1$
 			{
 				timeFrameType = safeParseInt(value, GraphSettings.TIME_FRAME_BACK_FROM_NOW);
 			}
-			else if (name.equals("TU"))
+			else if (name.equals("TU")) //$NON-NLS-1$
 			{
 				timeUnits = safeParseInt(value, GraphSettings.TIME_UNIT_HOUR);
 			}
-			else if (name.equals("NTU"))
+			else if (name.equals("NTU")) //$NON-NLS-1$
 			{
 				timeRange = safeParseInt(value, 1);
 			}
-			else if (name.equals("TS"))
+			else if (name.equals("TS")) //$NON-NLS-1$
 			{
 				timeFrom = new Date((long)safeParseInt(value, 0) * 1000L);
 			}
-			else if (name.equals("TF"))
+			else if (name.equals("TF")) //$NON-NLS-1$
 			{
 				timeTo = new Date((long)safeParseInt(value, 0) * 1000L);
 			}
-			else if (name.equals("T"))
+			else if (name.equals("T")) //$NON-NLS-1$
 			{
 				title = value;
 			}
-			else if (name.equals("S"))
+			else if (name.equals("S")) //$NON-NLS-1$
 			{
 				// autoscale flag
 			}
-			else if (name.equals("G"))
+			else if (name.equals("G")) //$NON-NLS-1$
 			{
 				showGrid = (safeParseInt(value, 1) != 0);
 			}
-			else if (name.equals("L"))
+			else if (name.equals("L")) //$NON-NLS-1$
 			{
 				showLegend = (safeParseInt(value, 1) != 0);
 			}
-			else if (name.equals("R"))
+			else if (name.equals("R")) //$NON-NLS-1$
 			{
 				// show ruler flag
 			}
-			else if (name.equals("H"))
+			else if (name.equals("H")) //$NON-NLS-1$
 			{
 				showHostNames = (safeParseInt(value, 0) != 0);
 			}
-			else if (name.equals("O"))
+			else if (name.equals("O")) //$NON-NLS-1$
 			{
 				logScale = (safeParseInt(value, 0) != 0);
 			}
-			else if (name.equals("CA"))
+			else if (name.equals("CA")) //$NON-NLS-1$
 			{
 				// axis color
 			}
-			else if (name.equals("CB"))
+			else if (name.equals("CB")) //$NON-NLS-1$
 			{
 				// background color
 			}
-			else if (name.equals("CG"))
+			else if (name.equals("CG")) //$NON-NLS-1$
 			{
 				// grid color
 			}
-			else if (name.equals("CLF"))
+			else if (name.equals("CLF")) //$NON-NLS-1$
 			{
 				// legend text color
 			}
-			else if (name.equals("CLB"))
+			else if (name.equals("CLB")) //$NON-NLS-1$
 			{
 				// legend background color
 			}
-			else if (name.equals("CP"))
+			else if (name.equals("CP")) //$NON-NLS-1$
 			{
 				// plot area color
 			}
-			else if (name.equals("CR"))
+			else if (name.equals("CR")) //$NON-NLS-1$
 			{
 				// ruler color
 			}
-			else if (name.equals("CS"))
+			else if (name.equals("CS")) //$NON-NLS-1$
 			{
 				// selection color
 			}
-			else if (name.equals("CT"))
+			else if (name.equals("CT")) //$NON-NLS-1$
 			{
 				// text color
 			}
@@ -326,7 +326,7 @@ public class ChartConfig
 		// Apply item styles
 		for(int i = 0; (i < dciList.length) && (i < itemStyles.length); i++)
 		{
-			dciList[i].color = "0x" + Integer.toHexString(itemStyles[i].getColor());
+			dciList[i].color = "0x" + Integer.toHexString(itemStyles[i].getColor()); //$NON-NLS-1$
 			dciList[i].lineWidth = itemStyles[i].getLineWidth();
 		}
 	}
