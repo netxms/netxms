@@ -181,6 +181,7 @@ public class Messages extends NLS
 	public String Gauge_Bar;
    public String Gauge_Dial;
    public String Gauge_FontName;
+   public String Gauge_ShowBorder;
    public String Gauge_Text;
    public String Gauge_Type;
    public String Gauge_Vertical;

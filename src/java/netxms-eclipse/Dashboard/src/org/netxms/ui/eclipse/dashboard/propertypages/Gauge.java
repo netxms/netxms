@@ -151,7 +151,7 @@ public class Gauge extends PropertyPage
 		checkVertical.setLayoutData(gd);
 		
       checkElementBorders = new Button(dialogArea, SWT.CHECK);
-      checkElementBorders.setText("Show border around each element");
+      checkElementBorders.setText(Messages.get().Gauge_ShowBorder);
       checkElementBorders.setSelection(config.isElementBordersVisible());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
