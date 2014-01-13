@@ -369,7 +369,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
  */
 BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 {
-   static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT") };
+   static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
 
    NXC_ACTION *pAction;
    BOOL bSuccess = FALSE;
@@ -381,8 +381,7 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
    {
       if (pAction->bIsDisabled)
       {
-         DbgPrintf(3, _T("*actions* Action %d (%s) is disabled and will not be executed"),
-                   dwActionId, pAction->szName);
+         DbgPrintf(3, _T("*actions* Action %d (%s) is disabled and will not be executed"), dwActionId, pAction->szName);
          bSuccess = TRUE;
       }
       else
