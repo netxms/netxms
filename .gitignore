@@ -136,6 +136,9 @@ target
 /src/java/netxms-client/.classpath
 /src/java/netxms-client/.project
 /src/java/netxms-client/.settings
+/src/java/nxshell/.classpath
+/src/java/nxshell/.project
+/src/java/nxshell/.settings
 /src/java/report-generator/.classpath
 /src/java/report-generator/.project
 /src/java/report-generator/.settings

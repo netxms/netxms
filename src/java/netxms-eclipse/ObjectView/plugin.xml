@@ -144,5 +144,15 @@
          </action>
       </objectContribution>
    </extension>
+   <extension
+         point="org.eclipse.ui.services">
+      <sourceProvider
+            provider="org.netxms.ui.eclipse.objectview.SourceProvider">
+         <variable
+               name="org.netxms.ui.eclipse.objectview.ActiveTab"
+               priorityLevel="workbench">
+         </variable>
+      </sourceProvider>
+   </extension>
 
 </plugin>

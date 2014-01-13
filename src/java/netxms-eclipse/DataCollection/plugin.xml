@@ -452,7 +452,7 @@
             <visibleWhen
                   checkEnabled="false">
                <with
-                     variable="nxmcObjectViewActiveTab">
+                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
                   <instanceof
                         value="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues">
                   </instanceof>
@@ -460,16 +460,6 @@
             </visibleWhen>
          </command>
       </menuContribution>
-   </extension>
-   <extension
-         point="org.eclipse.ui.services">
-      <sourceProvider
-            provider="org.netxms.ui.eclipse.objectview.services.SourceProvider">
-         <variable
-               name="nxmcObjectViewActiveTab"
-               priorityLevel="workbench">
-         </variable>
-      </sourceProvider>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
