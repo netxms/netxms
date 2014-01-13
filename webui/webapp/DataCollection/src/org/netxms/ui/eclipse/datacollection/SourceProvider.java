@@ -31,6 +31,7 @@ import org.eclipse.ui.services.IServiceLocator;
  */
 public class SourceProvider extends AbstractSourceProvider
 {
+   private static final String INSTANCE_ATTRIBUTE = "netxms.datacollection.SourceProvider"; //$NON-NLS-1$
    private static final String SUMMARY_TABLES_EXIST = "org.netxms.ui.eclipse.datacollection.SummaryTablesExist";
    
    private static final String[] PROVIDED_SOURCE_NAMES = 
@@ -48,7 +49,7 @@ public class SourceProvider extends AbstractSourceProvider
     */
    public static SourceProvider getInstance(Display display)
    {
-      return (SourceProvider)RWT.getUISession(display).getAttribute("netxms.datacollection.SourceProvider");
+      return (SourceProvider)RWT.getUISession(display).getAttribute(INSTANCE_ATTRIBUTE);
    }
    
    /* (non-Javadoc)
@@ -60,7 +61,7 @@ public class SourceProvider extends AbstractSourceProvider
       super.initialize(locator);
       stateMap.put(SUMMARY_TABLES_EXIST, false);
       display = Display.getCurrent();
-      RWT.getUISession(display).setAttribute("netxms.datacollection.SourceProvider", this);
+      RWT.getUISession(display).setAttribute(INSTANCE_ATTRIBUTE, this);
    }
    
    /* (non-Javadoc)
@@ -102,5 +103,6 @@ public class SourceProvider extends AbstractSourceProvider
    @Override
    public void dispose()
    {
+      RWT.getUISession().removeAttribute(INSTANCE_ATTRIBUTE);
    }
 }

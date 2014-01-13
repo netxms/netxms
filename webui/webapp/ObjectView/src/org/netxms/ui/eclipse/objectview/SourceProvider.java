@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.objectview;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 import org.eclipse.ui.services.IServiceLocator;
@@ -29,12 +30,12 @@ import org.eclipse.ui.services.IServiceLocator;
  */
 public class SourceProvider extends AbstractSourceProvider
 {
+   private static final String INSTANCE_ATTRIBUTE = "netxms.objectview.SourceProvider"; //$NON-NLS-1$
 	public static final String ACTIVE_TAB = "org.netxms.ui.eclipse.objectview.ActiveTab"; //$NON-NLS-1$
 	
 	private static final String[] PROVIDED_SOURCE_NAMES = new String[] { ACTIVE_TAB };
-	private static final Map<String, Object> stateMap = new HashMap<String, Object>(1);
-
-	private static SourceProvider instance = null;
+	
+	private final Map<String, Object> stateMap = new HashMap<String, Object>(1);
 	
 	/**
 	 * Get source provider instance.
@@ -43,7 +44,7 @@ public class SourceProvider extends AbstractSourceProvider
 	 */
 	public static SourceProvider getInstance()
 	{
-		return instance;
+		return (SourceProvider)RWT.getUISession().getAttribute(INSTANCE_ATTRIBUTE);
 	}
 	
 	/* (non-Javadoc)
@@ -54,7 +55,7 @@ public class SourceProvider extends AbstractSourceProvider
 	{
 		super.initialize(locator);
 		stateMap.put(ACTIVE_TAB, null);
-		instance = this;
+		RWT.getUISession().setAttribute(INSTANCE_ATTRIBUTE, this);
 	}
 
 	/* (non-Javadoc)
@@ -82,6 +83,7 @@ public class SourceProvider extends AbstractSourceProvider
 	@Override
 	public void dispose()
 	{
+	   RWT.getUISession().removeAttribute(INSTANCE_ATTRIBUTE);
 	}
 	
 	/**

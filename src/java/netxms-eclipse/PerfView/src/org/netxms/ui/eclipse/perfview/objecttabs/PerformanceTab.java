@@ -38,6 +38,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
@@ -45,6 +46,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.objecttabs.internal.PerfTabGraph;
@@ -110,7 +112,7 @@ public class PerformanceTab extends ObjectTab
 		waitingImage.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 2, 1));
 		try
 		{
-			waitingImage.setImage(new URL("platform:/plugin/org.netxms.ui.eclipse.library/icons/loading.gif")); //$NON-NLS-1$
+			waitingImage.setImage(new URL("platform:/plugin/org.netxms.ui.eclipse.console/icons/loading.gif")); //$NON-NLS-1$
 		}
 		catch(MalformedURLException e)
 		{
@@ -125,7 +127,8 @@ public class PerformanceTab extends ObjectTab
 				try
 				{
 					final PerfTabDci[] items = session.getPerfTabItems(object.getObjectId());
-					new UIJob(PerformanceTab.this.getClientArea().getDisplay(), Messages.get().PerformanceTab_JobName) {
+					final Display display = PerformanceTab.this.getClientArea().getDisplay();
+					new UIJob(display, Messages.get().PerformanceTab_JobName) {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
@@ -141,6 +144,7 @@ public class PerformanceTab extends ObjectTab
 				}
 				catch(Exception e)
 				{
+				   Activator.logError("Exception in performance tab loading job", e);
 				}
 				return Status.OK_STATUS;
 			}

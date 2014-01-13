@@ -908,7 +908,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                   if (e.getErrorCode() == RCC.OBJECT_ALREADY_EXISTS)
                   {
                      runInUIThread(new Runnable() {
-
                         @Override
                         public void run()
                         {
@@ -922,7 +921,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                      if (e.getErrorCode() == RCC.ACCESS_DENIED)
                      {
                         runInUIThread(new Runnable() {
-
                            @Override
                            public void run()
                            {
