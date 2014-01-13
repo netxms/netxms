@@ -87,7 +87,7 @@ static BOOL ExecCommand(char *pszCmd)
             pszText = pResponse->GetVariableStr(VID_MESSAGE);
             if (pszText != NULL)
             {
-#ifdef _WIN32
+#if defined(_WIN32) || !defined(UNICODE)
                WriteToTerminal(pszText);
 #else
 	       char *mbText = MBStringFromWideString(pszText);
