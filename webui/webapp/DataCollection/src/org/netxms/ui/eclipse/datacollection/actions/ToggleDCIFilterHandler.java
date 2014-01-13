@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 import org.netxms.ui.eclipse.datacollection.objecttabs.LastValues;
-import org.netxms.ui.eclipse.objectview.services.SourceProvider;
 
 /**
  * Command handler for toggling DCI filter state
@@ -46,7 +45,7 @@ public class ToggleDCIFilterHandler extends AbstractHandler implements IElementU
 		Object object = event.getApplicationContext();
 		if (object instanceof IEvaluationContext)
 		{
-			Object tab = ((IEvaluationContext)object).getVariable(SourceProvider.ACTIVE_TAB);
+			Object tab = ((IEvaluationContext)object).getVariable("org.netxms.ui.eclipse.objectview.ActiveTab");
 			if ((tab != null) && (tab instanceof LastValues))
 			{
 				ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);

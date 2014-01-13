@@ -61,7 +61,6 @@ public class SourceProvider extends AbstractSourceProvider
       stateMap.put(SUMMARY_TABLES_EXIST, false);
       display = Display.getCurrent();
       RWT.getUISession(display).setAttribute("netxms.datacollection.SourceProvider", this);
-System.out.println("init called!!!! " + display);      
    }
    
    /* (non-Javadoc)
