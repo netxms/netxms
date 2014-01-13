@@ -108,7 +108,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 
 		final Menu tablesMenu = new Menu(menu);
 		
-		DciSummaryTableDescriptor[] tables = SummaryTablesCache.getTables();
+		DciSummaryTableDescriptor[] tables = SummaryTablesCache.getInstance().getTables();
 		Arrays.sort(tables, new Comparator<DciSummaryTableDescriptor>() {
 			@Override
 			public int compare(DciSummaryTableDescriptor arg0, DciSummaryTableDescriptor arg1)

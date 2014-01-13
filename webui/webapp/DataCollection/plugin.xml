@@ -498,36 +498,45 @@
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
+            allPopups="false"
             locationURI="popup:org.eclipse.ui.popup.any?after=datacollection">
          <dynamic
                class="org.netxms.ui.eclipse.datacollection.SummaryTablesDynamicMenu"
                id="org.netxms.ui.eclipse.datacollection.SummaryTablesDynamicMenu">
             <visibleWhen
                   checkEnabled="false">
-               <iterate
-                     ifEmpty="false"
-                     operator="and">
-                  <or>
-                     <instanceof
-                           value="org.netxms.client.objects.Container">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.ServiceRoot">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Subnet">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Cluster">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Zone">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.EntireNetwork">
-                     </instanceof>
-                  </or>
-               </iterate>
+               <and>
+	               <iterate
+	                     ifEmpty="false"
+	                     operator="and">
+	                  <or>
+	                     <instanceof
+	                           value="org.netxms.client.objects.Container">
+	                     </instanceof>
+	                     <instanceof
+	                           value="org.netxms.client.objects.ServiceRoot">
+	                     </instanceof>
+	                     <instanceof
+	                           value="org.netxms.client.objects.Subnet">
+	                     </instanceof>
+	                     <instanceof
+	                           value="org.netxms.client.objects.Cluster">
+	                     </instanceof>
+	                     <instanceof
+	                           value="org.netxms.client.objects.Zone">
+	                     </instanceof>
+	                     <instanceof
+	                           value="org.netxms.client.objects.EntireNetwork">
+	                     </instanceof>
+	                  </or>
+	               </iterate>
+                <with
+                      variable="org.netxms.ui.eclipse.datacollection.SummaryTablesExist">
+                   <equals
+                         value="true">
+                   </equals>
+                </with>
+               </and>
             </visibleWhen>
          </dynamic>
       </menuContribution>
@@ -541,6 +550,16 @@
             properties="isClusterObject,isTemplateObject"
             type="org.netxms.client.datacollection.DataCollectionObject">
       </propertyTester>
+   </extension>
+   <extension
+         point="org.eclipse.ui.services">
+      <sourceProvider
+            provider="org.netxms.ui.eclipse.datacollection.SourceProvider">
+         <variable
+               name="org.netxms.ui.eclipse.datacollection.SummaryTablesExist"
+               priorityLevel="workbench">
+         </variable>
+      </sourceProvider>
    </extension>
 
 </plugin>

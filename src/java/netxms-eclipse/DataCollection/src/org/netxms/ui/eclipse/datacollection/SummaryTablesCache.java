@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 
 /**
- * Cache for object tools
- *
+ * Cache for DCI summary tables
  */
 public class SummaryTablesCache
 {
@@ -79,11 +78,11 @@ public class SummaryTablesCache
 					tables.put(d.getId(), d);
 				}
 			}
+	      SourceProvider.getInstance().update();
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
-			// TODO: add logging
+		   Activator.logError("Exception in SummaryTablesCache.reload()", e);
 		}
 	}
 	
@@ -114,6 +113,7 @@ public class SummaryTablesCache
 		{
 			tables.remove(tableId);
 		}
+		SourceProvider.getInstance().update();
 	}
 	
 	/**
@@ -124,11 +124,20 @@ public class SummaryTablesCache
 	 */
 	public static DciSummaryTableDescriptor[] getTables()
 	{
-		DciSummaryTableDescriptor[] t = null;
 		synchronized(tables)
 		{
-			t = tables.values().toArray(new DciSummaryTableDescriptor[tables.values().size()]);
+			return tables.values().toArray(new DciSummaryTableDescriptor[tables.values().size()]);
 		}
-		return t;
+	}
+	
+	/**
+	 * @return
+	 */
+	public static boolean isEmpty()
+	{
+      synchronized(tables)
+      {
+         return tables.isEmpty();
+      }
 	}
 }

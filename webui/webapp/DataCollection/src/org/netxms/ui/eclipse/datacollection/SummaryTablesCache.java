@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,28 +21,52 @@ package org.netxms.ui.eclipse.datacollection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Cache for object tools
- *
+ * Cache for DCI summary tables
  */
 public class SummaryTablesCache
 {
-	private static Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
-	private static NXCSession session = null;
+	private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
+	private NXCSession session;
+	private Display display;
 	
-	/**
+   /**
+    * Attach session to cache
+    * 
+    * @param session
+    */
+   public static void attachSession(NXCSession session)
+   {
+      SummaryTablesCache instance = new SummaryTablesCache(session);
+      ConsoleSharedData.setProperty("SummaryTablesCache", instance);
+   }
+
+   /**
+    * Get cache instance
+    * 
+    * @return
+    */
+   public static SummaryTablesCache getInstance()
+   {
+      return (SummaryTablesCache)ConsoleSharedData.getProperty("SummaryTablesCache");
+   }
+
+   /**
 	 * Initialize object tools cache. Should be called when connection with
 	 * the server already established.
 	 */
-	public static void init(NXCSession session)
+	private SummaryTablesCache(NXCSession session)
 	{
-		SummaryTablesCache.session = session;
+		this.session = session;
+      display = Display.getCurrent();
 		
 		reload();
 		
@@ -66,7 +90,7 @@ public class SummaryTablesCache
 	/**
 	 * Reload tables from server
 	 */
-	private static void reload()
+	private void reload()
 	{
 		try
 		{
@@ -79,11 +103,11 @@ public class SummaryTablesCache
 					tables.put(d.getId(), d);
 				}
 			}
+	      SourceProvider.getInstance(display).update();
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
-			// TODO: add logging
+		   Activator.logError("Exception in SummaryTablesCache.reload()", e);
 		}
 	}
 	
@@ -92,7 +116,7 @@ public class SummaryTablesCache
 	 * 
 	 * @param tableId ID of changed table
 	 */
-	private static void onTableChange(final int tableId)
+	private void onTableChange(final int tableId)
 	{
 		new Thread() {
 			@Override
@@ -108,12 +132,13 @@ public class SummaryTablesCache
 	 * 
 	 * @param tableId ID of deleted table
 	 */
-	private static void onTableDelete(final int tableId)
+	private void onTableDelete(final int tableId)
 	{
 		synchronized(tables)
 		{
 			tables.remove(tableId);
 		}
+		SourceProvider.getInstance(display).update();
 	}
 	
 	/**
@@ -122,13 +147,22 @@ public class SummaryTablesCache
 	 * 
 	 * @return current set of DCI summary tables
 	 */
-	public static DciSummaryTableDescriptor[] getTables()
+	public DciSummaryTableDescriptor[] getTables()
 	{
-		DciSummaryTableDescriptor[] t = null;
 		synchronized(tables)
 		{
-			t = tables.values().toArray(new DciSummaryTableDescriptor[tables.values().size()]);
+			return tables.values().toArray(new DciSummaryTableDescriptor[tables.values().size()]);
 		}
-		return t;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isEmpty()
+	{
+      synchronized(tables)
+      {
+         return tables.isEmpty();
+      }
 	}
 }
