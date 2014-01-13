@@ -87,7 +87,13 @@ static BOOL ExecCommand(char *pszCmd)
             pszText = pResponse->GetVariableStr(VID_MESSAGE);
             if (pszText != NULL)
             {
+#ifdef _WIN32
                WriteToTerminal(pszText);
+#else
+	       char *mbText = MBStringFromWideString(pszText);
+	       fputs(mbText, stdout);
+	       free(mbText);
+#endif
                free(pszText);
             }
             break;
@@ -102,11 +108,9 @@ static BOOL ExecCommand(char *pszCmd)
    return bConnClosed;
 }
 
-
-//
-// Interactive mode loop
-//
-
+/**
+ * Interactive mode loop
+ */
 static void Shell()
 {
    char *ptr, szCommand[256];
@@ -124,7 +128,11 @@ static void Shell()
 #if USE_READLINE
       ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
 #else
+#ifdef _WIN32
       WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
+#else
+      fputs("\x1b[33mnetxmsd:\x1b[0m ", stdout);
+#endif
       fflush(stdout);
       if (fgets(szCommand, 255, stdin) == NULL)
          break;   // Error reading stdin
