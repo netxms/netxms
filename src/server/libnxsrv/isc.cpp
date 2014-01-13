@@ -135,12 +135,10 @@ ISC::~ISC()
 	MutexDestroy(m_socketLock);
 }
 
-
-//
-// Print message. This function is virtual and can be overrided in
-// derived classes. Default implementation will print message to stdout.
-//
-
+/**
+ * Print message. This function is virtual and can be overrided in
+ * derived classes. Default implementation will print message to stdout.
+ */
 void ISC::PrintMsg(const TCHAR *format, ...)
 {
    va_list args;

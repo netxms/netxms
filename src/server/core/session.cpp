@@ -2051,8 +2051,8 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
             object->commentsToMessage(&msg);
          sendMessage(&msg);
          msg.deleteAllVariables();
-         object->decRefCount();
       }
+      object->decRefCount();
 	}
 	delete objects;
 

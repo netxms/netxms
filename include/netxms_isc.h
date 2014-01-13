@@ -23,30 +23,23 @@
 #ifndef _netxms_isc_h_
 #define _netxms_isc_h_
 
-
-//
-// Default port number
-//
-
+/**
+ * Default ISC port number
+ */
 #define NETXMS_ISC_PORT        4702
 
-
-//
-// Well-known ISC services
-//
-
+/**
+ * Well-known ISC services
+ */
 #define ISC_SERVICE_EVENT_FORWARDER    ((UINT32)1)
 #define ISC_SERVICE_OBJECT_SYNC        ((UINT32)2)
 #define ISC_SERVICE_LICENSE_SERVER     ((UINT32)3)
 
 #define ISC_SERVICE_CUSTOM_1           ((UINT32)100000)
 
-
-//
-// ISC error codes
-//
-
-
+/**
+ * ISC error codes
+ */
 #define ISC_ERR_SUCCESS                ((UINT32)0)
 #define ISC_ERR_UNKNOWN_SERVICE        ((UINT32)1)
 #define ISC_ERR_REQUEST_OUT_OF_STATE   ((UINT32)2)
@@ -67,11 +60,9 @@
 #define ISC_ERR_OBJECT_NOT_FOUND       ((UINT32)17)
 #define ISC_ERR_POST_EVENT_FAILED      ((UINT32)18)
 
-
-//
-// ISC session
-//
-
+/**
+ * ISC session
+ */
 class ISCSession
 {
 private:
@@ -94,11 +85,9 @@ public:
 	void *GetUserData() { return m_userData; }
 };
 
-
-//
-// ISC service definition
-//
-
+/**
+ * ISC service definition
+ */
 typedef struct
 {
 	UINT32 id;								// Service ID

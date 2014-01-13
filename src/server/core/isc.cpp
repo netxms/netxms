@@ -32,20 +32,16 @@
 #define ISC_STATE_INIT        0
 #define ISC_STATE_CONNECTED   1
 
-
-//
-// Externals
-//
-
+/**
+ * Service handlers
+ */
 BOOL EF_SetupSession(ISCSession *, CSCPMessage *);
 void EF_CloseSession(ISCSession *);
 BOOL EF_ProcessMessage(ISCSession *, CSCPMessage *, CSCPMessage *);
 
-
-//
-// Well-known service list
-//
-
+/**
+ * Well-known service list
+ */
 static ISC_SERVICE m_serviceList[] = 
 {
 	{ ISC_SERVICE_EVENT_FORWARDER, _T("EventForwarder"),
@@ -53,11 +49,9 @@ static ISC_SERVICE m_serviceList[] =
 	{ 0, NULL, NULL }
 };
 
-
-//
-// Request processing thread
-//
-
+/**
+ * Request processing thread
+ */
 static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 {
 	ISCSession *session = (ISCSession *)arg;
@@ -201,11 +195,9 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Local administrative interface listener thread
-//
-
+/**
+ * ISC listener thread
+ */
 THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
 {
    SOCKET sock, sockClient;
