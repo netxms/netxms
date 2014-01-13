@@ -106,6 +106,9 @@ public class PerformanceTab extends ObjectTab
 			chart.dispose();
 		charts.clear();
 		
+		if (object == null)
+		   return;
+		
 		if (waitingImage != null)
 			waitingImage.dispose();
 		waitingImage = new AnimatedImage(chartArea, SWT.NONE);

@@ -117,7 +117,7 @@
                icon="icons/alarm_browser.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_EntireNetwork"
                label="%action.Alarms.label"
-               menubarPath="aditions">
+               menubarPath="additions">
          </action>
       </objectContribution>
       <objectContribution
