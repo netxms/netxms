@@ -10,6 +10,7 @@
 - Management console:
 	- Stacked line charts implemented
 	- Authentication by certificates supported by Java console
+	- Russian translation improved
 - Fixed issues: #16, #76, #385, #464, #469, #472
 
 
