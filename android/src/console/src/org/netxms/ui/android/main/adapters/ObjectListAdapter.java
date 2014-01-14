@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -144,7 +145,7 @@ public class ObjectListAdapter extends BaseAdapter
 			objectName = new TextView(context);
 			objectName.setPadding(5, 2, 5, 2);
 			objectName.setTextColor(r.getColor(R.color.text_color));
-			objectName.setTextSize(objectName.getTextSize() * 1.1f);
+			objectName.setTextSize(TypedValue.COMPLEX_UNIT_PX, objectName.getTextSize() * 1.1f);
 
 			objectStatusText = new TextView(context);
 			objectStatusText.setPadding(5, 2, 5, 2);
