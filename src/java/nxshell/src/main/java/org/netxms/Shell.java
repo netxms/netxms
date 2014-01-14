@@ -22,6 +22,9 @@ public class Shell
    private String login;
    private String password;
 
+   /**
+    * @param args
+    */
    public static void main(String[] args)
    {
       final Shell shell = new Shell();
@@ -39,6 +42,11 @@ public class Shell
       }
    }
 
+   /**
+    * @param args
+    * @throws IOException
+    * @throws NetXMSClientException
+    */
    private void run(String[] args) throws IOException, NetXMSClientException
    {
       initJython(args);
@@ -64,6 +72,9 @@ public class Shell
       session.disconnect();
    }
 
+   /**
+    * @param interactive
+    */
    private void readCredentials(boolean interactive)
    {
       server = System.getProperty("netxms.server");
@@ -108,20 +119,38 @@ public class Shell
       }
    }
 
+   /**
+    * @return
+    */
    private String getBanner()
    {
       return "NetXMS " + NXCommon.VERSION + " Interactive Shell";
    }
 
+   /**
+    * @return
+    * @throws IOException
+    * @throws NetXMSClientException
+    */
    private NXCSession connect() throws IOException, NetXMSClientException
    {
-      final NXCSession session = new NXCSession(server, NXCSession.DEFAULT_CONN_PORT, login, password, true);
+      boolean encrypt = true;
+      String encryptOption = System.getProperty("netxms.encryptSession");
+      if (encryptOption != null)
+      {
+         encrypt = Boolean.parseBoolean(encryptOption);
+      }
+      
+      final NXCSession session = new NXCSession(server, NXCSession.DEFAULT_CONN_PORT, login, password, encrypt);
       session.connect();
       session.syncObjects();
       session.syncUserDatabase();
       return session;
    }
 
+   /**
+    * @return
+    */
    protected boolean isInteractive()
    {
       PySystemState systemState = Py.getSystemState();
@@ -133,6 +162,10 @@ public class Shell
       return interactive;
    }
 
+   /**
+    * @param args
+    * @return
+    */
    private InteractiveConsole createInterpreter(String args[])
    {
       final InteractiveConsole console;
@@ -155,6 +188,9 @@ public class Shell
       return console;
    }
 
+   /**
+    * @param args
+    */
    private void initJython(String[] args)
    {
       final Properties postProperties = new Properties();
