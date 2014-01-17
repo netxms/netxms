@@ -4847,7 +4847,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
       // User should have "acknowledge alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0));
+			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
       }
       else
       {

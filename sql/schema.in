@@ -553,7 +553,7 @@ CREATE TABLE trusted_nodes
 /*
 ** Data collection items
 **
-** If node_id != 0, it's an item bound to node,	and template_id points to 
+** If node_id != 0, it's an item bound to node,	and template_id points to
 ** the template used for creating this item. In this case, template_id = 0
 ** means that item was created manually.
 ** If node_id = 0, it's a template item, and template_id points to a template
@@ -563,7 +563,7 @@ CREATE TABLE trusted_nodes
 CREATE TABLE items
 (
 	item_id integer not null,
-	node_id integer not null,	
+	node_id integer not null,
 	template_id integer not null,
 	template_item_id integer not null,
 	name varchar(1023) null,
@@ -601,7 +601,7 @@ CREATE INDEX idx_items_node_id ON items(node_id);
 CREATE TABLE dc_tables
 (
 	item_id integer not null,
-	node_id integer not null,	
+	node_id integer not null,
 	template_id integer not null,
 	template_item_id integer not null,
 	name varchar(1023) null,
@@ -917,6 +917,7 @@ CREATE TABLE alarms
 	term_by integer not null,        // ID of user who was terminated alarm
 	timeout integer not null,
 	timeout_event integer not null,
+	ack_timeout integer not null,
 	PRIMARY KEY(alarm_id)
 ) TABLE_TYPE;
 
@@ -996,7 +997,7 @@ CREATE TABLE agent_pkg
 	platform varchar(63),
 	pkg_file varchar(255),
 	description varchar(255),
-	PRIMARY KEY(pkg_id)	
+	PRIMARY KEY(pkg_id)
 ) TABLE_TYPE;
 
 

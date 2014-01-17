@@ -83,6 +83,20 @@
       </tab>
    </extension>
    <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.netxms.ui.eclipse.alarmviewer.PreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
+            id="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
+            name="%page.Alarms.name">
+      </page>
+   </extension>
+   <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.alarmviewer.actions.popup.object.Node"

@@ -12,7 +12,31 @@ public class Messages extends NLS
 	public String AcknowledgeAlarm_ErrorMessage;
 	public String AcknowledgeAlarm_JobName;
 	public String AcknowledgeAlarm_TaskName;
-	public String AlarmComments_AddCommentJob;
+	public String AcknowledgeCustomTimeDialog_ConfigurationInfoLabel;
+
+   public String AcknowledgeCustomTimeDialog_CustomTimeDialogTitle;
+
+   public String AcknowledgeCustomTimeDialog_Days;
+
+   public String AcknowledgeCustomTimeDialog_Hours;
+
+   public String AcknowledgeCustomTimeDialog_Minutes;
+
+   public String AcknowledgeCustomTimeDialog_Waring;
+
+   public String AcknowledgeCustomTimeDialog_WarningOnlyDigits;
+
+   public String AcknowledgeCustomTimeDialog_WarningTimeGatherThen0;
+
+   public String AlarmAcknowledgeTimeFunctions_days;
+
+   public String AlarmAcknowledgeTimeFunctions_hours;
+
+   public String AlarmAcknowledgeTimeFunctions_minutes;
+
+   public String AlarmAcknowledgeTimeFunctions_ZiroMinutesEntry;
+
+   public String AlarmComments_AddCommentJob;
 	public String AlarmComments_AddCommentLink;
 	public String AlarmComments_AddError;
 	public String AlarmComments_Comments;
@@ -57,6 +81,8 @@ public class Messages extends NLS
 	public String AlarmList_ResolveAlarm;
 	public String AlarmList_Resolving;
 	public String AlarmList_StickyAck;
+
+   public String AlarmList_StickyAckMenutTitle;
 	public String AlarmList_SyncJobError;
 	public String AlarmList_SyncJobName;
 	public String AlarmList_Terminate;
@@ -67,6 +93,8 @@ public class Messages extends NLS
 	public String AlarmNotifier_ToolTip_Header;
 	public String AlarmReminderDialog_Dismiss;
 	public String AlarmReminderDialog_OutstandingAlarms;
+   public String Alarms_AcknowledgeTimeEditor;
+
    public String Alarms_Blinking;
    public String Alarms_ShowDetailedTooltips;
 	public String Alarms_ShowPopup;

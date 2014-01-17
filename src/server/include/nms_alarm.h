@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -54,8 +54,8 @@ public:
 
    BOOL init();
    void newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
-	              int iSeverity, UINT32 dwTimeout, UINT32 dwTimeoutEvent, Event *pEvent);
-   UINT32 ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky);
+	              int iSeverity, UINT32 dwTimeout, UINT32 dwTimeoutEvent, Event *pEvent, UINT32 ackTimeout);
+   UINT32 ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 time);
    UINT32 resolveById(UINT32 dwAlarmId, ClientSession *session, bool terminate);
    void resolveByKey(const TCHAR *key, bool useRegexp, bool terminate);
    void deleteAlarm(UINT32 dwAlarmId, bool objectCleanup);

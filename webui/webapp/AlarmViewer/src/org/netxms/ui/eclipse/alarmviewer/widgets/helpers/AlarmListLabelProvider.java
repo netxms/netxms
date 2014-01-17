@@ -94,7 +94,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 			case AlarmList.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(((Alarm)element).getCurrentSeverity());
 			case AlarmList.COLUMN_STATE:
-				return stateText[((Alarm)element).getState()];
+			   int time = ((Alarm)element).getAckTime();
+			   String timeString = time  > 0 ? " (" + RegionalSettings.getDateTimeFormat().format(System.currentTimeMillis()+(time*1000)) +")" : ""; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				return stateText[((Alarm)element).getState()] + timeString;
 			case AlarmList.COLUMN_SOURCE:
 				AbstractObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(((Alarm)element).getSourceObjectId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$

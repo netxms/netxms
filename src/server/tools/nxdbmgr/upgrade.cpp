@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
@@ -67,8 +67,8 @@ BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
    if (!bVarExist)
    {
       _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,")
-                                _T("need_server_restart) VALUES (%s,%s,%d,%d)"), 
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, pszName, 63), 
+                                _T("need_server_restart) VALUES (%s,%s,%d,%d)"),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, pszName, 63),
 					  (const TCHAR *)DBPrepareString(g_hCoreDB, pszValue, 255), iVisible, iNeedRestart);
       bResult = SQLQuery(szQuery);
    }
@@ -90,7 +90,7 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 	if (g_iSyntax == DB_SYNTAX_SQLITE)
 		return TRUE;	// SQLite does not support adding constraints
-			
+
 	_sntprintf(query, 4096, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, key);
 	return SQLQuery(query);
 }
@@ -169,7 +169,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 		return FALSE;
 	}
 
-	_sntprintf(query, queryLen, _T("SELECT %s,%s%s%s FROM %s WHERE %s LIKE '%%#%%'"), 
+	_sntprintf(query, queryLen, _T("SELECT %s,%s%s%s FROM %s WHERE %s LIKE '%%#%%'"),
 	           idColumn, column, (idColumn2 != NULL) ? _T(",") : _T(""), (idColumn2 != NULL) ? idColumn2 : _T(""), table, column);
 	hResult = SQLSelect(query);
 	if (hResult == NULL)
@@ -199,7 +199,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 					TCHAR *id2 = DBGetField(hResult, i, 2, NULL, 0);
 					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=%s AND %s=%s"),
 								  table, column, (const TCHAR *)newValue,
-								  idColumn, (const TCHAR *)DBPrepareString(g_hCoreDB, id), 
+								  idColumn, (const TCHAR *)DBPrepareString(g_hCoreDB, id),
 								  idColumn2, (const TCHAR *)DBPrepareString(g_hCoreDB, id2));
 				}
 				else
@@ -215,7 +215,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 				if (idColumn2 != NULL)
 				{
 					INT64 id2 = DBGetFieldInt64(hResult, i, 2);
-					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT _T(" AND %s=") INT64_FMT, 
+					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT _T(" AND %s=") INT64_FMT,
 								  table, column, (const TCHAR *)newValue, idColumn, id, idColumn2, id2);
 				}
 				else
@@ -357,6 +357,21 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
       if (!g_bIgnoreErrors)
          return FALSE;
    }
+   return TRUE;
+}
+
+/**
+ * Upgrade from V302 to V303
+ */
+static BOOL H_UpgradeFromV302(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE alarms ADD ack_timeout integer\n")
+      _T("UPDATE alarms SET ack_timeout='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='303' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -953,7 +968,7 @@ static BOOL H_UpgradeFromV270(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV269(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE items ADD instd_method integer\n")
 		_T("ALTER TABLE items ADD instd_data varchar(255)\n")
 		_T("ALTER TABLE items ADD instd_filter $SQL:TEXT\n")
@@ -1238,7 +1253,7 @@ static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV257(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE nodes ADD down_since integer\n")
 		_T("UPDATE nodes SET down_since=0\n")
 		_T("<END>");
@@ -1256,7 +1271,7 @@ static BOOL H_UpgradeFromV257(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV256(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE network_maps ADD bg_color integer\n")
 		_T("ALTER TABLE network_maps ADD link_routing integer\n")
 		_T("UPDATE network_maps SET bg_color=16777215,link_routing=1\n")
@@ -1266,7 +1281,7 @@ static BOOL H_UpgradeFromV256(int currVersion, int newVersion)
 		_T("<END>");
 
 	CHK_EXEC(SQLBatch(batch));
-	
+
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='257' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1288,7 +1303,7 @@ static BOOL H_UpgradeFromV255(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV254(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE alarms ADD resolved_by integer\n")
 		_T("UPDATE alarms SET resolved_by=0\n")
 		_T("UPDATE alarms SET alarm_state=3 WHERE alarm_state=2\n")
@@ -1305,7 +1320,7 @@ static BOOL H_UpgradeFromV254(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE network_maps ADD flags integer\n")
 		_T("ALTER TABLE network_maps ADD link_color integer\n")
 		_T("UPDATE network_maps SET flags=1,link_color=-1\n")
@@ -1331,7 +1346,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter")));
 	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
 
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE templates ADD flags integer\n")
 		_T("UPDATE templates SET flags=0 WHERE enable_auto_apply=0\n")
 		_T("UPDATE templates SET flags=3 WHERE enable_auto_apply<>0\n")
@@ -1344,7 +1359,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 	CHK_EXEC(SQLBatch(batch));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOBIND, _T("SYS_CONTAINER_AUTOBIND"), EVENT_SEVERITY_NORMAL, 1,
-	                             _T("Node %2 automatically bound to container %4"), 
+	                             _T("Node %2 automatically bound to container %4"),
 										  _T("Generated when node bound to container object by autobind rule.\r\n")
 	                             _T("Parameters:#\r\n")
 										  _T("   1) Node ID\r\n")
@@ -1354,7 +1369,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  ));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOUNBIND, _T("SYS_CONTAINER_AUTOUNBIND"), EVENT_SEVERITY_NORMAL, 1,
-	                             _T("Node %2 automatically unbound from container %4"), 
+	                             _T("Node %2 automatically unbound from container %4"),
 										  _T("Generated when node unbound from container object by autobind rule.\r\n")
 	                             _T("Parameters:#\r\n")
 										  _T("   1) Node ID\r\n")
@@ -1364,7 +1379,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  ));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOAPPLY, _T("SYS_TEMPLATE_AUTOAPPLY"), EVENT_SEVERITY_NORMAL, 1,
-	                             _T("Template %4 automatically applied to node %2"), 
+	                             _T("Template %4 automatically applied to node %2"),
 										  _T("Generated when template applied to node by autoapply rule.\r\n")
 	                             _T("Parameters:#\r\n")
 										  _T("   1) Node ID\r\n")
@@ -1374,7 +1389,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  ));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOREMOVE, _T("SYS_TEMPLATE_AUTOREMOVE"), EVENT_SEVERITY_NORMAL, 1,
-	                             _T("Template %4 automatically removed from node %2"), 
+	                             _T("Template %4 automatically removed from node %2"),
 										  _T("Generated when template removed from node by autoapply rule.\r\n")
 	                             _T("Parameters:#\r\n")
 										  _T("   1) Node ID\r\n")
@@ -1396,7 +1411,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE interfaces ADD admin_state integer\n")
 		_T("ALTER TABLE interfaces ADD oper_state integer\n")
 		_T("UPDATE interfaces SET admin_state=0,oper_state=0\n")
@@ -1405,7 +1420,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 	CHK_EXEC(SQLBatch(batch));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_UNEXPECTED_UP, _T("SYS_IF_UNEXPECTED_UP"), EVENT_SEVERITY_MAJOR, 1,
-	                             _T("Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5)"), 
+	                             _T("Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5)"),
 										  _T("Generated when interface goes up but it's expected state set to DOWN.\r\n")
 										  _T("Please note that source of event is node, not an interface itself.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -1417,7 +1432,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 										  ));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_EXPECTED_DOWN, _T("SYS_IF_EXPECTED_DOWN"), EVENT_SEVERITY_NORMAL, 1,
-	                             _T("Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)"), 
+	                             _T("Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)"),
 										  _T("Generated when interface goes down and it's expected state is DOWN.\r\n")
 										  _T("Please note that source of event is node, not an interface itself.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -1438,7 +1453,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 	}
 
 	TCHAR query[1024];
-	_sntprintf(query, 1024, 
+	_sntprintf(query, 1024,
 		_T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,")
 		_T("script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)	VALUES ")
 		_T("(%d,7944,'Show alarm when interface is unexpectedly up','%%m',5,'IF_UNEXP_UP_%%i_%%1',")
@@ -1448,7 +1463,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 	CHK_EXEC(SQLQuery(query));
 	ruleId++;
 
-	_sntprintf(query, 1024, 
+	_sntprintf(query, 1024,
 		_T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,")
 		_T("script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)	VALUES ")
 		_T("(%d,7944,'Acknowlege interface unexpectedly up alarms when interface goes down','%%m',")
@@ -1466,7 +1481,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE thresholds ADD current_severity integer\n")
 		_T("ALTER TABLE thresholds ADD last_event_timestamp integer\n")
 		_T("UPDATE thresholds SET current_severity=0,last_event_timestamp=0\n")
@@ -1705,7 +1720,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE snmp_trap_pmap ADD flags integer\n")
 		_T("UPDATE snmp_trap_pmap SET flags=0\n")
 		_T("<END>");
@@ -1714,10 +1729,10 @@ static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 
 	CHK_EXEC(SetColumnNullable(_T("snmp_trap_pmap"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_pmap"), _T("trap_id"), _T("parameter"), _T("description"), false));
-	
+
 	CHK_EXEC(SetColumnNullable(_T("cluster_resources"), _T("resource_name")));
 	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name"), false));
-	
+
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='246' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1727,7 +1742,7 @@ static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE nodes ADD runtime_flags integer\n")
 		_T("UPDATE nodes SET runtime_flags=0\n")
 		_T("<END>");
@@ -1741,7 +1756,7 @@ static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("rcpt_addr")));
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("email_subject")));
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("action_data")));
-	
+
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='245' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1753,7 +1768,7 @@ static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE interfaces ADD dot1x_pae_state integer\n")
 		_T("ALTER TABLE interfaces ADD dot1x_backend_state integer\n")
 		_T("UPDATE interfaces SET dot1x_pae_state=0,dot1x_backend_state=0\n")
@@ -1762,7 +1777,7 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 	CHK_EXEC(SQLBatch(batch));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_PAE_STATE_CHANGED, _T("SYS_8021X_PAE_STATE_CHANGED"),
-		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 PAE state changed from %4 to %2"), 
+		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 PAE state changed from %4 to %2"),
 		_T("Generated when switch port PAE state changed.\r\nParameters:\r\n")
 		_T("   1) New PAE state code\r\n")
 		_T("   2) New PAE state as text\r\n")
@@ -1772,7 +1787,7 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 		_T("   6) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_BACKEND_STATE_CHANGED, _T("SYS_8021X_BACKEND_STATE_CHANGED"),
-		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 backend authentication state changed from %4 to %2"), 
+		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 backend authentication state changed from %4 to %2"),
 		_T("Generated when switch port backend authentication state changed.\r\nParameters:\r\n")
 		_T("   1) New backend state code\r\n")
 		_T("   2) New backend state as text\r\n")
@@ -1782,19 +1797,19 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 		_T("   6) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_PAE_FORCE_UNAUTH, _T("SYS_8021X_PAE_FORCE_UNAUTH"),
-		EVENT_SEVERITY_MAJOR, 1, _T("Port %2 switched to force unauthorize state"), 
+		EVENT_SEVERITY_MAJOR, 1, _T("Port %2 switched to force unauthorize state"),
 		_T("Generated when switch port PAE state changed to FORCE UNAUTHORIZE.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_AUTH_FAILED, _T("SYS_8021X_AUTH_FAILED"),
-		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication failed on port %2"), 
+		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication failed on port %2"),
 		_T("Generated when switch port backend authentication state changed to FAIL.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_AUTH_TIMEOUT, _T("SYS_8021X_AUTH_TIMEOUT"),
-		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication time out on port %2"), 
+		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication time out on port %2"),
 		_T("Generated when switch port backend authentication state changed to TIMEOUT.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
@@ -1810,7 +1825,7 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV242(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE items ADD snmp_raw_value_type integer\n")
 		_T("UPDATE items SET snmp_raw_value_type=0\n")
 		_T("ALTER TABLE items ADD flags integer\n")
@@ -1831,7 +1846,7 @@ static BOOL H_UpgradeFromV242(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV241(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("DROP TABLE business_service_templates\n")
 		_T("ALTER TABLE dashboards ADD options integer\n")
 		_T("UPDATE dashboards SET options=0\n")
@@ -1849,7 +1864,7 @@ static BOOL H_UpgradeFromV241(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV240(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE slm_checks ADD template_id integer\n")
 		_T("ALTER TABLE slm_checks ADD current_ticket integer\n")
 		_T("UPDATE slm_checks SET template_id=0,current_ticket=0\n")
@@ -2011,7 +2026,7 @@ static BOOL H_UpgradeFromV232toV238(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV237(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("DROP TABLE slm_check_templates\n")
 		_T("DROP TABLE node_link_checks\n")
 		_T("DROP TABLE slm_checks\n")
@@ -2056,7 +2071,7 @@ static BOOL H_UpgradeFromV237(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV236(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE business_services DROP COLUMN name\n")
 		_T("ALTER TABLE business_services DROP COLUMN parent_id\n")
 		_T("ALTER TABLE business_services DROP COLUMN status\n")
@@ -2233,7 +2248,7 @@ static BOOL H_UpgradeFromV232(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV231(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE object_properties ADD submap_id integer\n")
 		_T("UPDATE object_properties SET submap_id=0\n")
 		_T("DROP TABLE maps\n")
@@ -2256,7 +2271,7 @@ static BOOL H_UpgradeFromV231(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV230(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE nodes ADD bridge_base_addr varchar(15)\n")
 		_T("UPDATE nodes SET bridge_base_addr='000000000000'\n")
 		_T("<END>");
@@ -2274,7 +2289,7 @@ static BOOL H_UpgradeFromV230(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV229(int currVersion, int newVersion)
 {
-	static TCHAR batch1[] = 
+	static TCHAR batch1[] =
 		_T("ALTER TABLE network_maps ADD bg_latitude varchar(20)\n")
 		_T("ALTER TABLE network_maps ADD bg_longitude varchar(20)\n")
 		_T("ALTER TABLE network_maps ADD bg_zoom integer\n")
@@ -2306,7 +2321,7 @@ static BOOL H_UpgradeFromV229(int currVersion, int newVersion)
 			return FALSE;
 	}
 
-	static TCHAR batch2[] = 
+	static TCHAR batch2[] =
 		_T("ALTER TABLE dashboard_elements DROP COLUMN horizontal_span\n")
 		_T("ALTER TABLE dashboard_elements DROP COLUMN vertical_span\n")
 		_T("ALTER TABLE dashboard_elements DROP COLUMN horizontal_alignment\n")
@@ -2364,7 +2379,7 @@ static BOOL H_UpgradeFromV227(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV226(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE clusters ADD zone_guid integer\n")
 		_T("UPDATE clusters SET zone_guid=0\n")
 		_T("<END>");
@@ -2382,7 +2397,7 @@ static BOOL H_UpgradeFromV226(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV225(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE interfaces ADD flags integer\n")
 		_T("UPDATE interfaces SET flags=0\n")
 		_T("UPDATE interfaces SET flags=1 WHERE synthetic_mask<>0\n")
@@ -2402,7 +2417,7 @@ static BOOL H_UpgradeFromV225(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV224(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE interfaces ADD description varchar(255)\n")
 		_T("UPDATE interfaces SET description=''\n")
 		_T("<END>");
@@ -2418,7 +2433,7 @@ static BOOL H_UpgradeFromV224(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV223(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("DROP TABLE zone_ip_addr_list\n")
 		_T("ALTER TABLE zones DROP COLUMN zone_type\n")
 		_T("ALTER TABLE zones DROP COLUMN controller_ip\n")
@@ -2439,7 +2454,7 @@ static BOOL H_UpgradeFromV223(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV222(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("DROP TABLE oid_to_type\n")
 		_T("ALTER TABLE nodes DROP COLUMN node_type\n")
 		_T("ALTER TABLE nodes ADD primary_name varchar(255)\n")
@@ -2459,7 +2474,7 @@ static BOOL H_UpgradeFromV222(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV221(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE object_properties ADD image varchar(36)\n")
 		_T("UPDATE object_properties SET image='00000000-0000-0000-0000-000000000000'\n")
 		_T("<END>");
@@ -2477,7 +2492,7 @@ static BOOL H_UpgradeFromV221(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV220(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE network_maps DROP COLUMN background\n")
 		_T("ALTER TABLE network_maps ADD background varchar(36)\n")
 		_T("<END>");
@@ -2495,7 +2510,7 @@ static BOOL H_UpgradeFromV220(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV219(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE interfaces ADD bridge_port integer\n")
 		_T("ALTER TABLE interfaces ADD phy_slot integer\n")
 		_T("ALTER TABLE interfaces ADD phy_port integer\n")
@@ -2573,7 +2588,7 @@ static BOOL H_UpgradeFromV217(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE nodes ADD snmp_port integer\n")
 		_T("UPDATE nodes SET snmp_port=161\n")
 		_T("ALTER TABLE items ADD snmp_port integer\n")
@@ -2655,7 +2670,7 @@ static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 		}
 		DBFreeResult(hResult);
 	}
-	
+
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='216' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -2804,7 +2819,7 @@ static BOOL H_UpgradeFromV211(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV210(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
 			_T(" (53,'SYS_DCI_UNSUPPORTED',2,1,'Status of DCI %1 (%5: %2) changed to UNSUPPORTED',")
 			_T("'Generated when DCI status changed to UNSUPPORTED.#0D#0AParameters:#0D#0A")
@@ -2866,7 +2881,7 @@ static BOOL H_UpgradeFromV209(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV208(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE users ADD auth_failures integer\n")
 		_T("ALTER TABLE users ADD last_passwd_change integer\n")
 		_T("ALTER TABLE users ADD min_passwd_length integer\n")
@@ -3090,7 +3105,7 @@ static BOOL H_UpgradeFromV204(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV203(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("ALTER TABLE object_properties ADD location_type integer\n")
 		_T("ALTER TABLE object_properties ADD latitude varchar(20)\n")
 		_T("ALTER TABLE object_properties ADD longitude varchar(20)\n")
@@ -3139,7 +3154,7 @@ static BOOL H_UpgradeFromV203(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV202(int currVersion, int newVersion)
 {
-	static TCHAR batch[] = 
+	static TCHAR batch[] =
 		_T("INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)")
 			_T(" VALUES (20,'&Info->Topology table (LLDP)',2,'Topology Table',1,' ','Show topology table (LLDP)','#00')\n")
 		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
@@ -3218,7 +3233,7 @@ static BOOL H_UpgradeFromV200(int currVersion, int newVersion)
 		_T("ALTER TABLE nodes ADD usm_methods integer\n")
 		_T("UPDATE nodes SET usm_auth_password='#00',usm_priv_password='#00',usm_methods=0\n")
 		_T("<END>");
-		
+
 	if (!SQLBatch(batch))
 		if (!g_bIgnoreErrors)
 			return FALSE;
@@ -3356,7 +3371,7 @@ static BOOL H_UpgradeFromV91(int currVersion, int newVersion)
 		_T("DROP TABLE images\n")
 		_T("DROP TABLE default_images\n")
 		_T("<END>");
-		
+
 	if (!SQLBatch(batch))
 		if (!g_bIgnoreErrors)
 			return FALSE;
@@ -3404,7 +3419,7 @@ static BOOL H_UpgradeFromV89(int currVersion, int newVersion)
 		_T("ALTER TABLE items ADD perftab_settings $SQL:TEXT\n")
 		_T("UPDATE items SET base_units=0,unit_multiplier=1,custom_units_name='#00',perftab_settings='#00'\n")
 		_T("<END>");
-		
+
 	if (!SQLBatch(m_szBatch))
 		if (!g_bIgnoreErrors)
 			return FALSE;
@@ -3434,7 +3449,7 @@ static BOOL H_UpgradeFromV88(int currVersion, int newVersion)
 			_T("'Generated when SQL query to backend database failed.#0D#0A")
 			_T("Parameters:#0D#0A   1) Query#0D#0A   2) Error message')\n")
 		_T("<END>");
-		
+
 	if (!SQLBatch(m_szBatch))
 		if (!g_bIgnoreErrors)
 			return FALSE;
@@ -3458,7 +3473,7 @@ static BOOL H_UpgradeFromV87(int currVersion, int newVersion)
 		_T("ALTER TABLE templates ADD apply_filter $SQL:TEXT\n")
 		_T("UPDATE templates SET enable_auto_apply=0,apply_filter='#00'\n")
 		_T("<END>");
-		
+
 	if (!SQLBatch(m_szBatch))
 		if (!g_bIgnoreErrors)
 			return FALSE;
@@ -3572,7 +3587,7 @@ static BOOL H_UpgradeFromV85(int currVersion, int newVersion)
 		_T("DROP TABLE lpp_rules\n")
 		_T("DROP TABLE lpp_groups\n")
 		_T("<END>");
-		
+
 	if (!SQLBatch(m_szBatch))
 		if (!g_bIgnoreErrors)
 			return FALSE;
@@ -3595,7 +3610,7 @@ static BOOL H_UpgradeFromV84(int currVersion, int newVersion)
 		_T("ALTER TABLE nodes ADD use_ifxtable integer\n")
 		_T("UPDATE nodes SET use_ifxtable=0\n")
 		_T("<END>");
-		
+
 	if (!SQLBatch(m_szBatch))
 		if (!g_bIgnoreErrors)
 			return FALSE;
@@ -3695,8 +3710,8 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 	DB_RESULT hResult;
 	TCHAR query[1024], buffer[1024];
 	int i;
-		
-	// Update dci_schedules table			
+
+	// Update dci_schedules table
 	hResult = SQLSelect(_T("SELECT item_id,schedule FROM dci_schedules"));
 	if (hResult != NULL)
 	{
@@ -3727,8 +3742,8 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
 	}
-	
-	// Update address_lists table			
+
+	// Update address_lists table
 	hResult = SQLSelect(_T("SELECT list_type,community_id,addr_type,addr1,addr2 FROM address_lists"));
 	if (hResult != NULL)
 	{
@@ -3749,7 +3764,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 		for(i = 0; i < DBGetNumRows(hResult); i++)
 		{
 			_sntprintf(query, 1024, _T("INSERT INTO address_lists (list_type,community_id,addr_type,addr1,addr2) VALUES(%d,%d,%d,'%s','%s')"),
-			           DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1), 
+			           DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1),
 						  DBGetFieldULong(hResult, i, 2), DBGetField(hResult, i, 3, buffer, 64),
 						  DBGetField(hResult, i, 4, &buffer[128], 64));
 			if (!SQLQuery(query))
@@ -3764,7 +3779,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
 	}
-         
+
 	// Create new tables
 	if (!CreateTable(_T("CREATE TABLE object_custom_attributes (")
 	                 _T("object_id integer not null,")
@@ -3801,7 +3816,7 @@ static BOOL H_UpgradeFromV79(int currVersion, int newVersion)
 		_T("ALTER TABLE nodes ADD uname varchar(255)\n")
 		_T("UPDATE nodes SET uname='#00'\n")
 		_T("<END>");
-		
+
 	if (!SQLBatch(m_szBatch))
 		if (!g_bIgnoreErrors)
 			return FALSE;
@@ -5472,7 +5487,7 @@ static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
 
    // Generate GUIDs for users and groups
    _tprintf(_T("Generating GUIDs...\n"));
-   
+
    hResult = SQLSelect(_T("SELECT id FROM users"));
    if (hResult != NULL)
    {
@@ -5600,7 +5615,7 @@ static BOOL H_UpgradeFromV38(int currVersion, int newVersion)
    if (!CreateTable(_T("CREATE TABLE submaps (")
 		                 _T("map_id integer not null,")
 		                 _T("submap_id integer not null,")
-		                 _T("attributes integer not null,")	
+		                 _T("attributes integer not null,")
 		                 _T("PRIMARY KEY(map_id,submap_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -5832,7 +5847,7 @@ static BOOL H_UpgradeFromV33(int currVersion, int newVersion)
       _T("ALTER TABLE items ADD adv_schedule integer\n")
       _T("UPDATE items SET adv_schedule=0\n")
       _T("<END>");
-   
+
    if (!SQLBatch(m_szBatch))
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -6351,17 +6366,17 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
             switch(dwId)
             {
                case 1:     // Topology Root
-                  ConfigReadStr(_T("TopologyRootObjectName"), szName, 
+                  ConfigReadStr(_T("TopologyRootObjectName"), szName,
                                 MAX_OBJECT_NAME, _T("Entire Network"));
                   dwImageId = ConfigReadULong(_T("TopologyRootImageId"), 0);
                   break;
                case 2:     // Service Root
-                  ConfigReadStr(_T("ServiceRootObjectName"), szName, 
+                  ConfigReadStr(_T("ServiceRootObjectName"), szName,
                                 MAX_OBJECT_NAME, _T("All Services"));
                   dwImageId = ConfigReadULong(_T("ServiceRootImageId"), 0);
                   break;
                case 3:     // Template Root
-                  ConfigReadStr(_T("TemplateRootObjectName"), szName, 
+                  ConfigReadStr(_T("TemplateRootObjectName"), szName,
                                 MAX_OBJECT_NAME, _T("All Services"));
                   dwImageId = ConfigReadULong(_T("TemplateRootImageId"), 0);
                   break;
@@ -6440,7 +6455,7 @@ static BOOL H_UpgradeFromV25(int currVersion, int newVersion)
             return FALSE;
    }
 
-   if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"), 
+   if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"),
                           _T("CREATE INDEX idx_timestamp ON idata_%d(idata_timestamp)"), 0, 1))
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -6639,7 +6654,7 @@ static BOOL H_UpgradeFromV21(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
-      _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)") 
+      _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)")
          _T(" VALUES (30,'SYS_SMS_FAILURE',1,1,'Unable to send SMS to phone %1',")
 		   _T("'Generated when server is unable to send SMS.#0D#0A")
 		   _T("   Parameters:#0D#0A   1) Phone number')\n")
@@ -6769,7 +6784,7 @@ static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
       _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)")
          _T(" VALUES (26,'SYS_SERVICE_UP',0,1,")
          _T("'Network service #22%1#22 returned to operational state',")
-		   _T("'Generated when network service responds as expected after failure.#0D#0A")  
+		   _T("'Generated when network service responds as expected after failure.#0D#0A")
          _T("Parameters:#0D#0A   1) Service name#0D0A")
 		   _T("   2) Service object ID#0D0A   3) Service type')\n")
       _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)")
@@ -6784,7 +6799,7 @@ static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
          _T("'<invalid_hash>','network_service.ico','<invalid_hash>')\n")
       _T("INSERT INTO default_images (object_class,image_id) VALUES (11,12)\n")
       _T("<END>");
-   
+
    if (!SQLBatch(m_szBatch))
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -6931,7 +6946,7 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
          return FALSE;
    }
 
-   _sntprintf(szQuery, 4096, 
+   _sntprintf(szQuery, 4096,
       _T("CREATE TABLE event_cfg (event_code integer not null,")
 	      _T("event_name varchar(63) not null,severity integer,flags integer,")
 	      _T("message varchar(255),description %s,PRIMARY KEY(event_code))"),
@@ -7353,6 +7368,7 @@ static struct
    { 299, 300, H_UpgradeFromV299 },
    { 300, 301, H_UpgradeFromV300 },
    { 301, 302, H_UpgradeFromV301 },
+   { 302, 303, H_UpgradeFromV302 },
    { 0, 0, NULL }
 };
 

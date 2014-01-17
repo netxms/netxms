@@ -2221,11 +2221,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void acknowledgeAlarm(final long alarmId, boolean sticky) throws IOException, NXCException
+   public void acknowledgeAlarm(final long alarmId, boolean sticky, int time) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_ACK_ALARM);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
       msg.setVariableInt16(NXCPCodes.VID_STICKY_FLAG, sticky ? 1 : 0);
+      msg.setVariableInt32(NXCPCodes.VID_TIMESTAMP, time);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -2239,7 +2240,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    public void acknowledgeAlarm(final long alarmId) throws IOException, NXCException
    {
-      acknowledgeAlarm(alarmId, false);
+      acknowledgeAlarm(alarmId, false, 0);
    }
 
    /**

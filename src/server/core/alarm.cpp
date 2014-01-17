@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -53,6 +53,7 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 	pMsg->SetVariable(VID_ALARM_TIMEOUT, pAlarm->dwTimeout);
 	pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, pAlarm->dwTimeoutEvent);
 	pMsg->SetVariable(VID_NUM_COMMENTS, pAlarm->noteCount);
+	pMsg->SetVariable(VID_TIMESTAMP, pAlarm->ackTimeout != 0 ? pAlarm->ackTimeout-time(NULL) : 0 );
 }
 
 /**
@@ -223,8 +224,8 @@ BOOL AlarmManager::init()
                                  _T("original_severity,current_severity,")
                                  _T("alarm_key,creation_time,last_change_time,")
                                  _T("hd_state,hd_ref,ack_by,repeat_count,")
-                                 _T("alarm_state,timeout,timeout_event,resolved_by ")
-                                 _T("FROM alarms WHERE alarm_state<>3"));
+                                 _T("alarm_state,timeout,timeout_event,resolved_by,")
+                                 _T("ack_timeout FROM alarms WHERE alarm_state<>3"));
    if (hResult == NULL)
       return FALSE;
 
@@ -254,6 +255,7 @@ BOOL AlarmManager::init()
          m_pAlarmList[i].dwTimeoutEvent = DBGetFieldULong(hResult, i, 16);
 			m_pAlarmList[i].noteCount = GetNoteCount(g_hCoreDB, m_pAlarmList[i].dwAlarmId);
          m_pAlarmList[i].dwResolvedByUser = DBGetFieldULong(hResult, i, 17);
+         m_pAlarmList[i].ackTimeout = DBGetFieldULong(hResult, i, 18);
       }
    }
 
@@ -268,7 +270,7 @@ BOOL AlarmManager::init()
  */
 void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
                             int iSeverity, UINT32 dwTimeout,
-									 UINT32 dwTimeoutEvent, Event *pEvent)
+									 UINT32 dwTimeoutEvent, Event *pEvent, UINT32 ackTimeout)
 {
    NXC_ALARM alarm;
    TCHAR *pszExpMsg, *pszExpKey, szQuery[2048];
@@ -294,8 +296,9 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
             m_pAlarmList[i].nCurrentSeverity = iSeverity;
 				m_pAlarmList[i].dwTimeout = dwTimeout;
 				m_pAlarmList[i].dwTimeoutEvent = dwTimeoutEvent;
+				m_pAlarmList[i].ackTimeout = ackTimeout;
             nx_strncpy(m_pAlarmList[i].szMessage, pszExpMsg, MAX_EVENT_MSG_LENGTH);
-            
+
             notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
             updateAlarmInDB(&m_pAlarmList[i]);
 
@@ -326,6 +329,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 		alarm.dwTimeout = dwTimeout;
 		alarm.dwTimeoutEvent = dwTimeoutEvent;
 		alarm.noteCount = 0;
+		alarm.ackTimeout = 0;
       nx_strncpy(alarm.szMessage, pszExpMsg, MAX_EVENT_MSG_LENGTH);
       nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
 
@@ -343,12 +347,12 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       }
 
       // Save alarm to database
-      _sntprintf(szQuery, 2048, 
+      _sntprintf(szQuery, 2048,
 			        _T("INSERT INTO alarms (alarm_id,creation_time,last_change_time,")
                  _T("source_object_id,source_event_code,message,original_severity,")
                  _T("current_severity,alarm_key,alarm_state,ack_by,resolved_by,hd_state,")
-                 _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id) VALUES ")
-                 _T("(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,") UINT64_FMT _T(")"),
+                 _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id, ack_timeout) VALUES ")
+                 _T("(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,") UINT64_FMT _T(",%d)"),
               alarm.dwAlarmId, alarm.dwCreationTime, alarm.dwLastChangeTime,
 				  alarm.dwSourceObject, alarm.dwSourceEventCode,
 				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szMessage),
@@ -357,7 +361,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 				  alarm.nState, alarm.dwAckByUser, alarm.dwResolvedByUser, alarm.nHelpDeskState,
 				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szHelpDeskRef),
               alarm.dwRepeatCount, alarm.dwTermByUser, alarm.dwTimeout,
-				  alarm.dwTimeoutEvent, alarm.qwSourceEventId);
+				  alarm.dwTimeoutEvent, alarm.qwSourceEventId, alarm.ackTimeout);
       QueueSQLRequest(szQuery);
 
       // Notify connected clients about new alarm
@@ -388,7 +392,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 /**
  * Acknowledge alarm with given ID
  */
-UINT32 AlarmManager::ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky)
+UINT32 AlarmManager::ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
@@ -398,10 +402,12 @@ UINT32 AlarmManager::ackById(UINT32 dwAlarmId, ClientSession *session, bool stic
       {
          if ((m_pAlarmList[i].nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING)
          {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject, 
-               _T("Acknowledged alarm %d (%s) on object %s"), dwAlarmId, m_pAlarmList[i].szMessage, 
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
+               _T("Acknowledged alarm %d (%s) on object %s"), dwAlarmId, m_pAlarmList[i].szMessage,
                GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
 
+            UINT32 endTime = acknowledgmentActionTime != 0 ? (UINT32)time(NULL) + acknowledgmentActionTime : 0;
+            m_pAlarmList[i].ackTimeout = endTime;
             m_pAlarmList[i].nState = ALARM_STATE_ACKNOWLEDGED;
 				if (sticky)
 	            m_pAlarmList[i].nState |= ALARM_STATE_STICKY;
@@ -441,8 +447,8 @@ UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, ClientSession *session, bool 
          if (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_OPEN)
          {
             dwObject = m_pAlarmList[i].dwSourceObject;
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), dwObject, 
-               _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"), 
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), dwObject,
+               _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
                dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(dwObject, _T("")));
 
 				if (terminate)
@@ -451,6 +457,7 @@ UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, ClientSession *session, bool 
                m_pAlarmList[i].dwResolvedByUser = session->getUserId();
             m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
 				m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
+				m_pAlarmList[i].ackTimeout = 0;
 				notifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
             updateAlarmInDB(&m_pAlarmList[i]);
 				if (terminate)
@@ -506,6 +513,7 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
 				m_pAlarmList[i].dwTermByUser = 0;
 			else
 				m_pAlarmList[i].dwResolvedByUser = 0;
+         m_pAlarmList[i].ackTimeout = 0;
 			notifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
          updateAlarmInDB(&m_pAlarmList[i]);
 			if (terminate)
@@ -572,7 +580,7 @@ bool AlarmManager::deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
 	lock();
 
 	// go through from end because m_numAlarms is decremented by deleteAlarm()
-	for(int i = m_numAlarms - 1; i >= 0; i--) 
+	for(int i = m_numAlarms - 1; i >= 0; i--)
    {
 		if (m_pAlarmList[i].dwSourceObject == objectId)
       {
@@ -627,14 +635,14 @@ void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
    _sntprintf(szQuery, 4096, _T("UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,")
                              _T("last_change_time=%d,current_severity=%d,repeat_count=%d,")
                              _T("hd_state=%d,hd_ref=%s,timeout=%d,timeout_event=%d,")
-									  _T("message=%s,resolved_by=%d WHERE alarm_id=%d"),
+									  _T("message=%s,resolved_by=%d, ack_timeout=%d WHERE alarm_id=%d"),
               pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
               pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
-              pAlarm->dwRepeatCount, pAlarm->nHelpDeskState, 
+              pAlarm->dwRepeatCount, pAlarm->nHelpDeskState,
 			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szHelpDeskRef),
               pAlarm->dwTimeout, pAlarm->dwTimeoutEvent,
 			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szMessage),
-				  pAlarm->dwResolvedByUser, pAlarm->dwAlarmId);
+				  pAlarm->dwResolvedByUser, pAlarm->ackTimeout, pAlarm->dwAlarmId);
    QueueSQLRequest(szQuery);
 
 	if (pAlarm->nState == ALARM_STATE_TERMINATED)
@@ -864,6 +872,22 @@ void AlarmManager::watchdogThread()
 							 m_pAlarmList[i].szKey, m_pAlarmList[i].dwSourceEventCode);
 				m_pAlarmList[i].dwTimeout = 0;	// Disable repeated timeout events
 				updateAlarmInDB(&m_pAlarmList[i]);
+			}
+
+			if ((m_pAlarmList[i].ackTimeout != 0) &&
+				 ((m_pAlarmList[i].nState & ALARM_STATE_STICKY) != 0) &&
+				 (((time_t)m_pAlarmList[i].ackTimeout <= now)))
+			{
+				DbgPrintf(5, _T("Alarm aknowledgment timeout: alarm_id=%d, timeout=%d, now=%d"),
+				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].ackTimeout, now);
+
+				PostEvent(m_pAlarmList[i].dwTimeoutEvent, m_pAlarmList[i].dwSourceObject, "dssd",
+				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,
+							 m_pAlarmList[i].szKey, m_pAlarmList[i].dwSourceEventCode);
+				m_pAlarmList[i].ackTimeout = 0;	// Disable repeated timeout events
+				m_pAlarmList[i].nState = ALARM_STATE_OUTSTANDING;
+				updateAlarmInDB(&m_pAlarmList[i]);
+				notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
 			}
 		}
 		unlock();

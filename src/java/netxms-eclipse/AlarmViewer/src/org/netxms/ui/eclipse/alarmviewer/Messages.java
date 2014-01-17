@@ -9,7 +9,31 @@ public class Messages extends NLS
 	public static String AcknowledgeAlarm_ErrorMessage;
 	public static String AcknowledgeAlarm_JobName;
 	public static String AcknowledgeAlarm_TaskName;
-	public static String AlarmComments_AddCommentJob;
+	public static String AcknowledgeCustomTimeDialog_ConfigurationInfoLabel;
+
+   public static String AcknowledgeCustomTimeDialog_CustomTimeDialogTitle;
+
+   public static String AcknowledgeCustomTimeDialog_Days;
+
+   public static String AcknowledgeCustomTimeDialog_Hours;
+
+   public static String AcknowledgeCustomTimeDialog_Minutes;
+
+   public static String AcknowledgeCustomTimeDialog_Waring;
+
+   public static String AcknowledgeCustomTimeDialog_WarningOnlyDigits;
+
+   public static String AcknowledgeCustomTimeDialog_WarningTimeGatherThen0;
+
+   public static String AlarmAcknowledgeTimeFunctions_days;
+
+   public static String AlarmAcknowledgeTimeFunctions_hours;
+
+   public static String AlarmAcknowledgeTimeFunctions_minutes;
+
+   public static String AlarmAcknowledgeTimeFunctions_ZiroMinutesEntry;
+
+   public static String AlarmComments_AddCommentJob;
 	public static String AlarmComments_AddCommentLink;
 	public static String AlarmComments_AddError;
 	public static String AlarmComments_Comments;
@@ -54,6 +78,8 @@ public class Messages extends NLS
 	public static String AlarmList_ResolveAlarm;
 	public static String AlarmList_Resolving;
 	public static String AlarmList_StickyAck;
+
+   public static String AlarmList_StickyAckMenutTitle;
 	public static String AlarmList_SyncJobError;
 	public static String AlarmList_SyncJobName;
 	public static String AlarmList_Terminate;
@@ -64,6 +90,8 @@ public class Messages extends NLS
 	public static String AlarmNotifier_ToolTip_Header;
 	public static String AlarmReminderDialog_Dismiss;
 	public static String AlarmReminderDialog_OutstandingAlarms;
+   public static String Alarms_AcknowledgeTimeEditor;
+
    public static String Alarms_Blinking;
    public static String Alarms_ShowDetailedTooltips;
 	public static String Alarms_ShowPopup;
