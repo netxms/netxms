@@ -511,9 +511,17 @@ BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, W
 #define AgentGetParameterArg AgentGetParameterArgA
 #endif
 
-void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
+#if defined(__GNUC__) || defined(__clang__)
+   __attribute__ ((format(printf, 2, 3)))
+#endif
+;
 void LIBNETXMS_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
-void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...)
+#if defined(__GNUC__) || defined(__clang__)
+   __attribute__ ((format(printf, 2, 3)))
+#endif
+;
 void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
 void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
