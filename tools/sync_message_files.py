@@ -4,7 +4,8 @@ import sys
 import os
 import collections
 
-locales = ['cs', 'es', 'ru', 'zh_CN']
+#locales = ['cs', 'es', 'ru', 'zh_CN']
+locales = ['cs']
 
 def readPropertyFile(name):
     data = {}
@@ -14,7 +15,7 @@ def readPropertyFile(name):
             line = line.rstrip("\r\n")
             s = line.split("=")
             if len(s) == 2:
-                data[s[0]] = s[1]
+                data[s[0].strip()] = s[1].strip()
     except IOError:
         data = {}
     return data
