@@ -371,8 +371,19 @@ public:
 BOOL Initialize();
 void Shutdown();
 void Main();
-void ConsolePrintf(const TCHAR *pszFormat, ...);
-void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...);
+
+void ConsolePrintf(const TCHAR *pszFormat, ...)
+#if defined(__GNUC__) || defined(__clang__)
+   __attribute__ ((format(printf, 1, 2)))
+#endif
+;
+
+void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
+#if defined(__GNUC__) || defined(__clang__)
+   __attribute__ ((format(printf, 3, 4)))
+#endif
+;
+
 void DebugPrintfCallback(int level, const TCHAR *pszFormat, va_list args);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
