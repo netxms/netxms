@@ -1241,7 +1241,11 @@ typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);
 void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer);
 
 void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text);
-void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
+   __attribute__ ((format(printf, 1, 2)))
+#endif
+;
 
 #ifdef _WIN32
 int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl);

@@ -771,6 +771,7 @@ esac
 
 if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
+	CPPFLAGS="$CPPFLAGS -Wformat"
 
 	AC_LANG_PUSH([C++])
 

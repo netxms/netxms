@@ -788,7 +788,11 @@ void InitiateShutdown();
 
 BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
-void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...);
+void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
+   __attribute__ ((format(printf, 2, 3)))
+#endif
+;
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);

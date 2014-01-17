@@ -614,13 +614,13 @@ void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 
 void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
-#if defined(__GNUC__) || defined(__clang__)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
 
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
-#if defined(__GNUC__) || defined(__clang__)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
