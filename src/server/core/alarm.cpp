@@ -44,16 +44,16 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pMsg->SetVariable(VID_ALARM_KEY, pAlarm->szKey);
    pMsg->SetVariable(VID_ALARM_MESSAGE, pAlarm->szMessage);
    pMsg->SetVariable(VID_STATE, (WORD)(pAlarm->nState & ALARM_STATE_MASK));	// send only state to client, without flags
-	pMsg->SetVariable(VID_IS_STICKY, (WORD)((pAlarm->nState & ALARM_STATE_STICKY) ? 1 : 0));
+   pMsg->SetVariable(VID_IS_STICKY, (WORD)((pAlarm->nState & ALARM_STATE_STICKY) ? 1 : 0));
    pMsg->SetVariable(VID_CURRENT_SEVERITY, (WORD)pAlarm->nCurrentSeverity);
    pMsg->SetVariable(VID_ORIGINAL_SEVERITY, (WORD)pAlarm->nOriginalSeverity);
    pMsg->SetVariable(VID_HELPDESK_STATE, (WORD)pAlarm->nHelpDeskState);
    pMsg->SetVariable(VID_HELPDESK_REF, pAlarm->szHelpDeskRef);
    pMsg->SetVariable(VID_REPEAT_COUNT, pAlarm->dwRepeatCount);
-	pMsg->SetVariable(VID_ALARM_TIMEOUT, pAlarm->dwTimeout);
-	pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, pAlarm->dwTimeoutEvent);
-	pMsg->SetVariable(VID_NUM_COMMENTS, pAlarm->noteCount);
-	pMsg->SetVariable(VID_TIMESTAMP, pAlarm->ackTimeout != 0 ? pAlarm->ackTimeout-time(NULL) : 0 );
+   pMsg->SetVariable(VID_ALARM_TIMEOUT, pAlarm->dwTimeout);
+   pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, pAlarm->dwTimeoutEvent);
+   pMsg->SetVariable(VID_NUM_COMMENTS, pAlarm->noteCount);
+   pMsg->SetVariable(VID_TIMESTAMP, (UINT32)((pAlarm->ackTimeout != 0) ? (pAlarm->ackTimeout - time(NULL)) : 0));
 }
 
 /**
