@@ -264,8 +264,7 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const
       return wcslen(pWideCharStr) * (iCodePage == CP_UTF8 ? 3 : 2) + 1;
    }
 
-   return WideCharToMultiByteIconv(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar,
-      pbUsedDefChar);
+   return WideCharToMultiByteIconv(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
 #else
    if (cchByteChar == 0)
    {
