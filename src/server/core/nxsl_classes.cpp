@@ -361,7 +361,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 				else
 				{
 					pValue = new NXSL_Value;
-					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=%p peerNode=%p"), parentNode, peerNode);
+					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=%p peerNode=%p"), iface->Name(), iface->Id(), parentNode, peerNode);
 				}
 			}
 			else

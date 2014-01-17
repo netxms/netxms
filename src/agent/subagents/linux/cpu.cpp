@@ -28,15 +28,15 @@
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool volatile m_stopCollectorThread = false;
-static uint64_t m_user[MAX_CPU];
-static uint64_t m_nice[MAX_CPU];
-static uint64_t m_system[MAX_CPU];
-static uint64_t m_idle[MAX_CPU];
-static uint64_t m_iowait[MAX_CPU];
-static uint64_t m_irq[MAX_CPU];
-static uint64_t m_softirq[MAX_CPU];
-static uint64_t m_steal[MAX_CPU];
-static uint64_t m_guest[MAX_CPU];
+static UINT64 m_user[MAX_CPU];
+static UINT64 m_nice[MAX_CPU];
+static UINT64 m_system[MAX_CPU];
+static UINT64 m_idle[MAX_CPU];
+static UINT64 m_iowait[MAX_CPU];
+static UINT64 m_irq[MAX_CPU];
+static UINT64 m_softirq[MAX_CPU];
+static UINT64 m_steal[MAX_CPU];
+static UINT64 m_guest[MAX_CPU];
 static float *m_cpuUsage;
 static float *m_cpuUsageUser;
 static float *m_cpuUsageNice;
@@ -60,10 +60,10 @@ static void CpuUsageCollector()
 		return;
 	}
 
-	uint64_t user, nice, system, idle;
-	uint64_t iowait = 0, irq = 0, softirq = 0; // 2.6
-	uint64_t steal = 0; // 2.6.11
-	uint64_t guest = 0; // 2.6.24
+	UINT64 user, nice, system, idle;
+	UINT64 iowait = 0, irq = 0, softirq = 0; // 2.6
+	UINT64 steal = 0; // 2.6.11
+	UINT64 guest = 0; // 2.6.24
 	unsigned int cpu = 0;
 	unsigned int maxCpu = 0;
 	char buffer[1024];
@@ -103,9 +103,9 @@ static void CpuUsageCollector()
 
 		maxCpu = max(cpu, maxCpu);
 
-		uint64_t userDelta, niceDelta, systemDelta, idleDelta;
-		uint64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
-		uint64_t guestDelta;
+		UINT64 userDelta, niceDelta, systemDelta, idleDelta;
+		UINT64 iowaitDelta, irqDelta, softirqDelta, stealDelta;
+		UINT64 guestDelta;
 
 #define DELTA(x, y) (((x) > (y)) ? ((x) - (y)) : 0)
 		userDelta = DELTA(user, m_user[cpu]);
@@ -119,7 +119,7 @@ static void CpuUsageCollector()
 		guestDelta = DELTA(guest, m_guest[cpu]); //
 #undef DELTA
 
-		uint64_t totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
+		UINT64 totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
 		float onePercent = (float)totalDelta / 100.0; // 1% of total
 		if (onePercent == 0)
 		{
@@ -204,7 +204,7 @@ void StartCpuUsageCollector(void)
 #undef ALLOCATE_AND_CLEAR
 #undef SIZE
 
-#define CLEAR(x) memset(x, 0, sizeof(uint64_t) * MAX_CPU);
+#define CLEAR(x) memset(x, 0, sizeof(UINT64) * MAX_CPU);
 	CLEAR(m_user)
 	CLEAR(m_nice)
 	CLEAR(m_system)

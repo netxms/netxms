@@ -373,13 +373,13 @@ void Shutdown();
 void Main();
 
 void ConsolePrintf(const TCHAR *pszFormat, ...)
-#if defined(__GNUC__) || defined(__clang__)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 1, 2)))
 #endif
 ;
 
 void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
-#if defined(__GNUC__) || defined(__clang__)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 3, 4)))
 #endif
 ;
