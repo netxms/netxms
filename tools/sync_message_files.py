@@ -4,8 +4,7 @@ import sys
 import os
 import collections
 
-#locales = ['cs', 'es', 'ru', 'zh_CN']
-locales = ['cs']
+locales = ['cs', 'es', 'ru', 'zh_CN']
 
 def readPropertyFile(name):
     data = {}
