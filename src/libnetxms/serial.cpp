@@ -169,7 +169,29 @@ bool Serial::set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 		case 9600:   baud = B9600;   break;
 		case 19200:  baud = B19200;  break;
 		case 38400:  baud = B38400;  break;
-		default:     baud = B38400;  break;
+#ifdef B57600
+		case 57600:  baud = B57600;  break;
+#endif
+#ifdef B115200
+		case 115200: baud = B115200;  break;
+#endif
+#ifdef B230400
+		case 230400: baud = B230400;  break;
+#endif
+#ifdef B460800
+		case 460800: baud = B460800;  break;
+#endif
+#ifdef B500000
+		case 500000: baud = B500000;  break;
+#endif
+#ifdef B576000
+		case 576000: baud = B576000;  break;
+#endif
+#ifdef B921600
+		case 921600: baud = B921600;  break;
+#endif
+		default:     
+         return false;  // wrong/unsupported speed
 	}
 #ifdef _NETWARE
 	cfsetispeed(&newTio, (speed_t)baud);
@@ -297,7 +319,7 @@ bool Serial::restart()
 	
 	TCHAR *temp = m_pszPort;
 	m_pszPort = NULL;	// to prevent desctruction by open()
-	if (open(m_pszPort))
+	if (open(temp))
 		if (set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
 		{
 			free(temp);
@@ -345,9 +367,6 @@ int Serial::read(char *pBuff, int nSize)
 		nRet = -1;  // Timeout is an error
 	
 #endif // _WIN32
-	
-	//if (nRet == -1)
-	//   Restart();
 	
 	return nRet;
 }
@@ -414,9 +433,6 @@ int Serial::readAll(char *pBuff, int nSize)
 	}
 	
 #endif // _WIN32
-	
-	//if (nRet == -1)
-	//   Restart();
 	
 	return nRet;
 }
