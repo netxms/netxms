@@ -5129,6 +5129,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+   
+   /**
+    * Delete object tool.
+    *
+    * @param toolId Object tool ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void changeObjecToolDisableStatuss(long toolId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_DISABLE_STATUSS);
+      msg.setVariableInt32(NXCPCodes.VID_TOOL_ID, (int) toolId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 
    /**
     * Execute object tool of "table" type against given node.

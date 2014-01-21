@@ -310,6 +310,7 @@ public class NXCPCodes
 	public static final int CMD_GET_SUBNET_ADDRESS_MAP = 0x011C;
 	public static final int CMD_FILE_MONITORING = 0x011D;
 	public static final int CMD_CANCEL_FILE_MONITORING = 0x011E;
+	public static final int CMD_CHANGE_DISABLE_STATUSS = 0x011F;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

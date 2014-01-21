@@ -94,6 +94,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private Action actionNew;
 	private Action actionEdit;
 	private Action actionDelete;
+	private Action actionDisable;
+	private Action actionEnable;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -131,6 +133,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				{
 					actionEdit.setEnabled(selection.size() == 1);
 					actionDelete.setEnabled(selection.size() > 0);
+					actionDisable.setEnabled(areAllEnabled(selection));
+					actionEnable.setEnabled(areAllDisabled(selection));
 				}
 			}
 		});
@@ -157,6 +161,24 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		
 		refreshToolList();
 	}
+	
+	 private boolean areAllDisabled(IStructuredSelection selection)
+    {
+       List l = selection.toList();
+       for (int i = 0; i < l.size(); i++)
+          if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) == 0 )
+             return false;
+       return true;
+    }
+
+    private boolean areAllEnabled(IStructuredSelection selection)
+    {
+       List l = selection.toList();
+       for (int i = 0; i < l.size(); i++)
+          if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) > 0 )
+             return false;
+       return true;
+    }
 
 	/**
 	 * Create actions
@@ -213,6 +235,22 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		};
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
+		
+		actionDisable = new Action(Messages.get().ObjectToolsEditor_Disable) {
+         @Override
+         public void run()
+         {
+            setSelectedDisabled();
+         }
+      };
+      
+      actionEnable = new Action(Messages.get().ObjectToolsEditor_Enable) {
+         @Override
+         public void run()
+         {
+            setSelectedEnabled();
+         }
+      };
 	}
 
 	/**
@@ -290,7 +328,16 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
-		mgr.add(actionEdit);
+      mgr.add(actionEdit);
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if(areAllEnabled(selection))
+		{
+	      mgr.add(actionDisable);
+		}
+		if(areAllDisabled(selection))
+		{
+		   mgr.add(actionEnable);
+		}
 	}
 
 	/**
@@ -425,6 +472,62 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		}.schedule();
 	}
+	
+	 private void setSelectedDisabled()
+    {
+	    IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+       if (selection.isEmpty())
+          return;
+       
+       if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ObjectToolsEditor_Confirmation, Messages.get().ObjectToolsEditor_AckToDisableObjectTool))
+          return;
+       
+       final Object[] objects = selection.toArray();
+       new ConsoleJob(Messages.get().ObjectToolsEditor_DisableObjTool, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+          @Override
+          protected String getErrorMessage()
+          {
+             return Messages.get().ObjectToolsEditor_ErrorDisablingObjectTools;
+          }
+
+          @Override
+          protected void runInternal(IProgressMonitor monitor) throws Exception
+          {
+             for(int i = 0; i < objects.length; i++)
+             {
+                session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId());
+             }
+          }
+       }.start();
+    }
+	 
+	 private void setSelectedEnabled()
+    {
+	    IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+	      if (selection.isEmpty())
+	         return;
+	      
+	      if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ObjectToolsEditor_Confirmation, Messages.get().ObjectToolsEditor_AckToEnableObjTool))
+	         return;
+	      
+	      final Object[] objects = selection.toArray();
+	      new ConsoleJob(Messages.get().ObjectToolsEditor_EnableObjTool, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+	         @Override
+	         protected String getErrorMessage()
+	         {
+	            return Messages.get().ObjectToolsEditor_ErrorDisablingObjTools;
+	         }
+
+	         @Override
+	         protected void runInternal(IProgressMonitor monitor) throws Exception
+	         {
+	            for(int i = 0; i < objects.length; i++)
+	            {
+	               session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId());
+	            }
+	         }
+	      }.start();       
+    }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
