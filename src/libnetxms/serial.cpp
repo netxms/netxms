@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2005, 2006 Alex Kirhenshtein
+** Copyright (C) 2005-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -299,8 +299,8 @@ void Serial::setTimeout(int nTimeout)
 	
 	tcgetattr(m_hPort, &tio);
 	
-	m_nTimeout = nTimeout / 100; // convert to deciseconds (VTIME in 1/10sec)
-	tio.c_cc[VTIME] = m_nTimeout;
+	m_nTimeout = nTimeout; // convert to deciseconds (VTIME in 1/10sec)
+	tio.c_cc[VTIME] = nTimeout / 100; // convert to deciseconds (VTIME in 1/10sec)
 	
 	tcsetattr(m_hPort, TCSANOW, &tio);
 #endif // WIN32
@@ -320,11 +320,14 @@ bool Serial::restart()
 	TCHAR *temp = m_pszPort;
 	m_pszPort = NULL;	// to prevent desctruction by open()
 	if (open(temp))
+   {
 		if (set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
 		{
+         setTimeout(m_nTimeout);
 			free(temp);
 			return true;
 		}
+   }
 	free(temp);
 	return false;
 }
@@ -358,7 +361,7 @@ int Serial::read(char *pBuff, int nSize)
 	
 	FD_ZERO(&rdfs);
 	FD_SET(m_hPort, &rdfs);
-	tv.tv_sec = m_nTimeout / 10;
+	tv.tv_sec = m_nTimeout / 1000;  // Timeout is in milliseconds
 	tv.tv_usec = 0;
 	nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
 	if (nRet > 0)
@@ -443,7 +446,7 @@ int Serial::readAll(char *pBuff, int nSize)
 int Serial::readToMark(char *buffer, int size, const char **marks, char **occurence)
 {
    char *curr = buffer;
-   int sizeLeft = size;
+   int sizeLeft = size - 1;
    int totalBytesRead = 0;
    *occurence = NULL;
 
@@ -454,6 +457,8 @@ int Serial::readToMark(char *buffer, int size, const char **marks, char **occure
          return bytesRead;
 
       totalBytesRead += bytesRead;
+      curr += bytesRead;
+      *curr = 0;
       for(int i = 0; marks[i] != NULL; i++)
       {
          char *mark = strstr(buffer, marks[i]);
