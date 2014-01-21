@@ -1,6 +1,6 @@
 /*
-** NetXMS UPS management subagent
-** Copyright (C) 2006 Victor Kirhenshtein
+** NetXMS SMS sending subagent
+** Copyright (C) 2006-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,21 +27,15 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 bool InitSender(const TCHAR *pszInitArgs);
-void ShutdownSender();
 bool SendSMS(const char *pszPhoneNumber, const char *pszText);
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern TCHAR g_szDeviceModel[];
-
 
 #endif
