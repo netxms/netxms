@@ -47,11 +47,9 @@ static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for SMS.Send action
-//
-
+/**
+ * Handler for SMS.Send action
+ */
 static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pData)
 {
 	if (pArgs->getSize() < 2)
@@ -69,11 +67,9 @@ static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pD
 	return rc;
 }
 
-
-//
-// Subagent initialization
-//
-
+/**
+ * Subagent initialization
+ */
 static BOOL SubAgentInit(Config *config)
 {
 	// Parse configuration
@@ -131,24 +127,20 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(SMS)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
