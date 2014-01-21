@@ -50,7 +50,7 @@
  */
 Serial::Serial()
 {
-	m_nTimeout = 0;
+	m_nTimeout = 5000;
 	m_hPort = INVALID_HANDLE_VALUE;
 	m_pszPort = NULL;
 #ifndef _WIN32
@@ -147,7 +147,7 @@ bool Serial::set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 	tcgetattr(m_hPort, &newTio);
 		
 	newTio.c_cc[VMIN] = 1;
-	newTio.c_cc[VTIME] = m_nTimeout;
+	newTio.c_cc[VTIME] = m_nTimeout / 100; // convert to deciseconds (VTIME in 1/10sec)
 		
 	newTio.c_cflag |= CLOCAL | CREAD;
 		
@@ -256,7 +256,7 @@ bool Serial::set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 			break;
 	}
 		
-	tcsetattr(m_hPort, TCSANOW, &newTio);
+	bRet = (tcsetattr(m_hPort, TCSANOW, &newTio) == 0);
 		
 #endif // _WIN32
 	return bRet;
@@ -298,11 +298,11 @@ void Serial::setTimeout(int nTimeout)
 	struct termios tio;
 	
 	tcgetattr(m_hPort, &tio);
-	
-	m_nTimeout = nTimeout; // convert to deciseconds (VTIME in 1/10sec)
+
+	m_nTimeout = nTimeout;
 	tio.c_cc[VTIME] = nTimeout / 100; // convert to deciseconds (VTIME in 1/10sec)
 	
-	tcsetattr(m_hPort, TCSANOW, &tio);
+   tcsetattr(m_hPort, TCSANOW, &tio);
 #endif // WIN32
 }
 
@@ -319,9 +319,14 @@ bool Serial::restart()
 	
 	TCHAR *temp = m_pszPort;
 	m_pszPort = NULL;	// to prevent desctruction by open()
+   int speed = m_nSpeed;
+   int dataBits = m_nDataBits;
+   int parity = m_nParity;
+   int stopBits = m_nStopBits;
+   int flowControl = m_nFlowControl;
 	if (open(temp))
    {
-		if (set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
+		if (set(speed, dataBits, parity, stopBits, flowControl))
 		{
          setTimeout(m_nTimeout);
 			free(temp);
@@ -408,7 +413,7 @@ int Serial::readAll(char *pBuff, int nSize)
 	{
 		FD_ZERO(&rdfs);
 		FD_SET(m_hPort, &rdfs);
-		tv.tv_sec = m_nTimeout / 10;
+		tv.tv_sec = m_nTimeout / 1000;  // timeout is in milliseconds
 		tv.tv_usec = 0;
 		nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
 		if (nRet > 0)
@@ -458,6 +463,7 @@ int Serial::readToMark(char *buffer, int size, const char **marks, char **occure
 
       totalBytesRead += bytesRead;
       curr += bytesRead;
+      sizeLeft -= bytesRead;
       *curr = 0;
       for(int i = 0; marks[i] != NULL; i++)
       {
@@ -482,9 +488,9 @@ bool Serial::write(const char *pBuff, int nSize)
 	if (m_hPort == INVALID_HANDLE_VALUE)
 		return false;
 	
+   ThreadSleepMs(100);
+
 #ifdef _WIN32
-	
-	Sleep(100);
 	
 	DWORD nDone;
 	if (WriteFile(m_hPort, pBuff, nSize, &nDone, NULL) != 0)
@@ -500,7 +506,6 @@ bool Serial::write(const char *pBuff, int nSize)
 	}
 	
 #else // UNIX
-	usleep(100);
 	
 	if (::write(m_hPort, (char *)pBuff, nSize) == nSize)
 	{

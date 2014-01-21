@@ -1,6 +1,6 @@
 /*
-** NetXMS SMS sender subagent
-** Copyright (C) 2007-2012 Victor Kirhenshtein
+** NetXMS SMS sending subagent
+** Copyright (C) 2006-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -180,14 +180,19 @@ bool InitSender(const TCHAR *pszInitArgs)
 			parityAsText = _T("NONE");
 			break;
 	}
-	AgentWriteDebugLog(1, _T("SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d"),
+	AgentWriteDebugLog(1, _T("SMS: initialize for port={%s}, speed=%d, data=%d, parity=%s, stop=%d"),
 	                portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 	
 	if (m_serial.open(portName))
 	{
-		AgentWriteDebugLog(5, _T("SMS Sender: port opened"));
-		m_serial.setTimeout(10000);
-		m_serial.set(portSpeed, dataBits, parity, stopBits);
+		AgentWriteDebugLog(5, _T("SMS: port opened"));
+		m_serial.setTimeout(2000);
+		
+      if (!m_serial.set(portSpeed, dataBits, parity, stopBits))
+      {
+   		AgentWriteDebugLog(5, _T("SMS: cannot set port parameters"));
+         goto cleanup;
+      }
 		
       if (!InitModem(&m_serial))
          goto cleanup;
@@ -248,7 +253,7 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
       goto cleanup;
 	AgentWriteDebugLog(5, _T("SMS: AT+CMGF=1 sent, got OK"));
 
-   char buffer[128];
+   char buffer[256];
    snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
 	m_serial.write(buffer, (int)strlen(buffer)); // set number
 
@@ -261,9 +266,18 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
       goto cleanup;
    }
 	
-   snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", pszText);
+   if (strlen(pszText) <= 160)
+   {
+      snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", pszText);
+   }
+   else
+   {
+      strncpy(buffer, pszText, 160);
+      strcpy(&buffer[160], "\x1A\r\n");
+   }
 	m_serial.write(buffer, (int)strlen(buffer)); // send text, end with ^Z
 
+   m_serial.setTimeout(30000);
    if (!ReadToOK(&m_serial))
       goto cleanup;
 
@@ -271,14 +285,7 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
    success = true;
 
 cleanup:
+   m_serial.setTimeout(2000);
    m_serial.close();
 	return success;
-}
-
-/**
- * Shutdown sender
- */
-void ShutdownSender()
-{
-	m_serial.close();
 }
