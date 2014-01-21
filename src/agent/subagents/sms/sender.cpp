@@ -27,6 +27,7 @@
  */
 static Serial m_serial;
 static const char *eosMarks[] = { "OK", "ERROR", NULL };
+static const char *eosMarksSend[] = { ">", "ERROR", NULL };
 
 /**
  * Read input to OK
@@ -34,12 +35,16 @@ static const char *eosMarks[] = { "OK", "ERROR", NULL };
 static bool ReadToOK(Serial *serial, char *data = NULL)
 {
    char buffer[1024];
+   memset(buffer, 0, 1024);
    while(true)
    {
       char *mark;
       int rc = serial->readToMark(buffer, 1024, eosMarks, &mark);
       if (rc <= 0)
+      {
+         AgentWriteDebugLog(5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
          return false;
+      }
       if (mark != NULL) 
       {
          if (data != NULL)
@@ -67,6 +72,9 @@ static bool ReadToOK(Serial *serial, char *data = NULL)
  */
 static bool InitModem(Serial *serial)
 {
+	serial->write("\x1A\r\n", 3); // in case of pending send operation
+   ReadToOK(serial);
+
 	serial->write("ATZ\r\n", 5); // init modem
    if (!ReadToOK(serial))
       return false;
@@ -230,7 +238,7 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
 	if ((pszPhoneNumber == NULL) || (pszText == NULL))
       return false;
 
-	AgentWriteDebugLog(3, _T("SMS send: to {%s}: {%s}"), pszPhoneNumber, pszText);
+	AgentWriteDebugLog(3, _T("SMS send: to {%hs}: {%hs}"), pszPhoneNumber, pszText);
 
    if (!InitModem(&m_serial))
       return false;
@@ -243,8 +251,17 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
    char buffer[128];
    snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
 	m_serial.write(buffer, (int)strlen(buffer)); // set number
+
+   char *mark;
+   if (m_serial.readToMark(buffer, sizeof(buffer), eosMarksSend, &mark) <= 0)
+      return false;
+   if ((mark == NULL) || (*mark != '>'))
+   {
+   	AgentWriteDebugLog(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+      return false;
+   }
 	
-   snprintf(buffer, sizeof(buffer), "%s%c\r\n", pszText, 0x1A);
+   snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", pszText);
 	m_serial.write(buffer, (int)strlen(buffer)); // send text, end with ^Z
 
    if (!ReadToOK(&m_serial))
