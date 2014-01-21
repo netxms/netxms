@@ -438,6 +438,36 @@ int Serial::readAll(char *pBuff, int nSize)
 }
 
 /**
+ * Read data up to one of given marks
+ */
+int Serial::readToMark(char *buffer, int size, const char **marks, char **occurence)
+{
+   char *curr = buffer;
+   int sizeLeft = size;
+   int totalBytesRead = 0;
+   *occurence = NULL;
+
+   while(sizeLeft > 0)
+   {
+      int bytesRead = read(curr, sizeLeft);
+      if (bytesRead <= 0)
+         return bytesRead;
+
+      totalBytesRead += bytesRead;
+      for(int i = 0; marks[i] != NULL; i++)
+      {
+         char *mark = strstr(buffer, marks[i]);
+         if (mark != NULL)
+         {
+            *occurence = mark;
+            return totalBytesRead;
+         }
+      }
+   }
+   return totalBytesRead;
+}
+
+/**
  * Write character(s) to port
  */
 bool Serial::write(const char *pBuff, int nSize)

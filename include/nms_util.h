@@ -194,6 +194,7 @@ public:
 	void setTimeout(int nTimeout);
 	int read(char *pBuff, int nSize); /* waits up to timeout and do single read */
 	int readAll(char *pBuff, int nSize); /* read until timeout or out of space */
+   int readToMark(char *buff, int size, const char **marks, char **occurence);
 	bool write(const char *pBuff, int nSize);
 	void flush();
 	bool set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl = FLOW_NONE);
