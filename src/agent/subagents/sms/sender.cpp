@@ -183,15 +183,13 @@ bool InitSender(const TCHAR *pszInitArgs)
 	AgentWriteDebugLog(1, _T("SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d"),
 	                portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 	
-	bRet = m_serial.open(portName);
-	if (bRet)
+	if (m_serial.open(portName))
 	{
 		AgentWriteDebugLog(5, _T("SMS Sender: port opened"));
-		m_serial.setTimeout(1000);
+		m_serial.setTimeout(10000);
 		m_serial.set(portSpeed, dataBits, parity, stopBits);
 		
-      bRet = InitModem(&m_serial);
-      if (!bRet)
+      if (!InitModem(&m_serial))
          goto cleanup;
 
 		// enter PIN: AT+CPIN="xxxx"
@@ -199,8 +197,7 @@ bool InitSender(const TCHAR *pszInitArgs)
 		
 		m_serial.write("ATI3\r\n", 6); // read vendor id
 		char vendorId[1024];
-      bRet = ReadToOK(&m_serial, vendorId);
-      if (!bRet)
+      if (!ReadToOK(&m_serial, vendorId))
          goto cleanup;
 		AgentWriteDebugLog(5, _T("SMS init: ATI3 sent, got OK"));
 		
@@ -222,12 +219,9 @@ bool InitSender(const TCHAR *pszInitArgs)
 	}
 
 cleanup:
-	if (portName != NULL)
-	{
-		free(portName);
-	}
-	
-	return bRet;
+	safe_free(portName);
+   m_serial.close();
+	return TRUE;   // return TRUE always to keep subagent in memory
 }
 
 /**
@@ -238,14 +232,20 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
 	if ((pszPhoneNumber == NULL) || (pszText == NULL))
       return false;
 
-	AgentWriteDebugLog(3, _T("SMS send: to {%hs}: {%hs}"), pszPhoneNumber, pszText);
-
-   if (!InitModem(&m_serial))
+	AgentWriteDebugLog(3, _T("SMS: send to {%hs}: {%hs}"), pszPhoneNumber, pszText);
+   if (!m_serial.restart())
+   {
+   	AgentWriteDebugLog(5, _T("SMS: failed to open port"));
       return false;
+   }
+
+   bool success = false;
+   if (!InitModem(&m_serial))
+      goto cleanup;
 	
 	m_serial.write("AT+CMGF=1\r\n", 11); // =1 - text message
    if (!ReadToOK(&m_serial))
-      return false;
+      goto cleanup;
 	AgentWriteDebugLog(5, _T("SMS: AT+CMGF=1 sent, got OK"));
 
    char buffer[128];
@@ -254,21 +254,25 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
 
    char *mark;
    if (m_serial.readToMark(buffer, sizeof(buffer), eosMarksSend, &mark) <= 0)
-      return false;
+      goto cleanup;
    if ((mark == NULL) || (*mark != '>'))
    {
    	AgentWriteDebugLog(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
-      return false;
+      goto cleanup;
    }
 	
    snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", pszText);
 	m_serial.write(buffer, (int)strlen(buffer)); // send text, end with ^Z
 
    if (!ReadToOK(&m_serial))
-      return false;
+      goto cleanup;
 
    AgentWriteDebugLog(5, _T("SMS: AT+CMGS + message body sent, got OK"));
-	return true;
+   success = true;
+
+cleanup:
+   m_serial.close();
+	return success;
 }
 
 /**
