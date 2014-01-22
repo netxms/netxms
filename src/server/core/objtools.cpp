@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -328,7 +328,7 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
 
       dwNameLen = SNMPParseOID(((SNMP_ENUM_ARGS *)pArg)->ppszOidList[0], pdwVarName, MAX_OID_LEN);
       pOid = pVar->GetName();
-      SNMPConvertOIDToText(pOid->getLength() - dwNameLen, 
+      SNMPConvertOIDToText(pOid->getLength() - dwNameLen,
          (UINT32 *)&(pOid->getValue())[dwNameLen], szSuffix, MAX_OID_LEN * 4);
    }
 
@@ -361,7 +361,7 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
 
          for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
             AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, i,
-                          pRespPDU->getVariable(i - 1), 
+                          pRespPDU->getVariable(i - 1),
                           ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i],
                           ((SNMP_ENUM_ARGS *)pArg)->pNode);
       }
@@ -520,6 +520,41 @@ UINT32 DeleteObjectToolFromDB(UINT32 dwToolId)
    DBQuery(g_hCoreDB, szQuery);
 
    NotifyClientSessions(NX_NOTIFY_OBJTOOL_DELETED, dwToolId);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Change Object Tool Disable status to opposit
+ */
+UINT32 ChangeObjectToolDisableStatuss(UINT32 toolID)
+{
+   TCHAR query[256];
+   DB_RESULT result;
+   UINT32 flags;
+
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT flags FROM object_tools WHERE tool_id=%d"), toolID);
+   result = DBSelect(g_hCoreDB, query);
+
+   if (result == NULL)
+   {
+      return RCC_INVALID_TOOL_ID;
+   }
+
+   if (DBGetNumRows(result) > 0)
+      flags = DBGetFieldULong(result, 0, 0);
+   DBFreeResult(result);
+   if((flags & TF_DISABLED) > 0)
+   {
+      flags &= ~TF_DISABLED;
+   }
+   else
+   {
+      flags |= TF_DISABLED;
+   }
+   _sntprintf(query, 4096, _T("UPDATE object_tools SET flags=%d WHERE tool_id=%d"), flags, toolID);
+   DBQuery(g_hCoreDB, query);
+
+   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, toolID);
    return RCC_SUCCESS;
 }
 

@@ -548,6 +548,7 @@ private:
    void sendObjectToolDetails(CSCPMessage *pRequest);
    void updateObjectTool(CSCPMessage *pRequest);
    void deleteObjectTool(CSCPMessage *pRequest);
+   void changeObjecToolDisableStatuss(CSCPMessage *pRequest);
    void generateObjectToolId(UINT32 dwRqId);
    void execTableTool(CSCPMessage *pRequest);
    void changeSubscription(CSCPMessage *pRequest);
@@ -875,6 +876,7 @@ BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
 UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSession *pSession);
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
+UINT32 ChangeObjectToolDisableStatuss(UINT32 toolID);
 UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
 UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId);

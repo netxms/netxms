@@ -1032,6 +1032,9 @@ void ClientSession::processingThread()
          case CMD_DELETE_OBJECT_TOOL:
             deleteObjectTool(pMsg);
             break;
+         case CMD_CHANGE_DISABLE_STATUSS:
+            changeObjecToolDisableStatuss(pMsg);
+            break;
          case CMD_GENERATE_OBJECT_TOOL_ID:
             generateObjectToolId(pMsg->GetId());
             break;
@@ -7094,6 +7097,33 @@ void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
    {
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
       msg.SetVariable(VID_RCC, DeleteObjectToolFromDB(dwToolId));
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Change Object Tool Disable status to opposit
+ */
+void ClientSession::changeObjecToolDisableStatuss(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   UINT32 toolID;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   {
+      toolID = pRequest->GetVariableLong(VID_TOOL_ID);
+      msg.SetVariable(VID_RCC, ChangeObjectToolDisableStatuss(toolID));
    }
    else
    {
