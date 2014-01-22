@@ -22,12 +22,15 @@
 
 #include "sms.h"
 
+bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer);
+
 /**
  * Static data
  */
-static Serial m_serial;
-static const char *eosMarks[] = { "OK", "ERROR", NULL };
-static const char *eosMarksSend[] = { ">", "ERROR", NULL };
+static Serial s_serial;
+static const char *s_eosMarks[] = { "OK", "ERROR", NULL };
+static const char *s_eosMarksSend[] = { ">", "ERROR", NULL };
+static enum { OM_TEXT, OM_PDU } s_operationMode = OM_TEXT;
 
 /**
  * Read input to OK
@@ -39,7 +42,7 @@ static bool ReadToOK(Serial *serial, char *data = NULL)
    while(true)
    {
       char *mark;
-      int rc = serial->readToMark(buffer, 1024, eosMarks, &mark);
+      int rc = serial->readToMark(buffer, 1024, s_eosMarks, &mark);
       if (rc <= 0)
       {
          AgentWriteDebugLog(5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
@@ -161,6 +164,16 @@ bool InitSender(const TCHAR *pszInitArgs)
 							{
 								stopBits = TWOSTOPBITS;
 							}
+
+							// Text or PDU mode
+							if ((p = _tcschr(p, _T(','))) != NULL)
+							{
+								*p = 0; p++;
+								if (*p == _T('T'))
+									s_operationMode = OM_TEXT;
+								else if (*p == _T('P'))
+									s_operationMode = OM_PDU;
+							}
 						}
 					}
 				}
@@ -180,29 +193,29 @@ bool InitSender(const TCHAR *pszInitArgs)
 			parityAsText = _T("NONE");
 			break;
 	}
-	AgentWriteDebugLog(1, _T("SMS: initialize for port={%s}, speed=%d, data=%d, parity=%s, stop=%d"),
+	AgentWriteDebugLog(1, _T("SMS: initialize for port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d"),
 	                portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 	
-	if (m_serial.open(portName))
+	if (s_serial.open(portName))
 	{
 		AgentWriteDebugLog(5, _T("SMS: port opened"));
-		m_serial.setTimeout(2000);
+		s_serial.setTimeout(2000);
 		
-      if (!m_serial.set(portSpeed, dataBits, parity, stopBits))
+      if (!s_serial.set(portSpeed, dataBits, parity, stopBits))
       {
    		AgentWriteDebugLog(5, _T("SMS: cannot set port parameters"));
          goto cleanup;
       }
 		
-      if (!InitModem(&m_serial))
+      if (!InitModem(&s_serial))
          goto cleanup;
 
 		// enter PIN: AT+CPIN="xxxx"
 		// register network: AT+CREG1
 		
-		m_serial.write("ATI3\r\n", 6); // read vendor id
+		s_serial.write("ATI3\r\n", 6); // read vendor id
 		char vendorId[1024];
-      if (!ReadToOK(&m_serial, vendorId))
+      if (!ReadToOK(&s_serial, vendorId))
          goto cleanup;
 		AgentWriteDebugLog(5, _T("SMS init: ATI3 sent, got OK"));
 		
@@ -225,7 +238,7 @@ bool InitSender(const TCHAR *pszInitArgs)
 
 cleanup:
 	safe_free(portName);
-   m_serial.close();
+   s_serial.close();
 	return TRUE;   // return TRUE always to keep subagent in memory
 }
 
@@ -238,54 +251,83 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
       return false;
 
 	AgentWriteDebugLog(3, _T("SMS: send to {%hs}: {%hs}"), pszPhoneNumber, pszText);
-   if (!m_serial.restart())
+   if (!s_serial.restart())
    {
    	AgentWriteDebugLog(5, _T("SMS: failed to open port"));
       return false;
    }
 
    bool success = false;
-   if (!InitModem(&m_serial))
+   if (!InitModem(&s_serial))
       goto cleanup;
 	
-	m_serial.write("AT+CMGF=1\r\n", 11); // =1 - text message
-   if (!ReadToOK(&m_serial))
-      goto cleanup;
-	AgentWriteDebugLog(5, _T("SMS: AT+CMGF=1 sent, got OK"));
-
-   char buffer[256];
-   snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
-	m_serial.write(buffer, (int)strlen(buffer)); // set number
-
-   char *mark;
-   if (m_serial.readToMark(buffer, sizeof(buffer), eosMarksSend, &mark) <= 0)
-      goto cleanup;
-   if ((mark == NULL) || (*mark != '>'))
+   if (s_operationMode == OM_PDU)
    {
-   	AgentWriteDebugLog(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
-      goto cleanup;
-   }
-	
-   if (strlen(pszText) <= 160)
-   {
-      snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", pszText);
+	   s_serial.write("AT+CMGF=0\r\n", 11); // =0 - PDU message
+      if (!ReadToOK(&s_serial))
+         goto cleanup;
+	   AgentWriteDebugLog(5, _T("SMS: AT+CMGF=0 sent, got OK"));
+
+		char pduBuffer[PDU_BUFFER_SIZE];
+		SMSCreatePDUString(pszPhoneNumber, pszText, pduBuffer);
+
+      char buffer[256];
+		snprintf(buffer, sizeof(buffer), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
+	   s_serial.write(buffer, (int)strlen(buffer));
+
+      char *mark;
+      if (s_serial.readToMark(buffer, sizeof(buffer), s_eosMarksSend, &mark) <= 0)
+         goto cleanup;
+      if ((mark == NULL) || (*mark != '>'))
+      {
+   	   AgentWriteDebugLog(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+         goto cleanup;
+      }
+
+      s_serial.write(pduBuffer, (int)strlen(pduBuffer)); // send PDU
+      s_serial.write("\x1A\r\n", 3); // send ^Z
    }
    else
    {
-      strncpy(buffer, pszText, 160);
-      strcpy(&buffer[160], "\x1A\r\n");
-   }
-	m_serial.write(buffer, (int)strlen(buffer)); // send text, end with ^Z
+	   s_serial.write("AT+CMGF=1\r\n", 11); // =1 - text message
+      if (!ReadToOK(&s_serial))
+         goto cleanup;
+	   AgentWriteDebugLog(5, _T("SMS: AT+CMGF=1 sent, got OK"));
 
-   m_serial.setTimeout(30000);
-   if (!ReadToOK(&m_serial))
+      char buffer[256];
+      snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
+	   s_serial.write(buffer, (int)strlen(buffer)); // set number
+
+      char *mark;
+      if (s_serial.readToMark(buffer, sizeof(buffer), s_eosMarksSend, &mark) <= 0)
+         goto cleanup;
+      if ((mark == NULL) || (*mark != '>'))
+      {
+   	   AgentWriteDebugLog(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+         goto cleanup;
+      }
+   	
+      if (strlen(pszText) <= 160)
+      {
+         snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", pszText);
+      }
+      else
+      {
+         strncpy(buffer, pszText, 160);
+         strcpy(&buffer[160], "\x1A\r\n");
+      }
+	   s_serial.write(buffer, (int)strlen(buffer)); // send text, end with ^Z
+   }
+
+   s_serial.setTimeout(30000);
+   if (!ReadToOK(&s_serial))
       goto cleanup;
 
    AgentWriteDebugLog(5, _T("SMS: AT+CMGS + message body sent, got OK"));
    success = true;
 
 cleanup:
-   m_serial.setTimeout(2000);
-   m_serial.close();
+   s_serial.setTimeout(2000);
+   s_serial.close();
 	return success;
 }
