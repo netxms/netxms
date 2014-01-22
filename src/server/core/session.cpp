@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 NetXMS Team
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -9182,18 +9182,17 @@ void ClientSession::SendGraphList(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-//
-// Save graph
-//
-
+/**
+ * Save graph
+ */
 void ClientSession::SaveGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	BOOL bNew, bSuccess;
-	UINT32 id, graphId, graphUserId, graphAccess;
+	UINT32 id, graphId, graphUserId, graphAccess, accessRightStatus;
 	UINT16 overwrite;
 	TCHAR szQuery[16384], *pszEscName, *pszEscData, *pszTemp, dwGraphName[255];
-	int i, nACLSize, accessRightStatus;
+	int i, nACLSize;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -9204,7 +9203,7 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 
    GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName);
 
-   if(nameUniq.graphId == graphId)
+   if (nameUniq.graphId == graphId)
    {
       nameUniq.status = RCC_SUCCESS;
    }
@@ -9221,10 +9220,10 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 		bNew = FALSE;
 	}
 
-   if( accessRightStatus == RCC_SUCCESS && ( nameUniq.status == RCC_SUCCESS || (overwrite && bNew) ) )
+   if (accessRightStatus == RCC_SUCCESS && (nameUniq.status == RCC_SUCCESS || (overwrite && bNew)))
    {
       bSuccess = TRUE;
-      if(nameUniq.status != RCC_SUCCESS )
+      if (nameUniq.status != RCC_SUCCESS)
       {
          bNew = FALSE;
          graphId = nameUniq.graphId;

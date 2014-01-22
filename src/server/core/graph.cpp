@@ -90,7 +90,7 @@ BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT3
 /**
  * Check access to the graph
  */
-int GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
+UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
 {
    // Check existence and access rights
    TCHAR szQuery[16384];
@@ -98,6 +98,7 @@ int GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
    UINT32 dwOwner;
    GRAPH_ACL_ENTRY *pACL = NULL;
    int nACLSize;
+   UINT32 rcc = RCC_DB_FAILURE;
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), graphId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -113,29 +114,26 @@ int GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
                 (graphUserId == dwOwner) ||
                 CheckGraphAccess(pACL, nACLSize, graphId, graphUserId, NXGRAPH_ACCESS_WRITE))
             {
-               return RCC_SUCCESS;
+               rcc = RCC_SUCCESS;
             }
             else
             {
-               return RCC_ACCESS_DENIED;
+               rcc = RCC_ACCESS_DENIED;
             }
             safe_free(pACL);
          }
          else
          {
-            return RCC_DB_FAILURE;
+            rcc = RCC_DB_FAILURE;
          }
       }
       else
       {
-         return RCC_INVALID_GRAPH_ID;
+         rcc = RCC_INVALID_GRAPH_ID;
       }
       DBFreeResult(hResult);
    }
-   else
-   {
-      return RCC_DB_FAILURE;
-   }
+   return rcc;
 };
 
 /**
