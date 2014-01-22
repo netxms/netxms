@@ -154,28 +154,33 @@ copy_error:
  */
 int xmpp_stanza_release(xmpp_stanza_t * const stanza)
 {
-    int released = 0;
-    xmpp_stanza_t *child, *tchild;
+   int released = 0;
+   xmpp_stanza_t *child, *tchild;
 
-    /* release stanza */
-    if (stanza->ref > 1)
-	stanza->ref--;
-    else {
-	/* release all children */
-	child = stanza->children;
-	while (child) {
-	    tchild = child;
-	    child = child->next;
-	    xmpp_stanza_release(tchild);
-	}
+   /* release stanza */
+   if (stanza->ref > 1)
+   {
+      stanza->ref--;
+   }
+   else 
+   {
+      /* release all children */
+      child = stanza->children;
+      while (child) 
+      {
+         tchild = child;
+         child = child->next;
+         xmpp_stanza_release(tchild);
+      }
 
-	if (stanza->attributes) hash_release(stanza->attributes);
-	if (stanza->data) xmpp_free(stanza->ctx, stanza->data);
-	xmpp_free(stanza->ctx, stanza);
-	released = 1;
-    }
-
-    return released;
+      if (stanza->attributes) 
+         hash_release(stanza->attributes);
+      if (stanza->data) 
+         xmpp_free(stanza->ctx, stanza->data);
+      xmpp_free(stanza->ctx, stanza);
+      released = 1;
+   }
+   return released;
 }
 
 /** Determine if a stanza is a text node.
@@ -565,8 +570,7 @@ int xmpp_stanza_set_attribute(xmpp_stanza_t * const stanza,
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_set_ns(xmpp_stanza_t * const stanza,
-		       const char * const ns)
+int xmpp_stanza_set_ns(xmpp_stanza_t * const stanza, const char * const ns)
 {
     return xmpp_stanza_set_attribute(stanza, "xmlns", ns);
 }
@@ -582,12 +586,13 @@ int xmpp_stanza_set_ns(xmpp_stanza_t * const stanza,
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child)
+int xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child, int do_clone)
 {
     xmpp_stanza_t *s;
 
     /* get a reference to the child */
-    xmpp_stanza_clone(child);
+    if (do_clone)
+      xmpp_stanza_clone(child);
 
     child->parent = stanza;
 
