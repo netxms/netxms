@@ -484,7 +484,7 @@ typedef struct
 #define CMD_GET_SUBNET_ADDRESS_MAP     0x011C
 #define CMD_FILE_MONITORING            0x011D
 #define CMD_CANCEL_FILE_MONITORING     0x011E
-#define CMD_CHANGE_DISABLE_STATUSS     0x011F
+#define CMD_CHANGE_DISABLE_STATUSS      0x011F
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

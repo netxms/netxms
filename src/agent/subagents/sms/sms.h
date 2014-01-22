@@ -27,6 +27,8 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 
+#define PDU_BUFFER_SIZE    512
+
 /**
  * Functions
  */

@@ -1,6 +1,5 @@
 /* 
-** NetXMS - Network Management System
-** Generic SMS driver
+** NetXMS SMS sending subagent
 ** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -21,7 +20,7 @@
 **
 **/
 
-#include "generic_smsdrv.h"
+#include "sms.h"
 
 /**
  * Pack 7-bit characters into 8-bit characters
@@ -88,7 +87,7 @@ bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduB
 	}
 	strcat(phoneNumberFormatted, "F");
 
-	DbgPrintf(7, _T("SMSCreatePDUString: Formatted phone before: %hs,%d"), phoneNumberFormatted, phoneLength);
+	AgentWriteDebugLog(7, _T("SMSCreatePDUString: Formatted phone before: %hs,%d"), phoneNumberFormatted, phoneLength);
 	for (i = 0; i <= phoneLength; i += 2)
 	{
 		char tmp = phoneNumberFormatted[i+1];
@@ -96,9 +95,9 @@ bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduB
 		phoneNumberFormatted[i] = tmp;
 	}
 	phoneNumberFormatted[phoneLength + (phoneLength % 2)] = '\0';
-	DbgPrintf(7, _T("SMSCreatePDUString: Formatted phone: %hs"), phoneNumberFormatted);
+	AgentWriteDebugLog(7, _T("SMSCreatePDUString: Formatted phone: %hs"), phoneNumberFormatted);
 	SMSPack7BitChars(message, payload, &payloadSize, bufferSize);
-	DbgPrintf(7, _T("SMSCreatePDUString: Got payload size: %d"), payloadSize);
+	AgentWriteDebugLog(7, _T("SMSCreatePDUString: Got payload size: %d"), payloadSize);
 
 	for (i = 0; i < payloadSize; i++)
 	{
