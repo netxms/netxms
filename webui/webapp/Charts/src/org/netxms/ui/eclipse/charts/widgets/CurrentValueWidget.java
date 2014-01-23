@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ public class CurrentValueWidget extends GaugeWidget
 		{
 			gc.setForeground(colors.create(RED_ZONE_COLOR));
 		}
-		if ((dci.getValue() <= leftYellowZone) || (dci.getValue() >= rightYellowZone))
+		else if ((dci.getValue() <= leftYellowZone) || (dci.getValue() >= rightYellowZone))
 		{
 			gc.setForeground(colors.create(YELLOW_ZONE_COLOR));
 		}
