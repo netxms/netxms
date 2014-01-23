@@ -74,6 +74,7 @@ static void DBConnectionPoolPopulate()
       else
       {
          __DBDbgPrintf(3, _T("Database Connection Pool: cannot create DB connection %d (%s)"), i, errorText);
+         delete conn;
       }
 	}
 	MutexUnlock(m_poolAccessMutex);
@@ -236,11 +237,19 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 	   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       PoolConnectionInfo *conn = new PoolConnectionInfo;
       conn->handle = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
-      conn->inUse = true;
-      conn->connectTime = time(NULL);
-      conn->lastAccessTime = conn->connectTime;
-      m_connections.add(conn);
-      handle = conn->handle;
+      if (conn->handle != NULL)
+      {
+         conn->inUse = true;
+         conn->connectTime = time(NULL);
+         conn->lastAccessTime = conn->connectTime;
+         m_connections.add(conn);
+         handle = conn->handle;
+      }
+      else
+      {
+         __DBDbgPrintf(3, _T("Database Connection Pool: cannot create additional DB connection (%s)"), errorText);
+         delete conn;
+      }
 	}
 
 	MutexUnlock(m_poolAccessMutex);
