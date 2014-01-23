@@ -77,21 +77,21 @@ static int VersionHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
 
    xmpp_stanza_t *name = xmpp_stanza_new(ctx);
    xmpp_stanza_set_name(name, "name");
-   xmpp_stanza_add_child(query, name, FALSE);
+   xmpp_stanza_add_child_ex(query, name, FALSE);
 
    xmpp_stanza_t *text = xmpp_stanza_new(ctx);
    xmpp_stanza_set_text(text, "NetXMS Server");
-   xmpp_stanza_add_child(name, text, FALSE);
+   xmpp_stanza_add_child_ex(name, text, FALSE);
 
    xmpp_stanza_t *version = xmpp_stanza_new(ctx);
    xmpp_stanza_set_name(version, "version");
-   xmpp_stanza_add_child(query, version, FALSE);
+   xmpp_stanza_add_child_ex(query, version, FALSE);
 
    text = xmpp_stanza_new(ctx);
    xmpp_stanza_set_text(text, NETXMS_VERSION_STRING_A);
-   xmpp_stanza_add_child(version, text, FALSE);
+   xmpp_stanza_add_child_ex(version, text, FALSE);
 
-   xmpp_stanza_add_child(reply, query, FALSE);
+   xmpp_stanza_add_child_ex(reply, query, FALSE);
 
    xmpp_send(conn, reply);
    xmpp_stanza_release(reply);
@@ -181,8 +181,8 @@ static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
          char *response = console.output->getUTF8String();
 	      xmpp_stanza_set_text(text, response);
          free(response);
-	      xmpp_stanza_add_child(body, text, FALSE);
-	      xmpp_stanza_add_child(reply, body, FALSE);
+	      xmpp_stanza_add_child_ex(body, text, FALSE);
+	      xmpp_stanza_add_child_ex(reply, body, FALSE);
       	
 	      xmpp_send(conn, reply);
 	      xmpp_stanza_release(reply);
@@ -325,8 +325,8 @@ bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message)
 	
 	xmpp_stanza_t *text = xmpp_stanza_new(s_xmppContext);
 	xmpp_stanza_set_text(text, _message);
-	xmpp_stanza_add_child(body, text, FALSE);
-	xmpp_stanza_add_child(msg, body, FALSE);
+	xmpp_stanza_add_child_ex(body, text, FALSE);
+	xmpp_stanza_add_child_ex(msg, body, FALSE);
 	
 	xmpp_send(s_xmppConnection, msg);
 	xmpp_stanza_release(msg);
