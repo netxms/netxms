@@ -586,7 +586,24 @@ int xmpp_stanza_set_ns(xmpp_stanza_t * const stanza, const char * const ns)
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child, int do_clone)
+int xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child)
+{
+   return xmpp_stanza_add_child_ex(stanza, child, TRUE);
+}
+
+/** Add a child stanza to a stanza object.
+ *  This function clones the child and appends it to the stanza object's
+ *  children.
+ *
+ *  @param stanza a Strophe stanza object
+ *  @param child the child stanza object
+ *  @param do_clone TRUE to increase ref count of child (default for xmpp_stanza_add_child)
+ *
+ *  @return XMPP_EOK (0) on success or a number less than 0 on failure
+ *
+ *  @ingroup Stanza
+ */
+int xmpp_stanza_add_child_ex(xmpp_stanza_t *stanza, xmpp_stanza_t *child, int do_clone)
 {
     xmpp_stanza_t *s;
 
