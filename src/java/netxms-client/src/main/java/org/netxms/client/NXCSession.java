@@ -186,6 +186,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private String timeFormat;
    private String shortTimeFormat;
    private int defaultDciRetentionTime;
+   private int alarmStatusFlowStrict;
    private int defaultDciPollingInterval;
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
@@ -693,7 +694,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
          long data = msg.getVariableAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
-         sendNotification(new NXCNotification(code, data));
+         if(code == NXCNotification.ALARM_STATUS_FLOW_CHANGED)
+         {
+            alarmStatusFlowStrict = (int)data;
+         }
+         else
+         {
+            sendNotification(new NXCNotification(code, data));
+         }
       }
       
       /**
@@ -1499,6 +1507,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          defaultDciRetentionTime = response.getVariableAsInteger(NXCPCodes.VID_RETENTION_TIME);
          if (defaultDciRetentionTime == 0) defaultDciRetentionTime = 30;
 
+         alarmStatusFlowStrict = response.getVariableAsInteger(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
+         
          Logger.info("NXCSession.connect", "succesfully connected and logged in, userId=" + userId);
          isConnected = true;
       }
@@ -2363,6 +2373,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
       msg.setVariableInt32(NXCPCodes.VID_NOTE_ID, (int) noteId);
       msg.setVariable(NXCPCodes.VID_COMMENTS, text);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * 
+    */
+   public void setAlarmFlowState(int state) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_STATUS_FLOW);
+      msg.setVariableInt32(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE, state);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -6633,6 +6654,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public final int getDefaultDciPollingInterval()
    {
       return defaultDciPollingInterval;
+   }
+   
+   /**
+    * @return the alarmStatusFlowStrict
+    */
+   public final int getAlarmStatusFlowStrict()
+   {
+      return alarmStatusFlowStrict;
    }
 
    /**

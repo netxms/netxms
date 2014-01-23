@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.editors.AcknowledgeTimeEditor;
+import org.netxms.ui.eclipse.alarmviewer.editors.StrictFlowBooleanFieldEditor;
 
 /**
  * "Alarms" preference page
@@ -58,5 +59,6 @@ public class Alarms extends FieldEditorPreferencePage implements IWorkbenchPrefe
 		//addField(new BooleanFieldEditor("OUTSTANDING_ALARMS_REMINDER", Messages.get().Alarms_ShowReminder, getFieldEditorParent())); //$NON-NLS-1$
       //addField(new BooleanFieldEditor("SHOW_ALARM_TOOLTIPS", Messages.get().Alarms_ShowDetailedTooltips, getFieldEditorParent())); //$NON-NLS-1$
       addField(new AcknowledgeTimeEditor("ALARM_TIME_EDITOR", Messages.get().Alarms_AcknowledgeTimeEditor, getFieldEditorParent())); //$NON-NLS-1$
+      addField(new StrictFlowBooleanFieldEditor("ALARM_TIME_EDITOR", Messages.get().Alarms_SetAlarmFlowToStrict, getFieldEditorParent())); //$NON-NLS-1$
 	}
 }

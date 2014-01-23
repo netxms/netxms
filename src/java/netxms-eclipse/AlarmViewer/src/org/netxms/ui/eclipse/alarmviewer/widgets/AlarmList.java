@@ -565,7 +565,6 @@ public class AlarmList extends Composite
 		// Register menu for extension.
 		if (viewPart != null)
 			viewPart.getSite().registerContextMenu(menuMgr, alarmViewer);
-		
 	}
 	
 	/**
@@ -578,21 +577,29 @@ public class AlarmList extends Composite
 		if (selection.size() == 0)
 			return;
 		
-		manager.add(actionAcknowledge);
-		manager.add(actionStickyAcknowledge);
+		int states = getSelectionType(selection.toArray());
 		
-		initializeTimeAcknowledge();
-      timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$
-      for(Action act : timeAcknowledge)
-      {
-         timeAcknowledgeMenu.add(act);
-      }
-      timeAcknowledgeMenu.add(new Separator());   
-      timeAcknowledgeMenu.add(timeAcknowledgeOther);
-		manager.add(timeAcknowledgeMenu);
+		if(states == 2)
+		{
+   		manager.add(actionAcknowledge);
+   		manager.add(actionStickyAcknowledge);
+   		
+   		initializeTimeAcknowledge();
+         timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$
+         for(Action act : timeAcknowledge)
+         {
+            timeAcknowledgeMenu.add(act);
+         }
+         timeAcknowledgeMenu.add(new Separator());   
+         timeAcknowledgeMenu.add(timeAcknowledgeOther);
+   		manager.add(timeAcknowledgeMenu);
+		}
 		
-		manager.add(actionResolve);
-		manager.add(actionTerminate);
+		if(states < 4)
+		   manager.add(actionResolve);
+		if (states == 4 || (session.getAlarmStatusFlowStrict() == 0))
+		   manager.add(actionTerminate);
+		
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
@@ -617,7 +624,17 @@ public class AlarmList extends Composite
 		}
 	}
 
-	/**
+	private int getSelectionType(Object[] array)
+   {
+      int type = 0;
+      for(int i = 0; i < array.length; i++)
+      {
+         type |= ((Alarm)array[i]).getState()+2;
+      }
+      return type;
+   }
+
+   /**
 	 * Change root object for alarm list
 	 * 
 	 * @param objectId ID of new root object

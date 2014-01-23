@@ -888,6 +888,9 @@ void ClientSession::processingThread()
          case CMD_GET_ALARM_NOTES:
 				getAlarmNotes(pMsg);
             break;
+         case CMD_SET_ALARM_STATUS_FLOW:
+            updateAlarmStatusFlow(pMsg);
+            break;
          case CMD_UPDATE_ALARM_NOTE:
 				updateAlarmNote(pMsg);
             break;
@@ -1751,6 +1754,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
 			msg.SetVariable(VID_POLLING_INTERVAL, ConfigReadULong(_T("DefaultDCIPollingInterval"), 60));
 			msg.SetVariable(VID_RETENTION_TIME, ConfigReadULong(_T("DefaultDCIRetentionTime"), 30));
+			msg.SetVariable(VID_ALARM_STATUS_FLOW_STATE, ConfigReadInt(_T("StrictAlatmStatusFlow"), 0));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
@@ -5028,7 +5032,21 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
    sendMessage(&msg);
 }
 
+void ClientSession::updateAlarmStatusFlow(CSCPMessage *request)
+{
+   CSCPMessage msg;
 
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+   int status = request->GetVariableLong(VID_ALARM_STATUS_FLOW_STATE);
+
+   ConfigWriteInt(_T("StrictAlatmStatusFlow"), status, false);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+   // Send response
+   sendMessage(&msg);
+}
 //
 // Create new action
 //

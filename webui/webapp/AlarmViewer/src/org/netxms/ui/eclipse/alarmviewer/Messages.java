@@ -96,6 +96,8 @@ public class Messages extends NLS
    public String Alarms_AcknowledgeTimeEditor;
 
    public String Alarms_Blinking;
+   public String Alarms_SetAlarmFlowToStrict;
+
    public String Alarms_ShowDetailedTooltips;
 	public String Alarms_ShowPopup;
 	public String Alarms_ShowReminder;

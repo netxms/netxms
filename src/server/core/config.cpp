@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -120,7 +120,7 @@ stop_search:
    if ((homeDir != NULL) && (*homeDir != 0))
    {
 #ifdef _WIN32
-      _sntprintf(g_szLibDir, MAX_PATH, _T("%s%slib"), homeDir, 
+      _sntprintf(g_szLibDir, MAX_PATH, _T("%s%slib"), homeDir,
          (homeDir[_tcslen(homeDir) - 1] != FS_PATH_SEPARATOR_CHAR) ? FS_PATH_SEPARATOR : _T(""));
 #else
       _sntprintf(g_szLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
@@ -200,6 +200,10 @@ static void OnConfigVariableChange(BOOL isCLOB, const TCHAR *name, const TCHAR *
    {
       CASReadSettings();
    }
+   if(!_tcsicmp(name, _T("StrictAlatmStatusFlow")))
+   {
+      NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcsicmp(value, _T("0")) ? 1 : 0);
+   }
 }
 
 /**
@@ -275,7 +279,7 @@ int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault)
 }
 
 /**
- * Read unsigned long value from configuration table 
+ * Read unsigned long value from configuration table
  */
 UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault)
 {
