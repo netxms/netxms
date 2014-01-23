@@ -374,10 +374,10 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 * @param xSeries X axis data
 	 * @param ySeries Y axis data
 	 */
-	private ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries)
+	private ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries, boolean updateChart)
 	{
 		ISeriesSet seriesSet = getSeriesSet();
-		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index));
+		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index), updateChart);
 
 		series.setName(description);
 		series.setAntialias(SWT.ON);
@@ -388,7 +388,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
 		
-	   series.enableStack(stacked);
+	   series.enableStack(stacked, updateChart);
 		
 		return series;
 	}
@@ -627,6 +627,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void refresh()
 	{
+	   updateStackAndRiserData();
 		adjustYAxis(true);
 	}
 	
@@ -636,6 +637,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void rebuild()
 	{
+      updateStackAndRiserData();
 		adjustYAxis(true);
 	}
 
@@ -679,7 +681,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 			ySeries[i] = values[i].getValueAsDouble();
 		}
 		
-		ILineSeries series = addLineSeries(index, item.getDescription(), xSeries, ySeries);
+		ILineSeries series = addLineSeries(index, item.getDescription(), xSeries, ySeries, updateChart);
 		applyItemStyle(index, series);
 		
 		if (updateChart)

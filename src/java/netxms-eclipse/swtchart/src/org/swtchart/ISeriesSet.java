@@ -23,7 +23,7 @@ public interface ISeriesSet {
      *            the id for series
      * @return the series
      */
-    ISeries createSeries(SeriesType type, String id);
+    ISeries createSeries(SeriesType type, String id, boolean updateChart);
 
     /**
      * Gets the series for given id.

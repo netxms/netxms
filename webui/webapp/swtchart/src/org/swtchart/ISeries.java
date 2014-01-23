@@ -91,7 +91,7 @@ public interface ISeries {
      * @throws IllegalStateException
      *             if series contains negative values.
      */
-    void enableStack(boolean enabled);
+    void enableStack(boolean enabled, boolean update);
 
     /**
      * Gets the state indicating if stack is enabled.
