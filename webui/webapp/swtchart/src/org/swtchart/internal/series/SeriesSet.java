@@ -49,10 +49,11 @@ public class SeriesSet implements ISeriesSet
       seriesMap = new LinkedHashMap<String, Series>();
    }
 
-   /*
-    * @see ISeriesSet#createSeries(ISeries.SeriesType, String)
+   /* (non-Javadoc)
+    * @see org.swtchart.ISeriesSet#createSeries(org.swtchart.ISeries.SeriesType, java.lang.String, boolean)
     */
-   public ISeries createSeries(SeriesType type, String id)
+   @Override
+   public ISeries createSeries(SeriesType type, String id, boolean updateChart)
    {
       if (id == null)
       {
@@ -95,10 +96,13 @@ public class SeriesSet implements ISeriesSet
 
       seriesMap.put(identifier, series);
 
-      Axis axis = (Axis)chart.getAxisSet().getXAxis(xAxisIds[0]);
-      if (axis != null)
+      if (updateChart)
       {
-         updateStackAndRiserData();
+         Axis axis = (Axis)chart.getAxisSet().getXAxis(xAxisIds[0]);
+         if (axis != null)
+         {
+            updateStackAndRiserData();
+         }
       }
 
       // legend will be shown if there is previously no series.
