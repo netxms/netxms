@@ -134,8 +134,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				{
 					actionEdit.setEnabled(selection.size() == 1);
 					actionDelete.setEnabled(selection.size() > 0);
-					actionDisable.setEnabled(areAllEnabled(selection));
-					actionEnable.setEnabled(areAllDisabled(selection));
+					actionDisable.setEnabled(containEnabled(selection));
+					actionEnable.setEnabled(containDisabled(selection));
 				}
 			}
 		});
@@ -163,22 +163,22 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		refreshToolList();
 	}
 	
-	 private boolean areAllDisabled(IStructuredSelection selection)
-    {
-       List l = selection.toList();
-       for (int i = 0; i < l.size(); i++)
-          if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) == 0 )
-             return false;
-       return true;
-    }
-
-    private boolean areAllEnabled(IStructuredSelection selection)
+	 private boolean containDisabled(IStructuredSelection selection)
     {
        List l = selection.toList();
        for (int i = 0; i < l.size(); i++)
           if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) > 0 )
-             return false;
-       return true;
+                return true;
+       return false;
+    }
+
+    private boolean containEnabled(IStructuredSelection selection)
+    {
+       List l = selection.toList();
+       for (int i = 0; i < l.size(); i++)
+          if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) == 0 )
+             return true;
+       return false;
     }
 
 	/**
@@ -327,18 +327,19 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		mgr.add(actionNew);
 		mgr.add(actionDelete);
 		mgr.add(new Separator());
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if(containEnabled(selection))
+      {
+         mgr.add(actionDisable);
+      }
+      if(containDisabled(selection))
+      {
+         mgr.add(actionEnable);
+      }
+		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
-      mgr.add(actionEdit);
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if(areAllEnabled(selection))
-		{
-	      mgr.add(actionDisable);
-		}
-		if(areAllDisabled(selection))
-		{
-		   mgr.add(actionEnable);
-		}
+      mgr.add(actionEdit);     
 	}
 
 	/**
@@ -496,7 +497,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
           {
              for(int i = 0; i < objects.length; i++)
              {
-                session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId());
+                if((((ObjectTool)objects[i]).getFlags() & ObjectTool.DISABLED) == 0 )
+                   session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId(), false);
              }
           }
        }.start();
@@ -524,7 +526,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	         {
 	            for(int i = 0; i < objects.length; i++)
 	            {
-	               session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId());
+	               if((((ObjectTool)objects[i]).getFlags() & ObjectTool.DISABLED) > 0 )
+	                  session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId(), true);
 	            }
 	         }
 	      }.start();       

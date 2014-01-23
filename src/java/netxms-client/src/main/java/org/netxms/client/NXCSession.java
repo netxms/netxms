@@ -5155,13 +5155,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * Delete object tool.
     *
     * @param toolId Object tool ID
+    * @param enable true if object tool should be enabled, false if disabled
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void changeObjecToolDisableStatuss(long toolId) throws IOException, NXCException
+   public void changeObjecToolDisableStatuss(long toolId, boolean enable) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_DISABLE_STATUSS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_OBJECT_TOOL_STATUS);
       msg.setVariableInt32(NXCPCodes.VID_TOOL_ID, (int) toolId);
+      msg.setVariableInt32(NXCPCodes.VID_STATE, enable ? 1 : 0);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

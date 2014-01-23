@@ -1035,7 +1035,7 @@ void ClientSession::processingThread()
          case CMD_DELETE_OBJECT_TOOL:
             deleteObjectTool(pMsg);
             break;
-         case CMD_CHANGE_DISABLE_STATUSS:
+         case CMD_CHANGE_OBJECT_TOOL_STATUS:
             changeObjecToolDisableStatuss(pMsg);
             break;
          case CMD_GENERATE_OBJECT_TOOL_ID:
@@ -7131,7 +7131,7 @@ void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
 void ClientSession::changeObjecToolDisableStatuss(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   UINT32 toolID;
+   UINT32 toolID, enable;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -7141,7 +7141,8 @@ void ClientSession::changeObjecToolDisableStatuss(CSCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       toolID = pRequest->GetVariableLong(VID_TOOL_ID);
-      msg.SetVariable(VID_RCC, ChangeObjectToolDisableStatuss(toolID));
+      enable = pRequest->GetVariableLong(VID_STATE);
+      msg.SetVariable(VID_RCC, ChangeObjectToolDisableStatuss(toolID, enable == 0 ? false : true));
    }
    else
    {

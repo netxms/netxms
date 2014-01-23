@@ -526,24 +526,13 @@ UINT32 DeleteObjectToolFromDB(UINT32 dwToolId)
 /**
  * Change Object Tool Disable status to opposit
  */
-UINT32 ChangeObjectToolDisableStatuss(UINT32 toolID)
+UINT32 ChangeObjectToolDisableStatuss(UINT32 toolID, bool enable)
 {
    TCHAR query[256];
    DB_RESULT result;
    UINT32 flags;
 
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT flags FROM object_tools WHERE tool_id=%d"), toolID);
-   result = DBSelect(g_hCoreDB, query);
-
-   if (result == NULL)
-   {
-      return RCC_INVALID_TOOL_ID;
-   }
-
-   if (DBGetNumRows(result) > 0)
-      flags = DBGetFieldULong(result, 0, 0);
-   DBFreeResult(result);
-   if((flags & TF_DISABLED) > 0)
+   if(enable)
    {
       flags &= ~TF_DISABLED;
    }
