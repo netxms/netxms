@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.console;
 import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.bindings.BindingManager;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CBanner;
 import org.eclipse.swt.widgets.Composite;
@@ -116,5 +117,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	public void postWindowClose()
 	{
 		super.postWindowClose();
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null)
+         executor.execute("location.reload(true);");
 	}
 }
