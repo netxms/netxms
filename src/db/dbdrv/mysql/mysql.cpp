@@ -568,6 +568,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STATEM
 				{
 					result->numRows = (int)mysql_stmt_num_rows(hStmt->statement);
 					result->currentRow = -1;
+         		*pdwError = DBERR_SUCCESS;
 				}
 				else
 				{
