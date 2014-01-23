@@ -484,7 +484,8 @@ typedef struct
 #define CMD_GET_SUBNET_ADDRESS_MAP     0x011C
 #define CMD_FILE_MONITORING            0x011D
 #define CMD_CANCEL_FILE_MONITORING     0x011E
-#define CMD_CHANGE_DISABLE_STATUSS      0x011F
+#define CMD_CHANGE_DISABLE_STATUSS     0x011F
+#define CMD_SET_ALARM_STATUS_FLOW      0x0120
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -956,6 +957,7 @@ typedef struct
 #define VID_FILE_SIZE_LIMIT         ((UINT32)458)
 #define VID_FILE_FOLLOW             ((UINT32)459)
 #define VID_FILE_DATA               ((UINT32)460)
+#define VID_ALARM_STATUS_FLOW_STATE ((UINT32)461)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -321,10 +321,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_SNMP_TRAP"),
       _T("CMD_GET_SUBNET_ADDRESS_MAP"),
       _T("CMD_FILE_MONITORING"),
-      _T("CMD_CANCEL_FILE_MONITORING")
+      _T("CMD_CANCEL_FILE_MONITORING"),
+      _T("CMD_CHANGE_DISABLE_STATUSS"),
+      _T("CMD_SET_ALARM_STATUS_FLOW")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_CANCEL_FILE_MONITORING))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_SET_ALARM_STATUS_FLOW))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);
@@ -345,7 +347,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
  */
 int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuffer,
                                            CSCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
-                                           NXCPEncryptionContext **ppCtx, 
+                                           NXCPEncryptionContext **ppCtx,
                                            BYTE **decryptionBuffer, UINT32 dwTimeout,
 														 UINT32 maxMsgSize)
 {
@@ -372,7 +374,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuf
          memmove(nxcpBuffer->szBuffer, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufPos], nxcpBuffer->dwBufSize);
          nxcpBuffer->dwBufPos = 0;
 
-         // Receive new portion of data from the network 
+         // Receive new portion of data from the network
          // and append it to existing data in buffer
 			iErr = RecvEx(hSocket, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufSize],
                        CSCP_TEMP_BUF_SIZE - nxcpBuffer->dwBufSize, 0, dwTimeout);
@@ -381,7 +383,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuf
          nxcpBuffer->dwBufSize += (UINT32)iErr;
       }
 
-      // Get message size from message header and copy available 
+      // Get message size from message header and copy available
       // message bytes from buffer
       dwMsgSize = ntohl(((CSCP_MESSAGE *)(&nxcpBuffer->szBuffer[nxcpBuffer->dwBufPos]))->dwSize);
       if (dwMsgSize > *bufferSize)
@@ -415,7 +417,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuf
 	nxcpBuffer->dwBufPos = 0;
    do
    {
-		iErr = RecvEx(hSocket, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufSize], 
+		iErr = RecvEx(hSocket, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufSize],
 		              CSCP_TEMP_BUF_SIZE - nxcpBuffer->dwBufSize, 0, dwTimeout);
       if (iErr <= 0)
          return (iErr == -2) ? 3 : iErr;
@@ -455,7 +457,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuf
       dwBytesRead += dwBytesToCopy;
    }
 	while((dwBytesRead < dwMsgSize) || (dwBytesRead < CSCP_HEADER_SIZE));
-   
+
    // Check if we have something left in buffer
    if (dwBytesToCopy < (UINT32)iErr)
    {
@@ -490,7 +492,7 @@ decrypt_message:
 
 int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *msgBuffer,
                                          CSCP_BUFFER *nxcpBuffer, UINT32 bufferSize,
-                                         NXCPEncryptionContext **ppCtx, 
+                                         NXCPEncryptionContext **ppCtx,
                                          BYTE *decryptionBuffer, UINT32 dwTimeout)
 {
 	CSCP_MESSAGE *mb = msgBuffer;
@@ -506,7 +508,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *msgBuffer
  * Buffer should be of dwDataSize + CSCP_HEADER_SIZE + 8 bytes.
  */
 CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId, WORD wFlags,
-                                                        UINT32 dwDataSize, void *pData, 
+                                                        UINT32 dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer)
 {
    CSCP_MESSAGE *pMsg;
@@ -670,7 +672,7 @@ BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
       }
       else if ((nSize == 1) || (nSize == 3) || (nSize >= CSCP_HEADER_SIZE))
       {
-         // We don't receive any answer or receive invalid answer - 
+         // We don't receive any answer or receive invalid answer -
          // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
          // and set version number to 1
          bRet = TRUE;

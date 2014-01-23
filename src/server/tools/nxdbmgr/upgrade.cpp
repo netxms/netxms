@@ -361,6 +361,21 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V303 to V304
+ */
+static BOOL H_UpgradeFromV303(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ")
+                           _T("('StrictAlatmStatusFlow','0',1,0)\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='304' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V302 to V303
  */
 static BOOL H_UpgradeFromV302(int currVersion, int newVersion)
@@ -7369,6 +7384,7 @@ static struct
    { 300, 301, H_UpgradeFromV300 },
    { 301, 302, H_UpgradeFromV301 },
    { 302, 303, H_UpgradeFromV302 },
+   { 303, 304, H_UpgradeFromV303 },
    { 0, 0, NULL }
 };
 

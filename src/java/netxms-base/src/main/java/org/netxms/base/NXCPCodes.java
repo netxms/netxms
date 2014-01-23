@@ -311,6 +311,7 @@ public class NXCPCodes
 	public static final int CMD_FILE_MONITORING = 0x011D;
 	public static final int CMD_CANCEL_FILE_MONITORING = 0x011E;
 	public static final int CMD_CHANGE_DISABLE_STATUSS = 0x011F;
+	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -781,6 +782,7 @@ public class NXCPCodes
    public static final long VID_FILE_SIZE_LIMIT = 458;
    public static final long VID_FILE_FOLLOW = 459;
    public static final long VID_FILE_DATA = 460;
+   public static final long VID_ALARM_STATUS_FLOW_STATE = 461;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

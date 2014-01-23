@@ -401,29 +401,30 @@ enum
 /**
  * Notification codes
  */
-#define NX_NOTIFY_SHUTDOWN             1
-#define NX_NOTIFY_EVENTDB_CHANGED      2
-#define NX_NOTIFY_ALARM_DELETED        3
-#define NX_NOTIFY_NEW_ALARM            4
-#define NX_NOTIFY_ALARM_CHANGED        5
-#define NX_NOTIFY_ACTION_CREATED       6
-#define NX_NOTIFY_ACTION_MODIFIED      7
-#define NX_NOTIFY_ACTION_DELETED       8
-#define NX_NOTIFY_OBJTOOLS_CHANGED     9
-#define NX_NOTIFY_DBCONN_STATUS        10
-#define NX_NOTIFY_ALARM_TERMINATED     11
-#define NX_NOTIFY_GRAPHS_CHANGED       12
-#define NX_NOTIFY_ETMPL_CHANGED        13
-#define NX_NOTIFY_ETMPL_DELETED        14
-#define NX_NOTIFY_OBJTOOL_DELETED      15
-#define NX_NOTIFY_TRAPCFG_CREATED      16
-#define NX_NOTIFY_TRAPCFG_MODIFIED     17
-#define NX_NOTIFY_TRAPCFG_DELETED      18
-#define NX_NOTIFY_MAPTBL_CHANGED       19
-#define NX_NOTIFY_MAPTBL_DELETED       20
-#define NX_NOTIFY_DCISUMTBL_CHANGED    21
-#define NX_NOTIFY_DCISUMTBL_DELETED    22
-#define NX_NOTIFY_CERTIFICATE_CHANGED  23
+#define NX_NOTIFY_SHUTDOWN                   1
+#define NX_NOTIFY_EVENTDB_CHANGED            2
+#define NX_NOTIFY_ALARM_DELETED              3
+#define NX_NOTIFY_NEW_ALARM                  4
+#define NX_NOTIFY_ALARM_CHANGED              5
+#define NX_NOTIFY_ACTION_CREATED             6
+#define NX_NOTIFY_ACTION_MODIFIED            7
+#define NX_NOTIFY_ACTION_DELETED             8
+#define NX_NOTIFY_OBJTOOLS_CHANGED           9
+#define NX_NOTIFY_DBCONN_STATUS              10
+#define NX_NOTIFY_ALARM_TERMINATED           11
+#define NX_NOTIFY_GRAPHS_CHANGED             12
+#define NX_NOTIFY_ETMPL_CHANGED              13
+#define NX_NOTIFY_ETMPL_DELETED              14
+#define NX_NOTIFY_OBJTOOL_DELETED            15
+#define NX_NOTIFY_TRAPCFG_CREATED            16
+#define NX_NOTIFY_TRAPCFG_MODIFIED           17
+#define NX_NOTIFY_TRAPCFG_DELETED            18
+#define NX_NOTIFY_MAPTBL_CHANGED             19
+#define NX_NOTIFY_MAPTBL_DELETED             20
+#define NX_NOTIFY_DCISUMTBL_CHANGED          21
+#define NX_NOTIFY_DCISUMTBL_DELETED          22
+#define NX_NOTIFY_CERTIFICATE_CHANGED        23
+#define NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED  24
 
 /**
  * Request completion codes

@@ -141,6 +141,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPPassword','netxms',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPPort','5222',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPServer','localhost',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StrictAlatmStatusFlow','0',1,0);
 
 /*
 ** Default admin user
