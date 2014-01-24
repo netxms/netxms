@@ -675,7 +675,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
 {
    DBDRV_ASYNC_RESULT hResult;
 	DB_ASYNC_RESULT result = NULL;
-   DWORD dwError;
+   DWORD dwError = DBERR_OTHER_ERROR;
    INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
