@@ -990,7 +990,9 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
          m_ppValueCache[i] = NULL;
 
       // Load missing values from database
-      if (m_pNode != NULL)
+      // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
+      // to reduce load on database at server startup
+      if ((m_pNode != NULL) && ((dwRequiredSize - m_dwCacheSize) * m_iPollingInterval > 300))
       {
          TCHAR szBuffer[MAX_DB_STRING];
          BOOL bHasData;
@@ -1062,6 +1064,13 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
          }
 			DBConnectionPoolReleaseConnection(hdb);
+      }
+      else
+      {
+         // will not read data from database, fill cache with empty values
+         for(UINT32 i = m_dwCacheSize; i < dwRequiredSize; i++)
+            m_ppValueCache[i] = new ItemValue(_T(""), 1);
+         DbgPrintf(7, _T("Cache load skipped for parameter %s [%d]"), m_szName, (int)m_dwId);
       }
       m_dwCacheSize = dwRequiredSize;
    }
