@@ -365,12 +365,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
  */
 static BOOL H_UpgradeFromV303(int currVersion, int newVersion)
 {
-   static TCHAR batch[] =
-      _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ")
-                           _T("('StrictAlatmStatusFlow','0',1,0)\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
-
+   CHK_EXEC(CreateConfigParam(_T("StrictAlarmStatusFlow"), _T("0"), 1, 0));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='304' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }

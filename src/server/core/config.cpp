@@ -200,9 +200,9 @@ static void OnConfigVariableChange(BOOL isCLOB, const TCHAR *name, const TCHAR *
    {
       CASReadSettings();
    }
-   if(!_tcsicmp(name, _T("StrictAlatmStatusFlow")))
+   else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {
-      NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcsicmp(value, _T("0")) ? 1 : 0);
+      NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcstol(value, NULL, 0));
    }
 }
 
