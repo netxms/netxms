@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2012 Victor Kirhenshtein
+** Copyright (C) 2006-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "ups.h"
 
-
-//
-// Create serial interface
-//
-
+/**
+ * Create serial interface
+ */
 SerialInterface::SerialInterface(TCHAR *device) : UPSInterface(device)
 {
 	m_portSpeed = 0;
@@ -85,12 +83,10 @@ SerialInterface::SerialInterface(TCHAR *device) : UPSInterface(device)
 	}
 }
 
-
-//
-// Read line from serial port
-//
-
-BOOL SerialInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
+/**
+ * Read line from serial port
+ */
+BOOL SerialInterface::readLineFromSerial(char *pszBuffer, int nBufLen)
 {
    int nPos = 0, nRet;
 
@@ -111,23 +107,19 @@ BOOL SerialInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
    return nRet > 0;
 }
 
-
-//
-// Open communication to UPS
-//
-
-BOOL SerialInterface::Open()
+/**
+ * Open communication to UPS
+ */
+BOOL SerialInterface::open()
 {
    return m_serial.open(m_pszDevice);
 }
 
-
-//
-// Close communications with UPS
-//
-
-void SerialInterface::Close()
+/**
+ * Close communications with UPS
+ */
+void SerialInterface::close()
 {
    m_serial.close();
-   UPSInterface::Close();
+   UPSInterface::close();
 }
