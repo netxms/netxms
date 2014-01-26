@@ -77,6 +77,9 @@ public class ClientConnectorService extends Service implements SessionListener
 	public static final String ACTION_FORCE_DISCONNECT = "org.netxms.ui.android.ACTION_FORCE_DISCONNECT";
 	public static final String ACTION_RESCHEDULE = "org.netxms.ui.android.ACTION_RESCHEDULE";
 	public static final String ACTION_CONFIGURE = "org.netxms.ui.android.ACTION_CONFIGURE";
+	public static final String ACTION_ALARM_ACKNOWLEDGE = "org.netxms.ui.android.ACTION_ALARM_ACKNOWLEDGE";
+	public static final String ACTION_ALARM_RESOLVE = "org.netxms.ui.android.ACTION_ALARM_RESOLVE";
+	public static final String ACTION_ALARM_TERMINATE = "org.netxms.ui.android.ACTION_ALARM_TERMINATE";
 	private static final String TAG = "nxclient/ClientConnectorService";
 	private static final String LASTALARM_KEY = "LastALarmIdNotified";
 
@@ -199,6 +202,12 @@ public class ClientConnectorService extends Service implements SessionListener
 					disconnect(false);
 			else if (intent.getAction().equals(ACTION_CONFIGURE))
 				reconnect(configure());
+			else if (intent.getAction().equals(ACTION_ALARM_ACKNOWLEDGE))
+				acknowledgeAlarm(intent.getLongExtra("alarmId", 0), false);
+			else if (intent.getAction().equals(ACTION_ALARM_RESOLVE))
+				resolveAlarm(intent.getLongExtra("alarmId", 0));
+			else if (intent.getAction().equals(ACTION_ALARM_TERMINATE))
+				terminateAlarm(intent.getLongExtra("alarmId", 0));
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -249,11 +258,12 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * Show alarm notification
 	 * 
-	 * @param severity	notification severity (used to determine icon and sound)
+	 * @param alarm	alarm object
 	 * @param text	notification text
 	 */
-	public void alarmNotification(int severity, String text)
+	public void alarmNotification(Alarm alarm, String text)
 	{
+		int severity = alarm.getCurrentSeverity();
 		if (notifyAlarm)
 		{
 			Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowserFragment.class);
@@ -268,7 +278,13 @@ public class ClientConnectorService extends Service implements SessionListener
 			final String sound = GetAlarmSound(severity);
 			if ((sound != null) && (sound.length() > 0))
 				nb.setSound(Uri.parse(sound));
-			notificationManager.notify(NOTIFY_ALARM, nb.build());
+			nb.addAction(R.drawable.alarm_acknowledged, getString(R.string.alarm_acknowledge), createPendingIntent(ACTION_ALARM_ACKNOWLEDGE, alarm.getId()));
+			nb.addAction(R.drawable.alarm_resolved, getString(R.string.alarm_resolve), createPendingIntent(ACTION_ALARM_RESOLVE, alarm.getId()));
+			nb.addAction(R.drawable.alarm_terminated, getString(R.string.alarm_terminate), createPendingIntent(ACTION_ALARM_TERMINATE, alarm.getId()));
+			notificationManager.notify(NOTIFY_ALARM,
+					new NotificationCompat.BigTextStyle(nb)
+							.bigText(text)
+							.build());
 		}
 		else
 		{
@@ -277,6 +293,22 @@ public class ClientConnectorService extends Service implements SessionListener
 				r.play();
 		}
 	}
+
+	/**
+	 * Creates pending intent for notification area buttons
+	 * 
+	 * @param action	intent action
+	 * @param id	alarm id on which to execute the action
+	 */
+	private PendingIntent createPendingIntent(String action, long id)
+	{
+		return PendingIntent.getService(
+				getApplicationContext(),
+				0,
+				new Intent(getApplicationContext(), ClientConnectorService.class).setAction(action).putExtra("alarmId", id),
+				PendingIntent.FLAG_UPDATE_CURRENT);
+	}
+
 	/**
 	 * Show status notification
 	 * 
@@ -648,7 +680,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				alarms.put(lastAlarmIdNotified, alarm);
 			}
 			unknownAlarm = object == null ? alarm : null;
-			alarmNotification(alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
+			alarmNotification(alarm, ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
 			refreshAlarmBrowser();
 		}
 	}
@@ -735,7 +767,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			if (unknownAlarm != null && unknownAlarm.getSourceObjectId() == object.getObjectId()) // Update <Unknown> notification
 			{
-				alarmNotification(unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
+				alarmNotification(unknownAlarm, object.getObjectName() + ": " + unknownAlarm.getMessage());
 				unknownAlarm = null;
 			}
 			refreshHomeScreen();
@@ -947,14 +979,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * @param ids
+	 * @param id	id of alarm
+	 * @param sticky	true for sticky acknwledge 
 	 */
-	public void acknowledgeAlarm(ArrayList<Long> ids, boolean sticky)
+	public void acknowledgeAlarm(long id, boolean sticky)
 	{
 		try
 		{
-			for (int i = 0; i < ids.size(); i++)
-				session.acknowledgeAlarm(ids.get(i).longValue(), sticky);
+			session.acknowledgeAlarm(id, sticky);
 		}
 		catch (Exception e)
 		{
@@ -963,14 +995,22 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * @param ids
+	 * @param ids	list of id
 	 */
-	public void resolveAlarm(ArrayList<Long> ids)
+	public void acknowledgeAlarms(ArrayList<Long> ids, boolean sticky)
+	{
+		for (int i = 0; i < ids.size(); i++)
+			acknowledgeAlarm(ids.get(i).longValue(), sticky);
+	}
+
+	/**
+	 * @param id	id of alarm
+	 */
+	public void resolveAlarm(long id)
 	{
 		try
 		{
-			for (int i = 0; i < ids.size(); i++)
-				session.resolveAlarm(ids.get(i).longValue());
+			session.resolveAlarm(id);
 		}
 		catch (Exception e)
 		{
@@ -979,19 +1019,36 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * @param ids
+	 * @param ids	list of id
 	 */
-	public void terminateAlarm(ArrayList<Long> ids)
+	public void resolveAlarms(ArrayList<Long> ids)
+	{
+		for (int i = 0; i < ids.size(); i++)
+			resolveAlarm(ids.get(i).longValue());
+	}
+
+	/**
+	 * @param id	id of alarm
+	 */
+	public void terminateAlarm(long id)
 	{
 		try
 		{
-			for (int i = 0; i < ids.size(); i++)
-				session.terminateAlarm(ids.get(i).longValue());
+			session.terminateAlarm(id);
 		}
 		catch (Exception e)
 		{
 			Log.e(TAG, "Exception while executing session.terminateAlarm", e);
 		}
+	}
+
+	/**
+	 * @param ids	list of id
+	 */
+	public void terminateAlarms(ArrayList<Long> ids)
+	{
+		for (int i = 0; i < ids.size(); i++)
+			terminateAlarm(ids.get(i).longValue());
 	}
 
 	/**

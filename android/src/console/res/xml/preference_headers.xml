@@ -3,25 +3,25 @@
 	<header
     	android:fragment="org.netxms.ui.android.main.fragments.ConsolePreferencesFragment"
         android:title="@string/pref_global"
-        android:summary="@string/pref_global">
+        android:summary="@string/pref_global_summary">
          <extra android:name="settings" android:value="global" />
          </header>
 	<header
     	android:fragment="org.netxms.ui.android.main.fragments.ConsolePreferencesFragment"
         android:title="@string/pref_connection"
-        android:summary="@string/pref_connection">
+        android:summary="@string/pref_connection_summary">
 		<extra android:name="settings" android:value="connection" />
 	</header>
 	<header
     	android:fragment="org.netxms.ui.android.main.fragments.ConsolePreferencesFragment"
         android:title="@string/pref_notifications"
-        android:summary="@string/pref_notifications">
+        android:summary="@string/pref_notifications_summary">
     	<extra android:name="settings" android:value="notifications" />
     </header>
 	<header
     	android:fragment="org.netxms.ui.android.main.fragments.ConsolePreferencesFragment"
         android:title="@string/pref_interface"
-        android:summary="@string/pref_interface">
+        android:summary="@string/pref_interface_summary">
     	<extra android:name="settings" android:value="interface" />
     </header>
 </preference-headers>

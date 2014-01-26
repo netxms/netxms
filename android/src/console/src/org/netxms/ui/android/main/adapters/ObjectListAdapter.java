@@ -205,6 +205,12 @@ public class ObjectListAdapter extends BaseAdapter
 				case AbstractObject.OBJECT_MOBILEDEVICE:
 					objectIconId = R.drawable.object_mobiledevice;
 					break;
+				case AbstractObject.OBJECT_SUBNET:
+					objectIconId = R.drawable.object_subnet;
+					break;
+				case AbstractObject.OBJECT_ZONE:
+					objectIconId = R.drawable.object_zone;
+					break;
 			}
 		}
 
