@@ -312,6 +312,7 @@ public class NXCPCodes
 	public static final int CMD_CANCEL_FILE_MONITORING = 0x011E;
 	public static final int CMD_CHANGE_OBJECT_TOOL_STATUS = 0x011F;
 	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
+	public static final int CMD_DELETE_ALARM_NOTE = 0x0121;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

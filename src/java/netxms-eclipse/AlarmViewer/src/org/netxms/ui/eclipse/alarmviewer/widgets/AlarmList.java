@@ -585,7 +585,7 @@ public class AlarmList extends Composite
    		manager.add(actionStickyAcknowledge);
    		
    		initializeTimeAcknowledge();
-         timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$
+         timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$ //$NON-NLS-1$
          for(Action act : timeAcknowledge)
          {
             timeAcknowledgeMenu.add(act);

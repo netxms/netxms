@@ -486,6 +486,7 @@ typedef struct
 #define CMD_CANCEL_FILE_MONITORING     0x011E
 #define CMD_CHANGE_OBJECT_TOOL_STATUS  0x011F
 #define CMD_SET_ALARM_STATUS_FLOW      0x0120
+#define CMD_DELETE_ALARM_NOTE          0x0121
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

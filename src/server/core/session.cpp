@@ -894,6 +894,9 @@ void ClientSession::processingThread()
          case CMD_UPDATE_ALARM_NOTE:
 				updateAlarmNote(pMsg);
             break;
+         case CMD_DELETE_ALARM_NOTE:
+            deleteAlarmNote(pMsg);
+            break;
          case CMD_GET_ALARM:
             getAlarm(pMsg);
             break;
@@ -4987,10 +4990,9 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
 }
 
 
-//
-// Update alarm comment
-//
-
+/**
+ * Update alarm comment
+ */
 void ClientSession::updateAlarmNote(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -5011,6 +5013,44 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
 			msg.SetVariable(VID_RCC, g_alarmMgr.updateAlarmNote(alarmId, noteId, CHECK_NULL(text), m_dwUserId));
 			safe_free(text);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms object will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Delete alarm comment
+ */
+void ClientSession::deleteAlarmNote(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   if (object != NULL)
+   {
+      // User should have "acknowledge alarm" right to the object
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      {
+			UINT32 noteId = request->GetVariableLong(VID_NOTE_ID);
+			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmNoteByID(alarmId, noteId));
       }
       else
       {

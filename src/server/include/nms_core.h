@@ -515,6 +515,7 @@ private:
    void deleteAlarm(CSCPMessage *request);
 	void getAlarmNotes(CSCPMessage *pRequest);
 	void updateAlarmNote(CSCPMessage *pRequest);
+	void deleteAlarmNote(CSCPMessage *request);
 	void updateAlarmStatusFlow(CSCPMessage *request);
    void createAction(CSCPMessage *pRequest);
    void updateAction(CSCPMessage *pRequest);
