@@ -22,6 +22,7 @@
 
 #include "sunos_subagent.h"
 #include <procfs.h>
+#include <sys/proc.h>
 
 
 //
