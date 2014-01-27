@@ -53,7 +53,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 	DbgPrintf(2, _T("User account status update thread started"));
 	while(!SleepAndCheckForShutdown(60))
 	{
-		DbgPrintf(5, _T("AccountStatusUpdater: wakeup"));
+		DbgPrintf(8, _T("AccountStatusUpdater: wakeup"));
 
 		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
 
@@ -70,14 +70,14 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 			{
 				// Re-enable temporary disabled user
 				user->enable();
-				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, _T(""), 0, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), _T(""), 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
 				DbgPrintf(3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
 			if (!user->isDisabled() && (blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
 			{
 				user->disable();
-				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, _T(""), 0, _T("User account \"%s\" disabled due to inactivity"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), _T(""), 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());
 				DbgPrintf(3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
@@ -226,6 +226,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
 			 (!m_users[i]->isDeleted()))
       {
 			User *user = (User *)m_users[i];
+         *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
 			// Determine authentication method to use
          if (!ssoAuth)
@@ -352,7 +353,6 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
                {
 				      *pbChangePasswd = false;
                }
-               *pdwId = user->getId();
                *pdwSystemRights = user->getSystemRights();
 					user->updateLastLogin();
                dwResult = RCC_SUCCESS;
@@ -772,7 +772,7 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 					{
 						BYTE newPasswdHash[SHA1_DIGEST_SIZE];
 #ifdef UNICODE
-						char *mb = MBStringFromWideString(newPassword);
+						char *mb = UTF8StringFromWideString(newPassword);
 						CalculateSHA1Hash((BYTE *)mb, strlen(mb), newPasswdHash);
 						free(mb);
 #else

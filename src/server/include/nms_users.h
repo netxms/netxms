@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -145,7 +145,7 @@ public:
 	void updateLastLogin() { m_lastLogin = time(NULL); m_flags |= UF_MODIFIED; }
 	void updatePasswordChangeTime() { m_lastPasswordChange = time(NULL); m_flags |= UF_MODIFIED; }
 	void enable();
-	void disable() { m_flags |= UF_DISABLED | UF_MODIFIED; }
+	void disable();
 };
 
 /**

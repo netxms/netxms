@@ -49,7 +49,7 @@ UserDatabaseObject::UserDatabaseObject()
 }
 
 /**
- * Condtructor for generic object - create new object with given id and name
+ * Constructor for generic object - create new object with given id and name
  */
 UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 {
@@ -462,6 +462,7 @@ void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 	m_flags |= UF_MODIFIED;
 	if (clearChangePasswdFlag)
 		m_flags &= ~UF_CHANGE_PASSWORD;
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
 /**
@@ -522,6 +523,10 @@ void User::modifyFromMessage(CSCPMessage *msg)
       UpdateGroupMembership(m_id, count, groups);
       safe_free(groups);
    }
+
+   // Clear intruder lockout flag if user is not disabled anymore
+   if (!(m_flags & UF_DISABLED))
+      m_flags &= ~UF_INTRUDER_LOCKOUT;
 }
 
 /**
@@ -539,6 +544,7 @@ void User::increaseAuthFailures()
 	}
 
 	m_flags |= UF_MODIFIED;
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
 /**
@@ -551,8 +557,17 @@ void User::enable()
 	m_disabledUntil = 0;
 	m_flags &= ~(UF_DISABLED | UF_INTRUDER_LOCKOUT);
 	m_flags |= UF_MODIFIED;
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
+/**
+ * Disable user account
+ */
+void User::disable()
+{ 
+   m_flags |= UF_DISABLED | UF_MODIFIED; 
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
+}
 
 /*****************************************************************************
  **  Group
@@ -563,8 +578,7 @@ void User::enable()
  * Expects fields in the following order:
  *    id,name,system_access,flags,description,guid
  */
-Group::Group(DB_RESULT hr, int row)
-      :UserDatabaseObject(hr, row)
+Group::Group(DB_RESULT hr, int row) : UserDatabaseObject(hr, row)
 {
 	DB_RESULT hResult;
 	TCHAR query[256];
@@ -593,7 +607,7 @@ Group::Group(DB_RESULT hr, int row)
 /**
  * Constructor for group object - create "Everyone" group
  */
-Group::Group()
+Group::Group() : UserDatabaseObject()
 {
 	m_id = GROUP_EVERYONE;
 	_tcscpy(m_name, _T("Everyone"));
