@@ -149,6 +149,7 @@ static TCHAR *m_pszControlServerList = NULL;
 static TCHAR *m_pszMasterServerList = NULL;
 static TCHAR *m_pszSubagentList = NULL;
 static TCHAR *m_pszExtParamList = NULL;
+static TCHAR *m_pszExtListsList = NULL;
 static TCHAR *m_pszShExtParamList = NULL;
 static TCHAR *m_pszParamProviderList = NULL;
 static TCHAR *m_pszExtSubagentList = NULL;
@@ -199,6 +200,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout, NULL },
 	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
    { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList, NULL },
+   { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtListsList, NULL },
    { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList, NULL },
    { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList, NULL },
    { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList, NULL },
@@ -786,7 +788,7 @@ BOOL Initialize()
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
-         if (!AddExternalParameter(pItem, FALSE))
+         if (!AddExternalParameter(pItem, FALSE, FALSE))
             nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszExtParamList);
@@ -799,10 +801,25 @@ BOOL Initialize()
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
-         if (!AddExternalParameter(pItem, TRUE))
+         if (!AddExternalParameter(pItem, TRUE, FALSE))
             nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszShExtParamList);
+   }
+
+   // Parse external lists
+   if (m_pszExtListsList != NULL)
+   {
+      for(pItem = pEnd = m_pszExtListsList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = _tcschr(pItem, _T('\n'));
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddExternalParameter(pItem, FALSE, TRUE))
+            nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(m_pszExtListsList);
    }
 
    // Parse external parameters providers list
