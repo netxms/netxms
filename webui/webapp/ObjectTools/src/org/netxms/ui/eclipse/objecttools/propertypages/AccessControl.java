@@ -170,7 +170,7 @@ public class AccessControl extends PropertyPage
 	 */
 	public void addUser()
 	{
-		SelectUserDialog dlg = new SelectUserDialog(getShell(), true);
+		SelectUserDialog dlg = new SelectUserDialog(getShell(), AbstractUserObject.class);
 		if (dlg.open() == Window.OK)
 		{
 			for(AbstractUserObject o : dlg.getSelection())

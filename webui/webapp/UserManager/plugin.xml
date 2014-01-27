@@ -130,6 +130,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.usermanager.propertypages.GroupMembership"
+              id="org.netxms.ui.eclipse.usermanager.propertypages.GroupMembership#2"
+              name="%page.GroupMembership.name">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.api.client.users.User">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
   <extension
