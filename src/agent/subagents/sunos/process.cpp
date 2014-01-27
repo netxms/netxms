@@ -73,10 +73,13 @@ static int ProcFilter(const struct dirent *pEnt)
 //                  be a regular expression.
 //    pszCmdLine - If not NULL, only processes with command line matched to
 //                 regular expression will be counted and read.
+//    lwpState   - If non-zero, only processes with pstatus_t.pr_lwp.pr_state
+//                 (as defined in proc.h: SSLEEP, SRUN, SZOMB, SSTOP,
+//                 SIDL, SONPROC) will be counted
 // Return value: number of matched processes or -1 in case of error.
 //
 
-static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
+static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine, int lwpState)
 {
 	struct dirent **pNameList;
 	int nCount, nFound;
@@ -123,7 +126,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
 
 				if (read(hFile, &psi, sizeof(psinfo_t)) == sizeof(psinfo_t))
 				{
-					BOOL nameMatch = TRUE, cmdLineMatch = TRUE;
+					BOOL nameMatch = TRUE, cmdLineMatch = TRUE, lwpStateMatch = TRUE;
 
 					if (pszProcName != NULL)
 					{
@@ -138,7 +141,12 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
 						cmdLineMatch = RegexpMatchA(psi.pr_psargs, pszCmdLine, TRUE);
 					}
 
-					if (nameMatch && cmdLineMatch)
+               if (lwpState != 0)
+               {
+                  lwpStateMatch = psi.pr_lwp.pr_stype == lwpState;
+               }
+
+					if (nameMatch && cmdLineMatch && lwpStateMatch)
 					{
 						if (pEnt != NULL)
 						{
@@ -175,7 +183,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 	int i, nProc;
 	TCHAR szBuffer[256];
 
-	nProc = ProcRead(&pList, NULL, NULL);
+	nProc = ProcRead(&pList, NULL, NULL, 0);
 	if (nProc != -1)
 	{
 		for(i = 0; i < nProc; i++)
@@ -206,7 +214,20 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 	if (*arg == _T('E'))	// Process.CountEx
 		AgentGetParameterArgA(param, 2, cmdLine, sizeof(cmdLine));
 
-	nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, (*arg == _T('E')) ? cmdLine : NULL);
+   switch (*arg)
+   {
+      case 'E':
+         nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, cmdLine, 0);
+         break;
+      case 'Z':
+         nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, NULL, SZOMB);
+         break;
+      default:
+         nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, cmdLine, 0);
+         // 'S'
+         break;
+   }
+
 	if (nCount >= 0)
 	{
 		ret_int(value, nCount);
@@ -421,7 +442,7 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 	AgentGetParameterArgA(param, 3, cmdLine, MAX_PATH);
 	StrStripA(cmdLine);
 
-	nCount = ProcRead(&pList, (procName[0] != 0) ? procName : NULL, (cmdLine[0] != 0) ? cmdLine : NULL);
+	nCount = ProcRead(&pList, (procName[0] != 0) ? procName : NULL, (cmdLine[0] != 0) ? cmdLine : NULL, 0);
 	if (nCount > 0)
 	{
 		for(i = 0, qwValue = 0; i < nCount; i++)
