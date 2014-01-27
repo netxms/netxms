@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.usermanager.propertypages;
 
 import java.util.HashMap;
 import java.util.Iterator;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -52,14 +51,14 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * "Members" page for user group
+ * "Group Membership" page for user
  */
-public class Members extends PropertyPage
+public class GroupMembership extends PropertyPage
 {
-	private SortableTableViewer userList;
+	private SortableTableViewer groupList;
 	private UserManager userManager;
-	private UserGroup object;
-	private HashMap<Long, AbstractUserObject> members = new HashMap<Long, AbstractUserObject>(0);
+	private User object;
+	private HashMap<Long, AbstractUserObject> groups = new HashMap<Long, AbstractUserObject>(0);
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -70,27 +69,27 @@ public class Members extends PropertyPage
 		userManager = (UserManager)ConsoleSharedData.getSession();
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		object = (UserGroup)getElement().getAdapter(UserGroup.class);
+		object = (User)getElement().getAdapter(User.class);
 
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 
-      final String[] columnNames = { Messages.get().Members_LoginName };
+      final String[] columnNames = { "Group name" };
       final int[] columnWidths = { 300 };
-      userList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
+      groupList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                          SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-		userList.setContentProvider(new ArrayContentProvider());
-		userList.setLabelProvider(new WorkbenchLabelProvider());
-		userList.setComparator(new UserComparator());
+		groupList.setContentProvider(new ArrayContentProvider());
+		groupList.setLabelProvider(new WorkbenchLabelProvider());
+		groupList.setComparator(new UserComparator());
 
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
-      userList.getControl().setLayoutData(gd);
+      groupList.getControl().setLayoutData(gd);
       
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       FillLayout buttonsLayout = new FillLayout();
@@ -113,13 +112,13 @@ public class Members extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(Members.this.getShell(), User.class);
+				SelectUserDialog dlg = new SelectUserDialog(GroupMembership.this.getShell(), UserGroup.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();
 					for(AbstractUserObject user : selection)
-						members.put(user.getId(), user);
-					userList.setInput(members.values().toArray(new AbstractUserObject[members.size()]));
+						groups.put(user.getId(), user);
+					groupList.setInput(groups.values().toArray(new AbstractUserObject[groups.size()]));
 				}
 			}
       });
@@ -138,35 +137,35 @@ public class Members extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
+				IStructuredSelection sel = (IStructuredSelection)groupList.getSelection();
 				Iterator<AbstractUserObject> it = sel.iterator();
 				while(it.hasNext())
 				{
 					AbstractUserObject element = it.next();
-					members.remove(element.getId());
+					groups.remove(element.getId());
 				}
-				userList.setInput(members.values().toArray());
+				groupList.setInput(groups.values().toArray());
 			}
       });
 		
-      userList.addSelectionChangedListener(new ISelectionChangedListener() {
+      groupList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				deleteButton.setEnabled(!userList.getSelection().isEmpty());
+				deleteButton.setEnabled(!groupList.getSelection().isEmpty());
 			}
       });
 
       // Initial data
-		for(long userId : object.getMembers())
+		for(long groupId : object.getGroups())
 		{
-			final AbstractUserObject user = userManager.findUserDBObjectById(userId);
-			if (user != null)
+			final AbstractUserObject group = userManager.findUserDBObjectById(groupId);
+			if (group != null)
 			{
-				members.put(user.getId(), user);
+				groups.put(group.getId(), group);
 			}
 		}
-		userList.setInput(members.values().toArray());
+		groupList.setInput(groups.values().toArray());
 
 		return dialogArea;
 	}
@@ -181,17 +180,17 @@ public class Members extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		long[] memberIds = new long[members.size()];
+		long[] groupIds = new long[groups.size()];
 		int i = 0;
-		for(Long id : members.keySet())
-			memberIds[i++] = id;
-		object.setMembers(memberIds);
+		for(Long id : groups.keySet())
+			groupIds[i++] = id;
+		object.setGroups(groupIds);
 		
 		new ConsoleJob(Messages.get().Members_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				userManager.modifyUserDBObject(object, UserManager.USER_MODIFY_MEMBERS);
+				userManager.modifyUserDBObject(object, UserManager.USER_MODIFY_GROUP_MEMBERSHIP);
 			}
 
 			@Override
@@ -209,7 +208,7 @@ public class Members extends PropertyPage
 						@Override
 						public void run()
 						{
-							Members.this.setValid(true);
+							GroupMembership.this.setValid(true);
 						}
 					});
 				}
