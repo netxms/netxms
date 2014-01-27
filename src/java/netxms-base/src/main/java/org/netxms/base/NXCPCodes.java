@@ -783,6 +783,7 @@ public class NXCPCodes
    public static final long VID_FILE_FOLLOW = 459;
    public static final long VID_FILE_DATA = 460;
    public static final long VID_ALARM_STATUS_FLOW_STATE = 461;
+   public static final long VID_GROUPS = 462;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
