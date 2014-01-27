@@ -958,6 +958,7 @@ typedef struct
 #define VID_FILE_FOLLOW             ((UINT32)459)
 #define VID_FILE_DATA               ((UINT32)460)
 #define VID_ALARM_STATUS_FLOW_STATE ((UINT32)461)
+#define VID_GROUPS                  ((UINT32)462)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

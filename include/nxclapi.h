@@ -682,6 +682,7 @@ enum
 #define USER_MODIFY_TEMP_DISABLE       0x00000200
 #define USER_MODIFY_CUSTOM_ATTRIBUTES  0x00000400
 #define USER_MODIFY_XMPP_ID            0x00000800
+#define USER_MODIFY_GROUP_MEMBERSHIP   0x00001000
 
 /**
  * User certificate mapping methods

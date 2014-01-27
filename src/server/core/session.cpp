@@ -2802,11 +2802,9 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
    sendMessage(&msg);
 }
 
-
-//
-// Notify client on user database update
-//
-
+/**
+ * Notify client on user database update
+ */
 void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 {
    CSCPMessage msg;
@@ -2832,11 +2830,9 @@ void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *obje
    }
 }
 
-
-//
-// Change management status for the object
-//
-
+/**
+ * Change management status for the object
+ */
 void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

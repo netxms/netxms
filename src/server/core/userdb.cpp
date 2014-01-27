@@ -396,13 +396,66 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId)
 
    MutexLock(m_mutexUserDatabaseAccess);
    for(int i = 0; i < m_userCount; i++)
+   {
 		if (m_users[i]->getId() == dwGroupId)
 		{
 			result = ((Group *)m_users[i])->isMember(dwUserId);
 			break;
 		}
+   }
    MutexUnlock(m_mutexUserDatabaseAccess);
    return result;
+}
+
+/**
+ * Fill message with group membership information for given user.
+ * Access to user database must be locked.
+ */
+void FillGroupMembershipInfo(CSCPMessage *msg, UINT32 userId)
+{
+   UINT32 *list = (UINT32 *)malloc(sizeof(UINT32) * m_userCount);
+   UINT32 count = 0;
+   for(int i = 0; i < m_userCount; i++)
+   {
+		if ((m_users[i]->getId() & GROUP_FLAG) && (m_users[i]->getId() != GROUP_EVERYONE) && ((Group *)m_users[i])->isMember(userId))
+		{
+         list[count++] = m_users[i]->getId();
+		}
+   }
+   msg->SetVariable(VID_NUM_GROUPS, count);
+   if (count > 0)
+      msg->SetVariableToInt32Array(VID_GROUPS, count, list);
+   free(list);
+}
+
+/**
+ * Update group membership for user
+ */
+void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
+{
+   for(int i = 0; i < m_userCount; i++)
+   {
+		if ((m_users[i]->getId() & GROUP_FLAG) && (m_users[i]->getId() != GROUP_EVERYONE))
+		{
+         bool found = false;
+         for(int j = 0; j < numGroups; j++)
+         {
+            if (m_users[i]->getId() == groups[j])
+            {
+               found = true;
+               break;
+            }
+         }
+         if (found)
+         {
+            ((Group *)m_users[i])->addUser(userId);
+         }
+         else
+         {
+            ((Group *)m_users[i])->deleteUser(userId);
+         }
+		}
+   }
 }
 
 /**
@@ -568,6 +621,22 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
 
    MutexUnlock(m_mutexUserDatabaseAccess);
    return dwResult;
+}
+
+/**
+ * Send user DB update for given user ID.
+ * Access to suer database must be already locked.
+ */
+void SendUserDBUpdate(int code, UINT32 id)
+{
+   for(int i = 0; i < m_userCount; i++)
+   {
+      if (m_users[i]->getId() == id)
+      {
+         SendUserDBUpdate(code, id, m_users[i]);
+         break;
+      }
+   }
 }
 
 /**
