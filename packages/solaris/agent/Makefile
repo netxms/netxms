@@ -10,7 +10,7 @@ endif
 all: package
 
 package:
-	mkdir /opt/netxms/svc
+	mkdir -p /opt/netxms/svc
 	cp files/nxagentd.xml /var/svc/manifest/application/management/
 	cp files/nxagentd /opt/netxms/svc/
 	sed 's,@version@,$(NX_VERSION),' < pkginfo.in > pkginfo
