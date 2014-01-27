@@ -492,7 +492,41 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 			i = j;
 		}
-		else
+      else if (temp[i] == _T('$') && temp[i+1] == _T('{'))
+      {
+         i += 2;
+			int j = i;
+			while((temp[j] != _T('}')) && (temp[j] != 0))
+				j++;
+
+			int len = min(j - i, 1023);
+
+         TCHAR varName[256];
+         memcpy(varName, &temp[i], len * sizeof(TCHAR));
+         varName[len] = 0;
+
+#ifdef UNICODE
+         char __buffer[256];
+         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, varName, -1, __buffer, 256, NULL, NULL);
+         char *result = getenv(__buffer);
+         if (result != NULL)
+         {
+            len = (int)min(strlen(result), bufSize - outpos - 1);
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, result, len, &buffer[outpos], len);
+         }
+         else
+         {
+            len = 0;
+         }
+#else
+         char *result = getenv(varName);
+         memcpy(&buffer[outpos], result, len);
+#endif
+         outpos += len;
+
+         i = j;
+      }
+      else
 		{
 			buffer[outpos++] = temp[i];
 		}
