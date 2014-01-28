@@ -1096,7 +1096,7 @@ WCHAR *wgetenv(const WCHAR *_string)
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _string, -1, name, 256, NULL, NULL);
    p = getenv(name);
    if (p == NULL)
-   return NULL;
+      return NULL;
 
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, p, -1, value, 8192);
    return value;
