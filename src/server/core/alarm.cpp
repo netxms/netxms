@@ -650,6 +650,8 @@ void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
 	{
 		_sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)pAlarm->dwAlarmId);
 		QueueSQLRequest(szQuery);
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		DeleteAlarmNotes(hdb, pAlarm->dwAlarmId);
 	}
 }
 
