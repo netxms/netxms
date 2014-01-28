@@ -2253,9 +2253,16 @@ if test "x${ENABLE_WERROR}" = "xyes"; then
 	CPPFLAGS="$CPPFLAGS -Werror"
 fi
 
-if test "x$shrext_cmds" != "x"; then
-	AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$shrext_cmds"), [Define to platform's shared library suffix])
+if test "x$PLATFORM" = "xDarwin"; then
+	SHLIB_SUFFIX=".so"
+else
+	if test "x$shrext_cmds" != "x"; then
+		SHLIB_SUFFIX="$shrext_cmds"
+	else
+		SHLIB_SUFFIX=".so"
+	fi
 fi
+AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's shared library suffix])
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
@@ -2292,7 +2299,7 @@ AC_SUBST(DB2_LIBS)
 AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(SQLFLAGS)
-AC_SUBST(SHLIB_SUFFIX, $shrext_cmds)
+AC_SUBST(SHLIB_SUFFIX)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -2523,6 +2530,8 @@ echo '                         Configure results'
 echo '---------------------------------------------------------------------'
 echo
 	echo "Prefix                  : ${prefix}"
+	echo "Platform                : ${PLATFORM}"
+	echo "Shared library suffix   : ${SHLIB_SUFFIX}"
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
