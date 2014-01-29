@@ -85,6 +85,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	private static final int NOTIFY_ALARM = 1;
 	private static final int NOTIFY_STATUS = 2;
+	private static final int NOTIFY_STATUS_NEVER = 0;
 	private static final int NOTIFY_STATUS_ON_CONNECT = 1;
 	private static final int NOTIFY_STATUS_ON_DISCONNECT = 2;
 	private static final int NOTIFY_STATUS_ALWAYS = 3;
@@ -120,7 +121,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private boolean encrypt = false;
 	private boolean enabled = false;
 	private boolean notifyAlarm = false;
-	private int notificationType = 0;
+	private int notificationType = NOTIFY_STATUS_NEVER;
 	private boolean notifyIcon = false;
 	private boolean notifyToast = false;
 	private int schedulerPostpone = 0;
