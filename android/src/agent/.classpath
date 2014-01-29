@@ -8,5 +8,6 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="lib" path="libs/netxms-base-1.2.11.jar"/>
 	<classpathentry kind="lib" path="libs/netxms-mobile-agent-1.2.11.jar"/>
+	<classpathentry kind="lib" path="libs/android-support-v4.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
