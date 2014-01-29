@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -54,17 +53,17 @@ public class SelectUserDialog extends Dialog
 {
 	private TableViewer userList;
 	private Session session;
-	private boolean showGroups;
+	Class<? extends AbstractUserObject> classFilter;
 	private boolean multiSelection = true;
 	private AbstractUserObject[] selection;
 	
 	/**
 	 * @param parentShell
 	 */
-	public SelectUserDialog(Shell parentShell, boolean showGroups)
+	public SelectUserDialog(Shell parentShell, Class<? extends AbstractUserObject> classFilter)
 	{
 		super(parentShell);
-		this.showGroups = showGroups;
+		this.classFilter = classFilter;
 	}
 	
 	/**
@@ -119,7 +118,7 @@ public class SelectUserDialog extends Dialog
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element)
 			{
-				return showGroups || (element instanceof User);
+				return classFilter.isInstance(element);
 			}
       });
       userList.setInput(((UserManager)session).getUserDatabaseObjects());

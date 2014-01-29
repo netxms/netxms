@@ -571,6 +571,7 @@ void AlarmManager::deleteAlarm(UINT32 dwAlarmId, bool objectCleanup)
    }
 }
 
+
 /**
  * Delete all alarms of given object. Intended to be called only
  * on final stage of object deletion.
@@ -649,6 +650,8 @@ void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
 	{
 		_sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)pAlarm->dwAlarmId);
 		QueueSQLRequest(szQuery);
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		DeleteAlarmNotes(hdb, pAlarm->dwAlarmId);
 	}
 }
 
@@ -924,6 +927,7 @@ static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
+   bool newNote = false;
 
    lock();
    for(int i = 0; i < m_numAlarms; i++)
@@ -958,6 +962,7 @@ UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR 
 			else
 			{
 				// new note
+				newNote = true;
 				noteId = CreateUniqueId(IDG_ALARM_NOTE);
 				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 				DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_notes (note_id,alarm_id,change_time,user_id,note_text) VALUES (?,?,?,?,?)"));
@@ -979,7 +984,8 @@ UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR 
 			}
 			if (rcc == RCC_SUCCESS)
 			{
-				m_pAlarmList[i].noteCount++;
+            if(newNote)
+               m_pAlarmList[i].noteCount++;
 				notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
 			}
          break;
@@ -988,6 +994,51 @@ UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR 
 
    return rcc;
 }
+
+
+/**
+ * Delete note
+ */
+UINT32 AlarmManager::deleteAlarmNoteByID(UINT32 alarmId, UINT32 noteId)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == alarmId)
+      {
+         if (IsValidNoteId(alarmId, noteId))
+         {
+            DB_HANDLE db = DBConnectionPoolAcquireConnection();
+            DB_STATEMENT stmt = DBPrepare(db, _T("DELETE FROM alarm_notes WHERE note_id=?"));
+            if (stmt != NULL)
+            {
+               DBBind(stmt, 1, DB_SQLTYPE_INTEGER, noteId);
+               rcc = DBExecute(stmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+               DBFreeStatement(stmt);
+            }
+            else
+            {
+               rcc = RCC_DB_FAILURE;
+            }
+            DBConnectionPoolReleaseConnection(db);
+         }
+         else
+         {
+            rcc = RCC_INVALID_ALARM_NOTE_ID;
+         }
+         if (rcc == RCC_SUCCESS)
+			{
+				m_pAlarmList[i].noteCount--;
+				notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+			}
+         break;
+      }
+   unlock();
+
+   return rcc;
+}
+
 
 /**
  * Get alarm's notes

@@ -33,15 +33,25 @@ public class Messages extends NLS
 
    public static String AlarmAcknowledgeTimeFunctions_ZiroMinutesEntry;
 
+   public static String AlarmComments_AckToDeleteComment;
+
    public static String AlarmComments_AddCommentJob;
 	public static String AlarmComments_AddCommentLink;
 	public static String AlarmComments_AddError;
 	public static String AlarmComments_Comments;
-	public static String AlarmComments_Details;
+
+   public static String AlarmComments_Confirmation;
+	public static String AlarmComments_DeleteCommentJob;
+
+   public static String AlarmComments_Details;
+
+   public static String AlarmComments_EttotDeletAlarmComment;
 	public static String AlarmComments_GetComments;
 	public static String AlarmComments_GetError;
 	public static String AlarmComments_InternalError;
-	public static String AlarmCommentsEditor_Edit;
+	public static String AlarmCommentsEditor_DeleteLabel;
+
+   public static String AlarmCommentsEditor_Edit;
 	public static String AlarmCommentsEditor_Unknown;
 	public static String AlarmComparator_Unknown;
 	public static String AlarmDetails_Column_Message;

@@ -49,7 +49,7 @@ UserDatabaseObject::UserDatabaseObject()
 }
 
 /**
- * Condtructor for generic object - create new object with given id and name
+ * Constructor for generic object - create new object with given id and name
  */
 UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 {
@@ -462,6 +462,7 @@ void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 	m_flags |= UF_MODIFIED;
 	if (clearChangePasswdFlag)
 		m_flags &= ~UF_CHANGE_PASSWORD;
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
 /**
@@ -481,6 +482,8 @@ void User::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_DISABLED_UNTIL, (UINT32)m_disabledUntil);
 	msg->SetVariable(VID_AUTH_FAILURES, (UINT32)m_authFailures);
    msg->SetVariable(VID_XMPP_ID, m_xmppId);
+
+   FillGroupMembershipInfo(msg, m_id);
 }
 
 /**
@@ -508,6 +511,22 @@ void User::modifyFromMessage(CSCPMessage *msg)
 	}
 	if (fields & USER_MODIFY_XMPP_ID)
 		msg->GetVariableStr(VID_XMPP_ID, m_xmppId, MAX_XMPP_ID_LEN);
+   if (fields & USER_MODIFY_GROUP_MEMBERSHIP)
+   {
+      int count = (int)msg->GetVariableLong(VID_NUM_GROUPS);
+      UINT32 *groups = NULL;
+      if (count > 0)
+      {
+         groups = (UINT32 *)malloc(sizeof(UINT32) * count);
+         msg->GetVariableInt32Array(VID_GROUPS, (UINT32)count, groups);
+      }
+      UpdateGroupMembership(m_id, count, groups);
+      safe_free(groups);
+   }
+
+   // Clear intruder lockout flag if user is not disabled anymore
+   if (!(m_flags & UF_DISABLED))
+      m_flags &= ~UF_INTRUDER_LOCKOUT;
 }
 
 /**
@@ -525,6 +544,7 @@ void User::increaseAuthFailures()
 	}
 
 	m_flags |= UF_MODIFIED;
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
 /**
@@ -537,8 +557,17 @@ void User::enable()
 	m_disabledUntil = 0;
 	m_flags &= ~(UF_DISABLED | UF_INTRUDER_LOCKOUT);
 	m_flags |= UF_MODIFIED;
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
+/**
+ * Disable user account
+ */
+void User::disable()
+{ 
+   m_flags |= UF_DISABLED | UF_MODIFIED; 
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
+}
 
 /*****************************************************************************
  **  Group
@@ -549,8 +578,7 @@ void User::enable()
  * Expects fields in the following order:
  *    id,name,system_access,flags,description,guid
  */
-Group::Group(DB_RESULT hr, int row)
-      :UserDatabaseObject(hr, row)
+Group::Group(DB_RESULT hr, int row) : UserDatabaseObject(hr, row)
 {
 	DB_RESULT hResult;
 	TCHAR query[256];
@@ -579,7 +607,7 @@ Group::Group(DB_RESULT hr, int row)
 /**
  * Constructor for group object - create "Everyone" group
  */
-Group::Group()
+Group::Group() : UserDatabaseObject()
 {
 	m_id = GROUP_EVERYONE;
 	_tcscpy(m_name, _T("Everyone"));
@@ -738,11 +766,9 @@ bool Group::isMember(UINT32 userId)
 	return false;
 }
 
-
-//
-// Add user to group
-//
-
+/**
+ * Add user to group
+ */
 void Group::addUser(UINT32 userId)
 {
 	int i;
@@ -758,13 +784,13 @@ void Group::addUser(UINT32 userId)
    m_members[i] = userId;
 
 	m_flags |= UF_MODIFIED;
+
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
-
-//
-// Delete user from group
-//
-
+/**
+ * Delete user from group
+ */
 void Group::deleteUser(UINT32 userId)
 {
    int i;
@@ -774,15 +800,15 @@ void Group::deleteUser(UINT32 userId)
       {
          m_memberCount--;
          memmove(&m_members[i], &m_members[i + 1], sizeof(UINT32) * (m_memberCount - i));
+      	m_flags |= UF_MODIFIED;
+         SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
+         break;
       }
-	m_flags |= UF_MODIFIED;
 }
 
-
-//
-// Fill NXCP message with user group data
-//
-
+/**
+ * Fill NXCP message with user group data
+ */
 void Group::fillMessage(CSCPMessage *msg)
 {
    UINT32 varId;
@@ -795,11 +821,9 @@ void Group::fillMessage(CSCPMessage *msg)
       msg->SetVariable(varId, m_members[i]);
 }
 
-
-//
-// Modify group object from NXCP message
-//
-
+/**
+ * Modify group object from NXCP message
+ */
 void Group::modifyFromMessage(CSCPMessage *msg)
 {
 	int i;
@@ -810,16 +834,43 @@ void Group::modifyFromMessage(CSCPMessage *msg)
 	fields = msg->GetVariableLong(VID_FIELDS);
 	if (fields & USER_MODIFY_MEMBERS)
 	{
+      UINT32 *members = m_members;
+      int count = m_memberCount;
 		m_memberCount = msg->GetVariableLong(VID_NUM_MEMBERS);
 		if (m_memberCount > 0)
 		{
-			m_members = (UINT32 *)realloc(m_members, sizeof(UINT32) * m_memberCount);
+			m_members = (UINT32 *)malloc(sizeof(UINT32) * m_memberCount);
 			for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
+         {
 				m_members[i] = msg->GetVariableLong(varId);
+
+            // check if new member
+            bool found = false;
+   			for(int j = 0; j < count; j++)
+            {
+               if (members[j] == m_members[i])
+               {
+                  members[j] = 0xFFFFFFFF;    // mark as found
+                  found = true;
+                  break;
+               }
+            }
+
+            if (!found)
+               SendUserDBUpdate(USER_DB_MODIFY, m_members[i]);  // new member added
+         }
+			for(i = 0; i < count; i++)
+            if (members[i] != 0xFFFFFFFF)  // not present in new list
+               SendUserDBUpdate(USER_DB_MODIFY, members[i]);
 		}
 		else
 		{
-			safe_free_and_null(m_members);
+         m_members = NULL;
+
+         // notify change for all old members
+			for(i = 0; i < count; i++)
+            SendUserDBUpdate(USER_DB_MODIFY, members[i]);
 		}
+		safe_free(members);
 	}
 }

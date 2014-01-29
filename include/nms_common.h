@@ -84,7 +84,7 @@
 /**
  * Wrappers for 64-bit integer constants
  */
-#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__)
+#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C)
 #define _LL(x) (x ## LL)
 #define _ULL(x) (x ## ULL)
 #elif defined(_MSC_VER)

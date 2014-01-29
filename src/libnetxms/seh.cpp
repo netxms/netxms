@@ -266,7 +266,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	m_pExInfoFile = _tfopen(szInfoFile, _T("w"));
 	if (m_pExInfoFile != NULL)
 	{
-		_ftprintf(m_pExInfoFile, _T("%s CRASH DUMP\n%s\n"), szProcNameUppercase, ctime(&t));
+		_ftprintf(m_pExInfoFile, _T("%s CRASH DUMP\n%s\n"), szProcNameUppercase, _tctime(&t));
 #ifdef _M_IX86
 		_ftprintf(m_pExInfoFile, _T("EXCEPTION: %08X (%s) at %08X\n"),
 #else

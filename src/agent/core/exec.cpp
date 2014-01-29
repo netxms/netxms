@@ -297,11 +297,15 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
 /**
  * Structure for passing data to popen() worker
  */
-struct POPEN_WORKER_DATA
+class POPEN_WORKER_DATA
 {
+public:
+   POPEN_WORKER_DATA() {}
+   virtual ~POPEN_WORKER_DATA() {}
+
 	int status;
 	TCHAR *cmdLine;
-	TCHAR value[MAX_RESULT_LENGTH];
+   StringList values;
 	CONDITION finished;
 	CONDITION released;
 };
@@ -316,27 +320,35 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 
 	if ((hPipe = _tpopen(data->cmdLine, _T("r"))) != NULL)
 	{
-		TCHAR *pTmp;
+      data->status = SYSINFO_RC_SUCCESS;
 
-		data->value[0] = 0;
-		TCHAR *ret = safe_fgetts(data->value, MAX_RESULT_LENGTH, hPipe);
-      if ((ret == NULL) && feof(hPipe))
-         ret = data->value;
-		pclose(hPipe);
-	   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
-		if (ret != NULL)
-		{
-			if ((pTmp = _tcschr(data->value, _T('\n'))) != NULL)
+      while (true)
+      {
+         TCHAR value[MAX_RESULT_LENGTH];
+
+         TCHAR *ret = safe_fgetts(value, MAX_RESULT_LENGTH, hPipe);
+         if (ret == NULL)
+         {
+            if (!feof(hPipe))
+            {
+               DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read error: %s"), _tcserror(errno));
+               data->status = SYSINFO_RC_ERROR;
+            }
+            break;
+         }
+
+         DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
+         TCHAR *pTmp;
+			if ((pTmp = _tcschr(value, _T('\n'))) != NULL)
 			{
 				*pTmp = 0;
 			}
-			data->status = SYSINFO_RC_SUCCESS;
-		}
-		else
-		{
-		   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read error: %s"), _tcserror(errno));
-			data->status = SYSINFO_RC_ERROR;
-		}
+         if (value[0] != 0)
+         {
+            data->values.add(value);
+         }
+      }
+		pclose(hPipe);
 	}
 	else
 	{
@@ -350,21 +362,21 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	ConditionWait(data->released, INFINITE);
 	ConditionDestroy(data->finished);
 	ConditionDestroy(data->released);
-	free(data);
+	delete data;
 
 	return THREAD_OK;
 }
 
 /**
- * Handler function for external (user-defined) parameters
+ * Exec function for external (user-defined) parameters and lists
  */
-LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue)
+LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 {
 	TCHAR *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH];
 	const TCHAR *sptr;
 	int i, iSize, iStatus;
 
-   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter called for \"%s\" \"%s\""), pszCmd, pszArg);
+   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal called for \"%s\" \"%s\""), pszCmd, pszArg);
 
    // Substitute $1 .. $9 with actual arguments
    iSize = (int)_tcslen(pszArg) * sizeof(TCHAR);  // we don't need _tcslen + 1 because loop starts from &pszArg[1]
@@ -399,7 +411,7 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
          pszCmdLine[i++] = *sptr;
       }
    pszCmdLine[i] = 0;
-   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter: command line is \"%s\""), pszCmdLine);
+   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal: command line is \"%s\""), pszCmdLine);
 
 #if defined(_WIN32)
 	if (*pszArg == _T('E'))
@@ -492,26 +504,35 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
 		{
 			POPEN_WORKER_DATA *data;
 
-			data = (POPEN_WORKER_DATA *)malloc(sizeof(POPEN_WORKER_DATA));
+			data = new POPEN_WORKER_DATA;
 			data->cmdLine = pszCmdLine;
 			data->finished = ConditionCreate(TRUE);
 			data->released = ConditionCreate(TRUE);
 			ThreadCreate(POpenWorker, 0, data);
-		   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter (shell exec): worker thread created"));
+		   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal (shell exec): worker thread created"));
 			if (ConditionWait(data->finished, g_dwExecTimeout))
 			{
 				iStatus = data->status;
 				if (iStatus == SYSINFO_RC_SUCCESS)
-					_tcscpy(pValue, data->value);
+            {
+               if (data->values.getSize() > 0)
+               {
+                  value->addAll(&data->values);
+               }
+               else
+               {
+                  value->add(_T(""));
+               }
+            }
 			}
 			else
 			{
 				// Timeout
-			   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter (shell exec): execution timeout"));
+			   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal (shell exec): execution timeout"));
 				iStatus = SYSINFO_RC_ERROR;
 			}
 			ConditionSet(data->released);	// Allow worker to destroy data
-		   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter (shell exec): execution status %d"), iStatus);
+		   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal (shell exec): execution status %d"), iStatus);
 		}
 
 #ifdef _WIN32
@@ -520,6 +541,41 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
 
    free(pszCmdLine);
    return iStatus;
+}
+
+/**
+ * Handler function for external (user-defined) parameters
+ */
+LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *args, TCHAR *value)
+{
+   LONG status = SYSINFO_RC_ERROR;
+
+   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter called for \"%s\" \"%s\""), cmd, args);
+
+   StringList values;
+   status = RunExternal(cmd, args, &values);
+   if (status == SYSINFO_RC_SUCCESS)
+   {
+      _tcscpy(value, values.getValue(0));
+   }
+
+   return status;
+}
+
+/**
+ * Handler function for external (user-defined) lists
+ */
+LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+{
+   StringList values;
+
+   int status = RunExternal(cmd, arg, &values);
+   if (status == SYSINFO_RC_SUCCESS)
+   {
+      value->addAll(&values);
+   }
+
+   return status;
 }
 
 

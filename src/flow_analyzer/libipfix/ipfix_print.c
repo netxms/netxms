@@ -62,10 +62,13 @@ static int ipfix_print_newmsg( ipfixs_node_t *s, ipfix_hdr_t *hdr, void *arg )
     /* print header
      */
     outf( fp, "IPFIX-HDR:\n version=%u,", hdr->version );
-    if ( hdr->version == IPFIX_VERSION_NF9 ) {
+    if ( hdr->version == IPFIX_VERSION_NF9 ) 
+    {
+       time_t t;
         outf( fp, " records=%u\n", hdr->u.nf9.count );
+        t = hdr->u.nf9.unixtime;
         strftime( timebuf, 40, "%Y-%m-%d %T %Z", 
-                  localtime( (const time_t *) &(hdr->u.nf9.unixtime) ));
+                  localtime( &t ));
         outf( fp, " sysuptime=%.3fs, unixtime=%lu (%s)\n", 
               (double)(hdr->u.nf9.sysuptime)/1000.0, 
               (u_long)hdr->u.nf9.unixtime, timebuf );

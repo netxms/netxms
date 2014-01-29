@@ -2,6 +2,12 @@
  * Header file for the ICE encryption library.
  *
  * Written by Matthew Kwan - July 1996
+ * License, as stated on http://www.darkside.com.au/ice/index.html:
+ *
+ *    The ICE algorithm is public domain, and source code can be
+ *    downloaded from this page. There are no patents or copyrights,
+ *    so its use is unrestricted. Naturally, if you do decide to
+ *    use it, the author would love to hear about it.
  */
 
 #ifndef _ICE_H

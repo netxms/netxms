@@ -51,7 +51,7 @@ public class AlarmCommentsEditor extends Composite
 	 * @param style
 	 * @param note
 	 */
-	public AlarmCommentsEditor(Composite parent, FormToolkit toolkit, ImageCache imageCache, AlarmNote note)
+	public AlarmCommentsEditor(Composite parent, FormToolkit toolkit, ImageCache imageCache, AlarmNote note, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction)
 	{
 		super(parent, SWT.BORDER);
 		
@@ -80,15 +80,18 @@ public class AlarmCommentsEditor extends Composite
 		final ImageHyperlink linkEdit = toolkit.createImageHyperlink(this, SWT.NONE);
 		linkEdit.setText(Messages.get().AlarmCommentsEditor_Edit);
 		linkEdit.setImage(SharedIcons.IMG_EDIT);
-		linkEdit.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-			}
-		});
+		linkEdit.addHyperlinkListener(editAction);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.RIGHT;
 		linkEdit.setLayoutData(gd);
+		
+		final ImageHyperlink linkDelete = toolkit.createImageHyperlink(this, SWT.NONE);
+		linkDelete.setText(Messages.get().AlarmCommentsEditor_DeleteLabel);
+		linkDelete.setImage(SharedIcons.IMG_DELETE_OBJECT);
+		linkDelete.addHyperlinkListener(deleteAction);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      linkDelete.setLayoutData(gd);
 		
 		text = new Text(this, SWT.MULTI | SWT.READ_ONLY);
 		text.setText(note.getText());

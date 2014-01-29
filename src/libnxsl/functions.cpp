@@ -379,6 +379,7 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program 
 	{
 		// No second argument
 		tTime = time(NULL);
+		bLocalTime = TRUE;
 	}
 
    ptm = bLocalTime ? localtime(&tTime) : gmtime(&tTime);

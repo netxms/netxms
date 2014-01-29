@@ -2359,6 +2359,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
+    * Delete alarm's note (comment). 
+    *
+    * @param alarmId alarm ID
+    * @param noteId  note ID or 0 for creating new note
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAlarmNote(long alarmId, long noteId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM_NOTE);
+      msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      msg.setVariableInt32(NXCPCodes.VID_NOTE_ID, (int) noteId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
     * Create or update alarm's note (comment). To create new note, set nodeId to 0.
     *
     * @param alarmId alarm ID
@@ -2378,7 +2395,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
    
    /**
+    * Changes state of alarm status flow. Strict or not - terminate state can be set only after 
+    * resolve state or after any state. 
     * 
+    * @param state state of alarm status flow - strict or not (1 or 0)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void setAlarmFlowState(int state) throws IOException, NXCException
    {

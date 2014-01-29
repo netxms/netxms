@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.alarmviewer.views;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.event.HyperlinkListener;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -59,6 +60,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ImageCache;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Alarm comments
@@ -316,9 +318,25 @@ public class AlarmComments extends ViewPart
 	 * @param note alarm note associated with this widget
 	 * @return
 	 */
-	private AlarmCommentsEditor createEditor(AlarmNote note)
+	private AlarmCommentsEditor createEditor(final AlarmNote note)
 	{
-		final AlarmCommentsEditor e = new AlarmCommentsEditor(editorsArea, toolkit, imageCache, note);
+	   HyperlinkAdapter editAction = new HyperlinkAdapter()
+      {
+	      @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+	         editComment(note.getId(), note.getText());
+         }
+      };
+      HyperlinkAdapter deleteAction = new HyperlinkAdapter()
+      {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            deleteComment(note.getId());
+         }
+      };
+		final AlarmCommentsEditor e = new AlarmCommentsEditor(editorsArea, toolkit, imageCache, note, editAction, deleteAction);
 		toolkit.adapt(e);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -333,31 +351,70 @@ public class AlarmComments extends ViewPart
 	 */
 	private void addComment()
 	{
-		final EditCommentDialog dlg = new EditCommentDialog(getSite().getShell());
-		if (dlg.open() != Window.OK)
-			return;
-		
-		new ConsoleJob(Messages.get().AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.updateAlarmNote(alarmId, 0, dlg.getText());
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						refresh();
-					}
-				});
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().AlarmComments_AddError;
-			}
-		}.start();
+
+	   editComment(0, ""); //$NON-NLS-1$
 	}
+	
+	/**
+    * Edit comment
+    */
+   private void editComment(final long noteId, String noteText)
+   {
+      final EditCommentDialog dlg = new EditCommentDialog(getSite().getShell(), noteId , noteText);
+      if (dlg.open() != Window.OK)
+         return;
+      
+      new ConsoleJob(Messages.get().AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.updateAlarmNote(alarmId, noteId, dlg.getText());
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  refresh();
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().AlarmComments_AddError;
+         }
+      }.start();
+   }
+   
+   /**
+    * Delete comment
+    */
+   private void deleteComment(final long noteId)
+   {
+      if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().AlarmComments_Confirmation, Messages.get().AlarmComments_AckToDeleteComment))
+         return;
+      
+      new ConsoleJob(Messages.get().AlarmComments_DeleteCommentJob, this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.deleteAlarmNote(alarmId, noteId);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  refresh();
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().AlarmComments_EttotDeletAlarmComment;
+         }
+      }.start();
+   }
 	
 	/**
 	 * Update alarm details

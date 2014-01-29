@@ -41,7 +41,7 @@ public class AlarmAcknowledgeTimeFunctions
       final int days = time / (24 * 60 * 60);
       final int hours = (time - days*(24 * 60 * 60)) / (60 * 60);
       final int minutes = (time - hours*(60 * 60) - days*(24 * 60 * 60)) / 60;
-      return (days > 0 ? Integer.toString(days)+Messages.get().AlarmAcknowledgeTimeFunctions_days : "") + (hours > 0 ? Integer.toString(hours)+Messages.get().AlarmAcknowledgeTimeFunctions_hours : "") + (minutes > 0 ? Integer.toString(minutes)+Messages.get().AlarmAcknowledgeTimeFunctions_minutes : ""); //$NON-NLS-2$ //$NON-NLS-4$ //$NON-NLS-6$
+      return (days > 0 ? Integer.toString(days)+Messages.get().AlarmAcknowledgeTimeFunctions_days : "") + (hours > 0 ? Integer.toString(hours)+Messages.get().AlarmAcknowledgeTimeFunctions_hours : "") + (minutes > 0 ? Integer.toString(minutes)+Messages.get().AlarmAcknowledgeTimeFunctions_minutes : "");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-6$
    }
 
 }

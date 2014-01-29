@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -145,7 +145,7 @@ public:
 	void updateLastLogin() { m_lastLogin = time(NULL); m_flags |= UF_MODIFIED; }
 	void updatePasswordChangeTime() { m_lastPasswordChange = time(NULL); m_flags |= UF_MODIFIED; }
 	void enable();
-	void disable() { m_flags |= UF_DISABLED | UF_MODIFIED; }
+	void disable();
 };
 
 /**
@@ -216,6 +216,7 @@ public:
 BOOL LoadUsers();
 void SaveUsers(DB_HANDLE hdb);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
+void SendUserDBUpdate(int code, UINT32 id);
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
                         BYTE *pChallenge, UINT32 *pdwId, UINT32 *pdwSystemRights,
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth);
@@ -233,6 +234,8 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize);
+void FillGroupMembershipInfo(CSCPMessage *msg, UINT32 userId);
+void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 
 /**

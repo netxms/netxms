@@ -1155,13 +1155,15 @@ UINT32 SNMP_PDU::encodeV3Header(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityCo
  */
 UINT32 SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityContext *securityContext)
 {
-	BYTE securityParameters[1024], sequence[1040];
 	UINT32 bytes;
-	UINT32 engineBoots = securityContext->getAuthoritativeEngine().getBoots();
-	UINT32 engineTime = securityContext->getAuthoritativeEngine().getTime();
 
 	if ((securityContext != NULL) && (securityContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM))
 	{
+   	BYTE securityParameters[1024], sequence[1040];
+
+	   UINT32 engineBoots = securityContext->getAuthoritativeEngine().getBoots();
+	   UINT32 engineTime = securityContext->getAuthoritativeEngine().getTime();
+
 		bytes = BER_Encode(ASN_OCTET_STRING, securityContext->getAuthoritativeEngine().getId(),
 		                   securityContext->getAuthoritativeEngine().getIdLen(), securityParameters, 1024);
 		bytes += BER_Encode(ASN_INTEGER, (BYTE *)&engineBoots, sizeof(UINT32), &securityParameters[bytes], 1024 - bytes);

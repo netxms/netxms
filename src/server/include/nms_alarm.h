@@ -61,6 +61,7 @@ public:
    void deleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
    bool deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
 	UINT32 updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
+	UINT32 deleteAlarmNoteByID(UINT32 alarmId, UINT32 noteId);
 
    UINT32 getAlarm(UINT32 dwAlarmId, CSCPMessage *msg);
    UINT32 getAlarmEvents(UINT32 dwAlarmId, CSCPMessage *msg);

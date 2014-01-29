@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Dialog box for editing alarm comments
+ * Dialog box for custom time dialog
  */
 public class AcknowledgeCustomTimeDialog extends Dialog
 {

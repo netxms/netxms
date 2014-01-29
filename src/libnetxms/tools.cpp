@@ -274,7 +274,6 @@ static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                else
                   return false;
 					MPtr++;
-               break;
             }
             BPtr = MPtr;           // Text block begins here
             while((*MPtr != 0) && (*MPtr != _T('*')))
@@ -492,7 +491,35 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 			i = j;
 		}
-		else
+      else if (temp[i] == _T('$') && temp[i+1] == _T('{'))
+      {
+         i += 2;
+			int j = i;
+			while((temp[j] != _T('}')) && (temp[j] != 0))
+				j++;
+
+			int len = min(j - i, 1023);
+
+         TCHAR varName[256];
+         memcpy(varName, &temp[i], len * sizeof(TCHAR));
+         varName[len] = 0;
+
+         TCHAR *result = _tgetenv(varName);
+         if (result != NULL)
+         {
+            len = (int)min(_tcslen(result), bufSize - outpos - 1);
+            memcpy(&buffer[outpos], result, len * sizeof(TCHAR));
+         }
+         else {
+            len = 0;
+         }
+
+
+         outpos += len;
+
+         i = j;
+      }
+      else
 		{
 			buffer[outpos++] = temp[i];
 		}

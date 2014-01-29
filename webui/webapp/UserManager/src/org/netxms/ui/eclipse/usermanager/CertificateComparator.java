@@ -41,16 +41,16 @@ public class CertificateComparator extends ViewerComparator
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case CertificateView.COLUMN_ID:
-				result = Long.compare(((AuthCertificate)e1).getId(), ((AuthCertificate)e2).getId());
+				result = Long.signum(((AuthCertificate)e1).getId() - ((AuthCertificate)e2).getId());
 				break;
 			case CertificateView.COLUMN_TYPE:
-				result = Integer.compare(((AuthCertificate)e1).getType(),((AuthCertificate)e2).getType());
+				result = Integer.signum(((AuthCertificate)e1).getType() - ((AuthCertificate)e2).getType());
 				break;
 			case CertificateView.COLUMN_COMMENTS:
-				result = ((AuthCertificate)e1).getComments().compareTo(((AuthCertificate)e2).getComments());
+				result = ((AuthCertificate)e1).getComments().compareToIgnoreCase(((AuthCertificate)e2).getComments());
 				break;
 			case CertificateView.COLUMN_SUBJECT:
-				result = ((AuthCertificate)e1).getSubject().compareTo(((AuthCertificate)e2).getSubject());
+				result = ((AuthCertificate)e1).getSubject().compareToIgnoreCase(((AuthCertificate)e2).getSubject());
 				break;
 			default:
 				result = 0;
