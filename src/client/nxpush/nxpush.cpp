@@ -190,9 +190,9 @@ int main(int argc, char *argv[])
 		{
 			_tprintf(_T("Not enough arguments\n\n"));
 #if HAVE_GETOPT_LONG
-			_tprintf(_T("Try `%s --help' for more information.\n"), argv[0]);
+			_tprintf(_T("Try nxpush --help for more information.\n"));
 #else
-			_tprintf(_T("Try `%s -h' for more information.\n"), argv[0]);
+			_tprintf(_T("Try nxpush -h for more information.\n"));
 #endif
 		}
 		exit(1);
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
 				{
 					if (optVerbose > 0)
 					{
-						_tprintf(_T("Cannot open \"%s\": %s\n"), p + 1, _tcserror(errno));
+						_tprintf(_T("Cannot open \"%hs\": %s\n"), p + 1, _tcserror(errno));
 					}
 				}
 			}
@@ -268,11 +268,9 @@ int main(int argc, char *argv[])
 	return ret;
 }
 
-
-//
-// Values parser - clean string and split by '='
-//
-
+/**
+ * Values parser - clean string and split by '='
+ */
 BOOL AddValue(char *pair)
 {
 	BOOL ret = FALSE;

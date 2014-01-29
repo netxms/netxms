@@ -215,12 +215,12 @@ int OdbcDisconnect(void* pvSqlCtx)
 		nSqlRet = SQLDisconnect(pSqlCtx->hDbc);
 		SQLFreeHandle(SQL_HANDLE_DBC, pSqlCtx->hDbc);
 		pSqlCtx->hDbc = NULL;
-	}
 
-	if (SQLRET_FAIL(nSqlRet))
-	{
-		_tcscpy(pSqlCtx->szOdbcMsg, MSG_EDISCONN);
-		nRet = FAIL;
+	   if (SQLRET_FAIL(nSqlRet))
+	   {
+		   _tcscpy(pSqlCtx->szOdbcMsg, MSG_EDISCONN);
+		   nRet = FAIL;
+	   }
 	}
 
 	if (nRet == SUCCESS)
