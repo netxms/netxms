@@ -1445,7 +1445,7 @@ public:
 
 	bool isSuitableForNode(Node *node);
 	bool isAutoBindEnabled() { return (m_flags & CF_AUTO_BIND) ? true : false; }
-	bool isAutoUnbindEnabled() { return ((m_flags & (CF_AUTO_UNBIND | CF_AUTO_UNBIND)) == (CF_AUTO_UNBIND | CF_AUTO_UNBIND)) ? true : false; }
+	bool isAutoUnbindEnabled() { return ((m_flags & (CF_AUTO_UNBIND | CF_AUTO_UNBIND)) == (CF_AUTO_BIND | CF_AUTO_UNBIND)) ? true : false; }
 
 	void setAutoBindFilter(const TCHAR *script);
 };

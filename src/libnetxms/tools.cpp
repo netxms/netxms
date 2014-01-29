@@ -274,7 +274,6 @@ static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                else
                   return false;
 					MPtr++;
-               break;
             }
             BPtr = MPtr;           // Text block begins here
             while((*MPtr != 0) && (*MPtr != _T('*')))

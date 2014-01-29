@@ -2014,7 +2014,6 @@ void ClientSession::generateEventCode(UINT32 dwRqId)
  */
 void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 {
-   UINT32 dwTimeStamp;
    CSCPMessage msg;
 
    // Send confirmation message
@@ -2031,7 +2030,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
 
    // Get client's last known time stamp
-   dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
+   UINT32 dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
 
    // Prepare message
    msg.SetCode(CMD_OBJECT);
@@ -10869,7 +10868,7 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 		}
 		else
 		{
-			debugPrintf(5, _T("findIpAddress(%s): subnet not found"), ipAddrText, subnet->Name());
+			debugPrintf(5, _T("findIpAddress(%s): subnet not found"), ipAddrText);
 		}
 	}
 
