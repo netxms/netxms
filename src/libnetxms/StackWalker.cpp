@@ -2,6 +2,9 @@
  * 
  * StackWalker.cpp
  *
+ * License info from the web site:
+ * This article, along with any associated source code and files,
+ * is licensed under The BSD License
  *
  * History:
  *  2005-07-27   v1    - First public release on http://www.codeproject.com/
