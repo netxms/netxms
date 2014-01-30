@@ -1036,28 +1036,6 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 	if ((pos <= 0) || !IS_VALID_STATEMENT_HANDLE(hStmt))
 		return;
 
-#ifdef UNICODE
-#define wBuffer buffer
-#define realAllocType allocType
-#else
-	void *wBuffer;
-	int realAllocType = allocType;
-	if (cType == DB_CTYPE_STRING)
-	{
-		wBuffer = (void *)WideStringFromMBString((char *)buffer);
-		if (allocType == DB_BIND_DYNAMIC)
-			free(buffer);
-		realAllocType = DB_BIND_DYNAMIC;
-	}
-	else
-	{
-		wBuffer = buffer;
-	}
-#endif
-	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
-#undef wBuffer
-#undef realAllocType
-
 	if (hStmt->m_connection->m_driver->m_dumpSql)
    {
 		if (cType == DB_CTYPE_STRING)
@@ -1088,6 +1066,28 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 			__DBDbgPrintf(9, _T("{%p} bind at pos %d: \"%s\""), hStmt, pos, text);
 		}
 	}
+
+#ifdef UNICODE
+#define wBuffer buffer
+#define realAllocType allocType
+#else
+	void *wBuffer;
+	int realAllocType = allocType;
+	if (cType == DB_CTYPE_STRING)
+	{
+		wBuffer = (void *)WideStringFromMBString((char *)buffer);
+		if (allocType == DB_BIND_DYNAMIC)
+			free(buffer);
+		realAllocType = DB_BIND_DYNAMIC;
+	}
+	else
+	{
+		wBuffer = buffer;
+	}
+#endif
+	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
+#undef wBuffer
+#undef realAllocType
 }
 
 /**
