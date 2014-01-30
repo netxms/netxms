@@ -27,6 +27,7 @@
     <string name="pref_connection">Connection</string>
     <string name="pref_parameters">Parameters</string>
     <string name="pref_scheduler">Scheduler</string>
+    <string name="pref_scheduler_summary">Define scheduler behaviour</string>
     <string name="pref_scheduler_daily_enable">Enable scheduler</string>
     <string name="pref_scheduler_daily_enabled">Daily scheduler is enabled (agent operates between the specified range)</string>
     <string name="pref_scheduler_daily_disabled">Daily scheduler is disabled (agent operates 24H per day)</string>
