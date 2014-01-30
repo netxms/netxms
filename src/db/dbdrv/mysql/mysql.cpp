@@ -649,10 +649,6 @@ extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColum
 	
 	if (hResult->isPreparedStatement)
 	{
-		MYSQL_BIND b;
-		unsigned long l = 0;
-		my_bool isNull;
-
 		if ((iRow < 0) || (iRow >= hResult->numRows) ||
 		    (iColumn < 0) || (iColumn >= hResult->numColumns))
 			return NULL;
@@ -664,6 +660,10 @@ extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColum
 			hResult->currentRow = iRow;
 		}
 
+		MYSQL_BIND b;
+		unsigned long l = 0;
+		my_bool isNull;
+
 		memset(&b, 0, sizeof(MYSQL_BIND));
 #if HAVE_ALLOCA || defined(_WIN32)
 		b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
@@ -674,12 +674,19 @@ extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColum
 		b.buffer_type = MYSQL_TYPE_STRING;
 		b.length = &l;
 		b.is_null = &isNull;
-int rc;
-		if ((rc=mysql_stmt_fetch_column(hResult->statement, &b, iColumn, 0)) == 0)
+      int rc = mysql_stmt_fetch_column(hResult->statement, &b, iColumn, 0);
+      if (rc == 0)
 		{
-			((char *)b.buffer)[l] = 0;
-			MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, pBuffer, nBufSize);
-			pBuffer[nBufSize - 1] = 0;
+         if (!isNull)
+         {
+			   ((char *)b.buffer)[l] = 0;
+			   MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, pBuffer, nBufSize);
+			   pBuffer[nBufSize - 1] = 0;
+         }
+         else
+         {
+            pBuffer[0] = 0;
+         }
 			pRet = pBuffer;
 		}
 #if !HAVE_ALLOCA && !defined(_WIN32)
@@ -703,31 +710,25 @@ int rc;
 	return pRet;
 }
 
-
-//
-// Get number of rows in result
-//
-
+/**
+ * Get number of rows in result
+ */
 extern "C" int EXPORT DrvGetNumRows(MYSQL_RESULT *hResult)
 {
-	return (hResult != NULL) ? (int)(hResult->isPreparedStatement ? mysql_stmt_num_rows(hResult->statement) : mysql_num_rows(hResult->resultSet)) : 0;
+   return (hResult != NULL) ? (int)(hResult->isPreparedStatement ? hResult->numRows : mysql_num_rows(hResult->resultSet)) : 0;
 }
 
-
-//
-// Get column count in query result
-//
-
+/**
+ * Get column count in query result
+ */
 extern "C" int EXPORT DrvGetColumnCount(MYSQL_RESULT *hResult)
 {
 	return (hResult != NULL) ? (int)mysql_num_fields(hResult->resultSet) : 0;
 }
 
-
-//
-// Get column name in query result
-//
-
+/**
+ * Get column name in query result
+ */
 extern "C" const char EXPORT *DrvGetColumnName(MYSQL_RESULT *hResult, int column)
 {
 	MYSQL_FIELD *field;
@@ -739,11 +740,9 @@ extern "C" const char EXPORT *DrvGetColumnName(MYSQL_RESULT *hResult, int column
 	return (field != NULL) ? field->name : NULL;
 }
 
-
-//
-// Free SELECT results
-//
-
+/**
+ * Free SELECT results
+ */
 extern "C" void EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
 {
 	if (hResult == NULL)
@@ -759,13 +758,10 @@ extern "C" void EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
 	free(hResult);
 }
 
-
-//
-// Perform asynchronous SELECT query
-//
-
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError, WCHAR *errorText)
+/**
+ * Perform asynchronous SELECT query
+ */
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	MYSQL_ASYNC_RESULT *pResult = NULL;
 	char *pszQueryUTF8;
