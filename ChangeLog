@@ -2,7 +2,11 @@
 * 1.3.0
 *
 
+- Android Agent:
+	- Implemented "Connection notification" in status bar (feature #481)
+	- Fix bug in resetting switch preference (settings) 
 - Android Console:
+	- Fix bug in resetting switch preference (settings) 
 	- Implemented "Entire network" root (feature #482)
 	- Manage last alarm from status bar: acknowledge, resolve, terminate (only for Android >= 4.1)
 - Fixed issues: #79, #393, #88
