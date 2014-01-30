@@ -28,8 +28,6 @@
 #else
 #include <signal.h>
 #include <sys/wait.h>
-#include <limits.h>
-#include <stdlib.h>
 #endif
 
 #if HAVE_LOCALE_H
@@ -168,11 +166,7 @@ static UINT32 m_dwLogHistorySize = 4;
 static UINT32 m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR m_szDailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
-#ifdef _WIN32
-static TCHAR executableName[MAX_PATH];
-#else
-static TCHAR executableName[PATH_MAX];
-#endif
+static TCHAR s_executableName[MAX_PATH];
 
 #if defined(_WIN32)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -394,7 +388,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 	}
 
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s-D %d %s-X %u"), executableName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s-D %d %s-X %u"), s_executableName,
               g_szConfigFile, g_windowsServiceName, g_windowsEventSourceName,
 				  (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
@@ -405,6 +399,10 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
 
+   DWORD dwResult;
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+   
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
    si.cb = sizeof(STARTUPINFO);
@@ -437,7 +435,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s-X %lu"), executableName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s-X %lu"), s_executableName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
@@ -1430,27 +1428,23 @@ int main(int argc, char *argv[])
 				{
                // try to guess executable path
 #ifdef _WIN32
-               DWORD dwResult;
-               STARTUPINFO si;
-               PROCESS_INFORMATION pi;
-
-               GetModuleFileName(GetModuleHandle(NULL), executableName, MAX_PATH);
+               GetModuleFileName(GetModuleHandle(NULL), s_executableName, MAX_PATH);
 #else
 #ifdef UNICODE
                char __buffer[PATH_MAX];
 #else
-#define __buffer executableName
+#define __buffer s_executableName
 #endif
                if (realpath(argv[0], __buffer) == NULL)
                {
                   // fallback
-                  nx_strncpy(executableName, PREFIX _T("/bin/nxagentd"), sizeof(executableName) / sizeof(executableName[0]));
+                  nx_strncpy(s_executableName, PREFIX _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
                }
                else
                {
 #ifdef UNICODE
                   int len = strlen(__buffer);
-                  MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, __buffer, len, executableName, len);
+                  MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, __buffer, len, s_executableName, len);
 #endif
                }
 #endif
