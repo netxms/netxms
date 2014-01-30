@@ -871,7 +871,6 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
  */
 static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	SNMP_PDU *rspPDU;
 	UINT32 len;
 	static UINT32 requestId = 1;
 	UINT32 nameLen, varName[MAX_OID_LEN], result = SNMP_ERR_SUCCESS;
@@ -888,26 +887,32 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
 
    // Create PDU and send request
-   SNMP_PDU *pdu = new SNMP_PDU(SNMP_GET_REQUEST, requestId++, trans->getSnmpVersion());
    nameLen = SNMPParseOID(argv[1]->getValueAsString(&len), varName, MAX_OID_LEN);
    if (nameLen == 0)
 		return NXSL_ERR_BAD_CONDITION;
 
+   SNMP_PDU *pdu = new SNMP_PDU(SNMP_GET_REQUEST, requestId++, trans->getSnmpVersion());
 	pdu->bindVariable(new SNMP_Variable(varName, nameLen));
-   result = trans->doRequest(pdu, &rspPDU, g_dwSNMPTimeout, 3 /* num retries */);
-	// FIXME: check rspPDU lifecycle
 
-   if (result == SNMP_ERR_SUCCESS && (rspPDU->getNumVariables() > 0) &&
-       (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+	SNMP_PDU *rspPDU;
+   result = trans->doRequest(pdu, &rspPDU, g_dwSNMPTimeout, 3 /* num retries */);
+   if (result == SNMP_ERR_SUCCESS)
    {
-      SNMP_Variable *pVar = rspPDU->getVariable(0);
-		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, pVar));
-	}
+      if ((rspPDU->getNumVariables() > 0) && (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      {
+         SNMP_Variable *pVar = rspPDU->getVariable(0);
+		   *ppResult = new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, pVar));
+	   }
+      else
+      {
+   		*ppResult = new NXSL_Value;
+      }
+      delete rspPDU;
+   }
 	else
 	{
 		*ppResult = new NXSL_Value;
 	}
-
 	return 0;
 }
 
@@ -963,7 +968,7 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  */
 static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	SNMP_PDU *request, *response;
+	SNMP_PDU *request = NULL, *response;
 	UINT32 len;
 	LONG ret = FALSE;
 
@@ -1031,6 +1036,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 	}
 
 finish:
+   delete request;
 	*ppResult = new NXSL_Value(ret);
 	return 0;
 }
@@ -1051,15 +1057,12 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
 	UINT32 rootName[MAX_OID_LEN], rootNameLen, name[MAX_OID_LEN], nameLen, result;
 	SNMP_PDU *rqPDU, *rspPDU;
 	BOOL isRunning = TRUE;
-	NXSL_Array *varList;
 	int i = 0;
 
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
-
-	varList = new NXSL_Array;
 
 	NXSL_Object *obj = argv[0]->getValueAsObject();
 	if (_tcscmp(obj->getClass()->getName(), g_nxslSnmpTransportClass.getName()))
@@ -1074,6 +1077,8 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
 
 	memcpy(name, rootName, rootNameLen * sizeof(UINT32));
    nameLen = rootNameLen;
+
+	NXSL_Array *varList = new NXSL_Array;
 
    // Walk the MIB
    while(isRunning)
@@ -1135,12 +1140,12 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
 	{
 		DbgPrintf(9, _T("SNMPWalk returned %d"), result);
 		*ppResult = new NXSL_Value;
+      delete varList;
 	}
 	else
 	{
 		*ppResult = new NXSL_Value(varList);
 	}
-
 	return 0;
 }
 

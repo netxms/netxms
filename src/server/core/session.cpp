@@ -8736,6 +8736,7 @@ void ClientSession::pushDCIData(CSCPMessage *pRequest)
       // Cleanup
       for(i = 0; i < dwNumItems; i++)
          safe_free(ppValueList[i]);
+      safe_free(ppValueList);
       free(ppItemList);
       free(dcTargetList);
    }
