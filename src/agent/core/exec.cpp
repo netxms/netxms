@@ -451,22 +451,19 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 
 					// Read process output
 					char *eptr;
-#ifdef UNICODE
 					char buffer[256];
-#define __valueptr buffer
-#else
-#define __valueptr pValue
-#endif
-					ReadFile(hOutput, __valueptr, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
-					__valueptr[dwBytes] = 0;
-					eptr = strchr(__valueptr, '\r');
+					ReadFile(hOutput, buffer, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
+					buffer[dwBytes] = 0;
+					eptr = strchr(buffer, '\r');
 					if (eptr != NULL)
 						*eptr = 0;
-					eptr = strchr(__valueptr, '\n');
+					eptr = strchr(buffer, '\n');
 					if (eptr != NULL)
 						*eptr = 0;
 #ifdef UNICODE
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, pValue, MAX_RESULT_LENGTH);
+               value->addPreallocated(WideStringFromMBString(buffer));
+#else
+               value->add(buffer);
 #endif
 					iStatus = SYSINFO_RC_SUCCESS;
 				}
@@ -500,7 +497,6 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 	else
 	{
 #endif
-
 		{
 			POPEN_WORKER_DATA *data;
 
@@ -515,14 +511,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 				iStatus = data->status;
 				if (iStatus == SYSINFO_RC_SUCCESS)
             {
-               if (data->values.getSize() > 0)
-               {
-                  value->addAll(&data->values);
-               }
-               else
-               {
-                  value->add(_T(""));
-               }
+               value->addAll(&data->values);
             }
 			}
 			else
@@ -546,19 +535,15 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 /**
  * Handler function for external (user-defined) parameters
  */
-LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *args, TCHAR *value)
+LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   LONG status = SYSINFO_RC_ERROR;
-
-   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter called for \"%s\" \"%s\""), cmd, args);
-
+   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter called for \"%s\" \"%s\""), cmd, arg);
    StringList values;
-   status = RunExternal(cmd, args, &values);
+   LONG status = RunExternal(cmd, arg, &values);
    if (status == SYSINFO_RC_SUCCESS)
    {
-      _tcscpy(value, values.getValue(0));
+      ret_string(value, values.getSize() > 0 ? values.getValue(0) : _T(""));
    }
-
    return status;
 }
 
@@ -567,22 +552,19 @@ LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *args, TCHAR *value)
  */
 LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
+   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalList called for \"%s\" \"%s\""), cmd, arg);
    StringList values;
-
-   int status = RunExternal(cmd, arg, &values);
+   LONG status = RunExternal(cmd, arg, &values);
    if (status == SYSINFO_RC_SUCCESS)
    {
       value->addAll(&values);
    }
-
    return status;
 }
 
-
-//
-// Execute external command via shell
-//
-
+/**
+ * Execute external command via shell
+ */
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *args)
 {
    TCHAR *pszCmdLine, *sptr;
