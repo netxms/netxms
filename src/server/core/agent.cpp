@@ -206,7 +206,6 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
  */
 void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 {
-   UINT32 rqId = pMsg->GetId();
 	NetObj *object = NULL;
 	if (m_nodeId != 0)
 		object = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
