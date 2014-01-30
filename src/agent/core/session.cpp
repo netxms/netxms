@@ -329,7 +329,6 @@ BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx
       CSCP_ENCRYPTED_MESSAGE *pEnMsg;
 
       pEnMsg = CSCPEncryptMessage(pCtx, pMsg);
-      free(pMsg);
       if (pEnMsg != NULL)
       {
          if (SendEx(m_hSocket, (const char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_socketWriteMutex) <= 0)
@@ -345,10 +344,10 @@ BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx
       {
          bResult = FALSE;
       }
-      free(pMsg);
    }
 	if (!bResult)
 	   DebugPrintf(m_dwIndex, 6, _T("CommSession::SendRawMessage() for %s (size %d) failed"), NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer), ntohl(pMsg->dwSize));
+   free(pMsg);
    return bResult;
 }
 

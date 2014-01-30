@@ -153,6 +153,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 		}
 	}
 
+   free(host);
 	return (unsigned char *)ret;
 }
 
