@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.alarmviewer.views;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.event.HyperlinkListener;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -411,7 +410,7 @@ public class AlarmComments extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return Messages.get().AlarmComments_EttotDeletAlarmComment;
+            return Messages.get().AlarmComments_ErrorDeleteAlarmComment;
          }
       }.start();
    }

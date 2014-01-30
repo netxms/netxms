@@ -13,47 +13,32 @@ public class Messages extends NLS
 	public String AcknowledgeAlarm_JobName;
 	public String AcknowledgeAlarm_TaskName;
 	public String AcknowledgeCustomTimeDialog_ConfigurationInfoLabel;
-
    public String AcknowledgeCustomTimeDialog_CustomTimeDialogTitle;
-
    public String AcknowledgeCustomTimeDialog_Days;
-
    public String AcknowledgeCustomTimeDialog_Hours;
-
    public String AcknowledgeCustomTimeDialog_Minutes;
-
-   public String AcknowledgeCustomTimeDialog_Waring;
-
-   public String AcknowledgeCustomTimeDialog_WarningOnlyDigits;
-
-   public String AcknowledgeCustomTimeDialog_WarningTimeGatherThen0;
-
+   public String AcknowledgeCustomTimeDialog_Warning;
+   public String AcknowledgeCustomTimeDialog_WarningZeroTime;
+   public String AlarmAcknowledgeTimeFunctions_day;
    public String AlarmAcknowledgeTimeFunctions_days;
-
+   public String AlarmAcknowledgeTimeFunctions_hour;
    public String AlarmAcknowledgeTimeFunctions_hours;
-
+   public String AlarmAcknowledgeTimeFunctions_minute;
    public String AlarmAcknowledgeTimeFunctions_minutes;
-
-   public String AlarmAcknowledgeTimeFunctions_ZiroMinutesEntry;
-
+   public String AlarmAcknowledgeTimeFunctions_ZeroMinutesEntry;
    public String AlarmComments_AckToDeleteComment;
-
    public String AlarmComments_AddCommentJob;
 	public String AlarmComments_AddCommentLink;
 	public String AlarmComments_AddError;
 	public String AlarmComments_Comments;
-
    public String AlarmComments_Confirmation;
 	public String AlarmComments_DeleteCommentJob;
-
    public String AlarmComments_Details;
-
-   public String AlarmComments_EttotDeletAlarmComment;
+   public String AlarmComments_ErrorDeleteAlarmComment;
 	public String AlarmComments_GetComments;
 	public String AlarmComments_GetError;
 	public String AlarmComments_InternalError;
 	public String AlarmCommentsEditor_DeleteLabel;
-
    public String AlarmCommentsEditor_Edit;
 	public String AlarmCommentsEditor_Unknown;
 	public String AlarmComparator_Unknown;

@@ -584,7 +584,7 @@ public class AlarmDetails extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return Messages.get().AlarmComments_EttotDeletAlarmComment;
+            return Messages.get().AlarmComments_ErrorDeleteAlarmComment;
          }
       }.start();
    }

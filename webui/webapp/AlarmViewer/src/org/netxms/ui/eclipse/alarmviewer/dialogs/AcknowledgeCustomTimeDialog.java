@@ -26,9 +26,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
  * Dialog box for custom time dialog
@@ -37,12 +38,9 @@ public class AcknowledgeCustomTimeDialog extends Dialog
 {
    private int time;
 	private Label info;
-	private Label daysLabel;
-	private Label hoursLabel;
-	private Label minutesLabel;
-	private Text daysText;
-	private Text hoursText;
-	private Text minutesText;
+	private LabeledSpinner days;
+	private LabeledSpinner hours;
+	private LabeledSpinner minutes;
 	
 	/**
 	 * @param parentShell
@@ -72,42 +70,46 @@ public class AcknowledgeCustomTimeDialog extends Dialog
 	{
 	   Composite dialogArea = (Composite)super.createDialogArea(parent);
 	   
-	   dialogArea.setLayout(new GridLayout(2, false));
+	   GridLayout layout = new GridLayout();
+	   layout.numColumns = 3;
+	   layout.makeColumnsEqualWidth = true;
+	   layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+	   layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+	   layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+	   layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+	   dialogArea.setLayout(layout);
       
-	   daysLabel = new Label(dialogArea, SWT.NONE);
-	   daysLabel.setText(Messages.get().AcknowledgeCustomTimeDialog_Days);
-      
-	   daysText = new Text(dialogArea, SWT.BORDER);
+	   days = new LabeledSpinner(dialogArea, SWT.NONE);
+	   days.setLabel(Messages.get().AcknowledgeCustomTimeDialog_Days);
       GridData gridData = new GridData();
-      gridData.widthHint = 50;
+      gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
-      daysText.setLayoutData(gridData);
-      daysText.setText("0"); //$NON-NLS-1$
+      days.setLayoutData(gridData);
+      days.setRange(0, 999);
+      days.setSelection(0);
       
-      hoursLabel = new Label(dialogArea, SWT.NONE);
-      hoursLabel.setText(Messages.get().AcknowledgeCustomTimeDialog_Hours);
-      
-      hoursText = new Text(dialogArea, SWT.BORDER);
+      hours = new LabeledSpinner(dialogArea, SWT.NONE);
+      hours.setLabel(Messages.get().AcknowledgeCustomTimeDialog_Hours);
       gridData = new GridData();
-      gridData.widthHint = 50;
+      gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
-      hoursText.setLayoutData(gridData);
-      hoursText.setText("0"); //$NON-NLS-1$
+      hours.setLayoutData(gridData);
+      hours.setRange(0, 23);
+      hours.setSelection(0);
       
-      minutesLabel = new Label(dialogArea, SWT.NONE);
-      minutesLabel.setText(Messages.get().AcknowledgeCustomTimeDialog_Minutes);
-      
-      minutesText = new Text(dialogArea, SWT.BORDER);
+      minutes = new LabeledSpinner(dialogArea, SWT.NONE);
+      minutes.setLabel(Messages.get().AcknowledgeCustomTimeDialog_Minutes);
       gridData = new GridData();
-      gridData.widthHint = 50;
+      gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
-      minutesText.setLayoutData(gridData);
-      minutesText.setText("0"); //$NON-NLS-1$
+      minutes.setLayoutData(gridData);
+      minutes.setRange(0, 59);
+      minutes.setSelection(0);
       
       info = new Label(dialogArea, SWT.WRAP);
       info.setText(Messages.get().AcknowledgeCustomTimeDialog_ConfigurationInfoLabel);
       gridData = new GridData();
-      gridData.horizontalSpan = 2;
+      gridData.horizontalSpan = 3;
       gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.verticalAlignment = SWT.FILL;
@@ -123,24 +125,10 @@ public class AcknowledgeCustomTimeDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		time = 0;
-		try
-      {
-		   if (minutesText.getText() != "") //$NON-NLS-1$
-		      time += Integer.parseInt(minutesText.getText())*60;
-		   if (hoursText.getText() != "") //$NON-NLS-1$
-		      time += Integer.parseInt(hoursText.getText())*60*60;
-		   if (daysText.getText() != "") //$NON-NLS-1$
-		      time += Integer.parseInt(daysText.getText())*24*60*60;
-      }
-      catch(NumberFormatException e)
-      {
-         MessageDialogHelper.openWarning(getShell(), Messages.get().AcknowledgeCustomTimeDialog_Waring, Messages.get().AcknowledgeCustomTimeDialog_WarningOnlyDigits);
-         return;
-      }
-		
-		if(time <= 0){
-		   MessageDialogHelper.openWarning(getShell(), Messages.get().AcknowledgeCustomTimeDialog_Waring, Messages.get().AcknowledgeCustomTimeDialog_WarningTimeGatherThen0);
+		time = days.getSelection() * 86400 + hours.getSelection() * 3600 + minutes.getSelection() * 60;
+		if (time <= 0)
+		{
+		   MessageDialogHelper.openWarning(getShell(), Messages.get().AcknowledgeCustomTimeDialog_Warning, Messages.get().AcknowledgeCustomTimeDialog_WarningZeroTime);
 		   return;
 		}
 	   super.okPressed();

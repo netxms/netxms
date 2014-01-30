@@ -482,7 +482,7 @@ public class AlarmList extends Composite
 	      final int time = settings.getInt("AlarmList.ackMenuEntry"+Integer.toString(i)); //$NON-NLS-1$
 	      if (time == 0)
 	         continue;
-	      String title = AlarmAcknowledgeTimeFunctions.instance.parseTimeToString(time);
+	      String title = AlarmAcknowledgeTimeFunctions.timeToString(time);
 	      Action action = new Action(title, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
 	         @Override
 	         public void run()
