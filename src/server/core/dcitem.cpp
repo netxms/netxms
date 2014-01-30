@@ -577,6 +577,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    
    // Check if some thresholds was deleted, and reposition others if needed
    Threshold **ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
+   memset(ppNewList, 0, sizeof(Threshold *) * dwNum);
    for(int i = 0; i < getThresholdCount(); i++)
    {
 		UINT32 j;
@@ -609,7 +610,8 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
          (*ppdwMapId)[*pdwNumMaps] = ppNewList[i]->getId();
          (*pdwNumMaps)++;
       }
-      ppNewList[i]->updateFromMessage(pMsg, dwId);
+      if (ppNewList[i] != NULL)
+         ppNewList[i]->updateFromMessage(pMsg, dwId);
    }
 
 	if (dwNum > 0)
@@ -625,7 +627,10 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 			m_thresholds = new ObjectArray<Threshold>((int)dwNum, 8, true);
 		}
 		for(UINT32 i = 0; i < dwNum; i++)
-			m_thresholds->add(ppNewList[i]);
+      {
+         if (ppNewList[i] != NULL)
+			   m_thresholds->add(ppNewList[i]);
+      }
 	}
 	else
 	{
