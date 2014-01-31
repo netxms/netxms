@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -147,7 +147,7 @@ public class PerformanceTab extends ObjectTab
 				}
 				catch(Exception e)
 				{
-				   Activator.logError(org.netxms.ui.eclipse.perfview.objecttabs.Messages.get().PerformanceTab_perfTabLoadingException, e);
+				   Activator.logError("Exception in performance tab loading job", e); //$NON-NLS-1$
 				}
 				return Status.OK_STATUS;
 			}

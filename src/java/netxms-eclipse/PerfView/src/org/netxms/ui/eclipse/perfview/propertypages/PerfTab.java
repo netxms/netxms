@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.perfview.propertypages;
 
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -29,7 +27,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
@@ -38,6 +35,7 @@ import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
+import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -58,10 +56,7 @@ public class PerfTab extends PropertyPage
 	private Spinner orderNumber;
 	private Button checkShowThresholds;
 	private DciSelector parentDci;
-	private Spinner from;
-   private Spinner to;
-   private Group yAxisScaleGroup;
-   private Button checkAutoScale;
+	private YAxisRangeEditor yAxisRange;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -144,49 +139,13 @@ public class PerfTab extends PropertyPage
       gd.horizontalSpan = layout.numColumns;
       checkShowThresholds.setLayoutData(gd);
       
-      //Auto scale part
-      
-      checkAutoScale = new Button(dialogArea, SWT.CHECK);
-      checkAutoScale.setText(Messages.get().General_Autoscale);
-      checkAutoScale.setSelection(settings.isAutoScale());
+      yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
-      checkAutoScale.setLayoutData(gd);
-      checkAutoScale.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            yAxisScaleGroup.setVisible(!checkAutoScale.getSelection());
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-      });
-      
-      yAxisScaleGroup = new Group(dialogArea, SWT.NONE);
-      yAxisScaleGroup.setText(Messages.get().General_YScaleGroupLabel);
-      layout = new GridLayout();
-      layout.marginWidth = WidgetHelper.OUTER_SPACING;
-      layout.marginHeight = WidgetHelper.OUTER_SPACING;
-      layout.horizontalSpacing = 16;
-      layout.makeColumnsEqualWidth = true;
-      layout.numColumns = 2;
-      yAxisScaleGroup.setLayout(layout);
-      gd = new GridData();
-      gd.horizontalSpan = layout.numColumns;
-      yAxisScaleGroup.setLayoutData(gd);
-      
-      
-      from = WidgetHelper.createLabeledSpinner(yAxisScaleGroup, SWT.BORDER, Messages.get().General_YScaleFrom, Integer.MIN_VALUE, Integer.MAX_VALUE, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      from.setSelection(settings.getMinYScaleValue());
-      
-      to = WidgetHelper.createLabeledSpinner(yAxisScaleGroup, SWT.BORDER, Messages.get().General_YScaleTo, Integer.MIN_VALUE, Integer.MAX_VALUE, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      to.setSelection(settings.getMaxYScaleValue());
-      
-      yAxisScaleGroup.setVisible(!checkAutoScale.getSelection());
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      yAxisRange.setLayoutData(gd);
+      yAxisRange.setSelection(settings.isAutoScale(), settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       
       return dialogArea;
 	}
@@ -206,9 +165,9 @@ public class PerfTab extends PropertyPage
 		settings.setOrder(orderNumber.getSelection());
 		settings.setShowThresholds(checkShowThresholds.getSelection());
 		
-		settings.setAutoScale(checkAutoScale.getSelection());
-		settings.setMinYScaleValue(from.getSelection());
-		settings.setMaxYScaleValue(to.getSelection());
+		settings.setAutoScale(yAxisRange.isAuto());
+		settings.setMinYScaleValue(yAxisRange.getMinY());
+		settings.setMaxYScaleValue(yAxisRange.getMaxY());
 
 		settings.setParentDciId(parentDci.getDciId());
 		

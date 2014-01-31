@@ -66,7 +66,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    private boolean autoScale = true;
    
    @Element(required = false)
-   private int minYScaleValue = 1;
+   private int minYScaleValue = 0;
 
    @Element(required = false)
    private int maxYScaleValue = 100;

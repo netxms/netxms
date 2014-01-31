@@ -24,7 +24,6 @@ import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataChart;
-import org.swtchart.Range;
 
 /**
  * Abstract base class for chart figures

@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.charts.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.birt.chart.model.ChartWithAxes;
-import org.eclipse.birt.chart.model.data.impl.NumberDataElementImpl;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
@@ -44,7 +42,6 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.Gauge;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.tools.ColorCache;
-import org.swtchart.Range;
 
 /**
  * Abstract gauge widget

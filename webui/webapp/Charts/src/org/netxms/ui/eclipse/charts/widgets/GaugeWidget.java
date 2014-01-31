@@ -42,7 +42,6 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.Gauge;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.tools.ColorCache;
-import org.swtchart.Range;
 
 /**
  * Abstract gauge widget

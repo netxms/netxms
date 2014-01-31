@@ -42,7 +42,6 @@ public class Messages extends NLS
    public String DciListLabelProvider_ResolveJobName;
    public String DciListLabelProvider_Unresolved;
    public String General_Autorefresh;
-   public String General_Autoscale;
    public String General_JobError;
    public String General_JobName;
    public String General_LogScale;
@@ -62,9 +61,6 @@ public class Messages extends NLS
    public String General_TimeUnitMinutes;
    public String General_TimeUnits;
    public String General_Title;
-   public String General_YScaleFrom;
-   public String General_YScaleGroupLabel;
-   public String General_YScaleTo;
    public String GraphTreeContentProvider_Root;
    public String HistoricalDataSelectionDialog_LastRecords;
    public String HistoricalDataSelectionDialog_TimeFrame;
@@ -185,6 +181,11 @@ public class Messages extends NLS
    public String TableValue_JobName;
    public String TableValue_LineChart;
    public String TableValue_PieChart;
+   public String YAxisRangeEditor_Automatic;
+   public String YAxisRangeEditor_From;
+   public String YAxisRangeEditor_Manual;
+   public String YAxisRangeEditor_Title;
+   public String YAxisRangeEditor_To;
    static
    {
       // initialize resource bundle

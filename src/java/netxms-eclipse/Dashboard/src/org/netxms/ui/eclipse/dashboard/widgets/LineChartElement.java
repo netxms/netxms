@@ -87,6 +87,7 @@ public class LineChartElement extends ElementWidget
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendVisible(config.isShowLegend());
 		chart.setLegendPosition(config.getLegendPosition());
+		chart.setExtendedLegend(config.isExtendedLegend());
 		chart.setGridVisible(config.isShowGrid());
 		if (!config.isAutoScale())
 		   chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());

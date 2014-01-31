@@ -8,6 +8,7 @@ public class Messages extends NLS
 	public static String AbstractChart_3DView;
 	public static String AbstractChart_Bottom;
 	public static String AbstractChart_Days;
+   public static String AbstractChart_ExtendedLegend;
 	public static String AbstractChart_Hours;
 	public static String AbstractChart_Left;
 	public static String AbstractChart_LegendPosition;
@@ -258,10 +259,6 @@ public class Messages extends NLS
    public static String StatusMap_NoGroup;
    public static String StatusMap_SeverityFilter;
    public static String TableComparisonChart_3DView;
-   public static String TableComparisonChart_autoScale;
-   public static String TableComparisonChart_autoScaleGroupLabel;
-   public static String TableComparisonChart_AutoScaleNumberFrom;
-   public static String TableComparisonChart_AutoScaleNumberTo;
 	public static String TableComparisonChart_Bottom;
 	public static String TableComparisonChart_Left;
 	public static String TableComparisonChart_LegendPosition;

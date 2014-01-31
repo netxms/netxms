@@ -80,9 +80,9 @@ public class PerfTabGraph extends DashboardComposite
 		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		if(!settings.isAutoScale())
-	    {
-			chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
-	    }
+      {
+		   chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
+      }
 		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName())); //$NON-NLS-1$
 	}
 	

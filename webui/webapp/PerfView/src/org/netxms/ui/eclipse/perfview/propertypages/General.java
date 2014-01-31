@@ -40,6 +40,7 @@ import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
+import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -55,7 +56,6 @@ public class General extends PropertyPage
 	private LabeledText title;
 	private Button checkShowGrid;
 	private Button checkShowLegend;
-	private Button checkAutoScale;
 	private Button checkShowHostNames;
 	private Button checkAutoRefresh;
 	private Button checkLogScale;
@@ -64,12 +64,10 @@ public class General extends PropertyPage
 	private Button radioBackFromNow;
 	private Button radioFixedInterval;
 	private Spinner timeRange;
-   private Spinner from;
-   private Spinner to;
 	private Combo timeUnits;
 	private DateTimeSelector timeFrom;
 	private DateTimeSelector timeTo;
-	private Group yAxisScaleGroup;
+	private YAxisRangeEditor yAxisRange;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -112,23 +110,6 @@ public class General extends PropertyPage
       checkShowGrid = new Button(optionsGroup, SWT.CHECK);
       checkShowGrid.setText(Messages.get().General_ShowGridLines);
       checkShowGrid.setSelection(config.isShowGrid());
-
-      checkAutoScale = new Button(optionsGroup, SWT.CHECK);
-      checkAutoScale.setText(Messages.get().General_Autoscale);
-      checkAutoScale.setSelection(config.isAutoScale());
-      checkAutoScale.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            yAxisScaleGroup.setVisible(!checkAutoScale.getSelection());
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-      });
 
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(Messages.get().General_ShowLegend);
@@ -300,28 +281,13 @@ public class General extends PropertyPage
       timeTo.setValue(config.getTimeTo());
       timeTo.setEnabled(radioFixedInterval.getSelection());
 
-      yAxisScaleGroup = new Group(dialogArea, SWT.NONE);
-      yAxisScaleGroup.setText(Messages.get().General_YScaleGroupLabel);
-      layout = new GridLayout();
-      layout.marginWidth = WidgetHelper.OUTER_SPACING;
-      layout.marginHeight = WidgetHelper.OUTER_SPACING;
-      layout.horizontalSpacing = 16;
-      layout.makeColumnsEqualWidth = true;
-      layout.numColumns = 2;
-      yAxisScaleGroup.setLayout(layout);
+      yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      yAxisScaleGroup.setLayoutData(gd);
-      
-      
-      from = WidgetHelper.createLabeledSpinner(yAxisScaleGroup, SWT.BORDER, Messages.get().General_YScaleFrom, Integer.MIN_VALUE, Integer.MAX_VALUE, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      from.setSelection(config.getMinYScaleValue());
-      
-      to = WidgetHelper.createLabeledSpinner(yAxisScaleGroup, SWT.BORDER, Messages.get().General_YScaleTo, Integer.MIN_VALUE, Integer.MAX_VALUE, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      to.setSelection(config.getMaxYScaleValue());
-      
-      yAxisScaleGroup.setVisible(!checkAutoScale.getSelection());
+      yAxisRange.setLayoutData(gd);
+      yAxisRange.setSelection(config.isAutoScale(), config.getMinYScaleValue(), config.getMaxYScaleValue());
       
       return dialogArea;
 	}
@@ -337,10 +303,11 @@ public class General extends PropertyPage
 		title.setText(""); //$NON-NLS-1$
 		checkShowGrid.setSelection(true);
 		checkShowLegend.setSelection(true);
-		checkAutoScale.setSelection(true);
 		checkShowHostNames.setSelection(false);
 		checkAutoRefresh.setSelection(true);
 		checkLogScale.setSelection(false);
+		
+		yAxisRange.setSelection(true, 0, 100);
 		
 		refreshIntervalScale.setSelection(30);
 		refreshIntervalSpinner.setSelection(30);
@@ -366,7 +333,7 @@ public class General extends PropertyPage
 		config.setTitle(title.getText());
 		config.setShowGrid(checkShowGrid.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
-		config.setAutoScale(checkAutoScale.getSelection());
+		config.setAutoScale(yAxisRange.isAuto());
 		config.setShowHostNames(checkShowHostNames.getSelection());
 		config.setAutoRefresh(checkAutoRefresh.getSelection());
 		config.setLogScale(checkLogScale.getSelection());
@@ -378,8 +345,8 @@ public class General extends PropertyPage
 		config.setTimeFrom(timeFrom.getValue());
 		config.setTimeTo(timeTo.getValue());
 		
-		config.setMinYScaleValue(from.getSelection());
-		config.setMaxYScaleValue(to.getSelection());
+		config.setMinYScaleValue(yAxisRange.getMinY());
+		config.setMaxYScaleValue(yAxisRange.getMaxY());
 		
 		if ((config instanceof PredefinedChartConfig) && isApply)
 		{

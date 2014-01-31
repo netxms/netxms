@@ -53,7 +53,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	private int refreshRate = 30;
    
    @Element(required = false)
-   private int minYScaleValue = 1;
+   private int minYScaleValue = 0;
 
    @Element(required = false)
    private int maxYScaleValue = 100;

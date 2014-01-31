@@ -134,8 +134,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				{
 					actionEdit.setEnabled(selection.size() == 1);
 					actionDelete.setEnabled(selection.size() > 0);
-					actionDisable.setEnabled(containEnabled(selection));
-					actionEnable.setEnabled(containDisabled(selection));
+					actionDisable.setEnabled(containsEnabled(selection));
+					actionEnable.setEnabled(containsDisabled(selection));
 				}
 			}
 		});
@@ -163,18 +163,26 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		refreshToolList();
 	}
 	
-	 private boolean containDisabled(IStructuredSelection selection)
+	 /**
+	 * @param selection
+	 * @return
+	 */
+	private boolean containsDisabled(IStructuredSelection selection)
     {
-       List l = selection.toList();
+       List<?> l = selection.toList();
        for (int i = 0; i < l.size(); i++)
           if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) > 0 )
                 return true;
        return false;
     }
 
-    private boolean containEnabled(IStructuredSelection selection)
+    /**
+    * @param selection
+    * @return
+    */
+   private boolean containsEnabled(IStructuredSelection selection)
     {
-       List l = selection.toList();
+       List<?> l = selection.toList();
        for (int i = 0; i < l.size(); i++)
           if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) == 0 )
              return true;
@@ -328,11 +336,11 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		mgr.add(actionDelete);
 		mgr.add(new Separator());
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if(containEnabled(selection))
+      if(containsEnabled(selection))
       {
          mgr.add(actionDisable);
       }
-      if(containDisabled(selection))
+      if(containsDisabled(selection))
       {
          mgr.add(actionEnable);
       }
