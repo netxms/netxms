@@ -40,7 +40,6 @@ public class Messages extends NLS
    public static String DciListLabelProvider_Unresolved;
    public static String General_Autorefresh;
    public static String General_Autoscale;
-   public static String General_EnableZoom;
    public static String General_JobError;
    public static String General_JobName;
    public static String General_LogScale;
@@ -49,7 +48,6 @@ public class Messages extends NLS
    public static String General_ShowGridLines;
    public static String General_ShowHostNames;
    public static String General_ShowLegend;
-   public static String General_ShowRuler;
    public static String General_TimeFrom;
    public static String General_TimeInterval;
    public static String General_TimePeriod;
@@ -61,6 +59,9 @@ public class Messages extends NLS
    public static String General_TimeUnitMinutes;
    public static String General_TimeUnits;
    public static String General_Title;
+   public static String General_YScaleFrom;
+   public static String General_YScaleGroupLabel;
+   public static String General_YScaleTo;
    public static String GraphTreeContentProvider_Root;
    public static String HistoricalDataSelectionDialog_LastRecords;
    public static String HistoricalDataSelectionDialog_TimeFrame;

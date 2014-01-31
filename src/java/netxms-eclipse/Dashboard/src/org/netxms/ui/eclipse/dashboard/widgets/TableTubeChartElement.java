@@ -57,6 +57,8 @@ public class TableTubeChartElement extends TableComparisonChartElement
 		chart.set3DModeEnabled(config.isShowIn3D());
 		chart.setTransposed(((TableTubeChartConfig)config).isTransposed());
 		chart.setTranslucent(config.isTranslucent());
+		if (!config.isAutoScale())
+         chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
 		
 		startRefreshTimer();
 	}

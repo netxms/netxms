@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -30,9 +32,13 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableTubeChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -44,12 +50,16 @@ public class TableComparisonChart extends PropertyPage
 	private TableComparisonChartConfig config;
 	private LabeledText title;
 	private Spinner refreshRate;
+   private Spinner from;
+   private Spinner to;
 	private Combo legendPosition;
 	private Button checkShowTitle;
 	private Button checkShowLegend;
 	private Button checkShowIn3D;
 	private Button checkTranslucent;
 	private Button checkTransposed;
+   private Button autoScale;
+   private Group yAxisScaleGroup;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -116,6 +126,30 @@ public class TableComparisonChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		checkShowIn3D.setLayoutData(gd);
 		
+		if(!(config instanceof TablePieChartConfig))
+      {
+         autoScale = new Button(optionsGroup, SWT.CHECK);
+         autoScale.setText(Messages.get().TableComparisonChart_autoScale);
+         autoScale.setSelection(config.isAutoScale());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         autoScale.setLayoutData(gd);
+         autoScale.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               yAxisScaleGroup.setVisible(!autoScale.getSelection());
+            }
+   
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+      }
+		
 		checkTranslucent = new Button(optionsGroup, SWT.CHECK);
 		checkTranslucent.setText(Messages.get().TableComparisonChart_Translucent);
 		checkTranslucent.setSelection(config.isTranslucent());
@@ -141,6 +175,30 @@ public class TableComparisonChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().TableComparisonChart_RefreshInterval, 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
+		
+		if(!(config instanceof TablePieChartConfig))
+      {
+         yAxisScaleGroup = new Group(dialogArea, SWT.NONE);
+         yAxisScaleGroup.setText(Messages.get().TableComparisonChart_autoScaleGroupLabel);
+         layout = new GridLayout();
+         layout.marginWidth = WidgetHelper.OUTER_SPACING;
+         layout.marginHeight = WidgetHelper.OUTER_SPACING;
+         layout.horizontalSpacing = 16;
+         layout.makeColumnsEqualWidth = true;
+         layout.numColumns = 2;
+         yAxisScaleGroup.setLayout(layout);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         yAxisScaleGroup.setLayoutData(gd);
+         
+         from = WidgetHelper.createLabeledSpinner(yAxisScaleGroup, SWT.BORDER, Messages.get().TableComparisonChart_AutoScaleNumberFrom, (config instanceof TableBarChartConfig) || (config instanceof TableTubeChartConfig) ? 0 : Integer.MIN_VALUE, Integer.MAX_VALUE, WidgetHelper.DEFAULT_LAYOUT_DATA);
+         from.setSelection(config.getMinYScaleValue());
+         
+         to = WidgetHelper.createLabeledSpinner(yAxisScaleGroup, SWT.BORDER, Messages.get().TableComparisonChart_AutoScaleNumberTo, (config instanceof TableBarChartConfig) || (config instanceof TableTubeChartConfig) ? 0 : Integer.MIN_VALUE, Integer.MAX_VALUE, WidgetHelper.DEFAULT_LAYOUT_DATA);
+         to.setSelection(config.getMaxYScaleValue());
+         yAxisScaleGroup.setVisible(!autoScale.getSelection());
+      }
 		
 		return dialogArea;
 	}
@@ -177,7 +235,15 @@ public class TableComparisonChart extends PropertyPage
 		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
 		config.setShowIn3D(checkShowIn3D.getSelection());
-		config.setTranslucent(checkTranslucent.getSelection());
+		config.setTranslucent(checkTranslucent.getSelection());	
+		
+		if(!(config instanceof TablePieChartConfig))
+      {
+         config.setAutoScale(autoScale.getSelection());
+         config.setMinYScaleValue(from.getSelection());
+         config.setMaxYScaleValue(to.getSelection());
+      }
+		
 		if (config instanceof TableBarChartConfig)
 		{
 			((TableBarChartConfig)config).setTransposed(checkTransposed.getSelection());

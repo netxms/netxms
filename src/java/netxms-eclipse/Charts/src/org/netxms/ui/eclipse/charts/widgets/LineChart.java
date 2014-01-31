@@ -89,6 +89,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean gridVisible;
 	private boolean stacked;
 	private boolean selectionActive = false;
+	private boolean adjustYAxis = true;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	private MouseMoveListener moveListener;
@@ -628,7 +629,10 @@ public class LineChart extends Chart implements HistoricalDataChart
 	public void refresh()
 	{
 	   updateStackAndRiserData();
-		adjustYAxis(true);
+	   if (adjustYAxis)
+	      adjustYAxis(true);
+	   else
+	      redraw();
 	}
 	
 	/* (non-Javadoc)
@@ -638,7 +642,10 @@ public class LineChart extends Chart implements HistoricalDataChart
 	public void rebuild()
 	{
       updateStackAndRiserData();
-		adjustYAxis(true);
+      if (adjustYAxis)
+         adjustYAxis(true);
+      else
+         redraw();
 	}
 
 	/* (non-Javadoc)
@@ -686,7 +693,14 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		if (updateChart)
 		{
-			adjustYAxis(true);
+		   if (adjustYAxis)
+   		{
+   			adjustYAxis(true);
+   		}
+		   else
+		   {
+		      redraw();
+		   }
 		}
 	}
 
@@ -815,6 +829,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void adjustYAxis(boolean repaint)
 	{
+	   adjustYAxis = true;
 		final IAxis yAxis = getAxisSet().getYAxis(0);
 		yAxis.adjustRange();
 		final Range range = yAxis.getRange();
@@ -990,5 +1005,12 @@ public class LineChart extends Chart implements HistoricalDataChart
    public boolean isExtendedLegend()
    {
       return getLegend().isExtended();
+   }
+
+   @Override
+   public void setYAxisRange(int from, int to)
+   {
+      getAxisSet().getYAxis(0).setRange(new Range(from, to));
+      adjustYAxis=false;
    }
 }

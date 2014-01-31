@@ -46,8 +46,17 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	@Element(required = false)
 	private boolean showTitle = true;
 
+   @Element(required = false)
+   private boolean autoScale = true;
+
 	@Element(required = false)
 	private int refreshRate = 30;
+   
+   @Element(required = false)
+   private int minYScaleValue = 1;
+
+   @Element(required = false)
+   private int maxYScaleValue = 100;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
@@ -186,4 +195,46 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	{
 		this.showTitle = showTitle;
 	}
+	
+	/**
+    * @return the minYScaleValue
+    */
+   public int getMinYScaleValue()
+   {
+      return minYScaleValue;
+   }
+
+   /**
+    * @param minYScaleValue the minYScaleValue to set
+    */
+   public void setMinYScaleValue(int minYScaleValue)
+   {
+      this.minYScaleValue = minYScaleValue;
+   }
+
+   /**
+    * @return the maxYScaleValue
+    */
+   public int getMaxYScaleValue()
+   {
+      return maxYScaleValue;
+   }
+
+   /**
+    * @param maxYScaleValue the maxYScaleValue to set
+    */
+   public void setMaxYScaleValue(int maxYScaleValue)
+   {
+      this.maxYScaleValue = maxYScaleValue;
+   }
+   
+   public boolean isAutoScale()
+   {
+      return autoScale;
+   }
+
+   public void setAutoScale(boolean autoScale)
+   {
+      this.autoScale = autoScale;
+   }
 }

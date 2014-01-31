@@ -147,7 +147,7 @@ public class PerformanceTab extends ObjectTab
 				}
 				catch(Exception e)
 				{
-				   Activator.logError("Exception in performance tab loading job", e);
+				   Activator.logError(org.netxms.ui.eclipse.perfview.objecttabs.Messages.get().PerformanceTab_perfTabLoadingException, e);
 				}
 				return Status.OK_STATUS;
 			}

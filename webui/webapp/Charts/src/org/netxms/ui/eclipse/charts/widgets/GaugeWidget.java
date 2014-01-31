@@ -42,6 +42,7 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.Gauge;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.swtchart.Range;
 
 /**
  * Abstract gauge widget
@@ -691,4 +692,9 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 			fontsCreated = true;
 		}
 	}
+	
+	  @Override
+	   public void setYAxisRange(int from, int to)
+	   {
+	   }
 }

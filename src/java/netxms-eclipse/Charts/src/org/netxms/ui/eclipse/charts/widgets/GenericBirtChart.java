@@ -27,6 +27,7 @@ import org.eclipse.birt.chart.exception.ChartException;
 import org.eclipse.birt.chart.factory.GeneratedChartState;
 import org.eclipse.birt.chart.factory.IGenerator;
 import org.eclipse.birt.chart.model.Chart;
+import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.attribute.Bounds;
 import org.eclipse.birt.chart.model.attribute.ColorDefinition;
 import org.eclipse.birt.chart.model.attribute.Palette;
@@ -34,6 +35,8 @@ import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.PaletteImpl;
+import org.eclipse.birt.chart.model.component.Axis;
+import org.eclipse.birt.chart.model.data.impl.NumberDataElementImpl;
 import org.eclipse.birt.core.framework.PlatformConfig;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
@@ -69,6 +72,9 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	private ColorCache colors;
 	private Set<String> errors = new HashSet<String>(0);
 	private Image errorImage = null;
+	protected boolean autoscale = true;
+	protected int from;
+	protected int to;
 	
 	/**
 	 * Create chart widget
@@ -418,4 +424,20 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			y += h + 5;
 		}
 	}
+	
+	  @Override
+	   public void setYAxisRange(int from, int to)
+	   {
+	     if(from == to)
+	         return;
+	      if(from > to)
+	      {
+	         int tmp = to;
+	         to = from;
+	         from = tmp;
+	      }
+	     autoscale = false;
+	     this.from = from;
+	     this.to = to;
+	   }
 }

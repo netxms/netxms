@@ -62,6 +62,8 @@ public class TubeChartElement extends ComparisonChartElement
 		chart.set3DModeEnabled(config.isShowIn3D());
 		chart.setTransposed(config.isTransposed());
 		chart.setTranslucent(config.isTranslucent());
+		if (!config.isAutoScale())
+         chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
 		
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())

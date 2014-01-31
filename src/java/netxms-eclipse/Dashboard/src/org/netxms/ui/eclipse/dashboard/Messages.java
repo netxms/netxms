@@ -258,6 +258,10 @@ public class Messages extends NLS
    public static String StatusMap_NoGroup;
    public static String StatusMap_SeverityFilter;
    public static String TableComparisonChart_3DView;
+   public static String TableComparisonChart_autoScale;
+   public static String TableComparisonChart_autoScaleGroupLabel;
+   public static String TableComparisonChart_AutoScaleNumberFrom;
+   public static String TableComparisonChart_AutoScaleNumberTo;
 	public static String TableComparisonChart_Bottom;
 	public static String TableComparisonChart_Left;
 	public static String TableComparisonChart_LegendPosition;
