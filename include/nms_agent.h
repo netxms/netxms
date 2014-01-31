@@ -383,7 +383,7 @@ typedef struct
    TCHAR name[MAX_PARAM_NAME];
    LONG (* handler)(const TCHAR *, const TCHAR *, Table *);
    const TCHAR *arg;
-	TCHAR instanceColumns[MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS];
+   TCHAR instanceColumns[MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS];
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_TABLE;
 

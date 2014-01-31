@@ -2369,6 +2369,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
 	src/agent/subagents/darwin/Makefile
+	src/agent/subagents/db2/Makefile
+	src/agent/subagents/dbquery/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/hpux/Makefile
@@ -2398,8 +2400,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
-   src/agent/subagents/wmi/Makefile
-   src/agent/subagents/db2/Makefile
+	src/agent/subagents/wmi/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile

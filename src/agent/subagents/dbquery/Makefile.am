@@ -3,9 +3,9 @@ INCLUDES=-I@top_srcdir@/include
 SUBAGENT = dbquery
 
 pkglib_LTLIBRARIES = dbquery.la
-odbcquery_la_SOURCES = dbquery.cpp
-odbcquery_la_LDFLAGS = -module -avoid-version
-odbcquery_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
+dbquery_la_SOURCES = conn.cpp dbquery.cpp direct.cpp poll.cpp
+dbquery_la_LDFLAGS = -module -avoid-version
+dbquery_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
 EXTRA_DIST = dbquery.vcproj dbquery.h
 

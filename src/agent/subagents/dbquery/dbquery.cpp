@@ -93,7 +93,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-   { _T("DB.Query(*)"), H_DirectQueryTable, NULL, NULL, _T("Direct database query result") },
+   { _T("DB.Query(*)"), H_DirectQueryTable, NULL, _T(""), _T("Direct database query result") },
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
