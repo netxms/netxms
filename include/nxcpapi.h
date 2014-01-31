@@ -184,6 +184,7 @@ private:
 #ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX m_encryptor;
    EVP_CIPHER_CTX m_decryptor;
+   MUTEX m_encryptorLock;
 #endif
 
 	NXCPEncryptionContext();

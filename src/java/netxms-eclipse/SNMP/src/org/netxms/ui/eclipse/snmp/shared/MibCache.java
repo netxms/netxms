@@ -74,6 +74,7 @@ public final class MibCache implements ConsoleLoginListener
 					if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
 					{
 						File file = session.downloadMibFile();
+						Activator.logInfo("MIB file downloaded to: " + file.getPath() + " (size " + file.length() + " bytes)");
 
 						if (mibFile.exists())
 							mibFile.delete();

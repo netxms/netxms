@@ -73,13 +73,13 @@ public class SnmpTest extends SessionTest
 	
 	public void testMibFileDownload() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connect(true);
 		
 		Date ts = session.getMibFileTimestamp();
 		System.out.println("MIB file timestamp: " + ts.toString());
 		
 		File f = session.downloadMibFile();
-		System.out.println("MIB file downloaded to: " + f.getPath());
+		System.out.println("MIB file downloaded to: " + f.getPath() + " (size " + f.length() + " bytes)");
 		
 		session.disconnect();
 		

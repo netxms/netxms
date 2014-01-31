@@ -4103,11 +4103,9 @@ void ClientSession::processEPPRecord(CSCPMessage *pRequest)
    }
 }
 
-
-//
-// Send compiled MIB file to client
-//
-
+/**
+ * Send compiled MIB file to client
+ */
 void ClientSession::sendMib(CSCPMessage *request)
 {
    TCHAR szBuffer[MAX_PATH];
@@ -4118,11 +4116,9 @@ void ClientSession::sendMib(CSCPMessage *request)
 	sendFile(szBuffer, request->GetId(), 0);
 }
 
-
-//
-// Send timestamp of compiled MIB file to client
-//
-
+/**
+ * Send timestamp of compiled MIB file to client
+ */
 void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
 {
    CSCPMessage msg;

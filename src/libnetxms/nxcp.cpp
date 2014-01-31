@@ -542,7 +542,6 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 														 MUTEX mutex)
 {
    int hFile, iBytes;
-   long fileSize, sendFileSize;
 	INT64 bytesTransferred = 0;
    UINT32 dwPadding;
    BOOL bResult = FALSE;
@@ -552,14 +551,16 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
    hFile = _topen(pszFile, O_RDONLY | O_BINARY);
    if (hFile != -1)
    {
-      if(sizeLimit > 0)
+      NX_STAT_STRUCT st;
+      NX_FSTAT(hFile, &st);
+      long fileSize = (long)st.st_size;
+      long bytesToRead = (fileSize - offset) > fileSize ? (0 - offset) : (fileSize - offset);
+
+      if (sizeLimit > 0)
       {
-         NX_STAT_STRUCT st;
-         NX_FSTAT(hFile, &st);
-         fileSize = (long)st.st_size;
-         sendFileSize = (fileSize - offset) > fileSize ? (0 - offset) : (fileSize - offset);
-         offset = sendFileSize > sizeLimit ?  - sizeLimit : offset;
+         offset = bytesToRead > sizeLimit ?  -sizeLimit : offset;
       }
+
 		if (lseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) != -1)
 		{
 			// Allocate message and prepare it's header
@@ -570,7 +571,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 
 			while(1)
 			{
-				iBytes = read(hFile, pMsg->df, FILE_BUFFER_SIZE);
+				iBytes = read(hFile, pMsg->df, min(FILE_BUFFER_SIZE, bytesToRead));
 				if (iBytes < 0)
 					break;
 
@@ -578,7 +579,8 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 				dwPadding = (8 - (((UINT32)iBytes + CSCP_HEADER_SIZE) % 8)) & 7;
 				pMsg->dwSize = htonl((UINT32)iBytes + CSCP_HEADER_SIZE + dwPadding);
 				pMsg->dwNumVars = htonl((UINT32)iBytes);   // dwNumVars contains actual data size for binary message
-				if (iBytes < FILE_BUFFER_SIZE)
+            bytesToRead -= iBytes;
+				if (bytesToRead <= 0)
 					pMsg->wFlags |= htons(MF_END_OF_FILE);
 
 				if (pCtx != NULL)
@@ -595,14 +597,13 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 					if (SendEx(hSocket, (char *)pMsg, (UINT32)iBytes + CSCP_HEADER_SIZE + dwPadding, 0, mutex) <= 0)
 						break;	// Send error
 				}
-
 				if (progressCallback != NULL)
 				{
 					bytesTransferred += iBytes;
 					progressCallback(bytesTransferred, cbArg);
 				}
 
-				if (iBytes < FILE_BUFFER_SIZE)
+				if (bytesToRead <= 0)
 				{
 					// End of file
 					bResult = TRUE;
