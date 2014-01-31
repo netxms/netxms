@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include
-
 SUBAGENT = dbquery
 
 pkglib_LTLIBRARIES = dbquery.la
 dbquery_la_SOURCES = conn.cpp dbquery.cpp direct.cpp poll.cpp
+dnquery_la_CPPFLAGS = -I@top_srcdir@/include
 dbquery_la_LDFLAGS = -module -avoid-version
 dbquery_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
