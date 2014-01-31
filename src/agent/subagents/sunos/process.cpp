@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2009 Victor Kirhenshtein
+ ** Copyright (C) 2004-2014 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -275,7 +275,7 @@ static BOOL ReadProcFile(pid_t nPid, const char *pszFile, void *pData, size_t nD
  */
 static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QWORD *pqwValue)
 {
-	QWORD qwValue;  
+	QWORD qwValue = 0;  
 	char szFileName[MAX_PATH];
 	prusage_t usage;
 	pstatus_t status;

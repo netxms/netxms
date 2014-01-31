@@ -344,7 +344,7 @@ static void UpdateSwapInfo()
       return;
    }
 
-   UINT64 freeBytes, totalBytes = 0;
+   UINT64 freeBytes = 0, totalBytes = 0;
    int bytesPerPage = (int)((sysconf(_SC_PAGESIZE) >> DEV_BSHIFT) * DEV_BSIZE);
 
    swapent *swapEntry = swapTable->swt_ent;
@@ -359,37 +359,6 @@ static void UpdateSwapInfo()
    s_swapTotal = totalBytes;
    s_swapFree = freeBytes;
    s_swapUsed = totalBytes - freeBytes;
-}
-
-static void UpdateSwapInfo2()
-{
-	kstat_lock();
-	kstat_ctl_t *kc = kstat_open();
-	if (kc != NULL)
-   {
-      kstat_unlock();
-      
-      struct vminfo v1, v2;
-      if (ReadVMInfo(kc, &v1))
-      {
-         ThreadSleep(1);
-         if (ReadVMInfo(kc, &v2))
-         {
-            s_swapUsed = v2.swap_alloc - v1.swap_alloc;
-            s_swapFree = v2.swap_free - v1.swap_free;
-            s_swapTotal = s_swapUsed + s_swapFree;
-         }
-      }
-      
-      kstat_lock();
-      kstat_close(kc);
-   }
-   else
-	{
-      AgentWriteDebugLog(6, _T("SunOS: kstat_open failed in UpdateSwapInfo"));
-      return;
-   }
-	kstat_unlock();
 }
 
 /**
