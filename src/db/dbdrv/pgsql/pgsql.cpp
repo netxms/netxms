@@ -264,7 +264,7 @@ static char *ConvertQuery(WCHAR *query)
 	if (count == 0)
 		return srcQuery;
 
-	char *dstQuery = (char *)malloc(strlen(srcQuery) + count * 2 + 1);
+	char *dstQuery = (char *)malloc(strlen(srcQuery) + count * 3 + 1);
 	bool inString = false;
 	int pos = 1;
 	char *src, *dst;
@@ -292,9 +292,15 @@ static char *ConvertQuery(WCHAR *query)
 					{
 						*dst++ = pos + '0';
 					}
-					else
+					else if (pos < 100)
 					{
 						*dst++ = pos / 10 + '0';
+						*dst++ = pos % 10 + '0';
+					}
+					else
+					{
+						*dst++ = pos / 100 + '0';
+						*dst++ = (pos % 100) / 10 + '0';
 						*dst++ = pos % 10 + '0';
 					}
 					pos++;
