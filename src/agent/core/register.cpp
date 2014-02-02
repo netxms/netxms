@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,26 +22,20 @@
 
 #include "nxagentd.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define MAX_MSG_SIZE    262144
 
-
-//
-// Register agent on management server
-//
-
-BOOL RegisterOnServer(TCHAR *pszServer)
+/**
+ * Register agent on management server
+ */
+BOOL RegisterOnServer(const TCHAR *pszServer)
 {
    DWORD dwAddr;
    SOCKET hSocket;

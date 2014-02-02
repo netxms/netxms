@@ -10109,11 +10109,9 @@ void ClientSession::onSituationChange(CSCPMessage *msg)
    }
 }
 
-
-//
-// Register agent
-//
-
+/**
+ * Register agent
+ */
 void ClientSession::registerAgent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

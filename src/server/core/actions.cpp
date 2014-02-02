@@ -653,11 +653,9 @@ void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction)
    pMsg->SetVariable(VID_RCPT_ADDR, pAction->szRcptAddr);
 }
 
-
-//
-// Send all actions to client
-//
-
+/**
+ * Send all actions to client
+ */
 void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId)
 {
    UINT32 i;
