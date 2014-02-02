@@ -44,20 +44,21 @@ extern "C" {
 /**
  * Constants
  */
-#define MAX_UPS_DEVICES       128
+#define MAX_UPS_DEVICES          128
 
-#define UPS_PROTOCOL_APC      1
-#define UPS_PROTOCOL_USB      2
-#define UPS_PROTOCOL_BCMXCP   3
+#define UPS_PROTOCOL_APC         1
+#define UPS_PROTOCOL_BCMXCP      2
+#define UPS_PROTOCOL_METASYS	   3
 #define UPS_PROTOCOL_MICRODOWELL	4
+#define UPS_PROTOCOL_USB         5
 
-#define BCMXCP_BUFFER_SIZE    1024
-#define BCMXCP_MAP_SIZE       128
+#define BCMXCP_BUFFER_SIZE       1024
+#define BCMXCP_MAP_SIZE          128
 
-#define METASYS_BUFFER_SIZE   256
+#define METASYS_BUFFER_SIZE      256
 
-#define UPF_NOT_SUPPORTED     ((DWORD)0x00000001)
-#define UPF_NULL_VALUE        ((DWORD)0x00000002)
+#define UPF_NOT_SUPPORTED        ((DWORD)0x00000001)
+#define UPF_NULL_VALUE           ((DWORD)0x00000002)
 
 /**
  * UPS parameter structure
@@ -260,6 +261,7 @@ class MetaSysInterface : public SerialInterface
 {
 protected:
    BYTE m_data[METASYS_BUFFER_SIZE];
+   int m_nominalPower;
 
    virtual BOOL open();
    virtual BOOL validateConnection();
@@ -275,12 +277,9 @@ public:
    virtual const TCHAR *getType() { return _T("METASYS"); }
 
    virtual void queryTemperature();
-   virtual void queryLineFrequency();
-   virtual void queryBatteryLevel();
    virtual void queryInputVoltage();
    virtual void queryOutputVoltage();
    virtual void queryBatteryVoltage();
-   virtual void queryEstimatedRuntime();
    virtual void queryModel();
    virtual void queryFirmwareVersion();
    virtual void querySerialNumber();

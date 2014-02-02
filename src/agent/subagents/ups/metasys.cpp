@@ -50,27 +50,12 @@
 #define MS_SET_BATTERY_TEST      ((BYTE)0x0E)
 
 /**
- * Meter map elements
- */
-#define MAP_OUTPUT_VA      			23
-#define MAP_INPUT_FREQUENCY         28
-#define MAP_BATTERY_VOLTAGE         33
-#define MAP_BATTERY_LEVEL           34
-#define MAP_BATTERY_RUNTIME         35
-#define MAP_INPUT_VOLTAGE           56
-#define MAP_AMBIENT_TEMPERATURE     62
-#define MAP_UPS_TEMPERATURE         63
-#define MAP_MAX_OUTPUT_VA     		71
-#define MAP_BATTERY_TEMPERATURE     77
-#define MAP_OUTPUT_VOLTAGE          78
-
-/**
  * Result formats
  */
-#define FMT_FLOAT     0
-#define FMT_DOUBLE      1
-#define FMT_STRING      2
-#define FMT_INT_MINUTES 3
+#define FMT_FLOAT       0
+#define FMT_SHORT       1
+#define FMT_TEMPERATURE 2
+#define FMT_BYTE        3
 
 /**
  * Calculate checksum for prepared message and add it to the end of buffer
@@ -101,24 +86,19 @@ static BOOL ValidateChecksum(BYTE *pBuffer)
 }
 
 /**
- * Get value as long integer
- */
-static INT32 GetLong(BYTE *pData)
-{
-#if WORDS_BIGENDIAN
-	return (INT32)(((UINT32)pData[3] << 24) | ((UINT32)pData[2] << 16) |
-                 ((UINT32)pData[1] << 8) | (UINT32)pData[0]);
-#else
-   return *((INT32 *)pData);
-#endif
-}
-
-/**
  * Get value as float
  */
 static float GetFloat(BYTE *data)
 {
    return (float)((((int)data[0]) << 8) | (int)data[1]) / 10;
+}
+
+/**
+ * Get value as short int
+ */
+static int GetShort(BYTE *data)
+{
+   return (((int)data[0]) << 8) | (int)data[1];
 }
 
 /**
@@ -130,6 +110,22 @@ static void DecodeValue(BYTE *data, int format, char *value)
    {
       case FMT_FLOAT:
          sprintf(value, "%0.1f", GetFloat(data));
+         break;
+      case FMT_SHORT:
+         sprintf(value, "%d", GetShort(data));
+         break;
+      case FMT_BYTE:
+         sprintf(value, "%d", (int)(*data));
+         break;
+      case FMT_TEMPERATURE:
+         {
+            BYTE t = *data;
+            t -= 128;
+            if (t > 0)
+               sprintf(value, "%d", (int)t);
+            else
+               strcpy(value, "N/A");
+         }
          break;
       default:
          strcpy(value, "ERROR");
@@ -144,6 +140,7 @@ MetaSysInterface::MetaSysInterface(TCHAR *pszDevice) : SerialInterface(pszDevice
 {
 	if (m_portSpeed == 0)
 		m_portSpeed = 2400;
+   m_nominalPower = 0;
 }
 
 /**
@@ -269,162 +266,215 @@ void MetaSysInterface::parseModelId()
    {        
       case 11:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (1 board)");
+         m_nominalPower = 630;
          break;
       case 12:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (2 boards)");
+         m_nominalPower = 1260;
          break;
       case 13:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (3 boards)");
+         m_nominalPower = 1890;
          break;
       case 14:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (4 boards)");
+         m_nominalPower = 2520;
          break;
       case 21:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 750/1000");
-         break;        
+         m_nominalPower = 500;
+         break;	
       case 22:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 1050/1500");
-         break;        
+         m_nominalPower = 700;
+         break;	
       case 23:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 1500/2000");
-         break;        
+         m_nominalPower = 1000;
+         break;	
       case 24:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 1800/2500");
-         break;        
+         m_nominalPower = 1200;
+         break;	
       case 25:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 2100/3000");
-         break;        
+         m_nominalPower = 1400;
+         break;	
       case 31:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 308");
-         break;        
+         m_nominalPower = 500;
+         break;	
       case 32:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 311");
-         break;        
+         m_nominalPower = 700;
+         break;	
       case 44:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (4 boards)/2");
+         m_nominalPower = 2520;
          break;
       case 45:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (5 boards)/2");
+         m_nominalPower = 3150;
          break;
       case 46:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (6 boards)/2");
+         m_nominalPower = 3780;
          break;
       case 47:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (7 boards)/2");
+         m_nominalPower = 4410;
          break;
       case 48:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (8 boards)/2");
+         m_nominalPower = 5040;
          break;
       case 51:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Millennium 810");
+         m_nominalPower = 700;
          break;
       case 52:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Millennium 820");
+         m_nominalPower = 1400;
          break;
       case 61:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 910");
+         m_nominalPower = 700;
          break;
       case 62:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 920");
+         m_nominalPower = 1400;
          break;
       case 63:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 930");
+         m_nominalPower = 2100;
          break;
       case 64:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 940");
+         m_nominalPower = 2800;
          break;
       case 74:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 940/2");
+         m_nominalPower = 2800;
          break;
       case 75:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 950/2");
+         m_nominalPower = 3500;
          break;
       case 76:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 960/2");
+         m_nominalPower = 4200;
          break;
       case 77:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 970/2");
+         m_nominalPower = 4900;
          break;
       case 78:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 980/2");
+         m_nominalPower = 5600;
          break;
       case 81:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 508");
+         m_nominalPower = 500;
          break;
       case 82:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 511");
+         m_nominalPower = 700;
          break;
       case 83:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 516");
+         m_nominalPower = 1000;
          break;
       case 84:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 519");
+         m_nominalPower = 1200;
          break;
       case 85:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 522");
+         m_nominalPower = 1400;
          break;
       case 91:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 305 / Harviot 530 SX");
+         m_nominalPower = 330;
          break;
       case 92:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ORDINATORE 2");
+         m_nominalPower = 330;
          break;
       case 93:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Harviot 730 SX");
+         m_nominalPower = 430;
          break;
       case 101:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 308 SX / SX Interactive / Ordinatore");
+         m_nominalPower = 500;
          break;
       case 102:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 311 SX / SX Interactive");
+         m_nominalPower = 700;
          break;
       case 111:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 800 / BI-TWICE 800");
+         m_nominalPower = 560;
          break;
       case 112:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 1600");
+         m_nominalPower = 1120;
          break;
       case 121:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 1000 / BI-TWICE 1000");
+         m_nominalPower = 700;
          break;
       case 122:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 2000");
+         m_nominalPower = 1400;
          break;
       case 131:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 1250 / BI-TWICE 1250");
+         m_nominalPower = 875;
          break;
       case 132:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 2500");
+         m_nominalPower = 1750;
          break;
       case 141:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 1250");
+         m_nominalPower = 875;
          break;
       case 142:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 2500");
+         m_nominalPower = 1750;
          break;
       case 143:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 3750");
+         m_nominalPower = 2625;
          break;
       case 144:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 5000");
+         m_nominalPower = 3500;
          break;
       case 154:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 5000/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 5000 / 2");
+         m_nominalPower = 3500;
          break;
       case 155:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 6250/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 6250 / 2");
+         m_nominalPower = 4375;
          break;
       case 156:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 7500/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 7500 / 2");
+         m_nominalPower = 5250;
          break;
       case 157:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 8750/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 8750 / 2");
+         m_nominalPower = 6125;
          break;
       case 158:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 10000/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 10000 / 2");
+         m_nominalPower = 7000;
          break;
       default:
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "unknown");
+         m_nominalPower = 0;
          break;
    } 
 }
@@ -486,7 +536,7 @@ void MetaSysInterface::queryModel()
  */
 void MetaSysInterface::queryBatteryVoltage()
 {
-   readParameter(MS_BATTERY_DATA, FMT_FLOAT, 1, &m_paramList[UPS_PARAM_BATTERY_LEVEL]);
+   readParameter(MS_BATTERY_DATA, 1, FMT_FLOAT, &m_paramList[UPS_PARAM_BATTERY_LEVEL]);
 }
 
 /**
@@ -494,7 +544,7 @@ void MetaSysInterface::queryBatteryVoltage()
  */
 void MetaSysInterface::queryInputVoltage()
 {
-   readParameter(MAP_INPUT_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_INPUT_VOLTAGE]);
+   readParameter(MS_INPUT_DATA, 3, FMT_SHORT, &m_paramList[UPS_PARAM_INPUT_VOLTAGE]);
 }
 
 /**
@@ -502,15 +552,7 @@ void MetaSysInterface::queryInputVoltage()
  */
 void MetaSysInterface::queryOutputVoltage()
 {
-   readParameter(MAP_OUTPUT_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE]);
-}
-
-/**
- * Get estimated runtime (in minutes)
- */
-void MetaSysInterface::queryEstimatedRuntime()
-{
-   readParameter(MAP_BATTERY_RUNTIME, FMT_INT_MINUTES, &m_paramList[UPS_PARAM_EST_RUNTIME]);
+   readParameter(MS_OUTPUT_DATA, 3, FMT_SHORT, &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE]);
 }
 
 /**
@@ -518,15 +560,7 @@ void MetaSysInterface::queryEstimatedRuntime()
  */
 void MetaSysInterface::queryTemperature()
 {
-   readParameter(MAP_AMBIENT_TEMPERATURE, FMT_INTEGER, &m_paramList[UPS_PARAM_TEMP]);
-}
-
-/**
- * Get line frequency (Hz)
- */
-void MetaSysInterface::queryLineFrequency()
-{
-   readParameter(MAP_INPUT_FREQUENCY, FMT_INTEGER, &m_paramList[UPS_PARAM_LINE_FREQ]);
+   readParameter(MS_STATUS, 3, FMT_TEMPERATURE, &m_paramList[UPS_PARAM_TEMP]);
 }
 
 /**
@@ -550,40 +584,7 @@ void MetaSysInterface::querySerialNumber()
  */
 void MetaSysInterface::queryOnlineStatus()
 {
-   int nBytes;
-
-   if (sendReadCommand(PW_STATUS_REQ))
-   {
-      nBytes = recvData(PW_STATUS_REQ);
-      if (nBytes > 0)
-      {
-         switch(m_data[0])
-         {
-            case 0x50:  // Online
-               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
-               break;
-            case 0xF0:  // On battery
-               if (m_data[1] & 0x20)
-                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '2';   // Low battery
-               else
-                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '1';
-               break;
-            default:    // Unknown status, assume OK
-               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
-               break;
-         }
-         m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[1] = 0;
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
-      }
-      else
-      {
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
-      }
-   }
-   else
-   {
-      m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
-   }
+   readParameter(MS_STATUS, 1, FMT_BYTE, &m_paramList[UPS_PARAM_ONLINE_STATUS]);
 }
 
 /**
@@ -591,23 +592,26 @@ void MetaSysInterface::queryOnlineStatus()
  */
 void MetaSysInterface::queryPowerLoad()
 {
-   UPS_PARAMETER upsCurrOutput, upsMaxOutput;
-   int nCurrOutput, nMaxOutput;
-
-   readParameter(MAP_OUTPUT_VA, FMT_INTEGER, &upsCurrOutput);
-   readParameter(MAP_MAX_OUTPUT_VA, FMT_INTEGER, &upsMaxOutput);
-   m_paramList[UPS_PARAM_LOAD].dwFlags = upsCurrOutput.dwFlags | upsMaxOutput.dwFlags;
-   if ((m_paramList[UPS_PARAM_LOAD].dwFlags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
+   if (m_nominalPower > 0)
    {
-      nCurrOutput = atoi(upsCurrOutput.szValue);
-      nMaxOutput = atoi(upsMaxOutput.szValue);
-      if ((nMaxOutput > 0) && (nMaxOutput >= nCurrOutput))
+      UPS_PARAMETER upsCurrOutput;
+      readParameter(MS_OUTPUT_DATA, 1, FMT_SHORT, &upsCurrOutput);
+      m_paramList[UPS_PARAM_LOAD].dwFlags = upsCurrOutput.dwFlags;
+      if ((m_paramList[UPS_PARAM_LOAD].dwFlags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
       {
-         sprintf(m_paramList[UPS_PARAM_LOAD].szValue, "%d", nCurrOutput * 100 / nMaxOutput);
+         int pw = atoi(upsCurrOutput.szValue);
+         if (m_nominalPower >= pw)
+         {
+            sprintf(m_paramList[UPS_PARAM_LOAD].szValue, "%d", pw * 100 / m_nominalPower);
+         }
+         else
+         {
+            m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NULL_VALUE;
+         }
       }
-      else
-      {
-         m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NULL_VALUE;
-      }
+   }
+   else
+   {
+      m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NOT_SUPPORTED;
    }
 }
