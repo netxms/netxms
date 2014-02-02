@@ -1,7 +1,13 @@
 *
-* 1.3.0
+* 1.2.12
 *
 
+- Support for MetaSystem UPS in UPS subagent
+- Timed (temporary) alarm acknowledgement
+- Management console:
+   - Fixed bug with red zone display in "last value" dashboard element
+   - Edit and delete for alarm comments are working now
+   - Fixed Y axis range can be set for line and bar charts
 - Android Agent:
 	- Implemented "Connection notification" in status bar (feature #481)
 	- Fix bug in resetting switch preference (settings) 
@@ -9,7 +15,7 @@
 	- Fix bug in resetting switch preference (settings) 
 	- Implemented "Entire network" root (feature #482)
 	- Manage last alarm from status bar: acknowledge, resolve, terminate (only for Android >= 4.1)
-- Fixed issues: #79, #393, #88
+- Fixed issues: #79, #88, #393, #481, #482, #483, #486, #487
 
 
 *
