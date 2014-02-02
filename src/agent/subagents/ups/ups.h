@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2012 Victor Kirhenshtein
+** Copyright (C) 2006-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,11 +41,9 @@ extern "C" {
 
 #endif
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define MAX_UPS_DEVICES       128
 
 #define UPS_PROTOCOL_APC      1
@@ -56,25 +54,23 @@ extern "C" {
 #define BCMXCP_BUFFER_SIZE    1024
 #define BCMXCP_MAP_SIZE       128
 
+#define METASYS_BUFFER_SIZE   256
+
 #define UPF_NOT_SUPPORTED     ((DWORD)0x00000001)
 #define UPF_NULL_VALUE        ((DWORD)0x00000002)
 
-
-//
-// UPS parameter structure
-//
-
+/**
+ * UPS parameter structure
+ */
 typedef struct
 {
    DWORD dwFlags;
    char szValue[MAX_RESULT_LENGTH];
 } UPS_PARAMETER;
 
-
-//
-// UPS parameter codes
-//
-
+/**
+ * UPS parameter codes
+ */
 #define UPS_PARAM_MODEL                0
 #define UPS_PARAM_FIRMWARE             1
 #define UPS_PARAM_MFG_DATE             2
@@ -92,11 +88,9 @@ typedef struct
 
 #define UPS_PARAM_COUNT                14
 
-
-//
-// Abstract UPS interface class
-//
-
+/**
+ * Abstract UPS interface class
+ */
 class UPSInterface
 {
 private:
@@ -114,8 +108,8 @@ protected:
    BOOL m_bIsConnected;
    UPS_PARAMETER m_paramList[UPS_PARAM_COUNT];
 
-   void SetConnected() { m_bIsConnected = TRUE; }
-   void SetNullFlag(int nParam, BOOL bFlag) 
+   void setConnected() { m_bIsConnected = TRUE; }
+   void setNullFlag(int nParam, BOOL bFlag) 
    { 
       if (bFlag)
          m_paramList[nParam].dwFlags |= UPF_NULL_VALUE;
@@ -123,18 +117,18 @@ protected:
          m_paramList[nParam].dwFlags &= ~UPF_NULL_VALUE;
    }
 
-   virtual BOOL Open();
-   virtual void Close();
-   virtual BOOL ValidateConnection();
+   virtual BOOL open();
+   virtual void close();
+   virtual BOOL validateConnection();
 
 public:
    UPSInterface(TCHAR *pszDevice);
    virtual ~UPSInterface();
 
-   const TCHAR *Device() { return m_pszDevice; }
-   const TCHAR *Name() { return CHECK_NULL(m_pszName); }
-   virtual const TCHAR *Type() { return _T("GENERIC"); }
-   BOOL IsConnected() { return m_bIsConnected; }
+   const TCHAR *getDevice() { return m_pszDevice; }
+   const TCHAR *getName() { return CHECK_NULL(m_pszName); }
+   virtual const TCHAR *getType() { return _T("GENERIC"); }
+   BOOL isConnected() { return m_bIsConnected; }
 
    void setName(const char *pszName);
 #ifdef UNICODE
@@ -146,27 +140,25 @@ public:
 
    LONG getParameter(int nParam, TCHAR *pszValue);
 
-   virtual void QueryModel();
-   virtual void QueryFirmwareVersion();
-   virtual void QueryMfgDate();
-   virtual void QuerySerialNumber();
-   virtual void QueryTemperature();
-   virtual void QueryBatteryVoltage();
-   virtual void QueryNominalBatteryVoltage();
-   virtual void QueryBatteryLevel();
-   virtual void QueryInputVoltage();
-   virtual void QueryOutputVoltage();
-   virtual void QueryLineFrequency();
-   virtual void QueryPowerLoad();
-   virtual void QueryEstimatedRuntime();
-   virtual void QueryOnlineStatus();
+   virtual void queryModel();
+   virtual void queryFirmwareVersion();
+   virtual void queryMfgDate();
+   virtual void querySerialNumber();
+   virtual void queryTemperature();
+   virtual void queryBatteryVoltage();
+   virtual void queryNominalBatteryVoltage();
+   virtual void queryBatteryLevel();
+   virtual void queryInputVoltage();
+   virtual void queryOutputVoltage();
+   virtual void queryLineFrequency();
+   virtual void queryPowerLoad();
+   virtual void queryEstimatedRuntime();
+   virtual void queryOnlineStatus();
 };
 
-
-//
-// UPS with serial interface
-//
-
+/**
+ * UPS with serial interface
+ */
 class SerialInterface : public UPSInterface
 {
 protected:
@@ -176,134 +168,165 @@ protected:
 	int m_parity;
 	int m_stopBits;
 
-   virtual BOOL Open();
-   virtual void Close();
+   virtual BOOL open();
+   virtual void close();
 
-   BOOL ReadLineFromSerial(char *pszBuffer, int nBufLen);
+   BOOL readLineFromSerial(char *pszBuffer, int nBufLen);
 
 public:
    SerialInterface(TCHAR *pszDevice);
 };
 
-
-//
-// APC UPS interface
-//
-
+/**
+ * APC UPS interface
+ */
 class APCInterface : public SerialInterface
 {
 protected:
-   virtual BOOL Open();
-   virtual BOOL ValidateConnection();
+   virtual BOOL open();
+   virtual BOOL validateConnection();
 
-   void QueryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep);
+   void queryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep);
 
 public:
    APCInterface(TCHAR *pszDevice);
 
-   virtual const TCHAR *Type() { return _T("APC"); }
+   virtual const TCHAR *getType() { return _T("APC"); }
 
-   virtual void QueryModel();
-   virtual void QueryFirmwareVersion();
-   virtual void QueryMfgDate();
-   virtual void QuerySerialNumber();
-   virtual void QueryTemperature();
-   virtual void QueryBatteryVoltage();
-   virtual void QueryNominalBatteryVoltage();
-   virtual void QueryBatteryLevel();
-   virtual void QueryInputVoltage();
-   virtual void QueryOutputVoltage();
-   virtual void QueryLineFrequency();
-   virtual void QueryPowerLoad();
-   virtual void QueryEstimatedRuntime();
-   virtual void QueryOnlineStatus();
+   virtual void queryModel();
+   virtual void queryFirmwareVersion();
+   virtual void queryMfgDate();
+   virtual void querySerialNumber();
+   virtual void queryTemperature();
+   virtual void queryBatteryVoltage();
+   virtual void queryNominalBatteryVoltage();
+   virtual void queryBatteryLevel();
+   virtual void queryInputVoltage();
+   virtual void queryOutputVoltage();
+   virtual void queryLineFrequency();
+   virtual void queryPowerLoad();
+   virtual void queryEstimatedRuntime();
+   virtual void queryOnlineStatus();
 };
 
-
-//
-// BCMXCP-compatible UPS interface
-//
-
+/**
+ * BCMXCP meter map entry
+ */
 struct BCMXCP_METER_MAP_ENTRY
 {
    int nFormat;
    int nOffset;
 };
 
+/**
+ * BCMXCP-compatible UPS interface
+ */
 class BCMXCPInterface : public SerialInterface
 {
 protected:
    BYTE m_data[BCMXCP_BUFFER_SIZE];
    BCMXCP_METER_MAP_ENTRY m_map[BCMXCP_MAP_SIZE];
 
-   virtual BOOL Open();
-   virtual BOOL ValidateConnection();
+   virtual BOOL open();
+   virtual BOOL validateConnection();
 
-   BOOL SendReadCommand(BYTE nCommand);
-   int RecvData(int nCommand);
-   void ReadParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam);
+   BOOL sendReadCommand(BYTE nCommand);
+   int recvData(int nCommand);
+   void readParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam);
 
 public:
    BCMXCPInterface(TCHAR *pszDevice);
 
-   virtual const TCHAR *Type() { return _T("BCMXCP"); }
+   virtual const TCHAR *getType() { return _T("BCMXCP"); }
 
-   virtual void QueryTemperature(void);
-   virtual void QueryLineFrequency(void);
-   virtual void QueryBatteryLevel(void);
-   virtual void QueryInputVoltage(void);
-   virtual void QueryOutputVoltage(void);
-   virtual void QueryBatteryVoltage(void);
-   virtual void QueryEstimatedRuntime(void);
-   virtual void QueryModel(void);
-   virtual void QueryFirmwareVersion(void);
-   virtual void QuerySerialNumber(void);
-   virtual void QueryOnlineStatus(void);
-   virtual void QueryPowerLoad(void);
+   virtual void queryTemperature();
+   virtual void queryLineFrequency();
+   virtual void queryBatteryLevel();
+   virtual void queryInputVoltage();
+   virtual void queryOutputVoltage();
+   virtual void queryBatteryVoltage();
+   virtual void queryEstimatedRuntime();
+   virtual void queryModel();
+   virtual void queryFirmwareVersion();
+   virtual void querySerialNumber();
+   virtual void queryOnlineStatus();
+   virtual void queryPowerLoad();
 };
 
-//
-// Microdowell UPS interface
-//
+/**
+ * BCMXCP-compatible UPS interface
+ */
+class MetaSysInterface : public SerialInterface
+{
+protected:
+   BYTE m_data[METASYS_BUFFER_SIZE];
 
+   virtual BOOL open();
+   virtual BOOL validateConnection();
+
+   BOOL sendReadCommand(BYTE nCommand);
+   int recvData(int nCommand);
+   void readParameter(int command, int offset, int format, UPS_PARAMETER *param);
+   void parseModelId();
+
+public:
+   MetaSysInterface(TCHAR *pszDevice);
+
+   virtual const TCHAR *getType() { return _T("METASYS"); }
+
+   virtual void queryTemperature();
+   virtual void queryLineFrequency();
+   virtual void queryBatteryLevel();
+   virtual void queryInputVoltage();
+   virtual void queryOutputVoltage();
+   virtual void queryBatteryVoltage();
+   virtual void queryEstimatedRuntime();
+   virtual void queryModel();
+   virtual void queryFirmwareVersion();
+   virtual void querySerialNumber();
+   virtual void queryOnlineStatus();
+   virtual void queryPowerLoad();
+};
+
+/**
+ * Microdowell UPS interface
+ */
 class MicrodowellInterface : public SerialInterface
 {
 protected:
-	virtual BOOL Open(void);
-	virtual BOOL ValidateConnection(void);
+	virtual BOOL open();
+	virtual BOOL validateConnection();
 
-	BOOL SendCmd(const char *cmd, int cmdLen, char *ret, int *retLen);
+	BOOL sendCmd(const char *cmd, int cmdLen, char *ret, int *retLen);
 
 	int ge2kva;
 
 public:
    MicrodowellInterface(TCHAR *pszDevice);
 
-   virtual const TCHAR *Type(void) { return _T("MICRODOWELL"); }
+   virtual const TCHAR *getType() { return _T("MICRODOWELL"); }
 
-   virtual void QueryModel(void);
-   virtual void QueryFirmwareVersion(void);
-   virtual void QueryMfgDate(void);
-   virtual void QuerySerialNumber(void);
-   virtual void QueryTemperature(void);
-   virtual void QueryBatteryVoltage(void);
-   virtual void QueryNominalBatteryVoltage(void);
-   virtual void QueryBatteryLevel(void);
-   virtual void QueryInputVoltage(void);
-   virtual void QueryOutputVoltage(void);
-   virtual void QueryLineFrequency(void);
-   virtual void QueryPowerLoad(void);
-   virtual void QueryEstimatedRuntime(void);
-   virtual void QueryOnlineStatus(void);
+   virtual void queryModel();
+   virtual void queryFirmwareVersion();
+   virtual void queryMfgDate();
+   virtual void querySerialNumber();
+   virtual void queryTemperature();
+   virtual void queryBatteryVoltage();
+   virtual void queryNominalBatteryVoltage();
+   virtual void queryBatteryLevel();
+   virtual void queryInputVoltage();
+   virtual void queryOutputVoltage();
+   virtual void queryLineFrequency();
+   virtual void queryPowerLoad();
+   virtual void queryEstimatedRuntime();
+   virtual void queryOnlineStatus();
 };
-
-
-//
-// UPS with USB interface
-//
 
 #ifdef _WIN32
 
+/**
+ * UPS with USB interface
+ */
 class USBInterface : public UPSInterface
 {
 protected:
@@ -312,30 +335,30 @@ protected:
    PHIDP_PREPARSED_DATA m_pPreparsedData;
    HIDP_VALUE_CAPS *m_pFeatureValueCaps;
 
-   virtual BOOL Open(void);
-   virtual void Close(void);
-   virtual BOOL ValidateConnection(void);
+   virtual BOOL open();
+   virtual void close();
+   virtual BOOL validateConnection();
 
-   LONG ReadIndexedString(USAGE nPage, USAGE uUsage, char *pszBuffer, int nBufLen);
-   LONG ReadInt(USAGE nPage, USAGE nUsage, LONG *pnValue);
+   LONG readIndexedString(USAGE nPage, USAGE uUsage, char *pszBuffer, int nBufLen);
+   LONG readInt(USAGE nPage, USAGE nUsage, LONG *pnValue);
 
-   void ReadStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam);
-   void ReadIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam, int nDiv, BOOL bDouble);
+   void readStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam);
+   void readIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam, int nDiv, BOOL bDouble);
 
 public:
    USBInterface(TCHAR *pszDevice);
    virtual ~USBInterface();
 
-   virtual const TCHAR *Type(void) { return _T("USB"); }
+   virtual const TCHAR *getType() { return _T("USB"); }
 
-   virtual void QueryModel(void);
-   virtual void QuerySerialNumber(void);
-   virtual void QueryBatteryVoltage(void);
-   virtual void QueryNominalBatteryVoltage(void);
-   virtual void QueryBatteryLevel(void);
-   virtual void QueryPowerLoad(void);
-   virtual void QueryEstimatedRuntime(void);
-   virtual void QueryOnlineStatus(void);
+   virtual void queryModel();
+   virtual void querySerialNumber();
+   virtual void queryBatteryVoltage();
+   virtual void queryNominalBatteryVoltage();
+   virtual void queryBatteryLevel();
+   virtual void queryPowerLoad();
+   virtual void queryEstimatedRuntime();
+   virtual void queryOnlineStatus();
 };
 
 #endif

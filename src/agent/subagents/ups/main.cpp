@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2012 Victor Kirhenshtein
+** Copyright (C) 2006-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,17 +49,15 @@ static LONG H_UPSData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	if (m_deviceInfo[nDev] == NULL)
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (!m_deviceInfo[nDev]->IsConnected())
+	if (!m_deviceInfo[nDev]->isConnected())
 		return SYSINFO_RC_ERROR;
 
 	return m_deviceInfo[nDev]->getParameter(CAST_FROM_POINTER(pArg, int), pValue);
 }
 
-
-//
-// UPS connection status
-//
-
+/**
+ * UPS connection status
+ */
 static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nDev;
@@ -75,15 +73,13 @@ static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
 	if (m_deviceInfo[nDev] == NULL)
 		return SYSINFO_RC_UNSUPPORTED;
 
-	ret_int(pValue, m_deviceInfo[nDev]->IsConnected() ? 0 : 1);
+	ret_int(pValue, m_deviceInfo[nDev]->isConnected() ? 0 : 1);
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// List configured devices
-//
-
+/**
+ * List configured devices
+ */
 static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	TCHAR szBuffer[256];
@@ -93,19 +89,17 @@ static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 		if (m_deviceInfo[i] != NULL)
 		{
 			_sntprintf(szBuffer, 256, _T("%d %s %s %s"), i,
-					m_deviceInfo[i]->Device(), m_deviceInfo[i]->Type(),
-					m_deviceInfo[i]->Name());
+					m_deviceInfo[i]->getDevice(), m_deviceInfo[i]->getType(),
+					m_deviceInfo[i]->getName());
 			value->add(szBuffer);
 		}
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Add device from configuration file parameter
-// Parameter value should be <device_id>:<port>:<protocol>:<name>
-//
-
+/**
+ * Add device from configuration file parameter
+ * Parameter value should be <device_id>:<port>:<protocol>:<name>
+ */
 static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 {
 	const TCHAR *ptr;
