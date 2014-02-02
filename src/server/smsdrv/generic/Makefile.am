@@ -6,4 +6,4 @@ libnxsms_generic_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libn
 
 EXTRA_DIST = \
 	generic.vcproj \
-	main.h
+	generic_smsdrv.h
