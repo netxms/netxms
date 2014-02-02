@@ -573,16 +573,7 @@ start:
 int LIBNETXMS_EXPORTABLE
 nx_getopt(int nargc, char * const *nargv, const char *options)
 {
-
-        /*
-         * We don't pass FLAG_PERMUTE to getopt_internal() since
-         * the BSD getopt(3) (unlike GNU) has never done this.
-         *
-         * Furthermore, since many privileged programs call getopt()
-         * before dropping privileges it makes sense to keep things
-         * as simple (and bug-free) as possible.
-         */
-        return (getopt_internal(nargc, nargv, options, NULL, NULL, 0));
+   return getopt_internal(nargc, nargv, options, NULL, NULL, FLAG_PERMUTE);
 }
 #endif /* REPLACE_GETOPT */
 
@@ -593,9 +584,7 @@ nx_getopt(int nargc, char * const *nargv, const char *options)
 int LIBNETXMS_EXPORTABLE
 getopt_long(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx)
 {
-
-        return (getopt_internal(nargc, nargv, options, long_options, idx,
-            FLAG_PERMUTE));
+   return getopt_internal(nargc, nargv, options, long_options, idx, FLAG_PERMUTE);
 }
 
 /*
@@ -605,9 +594,7 @@ getopt_long(int nargc, char * const *nargv, const char *options, const struct op
 int LIBNETXMS_EXPORTABLE
 getopt_long_only(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx)
 {
-
-        return (getopt_internal(nargc, nargv, options, long_options, idx,
-            FLAG_PERMUTE|FLAG_LONGONLY));
+   return getopt_internal(nargc, nargv, options, long_options, idx, FLAG_PERMUTE | FLAG_LONGONLY);
 }
 
 #endif   /* _WIN32 */
