@@ -173,6 +173,7 @@ void Query::poll()
 Query *Query::createFromConfig(const TCHAR *src)
 {
    TCHAR *config = _tcsdup(src);
+   TCHAR *curr = config;
    Query *query = new Query;
 
    // Name
@@ -181,7 +182,7 @@ Query *Query::createFromConfig(const TCHAR *src)
       goto fail;
    *s = 0;
    query->m_name = _tcsdup(config);
-   TCHAR *curr = s + 1;
+   curr = s + 1;
 
    // DB ID
    s = _tcschr(curr, _T(':'));
@@ -206,6 +207,7 @@ Query *Query::createFromConfig(const TCHAR *src)
 
    // Rest is SQL query
    query->m_query = _tcsdup(curr);
+   free(config);
    return query;
 
 fail:
