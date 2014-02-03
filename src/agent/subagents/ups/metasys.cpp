@@ -90,7 +90,7 @@ static BOOL ValidateChecksum(BYTE *pBuffer)
  */
 static float GetFloat(BYTE *data)
 {
-   return (float)((((int)data[0]) << 8) | (int)data[1]) / 10;
+   return (float)((((int)data[1]) << 8) | (int)data[0]) / 10;
 }
 
 /**
@@ -98,7 +98,7 @@ static float GetFloat(BYTE *data)
  */
 static int GetShort(BYTE *data)
 {
-   return (((int)data[0]) << 8) | (int)data[1];
+   return (((int)data[1]) << 8) | (int)data[0];
 }
 
 /**
@@ -543,7 +543,7 @@ void MetaSysInterface::queryModel()
  */
 void MetaSysInterface::queryBatteryVoltage()
 {
-   readParameter(MS_BATTERY_DATA, 1, FMT_FLOAT, &m_paramList[UPS_PARAM_BATTERY_LEVEL]);
+   readParameter(MS_BATTERY_DATA, 1, FMT_FLOAT, &m_paramList[UPS_PARAM_BATTERY_VOLTAGE]);
 }
 
 /**
