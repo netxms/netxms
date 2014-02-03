@@ -90,7 +90,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
                }
                else if (dwFlags & SG_HSTRING_RESULT)
                {
-						int rawLen = (dwBufferSize - 1) / 2 / sizeof(TCHAR);
+						int rawLen = (dwBufferSize - sizeof(TCHAR)) / 2 / sizeof(TCHAR);
 						BYTE *raw = (BYTE *)malloc(rawLen);
 						rawLen = (int)pVar->getRawValue(raw, rawLen);
 						BinToStr(raw, rawLen, (TCHAR *)pValue);
