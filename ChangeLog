@@ -4,6 +4,7 @@
 
 - Support for MetaSystem UPS in UPS subagent
 - Timed (temporary) alarm acknowledgement
+- New subagent DBQuery - replacement for ODBCQuery 
 - Management console:
    - Fixed bug with red zone display in "last value" dashboard element
    - Edit and delete for alarm comments are working now
@@ -49,7 +50,7 @@
 - nxapush can push data on behalf of other nodes
 - Transformation script can be run on aggregated DCIs
 - Unknown SNMP trap sources can be automatically added as nodes
-- Syslog processing optinmized for performance
+- Syslog processing optimized for performance
 - Default shared secret for agents can be configured
 - Driver for Ping3 devices
 - Driver for Allied Telesis switches

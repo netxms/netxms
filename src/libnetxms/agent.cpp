@@ -124,12 +124,10 @@ void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName,
       s_fpSendTrap2(dwEvent, eventName, nCount, ppszArgList);
 }
 
-
-//
-// Get arguments for parameters like name(arg1,...)
-// Returns FALSE on processing error
-//
-
+/**
+ * Get arguments for parameters like name(arg1,...)
+ * Returns FALSE on processing error
+ */
 static BOOL AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *arg, int maxSize)
 {
    const TCHAR *ptr1, *ptr2;

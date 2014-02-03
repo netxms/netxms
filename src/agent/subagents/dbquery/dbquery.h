@@ -28,6 +28,18 @@
 #include <nms_agent.h>
 #include <nxdbapi.h>
 
+#define MAX_DBID_LEN       64
+#define MAX_QUERY_NAME_LEN 64
+
+/**
+ * Query status codes
+ */
+enum QueryStatusCode
+{
+   QUERY_STATUS_UNKNOWN = -1,
+   QUERY_STATUS_OK = 0,
+   QUERY_STATUS_ERROR = 1
+};
 
 /**
  * database connection
@@ -63,6 +75,7 @@ public:
 LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value);
 LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value);
 
 /**
  * Functions
@@ -71,5 +84,13 @@ bool AddDatabaseFromConfig(const TCHAR *db);
 bool AddQueryFromConfig(const TCHAR *query);
 void ShutdownConnections();
 DB_HANDLE GetConnectionHandle(const TCHAR *dbid);
+void StartPollingThreads();
+void StopPollingThreads();
+void DBResultToTable(DB_RESULT hResult, Table *table);
+
+/**
+ * Shutdown condition
+ */
+extern CONDITION g_condShutdown;
 
 #endif
