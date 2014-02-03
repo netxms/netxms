@@ -229,22 +229,18 @@ void UPSInterface::queryOnlineStatus()
    m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-
-//
-// Communication thread starter
-//
-
+/**
+ * Communication thread starter
+ */
 THREAD_RESULT THREAD_CALL UPSInterface::commThreadStarter(void *pArg)
 {
    ((UPSInterface *)pArg)->commThread();
    return THREAD_OK;
 }
 
-
-//
-// Start communication thread
-//
-
+/**
+ * Start communication thread
+ */
 void UPSInterface::startCommunication()
 {
    m_thCommThread = ThreadCreateEx(commThreadStarter, 0, this);
@@ -279,6 +275,8 @@ void UPSInterface::commThread()
       queryEstimatedRuntime();
       queryOnlineStatus();
       MutexUnlock(m_mutex);
+
+      AgentWriteDebugLog(5, _T("UPS: initial poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
    }
    else
    {
@@ -343,6 +341,8 @@ void UPSInterface::commThread()
          queryOnlineStatus();
 
          MutexUnlock(m_mutex);
+
+         AgentWriteDebugLog(9, _T("UPS: poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
       }
    }
 }

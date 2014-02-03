@@ -643,15 +643,17 @@ void BCMXCPInterface::queryOnlineStatus()
 void BCMXCPInterface::queryPowerLoad()
 {
    UPS_PARAMETER upsCurrOutput, upsMaxOutput;
-   int nCurrOutput, nMaxOutput;
+
+   memset(&upsCurrOutput, 0, sizeof(UPS_PARAMETER));
+   memset(&upsMaxOutput, 0, sizeof(UPS_PARAMETER));
 
    readParameter(MAP_OUTPUT_VA, FMT_INTEGER, &upsCurrOutput);
    readParameter(MAP_MAX_OUTPUT_VA, FMT_INTEGER, &upsMaxOutput);
    m_paramList[UPS_PARAM_LOAD].dwFlags = upsCurrOutput.dwFlags | upsMaxOutput.dwFlags;
    if ((m_paramList[UPS_PARAM_LOAD].dwFlags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
    {
-      nCurrOutput = atoi(upsCurrOutput.szValue);
-      nMaxOutput = atoi(upsMaxOutput.szValue);
+      int nCurrOutput = atoi(upsCurrOutput.szValue);
+      int nMaxOutput = atoi(upsMaxOutput.szValue);
       if ((nMaxOutput > 0) && (nMaxOutput >= nCurrOutput))
       {
          sprintf(m_paramList[UPS_PARAM_LOAD].szValue, "%d", nCurrOutput * 100 / nMaxOutput);

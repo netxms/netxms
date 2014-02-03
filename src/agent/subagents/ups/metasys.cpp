@@ -161,6 +161,7 @@ BOOL MetaSysInterface::sendReadCommand(BYTE nCommand)
       bRet = m_serial.write((char *)packet, 4);
       nRetries--;
    } while((!bRet) && (nRetries > 0));
+   AgentWriteDebugLog(9, _T("UPS/METASYS: command %d %s"), (int)nCommand, bRet ? _T("sent successfully") :_T("send failed"));
    return bRet;
 }
 
@@ -172,7 +173,7 @@ int MetaSysInterface::recvData(int nCommand)
    BYTE packet[256];
    int nCount, nLength, nBytes, nRead;
 
-   memset(m_data, 0, BCMXCP_BUFFER_SIZE);
+   memset(m_data, 0, METASYS_BUFFER_SIZE);
    nCount = 0;
    do
    {
@@ -207,6 +208,9 @@ int MetaSysInterface::recvData(int nCommand)
 	// Validate packet's checksum
 	if (!ValidateChecksum(packet))
 		return -1;  // Bad checksum
+
+   TCHAR dump[516];
+   AgentWriteDebugLog(9, _T("UPS/METASYS: %d bytes read (%s)"), nLength + 1, BinToStr(packet, nLength + 1, dump));
 
 	memcpy(m_data, &packet[2], nLength - 1);
 	return nLength - 1;
@@ -246,6 +250,9 @@ BOOL MetaSysInterface::open()
             m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
             m_paramList[UPS_PARAM_SERIAL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
             m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+
+            AgentWriteDebugLog(4, _T("UPS: established connection with METASYS device (%hs FW:%hs)"), 
+               m_paramList[UPS_PARAM_MODEL].szValue, m_paramList[UPS_PARAM_FIRMWARE].szValue);
 
             bRet = TRUE;
             setConnected();
@@ -595,6 +602,7 @@ void MetaSysInterface::queryPowerLoad()
    if (m_nominalPower > 0)
    {
       UPS_PARAMETER upsCurrOutput;
+      memset(&upsCurrOutput, 0, sizeof(UPS_PARAMETER));
       readParameter(MS_OUTPUT_DATA, 1, FMT_SHORT, &upsCurrOutput);
       m_paramList[UPS_PARAM_LOAD].dwFlags = upsCurrOutput.dwFlags;
       if ((m_paramList[UPS_PARAM_LOAD].dwFlags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
