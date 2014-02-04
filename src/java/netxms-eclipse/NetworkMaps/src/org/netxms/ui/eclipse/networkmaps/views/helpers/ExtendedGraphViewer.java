@@ -204,9 +204,9 @@ public class ExtendedGraphViewer extends GraphViewer
 				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
 				graph.getRootLayer().translateToRelative(mousePoint);
 				IFigure figureUnderMouse = graph.getFigureAt(mousePoint.x, mousePoint.y);
-				if (figureUnderMouse == null || figureUnderMouse == graph) 
+				if ((figureUnderMouse == null) || (figureUnderMouse == graph))
 				{
-					if ((me.getState() & SWT.MOD1) == 0) 
+					if ((me.getState() & SWT.MOD1) == 0)
 					{
 						clearDecorationSelection(true);
 					}
