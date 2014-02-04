@@ -384,12 +384,12 @@ int Serial::read(char *pBuff, int nSize)
  */
 int Serial::readAll(char *pBuff, int nSize)
 {
-	int nRet;
-	
 	memset(pBuff, 0, nSize);
 	if (m_hPort == INVALID_HANDLE_VALUE)
 		return -1;
 	
+	int nRet = -1;
+
 #ifdef _WIN32
 	DWORD dwBytes;
 
@@ -397,11 +397,6 @@ int Serial::readAll(char *pBuff, int nSize)
 	{
 		nRet = (int)dwBytes;
 	}
-	else
-	{
-		nRet = -1;
-	}
-	
 #else // UNIX
 	fd_set rdfs;
 	struct timeval tv;
