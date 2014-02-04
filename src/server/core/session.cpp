@@ -1045,7 +1045,7 @@ void ClientSession::processingThread()
             deleteObjectTool(pMsg);
             break;
          case CMD_CHANGE_OBJECT_TOOL_STATUS:
-            changeObjecToolDisableStatuss(pMsg);
+            changeObjectToolStatus(pMsg);
             break;
          case CMD_GENERATE_OBJECT_TOOL_ID:
             generateObjectToolId(pMsg->GetId());
@@ -1141,13 +1141,13 @@ void ClientSession::processingThread()
             importConfiguration(pMsg);
             break;
 			case CMD_GET_GRAPH_LIST:
-				SendGraphList(pMsg->GetId());
+				sendGraphList(pMsg->GetId());
 				break;
 			case CMD_SAVE_GRAPH:
-			   SaveGraph(pMsg);
+			   saveGraph(pMsg);
             break;
 			case CMD_DELETE_GRAPH:
-				DeleteGraph(pMsg);
+				deleteGraph(pMsg);
 				break;
 			case CMD_ADD_CA_CERTIFICATE:
 				AddCACertificate(pMsg);
@@ -7168,9 +7168,9 @@ void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
 }
 
 /**
- * Change Object Tool Disable status to opposit
+ * Change Object Tool status (enabled/disabled)
  */
-void ClientSession::changeObjecToolDisableStatuss(CSCPMessage *pRequest)
+void ClientSession::changeObjectToolStatus(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    UINT32 toolID, enable;
@@ -7184,7 +7184,7 @@ void ClientSession::changeObjecToolDisableStatuss(CSCPMessage *pRequest)
    {
       toolID = pRequest->GetVariableLong(VID_TOOL_ID);
       enable = pRequest->GetVariableLong(VID_STATE);
-      msg.SetVariable(VID_RCC, ChangeObjectToolDisableStatuss(toolID, enable == 0 ? false : true));
+      msg.SetVariable(VID_RCC, ChangeObjectToolStatus(toolID, enable == 0 ? false : true));
    }
    else
    {
@@ -9186,12 +9186,10 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of available graphs to client
-//
-
-void ClientSession::SendGraphList(UINT32 dwRqId)
+/**
+ * Send list of available graphs to client
+ */
+void ClientSession::sendGraphList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	DB_RESULT hResult;
@@ -9277,7 +9275,7 @@ void ClientSession::SendGraphList(UINT32 dwRqId)
 /**
  * Save graph
  */
-void ClientSession::SaveGraph(CSCPMessage *pRequest)
+void ClientSession::saveGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	BOOL bNew, bSuccess;
@@ -9337,11 +9335,8 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 			pRequest->GetVariableStr(VID_NAME, szQuery, 256);
 			pszEscName = EncodeSQLString(szQuery);
 			pszTemp = pRequest->GetVariableStr(VID_GRAPH_CONFIG);
-			if (pszTemp != NULL)
-			{
-				pszEscData = EncodeSQLString(CHECK_NULL(pszTemp));
-				free(pszTemp);
-			}
+			pszEscData = EncodeSQLString(CHECK_NULL_EX(pszTemp));
+			safe_free(pszTemp);
 			if (bNew)
 			{
 				_sntprintf(szQuery, 16384, _T("INSERT INTO graphs (graph_id,owner_id,name,config) VALUES (%d,%d,'%s','%s')"),
@@ -9402,12 +9397,10 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete graph
-//
-
-void ClientSession::DeleteGraph(CSCPMessage *pRequest)
+/**
+ * Delete graph
+ */
+void ClientSession::deleteGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	UINT32 dwGraphId, dwOwner;

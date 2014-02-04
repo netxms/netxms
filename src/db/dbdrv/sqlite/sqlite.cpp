@@ -1,6 +1,6 @@
 /* 
 ** SQLite Database Driver
-** Copyright (C) 2005-2013 Victor Kirhenshtein
+** Copyright (C) 2005-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -438,6 +438,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stm
 				break;
 			}
 		}
+      safe_free(cnames);
 	}
 	else
 	{

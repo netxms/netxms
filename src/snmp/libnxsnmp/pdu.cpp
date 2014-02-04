@@ -451,8 +451,6 @@ BOOL SNMP_PDU::parseV3Header(BYTE *header, UINT32 headerLength)
 	UINT32 securityModel;
    if (!BER_DecodeContent(type, currPos, length, (BYTE *)&securityModel))
       return FALSE;   // Error parsing content
-   currPos += length;
-   remLength -= length + idLength;
 	m_securityModel = (int)securityModel;
 
 	return TRUE;
@@ -541,8 +539,6 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, UINT32 dataLength)
    if (type != ASN_OCTET_STRING)
       return FALSE;
 	memcpy(m_salt, currPos, min(length, 8));
-   currPos += length;
-   remLength -= length + idLength;
 
 	return TRUE;
 }

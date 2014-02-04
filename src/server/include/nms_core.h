@@ -550,7 +550,7 @@ private:
    void sendObjectToolDetails(CSCPMessage *pRequest);
    void updateObjectTool(CSCPMessage *pRequest);
    void deleteObjectTool(CSCPMessage *pRequest);
-   void changeObjecToolDisableStatuss(CSCPMessage *pRequest);
+   void changeObjectToolStatus(CSCPMessage *pRequest);
    void generateObjectToolId(UINT32 dwRqId);
    void execTableTool(CSCPMessage *pRequest);
    void changeSubscription(CSCPMessage *pRequest);
@@ -584,9 +584,9 @@ private:
    void sendPerfTabDCIList(CSCPMessage *pRequest);
    void exportConfiguration(CSCPMessage *pRequest);
    void importConfiguration(CSCPMessage *pRequest);
-	void SendGraphList(UINT32 dwRqId);
-	void SaveGraph(CSCPMessage *pRequest);
-	void DeleteGraph(CSCPMessage *pRequest);
+	void sendGraphList(UINT32 dwRqId);
+	void saveGraph(CSCPMessage *pRequest);
+	void deleteGraph(CSCPMessage *pRequest);
 	void AddCACertificate(CSCPMessage *pRequest);
 	void DeleteCertificate(CSCPMessage *pRequest);
 	void UpdateCertificateComments(CSCPMessage *pRequest);
@@ -878,7 +878,7 @@ BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
 UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSession *pSession);
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
-UINT32 ChangeObjectToolDisableStatuss(UINT32 toolID,  bool enable);
+UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
 UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId);

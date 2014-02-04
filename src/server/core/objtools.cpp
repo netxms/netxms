@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,11 +23,9 @@
 #include "nxcore.h"
 #include <netxms-regex.h>
 
-
-//
-// Tool startup info
-//
-
+/**
+ * Tool startup info
+ */
 struct TOOL_STARTUP_INFO
 {
    UINT32 dwToolId;
@@ -38,11 +36,9 @@ struct TOOL_STARTUP_INFO
    TCHAR *pszToolData;
 };
 
-
-//
-// SNMP table enumerator arguments
-//
-
+/**
+ * SNMP table enumerator arguments
+ */
 struct SNMP_ENUM_ARGS
 {
    UINT32 dwNumCols;
@@ -53,11 +49,9 @@ struct SNMP_ENUM_ARGS
 	Table *table;
 };
 
-
-//
-// Check if tool with given id exist and is a table tool
-//
-
+/**
+ * Check if tool with given id exist and is a table tool
+ */
 BOOL IsTableTool(UINT32 dwToolId)
 {
    DB_RESULT hResult;
@@ -526,25 +520,58 @@ UINT32 DeleteObjectToolFromDB(UINT32 dwToolId)
 /**
  * Change Object Tool Disable status to opposit
  */
-UINT32 ChangeObjectToolDisableStatuss(UINT32 toolID, bool enable)
+UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled)
 {
-   TCHAR query[256];
-   DB_RESULT result;
-   UINT32 flags;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   if(enable)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT flags FROM object_tools WHERE tool_id=?"));
+   if (hStmt == NULL)
    {
-      flags &= ~TF_DISABLED;
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   UINT32 rcc = RCC_SUCCESS;
+   UINT32 flags = 0;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != NULL)
+   {
+      flags = DBGetFieldULong(hResult, 0, 0);
+      DBFreeResult(hResult);
    }
    else
    {
-      flags |= TF_DISABLED;
+      rcc = RCC_DB_FAILURE;
    }
-   _sntprintf(query, 4096, _T("UPDATE object_tools SET flags=%d WHERE tool_id=%d"), flags, toolID);
-   DBQuery(g_hCoreDB, query);
+   DBFreeStatement(hStmt);
 
-   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, toolID);
-   return RCC_SUCCESS;
+   if (rcc == RCC_SUCCESS)
+   {
+      if (enabled)
+      {
+         flags &= ~TF_DISABLED;
+      }
+      else
+      {
+         flags |= TF_DISABLED;
+      }
+      rcc = RCC_DB_FAILURE;
+      hStmt = DBPrepare(hdb, _T("UPDATE object_tools SET flags=? WHERE tool_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, flags);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolId);
+         if (DBExecute(hStmt))
+         {
+            NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, toolId);
+            rcc = RCC_SUCCESS;
+         }
+         DBFreeStatement(hStmt);
+      }
+   }
+   return rcc;
 }
 
 /**
