@@ -161,11 +161,7 @@ LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
-	char szArg[128] = {0};
 	FILE *hFile;
-
-	// get processor
-	//AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	hFile = fopen("/proc/loadavg", "r");
 	if (hFile != NULL)
