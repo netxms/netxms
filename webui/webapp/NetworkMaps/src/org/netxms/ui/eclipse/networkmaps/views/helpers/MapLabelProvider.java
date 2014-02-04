@@ -249,6 +249,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			switch(objectFigureType)
 			{
+            case LARGE_LABEL:
+               return new ObjectFigureLargeLabel((NetworkMapObject)element, this);
 				case SMALL_LABEL:
 					return new ObjectFigureSmallLabel((NetworkMapObject)element, this);
 				case ICON:

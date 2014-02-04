@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,10 @@ public abstract class ObjectFigure extends Figure
 	{
 		this.element = element;
 		this.labelProvider = labelProvider;
-
+		
+		// set default font
+      setFont(labelProvider.getLabelFont());
+		
 		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		object = session.findObjectById(element.getObjectId());
 		if (object == null)
@@ -100,9 +103,4 @@ public abstract class ObjectFigure extends Figure
 		}
 		return false;
 	}
-
-	/**
-	 * Object update handler.
-	 */
-	protected abstract void onObjectUpdate();
 }

@@ -111,7 +111,6 @@ public class AlarmList extends Composite
 	private List<Action> timeAcknowledge;
 	private Action timeAcknowledgeOther;
 	
-	
 	/**
 	 * Create alarm list widget
 	 *  
@@ -124,7 +123,7 @@ public class AlarmList extends Composite
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
-		this.viewPart = viewPart;		
+		this.viewPart = viewPart;	
 		
 		// Setup table columns
 		final String[] names = { Messages.get().AlarmList_ColumnSeverity, Messages.get().AlarmList_ColumnState, Messages.get().AlarmList_ColumnSource, Messages.get().AlarmList_ColumnMessage, Messages.get().AlarmList_ColumnCount, Messages.get().AlarmList_Comments, Messages.get().AlarmList_AckBy, Messages.get().AlarmList_ColumnCreated, Messages.get().AlarmList_ColumnLastChange };

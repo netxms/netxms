@@ -52,7 +52,6 @@ public class ObjectFigureIcon extends ObjectFigure
 		
 		setLayoutManager(new BorderLayout());
 		
-		setFont(labelProvider.getLabelFont());
 		label = new Label(object.getObjectName());
 		label.setFont(labelProvider.getLabelFont());
 		label.setLabelAlignment(PositionConstants.CENTER);
@@ -164,15 +163,5 @@ public class ObjectFigureIcon extends ObjectFigure
 				gc.drawImage(image, rect.x + rect.width - imgSize.width, rect.y);  // rect.y + rect.height - imgSize.height
 			}
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigure#onObjectUpdate()
-	 */
-	@Override
-	protected void onObjectUpdate()
-	{
-		label.setText(object.getObjectName());
-		updateSize();
 	}
 }

@@ -2159,7 +2159,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          msg = waitForMessage(NXCPCodes.CMD_ALARM_DATA, rqId);
          long alarmId = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_ID);
-         if (alarmId == 0) break; // ALARM_ID == 0 indicates end of list
+         if (alarmId == 0) 
+            break; // ALARM_ID == 0 indicates end of list
          alarmList.put(alarmId, new Alarm(msg));
       }
 

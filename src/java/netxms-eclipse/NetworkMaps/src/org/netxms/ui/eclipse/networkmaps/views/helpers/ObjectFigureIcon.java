@@ -163,14 +163,4 @@ public class ObjectFigureIcon extends ObjectFigure
 			}
 		}
 	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigure#onObjectUpdate()
-	 */
-	@Override
-	protected void onObjectUpdate()
-	{
-		label.setText(object.getObjectName());
-		updateSize();
-	}
 }

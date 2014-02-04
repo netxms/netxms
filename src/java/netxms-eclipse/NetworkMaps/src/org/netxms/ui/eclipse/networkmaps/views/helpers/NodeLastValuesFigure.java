@@ -23,6 +23,7 @@ public class NodeLastValuesFigure extends Figure
 	{
 		GridLayout layout = new GridLayout(2, false);
 		layout.horizontalSpacing = 10;
+		layout.marginWidth = 0;
 		setLayoutManager(layout);
 		
 		Color color = SharedColors.getColor(SharedColors.MAP_LAST_VALUES_TEXT, Display.getCurrent());

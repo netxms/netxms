@@ -768,6 +768,18 @@ public class WidgetHelper
 	{
 		return (int)Math.round(px * 72.0 / device.getDPI().y);
 	}
+
+   /**
+    * Scale text points relative to "basic" 96 DPI.
+    * 
+    * @param device
+    * @param pt
+    * @return
+    */
+   public static int scaleTextPoints(Display device, int pt)
+   {
+      return (int)Math.round(pt * (device.getDPI().y / 96.0));
+   }
 	
 	/**
 	 * Get width of given text in pixels using settings from given control

@@ -123,7 +123,6 @@ public class AlarmList extends Composite
 	private List<Action> timeAcknowledge;
 	private Action timeAcknowledgeOther;
 	
-	
 	/**
 	 * Create alarm list widget
 	 *  
