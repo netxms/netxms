@@ -1668,7 +1668,8 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
                break;
             }
          }
-			pBuffer[fs.st_size] = 0;
+         if (pBuffer != NULL)
+            pBuffer[fs.st_size] = 0;
       }
    }
    close(fd);
@@ -1702,7 +1703,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSiz
 #endif
    if (fd != -1)
    {
-		pBuffer = LoadFileContent(fd, pdwFileSize);
+      pBuffer = LoadFileContent(fd, pdwFileSize);
    }
    return pBuffer;
 }

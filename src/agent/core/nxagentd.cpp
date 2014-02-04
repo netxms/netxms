@@ -593,7 +593,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 				ipAddr = INADDR_NONE;
 			netMask = 0xFFFFFFFF;
 		}
-		if (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE)
+		if (ipAddr == INADDR_NONE)
 		{
 			if (!(g_dwFlags & AF_DAEMON))
 				_tprintf(_T("Invalid server address '%s'\n"), pItem);
