@@ -124,6 +124,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StatusSingleThreshold','75',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StatusThresholds','503C2814',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StatusTranslation','01020304',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StrictAlarmStatusFlow','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyncInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyncNodeNamesWithDNS','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyslogListenPort','514',1,1);
@@ -141,7 +142,6 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPPassword','netxms',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPPort','5222',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPServer','localhost',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StrictAlarmStatusFlow','0',1,0);
 
 /*
 ** Default admin user

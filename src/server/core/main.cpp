@@ -1660,12 +1660,14 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 	sigemptyset(&signals);
 	sigaddset(&signals, SIGTERM);
 	sigaddset(&signals, SIGINT);
-	sigaddset(&signals, SIGPIPE);
 	sigaddset(&signals, SIGSEGV);
 	sigaddset(&signals, SIGCHLD);
 	sigaddset(&signals, SIGHUP);
 	sigaddset(&signals, SIGUSR1);
 	sigaddset(&signals, SIGUSR2);
+#if !defined(__sun) && !defined(_AIX) && !defined(__hpux)
+	sigaddset(&signals, SIGPIPE);
+#endif
 
 	sigprocmask(SIG_BLOCK, &signals, NULL);
 

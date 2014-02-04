@@ -476,11 +476,13 @@ static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 	sigemptyset(&signals);
 	sigaddset(&signals, SIGTERM);
 	sigaddset(&signals, SIGINT);
-	sigaddset(&signals, SIGPIPE);
 	sigaddset(&signals, SIGSEGV);
 	sigaddset(&signals, SIGHUP);
 	sigaddset(&signals, SIGUSR1);
 	sigaddset(&signals, SIGUSR2);
+#if !defined(__sun) && !defined(_AIX) && !defined(__hpux)
+	sigaddset(&signals, SIGPIPE);
+#endif
 
 	sigprocmask(SIG_BLOCK, &signals, NULL);
 
@@ -1141,7 +1143,6 @@ int main(int argc, char *argv[])
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
    signal(SIGPIPE, SIG_IGN);
    signal(SIGHUP, SIG_IGN);
-   signal(SIGINT, SIG_IGN);
    signal(SIGQUIT, SIG_IGN);
    signal(SIGUSR1, SIG_IGN);
    signal(SIGUSR2, SIG_IGN);
