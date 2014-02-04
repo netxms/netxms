@@ -425,30 +425,29 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
  */
 void DCTable::transform(Table *value)
 {
-   if (m_transformationScript != NULL)
+   if (m_transformationScript == NULL)
+      return;
+
+   NXSL_Value *nxslValue;
+   NXSL_ServerEnv *pEnv;
+
+   nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
+   pEnv = new NXSL_ServerEnv;
+   m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
+   if (m_pNode->Type() == OBJECT_NODE)
    {
-      NXSL_Value *nxslValue;
-      NXSL_ServerEnv *pEnv;
+      m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+   }
+   m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+   m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
 
-      nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
-      pEnv = new NXSL_ServerEnv;
-      m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
-      if (m_pNode->Type() == OBJECT_NODE)
-      {
-         m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
-      }
-      m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
-      m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
-	
-      if (m_transformationScript->run(pEnv, 1, &nxslValue) != 0)
-      {
-         TCHAR szBuffer[1024];
+   if (m_transformationScript->run(pEnv, 1, &nxslValue) != 0)
+   {
+      TCHAR szBuffer[1024];
 
-			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
-                    (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
-                   m_transformationScript->getErrorText(), m_dwId);
-      }
+		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
+                 (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
+      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_dwId);
    }
 }
 

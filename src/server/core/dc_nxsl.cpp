@@ -41,7 +41,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
-	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+	if (dci != NULL)
 	{
 		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
 	}
@@ -70,10 +70,21 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
-	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
-	{
-      *ppResult = rawValue ? ((DCItem *)dci)->getRawValueForNXSL() : ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
-	}
+	if (dci != NULL)
+   {
+      if (dci->getType() == DCO_TYPE_ITEM)
+	   {
+         *ppResult = rawValue ? ((DCItem *)dci)->getRawValueForNXSL() : ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
+	   }
+      else if (dci->getType() == DCO_TYPE_TABLE)
+      {
+         *ppResult = new NXSL_Value(new NXSL_Object(&g_nxslTableClass, ((DCTable *)dci)->getLastValue()));
+      }
+      else
+      {
+   		*ppResult = new NXSL_Value;	// Return NULL
+      }
+   }
 	else
 	{
 		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
@@ -168,7 +179,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectByName(argv[1]->getValueAsCString());
-	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
+	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
 	return 0;
 }
 
@@ -189,7 +200,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectByDescription(argv[1]->getValueAsCString());
-	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
+	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
 	return 0;
 }
 

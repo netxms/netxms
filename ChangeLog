@@ -5,6 +5,7 @@
 - Support for MetaSystem UPS in UPS subagent
 - Timed (temporary) alarm acknowledgement
 - New subagent DBQuery - replacement for ODBCQuery 
+- DCI access functions in NXSL works correctly with table DCIs
 - Management console:
    - Fixed bug with red zone display in "last value" dashboard element
    - Edit and delete for alarm comments are working now
