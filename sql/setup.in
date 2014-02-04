@@ -141,7 +141,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPPassword','netxms',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPPort','5222',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPServer','localhost',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StrictAlatmStatusFlow','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StrictAlarmStatusFlow','0',1,0);
 
 /*
 ** Default admin user
@@ -195,7 +195,7 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,-2147483647,2047);
 #define ID_GROUP_1 -2147483647
 #define ID_GROUP_2 -2147483646
 
-INSERT INTO event_groups (id,name,description,range_start,range_end) 
+INSERT INTO event_groups (id,name,description,range_start,range_end)
    VALUES (ID_GROUP_1,'NodeStatus','All events reporting about node status change',0,0);
 INSERT INTO event_groups (id,name,description,range_start,range_end)
    VALUES (ID_GROUP_2,'NewObjects','All events reporting about new objects creation',0,0);
