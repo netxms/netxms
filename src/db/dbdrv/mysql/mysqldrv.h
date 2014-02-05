@@ -71,6 +71,7 @@ typedef struct
  */
 typedef struct
 {
+	MYSQL_CONN *connection;
 	MYSQL_RES *resultSet;
 	bool isPreparedStatement;
 	MYSQL_STMT *statement;
@@ -86,7 +87,7 @@ typedef struct
  */
 typedef struct
 {
-   MYSQL_CONN *pConn;
+   MYSQL_CONN *connection;
    MYSQL_RES *pHandle;
    MYSQL_ROW pCurrRow;
    BOOL bNoMoreRows;
