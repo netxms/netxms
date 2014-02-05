@@ -10,6 +10,8 @@
    - Fixed bug with red zone display in "last value" dashboard element
    - Edit and delete for alarm comments are working now
    - Fixed Y axis range can be set for line and bar charts
+   - In alarm menue are not shown incompatible for selected alarm statuses.
+   - Alarm status flow can be changed to strict(terminate status can be set only after alarm is resolved). To change flow set "StrictAlarmStatusFlow" parameter to 1.
 - Android Agent:
 	- Implemented "Connection notification" in status bar (feature #481)
 	- Fix bug in resetting switch preference (settings) 
