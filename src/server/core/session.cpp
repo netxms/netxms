@@ -383,6 +383,13 @@ void ClientSession::readThread()
          break;
       }
 
+      // Receive timeout
+      if (iErr == 3)
+      {
+         debugPrintf(5, _T("RecvNXCPMessageEx: receive timeout"));
+         break;
+      }
+
       // Check if message is too large
       if (iErr == 1)
       {
@@ -396,13 +403,6 @@ void ClientSession::readThread()
       if (iErr == 2)
       {
          debugPrintf(4, _T("Unable to decrypt received message"));
-         continue;
-      }
-
-      // Receive timeout
-      if (iErr == 3)
-      {
-         debugPrintf(7, _T("RecvNXCPMessageEx: receive timeout"));
          continue;
       }
 
