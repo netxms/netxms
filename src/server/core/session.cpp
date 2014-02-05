@@ -399,6 +399,13 @@ void ClientSession::readThread()
          continue;
       }
 
+      // Receive timeout
+      if (iErr == 3)
+      {
+         debugPrintf(7, _T("RecvNXCPMessageEx: receive timeout"));
+         continue;
+      }
+
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
