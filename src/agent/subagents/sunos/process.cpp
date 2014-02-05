@@ -144,7 +144,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine, int lw
 
                if (lwpState != 0)
                {
-                  lwpStateMatch = psi.pr_lwp.pr_stype == lwpState;
+                  lwpStateMatch = psi.pr_lwp.pr_state == lwpState;
                }
 
 					if (nameMatch && cmdLineMatch && lwpStateMatch)
