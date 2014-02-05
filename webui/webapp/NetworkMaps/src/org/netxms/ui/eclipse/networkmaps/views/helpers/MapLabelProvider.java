@@ -99,6 +99,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
+	private boolean enableLongObjectName = false;
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 	private ColorCache colors;
@@ -150,6 +151,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground"); //$NON-NLS-1$
 		
 		colors = new ColorCache();
+		
+		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+		enableLongObjectName = ps.getBoolean("ENABLE_LONG_OBJECT_NAME");
+		System.out.println(enableLongObjectName);
 	}
 
 	/*
@@ -593,4 +598,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		return ((MapContentProvider)viewer.getContentProvider()).getNodeLastValues(nodeId);
 	}
+
+   public boolean isLongObjectNameEnabled()
+   {
+      return enableLongObjectName;
+   }
 }

@@ -37,5 +37,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
       ps.setDefault("NetMap.ShowStatusIcon", true); //$NON-NLS-1$
       ps.setDefault("NetMap.ShowStatusFrame", false); //$NON-NLS-1$
       ps.setDefault("NetMap.ShowStatusBackground", false); //$NON-NLS-1$
+      ps.setDefault("ENABLE_LONG_OBJECT_NAME", false); //$NON-NLS-1$
    }
 }

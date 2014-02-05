@@ -59,13 +59,13 @@ public class ObjectFigureIcon extends ObjectFigure
 		
 		setOpaque(false);
 
-		updateSize();
+		updateSize(labelProvider);
 	}
 	
 	/**
 	 * Update figure's size
 	 */
-	private void updateSize()
+	private void updateSize(MapLabelProvider labelProvider)
 	{
 		final Image image = labelProvider.getImage(element);
 		if (image != null)
@@ -80,8 +80,11 @@ public class ObjectFigureIcon extends ObjectFigure
 		}
 		
 		Dimension ls = label.getPreferredSize(-1, -1);
-		if (ls.width > imageWidth * 2)
-			ls.width = imageWidth * 2;
+		if(!labelProvider.isLongObjectNameEnabled())
+		{
+   		if (ls.width > imageWidth * 2)
+   			ls.width = imageWidth * 2; 
+		}
 		setSize(Math.max(Math.max(ls.width, imageWidth), imageWidth + BACKGROUND_MARGIN_X * 2 + FRAME_LINE_WIDTH), imageHeight + IMAGE_MARGIN_Y * 2 + ls.height);
 	}
 
