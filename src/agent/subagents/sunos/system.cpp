@@ -328,13 +328,17 @@ static void UpdateSwapInfo()
       return;
    }
 
-   swaptable *swapTable = (swaptable *)malloc(num * sizeof(swapent_t) + sizeof(int));
+   swaptable *swapTable = (swaptable *)malloc(num * sizeof(swapent_t) + sizeof(swaptable));
    if (swapTable == NULL)
    {
       AgentWriteDebugLog(6, _T("%s: %s: failed to allocate the swap table"), AGENT_NAME, METHOD_NAME);
       return;
    }
    swapTable->swt_n = num;
+   for (int i = 0; i < num; i++)
+   {
+      swapTable[i].swt_ent[i].ste_path = (char *)malloc(sizeof(TCHAR) * MAXPATHLEN);
+   }
 
    int ret = swapctl(SC_LIST, swapTable);
    if (ret == -1)
@@ -352,6 +356,7 @@ static void UpdateSwapInfo()
    {
       totalBytes += swapEntry[i].ste_pages * bytesPerPage;
       freeBytes += swapEntry[i].ste_free * bytesPerPage;
+      free(swapEntry[i].ste_path);
    }
 
    free(swapTable);
