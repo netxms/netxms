@@ -81,7 +81,19 @@ DBConnection *DBConnection::createFromConfig(const TCHAR *config)
    conn->m_server = ReadAttribute(config, _T("server"));
    conn->m_dbName = ReadAttribute(config, _T("dbname")); 
    conn->m_login = ReadAttribute(config, _T("login"));
-   conn->m_password = ReadAttribute(config, _T("password"));
+
+   TCHAR *password = ReadAttribute(config, _T("encryptedPassword"));
+   if (password != NULL)
+   {
+      TCHAR buffer[256];
+      DecryptPassword(CHECK_NULL_EX(conn->m_login), password, buffer);
+      free(password);
+      conn->m_password = _tcsdup(buffer);
+   }
+   else
+   {
+      conn->m_password = ReadAttribute(config, _T("password"));
+   }
 
    if ((conn->m_id == NULL) || (conn->m_driver == NULL))
    {

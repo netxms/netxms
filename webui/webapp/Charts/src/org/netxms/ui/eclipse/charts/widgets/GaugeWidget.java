@@ -691,4 +691,9 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 			fontsCreated = true;
 		}
 	}
+	
+	  @Override
+	   public void setYAxisRange(int from, int to)
+	   {
+	   }
 }

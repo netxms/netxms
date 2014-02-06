@@ -22,21 +22,17 @@
 
 #include "ups.h"
 
-
-//
-// Data types for CheckNA()
-//
-
+/**
+ * Data types for CheckNA()
+ */
 #define TYPE_STRING  0
 #define TYPE_LONG    1
 #define TYPE_DOUBLE  2
 
-
-//
-// Check if UPS reports parameter value as NA and set parameter's
-// flags acordingly. 
-//
-
+/**
+ * Check if UPS reports parameter value as NA and set parameter's
+ * flags acordingly. 
+ */
 static void CheckNA(UPS_PARAMETER *p, int nType)
 {
    LONG nVal;
@@ -80,28 +76,24 @@ static void CheckNA(UPS_PARAMETER *p, int nType)
    }
 }
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 APCInterface::APCInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
 {
 	if (m_portSpeed == 0)
 		m_portSpeed = 2400;
 }
 
-
-//
-// Query parameter from device
-//
-
-void APCInterface::QueryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep)
+/**
+ * Query parameter from device
+ */
+void APCInterface::queryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep)
 {
    char *pch;
 
    m_serial.write(pszRq, 1);
-   if (ReadLineFromSerial(p->szValue, MAX_RESULT_LENGTH))
+   if (readLineFromSerial(p->szValue, MAX_RESULT_LENGTH))
    {
       if (chSep != -1)
       {
@@ -117,17 +109,15 @@ void APCInterface::QueryParameter(const char *pszRq, UPS_PARAMETER *p, int nType
    }
 }
 
-
-//
-// Open device
-//
-
-BOOL APCInterface::Open()
+/**
+ * Open device
+ */
+BOOL APCInterface::open()
 {
    char szLine[256];
    BOOL bRet;
 
-   if (!SerialInterface::Open())
+   if (!SerialInterface::open())
       return FALSE;
 
    m_serial.setTimeout(1000);
@@ -135,16 +125,16 @@ BOOL APCInterface::Open()
 
    // Turn on "smart" mode
    m_serial.write("Y", 1);
-   bRet = ReadLineFromSerial(szLine, 256);
+   bRet = readLineFromSerial(szLine, 256);
    if (bRet && !strcmp(szLine, "SM"))
    {
       bRet = TRUE;
-      SetConnected();
+      setConnected();
 		
 		// Query model and set as device name
 		char buffer[MAX_RESULT_LENGTH];
    	m_serial.write("\x01", 1);
-		if (ReadLineFromSerial(buffer, MAX_RESULT_LENGTH))
+		if (readLineFromSerial(buffer, MAX_RESULT_LENGTH))
 		{
 			StrStripA(buffer);
 			setName(buffer);
@@ -158,48 +148,42 @@ BOOL APCInterface::Open()
    return bRet;
 }
 
-
-//
-// Validate connection
-//
-
-BOOL APCInterface::ValidateConnection(void)
+/**
+ * Validate connection
+ */
+BOOL APCInterface::validateConnection()
 {
    BOOL bRet;
    char szLine[256];
 
    m_serial.write("Y", 1);
-   bRet = ReadLineFromSerial(szLine, 256);
+   bRet = readLineFromSerial(szLine, 256);
    return (bRet && !strcmp(szLine, "SM"));
 }
 
-
-//
-// Get UPS model
-//
-
-void APCInterface::QueryModel(void)
+/**
+ * Get UPS model
+ */
+void APCInterface::queryModel()
 {
-   QueryParameter("\x01", &m_paramList[UPS_PARAM_MODEL], TYPE_STRING, -1);
+   queryParameter("\x01", &m_paramList[UPS_PARAM_MODEL], TYPE_STRING, -1);
 }
 
-
-//
-// Get UPS firmware version
-//
-
-void APCInterface::QueryFirmwareVersion(void)
+/**
+ * Get UPS firmware version
+ */
+void APCInterface::queryFirmwareVersion()
 {
    char szRev[256], szVer[256];
 
    m_serial.write("V", 1);
-   if (!ReadLineFromSerial(szVer, 256))
+   if (!readLineFromSerial(szVer, 256))
    {
       szVer[0] = 0;
    }
 
    m_serial.write("b", 1);
-   if (!ReadLineFromSerial(szRev, 256))
+   if (!readLineFromSerial(szRev, 256))
    {
       szRev[0] = 0;
    }
@@ -216,84 +200,68 @@ void APCInterface::QueryFirmwareVersion(void)
    }
 }
 
-
-//
-// Get manufacturing date
-//
-
-void APCInterface::QueryMfgDate(void)
+/**
+ * Get manufacturing date
+ */
+void APCInterface::queryMfgDate()
 {
-   QueryParameter("m", &m_paramList[UPS_PARAM_MFG_DATE], TYPE_STRING, -1);
+   queryParameter("m", &m_paramList[UPS_PARAM_MFG_DATE], TYPE_STRING, -1);
 }
 
-
-//
-// Get serial number
-//
-
-void APCInterface::QuerySerialNumber(void)
+/**
+ * Get serial number
+ */
+void APCInterface::querySerialNumber()
 {
-   QueryParameter("n", &m_paramList[UPS_PARAM_SERIAL], TYPE_STRING, -1);
+   queryParameter("n", &m_paramList[UPS_PARAM_SERIAL], TYPE_STRING, -1);
 }
 
-
-//
-// Get temperature inside UPS
-//
-
-void APCInterface::QueryTemperature(void)
+/**
+ * Get temperature inside UPS
+ */
+void APCInterface::queryTemperature()
 {
-   QueryParameter("C", &m_paramList[UPS_PARAM_TEMP], TYPE_LONG, '.');
+   queryParameter("C", &m_paramList[UPS_PARAM_TEMP], TYPE_LONG, '.');
 }
 
-
-//
-// Get battery voltage
-//
-
-void APCInterface::QueryBatteryVoltage(void)
+/**
+ * Get battery voltage
+ */
+void APCInterface::queryBatteryVoltage()
 {
-   QueryParameter("B", &m_paramList[UPS_PARAM_BATTERY_VOLTAGE], TYPE_DOUBLE, -1);
+   queryParameter("B", &m_paramList[UPS_PARAM_BATTERY_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
-
-//
-// Get nominal battery voltage
-//
-
-void APCInterface::QueryNominalBatteryVoltage(void)
+/**
+ * Get nominal battery voltage
+ */
+void APCInterface::queryNominalBatteryVoltage()
 {
-   QueryParameter("g", &m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE], TYPE_DOUBLE, -1);
+   queryParameter("g", &m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
-
-//
-// Get battery level (in percents)
-//
-
-void APCInterface::QueryBatteryLevel(void)
+/**
+ * Get battery level (in percents)
+ */
+void APCInterface::queryBatteryLevel()
 {
-   QueryParameter("f", &m_paramList[UPS_PARAM_BATTERY_LEVEL], TYPE_LONG, '.');
+   queryParameter("f", &m_paramList[UPS_PARAM_BATTERY_LEVEL], TYPE_LONG, '.');
 }
 
-
-//
-// Get input line voltage
-//
-
-void APCInterface::QueryInputVoltage(void)
+/**
+ * Get input line voltage
+ */
+void APCInterface::queryInputVoltage()
 {
-   QueryParameter("L", &m_paramList[UPS_PARAM_INPUT_VOLTAGE], TYPE_DOUBLE, -1);
+   queryParameter("L", &m_paramList[UPS_PARAM_INPUT_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
-
-//
-// Get output voltage
-//
-
-void APCInterface::QueryOutputVoltage(void)
+/**
+ * Get output voltage
+ */
+void APCInterface::queryOutputVoltage()
 {
-   QueryParameter("O", &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE], TYPE_DOUBLE, -1);
+   queryParameter("O", &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
 
@@ -301,9 +269,9 @@ void APCInterface::QueryOutputVoltage(void)
 // Get line frequency (Hz)
 //
 
-void APCInterface::QueryLineFrequency(void)
+void APCInterface::queryLineFrequency()
 {
-   QueryParameter("F", &m_paramList[UPS_PARAM_LINE_FREQ], TYPE_LONG, '.');
+   queryParameter("F", &m_paramList[UPS_PARAM_LINE_FREQ], TYPE_LONG, '.');
 }
 
 
@@ -311,9 +279,9 @@ void APCInterface::QueryLineFrequency(void)
 // Get UPS power load (in percents)
 //
 
-void APCInterface::QueryPowerLoad(void)
+void APCInterface::queryPowerLoad()
 {
-   QueryParameter("P", &m_paramList[UPS_PARAM_LOAD], TYPE_LONG, '.');
+   queryParameter("P", &m_paramList[UPS_PARAM_LOAD], TYPE_LONG, '.');
 }
 
 
@@ -321,9 +289,9 @@ void APCInterface::QueryPowerLoad(void)
 // Get estimated on-battery runtime
 //
 
-void APCInterface::QueryEstimatedRuntime(void)
+void APCInterface::queryEstimatedRuntime()
 {
-   QueryParameter("j", &m_paramList[UPS_PARAM_EST_RUNTIME], TYPE_LONG, ':');
+   queryParameter("j", &m_paramList[UPS_PARAM_EST_RUNTIME], TYPE_LONG, ':');
 }
 
 
@@ -331,13 +299,13 @@ void APCInterface::QueryEstimatedRuntime(void)
 // Check if UPS is online or on battery power
 //
 
-void APCInterface::QueryOnlineStatus(void)
+void APCInterface::queryOnlineStatus()
 {
    char *eptr, szLine[MAX_RESULT_LENGTH];
    DWORD dwFlags;
 
    m_serial.write("Q", 1);
-   if (ReadLineFromSerial(szLine, MAX_RESULT_LENGTH))
+   if (readLineFromSerial(szLine, MAX_RESULT_LENGTH))
    {
       if (strcmp(szLine, "NA"))
       {

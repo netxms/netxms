@@ -18,6 +18,8 @@
  */
 package org.netxms.client;
 
+import java.util.Random;
+
 /**
  * Basic connection tests
  */
@@ -41,5 +43,44 @@ public class ConnectionTest extends SessionTest
 		
 		Thread.sleep(2000);
 		session.disconnect();
+	}
+	
+	public void testMultipleConnections() throws Exception
+	{
+	   Thread[] t = new Thread[100];
+	   for(int i = 0; i < t.length; i++)
+	   {
+	      t[i] = new Thread(new Runnable() {
+            @Override
+            public void run()
+            {
+               try
+               {
+                  Random rand = new Random();
+                  Thread.sleep(rand.nextInt(60000) + 1000);
+                  final NXCSession session = connect(true);
+                  
+                  session.syncObjects();
+                  session.syncEventTemplates();
+                  session.syncUserDatabase();
+
+                  Thread.sleep(rand.nextInt(60000) + 10000);
+                  session.disconnect();
+               }
+               catch(Exception e)
+               {
+                  e.printStackTrace();
+               }
+            }
+         });
+	      t[i].start();
+         System.out.println("Thread #" + (i + 1) + " started");
+	   }
+	   
+      for(int i = 0; i < t.length; i++)
+      {
+         t[i].join();
+         System.out.println("Thread #" + (i + 1) + " stopped");
+      }
 	}
 }

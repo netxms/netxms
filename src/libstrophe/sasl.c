@@ -484,76 +484,80 @@ int base64_decoded_len(xmpp_ctx_t *ctx,
 unsigned char *base64_decode(xmpp_ctx_t *ctx,
 			     const char * const buffer, const unsigned len)
 {
-    int dlen;
-    unsigned char *dbuf, *d;
-    uint32_t word, hextet;
-    int i;
+   int dlen;
+   unsigned char *dbuf, *d;
+   uint32_t word, hextet;
+   int i;
 
-    /* len must be a multiple of 4 */
-    if (len & 0x03) return NULL;
+   /* len must be a multiple of 4 */
+   if (len & 0x03) return NULL;
 
-    dlen = base64_decoded_len(ctx, buffer, len);
-    dbuf = xmpp_alloc(ctx, dlen + 1);
-    if (dbuf != NULL) {
-	d = dbuf;
-	/* loop over each set of 4 characters, decoding 3 bytes */
-	for (i = 0; i < len - 3; i += 4) {
-	    hextet = _base64_invcharmap[(int)buffer[i]];
-	    if (hextet & 0xC0) break;
-	    word = hextet << 18;
-	    hextet = _base64_invcharmap[(int)buffer[i+1]];
-	    if (hextet & 0xC0) break;
-	    word |= hextet << 12;
-	    hextet = _base64_invcharmap[(int)buffer[i+2]];
-	    if (hextet & 0xC0) break;
-	    word |= hextet << 6;
-	    hextet = _base64_invcharmap[(int)buffer[i+3]];
-	    if (hextet & 0xC0) break;
-	    word |= hextet;
-	    *d++ = (word & 0x00FF0000) >> 16;
-	    *d++ = (word & 0x0000FF00) >> 8;
-	    *d++ = (word & 0x000000FF);
-	}
-	if (hextet > 64) goto _base64_decode_error;
-	/* handle the remainder */
-	switch (dlen % 3) {
-	    case 0:
-		/* nothing to do */
-		break;
-	    case 1:
-		/* redo the last quartet, checking for correctness */
-		hextet = _base64_invcharmap[(int)buffer[len-4]];
-		if (hextet & 0xC0) goto _base64_decode_error;
-		word = hextet << 2;
-		hextet = _base64_invcharmap[(int)buffer[len-3]];
-		if (hextet & 0xC0) goto _base64_decode_error;
-		word |= hextet >> 4;
-		*d++ = word & 0xFF;
-		hextet = _base64_invcharmap[(int)buffer[len-2]];
-		if (hextet != 64) goto _base64_decode_error;
-		hextet = _base64_invcharmap[(int)buffer[len-1]];
-		if (hextet != 64) goto _base64_decode_error;
-		break;
-	    case 2:
-		/* redo the last quartet, checking for correctness */
-		hextet = _base64_invcharmap[(int)buffer[len-4]];
-		if (hextet & 0xC0) goto _base64_decode_error;
-		word = hextet << 10;		
-		hextet = _base64_invcharmap[(int)buffer[len-3]];
-		if (hextet & 0xC0) goto _base64_decode_error;
-		word |= hextet << 4;		
-		hextet = _base64_invcharmap[(int)buffer[len-2]];
-		if (hextet & 0xC0) goto _base64_decode_error;
-		word |= hextet >> 2;
-		*d++ = (word & 0xFF00) >> 8;
-		*d++ = (word & 0x00FF);		
-		hextet = _base64_invcharmap[(int)buffer[len-1]];
-		if (hextet != 64) goto _base64_decode_error;
-		break;
-	}
-    }
-    *d = '\0';
-    return dbuf;
+   dlen = base64_decoded_len(ctx, buffer, len);
+   dbuf = xmpp_alloc(ctx, dlen + 1);
+   if (dbuf != NULL) 
+   {
+      d = dbuf;
+      /* loop over each set of 4 characters, decoding 3 bytes */
+   	for (i = 0; i < len - 3; i += 4) 
+      {
+         hextet = _base64_invcharmap[(int)buffer[i]];
+         if (hextet & 0xC0) 
+            break;
+         word = hextet << 18;
+         hextet = _base64_invcharmap[(int)buffer[i+1]];
+         if (hextet & 0xC0) break;
+         word |= hextet << 12;
+         hextet = _base64_invcharmap[(int)buffer[i+2]];
+         if (hextet & 0xC0) break;
+         word |= hextet << 6;
+         hextet = _base64_invcharmap[(int)buffer[i+3]];
+         if (hextet & 0xC0) break;
+         word |= hextet;
+         *d++ = (word & 0x00FF0000) >> 16;
+         *d++ = (word & 0x0000FF00) >> 8;
+         *d++ = (word & 0x000000FF);
+   	}
+      if (hextet > 64) goto _base64_decode_error;
+      /* handle the remainder */
+      switch (dlen % 3) 
+      {
+         case 0:
+            /* nothing to do */
+            break;
+         case 1:
+            /* redo the last quartet, checking for correctness */
+            hextet = _base64_invcharmap[(int)buffer[len-4]];
+            if (hextet & 0xC0) goto _base64_decode_error;
+            word = hextet << 2;
+            hextet = _base64_invcharmap[(int)buffer[len-3]];
+            if (hextet & 0xC0) goto _base64_decode_error;
+            word |= hextet >> 4;
+            *d++ = word & 0xFF;
+            hextet = _base64_invcharmap[(int)buffer[len-2]];
+            if (hextet != 64) goto _base64_decode_error;
+            hextet = _base64_invcharmap[(int)buffer[len-1]];
+            if (hextet != 64) goto _base64_decode_error;
+            break;
+         case 2:
+	         /* redo the last quartet, checking for correctness */
+	         hextet = _base64_invcharmap[(int)buffer[len-4]];
+	         if (hextet & 0xC0) goto _base64_decode_error;
+	         word = hextet << 10;		
+	         hextet = _base64_invcharmap[(int)buffer[len-3]];
+	         if (hextet & 0xC0) goto _base64_decode_error;
+	         word |= hextet << 4;		
+	         hextet = _base64_invcharmap[(int)buffer[len-2]];
+	         if (hextet & 0xC0) goto _base64_decode_error;
+	         word |= hextet >> 2;
+	         *d++ = (word & 0xFF00) >> 8;
+	         *d++ = (word & 0x00FF);		
+	         hextet = _base64_invcharmap[(int)buffer[len-1]];
+	         if (hextet != 64) goto _base64_decode_error;
+	         break;
+      }
+      *d = '\0';
+   }
+   return dbuf;
 
 _base64_decode_error:	
     /* invalid character; abort decoding! */

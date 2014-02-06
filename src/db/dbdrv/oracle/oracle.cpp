@@ -296,7 +296,7 @@ static UCS2CHAR *ConvertQuery(WCHAR *query)
 #endif
 	}
 
-	UCS2CHAR *dstQuery = (UCS2CHAR *)malloc((ucs2_strlen(srcQuery) + count * 2 + 1) * sizeof(UCS2CHAR));
+	UCS2CHAR *dstQuery = (UCS2CHAR *)malloc((ucs2_strlen(srcQuery) + count * 3 + 1) * sizeof(UCS2CHAR));
 	bool inString = false;
 	int pos = 1;
 	UCS2CHAR *src, *dst;
@@ -324,9 +324,15 @@ static UCS2CHAR *ConvertQuery(WCHAR *query)
 					{
 						*dst++ = pos + '0';
 					}
-					else
+					else if (pos < 100)
 					{
 						*dst++ = pos / 10 + '0';
+						*dst++ = pos % 10 + '0';
+					}
+					else
+					{
+						*dst++ = pos / 100 + '0';
+						*dst++ = (pos % 100) / 10 + '0';
 						*dst++ = pos % 10 + '0';
 					}
 					pos++;

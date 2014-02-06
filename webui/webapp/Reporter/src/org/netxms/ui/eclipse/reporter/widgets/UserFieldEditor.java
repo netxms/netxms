@@ -15,6 +15,7 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
@@ -84,7 +85,7 @@ public class UserFieldEditor extends FieldEditor
 	 */
 	protected void selectUser()
 	{
-		final SelectUserDialog dialog = new SelectUserDialog(getShell(), false);
+		final SelectUserDialog dialog = new SelectUserDialog(getShell(), User.class);
 		if (dialog.open() == Window.OK)
 		{
 			final AbstractUserObject[] selection = dialog.getSelection();

@@ -397,7 +397,7 @@ void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const T
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
 void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *arg);
 void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description);
-BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec);
+BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);
 UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
 UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue);
 UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue);

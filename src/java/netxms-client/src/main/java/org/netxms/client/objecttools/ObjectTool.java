@@ -42,6 +42,7 @@ public class ObjectTool
 	public static final int REQUIRES_OID_MATCH    = 0x00000004;
 	public static final int ASK_CONFIRMATION      = 0x00000008;
 	public static final int GENERATES_OUTPUT      = 0x00000010;
+	public static final int DISABLED              = 0x00000020;
 	public static final int SNMP_INDEXED_BY_VALUE = 0x00010000;
 	
 	protected long id;

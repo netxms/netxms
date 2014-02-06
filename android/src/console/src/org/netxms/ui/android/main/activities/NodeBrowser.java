@@ -11,6 +11,7 @@ import java.util.Stack;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.NodePoller;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
@@ -49,10 +50,10 @@ import android.widget.TextView;
 
 public class NodeBrowser extends AbstractClientActivity
 {
-	private static final String TAG = "nxclient/SyncMissingObjectsTask";
+	private static final String TAG = "nxclient/NodeBrowser";
 	private ListView listView;
 	private ObjectListAdapter adapter;
-	private final long initialParent = 2;
+	private long initialParent;
 	private AbstractObject currentParent = null;
 	private final Stack<AbstractObject> containerPath = new Stack<AbstractObject>();
 	private long[] savedPath = null;
@@ -71,6 +72,8 @@ public class NodeBrowser extends AbstractClientActivity
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.nodes_title);
 
+		initialParent = getIntent().getIntExtra("parentId", GenericObject.SERVICEROOT);
+
 		// keeps current list of nodes as datasource for listview
 		adapter = new ObjectListAdapter(this);
 
@@ -83,7 +86,10 @@ public class NodeBrowser extends AbstractClientActivity
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
 				AbstractObject obj = (AbstractObject)adapter.getItem(position);
-				if ((obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER))
+				if ((obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER) ||
+						(obj.getObjectClass() == AbstractObject.OBJECT_SUBNET) ||
+						(obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ||
+						(obj.getObjectClass() == AbstractObject.OBJECT_ZONE))
 				{
 					containerPath.push(currentParent);
 					currentParent = obj;

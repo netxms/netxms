@@ -33,11 +33,9 @@ UINT32 g_dwRejectedConnections = 0;
 CommSession **g_pSessionList = NULL;
 MUTEX g_hSessionListAccess;
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static MUTEX m_mutexWatchdogActive = INVALID_MUTEX_HANDLE;
 
 /**
@@ -69,11 +67,9 @@ static BOOL IsValidServerAddr(UINT32 dwAddr, BOOL *pbMasterServer, BOOL *pbContr
    return FALSE;
 }
 
-
-//
-// Register new session in list
-//
-
+/**
+ * Register new session in list
+ */
 static BOOL RegisterSession(CommSession *pSession)
 {
    UINT32 i;
@@ -93,11 +89,9 @@ static BOOL RegisterSession(CommSession *pSession)
    return FALSE;
 }
 
-
-//
-// Unregister session
-//
-
+/**
+ * Unregister session
+ */
 void UnregisterSession(UINT32 dwIndex)
 {
    MutexLock(g_hSessionListAccess);
@@ -256,20 +250,15 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
  */
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 {
-   UINT32 i;
-   time_t now;
-
    m_mutexWatchdogActive = MutexCreate();
    MutexLock(m_mutexWatchdogActive);
 
    ThreadSleep(5);
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      ThreadSleep(1);
-
       MutexLock(g_hSessionListAccess);
-      now = time(NULL);
-      for(i = 0; i < g_dwMaxSessions; i++)
+      time_t now = time(NULL);
+      for(UINT32 i = 0; i < g_dwMaxSessions; i++)
          if (g_pSessionList[i] != NULL)
          {
             if (g_pSessionList[i]->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
@@ -279,11 +268,12 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 				}
          }
       MutexUnlock(g_hSessionListAccess);
+      ThreadSleep(5);
    }
 
    // Disconnect all sessions
    MutexLock(g_hSessionListAccess);
-   for(i = 0; i < g_dwMaxSessions; i++)
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
       if (g_pSessionList[i] != NULL)
          g_pSessionList[i]->disconnect();
    MutexUnlock(g_hSessionListAccess);
@@ -295,11 +285,9 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    return THREAD_OK;
 }
 
-
-//
-// Handler for Agent.ActiveConnections parameter
-//
-
+/**
+ * Handler for Agent.ActiveConnections parameter
+ */
 LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    int nCounter;

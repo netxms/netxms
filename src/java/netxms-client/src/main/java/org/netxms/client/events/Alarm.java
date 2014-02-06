@@ -64,6 +64,7 @@ public class Alarm
 	private int timeout;
 	private int timeoutEvent;
 	private int commentsCount;
+	private int ackTime;
 	
 	/**
 	 * @param msg Source NXCP message
@@ -91,6 +92,7 @@ public class Alarm
 		timeout = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_TIMEOUT);
 		timeoutEvent = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
 		commentsCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COMMENTS);
+		ackTime = msg.getVariableAsInteger(NXCPCodes.VID_TIMESTAMP);
 	}
 
 	/**
@@ -260,4 +262,12 @@ public class Alarm
 	{
 		return sticky;
 	}
+	
+	/**
+    * @return the sticky
+    */
+   public int getAckTime()
+   {      
+      return ackTime;
+   }
 }

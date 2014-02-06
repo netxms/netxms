@@ -117,6 +117,8 @@ public:
    void disableEncryption() { m_wFlags |= MF_DONT_ENCRYPT; }
    void setEndOfSequence() { m_wFlags |= MF_END_OF_SEQUENCE; }
    void setReverseOrderFlag() { m_wFlags |= MF_REVERSE_ORDER; }
+
+   static String dump(CSCP_MESSAGE *msg, int version);
 };
 
 /**
@@ -184,6 +186,7 @@ private:
 #ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX m_encryptor;
    EVP_CIPHER_CTX m_decryptor;
+   MUTEX m_encryptorLock;
 #endif
 
 	NXCPEncryptionContext();

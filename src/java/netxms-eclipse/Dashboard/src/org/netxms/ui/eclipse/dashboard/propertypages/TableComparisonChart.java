@@ -32,7 +32,9 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableTubeChartConfig;
+import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -50,6 +52,7 @@ public class TableComparisonChart extends PropertyPage
 	private Button checkShowIn3D;
 	private Button checkTranslucent;
 	private Button checkTransposed;
+   private YAxisRangeEditor yAxisRange;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -142,6 +145,17 @@ public class TableComparisonChart extends PropertyPage
 		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().TableComparisonChart_RefreshInterval, 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
 		
+		if(!(config instanceof TablePieChartConfig))
+      {
+         yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
+         gd = new GridData();
+         gd.horizontalSpan = layout.numColumns;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         yAxisRange.setLayoutData(gd);
+         yAxisRange.setSelection(config.isAutoScale(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+      }
+		
 		return dialogArea;
 	}
 	
@@ -177,7 +191,15 @@ public class TableComparisonChart extends PropertyPage
 		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
 		config.setShowIn3D(checkShowIn3D.getSelection());
-		config.setTranslucent(checkTranslucent.getSelection());
+		config.setTranslucent(checkTranslucent.getSelection());	
+		
+		if(!(config instanceof TablePieChartConfig))
+      {
+         config.setAutoScale(yAxisRange.isAuto());
+         config.setMinYScaleValue(yAxisRange.getMinY());
+         config.setMaxYScaleValue(yAxisRange.getMaxY());
+      }
+		
 		if (config instanceof TableBarChartConfig)
 		{
 			((TableBarChartConfig)config).setTransposed(checkTransposed.getSelection());

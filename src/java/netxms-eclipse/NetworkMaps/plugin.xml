@@ -302,5 +302,11 @@
             priority="10">
       </handler>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.netxms.ui.eclipse.networkmaps.PreferenceInitializer">
+      </initializer>
+   </extension>
 
 </plugin>

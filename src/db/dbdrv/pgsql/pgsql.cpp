@@ -264,7 +264,7 @@ static char *ConvertQuery(WCHAR *query)
 	if (count == 0)
 		return srcQuery;
 
-	char *dstQuery = (char *)malloc(strlen(srcQuery) + count * 2 + 1);
+	char *dstQuery = (char *)malloc(strlen(srcQuery) + count * 3 + 1);
 	bool inString = false;
 	int pos = 1;
 	char *src, *dst;
@@ -292,9 +292,15 @@ static char *ConvertQuery(WCHAR *query)
 					{
 						*dst++ = pos + '0';
 					}
-					else
+					else if (pos < 100)
 					{
 						*dst++ = pos / 10 + '0';
+						*dst++ = pos % 10 + '0';
+					}
+					else
+					{
+						*dst++ = pos / 100 + '0';
+						*dst++ = (pos % 100) / 10 + '0';
 						*dst++ = pos % 10 + '0';
 					}
 					pos++;
@@ -958,41 +964,35 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT hResult)
 	return ((hResult != NULL) && (((PG_CONN *)hResult)->pFetchBuffer != NULL))? PQnfields(((PG_CONN *)hResult)->pFetchBuffer) : 0;
 }
 
-
-//
-// Get column name in async query result
-//
-
+/**
+ * Get column name in async query result
+ */
 extern "C" const char EXPORT *DrvGetColumnNameAsync(DBDRV_ASYNC_RESULT hResult, int column)
 {
 	return ((hResult != NULL) && (((PG_CONN *)hResult)->pFetchBuffer != NULL))? PQfname(((PG_CONN *)hResult)->pFetchBuffer, column) : NULL;
 }
 
-
-//
-// Destroy result of async query
-//
-
+/**
+ * Destroy result of async query
+ */
 extern "C" void EXPORT DrvFreeAsyncResult(PG_CONN *pConn)
 {
-   if (pConn != NULL)
+   if (pConn == NULL)
+      return;
+
+   if (pConn->pFetchBuffer != NULL)
    {
-      if (pConn->pFetchBuffer != NULL)
-      {
-		   PQclear(pConn->pFetchBuffer);
-         pConn->pFetchBuffer = NULL;
-      }
-		UnsafeDrvQuery(pConn, "CLOSE cur1", NULL);
-		UnsafeDrvQuery(pConn, "COMMIT", NULL);
+      PQclear(pConn->pFetchBuffer);
+      pConn->pFetchBuffer = NULL;
    }
-	MutexUnlock(pConn->mutexQueryLock);
+   UnsafeDrvQuery(pConn, "CLOSE cur1", NULL);
+   UnsafeDrvQuery(pConn, "COMMIT", NULL);
+   MutexUnlock(pConn->mutexQueryLock);
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Begin transaction
+ */
 extern "C" DWORD EXPORT DrvBegin(PG_CONN *pConn)
 {
    DWORD dwResult;

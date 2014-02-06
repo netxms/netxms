@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2012 Victor Kirhenshtein
+** Copyright (C) 2006-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "ups.h"
 
-
-//
-// Abstract class constructor
-//
-
+/**
+ * Abstract class constructor
+ */
 UPSInterface::UPSInterface(TCHAR *pszDevice)
 {
    int i;
@@ -42,11 +40,9 @@ UPSInterface::UPSInterface(TCHAR *pszDevice)
    m_thCommThread = INVALID_THREAD_HANDLE;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 UPSInterface::~UPSInterface()
 {
    ConditionSet(m_condStop);
@@ -57,11 +53,9 @@ UPSInterface::~UPSInterface()
    ConditionDestroy(m_condStop);
 }
 
-
-//
-// Set name
-//
-
+/**
+ * Set name
+ */
 void UPSInterface::setName(const char *pszName)
 {
    safe_free(m_pszName);
@@ -69,7 +63,7 @@ void UPSInterface::setName(const char *pszName)
    {
       TCHAR szBuffer[MAX_DB_STRING];
 
-      _sntprintf(szBuffer, MAX_DB_STRING, _T("%s-%s"), Type(), m_pszDevice);
+      _sntprintf(szBuffer, MAX_DB_STRING, _T("%s-%s"), getType(), m_pszDevice);
       m_pszName = _tcsdup(szBuffer);
    }
    else
@@ -104,41 +98,33 @@ void UPSInterface::setName(const WCHAR *pszName)
 
 #endif
 
-
-//
-// Open communication to UPS
-//
-
-BOOL UPSInterface::Open(void)
+/**
+ * Open communication to UPS
+ */
+BOOL UPSInterface::open()
 {
    return FALSE;
 }
 
-
-//
-// Close communications with UPS
-//
-
-void UPSInterface::Close(void)
+/**
+ * Close communications with UPS
+ */
+void UPSInterface::close()
 {
    m_bIsConnected = FALSE;
 }
 
-
-//
-// Validate connection to the UPS
-//
-
-BOOL UPSInterface::ValidateConnection()
+/**
+ * Validate connection to the UPS
+ */
+BOOL UPSInterface::validateConnection()
 {
    return FALSE;
 }
 
-
-//
-// Get parameter's value
-//
-
+/**
+ * Get parameter's value
+ */
 LONG UPSInterface::getParameter(int nParam, TCHAR *pszValue)
 {
    LONG nRet;
@@ -170,133 +156,127 @@ LONG UPSInterface::getParameter(int nParam, TCHAR *pszValue)
    return nRet;
 }
 
-
-//
-// Parameter query methods need to be overriden
-//
-
-void UPSInterface::QueryModel(void)
+/**
+ * Parameter query methods need to be overriden
+ */
+void UPSInterface::queryModel()
 {
    m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryFirmwareVersion(void)
+void UPSInterface::queryFirmwareVersion()
 {
    m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryMfgDate(void)
+void UPSInterface::queryMfgDate()
 {
    m_paramList[UPS_PARAM_MFG_DATE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QuerySerialNumber(void)
+void UPSInterface::querySerialNumber()
 {
    m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryTemperature(void)
+void UPSInterface::queryTemperature()
 {
    m_paramList[UPS_PARAM_TEMP].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryBatteryVoltage(void)
+void UPSInterface::queryBatteryVoltage()
 {
    m_paramList[UPS_PARAM_BATTERY_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryNominalBatteryVoltage(void)
+void UPSInterface::queryNominalBatteryVoltage()
 {
    m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryBatteryLevel(void)
+void UPSInterface::queryBatteryLevel()
 {
    m_paramList[UPS_PARAM_BATTERY_LEVEL].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryInputVoltage(void)
+void UPSInterface::queryInputVoltage()
 {
    m_paramList[UPS_PARAM_INPUT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryOutputVoltage(void)
+void UPSInterface::queryOutputVoltage()
 {
    m_paramList[UPS_PARAM_OUTPUT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryLineFrequency(void)
+void UPSInterface::queryLineFrequency()
 {
    m_paramList[UPS_PARAM_LINE_FREQ].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryPowerLoad(void)
+void UPSInterface::queryPowerLoad()
 {
    m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryEstimatedRuntime(void)
+void UPSInterface::queryEstimatedRuntime()
 {
    m_paramList[UPS_PARAM_EST_RUNTIME].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-void UPSInterface::QueryOnlineStatus(void)
+void UPSInterface::queryOnlineStatus()
 {
    m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-
-//
-// Communication thread starter
-//
-
+/**
+ * Communication thread starter
+ */
 THREAD_RESULT THREAD_CALL UPSInterface::commThreadStarter(void *pArg)
 {
    ((UPSInterface *)pArg)->commThread();
    return THREAD_OK;
 }
 
-
-//
-// Start communication thread
-//
-
+/**
+ * Start communication thread
+ */
 void UPSInterface::startCommunication()
 {
    m_thCommThread = ThreadCreateEx(commThreadStarter, 0, this);
 }
 
-
-//
-// Communication thread
-//
-
+/**
+ * Communication thread
+ */
 void UPSInterface::commThread()
 {
    int nIteration;
 
    // Try to open device immediatelly after start
-   if (Open())
+   if (open())
    {
       AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
 
       // Open successfully, query all parameters
       MutexLock(m_mutex);
-      QueryModel();
-      QueryFirmwareVersion();
-      QueryMfgDate();
-      QuerySerialNumber();
-      QueryTemperature();
-      QueryBatteryVoltage();
-      QueryNominalBatteryVoltage();
-      QueryBatteryLevel();
-      QueryInputVoltage();
-      QueryOutputVoltage();
-      QueryLineFrequency();
-      QueryPowerLoad();
-      QueryEstimatedRuntime();
-      QueryOnlineStatus();
+      queryModel();
+      queryFirmwareVersion();
+      queryMfgDate();
+      querySerialNumber();
+      queryTemperature();
+      queryBatteryVoltage();
+      queryNominalBatteryVoltage();
+      queryBatteryLevel();
+      queryInputVoltage();
+      queryOutputVoltage();
+      queryLineFrequency();
+      queryPowerLoad();
+      queryEstimatedRuntime();
+      queryOnlineStatus();
       MutexUnlock(m_mutex);
+
+      AgentWriteDebugLog(5, _T("UPS: initial poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
    }
    else
    {
@@ -311,7 +291,7 @@ void UPSInterface::commThread()
       // Try to connect to device if it is not connected
       if (!m_bIsConnected)
       {
-         if (Open())
+         if (open())
          {
             AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
             nIteration = 100;    // Force all parameters to be polled
@@ -319,11 +299,11 @@ void UPSInterface::commThread()
       }
       else  // Validate connection
       {
-         if (!ValidateConnection())
+         if (!validateConnection())
          {
             // Try to reconnect
-            Close();
-            if (Open())
+            close();
+            if (open())
             {
                nIteration = 100;    // Force all parameters to be polled
             }
@@ -334,7 +314,7 @@ void UPSInterface::commThread()
          }
       }
 
-      // Query parameters if we are connected
+      // query parameters if we are connected
       if (m_bIsConnected)
       {
          MutexLock(m_mutex);
@@ -343,24 +323,26 @@ void UPSInterface::commThread()
          if (nIteration == 100)
          {
             nIteration = 0;
-            QueryModel();
-            QueryFirmwareVersion();
-            QueryMfgDate();
-            QuerySerialNumber();
+            queryModel();
+            queryFirmwareVersion();
+            queryMfgDate();
+            querySerialNumber();
          }
 
-         QueryTemperature();
-         QueryBatteryVoltage();
-         QueryNominalBatteryVoltage();
-         QueryBatteryLevel();
-         QueryInputVoltage();
-         QueryOutputVoltage();
-         QueryLineFrequency();
-         QueryPowerLoad();
-         QueryEstimatedRuntime();
-         QueryOnlineStatus();
+         queryTemperature();
+         queryBatteryVoltage();
+         queryNominalBatteryVoltage();
+         queryBatteryLevel();
+         queryInputVoltage();
+         queryOutputVoltage();
+         queryLineFrequency();
+         queryPowerLoad();
+         queryEstimatedRuntime();
+         queryOnlineStatus();
 
          MutexUnlock(m_mutex);
+
+         AgentWriteDebugLog(9, _T("UPS: poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
       }
    }
 }

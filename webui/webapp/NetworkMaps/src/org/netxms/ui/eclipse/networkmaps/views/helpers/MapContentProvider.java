@@ -60,10 +60,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 			@Override
 			public void run()
 			{
-				/*
-				 Don't start sync thread in RAP as object tooltips not working anyway
 				syncLastValues(display);
-				*/
 			}
 		});
 		syncThread.setDaemon(true);
@@ -114,7 +111,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 									continue;
 								NetworkMapObject o = page.findObjectElement(e.getKey());
 								if (o != null)
-									viewer.update(o, null);
+									viewer.refresh(o);
 							}
 						}
 					}

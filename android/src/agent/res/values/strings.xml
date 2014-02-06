@@ -27,6 +27,7 @@
     <string name="pref_connection">Connection</string>
     <string name="pref_parameters">Parameters</string>
     <string name="pref_scheduler">Scheduler</string>
+    <string name="pref_scheduler_summary">Define scheduler behaviour</string>
     <string name="pref_scheduler_daily_enable">Enable scheduler</string>
     <string name="pref_scheduler_daily_enabled">Daily scheduler is enabled (agent operates between the specified range)</string>
     <string name="pref_scheduler_daily_disabled">Daily scheduler is disabled (agent operates 24H per day)</string>
@@ -58,7 +59,11 @@
 	<string name="pref_notification_toast">Toast notification</string>
 	<string name="pref_notification_toast_enabled">Toast notification enabled</string>
 	<string name="pref_notification_toast_disabled">Toast notification disabled</string>
-	
+	<string name="pref_notification_icon">Icon notification</string>
+	<string name="pref_notification_icon_enabled">Icon in status bar is enabled</string>
+	<string name="pref_notification_icon_disabled">Icon in status bar is disabled</string>
+	<string name="pref_notification_status">Notification behaviour</string>
+		
 	<string name="notify_started">NetXMS agent started</string>
 	<string name="notify_disconnected">Disconnected from server</string>
 	<string name="notify_connected">Connected to server: %1$s</string>
@@ -66,7 +71,7 @@
 	<string name="notify_connection_failed">Connection failed: %1$s</string>
 	<string name="notify_no_connection">Data connection not available!"</string>
 	<string name="notify_allocation_error">Out of memory!"</string>
-	<string name="notify_pushing_data">Pushing data&#8230;</string>
+	<string name="notify_push_data">Push data</string>
 		
 	<string name="info_agent_status">%1$s: push every %2$s minutes, between %3$s. %4$s</string>
 	<string name="info_agent_range">%1$s and %2$s</string>

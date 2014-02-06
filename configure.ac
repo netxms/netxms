@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.11], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.12], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -739,7 +739,7 @@ case "$PLATFORM" in
       fi
       ;;
    SunOS)
-      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS"
+      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D__EXTENSIONS__"
       AC_MSG_CHECKING(whether C compiler accepts -O2)
       OLD_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS -O2"
@@ -2369,6 +2369,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
 	src/agent/subagents/darwin/Makefile
+	src/agent/subagents/db2/Makefile
+	src/agent/subagents/dbquery/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/hpux/Makefile
@@ -2398,8 +2400,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
-   src/agent/subagents/wmi/Makefile
-   src/agent/subagents/db2/Makefile
+	src/agent/subagents/wmi/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile

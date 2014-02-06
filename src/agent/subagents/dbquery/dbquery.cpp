@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -65,9 +65,7 @@ static BOOL SubAgentInit(Config *config)
 
    // Create shutdown condition and start poller threads
    g_condShutdown = ConditionCreate(TRUE);
-   //for(i = 0; i < (int)m_dwNumQueries; i++)
-   //   m_pQueryList[i].hThread = ThreadCreateEx(PollerThread, 0, &m_pQueryList[i]);
-
+   StartPollingThreads();  
    return TRUE;
 }
 
@@ -77,11 +75,12 @@ static BOOL SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
    ConditionSet(g_condShutdown);
+   StopPollingThreads();
    ShutdownConnections();
 }
 
 /**
- * Subagent information
+ * Parameters supported by agent
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
@@ -91,11 +90,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("DB.QueryStatusText(*)"), H_PollResult, _T("T"), DCI_DT_STRING, _T("Database query status as text") }
 };
 
+/**
+ * Tables supported by agent
+ */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-   { _T("DB.Query(*)"), H_DirectQueryTable, NULL, NULL, _T("Direct database query result") },
+   { _T("DB.Query(*)"), H_DirectQueryTable, NULL, _T(""), _T("Direct database query result") },
+   { _T("DB.QueryResult(*)"), H_PollResultTable, NULL, _T(""), _T("Database query result") }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,

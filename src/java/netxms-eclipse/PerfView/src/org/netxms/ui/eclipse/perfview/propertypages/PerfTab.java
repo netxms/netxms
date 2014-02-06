@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
+import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -55,6 +56,7 @@ public class PerfTab extends PropertyPage
 	private Spinner orderNumber;
 	private Button checkShowThresholds;
 	private DciSelector parentDci;
+	private YAxisRangeEditor yAxisRange;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -137,6 +139,14 @@ public class PerfTab extends PropertyPage
       gd.horizontalSpan = layout.numColumns;
       checkShowThresholds.setLayoutData(gd);
       
+      yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      yAxisRange.setLayoutData(gd);
+      yAxisRange.setSelection(settings.isAutoScale(), settings.getMinYScaleValue(), settings.getMaxYScaleValue());
+      
       return dialogArea;
 	}
 	
@@ -154,6 +164,10 @@ public class PerfTab extends PropertyPage
 		settings.setType(type.getSelectionIndex());
 		settings.setOrder(orderNumber.getSelection());
 		settings.setShowThresholds(checkShowThresholds.getSelection());
+		
+		settings.setAutoScale(yAxisRange.isAuto());
+		settings.setMinYScaleValue(yAxisRange.getMinY());
+		settings.setMaxYScaleValue(yAxisRange.getMaxY());
 
 		settings.setParentDciId(parentDci.getDciId());
 		

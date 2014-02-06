@@ -18,14 +18,13 @@
  */
 package org.netxms.api.client.users;
 
-
+import java.util.Arrays;
 import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
  * NetXMS user object
- * 
  */
 public class User extends AbstractUserObject
 {
@@ -51,6 +50,7 @@ public class User extends AbstractUserObject
 	private Date disabledUntil = null;
 	private int authFailures;
 	private String xmppId;
+   private long[] groups;
 
 	/**
 	 * Default constructor
@@ -60,6 +60,7 @@ public class User extends AbstractUserObject
 		super(name);
 		fullName = "";
 		xmppId = "";
+		groups = new long[0];
 	}
 	
 	/**
@@ -79,6 +80,7 @@ public class User extends AbstractUserObject
 		this.disabledUntil = src.disabledUntil;
 		this.authFailures = src.authFailures;
 		this.xmppId = src.xmppId;
+		this.groups = Arrays.copyOf(src.groups, src.groups.length);
 	}
 	
 	/**
@@ -97,6 +99,9 @@ public class User extends AbstractUserObject
 		disabledUntil = msg.getVariableAsDate(NXCPCodes.VID_DISABLED_UNTIL);
 		authFailures = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_FAILURES);
 		xmppId = msg.getVariableAsString(NXCPCodes.VID_XMPP_ID);
+		groups = msg.getVariableAsUInt32Array(NXCPCodes.VID_GROUPS);
+		if (groups == null)
+		   groups = new long[0];
 	}
 	
 	/**
@@ -112,6 +117,9 @@ public class User extends AbstractUserObject
 		msg.setVariableInt16(NXCPCodes.VID_MIN_PASSWORD_LENGTH, minPasswordLength);
 		msg.setVariableInt32(NXCPCodes.VID_DISABLED_UNTIL, (disabledUntil != null) ? (int)(disabledUntil.getTime() / 1000) : 0);
 		msg.setVariable(NXCPCodes.VID_XMPP_ID, xmppId);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_GROUPS, groups.length);
+		if (groups.length > 0)
+		   msg.setVariable(NXCPCodes.VID_GROUPS, groups);
 	}
 
 	/**
@@ -257,5 +265,21 @@ public class User extends AbstractUserObject
    public void setXmppId(String xmppId)
    {
       this.xmppId = xmppId;
+   }
+
+   /**
+    * @return the groups
+    */
+   public long[] getGroups()
+   {
+      return groups;
+   }
+
+   /**
+    * @param groups the groups to set
+    */
+   public void setGroups(long[] groups)
+   {
+      this.groups = groups;
    }
 }

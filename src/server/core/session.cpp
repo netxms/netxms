@@ -383,6 +383,13 @@ void ClientSession::readThread()
          break;
       }
 
+      // Receive timeout
+      if (iErr == 3)
+      {
+         debugPrintf(5, _T("RecvNXCPMessageEx: receive timeout"));
+         break;
+      }
+
       // Check if message is too large
       if (iErr == 1)
       {
@@ -404,6 +411,12 @@ void ClientSession::readThread()
       {
          debugPrintf(4, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
+      }
+
+      if (g_debugLevel >= 8)
+      {
+         String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+         debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
       }
 
       // Special handling for raw messages
@@ -888,8 +901,14 @@ void ClientSession::processingThread()
          case CMD_GET_ALARM_NOTES:
 				getAlarmNotes(pMsg);
             break;
+         case CMD_SET_ALARM_STATUS_FLOW:
+            updateAlarmStatusFlow(pMsg);
+            break;
          case CMD_UPDATE_ALARM_NOTE:
 				updateAlarmNote(pMsg);
+            break;
+         case CMD_DELETE_ALARM_NOTE:
+            deleteAlarmNote(pMsg);
             break;
          case CMD_GET_ALARM:
             getAlarm(pMsg);
@@ -1032,6 +1051,9 @@ void ClientSession::processingThread()
          case CMD_DELETE_OBJECT_TOOL:
             deleteObjectTool(pMsg);
             break;
+         case CMD_CHANGE_OBJECT_TOOL_STATUS:
+            changeObjectToolStatus(pMsg);
+            break;
          case CMD_GENERATE_OBJECT_TOOL_ID:
             generateObjectToolId(pMsg->GetId());
             break;
@@ -1126,13 +1148,13 @@ void ClientSession::processingThread()
             importConfiguration(pMsg);
             break;
 			case CMD_GET_GRAPH_LIST:
-				SendGraphList(pMsg->GetId());
+				sendGraphList(pMsg->GetId());
 				break;
 			case CMD_SAVE_GRAPH:
-			   SaveGraph(pMsg);
+			   saveGraph(pMsg);
             break;
 			case CMD_DELETE_GRAPH:
-				DeleteGraph(pMsg);
+				deleteGraph(pMsg);
 				break;
 			case CMD_ADD_CA_CERTIFICATE:
 				AddCACertificate(pMsg);
@@ -1434,6 +1456,11 @@ void ClientSession::sendMessage(CSCPMessage *msg)
 		debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
 
 	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
+   if ((g_debugLevel >= 8) && (msg->GetCode() != CMD_ADM_MESSAGE))
+   {
+      String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+      debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+   }
    if (m_pCtx != NULL)
    {
       CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -1748,6 +1775,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
 			msg.SetVariable(VID_POLLING_INTERVAL, ConfigReadULong(_T("DefaultDCIPollingInterval"), 60));
 			msg.SetVariable(VID_RETENTION_TIME, ConfigReadULong(_T("DefaultDCIRetentionTime"), 30));
+			msg.SetVariable(VID_ALARM_STATUS_FLOW_STATE, ConfigReadInt(_T("StrictAlarmStatusFlow"), 0));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
@@ -2794,11 +2822,9 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
    sendMessage(&msg);
 }
 
-
-//
-// Notify client on user database update
-//
-
+/**
+ * Notify client on user database update
+ */
 void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 {
    CSCPMessage msg;
@@ -2824,11 +2850,9 @@ void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *obje
    }
 }
 
-
-//
-// Change management status for the object
-//
-
+/**
+ * Change management status for the object
+ */
 void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -4097,11 +4121,9 @@ void ClientSession::processEPPRecord(CSCPMessage *pRequest)
    }
 }
 
-
-//
-// Send compiled MIB file to client
-//
-
+/**
+ * Send compiled MIB file to client
+ */
 void ClientSession::sendMib(CSCPMessage *request)
 {
    TCHAR szBuffer[MAX_PATH];
@@ -4112,11 +4134,9 @@ void ClientSession::sendMib(CSCPMessage *request)
 	sendFile(szBuffer, request->GetId(), 0);
 }
 
-
-//
-// Send timestamp of compiled MIB file to client
-//
-
+/**
+ * Send timestamp of compiled MIB file to client
+ */
 void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -4846,7 +4866,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
       // User should have "acknowledge alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0));
+			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
       }
       else
       {
@@ -4983,10 +5003,9 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
 }
 
 
-//
-// Update alarm comment
-//
-
+/**
+ * Update alarm comment
+ */
 void ClientSession::updateAlarmNote(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -5024,7 +5043,59 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
    sendMessage(&msg);
 }
 
+/**
+ * Delete alarm comment
+ */
+void ClientSession::deleteAlarmNote(CSCPMessage *request)
+{
+   CSCPMessage msg;
 
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   if (object != NULL)
+   {
+      // User should have "acknowledge alarm" right to the object
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      {
+			UINT32 noteId = request->GetVariableLong(VID_NOTE_ID);
+			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmNoteByID(alarmId, noteId));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms object will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+void ClientSession::updateAlarmStatusFlow(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+   int status = request->GetVariableLong(VID_ALARM_STATUS_FLOW_STATE);
+
+   ConfigWriteInt(_T("StrictAlarmStatusFlow"), status, false);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+   // Send response
+   sendMessage(&msg);
+}
 //
 // Create new action
 //
@@ -7104,6 +7175,34 @@ void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
 }
 
 /**
+ * Change Object Tool status (enabled/disabled)
+ */
+void ClientSession::changeObjectToolStatus(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   UINT32 toolID, enable;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   {
+      toolID = pRequest->GetVariableLong(VID_TOOL_ID);
+      enable = pRequest->GetVariableLong(VID_STATE);
+      msg.SetVariable(VID_RCC, ChangeObjectToolStatus(toolID, enable == 0 ? false : true));
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
  * Generate ID for new object tool
  */
 void ClientSession::generateObjectToolId(UINT32 dwRqId)
@@ -9094,12 +9193,10 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of available graphs to client
-//
-
-void ClientSession::SendGraphList(UINT32 dwRqId)
+/**
+ * Send list of available graphs to client
+ */
+void ClientSession::sendGraphList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	DB_RESULT hResult;
@@ -9185,7 +9282,7 @@ void ClientSession::SendGraphList(UINT32 dwRqId)
 /**
  * Save graph
  */
-void ClientSession::SaveGraph(CSCPMessage *pRequest)
+void ClientSession::saveGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	BOOL bNew, bSuccess;
@@ -9245,11 +9342,8 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 			pRequest->GetVariableStr(VID_NAME, szQuery, 256);
 			pszEscName = EncodeSQLString(szQuery);
 			pszTemp = pRequest->GetVariableStr(VID_GRAPH_CONFIG);
-			if (pszTemp != NULL)
-			{
-				pszEscData = EncodeSQLString(CHECK_NULL(pszTemp));
-				free(pszTemp);
-			}
+			pszEscData = EncodeSQLString(CHECK_NULL_EX(pszTemp));
+			safe_free(pszTemp);
 			if (bNew)
 			{
 				_sntprintf(szQuery, 16384, _T("INSERT INTO graphs (graph_id,owner_id,name,config) VALUES (%d,%d,'%s','%s')"),
@@ -9310,12 +9404,10 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete graph
-//
-
-void ClientSession::DeleteGraph(CSCPMessage *pRequest)
+/**
+ * Delete graph
+ */
+void ClientSession::deleteGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	UINT32 dwGraphId, dwOwner;
@@ -10028,11 +10120,9 @@ void ClientSession::onSituationChange(CSCPMessage *msg)
    }
 }
 
-
-//
-// Register agent
-//
-
+/**
+ * Register agent
+ */
 void ClientSession::registerAgent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

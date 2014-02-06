@@ -850,8 +850,8 @@ typedef struct _dir_struc_w
 #endif
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
-int LIBNETXMS_EXPORTABLE SendEx(SOCKET, const void *, size_t, int, MUTEX);
-int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff, size_t nSize, int nFlags, UINT32 dwTimeout);
+int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
+int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout);
 #endif   /* __cplusplus */
 
 #ifdef __cplusplus

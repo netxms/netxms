@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.usermanager.propertypages;
 
 import java.util.HashMap;
 import java.util.Iterator;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -39,6 +38,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -112,7 +112,7 @@ public class Members extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(Members.this.getShell(), false);
+				SelectUserDialog dlg = new SelectUserDialog(Members.this.getShell(), User.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();

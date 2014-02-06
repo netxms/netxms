@@ -39,13 +39,16 @@ public class EditCommentDialog extends Dialog
 {
 	private LabeledText textControl;
 	private String text;
+	private long noteID;
 	
 	/**
 	 * @param parentShell
 	 */
-	public EditCommentDialog(Shell parentShell)
+	public EditCommentDialog(Shell parentShell, long noteID, String text)
 	{
 		super(parentShell);
+		this.noteID = noteID;
+		this.text = text;
 	}
 
 	/* (non-Javadoc)
@@ -91,6 +94,8 @@ public class EditCommentDialog extends Dialog
 		dialogArea.setLayout(layout);
 		textControl = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		textControl.setLabel(Messages.get().EditCommentDialog_Comment);
+		if(noteID != 0)
+		   textControl.setText(text);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;

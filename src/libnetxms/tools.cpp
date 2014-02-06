@@ -491,7 +491,35 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 			i = j;
 		}
-		else
+      else if (temp[i] == _T('$') && temp[i+1] == _T('{'))
+      {
+         i += 2;
+			int j = i;
+			while((temp[j] != _T('}')) && (temp[j] != 0))
+				j++;
+
+			int len = min(j - i, 1023);
+
+         TCHAR varName[256];
+         memcpy(varName, &temp[i], len * sizeof(TCHAR));
+         varName[len] = 0;
+
+         TCHAR *result = _tgetenv(varName);
+         if (result != NULL)
+         {
+            len = (int)min(_tcslen(result), bufSize - outpos - 1);
+            memcpy(&buffer[outpos], result, len * sizeof(TCHAR));
+         }
+         else {
+            len = 0;
+         }
+
+
+         outpos += len;
+
+         i = j;
+      }
+      else
 		{
 			buffer[outpos++] = temp[i];
 		}
@@ -831,11 +859,9 @@ QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
 #endif
 }
 
-
-//
-// Get pointer to clean file name (without path specification)
-//
-
+/**
+ * Get pointer to clean file name (without path specification)
+ */
 const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName)
 {
    const TCHAR *ptr;
@@ -846,11 +872,9 @@ const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName)
    return (ptr + 1);
 }
 
-
-//
-// Translate DCI data type from text form to code
-//
-
+/**
+ * Translate DCI data type from text form to code
+ */
 int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
 {
    static const TCHAR *m_pszValidTypes[] = { _T("INT"), _T("UINT"), _T("INT64"),
@@ -868,9 +892,9 @@ int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
  * Extended send() - send all data even if single call to send()
  * cannot handle them all
  */
-int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff, size_t nSize, int nFlags, MUTEX mutex)
+int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex)
 {
-	int nLeft = (int)nSize;
+	int nLeft = (int)len;
 	int nRet;
 
 	if (mutex != NULL)
@@ -880,9 +904,9 @@ int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff, size_t nSize,
 	{
 retry:
 #ifdef MSG_NOSIGNAL
-		nRet = send(nSocket, ((char *)pBuff) + (nSize - nLeft), nLeft, nFlags | MSG_NOSIGNAL);
+		nRet = send(hSocket, ((char *)data) + (len - nLeft), nLeft, flags | MSG_NOSIGNAL);
 #else
-		nRet = send(nSocket, ((char *)pBuff) + (nSize - nLeft), nLeft, nFlags);
+		nRet = send(hSocket, ((char *)data) + (len - nLeft), nLeft, flags);
 #endif
 		if (nRet <= 0)
 		{
@@ -899,8 +923,8 @@ retry:
 				tv.tv_sec = 60;
 				tv.tv_usec = 0;
 				FD_ZERO(&wfds);
-				FD_SET(nSocket, &wfds);
-				nRet = select(SELECT_NFDS(nSocket + 1), NULL, &wfds, NULL, &tv);
+				FD_SET(hSocket, &wfds);
+				nRet = select(SELECT_NFDS(hSocket + 1), NULL, &wfds, NULL, &tv);
 				if ((nRet > 0) || ((nRet == -1) && (errno == EINTR)))
 					goto retry;
 			}
@@ -912,14 +936,20 @@ retry:
 	if (mutex != NULL)
 		MutexUnlock(mutex);
 
-	return nLeft == 0 ? (int)nSize : nRet;
+	return nLeft == 0 ? (int)len : nRet;
 }
 
 /**
  * Extended recv() - receive data with timeout
+ * 
+ * @param hSocket socket handle
+ * @param data data buffer
+ * @param len buffer length in bytes
+ * @param flags flags to be passed to recv() call
+ * @param timeout waiting timeout in milliseconds
+ * @return number of bytes read on success, 0 if socket was closed, -1 on error, -2 on timeout
  */
-int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
-                                size_t nSize, int nFlags, UINT32 dwTimeout)
+int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout)
 {
    int iErr;
 #if HAVE_POLL
@@ -935,53 +965,53 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 
 	// I've seen on Linux that poll() may hang if fds.fd == -1,
 	// so we check this ourselves
-	if (nSocket == -1)
+	if (hSocket == INVALID_SOCKET)
 		return -1;
 
-   if (dwTimeout != INFINITE)
+   if (timeout != INFINITE)
    {
 #if HAVE_POLL
-      fds.fd = nSocket;
+      fds.fd = hSocket;
       fds.events = POLLIN;
       fds.revents = POLLIN;
       do
       {
          qwStartTime = GetCurrentTimeMs();
-	      iErr = poll(&fds, 1, dwTimeout);
+	      iErr = poll(&fds, 1, timeout);
          if ((iErr != -1) || (errno != EINTR))
             break;
          dwElapsed = GetCurrentTimeMs() - qwStartTime;
-         dwTimeout -= min(dwTimeout, dwElapsed);
-      } while(dwTimeout > 0);
+         timeout -= min(timeout, dwElapsed);
+      } while(timeout > 0);
 #else
 	   FD_ZERO(&rdfs);
-	   FD_SET(nSocket, &rdfs);
+	   FD_SET(hSocket, &rdfs);
 #ifdef _WIN32
-      tv.tv_sec = dwTimeout / 1000;
-      tv.tv_usec = (dwTimeout % 1000) * 1000;
-      iErr = select(SELECT_NFDS(nSocket + 1), &rdfs, NULL, NULL, &tv);
+      tv.tv_sec = timeout / 1000;
+      tv.tv_usec = (timeout % 1000) * 1000;
+      iErr = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
 #else
       do
       {
-         tv.tv_sec = dwTimeout / 1000;
-         tv.tv_usec = (dwTimeout % 1000) * 1000;
+         tv.tv_sec = timeout / 1000;
+         tv.tv_usec = (timeout % 1000) * 1000;
          qwStartTime = GetCurrentTimeMs();
-         iErr = select(SELECT_NFDS(nSocket + 1), &rdfs, NULL, NULL, &tv);
+         iErr = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
          if ((iErr != -1) || (errno != EINTR))
             break;
          dwElapsed = GetCurrentTimeMs() - qwStartTime;
-         dwTimeout -= min(dwTimeout, dwElapsed);
-      } while(dwTimeout > 0);
+         timeout -= min(timeout, dwElapsed);
+      } while(timeout > 0);
 #endif
 #endif
       if (iErr > 0)
       {
 #ifdef _WIN32
-         iErr = recv(nSocket, (char *)pBuff, (int)nSize, nFlags);
+         iErr = recv(hSocket, (char *)data, (int)len, flags);
 #else
          do
          {
-            iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+            iErr = recv(hSocket, (char *)data, len, flags);
          } while((iErr == -1) && (errno == EINTR));
 #endif
       }
@@ -993,11 +1023,11 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
    else
    {
 #ifdef _WIN32
-      iErr = recv(nSocket, (char *)pBuff, (int)nSize, nFlags);
+      iErr = recv(hSocket, (char *)data, (int)len, flags);
 #else
       do
       {
-         iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+         iErr = recv(hSocket, (char *)data, (int)len, flags);
       } while((iErr == -1) && (errno == EINTR));
 #endif
    }
@@ -1005,12 +1035,10 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
    return iErr;
 }
 
-
-//
-// Connect with given timeout
-// Sets socket to non-blocking mode
-//
-
+/**
+ * Connect with given timeout
+ * Sets socket to non-blocking mode
+ */
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout)
 {
 	SetSocketNonBlocking(s);
@@ -1186,11 +1214,9 @@ UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName)
 #define SM_SERVERR2             89
 #endif
 
-
-//
-// Get OS name and version
-//
-
+/**
+ * Get OS name and version
+ */
 void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 {
    int nSize = nBufSize - 1;
@@ -1640,7 +1666,8 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
                break;
             }
          }
-			pBuffer[fs.st_size] = 0;
+         if (pBuffer != NULL)
+            pBuffer[fs.st_size] = 0;
       }
    }
    close(fd);
@@ -1674,7 +1701,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSiz
 #endif
    if (fd != -1)
    {
-		pBuffer = LoadFileContent(fd, pdwFileSize);
+      pBuffer = LoadFileContent(fd, pdwFileSize);
    }
    return pBuffer;
 }

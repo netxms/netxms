@@ -156,9 +156,9 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
             {
                SaveResponse(szAddr, dwAddr, buff);
             }
-
-				safe_free(buff);
 			}
+
+         safe_free(buff);
 		}
 		NetClose(nSd);
 	}

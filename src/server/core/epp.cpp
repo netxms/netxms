@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -156,7 +156,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
 {
 	UINT32 i, id, count;
 	TCHAR *name, *value;
-	
+
    m_dwFlags = pMsg->GetVariableLong(VID_FLAGS);
    m_dwId = pMsg->GetVariableLong(VID_RULE_ID);
    pMsg->GetVariableBinary(VID_GUID, m_guid, UUID_LENGTH);
@@ -268,7 +268,7 @@ void EPRule::createNXMPRecord(String &str)
                                 uuid_to_string(guid, guidText), object->Type());
       }
    }
-   
+
    str += _T("\t\t\t</sources>\n\t\t\t<events>\n");
 
    for(UINT32 i = 0; i < m_dwNumEvents; i++)
@@ -426,7 +426,7 @@ bool EPRule::matchScript(Event *pEvent)
          if (bRet)
          {
          	NXSL_Variable *var;
-         	
+
          	var = pGlobals->find(_T("CUSTOM_MESSAGE"));
          	if (var != NULL)
          	{
@@ -528,7 +528,7 @@ void EPRule::generateAlarm(Event *pEvent)
 	{
 		g_alarmMgr.newAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
 								  (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
-								  m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent);
+								  m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0);
 	}
 }
 
@@ -541,7 +541,7 @@ bool EPRule::loadFromDB()
    TCHAR szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
    bool bSuccess = true;
    UINT32 i, count;
-   
+
    // Load rule's sources
    _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -589,7 +589,7 @@ bool EPRule::loadFromDB()
    {
       bSuccess = false;
    }
-   
+
    // Load situation attributes
    _sntprintf(szQuery, 256, _T("SELECT attr_name,attr_value FROM policy_situation_attr_list WHERE rule_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -662,8 +662,8 @@ void EPRule::saveToDB(DB_HANDLE hdb)
 	for(i = 0; i < m_situationAttrList.getSize(); i++)
 	{
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,%s,%s)"),
-                m_dwId, m_dwSituationId, 
-					 (const TCHAR *)DBPrepareString(hdb, m_situationAttrList.getKeyByIndex(i)), 
+                m_dwId, m_dwSituationId,
+					 (const TCHAR *)DBPrepareString(hdb, m_situationAttrList.getKeyByIndex(i)),
 					 (const TCHAR *)DBPrepareString(hdb, m_situationAttrList.getValueByIndex(i)));
       DBQuery(hdb, pszQuery);
 	}
@@ -857,7 +857,7 @@ void EventPolicy::replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList)
    // Replace id's in rules
    for(i = 0; i < m_dwNumRules; i++)
       m_ppRuleList[i]->setId(i);
-   
+
    unlock();
 }
 

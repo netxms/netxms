@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.networkmaps.widgets;
 
 import org.eclipse.draw2d.ManhattanConnectionRouter;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
@@ -38,6 +39,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
+import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
@@ -60,6 +62,7 @@ public class NetworkMapWidget extends Composite
 	protected MapLabelProvider labelProvider;
 	
 	private Color defaultLinkColor = null;
+	private boolean disableGeolocationBackground = false;
 
 	/**
 	 * @param parent
@@ -68,6 +71,9 @@ public class NetworkMapWidget extends Composite
 	public NetworkMapWidget(Composite parent, int style)
 	{
 		super(parent, style);
+	
+      final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND");
 		
 		setLayout(new FillLayout());
 
@@ -108,9 +114,14 @@ public class NetworkMapWidget extends Composite
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 		{
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			{
+			   if (!disableGeolocationBackground)
+			      viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			}
 			else
+			{
 				viewer.setBackgroundImage(ImageProvider.getInstance(getDisplay()).getImage(mapObject.getBackground()));
+			}
 		}
 
 		setConnectionRouter(mapObject.getDefaultLinkRouting());

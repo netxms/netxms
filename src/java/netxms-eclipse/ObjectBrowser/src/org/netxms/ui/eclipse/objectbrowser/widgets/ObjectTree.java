@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -301,7 +302,6 @@ public class ObjectTree extends Composite
 	public void enableDragSupport()
 	{
 		Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-		//objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new TreeDragSourceEffect(objectTree.getTree()));
 		objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
 			@Override
 			public void dragStart(DragSourceEvent event)
@@ -691,10 +691,15 @@ public class ObjectTree extends Composite
          @Override
          public boolean performDrop(Object data) 
          {
-            AbstractObject movableObject = (AbstractObject)((TreeSelection)data).getFirstElement();
-            TreePath path = ((TreeSelection)data).getPaths()[0];
-            AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
-            obj.performObjectMove((AbstractObject)getCurrentTarget(), parent, movableObject);
+            TreeSelection selection = (TreeSelection)data;
+            List<?> movableSelection = selection.toList();
+            for (int i = 0; i < movableSelection.size(); i++)
+            {
+               AbstractObject movableObject = (AbstractObject)movableSelection.get(i);
+               TreePath path = selection.getPaths()[0];
+               AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
+               obj.performObjectMove((AbstractObject)getCurrentTarget(), parent, movableObject);
+            }
             return true;
          }
 
@@ -705,60 +710,72 @@ public class ObjectTree extends Composite
                return false;
 
             IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
+            TreePath path = ((TreeSelection)selection).getPaths()[0];
+            AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
+            
             Iterator<?> it = selection.iterator();
-            Object object = it.next();
-            SubtreeType subtree = null;
-            if ((object instanceof AbstractObject)) {
-               if(obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
-                 subtree = SubtreeType.INFRASTRUCTURE;
-               if(obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
-                  subtree = SubtreeType.TEMPLATES;
-               if(obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
-                  subtree = SubtreeType.BUSINESS_SERVICES;
-               if(obj.isValidSelectionForMove(SubtreeType.DASHBOARDS))
-                  subtree = SubtreeType.DASHBOARDS;
-               if(obj.isValidSelectionForMove(SubtreeType.MAPS))
-                  subtree = SubtreeType.MAPS;
-               if(obj.isValidSelectionForMove(SubtreeType.POLICIES))
-                  subtree = SubtreeType.POLICIES;
-               
-            }
-            Set<Integer> filter;
+            if(!it.hasNext())
+               return false;
             
-            if (subtree==null){
-            	return false;
-            }
-            
-            switch(subtree)
+            Object object;
+            while (it.hasNext())
             {
-               case INFRASTRUCTURE:
-                  filter = ObjectSelectionDialog.createContainerSelectionFilter();
-                  break;
-               case TEMPLATES:
-                  filter = ObjectSelectionDialog.createTemplateGroupSelectionFilter();
-                  break;
-               case BUSINESS_SERVICES:
-                  filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
-                  break;
-               case DASHBOARDS:
-                  filter = ObjectSelectionDialog.createDashboardSelectionFilter();
-                  break;
-               case MAPS:
-                  filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
-                  break;
-               case POLICIES:
-                  filter = ObjectSelectionDialog.createPolicySelectionFilter();
-                  break;
-               default:
-                  filter = null;
-                  break;
+               object = it.next();
+               SubtreeType subtree = null;
+               if ((object instanceof AbstractObject)) {
+                  if(obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
+                    subtree = SubtreeType.INFRASTRUCTURE;
+                  if(obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
+                     subtree = SubtreeType.TEMPLATES;
+                  if(obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
+                     subtree = SubtreeType.BUSINESS_SERVICES;
+                  if(obj.isValidSelectionForMove(SubtreeType.DASHBOARDS))
+                     subtree = SubtreeType.DASHBOARDS;
+                  if(obj.isValidSelectionForMove(SubtreeType.MAPS))
+                     subtree = SubtreeType.MAPS;
+                  if(obj.isValidSelectionForMove(SubtreeType.POLICIES))
+                     subtree = SubtreeType.POLICIES;
+                  
+               }
+               Set<Integer> filter;
+               
+               if (subtree==null){
+               	return false;
+               }
+               
+               switch(subtree)
+               {
+                  case INFRASTRUCTURE:
+                     filter = ObjectSelectionDialog.createContainerSelectionFilter();
+                     break;
+                  case TEMPLATES:
+                     filter = ObjectSelectionDialog.createTemplateGroupSelectionFilter();
+                     break;
+                  case BUSINESS_SERVICES:
+                     filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
+                     break;
+                  case DASHBOARDS:
+                     filter = ObjectSelectionDialog.createDashboardSelectionFilter();
+                     break;
+                  case MAPS:
+                     filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
+                     break;
+                  case POLICIES:
+                     filter = ObjectSelectionDialog.createPolicySelectionFilter();
+                     break;
+                  default:
+                     filter = null;
+                     break;
+               }
+
+               if(((AbstractObject)object).getParents().next() != (parent.getObjectId()))
+                  return false;
+               
+               if(!filter.contains(((AbstractObject)target).getObjectClass()) || target.equals(object)){
+                  return false;   
+               }       
             }
-            
-            if(filter.contains(((AbstractObject)target).getObjectClass()) && !target.equals(object)){
-               return true;
-            }else{
-               return false;   
-            }         
+            return true;
          }
 
       });

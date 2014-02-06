@@ -146,11 +146,20 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		xAxis = chart.getPrimaryBaseAxes()[0];
 		xAxis.getTitle().setVisible(false);
 		xAxis.getLabel().setVisible(false);
+	
 		
 		// Y axis
 		yAxis = chart.getPrimaryOrthogonalAxis(xAxis);
 		yAxis.getTitle().setVisible(false);
-		yAxis.getScale().setMin(NumberDataElementImpl.create(0));
+      if(!autoscale)
+      {
+         yAxis.getScale().setMin(NumberDataElementImpl.create(from));
+         yAxis.getScale().setMax(NumberDataElementImpl.create(to));
+      }
+      else
+      {
+         yAxis.getScale().setMin(NumberDataElementImpl.create(0));
+      }
 		yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Grid.Y.Color"), LineStyle.DOTTED_LITERAL, 0)); //$NON-NLS-1$
 		yAxis.setType(useLogScale ? AxisType.LOGARITHMIC_LITERAL : AxisType.LINEAR_LITERAL);
 		yAxis.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);

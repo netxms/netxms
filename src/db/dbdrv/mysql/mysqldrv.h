@@ -44,22 +44,18 @@
 #include <mysql.h>
 #include <errmsg.h>
 
-
-//
-// Structure of DB connection handle
-//
-
+/**
+ * Structure of DB connection handle
+ */
 typedef struct
 {
    MYSQL *pMySQL;
    MUTEX mutexQueryLock;
 } MYSQL_CONN;
 
-
-//
-// Structure of prepared statement
-//
-
+/**
+ * Structure of prepared statement
+ */
 typedef struct
 {
 	MYSQL_CONN *connection;
@@ -70,13 +66,12 @@ typedef struct
 	int paramCount;
 } MYSQL_STATEMENT;
 
-
-//
-// Structure of synchronous SELECT result
-//
-
+/**
+ * Structure of synchronous SELECT result
+ */
 typedef struct
 {
+	MYSQL_CONN *connection;
 	MYSQL_RES *resultSet;
 	bool isPreparedStatement;
 	MYSQL_STMT *statement;
@@ -87,14 +82,12 @@ typedef struct
 	unsigned long *lengthFields;
 } MYSQL_RESULT;
 
-
-//
-// Structure of asynchronous SELECT result
-//
-
+/**
+ * Structure of asynchronous SELECT result
+ */
 typedef struct
 {
-   MYSQL_CONN *pConn;
+   MYSQL_CONN *connection;
    MYSQL_RES *pHandle;
    MYSQL_ROW pCurrRow;
    BOOL bNoMoreRows;

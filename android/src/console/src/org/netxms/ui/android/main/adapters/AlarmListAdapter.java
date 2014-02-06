@@ -393,16 +393,16 @@ public class AlarmListAdapter extends BaseAdapter
 				switch (action)
 				{
 					case ACKNOWLEDGE:
-						service.acknowledgeAlarm(params[0], false);
+						service.acknowledgeAlarms(params[0], false);
 						break;
 					case STICKY_ACKNOWLEDGE:
-						service.acknowledgeAlarm(params[0], true);
+						service.acknowledgeAlarms(params[0], true);
 						break;
 					case RESOLVE:
-						service.resolveAlarm(params[0]);
+						service.resolveAlarms(params[0]);
 						break;
 					case TERMINATE:
-						service.terminateAlarm(params[0]);
+						service.terminateAlarms(params[0]);
 						break;
 				}
 			return null;

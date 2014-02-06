@@ -23,13 +23,38 @@
 #include "dbquery.h"
 
 /**
+ * Convert DB_RESULT to table object
+ */
+void DBResultToTable(DB_RESULT hResult, Table *table)
+{
+   int numColumns = DBGetColumnCount(hResult);
+   for(int c = 0; c < numColumns; c++)
+   {
+      TCHAR name[64];
+      if (!DBGetColumnName(hResult, c, name, 64))
+         _sntprintf(name, 64, _T("COL_%d"), c + 1);
+      table->addColumn(name);
+   }
+
+   int numRows = DBGetNumRows(hResult);
+   for(int r = 0; r < numRows; r++)
+   {
+      table->addRow();
+      for(int c = 0; c < numColumns; c++)
+      {
+         table->setPreallocated(c, DBGetField(hResult, r, c, NULL, 0));
+      }
+   }
+}
+
+/**
  * Direct query - single value
  */
 LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
-   TCHAR dbid[64], query[256];
-   AgentGetParameterArg(param, 1, dbid, 64);
-   AgentGetParameterArg(param, 2, query, 64);
+   TCHAR dbid[MAX_DBID_LEN], query[256];
+   AgentGetParameterArg(param, 1, dbid, MAX_DBID_LEN);
+   AgentGetParameterArg(param, 2, query, 256);
 
    DB_HANDLE hdb = GetConnectionHandle(dbid);
    if (hdb == NULL)
@@ -55,9 +80,9 @@ LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value)
  */
 LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value)
 {
-   TCHAR dbid[64], query[256];
-   AgentGetParameterArg(param, 1, dbid, 64);
-   AgentGetParameterArg(param, 2, query, 64);
+   TCHAR dbid[MAX_DBID_LEN], query[256];
+   AgentGetParameterArg(param, 1, dbid, MAX_DBID_LEN);
+   AgentGetParameterArg(param, 2, query, 256);
 
    DB_HANDLE hdb = GetConnectionHandle(dbid);
    if (hdb == NULL)
@@ -70,25 +95,7 @@ LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value)
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != NULL)
    {
-      int numColumns = DBGetColumnCount(hResult);
-      for(int c = 0; c < numColumns; c++)
-      {
-         TCHAR name[64];
-         if (!DBGetColumnName(hResult, c, name, 64))
-            _sntprintf(name, 64, _T("COL_%d"), c + 1);
-         value->addColumn(name);
-      }
-
-      int numRows = DBGetNumRows(hResult);
-      for(int r = 0; r < numRows; r++)
-      {
-         value->addRow();
-         for(int c = 0; c < numColumns; c++)
-         {
-            value->setPreallocated(c, DBGetField(hResult, r, c, NULL, 0));
-         }
-      }
-
+      DBResultToTable(hResult, value);
       DBFreeResult(hResult);
       rc = SYSINFO_RC_SUCCESS;
    }

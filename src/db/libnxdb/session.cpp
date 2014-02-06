@@ -420,8 +420,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
       pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, nBufLen);
       if (pwszData != NULL)
       {
-         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                             pwszData, -1, pszBuffer, nBufLen, NULL, NULL);
+         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszData, -1, pszBuffer, nBufLen, NULL, NULL);
          pszRet = pszBuffer;
       }
       else
@@ -1036,28 +1035,6 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 	if ((pos <= 0) || !IS_VALID_STATEMENT_HANDLE(hStmt))
 		return;
 
-#ifdef UNICODE
-#define wBuffer buffer
-#define realAllocType allocType
-#else
-	void *wBuffer;
-	int realAllocType = allocType;
-	if (cType == DB_CTYPE_STRING)
-	{
-		wBuffer = (void *)WideStringFromMBString((char *)buffer);
-		if (allocType == DB_BIND_DYNAMIC)
-			free(buffer);
-		realAllocType = DB_BIND_DYNAMIC;
-	}
-	else
-	{
-		wBuffer = buffer;
-	}
-#endif
-	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
-#undef wBuffer
-#undef realAllocType
-
 	if (hStmt->m_connection->m_driver->m_dumpSql)
    {
 		if (cType == DB_CTYPE_STRING)
@@ -1088,6 +1065,28 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 			__DBDbgPrintf(9, _T("{%p} bind at pos %d: \"%s\""), hStmt, pos, text);
 		}
 	}
+
+#ifdef UNICODE
+#define wBuffer buffer
+#define realAllocType allocType
+#else
+	void *wBuffer;
+	int realAllocType = allocType;
+	if (cType == DB_CTYPE_STRING)
+	{
+		wBuffer = (void *)WideStringFromMBString((char *)buffer);
+		if (allocType == DB_BIND_DYNAMIC)
+			free(buffer);
+		realAllocType = DB_BIND_DYNAMIC;
+	}
+	else
+	{
+		wBuffer = buffer;
+	}
+#endif
+	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
+#undef wBuffer
+#undef realAllocType
 }
 
 /**

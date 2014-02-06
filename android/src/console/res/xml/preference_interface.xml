@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	<ListPreference android:dialogTitle="@string/pref_multiplier_title" android:key="global.multipliers" android:title="@string/pref_multipliers" android:entryValues="@array/multiplier_values" android:entries="@array/multiplier_labels" android:defaultValue="1" />
+	<ListPreference android:dialogTitle="@string/pref_multiplier_title" android:key="global.multipliers" android:title="@string/pref_multipliers" android:summary="@string/pref_multipliers_summary" android:entryValues="@array/multiplier_values" android:entries="@array/multiplier_labels" android:defaultValue="1" />
 </PreferenceScreen>

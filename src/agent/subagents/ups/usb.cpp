@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2012 Victor Kirhenshtein
+** Copyright (C) 2006-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,13 +80,13 @@ USBInterface::USBInterface(TCHAR *pszDevice) : UPSInterface(pszDevice)
  */
 USBInterface::~USBInterface()
 {
-   Close();
+   close();
 }
 
 /**
  * Open device
  */
-BOOL USBInterface::Open()
+BOOL USBInterface::open()
 {
    GUID hidGuid;
    HDEVINFO hInfo;
@@ -199,14 +199,14 @@ BOOL USBInterface::Open()
       AgentWriteDebugLog(7, _T("UPS: SetupDiGetClassDevs failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
    }
    if (bSuccess)
-      SetConnected();
+      setConnected();
    return bSuccess;
 }
 
 /**
  * Close device
  */
-void USBInterface::Close()
+void USBInterface::close()
 {
    if (m_hDev != INVALID_HANDLE_VALUE)
    {
@@ -219,27 +219,22 @@ void USBInterface::Close()
       m_pPreparsedData = NULL;
    }
    safe_free_and_null(m_pFeatureValueCaps);
-   UPSInterface::Close();
+   UPSInterface::close();
 }
 
-
-//
-// Validate connection
-//
-
-BOOL USBInterface::ValidateConnection(void)
+/**
+ * Validate connection
+ */
+BOOL USBInterface::validateConnection()
 {
    WCHAR wszSerial[256];
-
    return HidD_GetSerialNumberString(m_hDev, wszSerial, 256 * sizeof(WCHAR));
 }
 
-
-//
-// Read integer value from device
-//
-
-LONG USBInterface::ReadInt(USAGE uPage, USAGE uUsage, LONG *pnValue)
+/**
+ * Read integer value from device
+ */
+LONG USBInterface::readInt(USAGE uPage, USAGE uUsage, LONG *pnValue)
 {
    BYTE bReportID, *pReport;
    DWORD dwTemp;
@@ -277,16 +272,14 @@ LONG USBInterface::ReadInt(USAGE uPage, USAGE uUsage, LONG *pnValue)
    return nRet;
 }
 
-
-//
-// Read indexed string value from device
-//
-
-LONG USBInterface::ReadIndexedString(USAGE uPage, USAGE uUsage, char *pszBuffer, int nBufLen)
+/**
+ * Read indexed string value from device
+ */
+LONG USBInterface::readIndexedString(USAGE uPage, USAGE uUsage, char *pszBuffer, int nBufLen)
 {
    LONG nRet, nIndex;
 
-   nRet = ReadInt(uPage, uUsage, &nIndex);
+   nRet = readInt(uPage, uUsage, &nIndex);
    if (nRet == SYSINFO_RC_SUCCESS)
    {
       WCHAR wszTemp[256];
@@ -305,16 +298,14 @@ LONG USBInterface::ReadIndexedString(USAGE uPage, USAGE uUsage, char *pszBuffer,
    return nRet;
 }
 
-
-//
-// Read string parameter
-//
-
-void USBInterface::ReadStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam)
+/**
+ * Read string parameter
+ */
+void USBInterface::readStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam)
 {
    LONG nRet;
 
-   nRet = ReadIndexedString(nPage, nUsage, pParam->szValue, MAX_RESULT_LENGTH);
+   nRet = readIndexedString(nPage, nUsage, pParam->szValue, MAX_RESULT_LENGTH);
    switch(nRet)
    {
       case SYSINFO_RC_SUCCESS:
@@ -329,18 +320,15 @@ void USBInterface::ReadStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pPa
    }
 }
 
-
-//
-// Read integer parameter
-//
-
-void USBInterface::ReadIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam,
-                                int nDiv, BOOL bDouble)
+/**
+ * Read integer parameter
+ */
+void USBInterface::readIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam, int nDiv, BOOL bDouble)
 {
    LONG nRet, nValue;
    double dValue;
 
-   nRet = ReadInt(nPage, nUsage, &nValue);
+   nRet = readInt(nPage, nUsage, &nValue);
    switch(nRet)
    {
       case SYSINFO_RC_SUCCESS:
@@ -366,93 +354,77 @@ void USBInterface::ReadIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam
    }
 }
 
-
-//
-// Get model name
-//
-
-void USBInterface::QueryModel(void)
+/**
+ * Get model name
+ */
+void USBInterface::queryModel()
 {
-   ReadStringParam(0x84, 0xFE, &m_paramList[UPS_PARAM_MODEL]);
+   readStringParam(0x84, 0xFE, &m_paramList[UPS_PARAM_MODEL]);
 }
 
-
-//
-// Get serial number
-//
-
-void USBInterface::QuerySerialNumber(void)
+/**
+ * Get serial number
+ */
+void USBInterface::querySerialNumber()
 {
-   ReadStringParam(0x84, 0xFF, &m_paramList[UPS_PARAM_SERIAL]);
+   readStringParam(0x84, 0xFF, &m_paramList[UPS_PARAM_SERIAL]);
 }
 
-
-//
-// Get battery voltage
-//
-
-void USBInterface::QueryBatteryVoltage(void)
+/**
+ * Get battery voltage
+ */
+void USBInterface::queryBatteryVoltage()
 {
-   ReadIntParam(0x84, 0x30, &m_paramList[UPS_PARAM_BATTERY_VOLTAGE], 100, TRUE);
+   readIntParam(0x84, 0x30, &m_paramList[UPS_PARAM_BATTERY_VOLTAGE], 100, TRUE);
 }
 
-
-//
-// Get nominal battery voltage
-//
-
-void USBInterface::QueryNominalBatteryVoltage(void)
+/**
+ * Get nominal battery voltage
+ */
+void USBInterface::queryNominalBatteryVoltage()
 {
-   ReadIntParam(0x84, 0x40, &m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE], 100, TRUE);
+   readIntParam(0x84, 0x40, &m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE], 100, TRUE);
 }
 
-
-//
-// Battery level
-//
-
-void USBInterface::QueryBatteryLevel(void)
+/**
+ * Battery level
+ */
+void USBInterface::queryBatteryLevel()
 {
-   ReadIntParam(0x85, 0x66, &m_paramList[UPS_PARAM_BATTERY_LEVEL], 0, FALSE);
+   readIntParam(0x85, 0x66, &m_paramList[UPS_PARAM_BATTERY_LEVEL], 0, FALSE);
 }
 
-
-//
-// UPS load (in percents)
-//
-
-void USBInterface::QueryPowerLoad(void)
+/**
+ * UPS load (in percents)
+ */
+void USBInterface::queryPowerLoad()
 {
-   ReadIntParam(0x84, 0x35, &m_paramList[UPS_PARAM_LOAD], 10, FALSE);
+   readIntParam(0x84, 0x35, &m_paramList[UPS_PARAM_LOAD], 10, FALSE);
 }
 
-
-//
-// Estimated on-battery run time
-//
-
-void USBInterface::QueryEstimatedRuntime(void)
+/**
+ * Estimated on-battery run time
+ */
+void USBInterface::queryEstimatedRuntime()
 {
-   ReadIntParam(0x85, 0x68, &m_paramList[UPS_PARAM_EST_RUNTIME], 60, FALSE);
+   readIntParam(0x85, 0x68, &m_paramList[UPS_PARAM_EST_RUNTIME], 60, FALSE);
 }
 
-
-//
-// Get UPS online status
-//
-
-void USBInterface::QueryOnlineStatus(void)
+/**
+ * Get UPS online status
+ */
+void USBInterface::queryOnlineStatus()
 {
    LONG nRet, nACPresent, nBelowLimit;
 
-   nRet = ReadInt(0x85, 0xD0, &nACPresent);
+   nRet = readInt(0x85, 0xD0, &nACPresent);
    switch(nRet)
    {
       case SYSINFO_RC_SUCCESS:
          if (nACPresent == 0)
          {
             // If on battery power, check battery status
-            nRet = ReadInt(0x85, 0x42, &nBelowLimit);
+            nRet = readInt(0x85, 0x42, &nBelowLimit);
             if (nRet == SYSINFO_RC_SUCCESS)
             {
                m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = nBelowLimit ? '2' : '1';

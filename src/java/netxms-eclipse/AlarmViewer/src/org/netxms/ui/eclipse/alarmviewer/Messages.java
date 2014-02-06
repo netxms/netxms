@@ -9,15 +9,34 @@ public class Messages extends NLS
 	public static String AcknowledgeAlarm_ErrorMessage;
 	public static String AcknowledgeAlarm_JobName;
 	public static String AcknowledgeAlarm_TaskName;
-	public static String AlarmComments_AddCommentJob;
+	public static String AcknowledgeCustomTimeDialog_ConfigurationInfoLabel;
+   public static String AcknowledgeCustomTimeDialog_CustomTimeDialogTitle;
+   public static String AcknowledgeCustomTimeDialog_Days;
+   public static String AcknowledgeCustomTimeDialog_Hours;
+   public static String AcknowledgeCustomTimeDialog_Minutes;
+   public static String AcknowledgeCustomTimeDialog_Warning;
+   public static String AcknowledgeCustomTimeDialog_WarningZeroTime;
+   public static String AlarmAcknowledgeTimeFunctions_day;
+   public static String AlarmAcknowledgeTimeFunctions_days;
+   public static String AlarmAcknowledgeTimeFunctions_hour;
+   public static String AlarmAcknowledgeTimeFunctions_hours;
+   public static String AlarmAcknowledgeTimeFunctions_minute;
+   public static String AlarmAcknowledgeTimeFunctions_minutes;
+   public static String AlarmAcknowledgeTimeFunctions_ZeroMinutesEntry;
+   public static String AlarmComments_AckToDeleteComment;
+   public static String AlarmComments_AddCommentJob;
 	public static String AlarmComments_AddCommentLink;
 	public static String AlarmComments_AddError;
 	public static String AlarmComments_Comments;
-	public static String AlarmComments_Details;
+   public static String AlarmComments_Confirmation;
+	public static String AlarmComments_DeleteCommentJob;
+   public static String AlarmComments_Details;
+   public static String AlarmComments_ErrorDeleteAlarmComment;
 	public static String AlarmComments_GetComments;
 	public static String AlarmComments_GetError;
 	public static String AlarmComments_InternalError;
-	public static String AlarmCommentsEditor_Edit;
+	public static String AlarmCommentsEditor_DeleteLabel;
+   public static String AlarmCommentsEditor_Edit;
 	public static String AlarmCommentsEditor_Unknown;
 	public static String AlarmComparator_Unknown;
 	public static String AlarmDetails_Column_Message;
@@ -54,6 +73,8 @@ public class Messages extends NLS
 	public static String AlarmList_ResolveAlarm;
 	public static String AlarmList_Resolving;
 	public static String AlarmList_StickyAck;
+
+   public static String AlarmList_StickyAckMenutTitle;
 	public static String AlarmList_SyncJobError;
 	public static String AlarmList_SyncJobName;
 	public static String AlarmList_Terminate;
@@ -64,7 +85,11 @@ public class Messages extends NLS
 	public static String AlarmNotifier_ToolTip_Header;
 	public static String AlarmReminderDialog_Dismiss;
 	public static String AlarmReminderDialog_OutstandingAlarms;
+   public static String Alarms_AcknowledgeTimeEditor;
+
    public static String Alarms_Blinking;
+   public static String Alarms_SetAlarmFlowToStrict;
+
    public static String Alarms_ShowDetailedTooltips;
 	public static String Alarms_ShowPopup;
 	public static String Alarms_ShowReminder;

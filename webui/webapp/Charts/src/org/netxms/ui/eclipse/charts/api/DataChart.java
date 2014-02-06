@@ -26,6 +26,14 @@ public interface DataChart
 {
 	public static final int MAX_CHART_ITEMS = 16;
 	
+	 /**
+    * Set y axis range for chart.
+    * 
+    * @param from minimal y axis number
+    * @param to maximal y axis number
+    */
+   public abstract void setYAxisRange(int from, int to);
+	
 	/**
 	 * Marks end of initialization stage and causes first render of a chart.
 	 */

@@ -32,6 +32,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.logviewer.Messages;
@@ -121,7 +122,7 @@ public class UserConditionEditor extends ConditionEditor
 	 */
 	private void selectUser()
 	{
-		SelectUserDialog dlg = new SelectUserDialog(getShell(), false);
+		SelectUserDialog dlg = new SelectUserDialog(getShell(), User.class);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{

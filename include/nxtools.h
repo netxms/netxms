@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -45,6 +45,7 @@
 #define TF_REQUIRES_AGENT           ((DWORD)0x00000002)
 #define TF_REQUIRES_OID_MATCH       ((DWORD)0x00000004)
 #define TF_ASK_CONFIRMATION         ((DWORD)0x00000008)
+#define TF_DISABLED                 ((DWORD)0x00000020)
 #define TF_SNMP_INDEXED_BY_VALUE    ((DWORD)0x00010000)
 
 

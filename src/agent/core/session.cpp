@@ -170,8 +170,7 @@ void CommSession::readThread()
 #endif
    while(1)
    {
-      if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE,
-                                  &m_pCtx, pDecryptionBuffer, INFINITE)) <= 0)
+      if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE, &m_pCtx, pDecryptionBuffer, (g_dwIdleTimeout + 1) * 1000)) <= 0)
       {
          break;
       }
@@ -184,6 +183,17 @@ void CommSession::readThread()
       if (iErr == 2)
       {
          nxlog_write(MSG_DECRYPTION_FAILURE, EVENTLOG_WARNING_TYPE, NULL);
+         continue;
+      }
+
+      // Check for timeout
+      if (iErr == 3)
+      {
+         if (m_ts < time(NULL) - (time_t)g_dwIdleTimeout)
+         {
+				DebugPrintf(m_dwIndex, 5, _T("Session disconnected by timeout (last activity timestamp is %d)"), (int)m_ts);
+            break;
+         }
          continue;
       }
 

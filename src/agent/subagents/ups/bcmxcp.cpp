@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006-2014 Victor Kirhenshtein
 ** Code is partially based on BCMXCP driver for NUT:
 **
 ** ! bcmxcp.c - driver for powerware UPS
@@ -40,11 +40,9 @@
 #include "ups.h"
 #include <math.h>
 
-
-//
-// Commands
-//
-
+/**
+ * Commands
+ */
 #define PW_COMMAND_START_BYTE    ((BYTE)0xAB)
 
 #define PW_ID_BLOCK_REQ 	      ((BYTE)0x31)
@@ -60,11 +58,9 @@
 #define PW_COM_CAP_REQ		      ((BYTE)0x42)
 #define PW_UPS_TOPO_DATA_REQ	   ((BYTE)0x43)
 
-
-//
-// Meter map elements
-//
-
+/**
+ * Meter map elements
+ */
 #define MAP_OUTPUT_VA      			23
 #define MAP_INPUT_FREQUENCY         28
 #define MAP_BATTERY_VOLTAGE         33
@@ -77,21 +73,17 @@
 #define MAP_BATTERY_TEMPERATURE     77
 #define MAP_OUTPUT_VOLTAGE          78
 
-
-//
-// Result formats
-//
-
+/**
+ * Result formats
+ */
 #define FMT_INTEGER     0
 #define FMT_DOUBLE      1
 #define FMT_STRING      2
 #define FMT_INT_MINUTES 3
 
-
-//
-// Calculate checksum for prepared message and add it to the end of buffer
-//
-
+/**
+ * Calculate checksum for prepared message and add it to the end of buffer
+ */
 static void CalculateChecksum(BYTE *pBuffer)
 {
 	BYTE sum;
@@ -103,11 +95,9 @@ static void CalculateChecksum(BYTE *pBuffer)
    pBuffer[nLen] = sum;
 }
 
-
-//
-// Validate checksum of received packet
-//
-
+/**
+ * Validate checksum of received packet
+ */
 static BOOL ValidateChecksum(BYTE *pBuffer)
 {
    BYTE sum;
@@ -119,11 +109,9 @@ static BOOL ValidateChecksum(BYTE *pBuffer)
    return sum == 0;
 }
 
-
-//
-// Get value as long integer
-//
-
+/**
+ * Get value as long integer
+ */
 static LONG GetLong(BYTE *pData)
 {
 #if WORDS_BIGENDIAN
@@ -134,11 +122,9 @@ static LONG GetLong(BYTE *pData)
 #endif
 }
 
-
-//
-// Get value as float
-//
-
+/**
+ * Get value as float
+ */
 static float GetFloat(BYTE *pData)
 {
 #if WORDS_BIGENDIAN
@@ -152,11 +138,9 @@ static float GetFloat(BYTE *pData)
 #endif
 }
 
-
-//
-// Decode numerical value
-//
-
+/**
+ * Decode numerical value
+ */
 static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, char *pszValue)
 {
    LONG nValue;
@@ -225,23 +209,19 @@ static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, char *pszValu
    }
 }
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 BCMXCPInterface::BCMXCPInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
 {
 	if (m_portSpeed == 0)
 		m_portSpeed = 19200;
 }
 
-
-//
-// Send read command to device
-//
-
-BOOL BCMXCPInterface::SendReadCommand(BYTE nCommand)
+/**
+ * Send read command to device
+ */
+BOOL BCMXCPInterface::sendReadCommand(BYTE nCommand)
 {
    BYTE packet[4];
    BOOL bRet;
@@ -259,12 +239,10 @@ BOOL BCMXCPInterface::SendReadCommand(BYTE nCommand)
    return bRet;
 }
 
-
-//
-// Receive data block from device, and check hat it is for right command
-//
-
-int BCMXCPInterface::RecvData(int nCommand)
+/**
+ * Receive data block from device, and check hat it is for right command
+ */
+int BCMXCPInterface::recvData(int nCommand)
 {
    BYTE packet[128], nPrevSequence = 0;
    BOOL bEndBlock = FALSE;
@@ -341,18 +319,16 @@ int BCMXCPInterface::RecvData(int nCommand)
 	return nTotalBytes;
 }
 
-
-//
-// Open device
-//
-
-BOOL BCMXCPInterface::Open()
+/**
+ * Open device
+ */
+BOOL BCMXCPInterface::open()
 {
    BOOL bRet = FALSE;
    char szBuffer[256];
    int i, nBytes, nPos, nLen, nOffset;
 
-   if (SerialInterface::Open())
+   if (SerialInterface::open())
    {
       m_serial.setTimeout(1000);
       m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
@@ -361,9 +337,9 @@ BOOL BCMXCPInterface::Open()
       m_serial.write("\x1D\x1D", 2);
 
       // Read UPS ID block
-      if (SendReadCommand(PW_ID_BLOCK_REQ))
+      if (sendReadCommand(PW_ID_BLOCK_REQ))
       {
-         nBytes = RecvData(PW_ID_BLOCK_REQ);
+         nBytes = recvData(PW_ID_BLOCK_REQ);
          if (nBytes > 0)
          {
             // Skip to model name
@@ -393,34 +369,30 @@ BOOL BCMXCPInterface::Open()
             }
 
             bRet = TRUE;
-            SetConnected();
+            setConnected();
          }
       }
    }
    return bRet;
 }
 
-
-//
-// Validate connection to the device
-//
-
-BOOL BCMXCPInterface::ValidateConnection(void)
+/**
+ * Validate connection to the device
+ */
+BOOL BCMXCPInterface::validateConnection()
 {
-   if (SendReadCommand(PW_ID_BLOCK_REQ))
+   if (sendReadCommand(PW_ID_BLOCK_REQ))
    {
-      if (RecvData(PW_ID_BLOCK_REQ) > 0)
+      if (recvData(PW_ID_BLOCK_REQ) > 0)
          return TRUE;
    }
    return FALSE;
 }
 
-
-//
-// Read parameter from UPS
-//
-
-void BCMXCPInterface::ReadParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam)
+/**
+ * Read parameter from UPS
+ */
+void BCMXCPInterface::readParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam)
 {
    int nBytes;
 
@@ -430,9 +402,9 @@ void BCMXCPInterface::ReadParameter(int nIndex, int nFormat, UPS_PARAMETER *pPar
    }
    else
    {
-      if (SendReadCommand(PW_METER_BLOCK_REQ))
+      if (sendReadCommand(PW_METER_BLOCK_REQ))
       {
-         nBytes = RecvData(PW_METER_BLOCK_REQ);
+         nBytes = recvData(PW_METER_BLOCK_REQ);
          if (nBytes > 0)
          {
             if (m_map[nIndex].nOffset < nBytes)
@@ -458,18 +430,16 @@ void BCMXCPInterface::ReadParameter(int nIndex, int nFormat, UPS_PARAMETER *pPar
    }
 }
 
-
-//
-// Get UPS model
-//
-
-void BCMXCPInterface::QueryModel(void)
+/**
+ * Get UPS model
+ */
+void BCMXCPInterface::queryModel()
 {
    int nBytes, nPos;
 
-   if (SendReadCommand(PW_ID_BLOCK_REQ))
+   if (sendReadCommand(PW_ID_BLOCK_REQ))
    {
-      nBytes = RecvData(PW_ID_BLOCK_REQ);
+      nBytes = recvData(PW_ID_BLOCK_REQ);
       if (nBytes > 0)
       {
          nPos = m_data[0] * 2 + 1;
@@ -497,88 +467,72 @@ void BCMXCPInterface::QueryModel(void)
    }
 }
 
-
-//
-// Get battery level (in percents)
-//
-
-void BCMXCPInterface::QueryBatteryLevel(void)
+/**
+ * Get battery level (in percents)
+ */
+void BCMXCPInterface::queryBatteryLevel()
 {
-   ReadParameter(MAP_BATTERY_LEVEL, FMT_INTEGER, &m_paramList[UPS_PARAM_BATTERY_LEVEL]);
+   readParameter(MAP_BATTERY_LEVEL, FMT_INTEGER, &m_paramList[UPS_PARAM_BATTERY_LEVEL]);
 }
 
-
-//
-// Get battery voltage
-//
-
-void BCMXCPInterface::QueryBatteryVoltage(void)
+/**
+ * Get battery voltage
+ */
+void BCMXCPInterface::queryBatteryVoltage()
 {
-   ReadParameter(MAP_BATTERY_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_BATTERY_VOLTAGE]);
+   readParameter(MAP_BATTERY_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_BATTERY_VOLTAGE]);
 }
 
-
-//
-// Get input line voltage
-//
-
-void BCMXCPInterface::QueryInputVoltage(void)
+/**
+ * Get input line voltage
+ */
+void BCMXCPInterface::queryInputVoltage()
 {
-   ReadParameter(MAP_INPUT_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_INPUT_VOLTAGE]);
+   readParameter(MAP_INPUT_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_INPUT_VOLTAGE]);
 }
 
-
-//
-// Get output voltage
-//
-
-void BCMXCPInterface::QueryOutputVoltage(void)
+/**
+ * Get output voltage
+ */
+void BCMXCPInterface::queryOutputVoltage()
 {
-   ReadParameter(MAP_OUTPUT_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE]);
+   readParameter(MAP_OUTPUT_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE]);
 }
 
-
-//
-// Get estimated runtime (in minutes)
-//
-
-void BCMXCPInterface::QueryEstimatedRuntime(void)
+/**
+ * Get estimated runtime (in minutes)
+ */
+void BCMXCPInterface::queryEstimatedRuntime()
 {
-   ReadParameter(MAP_BATTERY_RUNTIME, FMT_INT_MINUTES, &m_paramList[UPS_PARAM_EST_RUNTIME]);
+   readParameter(MAP_BATTERY_RUNTIME, FMT_INT_MINUTES, &m_paramList[UPS_PARAM_EST_RUNTIME]);
 }
 
-
-//
-// Get temperature inside UPS
-//
-
-void BCMXCPInterface::QueryTemperature(void)
+/**
+ * Get temperature inside UPS
+ */
+void BCMXCPInterface::queryTemperature()
 {
-   ReadParameter(MAP_AMBIENT_TEMPERATURE, FMT_INTEGER, &m_paramList[UPS_PARAM_TEMP]);
+   readParameter(MAP_AMBIENT_TEMPERATURE, FMT_INTEGER, &m_paramList[UPS_PARAM_TEMP]);
 }
 
-
-//
-// Get line frequency (Hz)
-//
-
-void BCMXCPInterface::QueryLineFrequency()
+/**
+ * Get line frequency (Hz)
+ */
+void BCMXCPInterface::queryLineFrequency()
 {
-   ReadParameter(MAP_INPUT_FREQUENCY, FMT_INTEGER, &m_paramList[UPS_PARAM_LINE_FREQ]);
+   readParameter(MAP_INPUT_FREQUENCY, FMT_INTEGER, &m_paramList[UPS_PARAM_LINE_FREQ]);
 }
 
-
-//
-// Get firmware version
-//
-
-void BCMXCPInterface::QueryFirmwareVersion()
+/**
+ * Get firmware version
+ */
+void BCMXCPInterface::queryFirmwareVersion()
 {
    int i, nLen, nBytes, nPos;
 
-   if (SendReadCommand(PW_ID_BLOCK_REQ))
+   if (sendReadCommand(PW_ID_BLOCK_REQ))
    {
-      nBytes = RecvData(PW_ID_BLOCK_REQ);
+      nBytes = recvData(PW_ID_BLOCK_REQ);
       if (nBytes > 0)
       {
          nLen = m_data[0];
@@ -607,18 +561,16 @@ void BCMXCPInterface::QueryFirmwareVersion()
    }
 }
 
-
-//
-// Get unit serial number
-//
-
-void BCMXCPInterface::QuerySerialNumber()
+/**
+ * Get unit serial number
+ */
+void BCMXCPInterface::querySerialNumber()
 {
    int nBytes;
 
-   if (SendReadCommand(PW_ID_BLOCK_REQ))
+   if (sendReadCommand(PW_ID_BLOCK_REQ))
    {
-      nBytes = RecvData(PW_ID_BLOCK_REQ);
+      nBytes = recvData(PW_ID_BLOCK_REQ);
       if (nBytes >= 80)    // Serial number offset + length
       {
          memcpy(m_paramList[UPS_PARAM_SERIAL].szValue, &m_data[64], 16);
@@ -644,18 +596,16 @@ void BCMXCPInterface::QuerySerialNumber()
    }
 }
 
-
-//
-// Get UPS online status
-//
-
-void BCMXCPInterface::QueryOnlineStatus(void)
+/**
+ * Get UPS online status
+ */
+void BCMXCPInterface::queryOnlineStatus()
 {
    int nBytes;
 
-   if (SendReadCommand(PW_STATUS_REQ))
+   if (sendReadCommand(PW_STATUS_REQ))
    {
-      nBytes = RecvData(PW_STATUS_REQ);
+      nBytes = recvData(PW_STATUS_REQ);
       if (nBytes > 0)
       {
          switch(m_data[0])
@@ -687,23 +637,23 @@ void BCMXCPInterface::QueryOnlineStatus(void)
    }
 }
 
-
-//
-// Get UPS load
-//
-
-void BCMXCPInterface::QueryPowerLoad(void)
+/**
+ * Get UPS load
+ */
+void BCMXCPInterface::queryPowerLoad()
 {
    UPS_PARAMETER upsCurrOutput, upsMaxOutput;
-   int nCurrOutput, nMaxOutput;
 
-   ReadParameter(MAP_OUTPUT_VA, FMT_INTEGER, &upsCurrOutput);
-   ReadParameter(MAP_MAX_OUTPUT_VA, FMT_INTEGER, &upsMaxOutput);
+   memset(&upsCurrOutput, 0, sizeof(UPS_PARAMETER));
+   memset(&upsMaxOutput, 0, sizeof(UPS_PARAMETER));
+
+   readParameter(MAP_OUTPUT_VA, FMT_INTEGER, &upsCurrOutput);
+   readParameter(MAP_MAX_OUTPUT_VA, FMT_INTEGER, &upsMaxOutput);
    m_paramList[UPS_PARAM_LOAD].dwFlags = upsCurrOutput.dwFlags | upsMaxOutput.dwFlags;
    if ((m_paramList[UPS_PARAM_LOAD].dwFlags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
    {
-      nCurrOutput = atoi(upsCurrOutput.szValue);
-      nMaxOutput = atoi(upsMaxOutput.szValue);
+      int nCurrOutput = atoi(upsCurrOutput.szValue);
+      int nMaxOutput = atoi(upsMaxOutput.szValue);
       if ((nMaxOutput > 0) && (nMaxOutput >= nCurrOutput))
       {
          sprintf(m_paramList[UPS_PARAM_LOAD].szValue, "%d", nCurrOutput * 100 / nMaxOutput);

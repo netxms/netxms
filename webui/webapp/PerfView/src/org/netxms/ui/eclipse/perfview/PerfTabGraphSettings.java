@@ -38,6 +38,15 @@ public class PerfTabGraphSettings
 	@Element(required=false)
 	private boolean enabled = false;
 	
+   @Element(required = false)
+   private boolean autoScale = true;
+   
+   @Element(required = false)
+   private int minYScaleValue = 1;
+   
+   @Element(required = false)
+   private int maxYScaleValue = 100;
+	
 	@Element(required=false)
 	private int type = GraphItemStyle.LINE;
 	
@@ -324,4 +333,34 @@ public class PerfTabGraphSettings
 	{
 		this.order = order;
 	}
+	
+	public boolean isAutoScale()
+   {
+      return autoScale;
+   }
+
+   public void setAutoScale(boolean autoScale)
+   {
+      this.autoScale = autoScale;
+   }
+
+   public int getMinYScaleValue()
+   {
+      return minYScaleValue;
+   }
+
+   public void setMinYScaleValue(int minYScaleValue)
+   {
+      this.minYScaleValue = minYScaleValue;
+   }
+
+   public int getMaxYScaleValue()
+   {
+      return maxYScaleValue;
+   }
+
+   public void setMaxYScaleValue(int maxYScaleValue)
+   {
+      this.maxYScaleValue = maxYScaleValue;
+   }
 }

@@ -123,8 +123,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		for(int i = 0; i < tools.length; i++)
 		{
 			boolean allowed = isToolAllowed(tools[i], nodes);
+			boolean enabled = (tools[i].getFlags() & ObjectTool.DISABLED) == 0 ;
 			
-			if (allowed && isToolApplicable(tools[i], nodes))
+			if (allowed && isToolApplicable(tools[i], nodes) && enabled)
 			{
 				String[] path = tools[i].getName().split("\\-\\>"); //$NON-NLS-1$
 			
@@ -448,11 +449,11 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	private void executeFileDownload(final AbstractNode node, final ObjectTool tool)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		String[] parameters = tool.getData().split("\u007F");
+		String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
 		
 		final String fileName = substituteMacros(parameters[0], node);
 		final int maxFileSize = Integer.parseInt(parameters[1]);
-		final boolean follow = parameters[2].equals("true") ? true : false;
+		final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
 		
 		ConsoleJob job = new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
 			@Override

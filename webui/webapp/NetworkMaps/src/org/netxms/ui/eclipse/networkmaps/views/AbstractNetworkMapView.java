@@ -41,6 +41,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -134,6 +135,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected int routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
 	protected boolean allowManualLayout = false; // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
+   protected boolean disableGeolocationBackground = false;
 
 	protected Action actionRefresh;
 	protected Action actionShowStatusIcon;
@@ -171,6 +173,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
+
+		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND");
 
 		session = (NXCSession)ConsoleSharedData.getSession();
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
@@ -338,6 +343,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		refreshMap();
 	}
 
+	/**
+	 * Register double click handlers
+	 */
 	private void registerDoubleClickHandlers()
 	{
 		// Read all registered extensions and create handlers

@@ -38,8 +38,10 @@ public class Messages extends NLS
    public static String EditColumnDialog_SubstrIndex;
    public static String EditColumnDialog_Warning;
    public static String FileViewer_Cannot_Stop_File_Monitoring;
+   public static String FileViewer_ClearOutput;
    public static String FileViewer_Download_File_Updates;
    public static String FileViewer_InvalidObjectID;
+   public static String FileViewer_ScrollLock;
    public static String FileViewer_Stop_File_Monitoring;
    public static String Filter_AgentNeeded;
    public static String Filter_OIDShouldMatch;
@@ -49,9 +51,13 @@ public class Messages extends NLS
    public static String General_Confirmation;
    public static String General_ConfirmationMessage;
    public static String General_Description;
+   public static String General_DisableObjectToll;
    public static String General_ExecOptions;
+   public static String General_FileOptions;
    public static String General_FirstColumnValue;
+   public static String General_FollowFileChanges;
    public static String General_GeneratesOutput;
+   public static String General_LimitDownloadFileSizeLable;
    public static String General_Name;
    public static String General_OIDSuffix;
    public static String General_Operation;
@@ -91,6 +97,8 @@ public class Messages extends NLS
    public static String ObjectToolsDynamicMenu_ServerCommandExecuted;
    public static String ObjectToolsDynamicMenu_ToolExecution;
    public static String ObjectToolsDynamicMenu_TopLevelLabel;
+   public static String ObjectToolsEditor_AckToDisableObjectTool;
+   public static String ObjectToolsEditor_AckToEnableObjTool;
    public static String ObjectToolsEditor_ColDescr;
    public static String ObjectToolsEditor_ColId;
    public static String ObjectToolsEditor_ColName;
@@ -98,6 +106,12 @@ public class Messages extends NLS
    public static String ObjectToolsEditor_Confirmation;
    public static String ObjectToolsEditor_Delete;
    public static String ObjectToolsEditor_DeleteConfirmation;
+   public static String ObjectToolsEditor_Disable;
+   public static String ObjectToolsEditor_DisableObjTool;
+   public static String ObjectToolsEditor_Enable;
+   public static String ObjectToolsEditor_EnableObjTool;
+   public static String ObjectToolsEditor_ErrorDisablingObjectTools;
+   public static String ObjectToolsEditor_ErrorDisablingObjTools;
    public static String ObjectToolsEditor_JobDelete;
    public static String ObjectToolsEditor_JobDeleteError;
    public static String ObjectToolsEditor_JobGetConfig;

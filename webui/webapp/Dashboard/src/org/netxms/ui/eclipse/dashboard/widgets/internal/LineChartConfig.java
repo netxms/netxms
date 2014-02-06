@@ -37,6 +37,9 @@ public class LineChartConfig extends AbstractChartConfig
 	@Element(required = false)
 	private boolean showGrid = true;
 
+   @Element(required = false)
+   private boolean extendedLegend = false;
+
 	/**
 	 * Create line chart settings object from XML document
 	 * 
@@ -116,4 +119,20 @@ public class LineChartConfig extends AbstractChartConfig
 	{
 		this.showGrid = showGrid;
 	}
+
+   /**
+    * @return the extendedLegend
+    */
+   public boolean isExtendedLegend()
+   {
+      return extendedLegend;
+   }
+
+   /**
+    * @param extendedLegend the extendedLegend to set
+    */
+   public void setExtendedLegend(boolean extendedLegend)
+   {
+      this.extendedLegend = extendedLegend;
+   }
 }

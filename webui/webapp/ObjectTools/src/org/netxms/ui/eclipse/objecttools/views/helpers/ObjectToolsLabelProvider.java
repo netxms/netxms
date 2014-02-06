@@ -43,7 +43,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		Messages.get().ObjectToolsLabelProvider_TypeDownloadFile
 	};
 	
-	private Image[] toolTypeImages = new Image[toolTypes.length];
+	private Image[] toolTypeImages = new Image[toolTypes.length+1];
 	
 	/**
 	 * The constructor
@@ -58,6 +58,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		toolTypeImages[5] = Activator.getImageDescriptor("icons/console.png").createImage(); //$NON-NLS-1$
 		toolTypeImages[6] = Activator.getImageDescriptor("icons/console.png").createImage(); //$NON-NLS-1$
 		toolTypeImages[7] = Activator.getImageDescriptor("icons/file_download.png").createImage(); //$NON-NLS-1$
+		toolTypeImages[8] = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -71,7 +72,14 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 
 		try
 		{
-			return toolTypeImages[((ObjectTool)element).getType()];
+		   if((((ObjectTool)element).getFlags() & ObjectTool.DISABLED)== 0)
+		   {
+		      return toolTypeImages[((ObjectTool)element).getType()];
+		   }
+		   else
+		   {
+		      return toolTypeImages[8];
+		   }
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{

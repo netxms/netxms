@@ -24,6 +24,7 @@
 	<string name="home_screen_alarms">Alarms</string>
 	<string name="home_screen_dashboards">Dashboards</string>
 	<string name="home_screen_nodes">Nodes</string>
+	<string name="home_screen_entire_network">Entire network</string>
 	<string name="home_screen_graphs">Graphics</string>
 	<string name="home_screen_macaddress">MACaddress</string>
 			
@@ -40,9 +41,12 @@
     <string name="pref_port">Port</string>
     <string name="pref_port_summary">Port of NetXMS server</string>
     <string name="pref_global">Global settings</string>
+    <string name="pref_global_summary">Set global parameters (autostart on boot, &#8230;)</string>
     <string name="pref_connection">Connection</string>
+    <string name="pref_connection_summary">Set connection parameters (server name, port, username, encryption, scheduler &#8230;)</string>
     <string name="pref_parameters">Parameters</string>
     <string name="pref_scheduler">Scheduler</string>
+    <string name="pref_scheduler_summary">Define scheduler behaviour</string>
     <string name="pref_scheduler_enable">Enable scheduler</string>
     <string name="pref_scheduler_enabled">Scheduler is enabled</string>
     <string name="pref_scheduler_disabled">Scheduler is disabled</string>
@@ -59,6 +63,7 @@
 	<string name="pref_global_autostart_enabled">Allow automatic start of service</string>
 	<string name="pref_global_autostart_disabled">Block automatic start of service</string>
 	<string name="pref_notifications">Notifications</string>
+	<string name="pref_notifications_summary">Customize notifications (toast, notification bar, alarms sounds, &#8230;)</string>
 	<string name="pref_status">Connection status</string>
 	<string name="pref_alarms">Alarms</string>
 	<string name="pref_alarm_sound">Alarm sound by severity</string>
@@ -78,7 +83,9 @@
 	<string name="pref_global_notification_alarm_enabled">Alarm in status bar is enabled</string>
 	<string name="pref_global_notification_alarm_disabled">Alarm in status bar is disabled</string>
 	<string name="pref_interface">Interface</string>
+	<string name="pref_interface_summary">Customize interface parameters (multipliers, &#8230;)</string>
 	<string name="pref_multipliers">Multipliers</string>
+	<string name="pref_multipliers_summary">Define which multiplier to use in presenting data (last values, graphs, &#8230;)</string>
 	<string name="pref_multiplier_title">Choose multiplier</string>
 
 	<string name="notification_title">NetXMS</string>

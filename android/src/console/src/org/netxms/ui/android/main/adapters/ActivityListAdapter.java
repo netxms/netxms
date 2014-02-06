@@ -28,13 +28,30 @@ import android.widget.LinearLayout.LayoutParams;
  */
 public class ActivityListAdapter extends BaseAdapter
 {
-	private static final int[] activityId = { HomeScreen.ACTIVITY_ALARMS, HomeScreen.ACTIVITY_DASHBOARDS,
-			HomeScreen.ACTIVITY_NODES, HomeScreen.ACTIVITY_GRAPHS, HomeScreen.ACTIVITY_MACADDRESS };
-//		HomeScreen.ACTIVITY_NODES, HomeScreen.ACTIVITY_GRAPHS, HomeScreen.ACTIVITY_MACADDRESS, HomeScreen.ACTIVITY_TEST };
-	private static final int[] imageId = { R.drawable.alarms, R.drawable.dashboard,
-			R.drawable.nodes, R.drawable.graphs, R.drawable.macaddress, R.drawable.icon };
-	private static final int[] textId = { R.string.home_screen_alarms, R.string.home_screen_dashboards,
-			R.string.home_screen_nodes, R.string.home_screen_graphs, R.string.home_screen_macaddress, R.string.home };
+	private static final int[] activityId = {
+			HomeScreen.ACTIVITY_ALARMS,
+			HomeScreen.ACTIVITY_DASHBOARDS,
+			HomeScreen.ACTIVITY_NODES,
+			HomeScreen.ACTIVITY_ENTIRENETWORK,
+			HomeScreen.ACTIVITY_GRAPHS,
+			HomeScreen.ACTIVITY_MACADDRESS };
+//		HomeScreen.ACTIVITY_TEST };
+	private static final int[] imageId = {
+			R.drawable.alarms,
+			R.drawable.dashboard,
+			R.drawable.nodes,
+			R.drawable.entire_network,
+			R.drawable.graphs,
+			R.drawable.macaddress,
+			R.drawable.icon };
+	private static final int[] textId = {
+			R.string.home_screen_alarms,
+			R.string.home_screen_dashboards,
+			R.string.home_screen_nodes,
+			R.string.home_screen_entire_network,
+			R.string.home_screen_graphs,
+			R.string.home_screen_macaddress,
+			R.string.home };
 	private static final int[] statusImageId = {
 			R.drawable.status_normal, // STATUS_NORMAL = 0;
 			R.drawable.status_warning, // STATUS_WARNING = 1;
@@ -46,9 +63,17 @@ public class ActivityListAdapter extends BaseAdapter
 			R.drawable.status_disabled, // STATUS_DISABLED = 7;
 			R.drawable.status_testing // STATUS_TESTING = 8;
 	};
-	private static final int[] alarmId = { R.drawable.alarm_pg, R.drawable.alarm_p1, R.drawable.alarm_p2,
-			R.drawable.alarm_p3, R.drawable.alarm_p4, R.drawable.alarm_p5, R.drawable.alarm_p6,
-			R.drawable.alarm_p7, R.drawable.alarm_p8, R.drawable.alarm_p9 };
+	private static final int[] alarmId = {
+			R.drawable.alarm_pg,
+			R.drawable.alarm_p1,
+			R.drawable.alarm_p2,
+			R.drawable.alarm_p3,
+			R.drawable.alarm_p4,
+			R.drawable.alarm_p5,
+			R.drawable.alarm_p6,
+			R.drawable.alarm_p7,
+			R.drawable.alarm_p8,
+			R.drawable.alarm_p9 };
 	private static final int MAX_ALARMS = alarmId.length;
 	private SparseArray<AbstractObject> topNodes = null;
 	private final Context context;
@@ -77,6 +102,9 @@ public class ActivityListAdapter extends BaseAdapter
 			if (objList.get(i) != null)
 				switch (objList.get(i).getObjectClass())
 				{
+					case AbstractObject.OBJECT_NETWORK:
+						topNodes.put(HomeScreen.ACTIVITY_ENTIRENETWORK, objList.get(i));
+						break;
 					case AbstractObject.OBJECT_DASHBOARDROOT:
 						topNodes.put(HomeScreen.ACTIVITY_DASHBOARDS, objList.get(i));
 						break;
@@ -157,6 +185,7 @@ public class ActivityListAdapter extends BaseAdapter
 						infoLayer = parent.getResources().getDrawable(numAlarms >= MAX_ALARMS ? alarmId[0] : alarmId[numAlarms]);
 					break;
 				case HomeScreen.ACTIVITY_NODES:
+				case HomeScreen.ACTIVITY_ENTIRENETWORK:
 				case HomeScreen.ACTIVITY_DASHBOARDS:
 					if (topNodes != null)
 					{
