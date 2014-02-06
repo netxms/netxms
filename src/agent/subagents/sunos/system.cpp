@@ -428,10 +428,10 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
          }
          break;
       case MEMINFO_SWAP_TOTAL:
-         ret_uint64(pValue, GetSwapCounter(&s_swapTotal) * qwPageSize);
+         ret_uint64(pValue, GetSwapCounter(&s_swapTotal));
          break;
       case MEMINFO_SWAP_FREE:
-         ret_uint64(pValue, GetSwapCounter(&s_swapFree) * qwPageSize);
+         ret_uint64(pValue, GetSwapCounter(&s_swapFree));
          break;
       case MEMINFO_SWAP_FREEPCT:
          {
@@ -440,7 +440,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
          }
          break;
       case MEMINFO_SWAP_USED:
-         ret_uint64(pValue, GetSwapCounter(&s_swapUsed) * qwPageSize);
+         ret_uint64(pValue, GetSwapCounter(&s_swapUsed));
          break;
       case MEMINFO_SWAP_USEDPCT:
          {
@@ -449,34 +449,44 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
          }
          break;
       case MEMINFO_VIRTUAL_TOTAL:
-         ret_uint64(pValue, ((QWORD)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal)) * qwPageSize);
+         ret_uint64(pValue, ((QWORD)sysconf(_SC_PHYS_PAGES) * qwPageSize) + GetSwapCounter(&s_swapTotal));
          break;
       case MEMINFO_VIRTUAL_FREE:
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_uint64(pValue, ((QWORD)kn.value.ul + GetSwapCounter(&s_swapFree)) * qwPageSize);
+            ret_uint64(pValue, ((QWORD)kn.value.ul * qwPageSize) + GetSwapCounter(&s_swapFree));
          }
          break;
       case MEMINFO_VIRTUAL_FREEPCT:
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_double(pValue, ((double)kn.value.ul + (double)GetSwapCounter(&s_swapFree)) * 100.0 / ((double)sysconf(_SC_PHYS_PAGES) + (double)GetSwapCounter(&s_swapTotal)));
+            ret_double(pValue,
+                  (((double)kn.value.ul * qwPageSize) + (double)GetSwapCounter(&s_swapFree))
+                  /
+                  (((double)sysconf(_SC_PHYS_PAGES) * qwPageSize) + (double)GetSwapCounter(&s_swapTotal))
+                  * 100.0
+            );
          }
          break;
       case MEMINFO_VIRTUAL_USED:
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_uint64(pValue, ((QWORD)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) + GetSwapCounter(&s_swapUsed)) * qwPageSize);
+            ret_uint64(pValue, ((QWORD)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * qwPageSize) + GetSwapCounter(&s_swapUsed));
          }
          break;
       case MEMINFO_VIRTUAL_USEDPCT:
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_double(pValue, ((double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) + (double)GetSwapCounter(&s_swapUsed)) * 100.0 /  ((double)sysconf(_SC_PHYS_PAGES) + (double)GetSwapCounter(&s_swapTotal)));
+            ret_double(pValue,
+                  (((double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * qwPageSize) + (double)GetSwapCounter(&s_swapUsed))
+                  /
+                  (((double)sysconf(_SC_PHYS_PAGES) * qwPageSize) + (double)GetSwapCounter(&s_swapTotal))
+                  * 100.0
+            );
          }
          break;
       default:
