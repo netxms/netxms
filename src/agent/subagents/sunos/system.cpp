@@ -354,8 +354,8 @@ static void UpdateSwapInfo()
    swapent *swapEntry = swapTable->swt_ent;
    for(int i = 0; i < num; i++)
    {
-      totalBytes += swapEntry[i].ste_pages * bytesPerPage;
-      freeBytes += swapEntry[i].ste_free * bytesPerPage;
+      totalBytes += (INT64)swapEntry[i].ste_pages * bytesPerPage;
+      freeBytes += (INT64)swapEntry[i].ste_free * bytesPerPage;
       free(swapEntry[i].ste_path);
    }
 
