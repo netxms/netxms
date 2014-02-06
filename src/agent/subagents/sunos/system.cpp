@@ -429,13 +429,19 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
          ret_uint64(pValue, GetSwapCounter(&s_swapFree) * qwPageSize);
          break;
       case MEMINFO_SWAP_FREEPCT:
-         ret_double(pValue, (double)GetSwapCounter(&s_swapFree) * 100.0 / (double)GetSwapCounter(&s_swapTotal));
+         {
+            GetSwapCounter(&s_swapTotal);
+            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapFree) * 100.0 / (double)s_swapTotal);
+         }
          break;
       case MEMINFO_SWAP_USED:
          ret_uint64(pValue, GetSwapCounter(&s_swapUsed) * qwPageSize);
          break;
       case MEMINFO_SWAP_USEDPCT:
-         ret_double(pValue, (double)GetSwapCounter(&s_swapUsed) * 100.0 / (double)GetSwapCounter(&s_swapTotal));
+         {
+            GetSwapCounter(&s_swapTotal);
+            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapUsed) * 100.0 / (double)s_swapTotal);
+         }
          break;
       case MEMINFO_VIRTUAL_TOTAL:
          ret_uint64(pValue, ((QWORD)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal)) * qwPageSize);
