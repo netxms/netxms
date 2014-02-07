@@ -156,27 +156,29 @@ LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
 	return ret;
 }
 
+/**
+ * Config template
+ */
+static DatabaseInfo s_info;
+static TCHAR s_dbPassEncrypted[MAX_DB_STRING] = _T("");
+static NX_CFG_TEMPLATE s_configTemplate[] = 
+{
+	{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, s_info.id },
+	{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, s_info.name },
+	{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, s_info.name },
+	{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, s_info.username },
+	{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, s_info.password },
+   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_dbPassEncrypted },
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
 
 /*
  * Subagent initialization
  */
-
 static BOOL SubAgentInit(Config *config)
 {
 	BOOL result = TRUE;
-	static DatabaseInfo info;
 	int i;
-	TCHAR dbPassEncrypted[MAX_DB_STRING] = _T("");
-	static NX_CFG_TEMPLATE configTemplate[] = 
-	{
-		{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, info.id },
-		{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, info.name },
-		{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, info.name },
-		{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, info.username },
-		{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, info.password },
-	   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, dbPassEncrypted },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-	};
 
 	// Init db driver
 	g_driverHandle = DBLoadDriver(_T("oracle.ddr"), NULL, TRUE, NULL, NULL);
@@ -193,21 +195,21 @@ static BOOL SubAgentInit(Config *config)
 
 	// Load configuration from "oracle" section to allow simple configuration
 	// of one database without XML includes
-	memset(&info, 0, sizeof(info));
+	memset(&s_info, 0, sizeof(s_info));
 	g_dbCount = -1;
-	if (config->parseTemplate(_T("ORACLE"), configTemplate))
+	if (config->parseTemplate(_T("ORACLE"), s_configTemplate))
 	{
-		if (info.name[0] != 0)
+		if (s_info.name[0] != 0)
 		{
-			if (info.id[0] == 0)
-				_tcscpy(info.id, info.name);
-			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
+			if (s_info.id[0] == 0)
+				_tcscpy(s_info.id, s_info.name);
+			memcpy(&g_dbInfo[++g_dbCount], &s_info, sizeof(DatabaseInfo));
 			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
 		}
 
-	   if (*dbPassEncrypted != '\0')
+	   if (*s_dbPassEncrypted != 0)
 	   {
-	      DecryptPassword(info.username, dbPassEncrypted, info.password);
+	      DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
 	   }
 	}
 
@@ -217,29 +219,29 @@ static BOOL SubAgentInit(Config *config)
 		for (i = 1; result && i <= MAX_DATABASES; i++)
 		{
 			TCHAR section[MAX_STR];
-			memset((void*)&info, 0, sizeof(info));
+			memset((void*)&s_info, 0, sizeof(s_info));
 			_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
-			dbPassEncrypted[0] = _T('\0');
+			s_dbPassEncrypted[0] = 0;
 
-			if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
+			if ((result = config->parseTemplate(section, s_configTemplate)) != TRUE)
 			{
 				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration template"), MYNAMESTR);
 				return FALSE;
 			}
-			if (info.name[0] != _T('\0'))
-				memcpy((void*)&g_dbInfo[++g_dbCount], (void*)&info, sizeof(info));
+			if (s_info.name[0] != 0)
+				memcpy(&g_dbInfo[++g_dbCount], &s_info, sizeof(s_info));
 			else
 				continue;
-			if (info.username[0] == '\0')
+			if (s_info.username[0] == 0)
 			{
 				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username for "), MYNAMESTR);
 				result = FALSE;
 			}
-         if (*dbPassEncrypted != _T('\0'))
+         if (*s_dbPassEncrypted != _T('\0'))
          {
-            result = DecryptPassword(info.username, dbPassEncrypted, info.password);
+            result = DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
          }
-         if (info.password[0] == '\0')
+         if (s_info.password[0] == '\0')
          {
             AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting password for "), MYNAMESTR);
             result = FALSE;
@@ -274,7 +276,7 @@ static BOOL SubAgentInit(Config *config)
 // Shutdown handler
 //
 
-static void SubAgentShutdown(void)
+static void SubAgentShutdown()
 {
 	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: shutting down"), MYNAMESTR);
 	ConditionSet(g_shutdownCondition);
@@ -423,8 +425,6 @@ bool getParametersFromDB( int dbIndex )
 //
 // Subagent information
 //
-
-
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Oracle.Sessions.Count(*)"), getParameters, _T("X"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions opened") },
