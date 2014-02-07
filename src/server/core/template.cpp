@@ -488,6 +488,10 @@ bool Template::updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNum
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
 				((DCItem *)object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
+            if (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE)
+            {
+               updateInstanceDiscoveryItems((DCItem *)object);
+            }
 			}
 			else
 			{
@@ -501,6 +505,24 @@ bool Template::updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNum
 
    unlockDciAccess();
    return success;
+}
+
+/**
+ * Update DCIs created by instance dicovery.
+ * This method expects DCI access already locked.
+ *
+ * @param dci instance discovery template DCI
+ */
+void Template::updateInstanceDiscoveryItems(DCItem *dci)
+{
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *object = m_dcObjects->get(i);
+      if ((object->getType() == DCO_TYPE_ITEM) && (object->getTemplateId() == m_dwId) && (object->getTemplateItemId() == dci->getId()))
+      {
+         object->updateFromTemplate(dci);
+      }
+	}
 }
 
 /**

@@ -525,6 +525,7 @@ protected:
 
    void loadItemsFromDB();
    void destroyItems();
+   void updateInstanceDiscoveryItems(DCItem *dci);
 
    void lockDciAccess(bool writeLock) { if (writeLock) { RWLockWriteLock(m_dciAccessLock, INFINITE); } else { RWLockReadLock(m_dciAccessLock, INFINITE); } }
 	void unlockDciAccess() { RWLockUnlock(m_dciAccessLock); }
@@ -551,8 +552,7 @@ public:
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false);
-   bool updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps,
-                       UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
+   bool updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    bool deleteDCObject(UINT32 dcObjectId, bool needLock);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
    int getItemType(UINT32 dwItemId);

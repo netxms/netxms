@@ -6,6 +6,7 @@
 - Timed (temporary) alarm acknowledgement
 - New subagent DBQuery - replacement for ODBCQuery 
 - DCI access functions in NXSL works correctly with table DCIs
+- Fixed bugs with instance discovery DCIs created from templates
 - Management console:
    - Fixed bug with red zone display in "last value" dashboard element
    - Edit and delete for alarm comments are working now

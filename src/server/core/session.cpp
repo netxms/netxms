@@ -3058,15 +3058,13 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
                   if (m_pOpenDCIList[i] == dwObjectId)
                   {
                      m_dwOpenDCIListSize--;
-                     memmove(&m_pOpenDCIList[i], &m_pOpenDCIList[i + 1],
-                             sizeof(UINT32) * (m_dwOpenDCIListSize - i));
+                     memmove(&m_pOpenDCIList[i], &m_pOpenDCIList[i + 1], sizeof(UINT32) * (m_dwOpenDCIListSize - i));
                      break;
                   }
             }
 
             // Queue template update
-            if ((object->Type() == OBJECT_TEMPLATE) ||
-					 (object->Type() == OBJECT_CLUSTER))
+            if ((object->Type() == OBJECT_TEMPLATE) || (object->Type() == OBJECT_CLUSTER))
                ((Template *)object)->queueUpdate();
          }
          else
