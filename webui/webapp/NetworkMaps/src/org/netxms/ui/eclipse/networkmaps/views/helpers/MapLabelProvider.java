@@ -154,7 +154,6 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		enableLongObjectName = ps.getBoolean("ENABLE_LONG_OBJECT_NAME");
-		System.out.println(enableLongObjectName);
 	}
 
 	/*
