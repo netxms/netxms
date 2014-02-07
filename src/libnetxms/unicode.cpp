@@ -933,9 +933,8 @@ int wstat(const WCHAR *_path, struct stat *_sbuf)
 int w##func(const WCHAR *_path) \
 { \
 	char path[MAX_PATH]; \
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, \
-	                    _path, -1, path, MAX_PATH, NULL, NULL); \
-	return chdir(path); \
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL); \
+	return func(path); \
 }
 
 #if !HAVE_WCHDIR
