@@ -5960,6 +5960,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE);
+      if(serverFileName.equals(""))
+      {
+         serverFileName = localFile.getName();
+      }
       msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

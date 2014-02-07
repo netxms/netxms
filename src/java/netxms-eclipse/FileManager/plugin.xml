@@ -2,6 +2,17 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.filemanager.views.ViewServerFile"
+            icon="icons/file.png"
+            id="org.netxms.ui.eclipse.usermanager.view.server_files"
+            name="%view.ServerFileList.name"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
          point="org.eclipse.core.runtime.adapters">
       <factory
             adaptableType="org.netxms.client.ServerFile"
@@ -86,6 +97,11 @@
             id="org.netxms.ui.eclipse.filemanager.commands.upload_file_to_server"
             name="%command.name.UploadToServer">
       </command>
+      <command
+            description="%command.ServerFileList.description"
+            id="org.netxms.ui.eclipse.console.category.views.open_server_file_list"
+            name="%command.ServerFileList.name">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -101,6 +117,16 @@
                label="%action.label.UploadToServer"
                menubarPath="tools/additions"
                tooltip="%action.tooltip.UploadToServer">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.filemanager.actions.GetServerFileList"
+               definitionId="org.netxms.ui.eclipse.console.category.views.open_server_file_list"
+               icon="icons/file.png"
+               id="org.netxms.ui.eclipse.usermanager.view.server_files"
+               label="%action.label.ServerFileList"
+               menubarPath="config/additions"
+               toolbarPath="config/additions"
+               tooltip="%action.tooltip.ServerFileList">
          </action>
       </actionSet>
    </extension>

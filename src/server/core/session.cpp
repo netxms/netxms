@@ -11753,6 +11753,7 @@ void ClientSession::receiveFile(CSCPMessage *request)
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
                _T("Started upload of file \"%s\" to server"), fileName);
+            NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
          }
          else
          {
@@ -11774,9 +11775,9 @@ void ClientSession::receiveFile(CSCPMessage *request)
 }
 
 
-//
-// Delete file in store
-//
+/**
+ * Delete file in store
+ */
 
 void ClientSession::deleteFile(CSCPMessage *request)
 {
@@ -11793,12 +11794,14 @@ void ClientSession::deleteFile(CSCPMessage *request)
       request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
 
-      _tcscpy(fileName, g_szDataDir);
-		_tcscat(fileName, DDIR_FILES);
-      _tcscat(fileName, FS_PATH_SEPARATOR);
-      _tcscat(fileName, cleanFileName);
-      if (_tunlink(fileName) == 0)
+      _tcscpy(m_szCurrFileName, g_szDataDir);
+      _tcscat(m_szCurrFileName, DDIR_FILES);
+      _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
+      _tcscat(m_szCurrFileName, cleanFileName);
+
+      if (_tunlink(m_szCurrFileName) == 0)
       {
+         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
       else
