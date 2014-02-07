@@ -393,7 +393,9 @@ public:
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 
    void fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId);
-   void addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd);
+   void addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
+
+   String getAll(const TCHAR *separator);
 };
 
 /**

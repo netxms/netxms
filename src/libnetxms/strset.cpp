@@ -191,8 +191,9 @@ void StringSet::fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId)
  * @param baseId base ID for data fields
  * @param countId ID of field with number of strings
  * @param clearBeforeAdd if set to true, existing content will be deleted
+ * @param toUppercase if set to true, all strings will be converted to upper case before adding
  */
-void StringSet::addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd)
+void StringSet::addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase)
 {
    if (clearBeforeAdd)
       clear();
@@ -203,6 +204,28 @@ void StringSet::addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countI
    {
       TCHAR *str = msg->GetVariableStr(varId++);
       if (str != NULL)
+      {
+         if (toUppercase)
+            _tcsupr(str);
          addPreallocated(str);
+      }
    }
+}
+
+/**
+ * Get all entries as one string, optionally separated by given separator
+ *
+ * @parm separator optional separator, may be NULL
+ */
+String StringSet::getAll(const TCHAR *separator)
+{
+   String result;
+   StringSetEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if ((separator != NULL) && (result.getSize() > 0))
+         result += separator;
+      result += entry->str;
+   }
+   return result;
 }
