@@ -165,7 +165,7 @@ void nxcp_add_string(uint32_t id, const char *value)
    NXCP_DF *df = (NXCP_DF *)curr;
    df->id = htonl(id);
    df->type = CSCP_DT_STRING;
-   for(l = 0, p = value, curr += 12; *p != 0; l++, p++)
+   for(l = 0, p = value, curr += 12; *p != 0; l += 2, p++)
    {
       *(curr++) = 0;
       *(curr++) = *p;
