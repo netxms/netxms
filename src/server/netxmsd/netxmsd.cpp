@@ -323,7 +323,7 @@ int main(int argc, char* argv[])
    FILE *fp;
 #endif
 
-#if defined(__sun) || defined(_AIX) || defined(__hpux)
+#ifndef _WIN32
    signal(SIGPIPE, SIG_IGN);
    signal(SIGHUP, SIG_IGN);
    signal(SIGQUIT, SIG_IGN);

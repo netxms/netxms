@@ -482,11 +482,9 @@ UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColu
    return dwVal;
 }
 
-
-//
-// Get field's value as unsigned 64-bit int
-//
-
+/**
+ * Get field's value as unsigned 64-bit int
+ */
 UINT64 LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iColumn)
 {
    INT64 iVal;
@@ -509,11 +507,9 @@ UINT64 LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iCol
    return qwVal;
 }
 
-
-//
-// Get field's value as signed long
-//
-
+/**
+ * Get field's value as signed long
+ */
 INT32 LIBNXDB_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR *pszVal, szBuffer[256];
