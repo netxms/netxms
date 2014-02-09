@@ -310,6 +310,10 @@ static bool ReadVMInfo(kstat_ctl_t *kc, struct vminfo *info)
  */
 static time_t s_lastSwapInfoUpdate = 0;
 static MUTEX s_swapInfoMutex = MutexCreate();
+
+/**
+ * All swap counters are in blocks
+ */
 static UINT64 s_swapUsed = 0;
 static UINT64 s_swapFree = 0;
 static UINT64 s_swapTotal = 0;
@@ -319,7 +323,7 @@ static UINT64 s_swapTotal = 0;
  */
 static void UpdateSwapInfo()
 {
-   static char METHOD_NAME[16] = "UpdateSwapInfo";
+   TCHAR METHOD_NAME[] = "UpdateSwapInfo";
 
    int num = swapctl(SC_GETNSWP, NULL);
    if (num == -1)
@@ -328,16 +332,17 @@ static void UpdateSwapInfo()
       return;
    }
 
-   swaptable *swapTable = (swaptable *)malloc(num * sizeof(swapent_t) + sizeof(swaptable));
+   swaptbl_t *swapTable = (swaptbl_t *)malloc(num * sizeof(swapent_t) + sizeof(swaptbl_t));
    if (swapTable == NULL)
    {
       AgentWriteDebugLog(6, _T("%s: %s: failed to allocate the swap table"), AGENT_NAME, METHOD_NAME);
       return;
    }
    swapTable->swt_n = num;
+   char buffer[MAXPATHLEN];
    for (int i = 0; i < num; i++)
    {
-      swapTable[i].swt_ent[i].ste_path = (char *)malloc(sizeof(TCHAR) * MAXPATHLEN);
+      swapTable->swt_ent[i].ste_path = buffer;
    }
 
    int ret = swapctl(SC_LIST, swapTable);
@@ -348,15 +353,14 @@ static void UpdateSwapInfo()
       return;
    }
 
-   UINT64 freeBytes = 0, totalBytes = 0;
-   int bytesPerPage = (int)((sysconf(_SC_PAGESIZE) >> DEV_BSHIFT) * DEV_BSIZE);
+   UINT64 totalBytes = 0;
+   UINT64 freeBytes = 0;
 
    swapent *swapEntry = swapTable->swt_ent;
    for(int i = 0; i < num; i++)
    {
-      totalBytes += (INT64)swapEntry[i].ste_pages * bytesPerPage;
-      freeBytes += (INT64)swapEntry[i].ste_free * bytesPerPage;
-      free(swapEntry[i].ste_path);
+      totalBytes += (INT64)swapEntry[i].ste_pages;
+      freeBytes += (INT64)swapEntry[i].ste_free;
    }
 
    free(swapTable);
@@ -424,69 +428,65 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_double(pValue, (double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * 100.0 /  (double)sysconf(_SC_PHYS_PAGES));
+            ret_double(pValue, (double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * 100.0 / sysconf(_SC_PHYS_PAGES));
          }
          break;
       case MEMINFO_SWAP_TOTAL:
-         ret_uint64(pValue, GetSwapCounter(&s_swapTotal));
+         ret_uint64(pValue, GetSwapCounter(&s_swapTotal) * qwPageSize);
          break;
       case MEMINFO_SWAP_FREE:
-         ret_uint64(pValue, GetSwapCounter(&s_swapFree));
+         ret_uint64(pValue, GetSwapCounter(&s_swapFree) * qwPageSize);
          break;
       case MEMINFO_SWAP_FREEPCT:
          {
             GetSwapCounter(&s_swapTotal);
-            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapFree) * 100.0 / (double)s_swapTotal);
+            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapFree) * 100.0 / s_swapTotal);
          }
          break;
       case MEMINFO_SWAP_USED:
-         ret_uint64(pValue, GetSwapCounter(&s_swapUsed));
+         ret_uint64(pValue, GetSwapCounter(&s_swapUsed) * qwPageSize);
          break;
       case MEMINFO_SWAP_USEDPCT:
          {
             GetSwapCounter(&s_swapTotal);
-            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapUsed) * 100.0 / (double)s_swapTotal);
+            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapUsed) * 100.0 / s_swapTotal);
          }
          break;
       case MEMINFO_VIRTUAL_TOTAL:
-         ret_uint64(pValue, ((QWORD)sysconf(_SC_PHYS_PAGES) * qwPageSize) + GetSwapCounter(&s_swapTotal));
+         ret_uint64(pValue, ((UINT64)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal)) * qwPageSize);
          break;
       case MEMINFO_VIRTUAL_FREE:
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_uint64(pValue, ((QWORD)kn.value.ul * qwPageSize) + GetSwapCounter(&s_swapFree));
+            ret_uint64(pValue, ((UINT64)kn.value.ul + GetSwapCounter(&s_swapFree)) * qwPageSize);
          }
          break;
       case MEMINFO_VIRTUAL_FREEPCT:
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_double(pValue,
-                  (((double)kn.value.ul * qwPageSize) + (double)GetSwapCounter(&s_swapFree))
-                  /
-                  (((double)sysconf(_SC_PHYS_PAGES) * qwPageSize) + (double)GetSwapCounter(&s_swapTotal))
-                  * 100.0
-            );
+            UINT64 freeMem = (UINT64)kn.value.ul + GetSwapCounter(&s_swapFree);
+            UINT64 totalMem = (UINT64)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal);
+
+            ret_double(pValue, (double)(freeMem * 100) / totalMem);
          }
          break;
       case MEMINFO_VIRTUAL_USED:
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_uint64(pValue, ((QWORD)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * qwPageSize) + GetSwapCounter(&s_swapUsed));
+            ret_uint64(pValue, (UINT64)(sysconf(_SC_PHYS_PAGES) - kn.value.ul + GetSwapCounter(&s_swapUsed)) * qwPageSize);
          }
          break;
       case MEMINFO_VIRTUAL_USEDPCT:
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_double(pValue,
-                  (((double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * qwPageSize) + (double)GetSwapCounter(&s_swapUsed))
-                  /
-                  (((double)sysconf(_SC_PHYS_PAGES) * qwPageSize) + (double)GetSwapCounter(&s_swapTotal))
-                  * 100.0
-            );
+            UINT64 freeMem = (UINT64)kn.value.ul + GetSwapCounter(&s_swapFree);
+            UINT64 totalMem = (UINT64)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal);
+
+            ret_double(pValue, (double)(totalMem - freeMem) * 100.0 / totalMem);
          }
          break;
       default:
