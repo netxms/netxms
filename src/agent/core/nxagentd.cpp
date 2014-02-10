@@ -108,6 +108,7 @@ extern const TCHAR *g_szMessages[];
  */
 UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
+TCHAR g_szEncryptedSharedSecret[MAX_SECRET_LENGTH] = _T("");
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
 TCHAR g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 TCHAR g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
@@ -221,6 +222,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("RequireEncryption"), CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags, NULL },
    { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList, NULL },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, NULL },
+   { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szEncryptedSharedSecret, NULL },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
@@ -1427,6 +1429,11 @@ int main(int argc, char *argv[])
 				g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"));
 				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
 				{
+               if (g_szEncryptedSharedSecret[0] != 0)
+               {
+                  DecryptPassword(_T("netxms"), g_szEncryptedSharedSecret, g_szSharedSecret);
+               }
+
                // try to guess executable path
 #ifdef _WIN32
                GetModuleFileName(GetModuleHandle(NULL), s_executableName, MAX_PATH);
