@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Object Tools plugin
 Bundle-SymbolicName: org.netxms.ui.eclipse.objecttools;singleton:=true
-Bundle-Version: 1.2.11
+Bundle-Version: 1.2.12
 Bundle-Activator: org.netxms.ui.eclipse.objecttools.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",

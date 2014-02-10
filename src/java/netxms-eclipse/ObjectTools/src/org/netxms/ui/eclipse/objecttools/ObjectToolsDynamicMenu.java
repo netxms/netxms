@@ -122,17 +122,15 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		int added = 0;
 		for(int i = 0; i < tools.length; i++)
 		{
-			boolean allowed = isToolAllowed(tools[i], nodes);
-			boolean enabled = (tools[i].getFlags() & ObjectTool.DISABLED) == 0 ;
-			
-			if (allowed && isToolApplicable(tools[i], nodes) && enabled)
+			boolean enabled = (tools[i].getFlags() & ObjectTool.DISABLED) == 0;
+			if (enabled && isToolAllowed(tools[i], nodes) && isToolApplicable(tools[i], nodes))
 			{
 				String[] path = tools[i].getName().split("\\-\\>"); //$NON-NLS-1$
 			
 				Menu rootMenu = toolsMenu;
 				for(int j = 0; j < path.length - 1; j++)
 				{
-					String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+               final String key = rootMenu.hashCode() + "@" + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
 					Menu currMenu = menus.get(key);
 					if (currMenu == null)
 					{
