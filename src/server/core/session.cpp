@@ -2076,6 +2076,13 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             object->commentsToMessage(&msg);
+         if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            // mask passwords
+            msg.SetVariable(VID_SHARED_SECRET, _T("********"));
+            msg.SetVariable(VID_SNMP_AUTH_PASSWORD, _T("********"));
+            msg.SetVariable(VID_SNMP_PRIV_PASSWORD, _T("********"));
+         }
          sendMessage(&msg);
          msg.deleteAllVariables();
       }
@@ -2133,6 +2140,13 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             object->commentsToMessage(&msg);
+         if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            // mask passwords
+            msg.SetVariable(VID_SHARED_SECRET, _T("********"));
+            msg.SetVariable(VID_SNMP_AUTH_PASSWORD, _T("********"));
+            msg.SetVariable(VID_SNMP_PRIV_PASSWORD, _T("********"));
+         }
          sendMessage(&msg);
          msg.deleteAllVariables();
       }
