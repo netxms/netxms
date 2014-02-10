@@ -203,14 +203,13 @@ static BOOL SubAgentInit(Config *config)
 		{
 			if (s_info.id[0] == 0)
 				_tcscpy(s_info.id, s_info.name);
+         if (*s_dbPassEncrypted != 0)
+         {
+            DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
+         }
 			memcpy(&g_dbInfo[++g_dbCount], &s_info, sizeof(DatabaseInfo));
 			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
 		}
-
-	   if (*s_dbPassEncrypted != 0)
-	   {
-	      DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
-	   }
 	}
 
 	// Load full-featured XML configuration
@@ -334,6 +333,10 @@ THREAD_RESULT THREAD_CALL queryThread(void* arg)
 			db.connected = true;
 			db.version = getOracleVersion(db.handle);
 		}
+      else
+      {
+         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: can't connect to DB: %s"), MYNAMESTR, errorText);
+      }
 
 		while (db.connected)
 		{
