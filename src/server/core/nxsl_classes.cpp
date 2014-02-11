@@ -186,6 +186,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(pNode->getPlatformName());
    }
+   else if (!_tcscmp(pszAttr, _T("runtimeFlags")))
+   {
+      pValue = new NXSL_Value(pNode->getRuntimeFlags());
+   }
    else if (!_tcscmp(pszAttr, _T("snmpOID")))
    {
       pValue = new NXSL_Value(pNode->getSNMPObjectId());
