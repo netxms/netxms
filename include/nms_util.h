@@ -1152,7 +1152,7 @@ extern "C"
 	int wsystem(const WCHAR *_cmd);
 #endif
 #if !HAVE_WMKSTEMP
-	int wmkstemp(const WCHAR *_template);
+	int wmkstemp(WCHAR *_template);
 #endif
 #if !HAVE_WACCESS
 	int waccess(const WCHAR *_path, int mode);
