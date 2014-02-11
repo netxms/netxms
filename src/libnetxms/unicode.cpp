@@ -954,7 +954,19 @@ DEFINE_PATH_FUNC(remove)
 #endif
 
 #if !HAVE_WMKSTEMP
-DEFINE_PATH_FUNC(mkstemp)
+
+int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *_path)
+{
+   char path[MAX_PATH];
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
+   int rc = mkstemp(path);
+   if (rc != -1)
+   {
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, path, -1, _path, wcslen(_path) + 1);
+   }
+   return rc;
+}
+
 #endif
 
 #if !HAVE_WPOPEN
