@@ -96,7 +96,7 @@ public interface DataChart
 	public abstract boolean isLegendVisible();
 	
 	/**
-	 * Set legend position
+	 * Set legend position (constants defined in GraphSettings)
 	 * 
 	 * @param position
 	 */

@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry exported="true" kind="lib" path="jar/certificate-manager-1.2.12.jar"/>
 	<classpathentry exported="true" kind="lib" path="jar/netxms-base-1.2.12.jar"/>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-client-1.2.12.jar"/>
+	<classpathentry exported="true" kind="lib" path="jar/netxms-client-1.2.12.jar" sourcepath="/netxms-client"/>
 	<classpathentry exported="true" kind="lib" path="jar/netxms-client-api-1.2.12.jar"/>
 	<classpathentry exported="true" kind="lib" path="jar/simple-xml-2.6.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
