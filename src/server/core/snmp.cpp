@@ -310,7 +310,7 @@ restart_check:
 
 	// Check community from list
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	hResult = DBSelect(g_hCoreDB, _T("SELECT community FROM snmp_communities"));
+	hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
 	if (hResult != NULL)
 	{
 		char temp[256];
