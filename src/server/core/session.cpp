@@ -12026,11 +12026,9 @@ void ClientSession::deleteReportResults(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Render report execution results into document
-//
-
+/**
+ * Render report execution results into document
+ */
 void ClientSession::renderReport(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -12075,6 +12073,8 @@ void ClientSession::renderReport(CSCPMessage *request)
 	}
 #else
 	int ret = _tsystem(buffer);
+   if ((ret == -1) && (errno == ECHILD))
+      ret = 0;
 #endif
 
 	if (ret == 0)
