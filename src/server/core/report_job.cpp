@@ -165,6 +165,8 @@ bool ReportJob::run()
 	}
 #else
 	int ret = _tsystem(buffer);
+   if ((ret == -1) && (errno = ECHILD))
+      ret = 0;
 #endif
 	DbgPrintf(6, _T("ReportJob: command return code: %d"), ret);
 
