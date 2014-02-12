@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -347,8 +347,8 @@ protected:
 
    void LockData() { MutexLock(m_mutexData); }
    void UnlockData() { MutexUnlock(m_mutexData); }
-   void LockACL() { MutexLock(m_mutexACL); }
-   void UnlockACL() { MutexUnlock(m_mutexACL); }
+   void lockACL() { MutexLock(m_mutexACL); }
+   void unlockACL() { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite)
    {
       if (bWrite)

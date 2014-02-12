@@ -789,7 +789,7 @@ BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
    SAVE_PARAM sp;
 
    // Save access list
-   LockACL();
+   lockACL();
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM acl WHERE object_id=%d"), m_dwId);
    if (DBQuery(hdb, szQuery))
    {
@@ -798,7 +798,7 @@ BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
       m_pAccessList->enumerateElements(EnumerationHandler, &sp);
       bSuccess = TRUE;
    }
-   UnlockACL();
+   unlockACL();
    return bSuccess;
 }
 
@@ -930,14 +930,14 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    {
       UINT32 i, dwNumElements;
 
-      LockACL();
+      lockACL();
       dwNumElements = pRequest->GetVariableLong(VID_ACL_SIZE);
       m_bInheritAccessRights = pRequest->GetVariableShort(VID_INHERIT_RIGHTS);
       m_pAccessList->deleteAll();
       for(i = 0; i < dwNumElements; i++)
          m_pAccessList->addElement(pRequest->GetVariableLong(VID_ACL_USER_BASE + i),
                                    pRequest->GetVariableLong(VID_ACL_RIGHTS_BASE +i));
-      UnlockACL();
+      unlockACL();
    }
 
 	// Change trusted nodes list
@@ -1011,9 +1011,9 @@ UINT32 NetObj::getUserRights(UINT32 userId)
 		return 0;
 
    // Check if have direct right assignment
-   LockACL();
+   lockACL();
    bool hasDirectRights = m_pAccessList->getUserRights(userId, &dwRights);
-   UnlockACL();
+   unlockACL();
 
    if (!hasDirectRights)
    {
@@ -1050,9 +1050,9 @@ BOOL NetObj::checkAccessRights(UINT32 userId, UINT32 requiredRights)
  */
 void NetObj::dropUserAccess(UINT32 dwUserId)
 {
-   LockACL();
+   lockACL();
    bool modified = m_pAccessList->deleteElement(dwUserId);
-   UnlockACL();
+   unlockACL();
    if (modified)
    {
       LockData();
