@@ -652,6 +652,7 @@ void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
 		QueueSQLRequest(szQuery);
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		DeleteAlarmNotes(hdb, pAlarm->dwAlarmId);
+      DBConnectionPoolReleaseConnection(hdb);
 	}
 }
 
