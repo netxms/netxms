@@ -1827,7 +1827,8 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
          msg.SetCode(CMD_EVENT_DB_RECORD);
          msg.SetId(dwRqId);
 
-         hResult = DBAsyncSelect(g_hCoreDB, _T("SELECT event_code,event_name,severity,flags,message,description FROM event_cfg"));
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         hResult = DBAsyncSelect(hdb, _T("SELECT event_code,event_name,severity,flags,message,description FROM event_cfg"));
          if (hResult != NULL)
          {
             while(DBFetch(hResult))
@@ -1848,6 +1849,7 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
             }
             DBFreeAsyncResult(hResult);
          }
+         DBConnectionPoolReleaseConnection(hdb);
 
          // End-of-list indicator
          msg.SetVariable(VID_EVENT_CODE, (UINT32)0);
@@ -1893,9 +1895,11 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
    {
       TCHAR szQuery[8192], szName[MAX_EVENT_NAME];
 
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       // Check if event with specific code exists
       UINT32 dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
-		bool bEventExist = IsDatabaseRecordExist(g_hCoreDB, _T("event_cfg"), _T("event_code"), dwEventCode);
+		bool bEventExist = IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), dwEventCode);
 
       // Check that we are not trying to create event below 100000
       if (bEventExist || (dwEventCode >= FIRST_USER_EVENT_ID))
@@ -1927,7 +1931,7 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
 
             safe_free(pszDescription);
 
-            if (DBQuery(g_hCoreDB, szQuery))
+            if (DBQuery(hdb, szQuery))
             {
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
                ReloadEvents();
@@ -1952,6 +1956,7 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_INVALID_EVENT_CODE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -2184,6 +2189,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
    msg.SetId(dwRqId);
 
    MutexLock(m_mutexSendEvents);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Retrieve events from database
    switch(g_nDBSyntax)
@@ -2192,7 +2198,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
          dwNumRows = 0;
-         hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM event_log"));
+         hTempResult = DBSelect(hdb, _T("SELECT count(*) FROM event_log"));
          if (hTempResult != NULL)
          {
             if (DBGetNumRows(hTempResult) > 0)
@@ -2229,7 +2235,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
          szQuery[0] = 0;
          break;
    }
-   hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+   hResult = DBAsyncSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -2273,6 +2279,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
    	sendMessage(&msg);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
    MutexUnlock(m_mutexSendEvents);
 }
 
@@ -5802,11 +5809,9 @@ void ClientSession::LockPackageDB(UINT32 dwRqId, BOOL bLock)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of all installed packages to client
-//
-
+/**
+ * Send list of all installed packages to client
+ */
 void ClientSession::SendAllPackages(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -5822,7 +5827,8 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
    {
       if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
       {
-         hResult = DBAsyncSelect(g_hCoreDB, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         hResult = DBAsyncSelect(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
          if (hResult != NULL)
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -5855,6 +5861,7 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
          {
             msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
          }
+         DBConnectionPoolReleaseConnection(hdb);
       }
       else
       {
@@ -5872,11 +5879,9 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
       sendMessage(&msg);
 }
 
-
-//
-// Install package to server
-//
-
+/**
+ * Install package to server
+ */
 void ClientSession::InstallPackage(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6922,7 +6927,8 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT tool_id,user_id FROM object_tools_acl"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT tool_id,user_id FROM object_tools_acl"));
    if (hResult != NULL)
    {
       dwAclSize = DBGetNumRows(hResult);
@@ -6934,7 +6940,7 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
       }
       DBFreeResult(hResult);
 
-      hResult = DBSelect(g_hCoreDB, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,matching_oid,confirmation_text FROM object_tools"));
+      hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,matching_oid,confirmation_text FROM object_tools"));
       if (hResult != NULL)
       {
          dwNumTools = DBGetNumRows(hResult);
@@ -7007,6 +7013,7 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
    }
+   DBConnectionPoolReleaseConnection(hdb);
 
    // Send response
    sendMessage(&msg);
@@ -7029,9 +7036,11 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=%d"), dwToolId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -7063,7 +7072,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 
             // Access list
             _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
-            hResult = DBSelect(g_hCoreDB, szQuery);
+            hResult = DBSelect(hdb, szQuery);
             if (hResult != NULL)
             {
                iNumRows = DBGetNumRows(hResult);
@@ -7084,7 +7093,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT col_name,col_oid,col_format,col_substr ")
                                      _T("FROM object_tools_table_columns WHERE tool_id=%d ")
                                      _T("ORDER BY col_number"), dwToolId);
-                  hResult = DBSelect(g_hCoreDB, szQuery);
+                  hResult = DBSelect(hdb, szQuery);
                   if (hResult != NULL)
                   {
                      iNumRows = DBGetNumRows(hResult);
@@ -7123,6 +7132,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -7383,11 +7393,9 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Send script list
-//
-
+/**
+ * Send script list
+ */
 void ClientSession::sendScriptList(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -7424,11 +7432,9 @@ void ClientSession::sendScriptList(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Send script
-//
-
+/**
+ * Send script
+ */
 void ClientSession::sendScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -9349,7 +9355,8 @@ void ClientSession::saveGraph(CSCPMessage *pRequest)
 	{
 		debugPrintf(5, _T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), graphId);
 		bSuccess = FALSE;
-		if (DBBegin(g_hCoreDB))
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		if (DBBegin(hdb))
 		{
 			pRequest->GetVariableStr(VID_NAME, szQuery, 256);
 			pszEscName = EncodeSQLString(szQuery);
@@ -9372,7 +9379,7 @@ void ClientSession::saveGraph(CSCPMessage *pRequest)
 			free(pszEscName);
 			free(pszEscData);
 
-			if (DBQuery(g_hCoreDB, szQuery))
+			if (DBQuery(hdb, szQuery))
 			{
 				// Insert new ACL
 				nACLSize = (int)pRequest->GetVariableLong(VID_ACL_SIZE);
@@ -9382,7 +9389,7 @@ void ClientSession::saveGraph(CSCPMessage *pRequest)
 					graphAccess = pRequest->GetVariableLong(id++);
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO graph_acl (graph_id,user_id,user_rights) VALUES (%d,%d,%d)"),
 					          graphId, graphUserId, graphAccess);
-					if (!DBQuery(g_hCoreDB, szQuery))
+					if (!DBQuery(hdb, szQuery))
 					{
 						bSuccess = FALSE;
 						msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
@@ -9397,20 +9404,21 @@ void ClientSession::saveGraph(CSCPMessage *pRequest)
 
 			if (bSuccess)
 			{
-				DBCommit(g_hCoreDB);
+				DBCommit(hdb);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 				msg.SetVariable(VID_GRAPH_ID, graphId);
 				notify(NX_NOTIFY_GRAPHS_CHANGED);
 			}
 			else
 			{
-				DBRollback(g_hCoreDB);
+				DBRollback(hdb);
 			}
 		}
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 		}
+      DBConnectionPoolReleaseConnection(hdb);
 	}
 
    sendMessage(&msg);

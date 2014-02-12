@@ -1251,8 +1251,10 @@ bool DCItem::deleteAllData()
 	bool success;
 
    lock();
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->Id(), m_dwId);
-	success = DBQuery(g_hCoreDB, szQuery) ? true : false;
+	success = DBQuery(hdb, szQuery) ? true : false;
+   DBConnectionPoolReleaseConnection(hdb);
 	clearCache();
 	updateCacheSize();
    unlock();

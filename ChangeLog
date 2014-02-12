@@ -8,6 +8,7 @@
 - DCI access functions in NXSL works correctly with table DCIs
 - Fixed bugs with instance discovery DCIs created from templates
 - New property "runtimeFlags" in NXSL class "Node"
+- New event SYS_IF_PEER_CHANGED (sent when peer change detected in interface)
 - Management console:
    - Fixed bug with red zone display in "last value" dashboard element
    - Edit and delete for alarm comments are working now
@@ -21,7 +22,7 @@
 	- Fix bug in resetting switch preference (settings) 
 	- Implemented "Entire network" root (feature #482)
 	- Manage last alarm from status bar: acknowledge, resolve, terminate (only for Android >= 4.1)
-- Fixed issues: #79, #88, #393, #481, #482, #483, #486, #487, #490
+- Fixed issues: #79, #88, #393, #481, #482, #483, #484, #486, #487, #490
 
 
 *

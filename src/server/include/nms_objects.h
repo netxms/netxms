@@ -628,6 +628,7 @@ public:
    virtual BOOL CreateFromDB(UINT32 dwId);
 
    Node *getParentNode();
+   UINT32 getParentNodeId();
 
    UINT32 getZoneId() { return m_zoneId; }
    UINT32 getIpNetMask() { return m_dwIpNetMask; }
@@ -666,7 +667,8 @@ public:
    void setPortNumber(UINT32 port) { m_portNumber = port; Modify(); }
 	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
 	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; Modify(); }
-	void setPeer(UINT32 nodeId, UINT32 ifId) { m_peerNodeId = nodeId; m_peerInterfaceId = ifId; Modify(); }
+	void setPeer(Node *node, Interface *iface);
+   void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; Modify(); }
    void setDescription(const TCHAR *descr) { nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); }
 
 	void updateZoneId();

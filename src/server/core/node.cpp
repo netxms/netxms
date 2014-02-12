@@ -4978,7 +4978,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 						Interface *ifOldPeer = (Interface *)FindObjectById(ifRemote->getPeerInterfaceId(), OBJECT_INTERFACE);
 						if (ifOldPeer != NULL)
 						{
-							ifOldPeer->setPeer(0, 0);
+							ifOldPeer->clearPeer();
 						}
 					}
 					if ((ifLocal->getPeerInterfaceId() != 0) && (ifLocal->getPeerInterfaceId() != ifRemote->Id()))
@@ -4986,12 +4986,12 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 						Interface *ifOldPeer = (Interface *)FindObjectById(ifLocal->getPeerInterfaceId(), OBJECT_INTERFACE);
 						if (ifOldPeer != NULL)
 						{
-							ifOldPeer->setPeer(0, 0);
+							ifOldPeer->clearPeer();
 						}
 					}
 
-					ifLocal->setPeer(ni->objectId, ifRemote->Id());
-					ifRemote->setPeer(m_dwId, ifLocal->Id());
+					ifLocal->setPeer((Node *)object, ifRemote);
+					ifRemote->setPeer(this, ifLocal);
 					sendPollerMsg(dwRqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
 					              ifLocal->Name(), object->Name(), ifRemote->Name());
 					DbgPrintf(5, _T("Local interface %s:%s linked to remote interface %s:%s"),
@@ -5010,7 +5010,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
          Interface *iface = (Interface *)m_pChildList[i];
          if ((iface->getPeerNodeId() == m_dwId) && (iface->getPeerInterfaceId() == iface->Id()))
          {
-            iface->setPeer(0, 0);
+            iface->clearPeer();
             DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Self-linked interface %s [%d] fixed"), m_szName, m_dwId, iface->Name(), iface->Id());
          }
       }
