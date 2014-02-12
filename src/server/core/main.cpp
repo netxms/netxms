@@ -1188,6 +1188,20 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			}
 		}
+		else if (IsCommand(_T("DBCP"), szBuffer, 4))
+		{
+         ObjectArray<PoolConnectionInfo> *list = DBConnectionPoolGetConnectionList();
+         for(int i = 0; i < list->size(); i++)
+         {
+            PoolConnectionInfo *c = list->get(i);
+            TCHAR accessTime[64];
+            struct tm *ltm = localtime(&c->lastAccessTime);
+            _tcsftime(accessTime, 64, _T("%d.%b.%Y %H:%M:%S"), ltm);
+            ConsolePrintf(pCtx, _T("%p %s %hs:%d\n"), c->handle, accessTime, c->srcFile, c->srcLine);
+         }
+         ConsolePrintf(pCtx, _T("%d database connections in use\n\n"), list->size());
+         delete list;
+      }
 		else if (IsCommand(_T("FDB"), szBuffer, 3))
 		{
 			// Get argument
@@ -1608,6 +1622,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
 				_T("   show components <node>    - Show physical components of given node\n")
+            _T("   show dbcp                 - Show active sessions in database connection pool\n")
 				_T("   show fdb <node>           - Show forwarding database for node\n")
 				_T("   show flags                - Show internal server flags\n")
 				_T("   show index <index>        - Show internal index\n")
