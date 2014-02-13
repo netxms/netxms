@@ -560,8 +560,9 @@ public:
    DCObject *getDCObjectById(UINT32 itemId);
    DCObject *getDCObjectByTemplateId(UINT32 tmplItemId);
    DCObject *getDCObjectByIndex(int index);
-   DCObject *getDCObjectByName(const TCHAR *pszName);
-   DCObject *getDCObjectByDescription(const TCHAR *pszDescription);
+   DCObject *getDCObjectByName(const TCHAR *name);
+   DCObject *getDCObjectByDescription(const TCHAR *description);
+   NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description);
    BOOL lockDCIList(UINT32 dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    BOOL unlockDCIList(UINT32 dwSessionId);
    void setDCIModificationFlag() { m_bDCIListModified = TRUE; }

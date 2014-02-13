@@ -11,6 +11,7 @@
 - New event SYS_IF_PEER_CHANGED (sent when peer change detected in interface)
 - New system permission: Manage Image Library
 - Object level access control can be enabled for logs
+- New NXSL function FindAllDCIs
 - Management console:
    - Fixed bug with red zone display in "last value" dashboard element
    - Edit and delete for alarm comments are working now
