@@ -443,6 +443,12 @@ static BOOL AcceptNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 zoneId, BYTE
       return FALSE;  // Node already exist in database
 	}
 
+   if (!memcmp(macAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))
+   {
+		DbgPrintf(4, _T("AcceptNewNode(%s): broadcast MAC address"), szIpAddr);
+      return FALSE;  // Broadcast MAC
+   }
+
 	Interface *iface = GetOldNodeWithNewIP(dwIpAddr, dwNetMask, zoneId, macAddr);
 	if (iface != NULL)
 	{
