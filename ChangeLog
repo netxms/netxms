@@ -24,7 +24,7 @@
 	- Fix bug in resetting switch preference (settings) 
 	- Implemented "Entire network" root (feature #482)
 	- Manage last alarm from status bar: acknowledge, resolve, terminate (only for Android >= 4.1)
-- Fixed issues: #79, #88, #280, #285, #393, #481, #482, #483, #484, #486, #487, #490, #502
+- Fixed issues: #79, #88, #280, #285, #393, #415, #481, #482, #483, #484, #486, #487, #490, #502
 
 
 *
@@ -72,8 +72,8 @@
 	- "Nodes" tab in object details view for subnets and containers
 	- "Address Map" tab in object details view for subnets
 	- Czech and Russian localization
-- Fixed issues: #150, #226, #307, #330, #362, #363, #364, #366, #367, #373, #378, 
-                #384, #387, #390, $401, #410, #414, #416, #419, #439, #440
+- Fixed issues: #95, #150, #226, #307, #330, #362, #363, #364, #366, #367, #373,
+                #378, #384, #387, #390, $401, #410, #414, #416, #419, #439, #440
 
 
 *
