@@ -11147,6 +11147,16 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	CSCPMessage msg;
 	UINT32 rcc = RCC_SUCCESS;
 
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+   if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
+   {
+	   msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(&msg);
+      return;
+   }
+
 	uuid_t guid;
 	uuid_clear(guid);
 
@@ -11297,6 +11307,13 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+   if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
+   {
+	   msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(&msg);
+      return;
+   }
 
 	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
 	uuid_to_string(guid, guidText);
