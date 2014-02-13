@@ -3321,9 +3321,33 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       // appropriate notification without waiting for actual server update
       synchronized(objectList)
       {
-         objectList.remove(objectId);
+         AbstractObject object = objectList.get(objectId);
+         if (object != null)
+         {
+            objectList.remove(objectId);
+            removeOrphanedObjects(object);
+         }
       }
       sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, objectId));
+   }
+   
+   /**
+    * Remove orphaned objects (with last parent left)
+    * 
+    * @param parent
+    */
+   private void removeOrphanedObjects(AbstractObject parent)
+   {
+      Iterator<Long> it = parent.getChildren();
+      while(it.hasNext())
+      {
+         AbstractObject object = objectList.get(it.next());
+         if ((object != null) && (object.getParentCount() == 1))
+         {
+            objectList.remove(object.getObjectId());
+            removeOrphanedObjects(object);
+         }
+      }
    }
 
    /**

@@ -483,8 +483,6 @@ void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
  */
 void NetObj::deleteObject(NetObj *initiator)
 {
-   UINT32 i;
-
    DbgPrintf(4, _T("Deleting object %d [%s]"), m_dwId, m_szName);
 
 	// Prevent object change propagation until it's marked as deleted
@@ -502,15 +500,21 @@ void NetObj::deleteObject(NetObj *initiator)
 
    prepareForDeletion();
 
+   DbgPrintf(5, _T("NetObj::deleteObject(): deleting object %d from indexes"), m_dwId);
+   NetObjDeleteFromIndexes(this);
+
    // Delete references to this object from child objects
-   DbgPrintf(5, _T("NetObj::Delete(): clearing child list for object %d"), m_dwId);
+   DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_dwId);
+   ObjectArray<NetObj> *deleteList = NULL;
    LockChildList(TRUE);
-   for(i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
    {
       if (m_pChildList[i]->getParentCount() == 1)
       {
          // last parent, delete object
-			m_pChildList[i]->deleteObject(this);
+         if (deleteList == NULL)
+            deleteList = new ObjectArray<NetObj>(16, 16, false);
+			deleteList->add(m_pChildList[i]);
       }
       else
       {
@@ -523,10 +527,22 @@ void NetObj::deleteObject(NetObj *initiator)
    m_dwChildCount = 0;
    UnlockChildList();
 
+   // Delete orphaned child objects
+   if (deleteList != NULL)
+   {
+      for(int i = 0; i < deleteList->size(); i++)
+      {
+         NetObj *o = deleteList->get(i);
+         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), o->Name(), o->Id());
+         o->deleteObject(this);
+      }
+      delete deleteList;
+   }
+
    // Remove references to this object from parent objects
    DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_dwId);
    LockParentList(TRUE);
-   for(i = 0; i < m_dwParentCount; i++)
+   for(UINT32 i = 0; i < m_dwParentCount; i++)
    {
       // If parent is deletion initiator the this is object already
       // removed from parent's list
@@ -548,11 +564,8 @@ void NetObj::deleteObject(NetObj *initiator)
    Modify();
    UnlockData();
 
-   DbgPrintf(5, _T("NetObj::Delete(): deleting object %d from indexes"), m_dwId);
-   NetObjDeleteFromIndexes(this);
-
    // Notify all other objects about object deletion
-   DbgPrintf(5, _T("NetObj::Delete(): calling OnObjectDelete(%d)"), m_dwId);
+   DbgPrintf(5, _T("NetObj::deleteObject(): calling onObjectDelete(%d)"), m_dwId);
 	g_idxObjectById.forEach(onObjectDeleteCallback, this);
 
    DbgPrintf(4, _T("Object %d successfully deleted"), m_dwId);

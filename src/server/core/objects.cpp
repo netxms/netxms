@@ -457,7 +457,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
  * Delete object from indexes
  * If object has an IP address, this function will delete it from
  * appropriate index. Normally this function should be called from
- * NetObj::Delete() method.
+ * NetObj::deleteObject() method.
  */
 void NetObjDeleteFromIndexes(NetObj *pObject)
 {

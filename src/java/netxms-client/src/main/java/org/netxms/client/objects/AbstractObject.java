@@ -274,6 +274,16 @@ public abstract class AbstractObject
 	{
 		return image.equals(NXCommon.EMPTY_GUID);
 	}
+	
+	/**
+	 * Get number of parent objects
+	 * 
+	 * @return
+	 */
+	public int getParentCount()
+	{
+	   return parents.size();
+	}
 
 	/**
 	 * @return Iterator for list of parent objects
