@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -235,7 +235,7 @@ BOOL Node::CreateFromDB(UINT32 dwId)
       return FALSE;
    }
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
 		_T("SELECT primary_name,primary_ip,node_flags,")
       _T("snmp_version,auth_method,secret,")
       _T("agent_port,status_poll_type,snmp_oid,agent_version,")
@@ -848,7 +848,7 @@ BOOL Node::isMyIP(UINT32 dwIpAddr)
  * Create new interface
  */
 Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCHAR *name, const TCHAR *descr,
-                                    UINT32 dwIndex, UINT32 dwType, BYTE *pbMacAddr, UINT32 bridgePort, 
+                                    UINT32 dwIndex, UINT32 dwType, BYTE *pbMacAddr, UINT32 bridgePort,
 										      UINT32 slot, UINT32 port, bool physPort, bool manuallyCreated, bool system)
 {
    Interface *pInterface;
@@ -886,7 +886,7 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
 						TCHAR szBuffer[16];
 
 						// Multicast address??
-						DbgPrintf(2, _T("Attempt to create interface object with multicast address %s"), 
+						DbgPrintf(2, _T("Attempt to create interface object with multicast address %s"),
 									 IpToStr(dwIpAddr, szBuffer));
 					}
 				}
@@ -896,7 +896,7 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
 				// Ignore mask 255.255.255.254 - it's invalid
 				if ((dwIpAddr < 0xE0000000) && (dwNetMask != 0xFFFFFFFF) && (dwNetMask != 0xFFFFFFFE))
 				{
-					pSubnet = createSubnet(dwIpAddr & dwNetMask, dwNetMask, bSyntheticMask);
+					pSubnet = createSubnet(dwIpAddr, dwNetMask, bSyntheticMask);
 				}
 			}
 			else
@@ -939,7 +939,7 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
    if (pSubnet != NULL)
    {
       pSubnet->AddNode(this);
-      
+
       // Check if subnet mask is correct on interface
       if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask())
 		{
@@ -977,7 +977,7 @@ void Node::deleteInterface(Interface *pInterface)
                   break;
                }
       UnlockChildList();
-      
+
       if (bUnlink)
       {
          // Last interface in subnet, should unlink node
@@ -989,7 +989,7 @@ void Node::deleteInterface(Interface *pInterface)
          }
 			DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
 			          m_szName, m_dwId, pInterface->Name(), pInterface->Id(),
-						 (pSubnet != NULL) ? pSubnet->Name() : _T("(null)"), 
+						 (pSubnet != NULL) ? pSubnet->Name() : _T("(null)"),
 						 (pSubnet != NULL) ? pSubnet->Id() : 0);
       }
    }
@@ -1341,7 +1341,7 @@ restart_agent_check:
 			g_pModuleList[i].pfStatusPollHook(this, pSession, dwRqId, nPoller);
 		}
 	}
-   
+
 	// Execute hook script
    SetPollerInfo(nPoller, _T("hook"));
 	executeHookScript(_T("StatusPoll"));
@@ -1592,7 +1592,7 @@ void Node::updatePrimaryIpAddr()
 	{
 		TCHAR buffer1[32], buffer2[32];
 
-		DbgPrintf(4, _T("IP address for node %s [%d] changed from %s to %s"), 
+		DbgPrintf(4, _T("IP address for node %s [%d] changed from %s to %s"),
 			m_szName, (int)m_dwId, IpToStr(m_dwIpAddr, buffer1), IpToStr(ipAddr, buffer2));
 		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_dwId, "aa", ipAddr, m_dwIpAddr);
 
@@ -1702,7 +1702,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 		sendPollerMsg(dwRqId, _T("Checking node name\r\n"));
 		UINT32 dwAddr = ntohl(_t_inet_addr(m_szName));
 		if ((g_dwFlags & AF_RESOLVE_NODE_NAMES) &&
-			 (dwAddr != INADDR_NONE) && 
+			 (dwAddr != INADDR_NONE) &&
 			 (dwAddr != INADDR_ANY) &&
 			 isMyIP(dwAddr))
 		{
@@ -2272,7 +2272,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 					if (ap == NULL)
 					{
 						String name;
-						
+
                   if (info->getName() != NULL)
                   {
                      name = info->getName();
@@ -2534,7 +2534,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          {
             // New interface
             sendPollerMsg(dwRqId, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->szName);
-            createNewInterface(ifInfo->dwIpAddr, 
+            createNewInterface(ifInfo->dwIpAddr,
                                ifInfo->dwIpNetMask,
                                ifInfo->szName,
 										 ifInfo->szDescription,
@@ -2845,8 +2845,8 @@ void Node::updateInstances(DCItem *root, StringList *instances)
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
-		if ((object->getType() != DCO_TYPE_ITEM) || 
-			 (object->getTemplateId() != m_dwId) || 
+		if ((object->getType() != DCO_TYPE_ITEM) ||
+			 (object->getTemplateId() != m_dwId) ||
 			 (object->getTemplateItemId() != root->getId()))
 			continue;
 
@@ -3036,14 +3036,14 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, 
 		}
    }
    DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
-   return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
+   return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
 
 /**
  * Read one row for SNMP table
  */
-static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, UINT32 baseOidLen, UINT32 index, 
+static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, UINT32 baseOidLen, UINT32 index,
                                ObjectArray<DCTableColumn> *columns, Table *table)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -3248,7 +3248,7 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
 		delete pTransport;
    }
    DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
-   return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
+   return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
 
@@ -3727,7 +3727,7 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->IsVariableExist(VID_IP_ADDRESS))
    {
       UINT32 i, dwIpAddr;
-      
+
       dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
 
       // Check if received IP address is one of node's interface addresses
@@ -3768,7 +3768,7 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    {
       UINT32 dwNodeId;
       NetObj *pObject;
-      
+
       dwNodeId = pRequest->GetVariableLong(VID_POLLER_NODE_ID);
 		if (dwNodeId != 0)
 		{
@@ -4327,7 +4327,7 @@ BOOL Node::getNextHop(UINT32 dwSrcAddr, UINT32 dwDestAddr, UINT32 *pdwNextHop, U
 				break;
 			}
 		}
-		else if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) && 
+		else if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
 					(m_pChildList[i]->IpAddr() != 0))
 		{
 			UINT32 mask = ((Interface *)m_pChildList[i])->getIpNetMask();
@@ -4358,7 +4358,7 @@ BOOL Node::getNextHop(UINT32 dwSrcAddr, UINT32 dwDestAddr, UINT32 *pdwNextHop, U
    {
       for(i = 0; i < (UINT32)m_pRoutingTable->iNumEntries; i++)
 		{
-         if ((!nextHopFound || (m_pRoutingTable->pRoutes[i].dwDestMask == 0xFFFFFFFF)) && 
+         if ((!nextHopFound || (m_pRoutingTable->pRoutes[i].dwDestMask == 0xFFFFFFFF)) &&
 			    ((dwDestAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr))
          {
             *pdwNextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
@@ -4405,11 +4405,11 @@ void Node::updateRoutingTable()
 /**
  * Call SNMP Enumerate with node's SNMP parameters
  */
-UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid, 
+UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
                               UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
                               void *pArg, const TCHAR *context)
 {
-   if ((m_dwFlags & NF_IS_SNMP) && 
+   if ((m_dwFlags & NF_IS_SNMP) &&
        (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)) &&
        (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
 	{
@@ -4440,7 +4440,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
 void Node::setAgentProxy(AgentConnection *pConn)
 {
 	UINT32 proxyNode = m_dwProxyNode;
-	
+
 	if (IsZoningEnabled() && (proxyNode == 0) && (m_zoneId != 0))
 	{
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
@@ -4519,7 +4519,7 @@ void Node::prepareForDeletion()
    while(1)
    {
       LockData();
-      if ((m_dwDynamicFlags & 
+      if ((m_dwDynamicFlags &
             (NDF_QUEUED_FOR_STATUS_POLL | NDF_QUEUED_FOR_CONFIG_POLL |
              NDF_QUEUED_FOR_DISCOVERY_POLL | NDF_QUEUED_FOR_ROUTE_POLL |
 				 NDF_QUEUED_FOR_TOPOLOGY_POLL)) == 0)
@@ -4762,7 +4762,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 	}
 
 	if (bSuccess)
-		DbgPrintf(4, _T("Name for node %d was resolved to %s%s"), m_dwId, m_szName, 
+		DbgPrintf(4, _T("Name for node %d was resolved to %s%s"), m_dwId, m_szName,
 			bNameTruncated ? _T(" (truncated to host)") : _T(""));
 	else
 		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId, m_szName);
@@ -4967,7 +4967,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				          m_szName, m_dwId, object->Name(), object->Id(), ni->ifLocal, ni->ifRemote);
 				Interface *ifLocal = findInterface(ni->ifLocal, INADDR_ANY);
 				Interface *ifRemote = ((Node *)object)->findInterface(ni->ifRemote, INADDR_ANY);
-				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_szName, m_dwId, 
+				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_szName, m_dwId,
 				          (ifLocal != NULL) ? ifLocal->Name() : _T("(null)"),
 				          (ifRemote != NULL) ? ifRemote->Name() : _T("(null)"));
 				if ((ifLocal != NULL) && (ifRemote != NULL))
@@ -5040,7 +5040,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				for(int i = 0; i < stations->size(); i++)
 				{
 					WirelessStationInfo *ws = stations->get(i);
-					
+
 					AccessPoint *ap = FindAccessPointByRadioId(ws->rfIndex);
 					if (ap != NULL)
 					{
@@ -5199,6 +5199,14 @@ void Node::resolveVlanPorts(VlanList *vlanList)
  */
 Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
 {
+   if(syntheticMask)
+   {
+      while(FindSubnetByIP(m_zoneId, ipAddr & netMask) != NULL)
+      {
+         netMask = (netMask >> 1) | 0xFFFFFF00;
+      }
+   }
+   ipAddr = ipAddr & netMask;
    Subnet *s = new Subnet(ipAddr, netMask, m_zoneId, syntheticMask);
    NetObjInsert(s, TRUE);
    if (g_dwFlags & AF_ENABLE_ZONING)
@@ -5282,7 +5290,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			}
 			else if (!isSync)
 			{
-            pSubnet = createSubnet(iface->dwIpAddr & iface->dwIpNetMask, iface->dwIpNetMask, false);
+            pSubnet = createSubnet(iface->dwIpAddr, iface->dwIpNetMask, false);
 			}
 
 			// Check if subnet mask is correct on interface
@@ -5311,9 +5319,9 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
    }
    else
    {
-		pSubnet = createSubnet(m_dwIpAddr & 0xFFFFFF00, 0xFFFFFF00, true);
+		pSubnet = createSubnet(m_dwIpAddr, 0xFFFFFF00, true);
    }
-	
+
 	// Check if we have incorrect subnets as parents
 	LockParentList(FALSE);
 	LockChildList(FALSE);
@@ -5350,13 +5358,13 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			{
 				DbgPrintf(4, _T("Node::CheckSubnetBinding(): Subnet %s [%d] is incorrect for node %s [%d]"),
 							 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
-				ppUnlinkList[count++] = pSubnet;	
+				ppUnlinkList[count++] = pSubnet;
 			}
 		}
 	}
 	UnlockChildList();
 	UnlockParentList();
-	
+
 	// Unlink for incorrect subnet objects
 	for(i = 0; i < count; i++)
 	{
@@ -5374,7 +5382,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId)
 	InterfaceList *pIfList;
 	UINT32 i;
 	int j;
-	
+
    pollerLock();
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting interface names poll for node %s\r\n"), m_szName);
@@ -5742,7 +5750,7 @@ void Node::executeHookScript(const TCHAR *hookName)
 	script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
 	if (script->run(pEnv, 0, NULL) != 0)
 	{
-		DbgPrintf(4, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"), 
+		DbgPrintf(4, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
 		          m_szName, m_dwId, scriptName, script->getErrorText());
 	}
 	script->unlock();	// FIXME
@@ -5766,7 +5774,7 @@ bool Node::isDataCollectionDisabled()
 bool Node::ifDescrFromLldpLocalId(BYTE *id, size_t idLen, TCHAR *ifName)
 {
 	bool result = false;
-	LockData();	
+	LockData();
 	if (m_lldpLocalPortInfo != NULL)
 	{
 		for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
