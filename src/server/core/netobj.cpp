@@ -1588,3 +1588,11 @@ bool NetObj::showThresholdSummary()
 {
 	return false;
 }
+
+/**
+ * Must return true if object is a possible event source
+ */
+bool NetObj::isEventSource()
+{
+   return false;
+}

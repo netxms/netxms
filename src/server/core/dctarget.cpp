@@ -533,3 +533,11 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
    }
    unlockDciAccess();
 }
+
+/**
+ * Must return true if object is a possible event source
+ */
+bool DataCollectionTarget::isEventSource()
+{
+   return true;
+}

@@ -465,6 +465,7 @@ public:
 	virtual NXSL_Array *getChildrenForNXSL();
 
 	virtual bool showThresholdSummary();
+   virtual bool isEventSource();
 
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
@@ -787,6 +788,8 @@ public:
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
    virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
+
+   virtual bool isEventSource();
 };
 
 /**

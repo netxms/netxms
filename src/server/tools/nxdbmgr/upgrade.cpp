@@ -361,6 +361,18 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V305 to V306
+ */
+static BOOL H_UpgradeFromV305(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("ExtendedLogQueryAccessControl"), _T("0"), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("EnableTimedAlarmAck"), _T("1"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("EnableCheckPointSNMP"), _T("0"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='306' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V304 to V305
  */
 static BOOL H_UpgradeFromV304(int currVersion, int newVersion)
@@ -4926,11 +4938,9 @@ static BOOL H_UpgradeFromV54(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V53 to V54
-//
-
+/**
+ * Upgrade from V53 to V54
+ */
 static BOOL H_UpgradeFromV53(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
@@ -7406,6 +7416,7 @@ static struct
    { 302, 303, H_UpgradeFromV302 },
    { 303, 304, H_UpgradeFromV303 },
    { 304, 305, H_UpgradeFromV304 },
+   { 305, 306, H_UpgradeFromV305 },
    { 0, 0, NULL }
 };
 

@@ -10655,7 +10655,7 @@ void ClientSession::queryServerLog(CSCPMessage *request)
 	if (log != NULL)
 	{
 		INT64 rowCount;
-		msg.SetVariable(VID_RCC, log->query(new LogFilter(request), &rowCount) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		msg.SetVariable(VID_RCC, log->query(new LogFilter(request), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
 		msg.SetVariable(VID_NUM_ROWS, (QWORD)rowCount);
 		log->unlock();
 	}
@@ -10685,7 +10685,7 @@ void ClientSession::getServerLogQueryData(CSCPMessage *request)
 		INT64 startRow = request->GetVariableInt64(VID_START_ROW);
 		INT64 numRows = request->GetVariableInt64(VID_NUM_ROWS);
 		bool refresh = request->GetVariableShort(VID_FORCE_RELOAD) ? true : false;
-		data = log->getData(startRow, numRows, refresh);
+		data = log->getData(startRow, numRows, refresh, getUserId()); // pass user id from session
 		log->unlock();
 		if (data != NULL)
 		{
