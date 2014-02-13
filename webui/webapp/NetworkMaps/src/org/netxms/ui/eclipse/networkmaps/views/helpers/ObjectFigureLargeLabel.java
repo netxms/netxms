@@ -83,6 +83,7 @@ public class ObjectFigureLargeLabel extends ObjectFigure
 
       additionalInfo = new Label(object.getObjectName());
       additionalInfo.setLabelAlignment(PositionConstants.LEFT);
+      additionalInfo.setFont(labelProvider.getLabelFont());
       add(additionalInfo);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
