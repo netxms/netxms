@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.branding.IProductConstants;
 import org.eclipse.ui.splash.BasicSplashHandler;
+import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
 
 /**
@@ -87,7 +88,7 @@ public class SplashHandler extends BasicSplashHandler
 			{
 				e.gc.setForeground(versionColor);
 				e.gc.setFont(versionFont);
-				e.gc.drawText(Messages.get().SplashHandler_Version + NXCommon.VERSION, 209, 181, true);
+				e.gc.drawText(Messages.get().SplashHandler_Version + NXCommon.VERSION + " (" + BuildNumber.TEXT + ")", 209, 181, true);
 			}
 		});
 		content.addDisposeListener(new DisposeListener() {
