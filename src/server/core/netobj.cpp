@@ -478,16 +478,17 @@ void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
 
 /**
  * Prepare object for deletion - remove all references, etc.
+ *
+ * @param initiator pointer to parent object which causes recursive deletion or NULL
  */
-void NetObj::deleteObject()
+void NetObj::deleteObject(NetObj *initiator)
 {
    UINT32 i;
 
    DbgPrintf(4, _T("Deleting object %d [%s]"), m_dwId, m_szName);
 
 	// Prevent object change propagation until it's marked as deleted
-	// (to prevent the object's re-appearance in GUI if client hides the object
-	// after successful call to Session::deleteObject())
+	// (to prevent the object's incorrect appearance in GUI
 	LockData();
    m_isHidden = true;
 	UnlockData();
@@ -501,34 +502,45 @@ void NetObj::deleteObject()
 
    prepareForDeletion();
 
+   // Delete references to this object from child objects
+   DbgPrintf(5, _T("NetObj::Delete(): clearing child list for object %d"), m_dwId);
+   LockChildList(TRUE);
+   for(i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->getParentCount() == 1)
+      {
+         // last parent, delete object
+			m_pChildList[i]->deleteObject(this);
+      }
+      else
+      {
+         m_pChildList[i]->DeleteParent(this);
+      }
+		decRefCount();
+   }
+   free(m_pChildList);
+   m_pChildList = NULL;
+   m_dwChildCount = 0;
+   UnlockChildList();
+
    // Remove references to this object from parent objects
    DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_dwId);
    LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
    {
-      m_pParentList[i]->DeleteChild(this);
-      m_pParentList[i]->calculateCompoundStatus();
+      // If parent is deletion initiator the this is object already
+      // removed from parent's list
+      if (m_pParentList[i] != initiator)
+      {
+         m_pParentList[i]->DeleteChild(this);
+         m_pParentList[i]->calculateCompoundStatus();
+      }
 		decRefCount();
    }
    free(m_pParentList);
    m_pParentList = NULL;
    m_dwParentCount = 0;
    UnlockParentList();
-
-   // Delete references to this object from child objects
-   DbgPrintf(5, _T("NetObj::Delete(): clearing child list for object %d"), m_dwId);
-   LockChildList(TRUE);
-   for(i = 0; i < m_dwChildCount; i++)
-   {
-      m_pChildList[i]->DeleteParent(this);
-		decRefCount();
-      if (m_pChildList[i]->isOrphaned())
-			m_pChildList[i]->deleteObject();
-   }
-   free(m_pChildList);
-   m_pChildList = NULL;
-   m_dwChildCount = 0;
-   UnlockChildList();
 
    LockData();
    m_isHidden = false;
@@ -1562,14 +1574,4 @@ ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
 bool NetObj::showThresholdSummary()
 {
 	return false;
-}
-
-int NetObj::getChildCount()
-{
-   return m_dwChildCount;
-}
-
-int NetObj::getParentCount()
-{
-   return m_dwParentCount;
 }

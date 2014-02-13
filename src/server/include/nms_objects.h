@@ -417,7 +417,7 @@ public:
    void DeleteChild(NetObj *pObject);  // Delete reference to child object
    void DeleteParent(NetObj *pObject); // Delete reference to parent object
 
-   void deleteObject();     // Prepare object for deletion
+   void deleteObject(NetObj *initiator = NULL);     // Prepare object for deletion
 
    bool isHidden() { return m_isHidden; }
    void hide();
@@ -458,13 +458,13 @@ public:
 	ObjectArray<NetObj> *getChildList(int typeFilter);
 	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly, bool updateRefCount);
 
+   int getChildCount() { return (int)m_dwChildCount; }
+   int getParentCount() { return (int)m_dwParentCount; }
+
 	virtual NXSL_Array *getParentsForNXSL();
 	virtual NXSL_Array *getChildrenForNXSL();
 
 	virtual bool showThresholdSummary();
-
-	virtual int getChildCount();
-	virtual int getParentCount();
 
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
