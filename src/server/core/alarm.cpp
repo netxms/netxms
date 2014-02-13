@@ -784,8 +784,9 @@ NetObj *AlarmManager::getAlarmSourceObject(UINT32 dwAlarmId)
    // If not found, search database
    if (i == m_numAlarms)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT source_object_id FROM alarms WHERE alarm_id=%d"), dwAlarmId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -794,6 +795,7 @@ NetObj *AlarmManager::getAlarmSourceObject(UINT32 dwAlarmId)
          }
          DBFreeResult(hResult);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
 
    return FindObjectById(dwObjectId);

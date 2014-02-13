@@ -7777,7 +7777,8 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
          szQuery[0] = 0;
          break;
    }
-   hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBAsyncSelect(hdb, szQuery);
    if (hResult != NULL)
    {
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -7820,6 +7821,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
 		sendMessage(&msg);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
    MutexUnlock(m_mutexSendSyslog);
 }
 
@@ -7910,7 +7912,9 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             szQuery[0] = 0;
             break;
       }
-      hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      hResult = DBAsyncSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -7940,6 +7944,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
          msg.setEndOfSequence();
       }
 
+      DBConnectionPoolReleaseConnection(hdb);
       MutexUnlock(m_mutexSendTrapLog);
    }
    else
@@ -9227,10 +9232,11 @@ void ClientSession::sendGraphList(UINT32 dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-	pACL = LoadGraphACL(0, &nACLSize);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	pACL = LoadGraphACL(hdb, 0, &nACLSize);
 	if (nACLSize != -1)
 	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
+		hResult = DBSelect(hdb, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
 		if (hResult != NULL)
 		{
 			pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
@@ -9294,6 +9300,7 @@ void ClientSession::sendGraphList(UINT32 dwRqId)
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
    sendMessage(&msg);
 }
 
@@ -9439,15 +9446,17 @@ void ClientSession::deleteGraph(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	dwGraphId = pRequest->GetVariableLong(VID_GRAPH_ID);
 	_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
-	hResult = DBSelect(g_hCoreDB, szQuery);
+	hResult = DBSelect(hdb, szQuery);
 	if (hResult != NULL)
 	{
 		if (DBGetNumRows(hResult) > 0)
 		{
 			dwOwner = DBGetFieldULong(hResult, 0, 0);
-			pACL = LoadGraphACL(dwGraphId, &nACLSize);
+			pACL = LoadGraphACL(hdb, dwGraphId, &nACLSize);
 			if (nACLSize != -1)
 			{
 				if ((m_dwUserId == 0) ||
@@ -9455,10 +9464,10 @@ void ClientSession::deleteGraph(CSCPMessage *pRequest)
 				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_READ))
 				{
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graphs WHERE graph_id=%d"), dwGraphId);
-					if (DBQuery(g_hCoreDB, szQuery))
+					if (DBQuery(hdb, szQuery))
 					{
 						_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
-						DBQuery(g_hCoreDB, szQuery);
+						DBQuery(hdb, szQuery);
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
 						notify(NX_NOTIFY_GRAPHS_CHANGED);
 					}
@@ -9489,6 +9498,7 @@ void ClientSession::deleteGraph(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
    sendMessage(&msg);
 }
 
@@ -9881,11 +9891,9 @@ void ClientSession::sendSMS(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Send SNMP community list
-//
-
+/**
+ * Send SNMP community list
+ */
 void ClientSession::SendCommunityList(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -9899,7 +9907,8 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT community FROM snmp_communities"));
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
 		if (hResult != NULL)
 		{
 			count = DBGetNumRows(hResult);
@@ -9916,6 +9925,7 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 		}
+      DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
@@ -9925,11 +9935,9 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 	sendMessage(&msg);
 }
 
-
-//
-// Update SNMP community list
-//
-
+/**
+ * Update SNMP community list
+ */
 void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -9942,27 +9950,28 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-		if (DBBegin(g_hCoreDB))
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		if (DBBegin(hdb))
 		{
-			DBQuery(g_hCoreDB, _T("DELETE FROM snmp_communities"));
+			DBQuery(hdb, _T("DELETE FROM snmp_communities"));
 			count = pRequest->GetVariableLong(VID_NUM_STRINGS);
 			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
 			{
 				pRequest->GetVariableStr(id++, value, 256);
-				String escValue = DBPrepareString(g_hCoreDB, value);
+				String escValue = DBPrepareString(hdb, value);
 				_sntprintf(query, 1024, _T("INSERT INTO snmp_communities (id,community) VALUES(%d,%s)"), i + 1, (const TCHAR *)escValue);
-				if (!DBQuery(g_hCoreDB, query))
+				if (!DBQuery(hdb, query))
 					break;
 			}
 
 			if (i == count)
 			{
-				DBCommit(g_hCoreDB);
+				DBCommit(hdb);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				DBRollback(g_hCoreDB);
+				DBRollback(hdb);
 				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 			}
 		}
@@ -9970,6 +9979,7 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 		}
+      DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
@@ -11129,11 +11139,9 @@ static void SendLibraryImageDelete(ClientSession *pSession, void *pArg)
 	pSession->onLibraryImageChange((uuid_t *)pArg, true);
 }
 
-
-//
-// Update library image from client
-//
-
+/**
+ * Update library image from client
+ */
 void ClientSession::updateLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -11182,11 +11190,13 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	//debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guidText, name, category, (int)imageSize);
 	debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s"), guidText, name, category);
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	if (rcc == RCC_SUCCESS)
 	{
 		TCHAR query[MAX_DB_STRING];
 		_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
-		DB_RESULT result = DBSelect(g_hCoreDB, query);
+		DB_RESULT result = DBSelect(hdb, query);
 		if (result != NULL)
 		{
 			int count = DBGetNumRows(result);
@@ -11220,7 +11230,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 			if (query[0] != 0)
 			{
-				if (DBQuery(g_hCoreDB, query))
+				if (DBQuery(hdb, query))
 				{
 					// DB up to date, update file)
 					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
@@ -11233,7 +11243,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 						{
 							m_dwFileRqId = request->GetId();
 							m_dwUploadCommand = CMD_MODIFY_IMAGE;
-              memcpy(m_uploadImageGuid, guid, UUID_LENGTH);
+                     memcpy(m_uploadImageGuid, guid, UUID_LENGTH);
 						}
 						else
 						{
@@ -11264,6 +11274,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 		msg.SetVariable(VID_GUID, guid, UUID_LENGTH);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
 
@@ -11273,11 +11284,9 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	}
 }
 
-
-//
-// Delete image from library
-//
-
+/**
+ * Delete image from library
+ */
 void ClientSession::deleteLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -11293,8 +11302,10 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 	uuid_to_string(guid, guidText);
 	debugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
-	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult != NULL)
 	{
 		if (DBGetNumRows(hResult) > 0)
@@ -11302,7 +11313,7 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 			if (DBGetFieldLong(hResult, 0, 0) == 0)
 			{
 				_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND guid = '%s'"), guidText);
-				if (DBQuery(g_hCoreDB, query))
+				if (DBQuery(hdb, query))
 				{
 					// TODO: remove from FS?
 				}
@@ -11326,6 +11337,8 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 	{
 		rcc = RCC_DB_FAILURE;
 	}
+
+   DBConnectionPoolReleaseConnection(hdb);
 
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
@@ -11368,7 +11381,8 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
       _tcscat(query, (const TCHAR *)DBPrepareString(g_hCoreDB, category));
 	}
 
-	DB_RESULT result = DBSelect(g_hCoreDB, query);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_RESULT result = DBSelect(hdb, query);
 	if (result != NULL)
 	{
 		int count = DBGetNumRows(result);
@@ -11398,6 +11412,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 		rcc = RCC_DB_FAILURE;
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
 }
