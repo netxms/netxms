@@ -249,6 +249,16 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #endif
 				useLogin = TRUE;
 				break;
+#ifndef _WIN32
+			case 'p':   // PID file
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPIDFile, MAX_PATH);
+				g_szPIDFile[MAX_PATH - 1] = 0;
+#else
+				nx_strncpy(g_szPIDFile, optarg, MAX_PATH);
+#endif
+				break;
+#endif
 			case 'P':
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, 256);
