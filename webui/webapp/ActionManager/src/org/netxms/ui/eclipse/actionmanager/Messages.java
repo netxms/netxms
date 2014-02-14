@@ -11,8 +11,10 @@ public class Messages extends NLS
 	public String ActionLabelProvider_ActionTypeExecute;
 	public String ActionLabelProvider_ActionTypeForward;
 	public String ActionLabelProvider_ActionTypeMail;
+   public String ActionLabelProvider_ActionTypeNXSL;
 	public String ActionLabelProvider_ActionTypeRemoteExec;
 	public String ActionLabelProvider_ActionTypeSMS;
+   public String ActionLabelProvider_ActionTypeXMPP;
 	public String ActionLabelProvider_Unknown;
 	public String ActionManager_ActionDelete;
 	public String ActionManager_ActionNew;

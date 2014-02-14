@@ -45,8 +45,8 @@ import org.netxms.ui.eclipse.snmp.Messages;
 public final class MibCache implements ConsoleLoginListener
 {	
 	private static final Object MUTEX = new Object();
-	
-	private static MibTree mibTree = new MibTree();
+
+	private static MibTree mibTree = null;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.console.api.ConsoleLoginListener#afterLogin(org.netxms.client.NXCSession, org.eclipse.swt.widgets.Display)
@@ -110,11 +110,6 @@ public final class MibCache implements ConsoleLoginListener
 					      file.delete();
 						}
 					}
-					
-					synchronized(MUTEX)
-					{
-						MibCache.mibTree = new MibTree(mibFile);
-					}
 				}
 			}
 
@@ -133,10 +128,38 @@ public final class MibCache implements ConsoleLoginListener
 	 */
 	public static MibTree getMibTree()
 	{
-		synchronized(MUTEX)
-		{
-			return mibTree;
-		}
+	   synchronized(MUTEX)
+      {
+   	   if (mibTree != null)
+   	      return mibTree;
+   
+         Location loc = Platform.getInstanceLocation();
+         if (loc != null)
+         {
+            File targetDir;
+            try
+            {
+               targetDir = new File(loc.getURL().toURI());
+            }
+            catch(URISyntaxException e)
+            {
+               targetDir = new File(loc.getURL().getPath());
+            }
+            File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
+            if (mibFile.exists())
+            {
+               try
+               {
+                  mibTree = new MibTree(mibFile);
+               }
+               catch(Exception e)
+               {
+                  Activator.logError("Cannot load MIB file", e);
+               }
+            }
+         }
+   		return (mibTree != null) ? mibTree : new MibTree();
+      }
 	}
 	
 	/**
@@ -161,8 +184,10 @@ public final class MibCache implements ConsoleLoginListener
 			return null;
 		}
 		synchronized(MUTEX)
-		{
-			return mibTree.findObject(id, exactMatch);
-		}
+      {
+	      if (mibTree == null)
+	         return null;
+	      return mibTree.findObject(id, exactMatch);
+      }
 	}
 }

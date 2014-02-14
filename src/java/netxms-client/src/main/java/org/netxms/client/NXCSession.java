@@ -1207,7 +1207,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
-      if (msg == null) throw new NXCException(RCC.TIMEOUT);
+      if (msg == null) 
+         throw new NXCException(RCC.TIMEOUT);
       return msg;
    }
 
@@ -1220,7 +1221,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public NXCPMessage waitForMessage(final int code, final long id) throws NXCException
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
-      if (msg == null) throw new NXCException(RCC.TIMEOUT);
+      if (msg == null) 
+         throw new NXCException(RCC.TIMEOUT);
       return msg;
    }
 
