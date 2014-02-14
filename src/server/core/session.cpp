@@ -6670,11 +6670,11 @@ void ClientSession::setupEncryption(CSCPMessage *request)
    msg.deleteAllVariables();
 
    // Wait for encryption setup
-   ConditionWait(m_condEncryptionSetup, 3000);
+   ConditionWait(m_condEncryptionSetup, 30000);
 
    // Send response
    msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
+   msg.SetId(request->GetId());
    msg.SetVariable(VID_RCC, m_dwEncryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
    msg.SetCode(CMD_REQUEST_COMPLETED);
