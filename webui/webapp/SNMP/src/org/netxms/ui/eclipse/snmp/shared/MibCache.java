@@ -109,6 +109,12 @@ public final class MibCache implements ConsoleLoginListener
 					      
 					      file.delete();
 						}
+						
+						// invalidate already loaded tree
+						synchronized(MUTEX)
+                  {
+						   mibTree = null;
+                  }
 					}
 				}
 			}
