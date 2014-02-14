@@ -3806,7 +3806,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       data.setInheritAccessRights(inheritAccessRights);
       modifyObject(data);
    }
-
+   
    /**
     * Change report's definition (wrapper for modifyObject())
     *
@@ -3886,6 +3886,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+
+   /**
+    * Get effective rights of currently logged in user to given object.
+    * 
+    * @param objectId
+    * @return
+    * @throws IOException
+    * @throws NXCException
+    */
+   public int getEffectiveRights(final long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EFFECTIVE_RIGHTS);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getVariableAsInteger(NXCPCodes.VID_EFFECTIVE_RIGHTS);
+   }
+
 
    /**
     * Common internal implementation for bindObject, unbindObject, and

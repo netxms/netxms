@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,13 +30,16 @@ import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.api.client.constants.UserAccessRights;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -49,6 +52,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	
 	private NXCSession session;
 	private Dashboard dashboard;
+	private boolean readOnly = true;
 	private DashboardControl dbc;
 	private Composite parentComposite;
 	private DashboardModifyListener dbcModifyListener;
@@ -85,25 +89,51 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+	   ConsoleJob job = new ConsoleJob("Get effective rights", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            readOnly = ((dashboard.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get effective rights for dashboard object";
+         }
+      };
+      job.start();
+      
+      // FIXME: rewrite waiting
+      try
+      {
+         job.join();
+      }
+      catch(InterruptedException e)
+      {
+      }
+	   
 		parentComposite = parent;
 		dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, false);
-		dbcModifyListener = new DashboardModifyListener() {
-			@Override
-			public void save()
-			{
-				actionSave.setEnabled(false);
-				firePropertyChange(PROP_DIRTY);
-			}
-			
-			@Override
-			public void modify()
-			{
-				actionSave.setEnabled(true);
-				firePropertyChange(PROP_DIRTY);
-			}
-		};
-		dbc.setModifyListener(dbcModifyListener);
-
+		if (!readOnly)
+		{
+   		dbcModifyListener = new DashboardModifyListener() {
+   			@Override
+   			public void save()
+   			{
+   				actionSave.setEnabled(false);
+   				firePropertyChange(PROP_DIRTY);
+   			}
+   			
+   			@Override
+   			public void modify()
+   			{
+   				actionSave.setEnabled(true);
+   				firePropertyChange(PROP_DIRTY);
+   			}
+   		};
+   		dbc.setModifyListener(dbcModifyListener);
+		}
 		createActions();
 		contributeToActionBars();
 	}
@@ -241,19 +271,22 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(actionEditMode);
-		manager.add(actionSave);
-		manager.add(new Separator());
-		manager.add(actionAddAlarmBrowser);
-		manager.add(actionAddLabel);
-		manager.add(actionAddLineChart);
-		manager.add(actionAddBarChart);
-		manager.add(actionAddPieChart);
-		manager.add(actionAddTubeChart);
-		manager.add(actionAddStatusIndicator);
-		manager.add(actionAddAvailabilityChart);
-		manager.add(actionAddDashboard);
-		manager.add(new Separator());
+	   if (!readOnly)
+	   {
+   		manager.add(actionEditMode);
+   		manager.add(actionSave);
+   		manager.add(new Separator());
+   		manager.add(actionAddAlarmBrowser);
+   		manager.add(actionAddLabel);
+   		manager.add(actionAddLineChart);
+   		manager.add(actionAddBarChart);
+   		manager.add(actionAddPieChart);
+   		manager.add(actionAddTubeChart);
+   		manager.add(actionAddStatusIndicator);
+   		manager.add(actionAddAvailabilityChart);
+   		manager.add(actionAddDashboard);
+   		manager.add(new Separator());
+	   }
 		manager.add(actionRefresh);
 	}
 
@@ -265,8 +298,11 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionEditMode);
-		manager.add(actionSave);
+	   if (!readOnly)
+	   {
+   		manager.add(actionEditMode);
+   		manager.add(actionSave);
+	   }
 		manager.add(actionRefresh);
 	}
 	
@@ -302,7 +338,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	@Override
 	public boolean isDirty()
 	{
-		return dbc.isModified();
+		return dbc.isModified() && !readOnly;
 	}
 
 	/* (non-Javadoc)
@@ -320,7 +356,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
-		return dbc.isModified();
+		return dbc.isModified() && !readOnly;
 	}
 
 	/**
@@ -346,7 +382,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 				parentComposite.layout(true, true);
 				setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
-				dbc.setModifyListener(dbcModifyListener);
+				if (!readOnly)
+				{
+				   dbc.setModifyListener(dbcModifyListener);
+				}
 			}
 			else
 			{
@@ -357,7 +396,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		{
 			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, dbc.getElements(), this, dbc.isModified());
 			parentComposite.layout(true, true);
-			dbc.setModifyListener(dbcModifyListener);
+			if (!readOnly)
+			{
+			   dbc.setModifyListener(dbcModifyListener);
+			}
 		}
 
 		actionSave.setEnabled((dbc != null) ? dbc.isModified() : false);

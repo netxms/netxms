@@ -324,10 +324,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_CANCEL_FILE_MONITORING"),
       _T("CMD_CHANGE_OBJECT_TOOL_STATUS"),
       _T("CMD_SET_ALARM_STATUS_FLOW"),
-      _T("CMD_DELETE_ALARM_NOTE")
+      _T("CMD_DELETE_ALARM_NOTE"),
+      _T("CMD_GET_EFFECTIVE_RIGHTS")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_DELETE_ALARM_NOTE))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_EFFECTIVE_RIGHTS))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

@@ -134,6 +134,9 @@ public abstract class AbstractObject
 	protected HashSet<Long> parents = new HashSet<Long>(0);
 	protected HashSet<Long> children = new HashSet<Long>(0);
 	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
+	
+	private int effectiveRights = 0;
+	private boolean effectiveRightsCached = false;
 
 	/**
 	 * Create dummy object of GENERIC class
@@ -769,4 +772,28 @@ public abstract class AbstractObject
 	{
 		this.session = session;
 	}
+
+   /**
+    * Get effective rights for this object. On first call this method
+    * will do request to server, and on all subsequent calls
+    * will return cached value obtained at first call.
+    * 
+    * @return effective user rights on this object
+    */
+   public int getEffectiveRights()
+   {
+      if (effectiveRightsCached)
+         return effectiveRights;
+      
+      try
+      {
+         effectiveRights = session.getEffectiveRights(objectId);
+         effectiveRightsCached = true;
+      }
+      catch(Exception e)
+      {
+         effectiveRights = 0;
+      }
+      return effectiveRights;
+   }
 }

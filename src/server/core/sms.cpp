@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,32 +22,26 @@
 
 #include "nxcore.h"
 
-
-//
-// SMS structure
-//
-
+/**
+ * SMS structure
+ */
 typedef struct
 {
    TCHAR szRcpt[MAX_RCPT_ADDR_LEN];
    TCHAR szText[160];
 } SMS;
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static Queue *m_pMsgQueue = NULL;
 static BOOL (* m_DrvSendMsg)(const TCHAR *, const TCHAR *);
 static void (* m_DrvUnload)();
 static THREAD m_hThread = INVALID_THREAD_HANDLE;
 
-
-//
-// Sender thread
-//
-
+/**
+ * Sender thread
+ */
 static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
 {
    SMS *pMsg;
@@ -58,6 +52,7 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
+      DbgPrintf(4, _T("SMS sender: rcpt=%s text=\"%s\""), pMsg->szRcpt, pMsg->szText);
 		int tries = 3;
 		do
 		{
@@ -78,11 +73,9 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Initialize SMS subsystem
-//
-
+/**
+ * Initialize SMS subsystem
+ */
 void InitSMSSender()
 {
    TCHAR szDriver[MAX_PATH], szDrvConfig[MAX_PATH];
@@ -129,11 +122,9 @@ void InitSMSSender()
    }
 }
 
-
-//
-// Shutdown SMS sender
-//
-
+/**
+ * Shutdown SMS sender
+ */
 void ShutdownSMSSender()
 {
    if (m_pMsgQueue != NULL)
@@ -146,20 +137,16 @@ void ShutdownSMSSender()
    }
 }
 
-
-//
-// Post SMS to queue
-//
-
+/**
+ * Post SMS to queue
+ */
 void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText)
 {
-   SMS *pMsg;
+	if (m_pMsgQueue == NULL)
+      return;
 
-	if (m_pMsgQueue != NULL)
-	{
-		pMsg = (SMS *)malloc(sizeof(SMS));
-		nx_strncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
-		nx_strncpy(pMsg->szText, pszText, 160);
-		m_pMsgQueue->Put(pMsg);
-	}
+	SMS *pMsg = (SMS *)malloc(sizeof(SMS));
+	nx_strncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
+	nx_strncpy(pMsg->szText, pszText, 160);
+	m_pMsgQueue->Put(pMsg);
 }

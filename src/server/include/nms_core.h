@@ -658,6 +658,7 @@ private:
    void querySummaryTable(CSCPMessage *request);
    void forwardToReportingServer(CSCPMessage *request);
    void getSubnetAddressMap(CSCPMessage *request);
+   void getEffectiveRights(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

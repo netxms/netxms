@@ -1360,6 +1360,9 @@ void ClientSession::processingThread()
          case CMD_GET_SUBNET_ADDRESS_MAP:
             getSubnetAddressMap(pMsg);
             break;
+         case CMD_GET_EFFECTIVE_RIGHTS:
+            getEffectiveRights(pMsg);
+            break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -5155,11 +5158,9 @@ void ClientSession::createAction(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Update existing action's data
-//
-
+/**
+ * Update existing action's data
+ */
 void ClientSession::updateAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -5182,11 +5183,9 @@ void ClientSession::updateAction(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete action
-//
-
+/**
+ * Delete action
+ */
 void ClientSession::deleteAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -5219,11 +5218,9 @@ void ClientSession::deleteAction(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Process changes in actions
-//
-
+/**
+ * Process changes in actions
+ */
 void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
 {
    UPDATE_INFO *pUpdate;
@@ -5242,11 +5239,9 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
    }
 }
 
-
-//
-// Send all actions to client
-//
-
+/**
+ * Send all actions to client
+ */
 void ClientSession::sendAllActions(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -12731,6 +12726,33 @@ void ClientSession::getSubnetAddressMap(CSCPMessage *request)
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get effective rights for object
+ */
+void ClientSession::getEffectiveRights(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      msg.SetVariable(VID_EFFECTIVE_RIGHTS, object->getUserRights(m_dwUserId));
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
    }
    else  // No object with given ID
    {
