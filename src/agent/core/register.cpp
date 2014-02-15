@@ -48,16 +48,6 @@ BOOL RegisterOnServer(const TCHAR *pszServer)
    NXCPEncryptionContext *pDummyCtx = NULL;
    int nLen;
 
-#ifdef _WIN32
-   WSADATA wsaData;
-
-   if (WSAStartup(0x0202, &wsaData) != 0)
-   {
-      _tprintf(_T("ERROR: Unable to initialize Windows Sockets\n"));
-      return FALSE;
-   }
-#endif
-
    dwAddr = ResolveHostName(pszServer);
    if (dwAddr == INADDR_NONE)
    {
@@ -127,8 +117,5 @@ BOOL RegisterOnServer(const TCHAR *pszServer)
       closesocket(hSocket);
    }
 
-#ifdef _WIN32
-   WSACleanup();
-#endif
    return bRet;
 }

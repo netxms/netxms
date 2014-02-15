@@ -60,6 +60,8 @@ int WatchdogMain(DWORD pid);
 
 void InitSessionList();
 
+BOOL RegisterOnServer(const TCHAR *pszServer);
+
 #if !defined(_WIN32)
 void InitStaticSubagents();
 #endif
@@ -912,7 +914,12 @@ BOOL Initialize()
 	   {
          StartControlConnector();
       }
-	}
+
+   	if (g_dwFlags & AF_REGISTER)
+      {
+         RegisterOnServer(g_szRegistrar);
+      }
+   }
 
 #if defined(_WIN32)
    m_hCondShutdown = ConditionCreate(TRUE);

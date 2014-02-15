@@ -755,7 +755,8 @@ void ClientSession::processingThread()
           (m_wCurrentCmd != CMD_LOGIN) &&
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
           (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION) &&
-          (m_wCurrentCmd != CMD_GET_MY_CONFIG))
+          (m_wCurrentCmd != CMD_GET_MY_CONFIG) &&
+          (m_wCurrentCmd != CMD_REGISTER_AGENT))
       {
          delete pMsg;
          continue;
@@ -10156,40 +10157,33 @@ void ClientSession::registerAgent(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+	if (ConfigReadInt(_T("EnableAgentRegistration"), 0))
 	{
-		if (ConfigReadInt(_T("EnableAgentRegistration"), 0))
+		if (m_clientAddr->sa_family == AF_INET)
 		{
-			if (m_clientAddr->sa_family == AF_INET)
+			node = FindNodeByIP(0, ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));
+			if (node != NULL)
 			{
-				node = FindNodeByIP(0, ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));
-				if (node != NULL)
-				{
-					// Node already exist, force configuration poll
-					node->setRecheckCapsFlag();
-					node->forceConfigurationPoll();
-				}
-				else
-				{
-					NEW_NODE *info;
-
-					info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-					info->dwIpAddr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
-					info->dwNetMask = 0;
-					info->zoneId = 0;	// Add to default zone
-					info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
-					g_nodePollerQueue.Put(info);
-				}
-				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				// Node already exist, force configuration poll
+				node->setRecheckCapsFlag();
+				node->forceConfigurationPoll();
 			}
 			else
 			{
-				msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
+				NEW_NODE *info;
+
+				info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+				info->dwIpAddr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
+				info->dwNetMask = 0;
+				info->zoneId = 0;	// Add to default zone
+				info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
+				g_nodePollerQueue.Put(info);
 			}
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
 		}
 		else
 		{
-	      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
 		}
 	}
 	else
@@ -10200,11 +10194,9 @@ void ClientSession::registerAgent(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Get file from server
-//
-
+/**
+ * Get file from server
+ */
 void ClientSession::getServerFile(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
