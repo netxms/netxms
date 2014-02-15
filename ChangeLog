@@ -12,6 +12,7 @@
 - New system permission: Manage Image Library
 - Object level access control can be enabled for logs
 - New NXSL function FindAllDCIs
+- Driver for Allied Telesis switches improved
 - Management console:
    - Fixed bug with red zone display in "last value" dashboard element
    - Edit and delete for alarm comments are working now

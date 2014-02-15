@@ -146,6 +146,23 @@ static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
 }
 
 /**
+ * Handler for enumerating indexes via ifXTable
+ */
+static UINT32 HandlerIndexIfXTable(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+{
+   SNMP_ObjectId *name = pVar->GetName();
+   UINT32 index = name->getValue()[name->getLength() - 1];
+   if (((InterfaceList *)pArg)->findByIfIndex(index) == NULL)
+   {
+	   NX_INTERFACE_INFO info;
+	   memset(&info, 0, sizeof(NX_INTERFACE_INFO));
+      info.dwIndex = index;
+	   ((InterfaceList *)pArg)->add(&info);
+   }
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
  * Handler for enumerating IP addresses
  */
 static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
@@ -244,6 +261,9 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
    // Gather interface indexes
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
    {
+      // Gather additional interfaces from ifXTable
+      SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.31.1.1.1.1"), HandlerIndexIfXTable, pIfList, FALSE);
+
       // Enumerate interfaces
 		for(i = 0; i < pIfList->getSize(); i++)
       {
@@ -252,7 +272,12 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 			// Get interface description
 	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->dwIndex);
 	      if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->szDescription, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
-	         break;
+         {
+            // Try to get name from ifXTable
+	         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->dwIndex);
+	         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->szDescription, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
+   	         break;
+         }
 
          // Get interface alias if needed
          if (useAliases > 0)
@@ -321,8 +346,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 
          // Interface type
          _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->dwIndex);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0,
-                      &iface->dwType, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &iface->dwType, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			{
 				iface->dwType = IFTYPE_OTHER;
 			}

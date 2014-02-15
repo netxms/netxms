@@ -22,11 +22,9 @@
 
 #include "libnxsrv.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 InterfaceList::InterfaceList(int initialAlloc)
 {
 	m_allocated = initialAlloc;
@@ -35,21 +33,17 @@ InterfaceList::InterfaceList(int initialAlloc)
 	m_interfaces = (NX_INTERFACE_INFO *)malloc(sizeof(NX_INTERFACE_INFO) * m_allocated);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 InterfaceList::~InterfaceList()
 {
 	safe_free(m_interfaces);
 }
 
-
-//
-// Add new interface
-//
-
+/**
+ * Add new interface
+ */
 void InterfaceList::add(NX_INTERFACE_INFO *iface)
 {
 	if (m_size == m_allocated)
@@ -60,11 +54,9 @@ void InterfaceList::add(NX_INTERFACE_INFO *iface)
 	memcpy(&m_interfaces[m_size++], iface, sizeof(NX_INTERFACE_INFO));
 }
 
-
-//
-// Find interface entry by ifIndex
-//
-
+/**
+ * Find interface entry by ifIndex
+ */
 NX_INTERFACE_INFO *InterfaceList::findByIfIndex(UINT32 ifIndex)
 {
    // Delete loopback interface(s) from list
@@ -74,11 +66,9 @@ NX_INTERFACE_INFO *InterfaceList::findByIfIndex(UINT32 ifIndex)
 	return NULL;
 }
 
-
-//
-// Remove entry
-//
-
+/**
+ * Remove entry
+ */
 void InterfaceList::remove(int index)
 {
 	if ((index < 0) || (index >= m_size))
