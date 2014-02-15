@@ -9,7 +9,6 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.ServerFile;
-import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
 import org.netxms.ui.eclipse.filemanager.views.ViewServerFile;
 
 /**
