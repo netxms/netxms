@@ -32,8 +32,8 @@ enum
 
 typedef struct
 {
-   INT32 size;
-   INT32 allocated;
+   size_t size;
+   size_t allocated;
    char *data;
 } RequestData;
 

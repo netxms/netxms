@@ -258,48 +258,25 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0, NULL		// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(ECS)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
 	return TRUE;
-}
-
-#endif
-
-
-//
-// NetWare library entry point
-//
-
-#ifdef _NETWARE
-
-int _init(void)
-{
-	return 0;
-}
-
-int _fini(void)
-{
-	return 0;
 }
 
 #endif
