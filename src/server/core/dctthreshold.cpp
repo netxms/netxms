@@ -405,7 +405,7 @@ void DCTableThreshold::loadConditions()
          int groupId = -1;
          for(int i = 0; i < count; i++)
          {
-            if (DBGetFieldLong(hResult, i, 0) != groupId)
+            if ((DBGetFieldLong(hResult, i, 0) != groupId) || (group == NULL))
             {
                groupId = DBGetFieldLong(hResult, i, 0);
                group = new DCTableConditionGroup();
@@ -502,7 +502,7 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
    {
       if (m_groups->get(i)->check(value, row))
       {
-         if (m_activeKeys->exist(instance))
+         if (m_activeKeys->contains(instance))
          {
             return ALREADY_ACTIVE;
          }
@@ -512,7 +512,7 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
    }
 
    // no match
-   if (m_activeKeys->exist(instance))
+   if (m_activeKeys->contains(instance))
    {
       m_activeKeys->remove(instance);
       return DEACTIVATED;

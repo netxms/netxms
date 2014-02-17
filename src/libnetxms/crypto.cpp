@@ -505,6 +505,7 @@ NXCPEncryptionContext::NXCPEncryptionContext()
 #ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX_init(&m_encryptor);
    EVP_CIPHER_CTX_init(&m_decryptor);
+   m_encryptorLock = MutexCreate();
 #endif
 }
 
@@ -517,6 +518,7 @@ NXCPEncryptionContext::~NXCPEncryptionContext()
 #ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX_cleanup(&m_encryptor);
    EVP_CIPHER_CTX_cleanup(&m_decryptor);
+   MutexDestroy(m_encryptorLock);
 #endif
 }
 
@@ -703,8 +705,13 @@ CSCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(CSCP_MESSAGE *msg)
       return (CSCP_ENCRYPTED_MESSAGE *)nx_memdup(msg, ntohl(msg->dwSize));
 
 #ifdef _WITH_ENCRYPTION
+   MutexLock(m_encryptorLock);
+
    if (!EVP_EncryptInit_ex(&m_encryptor, NULL, NULL, m_sessionKey, m_iv))
+   {
+      MutexUnlock(m_encryptorLock);
       return NULL;
+   }
 
    UINT32 msgSize = ntohl(msg->dwSize);
    CSCP_ENCRYPTED_MESSAGE *emsg = 
@@ -723,6 +730,8 @@ CSCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(CSCP_MESSAGE *msg)
    msgSize += dataSize;
    EVP_EncryptFinal_ex(&m_encryptor, emsg->data + msgSize, &dataSize);
    msgSize += dataSize + CSCP_EH_UNENCRYPTED_BYTES;
+
+   MutexUnlock(m_encryptorLock);
 
    if (msgSize % 8 != 0)
    {

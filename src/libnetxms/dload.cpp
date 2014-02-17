@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -27,19 +27,24 @@
 #undef SEVERITY_CRITICAL
 #include <netware.h>
 #elif !defined(_WIN32)
+#ifdef _HPUX
+// dlfcn.h on HP-UX defines it's own UINT64 which conflicts with our definition
+#define UINT64 __UINT64
 #include <dlfcn.h>
+#undef UINT64
+#else
+#include <dlfcn.h>
+#endif
 #ifndef RTLD_GLOBAL
 #define RTLD_GLOBAL	0
 #endif
 #endif
 
-
-//
-// Error texts for NetWare LoadModule()
-//
-
 #ifdef _NETWARE
 
+/**
+ * Error texts for NetWare LoadModule()
+ */
 static char *m_pszErrorText[] =
 {
    "No error",
@@ -115,11 +120,9 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText
    return hModule;
 }
 
-
-//
-// Unload DLL/shared library
-//
-
+/**
+ * Unload DLL/shared library
+ */
 void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 {
    if (hModule != NULL)
@@ -138,11 +141,9 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
    }
 }
 
-
-//
-// Get symbol address from library
-//
-
+/**
+ * Get symbol address from library
+ */
 void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbol, TCHAR *pszErrorText)
 {
    void *pAddr;

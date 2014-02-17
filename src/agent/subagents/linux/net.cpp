@@ -67,6 +67,9 @@ LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
    return nRet;
 }
 
+/**
+ * Handler for Net.ArpCache list
+ */
 LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
    int nRet = SYSINFO_RC_ERROR;
@@ -76,67 +79,63 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
    if (hFile != NULL)
    {
       char szBuff[256];
-      int nFd;
-
-      nFd = socket(AF_INET, SOCK_DGRAM, 0);
-      if (nFd > 0)
+      if (fgets(szBuff, sizeof(szBuff), hFile) != NULL) // skip first line
       {
-         nRet = SYSINFO_RC_SUCCESS;
-
-         char *__unused = fgets(szBuff, sizeof(szBuff), hFile); // skip first line
-
-         while(fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+         int nFd = socket(AF_INET, SOCK_DGRAM, 0);
+         if (nFd > 0)
          {
-            int nIP1, nIP2, nIP3, nIP4;
-            int nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6;
-            char szTmp1[256];
-            char szTmp2[256];
-            char szTmp3[256];
-            char szIf[256];
+            nRet = SYSINFO_RC_SUCCESS;
 
-            if (sscanf(szBuff,
-               "%d.%d.%d.%d %s %s %02X:%02X:%02X:%02X:%02X:%02X %s %s",
-               &nIP1, &nIP2, &nIP3, &nIP4,
-               szTmp1, szTmp2,
-               &nMAC1, &nMAC2, &nMAC3, &nMAC4, &nMAC5, &nMAC6,
-               szTmp3, szIf) == 14)
+            while(fgets(szBuff, sizeof(szBuff), hFile) != NULL)
             {
-               int nIndex;
-               struct ifreq irq;
+               int nIP1, nIP2, nIP3, nIP4;
+               int nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6;
+               char szTmp1[256];
+               char szTmp2[256];
+               char szTmp3[256];
+               char szIf[256];
 
-               if (nMAC1 == 0 && nMAC2 == 0 &&
-                  nMAC3 == 0 && nMAC4 == 0 &&
-                  nMAC5 == 0 && nMAC6 == 0)
+               if (sscanf(szBuff,
+                          "%d.%d.%d.%d %s %s %02X:%02X:%02X:%02X:%02X:%02X %s %s",
+                          &nIP1, &nIP2, &nIP3, &nIP4,
+                          szTmp1, szTmp2,
+                          &nMAC1, &nMAC2, &nMAC3, &nMAC4, &nMAC5, &nMAC6,
+                          szTmp3, szIf) == 14)
                {
-                  // incomplete
-                  continue;
-               }
+                  int nIndex;
+                  struct ifreq irq;
 
-               strncpy(irq.ifr_name, szIf, IFNAMSIZ);
-               if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
-               {
-                  perror("ioctl()");
-                  nIndex = 0;
-               }
-               else
-               {
-                  nIndex = irq.ifr_ifindex;
-               }
+                  if (nMAC1 == 0 && nMAC2 == 0 &&
+                      nMAC3 == 0 && nMAC4 == 0 &&
+                      nMAC5 == 0 && nMAC6 == 0)
+                  {
+                     // incomplete
+                     continue;
+                  }
 
-               TCHAR output[256];
-               _sntprintf(output, 256,
-                  _T("%02X%02X%02X%02X%02X%02X %d.%d.%d.%d %d"),
-                  nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6,
-                  nIP1, nIP2, nIP3, nIP4,
-                  nIndex);
+                  strncpy(irq.ifr_name, szIf, IFNAMSIZ);
+                  if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
+                  {
+                     nIndex = 0;
+                  }
+                  else
+                  {
+                     nIndex = irq.ifr_ifindex;
+                  }
 
-               pValue->add(output);
+                  TCHAR output[256];
+                  _sntprintf(output, 256,
+                     _T("%02X%02X%02X%02X%02X%02X %d.%d.%d.%d %d"),
+                     nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6,
+                     nIP1, nIP2, nIP3, nIP4,
+                     nIndex);
+
+                  pValue->add(output);
+               }
             }
+            close(nFd);
          }
-
-         close(nFd);
       }
-
       fclose(hFile);
    }
 
@@ -248,7 +247,6 @@ static int SendMessage(int socket)
 static int ReceiveMessage(int socket, char* replyBuffer)
 {
    iovec io;
-   iovec io_reply = {};
    msghdr reply = {};
    sockaddr_nl kernel;
 
@@ -321,7 +319,6 @@ static IFINFO *GetInterfaceInfo(int socket)
       return NULL;
    }
 
-   msghdr reply = {};
    nlmsghdr* msg_ptr;
    int msgLen;
    int done = 0;

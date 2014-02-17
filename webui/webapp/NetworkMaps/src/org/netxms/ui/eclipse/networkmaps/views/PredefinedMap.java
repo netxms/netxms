@@ -152,9 +152,14 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 		{
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			{
+			   if (!disableGeolocationBackground)
+			      viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			}
 			else
+			{
 				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
+			}
 		}
 
 		setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
@@ -712,7 +717,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
 			{
-				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			   if (!disableGeolocationBackground)
+			      viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
 			}
 			else
 			{
@@ -739,9 +745,14 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 		{
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			{
+			   if (!disableGeolocationBackground)
+			      viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			}
 			else
+			{
 				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
+			}
 		}
 
 		setLayoutAlgorithm(mapObject.getLayout(), false);

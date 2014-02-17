@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -350,7 +350,7 @@ static void WriteLogToFile(TCHAR *message, const WORD wType)
       m_consoleWriter(_T("%s %s%s"), buffer, loglevel, message);
 
 	// Check log size
-	if ((m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
+	if ((m_logFileHandle != NULL) && (m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
 	{
 		struct stat st;
 

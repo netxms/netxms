@@ -60,6 +60,8 @@ int WatchdogMain(DWORD pid);
 
 void InitSessionList();
 
+BOOL RegisterOnServer(const TCHAR *pszServer);
+
 #if !defined(_WIN32)
 void InitStaticSubagents();
 #endif
@@ -108,6 +110,7 @@ extern const TCHAR *g_szMessages[];
  */
 UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
+TCHAR g_szEncryptedSharedSecret[MAX_SECRET_LENGTH] = _T("");
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
 TCHAR g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 TCHAR g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
@@ -149,6 +152,7 @@ static TCHAR *m_pszControlServerList = NULL;
 static TCHAR *m_pszMasterServerList = NULL;
 static TCHAR *m_pszSubagentList = NULL;
 static TCHAR *m_pszExtParamList = NULL;
+static TCHAR *m_pszExtListsList = NULL;
 static TCHAR *m_pszShExtParamList = NULL;
 static TCHAR *m_pszParamProviderList = NULL;
 static TCHAR *m_pszExtSubagentList = NULL;
@@ -165,6 +169,7 @@ static UINT32 m_dwLogHistorySize = 4;
 static UINT32 m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR m_szDailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
+static TCHAR s_executableName[MAX_PATH];
 
 #if defined(_WIN32)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -199,6 +204,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout, NULL },
 	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
    { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList, NULL },
+   { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtListsList, NULL },
    { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList, NULL },
    { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList, NULL },
    { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList, NULL },
@@ -218,6 +224,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("RequireEncryption"), CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags, NULL },
    { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList, NULL },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, NULL },
+   { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szEncryptedSharedSecret, NULL },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
@@ -365,6 +372,7 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 
 #endif   /* _WIN32 */
 
+
 /**
  * Restart agent
  */
@@ -373,16 +381,6 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 	DebugPrintf(INVALID_INDEX, 1, _T("H_RestartAgent() called"));
 
    TCHAR szCmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
-#ifdef _WIN32
-   TCHAR szExecName[MAX_PATH];
-   DWORD dwResult;
-   STARTUPINFO si;
-   PROCESS_INFORMATION pi;
-
-   GetModuleFileName(GetModuleHandle(NULL), szExecName, MAX_PATH);
-#else
-   TCHAR szExecName[MAX_PATH] = PREFIX _T("/bin/nxagentd");
-#endif
 
 	if (g_szPlatformSuffix[0] != 0)
 	{
@@ -394,7 +392,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 	}
 
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s-D %d %s-X %u"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s-D %d %s-X %u"), s_executableName,
               g_szConfigFile, g_windowsServiceName, g_windowsEventSourceName,
 				  (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
@@ -405,6 +403,10 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
 
+   DWORD dwResult;
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+   
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
    si.cb = sizeof(STARTUPINFO);
@@ -437,7 +439,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s-X %lu"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s-X %lu"), s_executableName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
@@ -478,11 +480,13 @@ static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 	sigemptyset(&signals);
 	sigaddset(&signals, SIGTERM);
 	sigaddset(&signals, SIGINT);
-	sigaddset(&signals, SIGPIPE);
 	sigaddset(&signals, SIGSEGV);
 	sigaddset(&signals, SIGHUP);
 	sigaddset(&signals, SIGUSR1);
 	sigaddset(&signals, SIGUSR2);
+#if !defined(__sun) && !defined(_AIX) && !defined(__hpux)
+	sigaddset(&signals, SIGPIPE);
+#endif
 
 	sigprocmask(SIG_BLOCK, &signals, NULL);
 
@@ -595,7 +599,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 				ipAddr = INADDR_NONE;
 			netMask = 0xFFFFFFFF;
 		}
-		if (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE)
+		if (ipAddr == INADDR_NONE)
 		{
 			if (!(g_dwFlags & AF_DAEMON))
 				_tprintf(_T("Invalid server address '%s'\n"), pItem);
@@ -786,7 +790,7 @@ BOOL Initialize()
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
-         if (!AddExternalParameter(pItem, FALSE))
+         if (!AddExternalParameter(pItem, FALSE, FALSE))
             nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszExtParamList);
@@ -799,10 +803,25 @@ BOOL Initialize()
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
-         if (!AddExternalParameter(pItem, TRUE))
+         if (!AddExternalParameter(pItem, TRUE, FALSE))
             nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszShExtParamList);
+   }
+
+   // Parse external lists
+   if (m_pszExtListsList != NULL)
+   {
+      for(pItem = pEnd = m_pszExtListsList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = _tcschr(pItem, _T('\n'));
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddExternalParameter(pItem, FALSE, TRUE))
+            nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(m_pszExtListsList);
    }
 
    // Parse external parameters providers list
@@ -895,7 +914,12 @@ BOOL Initialize()
 	   {
          StartControlConnector();
       }
-	}
+
+   	if (g_dwFlags & AF_REGISTER)
+      {
+         RegisterOnServer(g_szRegistrar);
+      }
+   }
 
 #if defined(_WIN32)
    m_hCondShutdown = ConditionCreate(TRUE);
@@ -1128,7 +1152,6 @@ int main(int argc, char *argv[])
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
    signal(SIGPIPE, SIG_IGN);
    signal(SIGHUP, SIG_IGN);
-   signal(SIGINT, SIG_IGN);
    signal(SIGQUIT, SIG_IGN);
    signal(SIGUSR1, SIG_IGN);
    signal(SIGUSR2, SIG_IGN);
@@ -1413,6 +1436,34 @@ int main(int argc, char *argv[])
 				g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"));
 				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
 				{
+               if (g_szEncryptedSharedSecret[0] != 0)
+               {
+                  DecryptPassword(_T("netxms"), g_szEncryptedSharedSecret, g_szSharedSecret);
+               }
+
+               // try to guess executable path
+#ifdef _WIN32
+               GetModuleFileName(GetModuleHandle(NULL), s_executableName, MAX_PATH);
+#else
+#ifdef UNICODE
+               char __buffer[PATH_MAX];
+#else
+#define __buffer s_executableName
+#endif
+               if (realpath(argv[0], __buffer) == NULL)
+               {
+                  // fallback
+                  nx_strncpy(s_executableName, PREFIX _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
+               }
+               else
+               {
+#ifdef UNICODE
+                  int len = strlen(__buffer);
+                  MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, __buffer, len, s_executableName, len);
+#endif
+               }
+#endif
+
 					// Set exception handler
 #ifdef _WIN32
 					if (g_dwFlags & AF_CATCH_EXCEPTIONS)

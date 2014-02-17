@@ -174,10 +174,11 @@ abstract public class Series implements ISeries
 		return stackEnabled;
 	}
 
-	/*
-	 * @see ISeries#enableStack(boolean)
+	/* (non-Javadoc)
+	 * @see org.swtchart.ISeries#enableStack(boolean, boolean)
 	 */
-	public void enableStack(boolean enabled)
+	@Override
+	public void enableStack(boolean enabled, boolean update)
 	{
 		if (enabled && minY < 0)
 		{
@@ -191,7 +192,8 @@ abstract public class Series implements ISeries
 
 		stackEnabled = enabled;
 
-		((SeriesSet)chart.getSeriesSet()).updateStackAndRiserData();
+		if (update)
+		   ((SeriesSet)chart.getSeriesSet()).updateStackAndRiserData();
 	}
 
 	/*

@@ -8,6 +8,7 @@ public class Messages extends NLS
 	public static String AbstractChart_3DView;
 	public static String AbstractChart_Bottom;
 	public static String AbstractChart_Days;
+   public static String AbstractChart_ExtendedLegend;
 	public static String AbstractChart_Hours;
 	public static String AbstractChart_Left;
 	public static String AbstractChart_LegendPosition;

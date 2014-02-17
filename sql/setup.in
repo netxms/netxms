@@ -49,6 +49,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableAdminInterface','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableAgentRegistration','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableAuditLog','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableCheckPointSNMP','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableEventStormDetection','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableISCListener','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableMultipleDBConnections','1',1,1);
@@ -56,11 +57,13 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableObjectTransactions','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableSNMPTraps','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableSyslogDaemon','0',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableTimedAlarmAck','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableXMPPConnector','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableZoning','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EventLogRetentionTime','90',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EventStormDuration','15',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EventStormEventsPerSecond','100',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ExtendedLogQueryAccessControl','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ExternalAuditFacility','13',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ExternalAuditPort','514',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ExternalAuditServer','none',1,1);
@@ -124,6 +127,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StatusSingleThreshold','75',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StatusThresholds','503C2814',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StatusTranslation','01020304',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StrictAlarmStatusFlow','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyncInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyncNodeNamesWithDNS','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyslogListenPort','514',1,1);
@@ -194,7 +198,7 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,-2147483647,2047);
 #define ID_GROUP_1 -2147483647
 #define ID_GROUP_2 -2147483646
 
-INSERT INTO event_groups (id,name,description,range_start,range_end) 
+INSERT INTO event_groups (id,name,description,range_start,range_end)
    VALUES (ID_GROUP_1,'NodeStatus','All events reporting about node status change',0,0);
 INSERT INTO event_groups (id,name,description,range_start,range_end)
    VALUES (ID_GROUP_2,'NewObjects','All events reporting about new objects creation',0,0);

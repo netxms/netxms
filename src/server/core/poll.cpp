@@ -485,7 +485,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       if (pArpCache != NULL)
       {
          for(i = 0; i < pArpCache->dwNumEntries; i++)
-				if (memcmp(pArpCache->pEntries[i].bMacAddr, _T("\xFF\xFF\xFF\xFF\xFF\xFF"), 6))	// Ignore broadcast addresses
+				if (memcmp(pArpCache->pEntries[i].bMacAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))	// Ignore broadcast addresses
 					CheckPotentialNode(pNode, pArpCache->pEntries[i].dwIpAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
          DestroyArpCache(pArpCache);
       }

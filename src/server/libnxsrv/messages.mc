@@ -926,4 +926,16 @@ Language=English
 XMPP: %1 %2
 .
 
+MessageId=
+SymbolicName=MSG_SERIAL_PORT_OPEN_FAILED
+Language=English
+Unable to open serial port %1
+.
+
+MessageId=
+SymbolicName=MSG_SERIAL_PORT_SET_FAILED
+Language=English
+Unable to configure serial port %1
+.
+
 ;#endif

@@ -111,7 +111,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 									continue;
 								NetworkMapObject o = page.findObjectElement(e.getKey());
 								if (o != null)
-									viewer.update(o, null);
+									viewer.refresh(o);
 							}
 						}
 					}

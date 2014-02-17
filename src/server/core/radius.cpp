@@ -612,11 +612,9 @@ static int result_recv(UINT32 host, WORD udp_port, char *buffer, int length, BYT
 	return (auth->code == PW_AUTHENTICATION_REJECT) ? 1 : 0;
 }
 
-
-//
-// Authenticate user via RADIUS using primary or secondary server
-//
-
+/**
+ * Authenticate user via RADIUS using primary or secondary server
+ */
 static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSecondaryServer, TCHAR *serverName)
 {
 	AUTH_HDR *auth;

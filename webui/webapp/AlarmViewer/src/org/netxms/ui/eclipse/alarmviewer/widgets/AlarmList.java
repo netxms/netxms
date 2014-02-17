@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -27,12 +29,14 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -55,8 +59,10 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
+import org.netxms.ui.eclipse.alarmviewer.dialogs.AcknowledgeCustomTimeDialog;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
+import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmAcknowledgeTimeFunctions;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
@@ -101,6 +107,9 @@ public class AlarmList extends Composite
 	private Action actionShowAlarmDetails;
 	private Action actionShowObjectDetails;
 	private Action actionExportToCsv;
+	private MenuManager timeAcknowledgeMenu;
+	private List<Action> timeAcknowledge;
+	private Action timeAcknowledgeOther;
 	
 	/**
 	 * Create alarm list widget
@@ -114,7 +123,7 @@ public class AlarmList extends Composite
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
-		this.viewPart = viewPart;		
+		this.viewPart = viewPart;	
 		
 		// Setup table columns
 		final String[] names = { Messages.get().AlarmList_ColumnSeverity, Messages.get().AlarmList_ColumnState, Messages.get().AlarmList_ColumnSource, Messages.get().AlarmList_ColumnMessage, Messages.get().AlarmList_ColumnCount, Messages.get().AlarmList_Comments, Messages.get().AlarmList_AckBy, Messages.get().AlarmList_ColumnCreated, Messages.get().AlarmList_ColumnLastChange };
@@ -281,7 +290,7 @@ public class AlarmList extends Composite
 			@Override
 			public void run()
 			{
-				acknowledgeAlarms(false);
+				acknowledgeAlarms(false, 0);
 			}
 		};
 		actionAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Acknowledge"); //$NON-NLS-1$
@@ -290,7 +299,7 @@ public class AlarmList extends Composite
 			@Override
 			public void run()
 			{
-				acknowledgeAlarms(true);
+				acknowledgeAlarms(true, 0);
 			}
 		};
 		actionStickyAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.StickyAcknowledge"); //$NON-NLS-1$
@@ -323,9 +332,110 @@ public class AlarmList extends Composite
 		actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails"); //$NON-NLS-1$
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
+		
+		//time based sticky acknowledgment 	
+		timeAcknowledgeOther = new Action("Other...", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         @Override
+         public void run()
+         {
+            AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(viewPart.getSite().getShell());//PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell()
+            if (dlg.open() == Window.OK)
+            {
+               int time = dlg.getTime();
+               if (time > 0)
+                  acknowledgeAlarms(true, time);
+            }
+         }
+      };
+      timeAcknowledgeOther.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledgeOther");  //$NON-NLS-1$
 	}
 
-	/**
+	private void initializeTimeAcknowledge()
+   {
+	   IDialogSettings settings = Activator.getDefault().getDialogSettings();
+	   int menuSize;
+	   try
+	   {
+	      menuSize = settings.getInt("AlarmList.ackMenuSize");//$NON-NLS-1$
+	   }
+	   catch(NumberFormatException e)
+	   {
+	      settings.put("AlarmList.ackMenuSize", 4); //$NON-NLS-1$
+	      timeAcknowledge = new ArrayList<Action>(4);
+         createDefaultCations();
+         settings.put("AlarmList.ackMenuEntry0", 1 * 60 * 60); //$NON-NLS-1$
+         settings.put("AlarmList.ackMenuEntry1", 4 * 60 * 60); //$NON-NLS-1$
+         settings.put("AlarmList.ackMenuEntry2", 24 * 60 * 60); //$NON-NLS-1$
+         settings.put("AlarmList.ackMenuEntry3", 2 * 24 * 60 * 60); //$NON-NLS-1$
+         return;
+	   }
+	   timeAcknowledge = new ArrayList<Action>(menuSize);
+	   for (int i = 0; i<menuSize ; i++){
+	      final int time = settings.getInt("AlarmList.ackMenuEntry"+Integer.toString(i)); //$NON-NLS-1$
+	      if (time == 0)
+	         continue;
+	      String title = AlarmAcknowledgeTimeFunctions.timeToString(time);
+	      Action action = new Action(title, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
+	         @Override
+	         public void run()
+	         {
+	            acknowledgeAlarms(true, time);
+	         }
+	      };
+	      action.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge"+Integer.toString(i)+"ID"); //$NON-NLS-1$ //$NON-NLS-2$
+	      timeAcknowledge.add(action);
+	   }
+   }
+
+   private void createDefaultCations()
+   {
+      Action act;
+      act = new Action("1 hour(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         @Override
+         public void run()
+         {
+            int time = 1*60*60; //hour to minutes, seconds
+            acknowledgeAlarms(true, time);
+         }
+      };
+      act.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge0ID"); //$NON-NLS-1$
+      timeAcknowledge.add(act);
+      
+      act = new Action("4 hour(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         @Override
+         public void run()
+         {
+            int time = 4*60*60; //hour to minutes, seconds
+            acknowledgeAlarms(true, time); 
+         }
+      };
+      act.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge1ID"); //$NON-NLS-1$
+      timeAcknowledge.add(act);
+      
+      act = new Action("1 day(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         @Override
+         public void run()
+         {
+            int time = 24*60*60; //day to hours, minutes, seconds
+            acknowledgeAlarms(true, time);
+         }
+      };
+      act.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge2ID"); //$NON-NLS-1$
+      timeAcknowledge.add(act);
+      
+      act = new Action("2 days(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         @Override
+         public void run()
+         {
+            int time = 2*24*60*60; //day to hours, minutes, seconds
+            acknowledgeAlarms(true, time);
+         }
+      };
+      act.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge3ID"); //$NON-NLS-1$
+      timeAcknowledge.add(act);
+   }
+
+   /**
 	 * Create pop-up menu for alarm list
 	 */
 	private void createPopupMenu()
@@ -359,10 +469,29 @@ public class AlarmList extends Composite
 		if (selection.size() == 0)
 			return;
 		
-		manager.add(actionAcknowledge);
-		manager.add(actionStickyAcknowledge);
-		manager.add(actionResolve);
-		manager.add(actionTerminate);
+		int states = getSelectionType(selection.toArray());
+		
+		if(states == 2)
+		{
+   		manager.add(actionAcknowledge);
+   		manager.add(actionStickyAcknowledge);
+   		
+   		initializeTimeAcknowledge();
+         timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$
+         for(Action act : timeAcknowledge)
+         {
+            timeAcknowledgeMenu.add(act);
+         }
+         timeAcknowledgeMenu.add(new Separator());   
+         timeAcknowledgeMenu.add(timeAcknowledgeOther);
+   		manager.add(timeAcknowledgeMenu);
+		}
+		
+		if(states < 4)
+		   manager.add(actionResolve);
+		if (states == 4 || (session.getAlarmStatusFlowStrict() == 0))
+		   manager.add(actionTerminate);
+		
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
@@ -385,7 +514,17 @@ public class AlarmList extends Composite
 		}
 	}
 
-	/**
+	private int getSelectionType(Object[] array)
+   {
+      int type = 0;
+      for(int i = 0; i < array.length; i++)
+      {
+         type |= ((Alarm)array[i]).getState()+2;
+      }
+      return type;
+   }
+
+   /**
 	 * Change root object for alarm list
 	 * 
 	 * @param objectId ID of new root object
@@ -476,7 +615,7 @@ public class AlarmList extends Composite
 	 * 
 	 * @param sticky
 	 */
-	private void acknowledgeAlarms(final boolean sticky)
+	private void acknowledgeAlarms(final boolean sticky, final int time)
 	{
 		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
 		if (selection.size() == 0)
@@ -493,7 +632,7 @@ public class AlarmList extends Composite
 					if (monitor.isCanceled())
 						break;
 					if (o instanceof Alarm)
-						session.acknowledgeAlarm(((Alarm)o).getId(), sticky);
+						session.acknowledgeAlarm(((Alarm)o).getId(), sticky, time);
 					monitor.worked(1);
 				}
 				monitor.done();

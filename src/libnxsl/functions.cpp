@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -379,6 +379,7 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program 
 	{
 		// No second argument
 		tTime = time(NULL);
+		bLocalTime = TRUE;
 	}
 
    ptm = bLocalTime ? localtime(&tTime) : gmtime(&tTime);
@@ -943,7 +944,7 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	}
 
 	int index = 0;	// 0 = not found
-	if ((substrLength < strLength) && (substrLength > 0))
+	if ((substrLength <= strLength) && (substrLength > 0))
 	{
 		if (reverse)
 		{
@@ -958,7 +959,7 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		}
 		else
 		{
-			for(int i = start; i < (int)(strLength - substrLength); i++)
+			for(int i = start; i <= (int)(strLength - substrLength); i++)
 			{
 				if (!memcmp(&str[i], substr, substrLength * sizeof(TCHAR)))
 				{

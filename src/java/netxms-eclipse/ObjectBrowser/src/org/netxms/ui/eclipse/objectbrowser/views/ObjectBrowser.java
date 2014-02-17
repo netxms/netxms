@@ -559,37 +559,59 @@ public class ObjectBrowser extends ViewPart
 	public boolean isValidSelectionForMove(SubtreeType subtree)
 	{
 		TreeItem[] selection = objectTree.getTreeControl().getSelection();
-		if (selection.length != 1)
-			return false;
+		if(selection.length < 1)
+		   return false;
 		
-		if (selection[0].getParentItem() == null)
-			return false;
-		
-		final AbstractObject currentObject = (AbstractObject)selection[0].getData();
-		final AbstractObject parentObject = (AbstractObject)selection[0].getParentItem().getData();
-		
-		for(ObjectActionValidator v : actionValidators)
-		{
-			int result = v.isValidSelectionForMove(subtree, currentObject, parentObject);
-			if (result == ObjectActionValidator.APPROVE)
-				return true;
-			if (result == ObjectActionValidator.REJECT)
-				return false;
-		}
-		return false;
+	   for(int i = 0; i < selection.length; i++)
+	   {
+	      if(!isValidObjectForMove(selection, i, subtree) || 
+	            ((AbstractObject)selection[0].getParentItem().getData()).getObjectId() != ((AbstractObject)selection[i].getParentItem().getData()).getObjectId())	   
+	         return false;
+	   }
+	   return true;		
 	}
 	
 	/**
-	 * Move selected object to another container
+    * Check if given selection object is valid for move
+    * 
+    * @return true if current selection object is valid for moving object
+    */
+	public boolean isValidObjectForMove(TreeItem[] selection, int i, SubtreeType subtree)
+	{
+	   if (selection[i].getParentItem() == null)
+         return false;
+      
+      final AbstractObject currentObject = (AbstractObject)selection[i].getData();
+      final AbstractObject parentObject = (AbstractObject)selection[i].getParentItem().getData();
+      
+      for(ObjectActionValidator v : actionValidators)
+      {
+         int result = v.isValidSelectionForMove(subtree, currentObject, parentObject);
+         if (result == ObjectActionValidator.APPROVE)
+            return true;
+         if (result == ObjectActionValidator.REJECT)
+            return false;
+      }
+      return false;
+	}
+	
+	/**
+	 * Move selected objects to another container
 	 */
 	private void moveObject(SubtreeType subtree)
 	{
 		if (!isValidSelectionForMove(subtree))
 			return;
 		
+		List<Object> currentObject = new ArrayList<Object>();
+		List<Object> parentObject = new ArrayList<Object>();
+		
 		TreeItem[] selection = objectTree.getTreeControl().getSelection();
-		final Object currentObject = selection[0].getData();
-		final Object parentObject = selection[0].getParentItem().getData();
+		for (int i = 0; i < selection.length; i++)
+		{
+   		currentObject.add(selection[i].getData());
+   		parentObject.add(selection[i].getParentItem().getData());
+		}
 		
 		Set<Integer> filter;
 		switch(subtree)
@@ -616,12 +638,16 @@ public class ObjectBrowser extends ViewPart
 				filter = null;
 				break;
 		}
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, filter);
+		
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, filter, currentObject);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
 	      final AbstractObject target = dlg.getSelectedObjects().get(0);
-		   performObjectMove(target, parentObject, currentObject);
+	      for (int i = 0; i < selection.length; i++)
+	      {
+	         performObjectMove(target, parentObject.get(i), currentObject.get(i));
+	      }
 		}
 	}
 	

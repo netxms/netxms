@@ -194,6 +194,7 @@ public:
 	void setTimeout(int nTimeout);
 	int read(char *pBuff, int nSize); /* waits up to timeout and do single read */
 	int readAll(char *pBuff, int nSize); /* read until timeout or out of space */
+   int readToMark(char *buff, int size, const char **marks, char **occurence);
 	bool write(const char *pBuff, int nSize);
 	void flush();
 	bool set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl = FLOW_NONE);
@@ -363,6 +364,11 @@ public:
 struct StringSetEntry;
 
 /**
+ * NXCP message
+ */
+class CSCPMessage;
+
+/**
  * String set class
  */
 class LIBNETXMS_EXPORTABLE StringSet
@@ -375,14 +381,21 @@ public:
    ~StringSet();
 
    void add(const TCHAR *str);
+   void addPreallocated(TCHAR *str);
    void remove(const TCHAR *str);
    void clear();
 
    int size();
-   bool exist(const TCHAR *str);
+   bool contains(const TCHAR *str);
 
    void addAll(StringSet *src);
+   void addAll(TCHAR **strings, int count);
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
+
+   void fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId);
+   void addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
+
+   String getAll(const TCHAR *separator);
 };
 
 /**
@@ -849,8 +862,8 @@ typedef struct _dir_struc_w
 #endif
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
-int LIBNETXMS_EXPORTABLE SendEx(SOCKET, const void *, size_t, int, MUTEX);
-int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff, size_t nSize, int nFlags, UINT32 dwTimeout);
+int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
+int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout);
 #endif   /* __cplusplus */
 
 #ifdef __cplusplus
@@ -1139,7 +1152,7 @@ extern "C"
 	int wsystem(const WCHAR *_cmd);
 #endif
 #if !HAVE_WMKSTEMP
-	int wmkstemp(const WCHAR *_template);
+	int wmkstemp(WCHAR *_template);
 #endif
 #if !HAVE_WACCESS
 	int waccess(const WCHAR *_path, int mode);
@@ -1241,7 +1254,11 @@ typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);
 void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer);
 
 void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text);
-void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
+   __attribute__ ((format(printf, 1, 2)))
+#endif
+;
 
 #ifdef _WIN32
 int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl);

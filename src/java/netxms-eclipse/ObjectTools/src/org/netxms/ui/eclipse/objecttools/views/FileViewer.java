@@ -144,23 +144,23 @@ public class FileViewer extends ViewPart
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
       
-      actionClear = new Action("&Clear output", SharedIcons.CLEAR_LOG) {
+      actionClear = new Action(Messages.get().FileViewer_ClearOutput, SharedIcons.CLEAR_LOG) {
          @Override
          public void run()
          {
-            textViewer.setText("");
+            textViewer.setText(""); //$NON-NLS-1$
          }
       };
       actionClear.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.clear_output"); //$NON-NLS-1$
       handlerService.activateHandler(actionClear.getActionDefinitionId(), new ActionHandler(actionClear));
 
-      actionScrollLock = new Action("&Scroll lock", Action.AS_CHECK_BOX) { 
+      actionScrollLock = new Action(Messages.get().FileViewer_ScrollLock, Action.AS_CHECK_BOX) { 
          @Override
          public void run()
          {
          }
       };
-      actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif"));
+      actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
       actionScrollLock.setChecked(false);
       actionScrollLock.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.scroll_lock"); //$NON-NLS-1$
       handlerService.activateHandler(actionScrollLock.getActionDefinitionId(), new ActionHandler(actionScrollLock));

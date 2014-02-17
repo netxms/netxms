@@ -219,6 +219,12 @@ void MobileDeviceSession::readThread()
          continue;   // Bad packet, wait for next
       }
 
+      if (g_debugLevel >= 8)
+      {
+         String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+         debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+      }
+
       // Special handling for raw messages
       WORD wFlags = ntohs(pRawMsg->wFlags);
       if (!(wFlags & MF_BINARY))
@@ -427,6 +433,11 @@ void MobileDeviceSession::sendMessage(CSCPMessage *msg)
 
 	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
 	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
+   if (g_debugLevel >= 8)
+   {
+      String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+      debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+   }
    if (m_pCtx != NULL)
    {
       CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -636,7 +647,7 @@ void MobileDeviceSession::setupEncryption(CSCPMessage *request)
    msg.deleteAllVariables();
 
    // Wait for encryption setup
-   ConditionWait(m_condEncryptionSetup, 3000);
+   ConditionWait(m_condEncryptionSetup, 30000);
 
    // Send response
    msg.SetCode(CMD_REQUEST_COMPLETED);

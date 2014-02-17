@@ -371,8 +371,19 @@ public:
 BOOL Initialize();
 void Shutdown();
 void Main();
-void ConsolePrintf(const TCHAR *pszFormat, ...);
-void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...);
+
+void ConsolePrintf(const TCHAR *pszFormat, ...)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
+   __attribute__ ((format(printf, 1, 2)))
+#endif
+;
+
+void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
+   __attribute__ ((format(printf, 3, 4)))
+#endif
+;
+
 void DebugPrintfCallback(int level, const TCHAR *pszFormat, va_list args);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
@@ -386,7 +397,7 @@ void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const T
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
 void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *arg);
 void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description);
-BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec);
+BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);
 UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
 UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue);
 UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue);

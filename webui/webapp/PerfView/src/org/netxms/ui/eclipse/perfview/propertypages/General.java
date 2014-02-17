@@ -40,6 +40,7 @@ import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
+import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -55,10 +56,7 @@ public class General extends PropertyPage
 	private LabeledText title;
 	private Button checkShowGrid;
 	private Button checkShowLegend;
-	private Button checkAutoScale;
 	private Button checkShowHostNames;
-	private Button checkShowRuler;
-	private Button checkEnableZoom;
 	private Button checkAutoRefresh;
 	private Button checkLogScale;
 	private Scale refreshIntervalScale;
@@ -69,6 +67,7 @@ public class General extends PropertyPage
 	private Combo timeUnits;
 	private DateTimeSelector timeFrom;
 	private DateTimeSelector timeTo;
+	private YAxisRangeEditor yAxisRange;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -112,25 +111,13 @@ public class General extends PropertyPage
       checkShowGrid.setText(Messages.get().General_ShowGridLines);
       checkShowGrid.setSelection(config.isShowGrid());
 
-      checkAutoScale = new Button(optionsGroup, SWT.CHECK);
-      checkAutoScale.setText(Messages.get().General_Autoscale);
-      //checkAutoScale.setSelection(settings.isAutoScale());
-
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(Messages.get().General_ShowLegend);
       checkShowLegend.setSelection(config.isShowLegend());
 
-      checkShowRuler = new Button(optionsGroup, SWT.CHECK);
-      checkShowRuler.setText(Messages.get().General_ShowRuler);
-      checkShowRuler.setSelection(false);
-
       checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
       checkShowHostNames.setText(Messages.get().General_ShowHostNames);
       checkShowHostNames.setSelection(config.isShowHostNames());
-
-      checkEnableZoom = new Button(optionsGroup, SWT.CHECK);
-      checkEnableZoom.setText(Messages.get().General_EnableZoom);
-      checkEnableZoom.setSelection(false);
 
       checkAutoRefresh = new Button(optionsGroup, SWT.CHECK);
       checkAutoRefresh.setText(Messages.get().General_Autorefresh);
@@ -293,6 +280,14 @@ public class General extends PropertyPage
       timeTo = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.get().General_TimeTo, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeTo.setValue(config.getTimeTo());
       timeTo.setEnabled(radioFixedInterval.getSelection());
+
+      yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      yAxisRange.setLayoutData(gd);
+      yAxisRange.setSelection(config.isAutoScale(), config.getMinYScaleValue(), config.getMaxYScaleValue());
       
       return dialogArea;
 	}
@@ -308,12 +303,11 @@ public class General extends PropertyPage
 		title.setText(""); //$NON-NLS-1$
 		checkShowGrid.setSelection(true);
 		checkShowLegend.setSelection(true);
-		checkAutoScale.setSelection(true);
 		checkShowHostNames.setSelection(false);
-		checkShowRuler.setSelection(false);
-		checkEnableZoom.setSelection(true);
 		checkAutoRefresh.setSelection(true);
 		checkLogScale.setSelection(false);
+		
+		yAxisRange.setSelection(true, 0, 100);
 		
 		refreshIntervalScale.setSelection(30);
 		refreshIntervalSpinner.setSelection(30);
@@ -339,7 +333,7 @@ public class General extends PropertyPage
 		config.setTitle(title.getText());
 		config.setShowGrid(checkShowGrid.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
-		//config.setAutoScale(checkAutoScale.getSelection());
+		config.setAutoScale(yAxisRange.isAuto());
 		config.setShowHostNames(checkShowHostNames.getSelection());
 		config.setAutoRefresh(checkAutoRefresh.getSelection());
 		config.setLogScale(checkLogScale.getSelection());
@@ -350,6 +344,9 @@ public class General extends PropertyPage
 		config.setTimeRange(timeRange.getSelection());
 		config.setTimeFrom(timeFrom.getValue());
 		config.setTimeTo(timeTo.getValue());
+		
+		config.setMinYScaleValue(yAxisRange.getMinY());
+		config.setMaxYScaleValue(yAxisRange.getMaxY());
 		
 		if ((config instanceof PredefinedChartConfig) && isApply)
 		{

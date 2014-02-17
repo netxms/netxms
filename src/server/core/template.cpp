@@ -488,6 +488,10 @@ bool Template::updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNum
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
 				((DCItem *)object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
+            if (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE)
+            {
+               updateInstanceDiscoveryItems((DCItem *)object);
+            }
 			}
 			else
 			{
@@ -501,6 +505,24 @@ bool Template::updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNum
 
    unlockDciAccess();
    return success;
+}
+
+/**
+ * Update DCIs created by instance dicovery.
+ * This method expects DCI access already locked.
+ *
+ * @param dci instance discovery template DCI
+ */
+void Template::updateInstanceDiscoveryItems(DCItem *dci)
+{
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *object = m_dcObjects->get(i);
+      if ((object->getType() == DCO_TYPE_ITEM) && (object->getTemplateId() == m_dwId) && (object->getTemplateItemId() == dci->getId()))
+      {
+         object->updateFromTemplate(dci);
+      }
+	}
 }
 
 /**
@@ -683,7 +705,7 @@ DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId)
 /**
  * Get item by it's name (case-insensetive)
  */
-DCObject *Template::getDCObjectByName(const TCHAR *pszName)
+DCObject *Template::getDCObjectByName(const TCHAR *name)
 {
    DCObject *object = NULL;
 
@@ -692,7 +714,7 @@ DCObject *Template::getDCObjectByName(const TCHAR *pszName)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *curr = m_dcObjects->get(i);
-      if (!_tcsicmp(curr->getName(), pszName))
+      if (!_tcsicmp(curr->getName(), name))
 		{
 			object = curr;
          break;
@@ -705,7 +727,7 @@ DCObject *Template::getDCObjectByName(const TCHAR *pszName)
 /**
  * Get item by it's description (case-insensetive)
  */
-DCObject *Template::getDCObjectByDescription(const TCHAR *pszDescription)
+DCObject *Template::getDCObjectByDescription(const TCHAR *description)
 {
    DCObject *object = NULL;
 
@@ -714,7 +736,7 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *pszDescription)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *curr = m_dcObjects->get(i);
-      if (!_tcsicmp(curr->getDescription(), pszDescription))
+      if (!_tcsicmp(curr->getDescription(), description))
 		{
 			object = curr;
          break;
@@ -733,6 +755,26 @@ DCObject *Template::getDCObjectByIndex(int index)
 	DCObject *object = m_dcObjects->get(index);
    unlockDciAccess();
    return object;
+}
+
+/**
+ * Get all DC objects with matching name and description
+ */
+NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description)
+{
+   NXSL_Array *list = new NXSL_Array();
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *curr = m_dcObjects->get(i);
+      if (((name == NULL) || MatchString(name, curr->getName(), false)) &&
+          ((description == NULL) || MatchString(description, curr->getDescription(), false)))
+		{
+         list->set(list->size(), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, curr)));
+		}
+	}
+	unlockDciAccess();
+   return new NXSL_Value(list);
 }
 
 /**

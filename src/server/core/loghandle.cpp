@@ -99,7 +99,7 @@ void LogHandle::buildQueryColumnList()
 /**
  * Do query according to filter
  */
-bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
+bool LogHandle::query(LogFilter *filter, INT64 *rowCount, const UINT32 userId)
 {
 	deleteQueryResults();
 	delete m_filter;
@@ -122,14 +122,95 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 	if (m_maxRecordId < 0)
 		return false;
 
-	return queryInternal(rowCount);
+	return queryInternal(rowCount, userId);
+}
+
+/**
+ * Creates a SQL WHERE clause for restricting log to only objects accessible by given user.
+ */
+String LogHandle::buildObjectAccessConstraint(const UINT32 userId) 
+{
+   String constraint;
+	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
+   IntegerArray<UINT32> *allowed = new IntegerArray<UINT32>(objects->size());
+   IntegerArray<UINT32> *restricted = new IntegerArray<UINT32>(objects->size());
+	for(int i = 0; i < objects->size(); i++)
+	{
+		NetObj *object = objects->get(i);
+      if (object->isEventSource())
+      {
+		   if (object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+		   {
+            allowed->add(object->Id());
+		   }
+         else
+         {
+            restricted->add(object->Id());
+         }
+      }
+      object->decRefCount();
+	}
+   delete objects;
+
+   if (restricted->size() == 0)
+   {
+      // no restriction
+   }
+   else if (allowed->size() == 0)
+   {
+      constraint += _T("1=0");   // always false
+   }
+   else
+   {
+      IntegerArray<UINT32> *list;
+      if (allowed->size() < restricted->size())
+      {
+         list = allowed;
+      }
+      else
+      {
+         list = restricted;
+         constraint += _T("NOT (");
+      }
+
+      if (list->size() < 1000)
+      {
+         constraint.addFormattedString(_T("%s IN ("), m_log->relatedObjectIdColumn);
+         for(int i = 0; i < list->size(); i++)
+         {
+            TCHAR buffer[32];
+            _sntprintf(buffer, 32, _T("%d,"), list->get(i));
+            constraint += buffer;
+         }
+         constraint.shrink();
+         constraint += _T(")");
+      }
+      else
+      {
+         for(int i = 0; i < list->size(); i++)
+         {
+            TCHAR buffer[32];
+   			constraint.addFormattedString(_T("(%s=%d)OR"), m_log->relatedObjectIdColumn, list->get(i));
+            constraint += buffer;
+         }
+         constraint.shrink(2);
+      }
+      if (allowed->size() >= restricted->size())
+      {
+         constraint += _T(")");
+      }
+   }
+   delete allowed;
+   delete restricted;
+	return constraint;
 }
 
 /**
  * Do query with current filter and column set
  */
-bool LogHandle::queryInternal(INT64 *rowCount)
+bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 {
+	QWORD qwTimeStart = GetCurrentTimeMs();
 	String query;
 	switch(g_nDBSyntax)
 	{
@@ -164,8 +245,19 @@ bool LogHandle::queryInternal(INT64 *rowCount)
 		}
 	}
 
+	if ((userId != 0) && ConfigReadInt(_T("ExtendedLogQueryAccessControl"), 0))
+   {
+		String constraint = buildObjectAccessConstraint(userId);
+		if (!constraint.isEmpty()) 
+      {
+			query += _T(" AND (");
+			query += constraint;
+			query += _T(")");
+		}
+	}
+
 	query += m_filter->buildOrderClause();
-	
+
 	// Limit record count
 	switch(g_nDBSyntax)
 	{
@@ -192,7 +284,7 @@ bool LogHandle::queryInternal(INT64 *rowCount)
 	{
 		*rowCount = DBGetNumRows(m_resultSet);
 		ret = true;
-		DbgPrintf(4, _T("Log query successfull, %d rows fetched"), (int)(*rowCount));
+		DbgPrintf(4, _T("Log query successfull, %d rows fetched in %d ms"), (int)(*rowCount), GetCurrentTimeMs() - qwTimeStart);
 	}
 	DBConnectionPoolReleaseConnection(dbHandle);
 
@@ -222,10 +314,10 @@ Table *LogHandle::createTable()
 /**
  * Get data from query result
  */
-Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh)
+Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh, const UINT32 userId)
 {
-	DbgPrintf(4, _T("Log data request: startRow=%d, numRows=%d, refresh=%s"),
-	          (int)startRow, (int)numRows, refresh ? _T("true") : _T("false"));
+	DbgPrintf(4, _T("Log data request: startRow=%d, numRows=%d, refresh=%s, userId=%d"),
+	          (int)startRow, (int)numRows, refresh ? _T("true") : _T("false"), userId);
 
 	if (m_resultSet == NULL)
 		return createTable();	// send empty table to indicate end of data
@@ -246,7 +338,7 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh)
 				m_rowCountLimit = (newLimit - m_rowCountLimit < 1000) ? (m_rowCountLimit + 1000) : newLimit;
 			deleteQueryResults();
 			INT64 rowCount;
-			if (!queryInternal(&rowCount))
+			if (!queryInternal(&rowCount, userId))
 				return NULL;
 			resultSize = DBGetNumRows(m_resultSet);
 		}

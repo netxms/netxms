@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.11], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.12], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -739,7 +739,7 @@ case "$PLATFORM" in
       fi
       ;;
    SunOS)
-      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS"
+      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D__EXTENSIONS__"
       AC_MSG_CHECKING(whether C compiler accepts -O2)
       OLD_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS -O2"
@@ -771,6 +771,7 @@ esac
 
 if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
+	CPPFLAGS="$CPPFLAGS -Wformat"
 
 	AC_LANG_PUSH([C++])
 
@@ -2252,9 +2253,16 @@ if test "x${ENABLE_WERROR}" = "xyes"; then
 	CPPFLAGS="$CPPFLAGS -Werror"
 fi
 
-if test "x$shrext_cmds" != "x"; then
-	AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$shrext_cmds"), [Define to platform's shared library suffix])
+if test "x$PLATFORM" = "xDarwin"; then
+	SHLIB_SUFFIX=".so"
+else
+	if test "x$shrext_cmds" != "x"; then
+		SHLIB_SUFFIX="$shrext_cmds"
+	else
+		SHLIB_SUFFIX=".so"
+	fi
 fi
+AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's shared library suffix])
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
@@ -2291,7 +2299,7 @@ AC_SUBST(DB2_LIBS)
 AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(SQLFLAGS)
-AC_SUBST(SHLIB_SUFFIX, $shrext_cmds)
+AC_SUBST(SHLIB_SUFFIX)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -2361,6 +2369,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
 	src/agent/subagents/darwin/Makefile
+	src/agent/subagents/db2/Makefile
+	src/agent/subagents/dbquery/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/hpux/Makefile
@@ -2390,8 +2400,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
-   src/agent/subagents/wmi/Makefile
-   src/agent/subagents/db2/Makefile
+	src/agent/subagents/wmi/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
@@ -2522,6 +2531,8 @@ echo '                         Configure results'
 echo '---------------------------------------------------------------------'
 echo
 	echo "Prefix                  : ${prefix}"
+	echo "Platform                : ${PLATFORM}"
+	echo "Shared library suffix   : ${SHLIB_SUFFIX}"
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"

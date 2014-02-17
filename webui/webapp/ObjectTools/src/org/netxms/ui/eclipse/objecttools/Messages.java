@@ -41,8 +41,10 @@ public class Messages extends NLS
    public String EditColumnDialog_SubstrIndex;
    public String EditColumnDialog_Warning;
    public String FileViewer_Cannot_Stop_File_Monitoring;
+   public String FileViewer_ClearOutput;
    public String FileViewer_Download_File_Updates;
    public String FileViewer_InvalidObjectID;
+   public String FileViewer_ScrollLock;
    public String FileViewer_Stop_File_Monitoring;
    public String Filter_AgentNeeded;
    public String Filter_OIDShouldMatch;
@@ -52,9 +54,13 @@ public class Messages extends NLS
    public String General_Confirmation;
    public String General_ConfirmationMessage;
    public String General_Description;
+   public String General_DisableObjectToll;
    public String General_ExecOptions;
+   public String General_FileOptions;
    public String General_FirstColumnValue;
+   public String General_FollowFileChanges;
    public String General_GeneratesOutput;
+   public String General_LimitDownloadFileSizeLable;
    public String General_Name;
    public String General_OIDSuffix;
    public String General_Operation;
@@ -94,6 +100,8 @@ public class Messages extends NLS
    public String ObjectToolsDynamicMenu_ServerCommandExecuted;
    public String ObjectToolsDynamicMenu_ToolExecution;
    public String ObjectToolsDynamicMenu_TopLevelLabel;
+   public String ObjectToolsEditor_AckToDisableObjectTool;
+   public String ObjectToolsEditor_AckToEnableObjTool;
    public String ObjectToolsEditor_ColDescr;
    public String ObjectToolsEditor_ColId;
    public String ObjectToolsEditor_ColName;
@@ -101,6 +109,12 @@ public class Messages extends NLS
    public String ObjectToolsEditor_Confirmation;
    public String ObjectToolsEditor_Delete;
    public String ObjectToolsEditor_DeleteConfirmation;
+   public String ObjectToolsEditor_Disable;
+   public String ObjectToolsEditor_DisableObjTool;
+   public String ObjectToolsEditor_Enable;
+   public String ObjectToolsEditor_EnableObjTool;
+   public String ObjectToolsEditor_ErrorDisablingObjectTools;
+   public String ObjectToolsEditor_ErrorDisablingObjTools;
    public String ObjectToolsEditor_JobDelete;
    public String ObjectToolsEditor_JobDeleteError;
    public String ObjectToolsEditor_JobGetConfig;

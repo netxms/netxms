@@ -376,7 +376,7 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
 		return true;
 
 	// *** SNMP ***
-	SNMP_Transport *pTransport;
+	SNMP_Transport *pTransport = NULL;
 	if (snmpProxy != 0)
 	{
 		Node *proxyNode = (Node *)g_idxNodeById.get(snmpProxy);
@@ -396,24 +396,27 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
 		pTransport = new SNMP_UDPTransport;
 		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(ipAddr), 161);
 	}
-	int version;
-   StringList oids;
-   oids.add(_T(".1.3.6.1.2.1.1.2.0"));
-   oids.add(_T(".1.3.6.1.2.1.1.1.0"));
-   AddDriverSpecificOids(&oids);
-   SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL, &oids);
-	if (ctx != NULL)
-	{
-		delete ctx;
-		if (transport != NULL)
-		{
-			pTransport->setSnmpVersion(version);
-			*transport = pTransport;
-			pTransport = NULL;	// prevent deletion
-		}
-		reachable = true;
-	}
-	delete pTransport;
+   if (pTransport != NULL)
+   {
+	   int version;
+      StringList oids;
+      oids.add(_T(".1.3.6.1.2.1.1.2.0"));
+      oids.add(_T(".1.3.6.1.2.1.1.1.0"));
+      AddDriverSpecificOids(&oids);
+      SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL, &oids);
+	   if (ctx != NULL)
+	   {
+		   delete ctx;
+		   if (transport != NULL)
+		   {
+			   pTransport->setSnmpVersion(version);
+			   *transport = pTransport;
+			   pTransport = NULL;	// prevent deletion
+		   }
+		   reachable = true;
+	   }
+	   delete pTransport;
+   }
 
 	return reachable;
 }
@@ -439,6 +442,12 @@ static BOOL AcceptNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 zoneId, BYTE
 		DbgPrintf(4, _T("AcceptNewNode(%s): node already exist in database"), szIpAddr);
       return FALSE;  // Node already exist in database
 	}
+
+   if (!memcmp(macAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))
+   {
+		DbgPrintf(4, _T("AcceptNewNode(%s): broadcast MAC address"), szIpAddr);
+      return FALSE;  // Broadcast MAC
+   }
 
 	Interface *iface = GetOldNodeWithNewIP(dwIpAddr, dwNetMask, zoneId, macAddr);
 	if (iface != NULL)

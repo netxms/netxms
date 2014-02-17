@@ -126,6 +126,17 @@ cat netxms-server-mysql.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERS
 cp /usr/lib/netxms/dbdrv/mysql.ddr netxms-server-mysql/usr/lib/netxms/dbdrv/
 cp -P /usr/lib/libnxddr_mysql.so* netxms-server-mysql/usr/lib/
 
+# netxms-server-oracle
+mkdir netxms-server-oracle
+mkdir netxms-server-oracle/DEBIAN
+mkdir netxms-server-oracle/usr
+mkdir netxms-server-oracle/usr/lib
+mkdir netxms-server-oracle/usr/lib/netxms
+mkdir netxms-server-oracle/usr/lib/netxms/dbdrv
+cat netxms-server-oracle.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-server-oracle/DEBIAN/control
+cp /usr/lib/netxms/dbdrv/oracle.ddr netxms-server-oracle/usr/lib/netxms/dbdrv/
+cp -P /usr/lib/libnxddr_oracle.so* netxms-server-oracle/usr/lib/
+
 # netxms-server-odbc
 mkdir netxms-server-odbc
 mkdir netxms-server-odbc/DEBIAN

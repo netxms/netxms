@@ -24,11 +24,9 @@
 #include "winnt_subagent.h"
 #include <winternl.h>
 
-
-//
-// Convert process time from FILETIME structure (100-nanosecond units) to __uint64 (milliseconds)
-//
-
+/**
+ * Convert process time from FILETIME structure (100-nanosecond units) to __uint64 (milliseconds)
+ */
 static unsigned __int64 ConvertProcessTime(FILETIME *lpft)
 {
    unsigned __int64 i;
@@ -265,7 +263,7 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 
 		if (pszCmdLine[0] != 0)		// not empty, check if match
 		{
-			memset(commandLine, 0, MAX_PATH);	
+			memset(commandLine, 0, sizeof(commandLine));	
 			GetProcessCommandLine(pid, commandLine, MAX_PATH);
 			bCmdMatch = RegexpMatch(commandLine, pszCmdLine, FALSE);
 		}

@@ -30,11 +30,9 @@
 static ACTION *m_pActionList = NULL;
 static UINT32 m_dwNumActions = 0;
 
-
-//
-// Add action
-// 
-
+/**
+ * Add action
+ */ 
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg, 
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription)
@@ -44,37 +42,60 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
    // Check if action with given name already registered
    for(i = 0; i < m_dwNumActions; i++)
       if (!_tcsicmp(m_pActionList[i].szName, pszName))
-         return FALSE;
+         break;
 
-   // Create new entry in action list
-   m_dwNumActions++;
-   m_pActionList = (ACTION *)realloc(m_pActionList, sizeof(ACTION) * m_dwNumActions);
-   nx_strncpy(m_pActionList[i].szName, pszName, MAX_PARAM_NAME);
-   m_pActionList[i].iType = iType;
-   nx_strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
-   switch(iType)
+   if (i == m_dwNumActions)
    {
-      case AGENT_ACTION_EXEC:
-      case AGENT_ACTION_SHELLEXEC:
-         m_pActionList[i].handler.pszCmdLine = _tcsdup(pArg);
-         break;
-      case AGENT_ACTION_SUBAGENT:
-         m_pActionList[i].handler.sa.fpHandler = fpHandler;
-         m_pActionList[i].handler.sa.pArg = pArg;
-         nx_strncpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
-         break;
-      default:
-         break;
+      // Create new entry in action list
+      m_dwNumActions++;
+      m_pActionList = (ACTION *)realloc(m_pActionList, sizeof(ACTION) * m_dwNumActions);
+      nx_strncpy(m_pActionList[i].szName, pszName, MAX_PARAM_NAME);
+      m_pActionList[i].iType = iType;
+      nx_strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
+      switch(iType)
+      {
+         case AGENT_ACTION_EXEC:
+         case AGENT_ACTION_SHELLEXEC:
+            m_pActionList[i].handler.pszCmdLine = _tcsdup(pArg);
+            break;
+         case AGENT_ACTION_SUBAGENT:
+            m_pActionList[i].handler.sa.fpHandler = fpHandler;
+            m_pActionList[i].handler.sa.pArg = pArg;
+            nx_strncpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
+            break;
+         default:
+            break;
+      }
+   }
+   else
+   {
+      // Update existing entry in action list
+      nx_strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
+      if ((m_pActionList[i].iType == AGENT_ACTION_EXEC) || (m_pActionList[i].iType == AGENT_ACTION_SHELLEXEC))
+         safe_free(m_pActionList[i].handler.pszCmdLine);
+      m_pActionList[i].iType = iType;
+      switch(iType)
+      {
+         case AGENT_ACTION_EXEC:
+         case AGENT_ACTION_SHELLEXEC:
+            m_pActionList[i].handler.pszCmdLine = _tcsdup(pArg);
+            break;
+         case AGENT_ACTION_SUBAGENT:
+            m_pActionList[i].handler.sa.fpHandler = fpHandler;
+            m_pActionList[i].handler.sa.pArg = pArg;
+            nx_strncpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
+            break;
+         default:
+            break;
+      }
    }
    return TRUE;
 }
 
-
-//
-// Add action from config record
-// Accepts string of format <action_name>:<command_line>
-// 
-
+/**
+ * Add action from config record
+ * Accepts string of format <action_name>:<command_line>
+ */ 
 BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec) //to be TCHAR
 {
    TCHAR *pCmdLine;

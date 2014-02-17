@@ -577,6 +577,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    
    // Check if some thresholds was deleted, and reposition others if needed
    Threshold **ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
+   memset(ppNewList, 0, sizeof(Threshold *) * dwNum);
    for(int i = 0; i < getThresholdCount(); i++)
    {
 		UINT32 j;
@@ -609,7 +610,8 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
          (*ppdwMapId)[*pdwNumMaps] = ppNewList[i]->getId();
          (*pdwNumMaps)++;
       }
-      ppNewList[i]->updateFromMessage(pMsg, dwId);
+      if (ppNewList[i] != NULL)
+         ppNewList[i]->updateFromMessage(pMsg, dwId);
    }
 
 	if (dwNum > 0)
@@ -625,7 +627,10 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 			m_thresholds = new ObjectArray<Threshold>((int)dwNum, 8, true);
 		}
 		for(UINT32 i = 0; i < dwNum; i++)
-			m_thresholds->add(ppNewList[i]);
+      {
+         if (ppNewList[i] != NULL)
+			   m_thresholds->add(ppNewList[i]);
+      }
 	}
 	else
 	{
@@ -990,7 +995,9 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
          m_ppValueCache[i] = NULL;
 
       // Load missing values from database
-      if (m_pNode != NULL)
+      // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
+      // to reduce load on database at server startup
+      if ((m_pNode != NULL) && ((dwRequiredSize - m_dwCacheSize) * m_iPollingInterval > 300))
       {
          TCHAR szBuffer[MAX_DB_STRING];
          BOOL bHasData;
@@ -1062,6 +1069,13 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
          }
 			DBConnectionPoolReleaseConnection(hdb);
+      }
+      else
+      {
+         // will not read data from database, fill cache with empty values
+         for(UINT32 i = m_dwCacheSize; i < dwRequiredSize; i++)
+            m_ppValueCache[i] = new ItemValue(_T(""), 1);
+         DbgPrintf(7, _T("Cache load skipped for parameter %s [%d]"), m_szName, (int)m_dwId);
       }
       m_dwCacheSize = dwRequiredSize;
    }
@@ -1237,8 +1251,10 @@ bool DCItem::deleteAllData()
 	bool success;
 
    lock();
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->Id(), m_dwId);
-	success = DBQuery(g_hCoreDB, szQuery) ? true : false;
+	success = DBQuery(hdb, szQuery) ? true : false;
+   DBConnectionPoolReleaseConnection(hdb);
 	clearCache();
 	updateCacheSize();
    unlock();
@@ -1294,10 +1310,22 @@ void DCItem::updateFromTemplate(DCObject *src)
 		m_thresholds->add(t);
    }
 
-   expandMacros(item->m_instance, m_instance, MAX_DB_STRING);
+   if ((item->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE))
+   {
+      expandInstance();
+   }
+   else
+   {
+      expandMacros(item->m_instance, m_instance, MAX_DB_STRING);
+      m_instanceDiscoveryMethod = item->m_instanceDiscoveryMethod;
+      safe_free(m_instanceDiscoveryData);
+	   m_instanceDiscoveryData = (item->m_instanceDiscoveryData != NULL) ? _tcsdup(item->m_instanceDiscoveryData) : NULL;
+      safe_free_and_null(m_instanceFilterSource);
+      delete_and_null(m_instanceFilter);
+      setInstanceFilter(item->m_instanceFilterSource);
+   }
 
    updateCacheSize();
-   
    unlock();
 }
 

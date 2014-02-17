@@ -401,29 +401,31 @@ enum
 /**
  * Notification codes
  */
-#define NX_NOTIFY_SHUTDOWN             1
-#define NX_NOTIFY_EVENTDB_CHANGED      2
-#define NX_NOTIFY_ALARM_DELETED        3
-#define NX_NOTIFY_NEW_ALARM            4
-#define NX_NOTIFY_ALARM_CHANGED        5
-#define NX_NOTIFY_ACTION_CREATED       6
-#define NX_NOTIFY_ACTION_MODIFIED      7
-#define NX_NOTIFY_ACTION_DELETED       8
-#define NX_NOTIFY_OBJTOOLS_CHANGED     9
-#define NX_NOTIFY_DBCONN_STATUS        10
-#define NX_NOTIFY_ALARM_TERMINATED     11
-#define NX_NOTIFY_GRAPHS_CHANGED       12
-#define NX_NOTIFY_ETMPL_CHANGED        13
-#define NX_NOTIFY_ETMPL_DELETED        14
-#define NX_NOTIFY_OBJTOOL_DELETED      15
-#define NX_NOTIFY_TRAPCFG_CREATED      16
-#define NX_NOTIFY_TRAPCFG_MODIFIED     17
-#define NX_NOTIFY_TRAPCFG_DELETED      18
-#define NX_NOTIFY_MAPTBL_CHANGED       19
-#define NX_NOTIFY_MAPTBL_DELETED       20
-#define NX_NOTIFY_DCISUMTBL_CHANGED    21
-#define NX_NOTIFY_DCISUMTBL_DELETED    22
-#define NX_NOTIFY_CERTIFICATE_CHANGED  23
+#define NX_NOTIFY_SHUTDOWN                   1
+#define NX_NOTIFY_EVENTDB_CHANGED            2
+#define NX_NOTIFY_ALARM_DELETED              3
+#define NX_NOTIFY_NEW_ALARM                  4
+#define NX_NOTIFY_ALARM_CHANGED              5
+#define NX_NOTIFY_ACTION_CREATED             6
+#define NX_NOTIFY_ACTION_MODIFIED            7
+#define NX_NOTIFY_ACTION_DELETED             8
+#define NX_NOTIFY_OBJTOOLS_CHANGED           9
+#define NX_NOTIFY_DBCONN_STATUS              10
+#define NX_NOTIFY_ALARM_TERMINATED           11
+#define NX_NOTIFY_GRAPHS_CHANGED             12
+#define NX_NOTIFY_ETMPL_CHANGED              13
+#define NX_NOTIFY_ETMPL_DELETED              14
+#define NX_NOTIFY_OBJTOOL_DELETED            15
+#define NX_NOTIFY_TRAPCFG_CREATED            16
+#define NX_NOTIFY_TRAPCFG_MODIFIED           17
+#define NX_NOTIFY_TRAPCFG_DELETED            18
+#define NX_NOTIFY_MAPTBL_CHANGED             19
+#define NX_NOTIFY_MAPTBL_DELETED             20
+#define NX_NOTIFY_DCISUMTBL_CHANGED          21
+#define NX_NOTIFY_DCISUMTBL_DELETED          22
+#define NX_NOTIFY_CERTIFICATE_CHANGED        23
+#define NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED  24
+#define NX_NOTIFY_FILE_LIST_CHANGED          25
 
 /**
  * Request completion codes
@@ -623,6 +625,7 @@ enum
 #define SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS 0x01000000
 #define SYSTEM_ACCESS_REPORTING_SERVER    0x02000000
 #define SYSTEM_ACCESS_XMPP_COMMANDS       0x04000000
+#define SYSTEM_ACCESS_MANAGE_IMAGE_LIB    0x08000000
 
 #define SYSTEM_ACCESS_FULL                0x07FFFFFF
 
@@ -681,6 +684,7 @@ enum
 #define USER_MODIFY_TEMP_DISABLE       0x00000200
 #define USER_MODIFY_CUSTOM_ATTRIBUTES  0x00000400
 #define USER_MODIFY_XMPP_ID            0x00000800
+#define USER_MODIFY_GROUP_MEMBERSHIP   0x00001000
 
 /**
  * User certificate mapping methods
@@ -1028,6 +1032,7 @@ typedef struct
    TCHAR szHelpDeskRef[MAX_HELPDESK_REF_LEN];
    void *pUserData;        // Can be freely used by client application
 	UINT32 noteCount;        // Number of notes added to alarm
+   UINT32 ackTimeout;  // Sticky acknowledgment end time. If acknowladgmant without timeout put 0
 } NXC_ALARM;
 
 /**

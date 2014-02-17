@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -484,6 +484,10 @@ typedef struct
 #define CMD_GET_SUBNET_ADDRESS_MAP     0x011C
 #define CMD_FILE_MONITORING            0x011D
 #define CMD_CANCEL_FILE_MONITORING     0x011E
+#define CMD_CHANGE_OBJECT_TOOL_STATUS  0x011F
+#define CMD_SET_ALARM_STATUS_FLOW      0x0120
+#define CMD_DELETE_ALARM_NOTE          0x0121
+#define CMD_GET_EFFECTIVE_RIGHTS       0x0122
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -842,7 +846,7 @@ typedef struct
 #define VID_NUM_ORDERING_COLUMNS    ((UINT32)345)
 #define VID_SYSTEM_TAG              ((UINT32)346)
 #define VID_NUM_ENUMS               ((UINT32)347)
-#define VID_NUM_PUSH_PARAMETERS     ((UINT32)348) 
+#define VID_NUM_PUSH_PARAMETERS     ((UINT32)348)
 #define VID_OLD_PASSWORD            ((UINT32)349)
 #define VID_MIN_PASSWORD_LENGTH     ((UINT32)350)
 #define VID_LAST_LOGIN              ((UINT32)351)
@@ -955,6 +959,9 @@ typedef struct
 #define VID_FILE_SIZE_LIMIT         ((UINT32)458)
 #define VID_FILE_FOLLOW             ((UINT32)459)
 #define VID_FILE_DATA               ((UINT32)460)
+#define VID_ALARM_STATUS_FLOW_STATE ((UINT32)461)
+#define VID_GROUPS                  ((UINT32)462)
+#define VID_EFFECTIVE_RIGHTS        ((UINT32)463)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -64,6 +64,8 @@ public class NXCNotification extends SessionNotification
 	public static final int DCI_SUMMARY_TABLE_UPDATED = 1021;
 	public static final int DCI_SUMMARY_TABLE_DELETED = 1022;
 	public static final int DCI_CERTIFICATE_CHANGED = 1023;
+	public static final int ALARM_STATUS_FLOW_CHANGED = 1024;
+	public static final int FILE_LIST_CHANGED = 1025;
 
 	public static final int OBJECT_SYNC_COMPLETED = 2001;
 	

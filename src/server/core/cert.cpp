@@ -110,7 +110,7 @@ static BOOL CheckCommonName(X509 *cert, const TCHAR *cn)
       return FALSE;
 
    unsigned char *utf8CertCN;
-   int length = ASN1_STRING_to_UTF8(&utf8CertCN, data);
+   ASN1_STRING_to_UTF8(&utf8CertCN, data);
 #ifdef UNICODE
    DbgPrintf(3, _T("Certificate CN=\"%hs\", user CN=\"%s\""), utf8CertCN, cn);
    char *utf8UserCN = UTF8StringFromWideString(cn);

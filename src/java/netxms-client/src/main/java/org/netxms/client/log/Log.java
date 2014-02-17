@@ -118,7 +118,7 @@ public class Log
 		msg.setVariableInt32(NXCPCodes.VID_LOG_HANDLE, handle);
 		filter.fillMessage(msg);
 		session.sendMessage(msg);
-		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
+		final NXCPMessage response = session.waitForRCC(msg.getMessageId(), 1800000);
 		numRecords = response.getVariableAsInt64(NXCPCodes.VID_NUM_ROWS);
 	}
 	
@@ -154,7 +154,7 @@ public class Log
 		msg.setVariableInt64(NXCPCodes.VID_NUM_ROWS, rowCount);
 		msg.setVariableInt16(NXCPCodes.VID_FORCE_RELOAD, refresh ? 1 : 0);
 		session.sendMessage(msg);
-		session.waitForRCC(msg.getMessageId());
+		session.waitForRCC(msg.getMessageId(), 1800000);
 		return session.receiveTable(msg.getMessageId(), NXCPCodes.CMD_LOG_DATA);
 	}
 

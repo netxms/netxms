@@ -5,7 +5,9 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.filemanager.messages"; //$NON-NLS-1$
-	public static String LocalFileSelector_AllFiles;
+	public static String GetServerFileList_ErrorMessageFileView;
+   public static String GetServerFileList_ErrorMessageFileViewTitle;
+   public static String LocalFileSelector_AllFiles;
 	public static String LocalFileSelector_None;
 	public static String LocalFileSelector_SelectFile;
 	public static String LocalFileSelector_Tooltip;
@@ -35,7 +37,18 @@ public class Messages extends NLS
 	public static String UploadFileToServer_JobError;
 	public static String UploadFileToServer_JobTitle;
 	public static String UploadFileToServer_TaskNamePrefix;
-	static
+	public static String ViewServerFile_DeletAck;
+   public static String ViewServerFile_DeleteConfirmation;
+   public static String ViewServerFile_DeleteFileOnServerAction;
+   public static String ViewServerFile_DeletFileFromServerJob;
+   public static String ViewServerFile_ErrorDeleteFileJob;
+   public static String ViewServerFile_FileName;
+   public static String ViewServerFile_FileSize;
+   public static String ViewServerFile_FileType;
+   public static String ViewServerFile_ModificationDate;
+   public static String ViewServerFile_ShowFilterAction;
+   public static String ViewServerFile_UploadFileOnServerAction;
+   static
 	{
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

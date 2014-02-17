@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2005, 2006 Alex Kirhenshtein
+** Copyright (C) 2005-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -50,7 +50,7 @@
  */
 Serial::Serial()
 {
-	m_nTimeout = 0;
+	m_nTimeout = 5000;
 	m_hPort = INVALID_HANDLE_VALUE;
 	m_pszPort = NULL;
 #ifndef _WIN32
@@ -147,7 +147,7 @@ bool Serial::set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 	tcgetattr(m_hPort, &newTio);
 		
 	newTio.c_cc[VMIN] = 1;
-	newTio.c_cc[VTIME] = m_nTimeout;
+	newTio.c_cc[VTIME] = m_nTimeout / 100; // convert to deciseconds (VTIME in 1/10sec)
 		
 	newTio.c_cflag |= CLOCAL | CREAD;
 		
@@ -169,7 +169,29 @@ bool Serial::set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 		case 9600:   baud = B9600;   break;
 		case 19200:  baud = B19200;  break;
 		case 38400:  baud = B38400;  break;
-		default:     baud = B38400;  break;
+#ifdef B57600
+		case 57600:  baud = B57600;  break;
+#endif
+#ifdef B115200
+		case 115200: baud = B115200;  break;
+#endif
+#ifdef B230400
+		case 230400: baud = B230400;  break;
+#endif
+#ifdef B460800
+		case 460800: baud = B460800;  break;
+#endif
+#ifdef B500000
+		case 500000: baud = B500000;  break;
+#endif
+#ifdef B576000
+		case 576000: baud = B576000;  break;
+#endif
+#ifdef B921600
+		case 921600: baud = B921600;  break;
+#endif
+		default:     
+         return false;  // wrong/unsupported speed
 	}
 #ifdef _NETWARE
 	cfsetispeed(&newTio, (speed_t)baud);
@@ -234,7 +256,7 @@ bool Serial::set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 			break;
 	}
 		
-	tcsetattr(m_hPort, TCSANOW, &newTio);
+	bRet = (tcsetattr(m_hPort, TCSANOW, &newTio) == 0);
 		
 #endif // _WIN32
 	return bRet;
@@ -276,11 +298,11 @@ void Serial::setTimeout(int nTimeout)
 	struct termios tio;
 	
 	tcgetattr(m_hPort, &tio);
+
+	m_nTimeout = nTimeout;
+	tio.c_cc[VTIME] = nTimeout / 100; // convert to deciseconds (VTIME in 1/10sec)
 	
-	m_nTimeout = nTimeout / 100; // convert to deciseconds (VTIME in 1/10sec)
-	tio.c_cc[VTIME] = m_nTimeout;
-	
-	tcsetattr(m_hPort, TCSANOW, &tio);
+   tcsetattr(m_hPort, TCSANOW, &tio);
 #endif // WIN32
 }
 
@@ -297,12 +319,20 @@ bool Serial::restart()
 	
 	TCHAR *temp = m_pszPort;
 	m_pszPort = NULL;	// to prevent desctruction by open()
-	if (open(m_pszPort))
-		if (set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
+   int speed = m_nSpeed;
+   int dataBits = m_nDataBits;
+   int parity = m_nParity;
+   int stopBits = m_nStopBits;
+   int flowControl = m_nFlowControl;
+	if (open(temp))
+   {
+		if (set(speed, dataBits, parity, stopBits, flowControl))
 		{
+         setTimeout(m_nTimeout);
 			free(temp);
 			return true;
 		}
+   }
 	free(temp);
 	return false;
 }
@@ -336,7 +366,7 @@ int Serial::read(char *pBuff, int nSize)
 	
 	FD_ZERO(&rdfs);
 	FD_SET(m_hPort, &rdfs);
-	tv.tv_sec = m_nTimeout / 10;
+	tv.tv_sec = m_nTimeout / 1000;  // Timeout is in milliseconds
 	tv.tv_usec = 0;
 	nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
 	if (nRet > 0)
@@ -346,9 +376,6 @@ int Serial::read(char *pBuff, int nSize)
 	
 #endif // _WIN32
 	
-	//if (nRet == -1)
-	//   Restart();
-	
 	return nRet;
 }
 
@@ -357,12 +384,12 @@ int Serial::read(char *pBuff, int nSize)
  */
 int Serial::readAll(char *pBuff, int nSize)
 {
-	int nRet;
-	
 	memset(pBuff, 0, nSize);
 	if (m_hPort == INVALID_HANDLE_VALUE)
 		return -1;
 	
+	int nRet = -1;
+
 #ifdef _WIN32
 	DWORD dwBytes;
 
@@ -370,11 +397,6 @@ int Serial::readAll(char *pBuff, int nSize)
 	{
 		nRet = (int)dwBytes;
 	}
-	else
-	{
-		nRet = -1;
-	}
-	
 #else // UNIX
 	fd_set rdfs;
 	struct timeval tv;
@@ -386,7 +408,7 @@ int Serial::readAll(char *pBuff, int nSize)
 	{
 		FD_ZERO(&rdfs);
 		FD_SET(m_hPort, &rdfs);
-		tv.tv_sec = m_nTimeout / 10;
+		tv.tv_sec = m_nTimeout / 1000;  // timeout is in milliseconds
 		tv.tv_usec = 0;
 		nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
 		if (nRet > 0)
@@ -415,10 +437,40 @@ int Serial::readAll(char *pBuff, int nSize)
 	
 #endif // _WIN32
 	
-	//if (nRet == -1)
-	//   Restart();
-	
 	return nRet;
+}
+
+/**
+ * Read data up to one of given marks
+ */
+int Serial::readToMark(char *buffer, int size, const char **marks, char **occurence)
+{
+   char *curr = buffer;
+   int sizeLeft = size - 1;
+   int totalBytesRead = 0;
+   *occurence = NULL;
+
+   while(sizeLeft > 0)
+   {
+      int bytesRead = read(curr, sizeLeft);
+      if (bytesRead <= 0)
+         return bytesRead;
+
+      totalBytesRead += bytesRead;
+      curr += bytesRead;
+      sizeLeft -= bytesRead;
+      *curr = 0;
+      for(int i = 0; marks[i] != NULL; i++)
+      {
+         char *mark = strstr(buffer, marks[i]);
+         if (mark != NULL)
+         {
+            *occurence = mark;
+            return totalBytesRead;
+         }
+      }
+   }
+   return totalBytesRead;
 }
 
 /**
@@ -431,9 +483,9 @@ bool Serial::write(const char *pBuff, int nSize)
 	if (m_hPort == INVALID_HANDLE_VALUE)
 		return false;
 	
+   ThreadSleepMs(100);
+
 #ifdef _WIN32
-	
-	Sleep(100);
 	
 	DWORD nDone;
 	if (WriteFile(m_hPort, pBuff, nSize, &nDone, NULL) != 0)
@@ -449,7 +501,6 @@ bool Serial::write(const char *pBuff, int nSize)
 	}
 	
 #else // UNIX
-	usleep(100);
 	
 	if (::write(m_hPort, (char *)pBuff, nSize) == nSize)
 	{

@@ -27,6 +27,7 @@ import org.swtchart.internal.Legend;
 import org.swtchart.internal.PlotArea;
 import org.swtchart.internal.Title;
 import org.swtchart.internal.axis.AxisSet;
+import org.swtchart.internal.series.SeriesSet;
 
 /**
  * A chart which are composed of title, legend, axes and plot area.
@@ -136,6 +137,14 @@ public class Chart extends Composite implements Listener
 	public ISeriesSet getSeriesSet()
 	{
 		return plotArea.getSeriesSet();
+	}
+	
+	/**
+	 * Update stack and riser data
+	 */
+	protected void updateStackAndRiserData()
+	{
+	   ((SeriesSet)plotArea.getSeriesSet()).updateStackAndRiserData();
 	}
 
 	/*

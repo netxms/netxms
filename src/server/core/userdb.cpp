@@ -53,7 +53,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 	DbgPrintf(2, _T("User account status update thread started"));
 	while(!SleepAndCheckForShutdown(60))
 	{
-		DbgPrintf(5, _T("AccountStatusUpdater: wakeup"));
+		DbgPrintf(8, _T("AccountStatusUpdater: wakeup"));
 
 		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
 
@@ -70,14 +70,14 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 			{
 				// Re-enable temporary disabled user
 				user->enable();
-				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, _T(""), 0, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), _T(""), 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
 				DbgPrintf(3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
 			if (!user->isDisabled() && (blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
 			{
 				user->disable();
-				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, _T(""), 0, _T("User account \"%s\" disabled due to inactivity"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), _T(""), 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());
 				DbgPrintf(3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
@@ -226,6 +226,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
 			 (!m_users[i]->isDeleted()))
       {
 			User *user = (User *)m_users[i];
+         *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
 			// Determine authentication method to use
          if (!ssoAuth)
@@ -352,7 +353,6 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
                {
 				      *pbChangePasswd = false;
                }
-               *pdwId = user->getId();
                *pdwSystemRights = user->getSystemRights();
 					user->updateLastLogin();
                dwResult = RCC_SUCCESS;
@@ -396,13 +396,66 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId)
 
    MutexLock(m_mutexUserDatabaseAccess);
    for(int i = 0; i < m_userCount; i++)
+   {
 		if (m_users[i]->getId() == dwGroupId)
 		{
 			result = ((Group *)m_users[i])->isMember(dwUserId);
 			break;
 		}
+   }
    MutexUnlock(m_mutexUserDatabaseAccess);
    return result;
+}
+
+/**
+ * Fill message with group membership information for given user.
+ * Access to user database must be locked.
+ */
+void FillGroupMembershipInfo(CSCPMessage *msg, UINT32 userId)
+{
+   UINT32 *list = (UINT32 *)malloc(sizeof(UINT32) * m_userCount);
+   UINT32 count = 0;
+   for(int i = 0; i < m_userCount; i++)
+   {
+		if ((m_users[i]->getId() & GROUP_FLAG) && (m_users[i]->getId() != GROUP_EVERYONE) && ((Group *)m_users[i])->isMember(userId))
+		{
+         list[count++] = m_users[i]->getId();
+		}
+   }
+   msg->SetVariable(VID_NUM_GROUPS, count);
+   if (count > 0)
+      msg->SetVariableToInt32Array(VID_GROUPS, count, list);
+   free(list);
+}
+
+/**
+ * Update group membership for user
+ */
+void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
+{
+   for(int i = 0; i < m_userCount; i++)
+   {
+		if ((m_users[i]->getId() & GROUP_FLAG) && (m_users[i]->getId() != GROUP_EVERYONE))
+		{
+         bool found = false;
+         for(int j = 0; j < numGroups; j++)
+         {
+            if (m_users[i]->getId() == groups[j])
+            {
+               found = true;
+               break;
+            }
+         }
+         if (found)
+         {
+            ((Group *)m_users[i])->addUser(userId);
+         }
+         else
+         {
+            ((Group *)m_users[i])->deleteUser(userId);
+         }
+		}
+   }
 }
 
 /**
@@ -571,6 +624,22 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
 }
 
 /**
+ * Send user DB update for given user ID.
+ * Access to suer database must be already locked.
+ */
+void SendUserDBUpdate(int code, UINT32 id)
+{
+   for(int i = 0; i < m_userCount; i++)
+   {
+      if (m_users[i]->getId() == id)
+      {
+         SendUserDBUpdate(code, id, m_users[i]);
+         break;
+      }
+   }
+}
+
+/**
  * Check if string contains subsequence of given sequence
  */
 static bool IsStringContainsSubsequence(const TCHAR *str, const TCHAR *sequence, int len)
@@ -703,7 +772,7 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 					{
 						BYTE newPasswdHash[SHA1_DIGEST_SIZE];
 #ifdef UNICODE
-						char *mb = MBStringFromWideString(newPassword);
+						char *mb = UTF8StringFromWideString(newPassword);
 						CalculateSHA1Hash((BYTE *)mb, strlen(mb), newPasswdHash);
 						free(mb);
 #else

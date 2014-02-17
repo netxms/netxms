@@ -146,7 +146,7 @@ public class PredefinedGraph extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(PredefinedGraph.this.getShell(), true);
+				SelectUserDialog dlg = new SelectUserDialog(PredefinedGraph.this.getShell(), AbstractUserObject.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();

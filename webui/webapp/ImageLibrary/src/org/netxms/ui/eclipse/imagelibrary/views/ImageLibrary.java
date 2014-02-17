@@ -243,6 +243,14 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 	}
 
+ 	protected void verifyImageFile(String fileName)
+ 	{
+ 		if (fileName != null)
+ 		{
+ 			new Image(getSite().getShell().getDisplay(), fileName);
+ 		}
+ 	}
+
 	/**
 	 * @param galleryItem
 	 * @param name
@@ -257,6 +265,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
+				verifyImageFile(fileName);
 				if (fileName != null)
 				{
 					FileInputStream stream = null;
@@ -323,6 +332,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
+				verifyImageFile(fileName);
+
 				final LibraryImage image = new LibraryImage();
 
 				final long fileSize = new File(fileName).length();

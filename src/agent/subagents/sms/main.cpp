@@ -1,6 +1,6 @@
 /*
-** NetXMS SMS sender subagent
-** Copyright (C) 2007-2012 Victor Kirhenshtein
+** NetXMS SMS sending subagent
+** Copyright (C) 2006-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,36 +22,28 @@
 
 #include "sms.h"
 
-
-//
-// Global variables
-//
-
+/**
+ * Model of attacjed modem
+ */
 TCHAR g_szDeviceModel[256] = _T("<unknown>");
 
-
-//
-// Static variables
-//
-
+/**
+ * Port name
+ */
 static TCHAR m_szDevice[MAX_PATH];
 
-
-//
-// Handler for SMS.SerialConfig and SMS.DeviceModel
-//
-
+/**
+ * Handler for SMS.SerialConfig and SMS.DeviceModel
+ */
 static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	ret_string(pValue, pArg);
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for SMS.Send action
-//
-
+/**
+ * Handler for SMS.Send action
+ */
 static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pData)
 {
 	if (pArgs->getSize() < 2)
@@ -69,11 +61,9 @@ static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pD
 	return rc;
 }
 
-
-//
-// Subagent initialization
-//
-
+/**
+ * Subagent initialization
+ */
 static BOOL SubAgentInit(Config *config)
 {
 	// Parse configuration
@@ -92,31 +82,33 @@ static BOOL SubAgentInit(Config *config)
 	return value != NULL;
 }
 
-
-//
-// Called by master agent at unload
-//
-
-static void SubAgentShutdown(void)
+/**
+ * Called by master agent at unload
+ */
+static void SubAgentShutdown()
 {
-	ShutdownSender();
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Subagent parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("SMS.DeviceModel"), H_StringConst, g_szDeviceModel, DCI_DT_STRING, _T("Current serial port configuration") },
 	{ _T("SMS.SerialConfig"), H_StringConst, m_szDevice, DCI_DT_STRING, _T("Current serial port configuration") }
 };
+
+/**
+ * Subagent actions
+ */
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
 	{ _T("SMS.Send"), H_SendSMS, NULL, _T("Send SMS") }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -131,24 +123,20 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(SMS)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

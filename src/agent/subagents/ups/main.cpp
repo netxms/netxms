@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2012 Victor Kirhenshtein
+** Copyright (C) 2006-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,18 +22,14 @@
 
 #include "ups.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Device list
+ */
 static UPSInterface *m_deviceInfo[MAX_UPS_DEVICES];
 
-
-//
-// Universal handler
-//
-
+/**
+ * Universal handler
+ */
 static LONG H_UPSData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nDev;
@@ -49,17 +45,15 @@ static LONG H_UPSData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	if (m_deviceInfo[nDev] == NULL)
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (!m_deviceInfo[nDev]->IsConnected())
+	if (!m_deviceInfo[nDev]->isConnected())
 		return SYSINFO_RC_ERROR;
 
 	return m_deviceInfo[nDev]->getParameter(CAST_FROM_POINTER(pArg, int), pValue);
 }
 
-
-//
-// UPS connection status
-//
-
+/**
+ * UPS connection status
+ */
 static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nDev;
@@ -75,15 +69,13 @@ static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
 	if (m_deviceInfo[nDev] == NULL)
 		return SYSINFO_RC_UNSUPPORTED;
 
-	ret_int(pValue, m_deviceInfo[nDev]->IsConnected() ? 0 : 1);
+	ret_int(pValue, m_deviceInfo[nDev]->isConnected() ? 0 : 1);
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// List configured devices
-//
-
+/**
+ * List configured devices
+ */
 static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	TCHAR szBuffer[256];
@@ -93,19 +85,17 @@ static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 		if (m_deviceInfo[i] != NULL)
 		{
 			_sntprintf(szBuffer, 256, _T("%d %s %s %s"), i,
-					m_deviceInfo[i]->Device(), m_deviceInfo[i]->Type(),
-					m_deviceInfo[i]->Name());
+					m_deviceInfo[i]->getDevice(), m_deviceInfo[i]->getType(),
+					m_deviceInfo[i]->getName());
 			value->add(szBuffer);
 		}
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Add device from configuration file parameter
-// Parameter value should be <device_id>:<port>:<protocol>:<name>
-//
-
+/**
+ * Add device from configuration file parameter
+ * Parameter value should be <device_id>:<port>:<protocol>:<name>
+ */
 static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 {
 	const TCHAR *ptr;
@@ -150,6 +140,10 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 								else if (!_tcsicmp(pszCurrField, _T("BCMXCP")))
 								{
 									nProto = UPS_PROTOCOL_BCMXCP;
+								}
+								else if (!_tcsicmp(pszCurrField, _T("METASYS")))
+								{
+									nProto = UPS_PROTOCOL_METASYS;
 								}
 								else if (!_tcsicmp(pszCurrField, _T("MICRODOWELL")))
 								{
@@ -230,6 +224,9 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 			case UPS_PROTOCOL_BCMXCP:
 				m_deviceInfo[nDev] = new BCMXCPInterface(szPort);
 				break;
+         case UPS_PROTOCOL_METASYS:
+				m_deviceInfo[nDev] = new MetaSysInterface(szPort);
+				break;
 			case UPS_PROTOCOL_MICRODOWELL:
 				m_deviceInfo[nDev] = new MicrodowellInterface(szPort);
 				break;
@@ -248,11 +245,9 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 	return ((nState == -1) && (nField >= 3));
 }
 
-
-//
-// Configuration file template
-//
-
+/**
+ * Configuration file template
+ */
 static TCHAR *m_pszDeviceList = NULL;
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
@@ -260,11 +255,9 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-
-//
-// Subagent initialization
-//
-
+/**
+ * Subagent initialization
+ */
 static BOOL SubAgentInit(Config *config)
 {
 	int i;
@@ -301,11 +294,9 @@ static BOOL SubAgentInit(Config *config)
 	return TRUE;
 }
 
-
-//
-// Called by master agent at unload
-//
-
+/**
+ * Called by master agent at unload
+ */
 static void SubAgentShutdown()
 {
 	int i;
@@ -318,11 +309,9 @@ static void SubAgentShutdown()
 		}
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Provided parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("UPS.BatteryLevel(*)"),           H_UPSData,
@@ -400,11 +389,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_INT,      _T("UPS {instance} temperature")
 	}
 };
+
+/**
+ * Provided lists
+ */
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
 	{ _T("UPS.DeviceList"), H_DeviceList, NULL }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -419,24 +415,20 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(UPS)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

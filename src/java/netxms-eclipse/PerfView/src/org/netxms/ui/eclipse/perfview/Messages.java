@@ -39,8 +39,6 @@ public class Messages extends NLS
    public static String DciListLabelProvider_ResolveJobName;
    public static String DciListLabelProvider_Unresolved;
    public static String General_Autorefresh;
-   public static String General_Autoscale;
-   public static String General_EnableZoom;
    public static String General_JobError;
    public static String General_JobName;
    public static String General_LogScale;
@@ -49,7 +47,6 @@ public class Messages extends NLS
    public static String General_ShowGridLines;
    public static String General_ShowHostNames;
    public static String General_ShowLegend;
-   public static String General_ShowRuler;
    public static String General_TimeFrom;
    public static String General_TimeInterval;
    public static String General_TimePeriod;
@@ -181,6 +178,11 @@ public class Messages extends NLS
    public static String TableValue_JobName;
    public static String TableValue_LineChart;
    public static String TableValue_PieChart;
+   public static String YAxisRangeEditor_Automatic;
+   public static String YAxisRangeEditor_From;
+   public static String YAxisRangeEditor_Manual;
+   public static String YAxisRangeEditor_Title;
+   public static String YAxisRangeEditor_To;
    static
    {
       // initialize resource bundle

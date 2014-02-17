@@ -84,6 +84,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean gridVisible;
 	private boolean stacked;
 	private boolean selectionActive = false;
+	private boolean adjustYAxis = true;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	//private MouseMoveListener moveListener;
@@ -374,10 +375,10 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 * @param xSeries X axis data
 	 * @param ySeries Y axis data
 	 */
-	private ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries)
+	private ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries, boolean updateChart)
 	{
 		ISeriesSet seriesSet = getSeriesSet();
-		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index));
+		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index), updateChart);
 
 		series.setName(description);
 		series.setAntialias(SWT.ON);
@@ -388,7 +389,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
 		
-	   series.enableStack(stacked);
+	   series.enableStack(stacked, updateChart);
 		
 		return series;
 	}
@@ -627,7 +628,11 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void refresh()
 	{
-		adjustYAxis(true);
+	   updateStackAndRiserData();
+	   if (adjustYAxis)
+	      adjustYAxis(true);
+	   else
+	      redraw();
 	}
 	
 	/* (non-Javadoc)
@@ -636,7 +641,11 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void rebuild()
 	{
-		adjustYAxis(true);
+      updateStackAndRiserData();
+      if (adjustYAxis)
+         adjustYAxis(true);
+      else
+         redraw();
 	}
 
 	/* (non-Javadoc)
@@ -655,7 +664,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	public int addParameter(GraphItem item)
 	{
 		items.add(item);
-		return items.size();
+		return items.size() - 1;
 	}
 
 	/* (non-Javadoc)
@@ -679,12 +688,19 @@ public class LineChart extends Chart implements HistoricalDataChart
 			ySeries[i] = values[i].getValueAsDouble();
 		}
 		
-		ILineSeries series = addLineSeries(index, item.getDescription(), xSeries, ySeries);
+		ILineSeries series = addLineSeries(index, item.getDescription(), xSeries, ySeries, updateChart);
 		applyItemStyle(index, series);
 		
 		if (updateChart)
 		{
-			adjustYAxis(true);
+		   if (adjustYAxis)
+   		{
+   			adjustYAxis(true);
+   		}
+		   else
+		   {
+		      redraw();
+		   }
 		}
 	}
 
@@ -813,6 +829,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void adjustYAxis(boolean repaint)
 	{
+	   adjustYAxis = true;
 		final IAxis yAxis = getAxisSet().getYAxis(0);
 		yAxis.adjustRange();
 		final Range range = yAxis.getRange();
@@ -988,5 +1005,12 @@ public class LineChart extends Chart implements HistoricalDataChart
    public boolean isExtendedLegend()
    {
       return getLegend().isExtended();
+   }
+
+   @Override
+   public void setYAxisRange(int from, int to)
+   {
+      getAxisSet().getYAxis(0).setRange(new Range(from, to));
+      adjustYAxis=false;
    }
 }

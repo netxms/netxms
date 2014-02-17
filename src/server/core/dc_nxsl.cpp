@@ -41,7 +41,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
-	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+	if (dci != NULL)
 	{
 		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
 	}
@@ -70,10 +70,22 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
-	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
-	{
-      *ppResult = rawValue ? ((DCItem *)dci)->getRawValueForNXSL() : ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
-	}
+	if (dci != NULL)
+   {
+      if (dci->getType() == DCO_TYPE_ITEM)
+	   {
+         *ppResult = rawValue ? ((DCItem *)dci)->getRawValueForNXSL() : ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
+	   }
+      else if (dci->getType() == DCO_TYPE_TABLE)
+      {
+         Table *t = ((DCTable *)dci)->getLastValue();
+         *ppResult = (t != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslTableClass, t)) : new NXSL_Value;
+      }
+      else
+      {
+   		*ppResult = new NXSL_Value;	// Return NULL
+      }
+   }
 	else
 	{
 		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
@@ -168,7 +180,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectByName(argv[1]->getValueAsCString());
-	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
+	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
 	return 0;
 }
 
@@ -189,7 +201,48 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectByDescription(argv[1]->getValueAsCString());
-	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
+	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
+	return 0;
+}
+
+/**
+ * NXSL function: Find all DCIs with matching name or description
+ */
+static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+   if ((argc < 1) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+   const TCHAR *nameFilter = NULL, *descriptionFilter = NULL;
+   if (argc > 1)
+   {
+      if (!argv[1]->isNull())
+      {
+         if (!argv[1]->isString())
+            return NXSL_ERR_NOT_STRING;
+         nameFilter = argv[1]->getValueAsCString();
+      }
+
+      if (argc > 2)
+      {
+         if (!argv[2]->isNull())
+         {
+            if (!argv[2]->isString())
+               return NXSL_ERR_NOT_STRING;
+            descriptionFilter = argv[2]->getValueAsCString();
+         }
+      }
+   }
+
+	Node *node = (Node *)object->getData();
+	*ppResult = node->getAllDCObjectsForNXSL(nameFilter, descriptionFilter);
 	return 0;
 }
 
@@ -442,6 +495,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
    { _T("CreateDCI"), F_CreateDCI, 7 },
+   { _T("FindAllDCIs"), F_FindAllDCIs, -1 },
    { _T("FindDCIByName"), F_FindDCIByName, 2 },
    { _T("FindDCIByDescription"), F_FindDCIByDescription, 2 },
 	{ _T("GetAvgDCIValue"), F_GetAvgDCIValue, 4 },

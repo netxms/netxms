@@ -96,6 +96,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
+	private boolean enableLongObjectName = false;
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 	private ColorCache colors;
@@ -137,9 +138,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage(); //$NON-NLS-1$
 		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage(); //$NON-NLS-1$
 
-		final Display display = viewer.getControl().getDisplay();
-		fontLabel = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 9), SWT.NORMAL); //$NON-NLS-1$
-		fontTitle = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 15), SWT.NORMAL); //$NON-NLS-1$
+		final Display display = viewer.getControl().getDisplay();	
+		fontLabel = new Font(display, "Verdana", WidgetHelper.scaleTextPoints(display, 6), SWT.NORMAL); //$NON-NLS-1$
+		fontTitle = new Font(display, "Verdana", WidgetHelper.scaleTextPoints(display, 10), SWT.NORMAL); //$NON-NLS-1$
 
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon"); //$NON-NLS-1$
@@ -147,6 +148,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground"); //$NON-NLS-1$
 		
 		colors = new ColorCache();
+		
+		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+		enableLongObjectName = ps.getBoolean("ENABLE_LONG_OBJECT_NAME");
 	}
 
 	/*
@@ -246,6 +250,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			switch(objectFigureType)
 			{
+            case LARGE_LABEL:
+               return new ObjectFigureLargeLabel((NetworkMapObject)element, this);
 				case SMALL_LABEL:
 					return new ObjectFigureSmallLabel((NetworkMapObject)element, this);
 				case ICON:
@@ -577,4 +583,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		return ((MapContentProvider)viewer.getContentProvider()).getNodeLastValues(nodeId);
 	}
+
+   public boolean isLongObjectNameEnabled()
+   {
+      return enableLongObjectName;
+   }
 }

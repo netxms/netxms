@@ -3,7 +3,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.netxms</groupId>
-  <version>1.2.11</version>
+  <version>1.2.12</version>
   <artifactId>netxms</artifactId>
   <packaging>pom</packaging>
   <name>NetXMS Meta-package</name>

@@ -515,6 +515,8 @@ private:
    void deleteAlarm(CSCPMessage *request);
 	void getAlarmNotes(CSCPMessage *pRequest);
 	void updateAlarmNote(CSCPMessage *pRequest);
+	void deleteAlarmNote(CSCPMessage *request);
+	void updateAlarmStatusFlow(CSCPMessage *request);
    void createAction(CSCPMessage *pRequest);
    void updateAction(CSCPMessage *pRequest);
    void deleteAction(CSCPMessage *pRequest);
@@ -548,6 +550,7 @@ private:
    void sendObjectToolDetails(CSCPMessage *pRequest);
    void updateObjectTool(CSCPMessage *pRequest);
    void deleteObjectTool(CSCPMessage *pRequest);
+   void changeObjectToolStatus(CSCPMessage *pRequest);
    void generateObjectToolId(UINT32 dwRqId);
    void execTableTool(CSCPMessage *pRequest);
    void changeSubscription(CSCPMessage *pRequest);
@@ -581,9 +584,9 @@ private:
    void sendPerfTabDCIList(CSCPMessage *pRequest);
    void exportConfiguration(CSCPMessage *pRequest);
    void importConfiguration(CSCPMessage *pRequest);
-	void SendGraphList(UINT32 dwRqId);
-	void SaveGraph(CSCPMessage *pRequest);
-	void DeleteGraph(CSCPMessage *pRequest);
+	void sendGraphList(UINT32 dwRqId);
+	void saveGraph(CSCPMessage *pRequest);
+	void deleteGraph(CSCPMessage *pRequest);
 	void AddCACertificate(CSCPMessage *pRequest);
 	void DeleteCertificate(CSCPMessage *pRequest);
 	void UpdateCertificateComments(CSCPMessage *pRequest);
@@ -655,6 +658,7 @@ private:
    void querySummaryTable(CSCPMessage *request);
    void forwardToReportingServer(CSCPMessage *request);
    void getSubnetAddressMap(CSCPMessage *request);
+   void getEffectiveRights(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
@@ -788,7 +792,11 @@ void InitiateShutdown();
 
 BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
-void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...);
+void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
+   __attribute__ ((format(printf, 2, 3)))
+#endif
+;
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
@@ -871,6 +879,7 @@ BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
 UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSession *pSession);
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
+UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
 UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId);
@@ -911,9 +920,9 @@ void ShowServerStats(CONSOLE_CTX pCtx);
 void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName);
 void DumpProcess(CONSOLE_CTX pCtx);
 
-GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize);
+GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
-int GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
+UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
 
 #if XMPP_SUPPORTED

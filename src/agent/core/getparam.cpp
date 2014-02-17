@@ -38,6 +38,7 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
@@ -440,7 +441,7 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
 /**
  * Add external parameter
  */  
-BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec) //to be TCHAR
+BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList) //to be TCHAR
 {
    TCHAR *pszCmdLine, *pszArg;
 
@@ -458,7 +459,14 @@ BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec) //to be TCHAR
 	pszArg = (TCHAR *)malloc((_tcslen(pszCmdLine) + 2) * sizeof(TCHAR));
 	pszArg[0] = bShellExec ? _T('S') : _T('E');
 	_tcscpy(&pszArg[1], pszCmdLine);
-   AddParameter(pszCfgLine, H_ExternalParameter, pszArg, DCI_DT_STRING, _T(""));
+   if (bIsList)
+   {
+      AddList(pszCfgLine, H_ExternalList, pszArg);
+   }
+   else
+   {
+      AddParameter(pszCfgLine, H_ExternalParameter, pszArg, DCI_DT_STRING, _T(""));
+   }
    return TRUE;
 }
 

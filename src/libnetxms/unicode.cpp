@@ -933,9 +933,8 @@ int wstat(const WCHAR *_path, struct stat *_sbuf)
 int w##func(const WCHAR *_path) \
 { \
 	char path[MAX_PATH]; \
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, \
-	                    _path, -1, path, MAX_PATH, NULL, NULL); \
-	return chdir(path); \
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL); \
+	return func(path); \
 }
 
 #if !HAVE_WCHDIR
@@ -955,7 +954,19 @@ DEFINE_PATH_FUNC(remove)
 #endif
 
 #if !HAVE_WMKSTEMP
-DEFINE_PATH_FUNC(mkstemp)
+
+int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *_path)
+{
+   char path[MAX_PATH];
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
+   int rc = mkstemp(path);
+   if (rc != -1)
+   {
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, path, -1, _path, wcslen(_path) + 1);
+   }
+   return rc;
+}
+
 #endif
 
 #if !HAVE_WPOPEN
@@ -1096,7 +1107,7 @@ WCHAR *wgetenv(const WCHAR *_string)
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _string, -1, name, 256, NULL, NULL);
    p = getenv(name);
    if (p == NULL)
-   return NULL;
+      return NULL;
 
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, p, -1, value, 8192);
    return value;

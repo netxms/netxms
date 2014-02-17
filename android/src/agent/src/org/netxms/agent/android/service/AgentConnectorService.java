@@ -23,6 +23,8 @@ import org.netxms.mobile.agent.MobileAgentException;
 import org.netxms.mobile.agent.Session;
 
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -41,6 +43,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -71,6 +74,11 @@ public class AgentConnectorService extends Service implements LocationListener
 	private static final int STRATEGY_NET_ONLY = 0;
 	private static final int STRATEGY_GPS_ONLY = 1;
 	private static final int STRATEGY_NET_AND_GPS = 2;
+	private static final int NOTIFY_STATUS = 1;
+	private static final int NOTIFY_STATUS_NEVER = 0;
+	private static final int NOTIFY_STATUS_ON_CONNECT = 1;
+	private static final int NOTIFY_STATUS_ON_DISCONNECT = 2;
+	private static final int NOTIFY_STATUS_ALWAYS = 3;
 
 	private final Binder binder = new AgentConnectorBinder();
 	private Handler uiThreadHandler = null;
@@ -79,10 +87,13 @@ public class AgentConnectorService extends Service implements LocationListener
 	private BroadcastReceiver receiver = null;
 	private SharedPreferences sp;
 	private LocationManager locationManager = null;
+	private NotificationManager notificationManager;
 	private HomeScreen homeScreen = null;
 	private boolean sendDeviceSystemInfo = true;
 	private boolean agentActive;
 	private boolean notifyToast;
+	private boolean notifyIcon;
+	private int notificationType = NOTIFY_STATUS_NEVER;
 	private String connectionServer;
 	private int connectionPort;
 	private String connectionLogin;
@@ -124,6 +135,7 @@ public class AgentConnectorService extends Service implements LocationListener
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		Logger.setLoggingFacility(new AndroidLoggingFacility());
 		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+		notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		configure();
 
 		receiver = new BroadcastReceiver()
@@ -198,6 +210,8 @@ public class AgentConnectorService extends Service implements LocationListener
 		refreshHomeScreen();
 		agentActive = sp.getBoolean("global.activate", false);
 		notifyToast = sp.getBoolean("notification.toast", true);
+		notifyIcon = sp.getBoolean("notification.icon", true);
+		notificationType = Integer.parseInt(sp.getString("notification.status", "0"));
 		connectionServer = sp.getString("connection.server", "");
 		connectionPort = SafeParser.parseInt(sp.getString("connection.port", "4747"), 4747);
 		connectionLogin = sp.getString("connection.login", "");
@@ -239,23 +253,33 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Show status notification
+	 * Show status notification (toast and icon, depending on settings)
 	 * 
 	 * @param status	connection status
-	 * @param extra	extra text to add at the end of the toast
+	 * @param extra	extra text to add at the end of the toast/status message
 	 */
-	public void statusNotification(ConnectionStatus status, String extra)
+	public void notification(ConnectionStatus status, String extra)
 	{
 		connectionStatus = status;
 		String text = "";
+		int icon = -1;
 		switch (status)
 		{
 			case CS_CONNECTED:
+				if (notificationType == NOTIFY_STATUS_ON_CONNECT || notificationType == NOTIFY_STATUS_ALWAYS)
+				{
+					icon = R.drawable.ic_stat_connected;
+				}
 				text = getString(R.string.notify_connected, extra);
 				break;
 			case CS_ERROR:
+				if (notificationType == NOTIFY_STATUS_ON_DISCONNECT || notificationType == NOTIFY_STATUS_ALWAYS)
+				{
+					icon = R.drawable.ic_stat_disconnected;
+				}
 				text = getString(R.string.notify_connection_failed, extra);
 				break;
+			case CS_DISCONNECTED:
 			case CS_NOCONNECTION:
 			case CS_INPROGRESS:
 			case CS_ALREADYCONNECTED:
@@ -264,6 +288,33 @@ public class AgentConnectorService extends Service implements LocationListener
 		}
 		if (notifyToast)
 			showToast(text);
+		if (icon == -1)
+			notificationManager.cancel(NOTIFY_STATUS);
+		else if (notifyIcon)
+			showIcon(text, icon);
+	}
+
+	/**
+	 * Show icon notification in status bar
+	 * 
+	 * @param text	notification text
+	 * @param icon	icon to show
+	 */
+	public void showIcon(String text, int icon)
+	{
+		Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
+		PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+		NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext())
+				.setSmallIcon(icon)
+				.setWhen(System.currentTimeMillis())
+				.setDefaults(Notification.DEFAULT_LIGHTS)
+				.setContentText(text)
+				.setContentTitle(getString(R.string.app_name))
+				.setContentIntent(intent);
+		notificationManager.notify(NOTIFY_STATUS,
+				new NotificationCompat.BigTextStyle(nb)
+						.bigText(text)
+						.build());
 	}
 
 	/**
@@ -458,7 +509,7 @@ public class AgentConnectorService extends Service implements LocationListener
 		protected Boolean doInBackground(Object... params)
 		{
 			Log.d(TAG, "PushDataTask.doInBackground: reconnecting...");
-			statusNotification(ConnectionStatus.CS_INPROGRESS, "");
+			notification(ConnectionStatus.CS_INPROGRESS, "");
 			if (NetHelper.isInternetOn(getApplicationContext()))
 			{
 				Session session = new Session(server, port, deviceId, login, password, encrypt);
@@ -466,7 +517,7 @@ public class AgentConnectorService extends Service implements LocationListener
 				{
 					session.connect();
 					Log.v(TAG, "PushDataTask.doInBackground: connected");
-					statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
+					notification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_push_data));
 					if (sendDeviceSystemInfo)
 					{
 						Log.v(TAG, "PushDataTask.doInBackground: sending DeviceSystemInfo");
@@ -507,12 +558,12 @@ public class AgentConnectorService extends Service implements LocationListener
 			if (result == true)
 			{
 				Log.d(TAG, "PushDataTask.onPostExecute: disconnecting...");
-				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
+				notification(ConnectionStatus.CS_DISCONNECTED, "");
 			}
 			else
 			{
 				Log.d(TAG, "PushDataTask.onPostExecute: error: " + connMsg);
-				statusNotification(ConnectionStatus.CS_ERROR, connMsg);
+				notification(ConnectionStatus.CS_ERROR, connMsg);
 			}
 			Editor e = sp.edit();
 			e.putLong("scheduler.last_activation", Calendar.getInstance().getTimeInMillis());

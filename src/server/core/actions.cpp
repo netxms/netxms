@@ -124,19 +124,9 @@ static void SaveActionToDB(NXC_ACTION *pAction)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   // Check if action with given ID already exist in database
-   TCHAR szQuery[8192];
-   _sntprintf(szQuery, 8192, _T("SELECT action_id FROM actions WHERE action_id=%d"), pAction->dwId);
-   DB_RESULT hResult = DBSelect(hdb, szQuery);
-   bool bExist = false;
-   if (hResult != NULL)
-   {
-      bExist = (DBGetNumRows(hResult) > 0);
-      DBFreeResult(hResult);
-   }
-
    // Prepare and execute INSERT or UPDATE query
-   if (bExist)
+   TCHAR szQuery[8192];
+   if (IsDatabaseRecordExist(hdb, _T("actions"), _T("action_id"), pAction->dwId))
       _sntprintf(szQuery, 8192, 
 		           _T("UPDATE actions SET action_name=%s,action_type=%d,is_disabled=%d,")
                  _T("rcpt_addr=%s,email_subject=%s,action_data=%s ")
@@ -653,11 +643,9 @@ void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction)
    pMsg->SetVariable(VID_RCPT_ADDR, pAction->szRcptAddr);
 }
 
-
-//
-// Send all actions to client
-//
-
+/**
+ * Send all actions to client
+ */
 void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId)
 {
    UINT32 i;

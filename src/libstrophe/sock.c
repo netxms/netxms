@@ -40,7 +40,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <arpa/nameser.h>
-#ifdef HAVE_ARPA_NAMESER_COMPAT_H
+#if HAVE_ARPA_NAMESER_COMPAT_H && !defined(_AIX)
 #include <arpa/nameser_compat.h>
 #endif
 #include <resolv.h>

@@ -313,6 +313,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       chart.setLegendPosition(config.getLegendPosition());
       chart.setStacked(config.isStacked());
       chart.setTranslucent(config.isTranslucent());
+      if(!config.isAutoScale())
+      {
+         chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
+      }
 
       // Data
       final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);

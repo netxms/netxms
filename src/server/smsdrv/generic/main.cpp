@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Generic SMS driver
-** Copyright (C) 2003-2010 Alex Kirhenshtein
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -21,16 +21,82 @@
 **
 **/
 
-#include "main.h"
+#include "generic_smsdrv.h"
 
-bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer, const int pduBufferSize);
+bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer);
 
-static BOOL SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText);
+/**
+ * Static data
+ */
+static Serial s_serial;
+static const char *s_eosMarks[] = { "OK", "ERROR", NULL };
+static const char *s_eosMarksSend[] = { ">", "ERROR", NULL };
+static enum { OM_TEXT, OM_PDU } s_operationMode = OM_TEXT;
 
-static Serial m_serial;
-static enum { OM_TEXT, OM_PDU } omode = OM_PDU;
+/**
+ * Read input to OK
+ */
+static bool ReadToOK(Serial *serial, char *data = NULL)
+{
+   char buffer[1024];
+   memset(buffer, 0, 1024);
+   while(true)
+   {
+      char *mark;
+      int rc = serial->readToMark(buffer, 1024, s_eosMarks, &mark);
+      if (rc <= 0)
+      {
+         DbgPrintf(5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
+         return false;
+      }
+      if (mark != NULL) 
+      {
+         if (data != NULL)
+         {
+            int len = (int)(mark - buffer);
+            memcpy(data, buffer, len);
+            data[len] = 0;
+         }
 
-// pszInitArgs format: portname,speed,databits,parity,stopbits
+         if (!strncmp(mark, "OK", 2))
+            return true;
+ 
+#ifdef UNICODE
+      	DbgPrintf(5, _T("SMS: non-OK response (%hs)"), mark);
+#else
+      	DbgPrintf(5, _T("SMS: non-OK response (%s)"), mark);
+#endif
+         return false;
+      }
+   }
+}
+
+/**
+ * Initialize modem
+ */
+static bool InitModem(Serial *serial)
+{
+	serial->write("\x1A\r\n", 3); // in case of pending send operation
+   ReadToOK(serial);
+
+	serial->write("ATZ\r\n", 5); // init modem
+   if (!ReadToOK(serial))
+      return false;
+	DbgPrintf(5, _T("SMS: ATZ sent, got OK"));
+
+   serial->write("ATE0\r\n", 6); // disable echo
+   if (!ReadToOK(serial))
+      return false;
+	DbgPrintf(5, _T("SMS: ATE0 sent, got OK"));
+   
+   return true;
+}
+
+/**
+ * Initialize driver
+ *
+ * pszInitArgs format: portname,speed,databits,parity,stopbits
+ */
 extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 {
 	bool bRet = false;
@@ -52,6 +118,7 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 	DbgPrintf(1, _T("Loading Generic SMS Driver (configuration: %s)"), pszInitArgs);
 	
 	TCHAR *p;
+	const TCHAR *parityAsText;
 	int portSpeed = 9600;
 	int dataBits = 8;
 	int parity = NOPARITY;
@@ -105,9 +172,9 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 							{
 								*p = 0; p++;
 								if (*p == _T('T'))
-									omode = OM_TEXT;
+									s_operationMode = OM_TEXT;
 								else if (*p == _T('P'))
-									omode = OM_PDU;
+									s_operationMode = OM_PDU;
 							}
 						}
 					}
@@ -119,172 +186,172 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 	switch (parity)
 	{
 		case ODDPARITY:
-			p = (TCHAR *)_T("ODD");
+			parityAsText = _T("ODD");
 			break;
 		case EVENPARITY:
-			p = (TCHAR *)_T("EVEN");
+			parityAsText = _T("EVEN");
 			break;
 		default:
-			p = (TCHAR *)_T("NONE");
+			parityAsText = _T("NONE");
 			break;
 	}
-	DbgPrintf(2, _T("SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d"),
-	          portName, portSpeed, dataBits, p, stopBits == TWOSTOPBITS ? 2 : 1);
+	DbgPrintf(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d"),
+	          portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 	
-	bRet = m_serial.open(portName);
-	if (bRet)
+	if (s_serial.open(portName))
 	{
-		DbgPrintf(4, _T("SMS: port opened"));
-		m_serial.setTimeout(1000);
-		m_serial.set(portSpeed, dataBits, parity, stopBits);
+		DbgPrintf(5, _T("SMS: port opened"));
+		s_serial.setTimeout(2000);
 		
+      if (!s_serial.set(portSpeed, dataBits, parity, stopBits))
+      {
+         nxlog_write(MSG_SERIAL_PORT_SET_FAILED, NXLOG_ERROR, "s", pszInitArgs);
+         goto cleanup;
+      }
+		
+      if (!InitModem(&s_serial))
+         goto cleanup;
+
 		// enter PIN: AT+CPIN="xxxx"
 		// register network: AT+CREG1
 		
-		char szTmp[128];
-		m_serial.write("ATZ\r\n", 5); // init modem && read user prefs
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS init: ATZ sent, got {%hs}"), szTmp);
-		m_serial.write("ATE0\r\n", 6); // disable echo
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS init: ATE0 sent, got {%hs}"), szTmp);
-		m_serial.write("ATI3\r\n", 6); // read vendor id
-		m_serial.read(szTmp, 128); // read version
-		DbgPrintf(4, _T("SMS init: ATI3 sent, got {%hs}"), szTmp);
+		s_serial.write("ATI3\r\n", 6); // read vendor id
+		char vendorId[1024];
+      if (!ReadToOK(&s_serial, vendorId))
+         goto cleanup;
+		DbgPrintf(5, _T("SMS init: ATI3 sent, got OK"));
 		
-		if (stricmp(szTmp, "ERROR") != 0)
-		{
-			char *sptr, *eptr;
-			
-			for(sptr = szTmp; (*sptr != 0) && ((*sptr == '\r') || (*sptr == '\n') || (*sptr == ' ') || (*sptr == '\t')); sptr++);
-			for(eptr = sptr; (*eptr != 0) && (*eptr != '\r') && (*eptr != '\n'); eptr++);
-			*eptr = 0;
-#ifdef UNICODE
-			WCHAR *wdata = WideStringFromMBString(sptr);
-			nxlog_write(MSG_GSM_MODEM_INFO, EVENTLOG_INFORMATION_TYPE, "ss", pszInitArgs, wdata);
-			free(wdata);
-#else
-			nxlog_write(MSG_GSM_MODEM_INFO, EVENTLOG_INFORMATION_TYPE, "ss", pszInitArgs, sptr);
-#endif
-		}
+		char *sptr, *eptr;	
+		for(sptr = vendorId; (*sptr != 0) && ((*sptr == '\r') || (*sptr == '\n') || (*sptr == ' ') || (*sptr == '\t')); sptr++);
+		for(eptr = sptr; (*eptr != 0) && (*eptr != '\r') && (*eptr != '\n'); eptr++);
+		*eptr = 0;
+      nxlog_write(MSG_GSM_MODEM_INFO, NXLOG_INFO, "sm", pszInitArgs, sptr);
 	}
 	else
 	{
-		DbgPrintf(1, _T("SMS: Unable to open serial port (%s)"), portName);
+      nxlog_write(MSG_SERIAL_PORT_OPEN_FAILED, NXLOG_ERROR, "s", pszInitArgs);
 	}
-	
-	if (portName != NULL)
-	{
-		free(portName);
-	}
-	
-	return bRet;
+
+cleanup:
+	safe_free(portName);
+   s_serial.close();
+	return TRUE;   // return TRUE always to keep driver in memory
 }
 
+/**
+ * Send SMS
+ */
 extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
-	if (omode == OM_PDU)
-		return SMSDriverSendPDU(pszPhoneNumber, pszText);
+	if ((pszPhoneNumber == NULL) || (pszText == NULL))
+      return FALSE;
 
-	if (pszPhoneNumber != NULL && pszText != NULL)
-	{
-		char szTmp[128];
-		
-		DbgPrintf(3, _T("SMS send: to {%s}: {%s}"), pszPhoneNumber, pszText);
-		
-		m_serial.write("ATZ\r\n", 5); // init modem && read user prefs
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS send: ATZ sent, got {%hs}"), szTmp);
-		m_serial.write("ATE0\r\n", 5); // disable echo
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS send: ATE0 sent, got {%hs}"), szTmp);
-		m_serial.write("AT+CMGF=1\r\n", 11); // =1 - text message
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS send: AT+CMGF=1 sent, got {%hs}"), szTmp);
-#ifdef UNICODE
-		char mbPhoneNumber[256];
-		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszPhoneNumber, -1, mbPhoneNumber, 256, NULL, NULL);
-		mbPhoneNumber[255] = 0;
-		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
-#else
-		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
-#endif
-		m_serial.write(szTmp, (int)strlen(szTmp)); // set number
-#ifdef UNICODE
-		char mbText[161];
-		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, -1, mbText, 161, NULL, NULL);
-		mbText[160] = 0;
-		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", mbText, 0x1A);
-#else
-		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pszText, 0x1A);
-#endif
-		m_serial.write(szTmp, (int)strlen(szTmp)); // send text, end with ^Z
-		m_serial.read(szTmp, 128); // read +CMGS:ref_num
-		DbgPrintf(4, _T("SMS send: AT+CMGS + message body sent, got {%hs}"), szTmp);
-	}
+   DbgPrintf(3, _T("SMS: send to {%s}: {%s}"), pszPhoneNumber, pszText);
+   if (!s_serial.restart())
+   {
+   	DbgPrintf(5, _T("SMS: failed to open port"));
+      return FALSE;
+   }
+
+   BOOL success = FALSE;
+   if (!InitModem(&s_serial))
+      goto cleanup;
 	
-	return true;
-}
+   if (s_operationMode == OM_PDU)
+   {
+	   s_serial.write("AT+CMGF=0\r\n", 11); // =0 - PDU message
+      if (!ReadToOK(&s_serial))
+         goto cleanup;
+	   DbgPrintf(5, _T("SMS: AT+CMGF=0 sent, got OK"));
 
-static BOOL SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
-{
-	if (pszPhoneNumber != NULL && pszText != NULL)
-	{
-		const int bufferSize = 512;
-		char szTmp[bufferSize];
-		char phoneNumber[bufferSize], text[bufferSize];
-
-		DbgPrintf(3, _T("SMS send: to {%s}: {%s}"), pszPhoneNumber, pszText);
-
+		char pduBuffer[PDU_BUFFER_SIZE];
 #ifdef UNICODE
-		if (WideCharToMultiByte(CP_ACP, 0, pszPhoneNumber, -1, phoneNumber, bufferSize, NULL, NULL) == 0 ||
-			WideCharToMultiByte(CP_ACP, 0, pszText, -1, text, bufferSize, NULL, NULL) == 0 )
-		{
-			DbgPrintf(2, _T("Failed to convert phone number or text to multibyte string"));
-			return FALSE;
-		}
+	   char mbPhoneNumber[128], mbText[161];
+
+	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszPhoneNumber, -1, mbPhoneNumber, 128, NULL, NULL);
+	   mbPhoneNumber[127] = 0;
+
+	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, -1, mbText, 161, NULL, NULL);
+	   mbText[160] = 0;
+
+		SMSCreatePDUString(mbPhoneNumber, mbText, pduBuffer);
 #else
-		nx_strncpy(phoneNumber, pszPhoneNumber, bufferSize);
-		nx_strncpy(text, pszText, bufferSize);
+		SMSCreatePDUString(pszPhoneNumber, pszText, pduBuffer);
 #endif
 
-		m_serial.write("ATZ\r\n", 5); // init modem && read user prefs
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS send: ATZ sent, got {%hs}"), szTmp);
-		m_serial.write("ATE0\r\n", 6); // disable echo
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS send: ATE0 sent, got {%hs}"), szTmp);
-		m_serial.write("AT+CMGF=0\r\n", 11); // =0 - send text in PDU mode
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS send: AT+CMGF=0 sent, got {%hs}"), szTmp);
+      char buffer[256];
+		snprintf(buffer, sizeof(buffer), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
+	   s_serial.write(buffer, (int)strlen(buffer));
 
-		m_serial.write("AT+CSCA?\r\n", 10); // send SMSC query
-		m_serial.read(szTmp, 128); // read OK
-		DbgPrintf(4, _T("SMS send: AT+CSCA? sent, got {%hs}"), szTmp);
-		if (strlen(szTmp) > 10 && !strncmp(szTmp, "\r\n+CSCA: ", 9))
-		{
-			char szTmp2[128];
-			snprintf(szTmp2, 128, "AT+CSCA=%s\r\n", szTmp + 9);
-			szTmp2[127] = '\0';
-			m_serial.write(szTmp2, (int)strlen(szTmp2)); // set SMSC
-			m_serial.read(szTmp, 128); // read OK
-			DbgPrintf(4, _T("SMS send: %hs sent, got {%hs}"), szTmp2, szTmp);
-		}
+      char *mark;
+      if (s_serial.readToMark(buffer, sizeof(buffer), s_eosMarksSend, &mark) <= 0)
+         goto cleanup;
+      if ((mark == NULL) || (*mark != '>'))
+      {
+   	   DbgPrintf(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+         goto cleanup;
+      }
 
-		char pduBuffer[bufferSize];
-		SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize);
+      s_serial.write(pduBuffer, (int)strlen(pduBuffer)); // send PDU
+      s_serial.write("\x1A\r\n", 3); // send ^Z
+   }
+   else
+   {
+	   s_serial.write("AT+CMGF=1\r\n", 11); // =1 - text message
+      if (!ReadToOK(&s_serial))
+         goto cleanup;
+	   DbgPrintf(5, _T("SMS: AT+CMGF=1 sent, got OK"));
 
-		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
-		m_serial.write(szTmp, (int)strlen(szTmp)); 
-		DbgPrintf(4, _T("SMS send: %hs sent"), szTmp);
-		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pduBuffer, 0x1A);
-		DbgPrintf(4, _T("SMS about to send: %hs sent"), szTmp);
-		m_serial.write(szTmp, (int)strlen(szTmp)); // send text, end with ^Z
-		m_serial.read(szTmp, 128); // read +CMGS:ref_num
-		DbgPrintf(4, _T("SMS send: AT+CMGS + message body sent, got {%hs}"), szTmp);
-	}
+      char buffer[256];
+#ifdef UNICODE
+	   char mbPhoneNumber[128];
+	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszPhoneNumber, -1, mbPhoneNumber, 128, NULL, NULL);
+	   mbPhoneNumber[127] = 0;
+      snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
+#else
+      snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
+#endif
+	   s_serial.write(buffer, (int)strlen(buffer)); // set number
 
-	return true;
+      char *mark;
+      if (s_serial.readToMark(buffer, sizeof(buffer), s_eosMarksSend, &mark) <= 0)
+         goto cleanup;
+      if ((mark == NULL) || (*mark != '>'))
+      {
+   	   DbgPrintf(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+         goto cleanup;
+      }
+   	
+#ifdef UNICODE
+	   char mbText[161];
+	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, -1, mbText, 161, NULL, NULL);
+	   mbText[160] = 0;
+      snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", mbText);
+#else
+      if (strlen(pszText) <= 160)
+      {
+         snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", pszText);
+      }
+      else
+      {
+         strncpy(buffer, pszText, 160);
+         strcpy(&buffer[160], "\x1A\r\n");
+      }
+#endif
+	   s_serial.write(buffer, (int)strlen(buffer)); // send text, end with ^Z
+   }
+
+   s_serial.setTimeout(30000);
+   if (!ReadToOK(&s_serial))
+      goto cleanup;
+
+   DbgPrintf(5, _T("SMS: AT+CMGS + message body sent, got OK"));
+   success = TRUE;
+
+cleanup:
+   s_serial.setTimeout(2000);
+   s_serial.close();
+	return success;
 }
 
 /**
@@ -292,14 +359,13 @@ static BOOL SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
  */
 extern "C" void EXPORT SMSDriverUnload()
 {
-	m_serial.close();
 }
+
+#ifdef _WIN32
 
 /**
  * DLL Entry point
  */
-#ifdef _WIN32
-
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

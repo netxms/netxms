@@ -1,4 +1,38 @@
 *
+* 1.2.12
+*
+
+- Support for MetaSystem UPS in UPS subagent
+- Timed (temporary) alarm acknowledgement
+- New subagent DBQuery - replacement for ODBCQuery 
+- DCI access functions in NXSL works correctly with table DCIs
+- Fixed bugs with instance discovery DCIs created from templates
+- New property "runtimeFlags" in NXSL class "Node"
+- New event SYS_IF_PEER_CHANGED (sent when peer change detected in interface)
+- New system permission: Manage Image Library
+- Object level access control can be enabled for logs
+- New NXSL function FindAllDCIs
+- Driver for Allied Telesis switches improved
+- Management console:
+   - Fixed bug with red zone display in "last value" dashboard element
+   - Edit and delete for alarm comments are working now
+   - Fixed Y axis range can be set for line and bar charts
+   - In alarm menue are not shown incompatible for selected alarm statuses.
+   - Alarm status flow can be changed to strict (terminate status can be set only 
+     after alarm is resolved). To change flow set "StrictAlarmStatusFlow" parameter to 1.
+   - SNMP MIB loaded into memory on first access
+- Android Agent:
+	- Implemented "Connection notification" in status bar (feature #481)
+	- Fix bug in resetting switch preference (settings) 
+- Android Console:
+	- Fix bug in resetting switch preference (settings) 
+	- Implemented "Entire network" root (feature #482)
+	- Manage last alarm from status bar: acknowledge, resolve, terminate (only for Android >= 4.1)
+- Fixed issues: #79, #88, #280, #285, #393, #415, #470, #475, #481, #482, #483,
+                #484, #486, #487, #490, #497, #500, #502, #504
+
+
+*
 * 1.2.11
 *
 
@@ -29,7 +63,7 @@
 - nxapush can push data on behalf of other nodes
 - Transformation script can be run on aggregated DCIs
 - Unknown SNMP trap sources can be automatically added as nodes
-- Syslog processing optinmized for performance
+- Syslog processing optimized for performance
 - Default shared secret for agents can be configured
 - Driver for Ping3 devices
 - Driver for Allied Telesis switches
@@ -43,8 +77,8 @@
 	- "Nodes" tab in object details view for subnets and containers
 	- "Address Map" tab in object details view for subnets
 	- Czech and Russian localization
-- Fixed issues: #150, #226, #307, #330, #362, #363, #364, #366, #367, #373, #378, 
-                #384, #387, #390, $401, #410, #414, #416, #419, #439, #440
+- Fixed issues: #95, #150, #226, #307, #330, #362, #363, #364, #366, #367, #373,
+                #378, #384, #387, #390, $401, #410, #414, #416, #419, #439, #440
 
 
 *

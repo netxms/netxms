@@ -119,26 +119,33 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
 			while(NetCanRead(nSd, READ_TIMEOUT))
 			{
 				nBytes = NetRead(nSd, buff + offset, buffSize - offset);
-				if (nBytes > 0) {
+				if (nBytes > 0) 
+            {
 					offset += nBytes;
-					if (buffSize - offset < (CHUNK_SIZE / 2)) {
+					if (buffSize - offset < (CHUNK_SIZE / 2)) 
+               {
 						char *tmp = (char *)realloc(buff, buffSize + CHUNK_SIZE);
-						if (tmp != NULL) {
+						if (tmp != NULL) 
+                  {
 							buffSize += CHUNK_SIZE;
 							buff = tmp;
 						}
-						else {
-							safe_free(buff);
+						else 
+                  {
+							safe_free_and_null(buff);
 							buffSize = 0;
+                     break;
 						}
 					}
 				}
-				else {
+				else 
+            {
 					break;
 				}
 			}
 
-			if (buff != NULL && offset > 0) {
+			if (buff != NULL && offset > 0) 
+         {
 				buff[offset] = 0;
 
 				if (tre_regexec(&preg, buff, 0, NULL, 0) == 0)
@@ -149,9 +156,9 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
             {
                SaveResponse(szAddr, dwAddr, buff);
             }
-
-				safe_free(buff);
 			}
+
+         safe_free(buff);
 		}
 		NetClose(nSd);
 	}

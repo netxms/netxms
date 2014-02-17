@@ -807,4 +807,29 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 		// TODO Auto-generated method stub
 		
 	}
+	
+   @Override
+   public void setYAxisRange(int from, int to)
+   {
+      if(from == to)
+         return;
+      if(from > to)
+      {
+         int tmp = to;
+         to = from;
+         from = tmp;
+      }
+      if(yAxis == null)
+      {
+         xAxis = ((ChartWithAxes)chart).getPrimaryBaseAxes()[0];
+         yAxis = ((ChartWithAxes)chart).getPrimaryOrthogonalAxis(xAxis);
+         yAxis.getScale().setMin(NumberDataElementImpl.create(from));
+         yAxis.getScale().setMax(NumberDataElementImpl.create(to));
+      }
+      else
+      {
+         yAxis.getScale().setMin(NumberDataElementImpl.create(from));
+         yAxis.getScale().setMax(NumberDataElementImpl.create(to));
+      }
+   }
 }

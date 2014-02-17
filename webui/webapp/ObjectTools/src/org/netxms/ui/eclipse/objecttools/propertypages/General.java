@@ -50,6 +50,7 @@ public class General extends PropertyPage
 	private LabeledText textRegexp;
 	private Button checkOutput;
 	private Button checkConfirmation;
+	private Button disable;
 	private Button follow;
 	private LabeledText textConfirmation;
 	private Button radioIndexOID;
@@ -128,7 +129,7 @@ public class General extends PropertyPage
 				textData.setText((parameters.length > 0) ? parameters[0] : ""); //$NON-NLS-1$
 				
 				Group fileOptionsGoup = new Group(dialogArea, SWT.NONE);
-				fileOptionsGoup.setText("File Options");
+				fileOptionsGoup.setText(Messages.get().General_FileOptions);
             gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
@@ -144,7 +145,7 @@ public class General extends PropertyPage
 		      gd.horizontalAlignment = SWT.FILL;
 		      gd.grabExcessHorizontalSpace = true;
 		      maxFileSize.setLayoutData(gd);
-				maxFileSize.setLabel("Limit initial download size (in bytes, 0 for unlimited)");
+				maxFileSize.setLabel(Messages.get().General_LimitDownloadFileSizeLable);
 				maxFileSize.setRange(0, 0x7FFFFFFF);
 				try
 				{
@@ -156,7 +157,7 @@ public class General extends PropertyPage
 				}
 							
 				follow = new Button(fileOptionsGoup, SWT.CHECK);
-				follow.setText("Follow file changes");
+				follow.setText(Messages.get().General_FollowFileChanges);
 				if(parameters.length > 2) //$NON-NLS-1$
 				{
 				   follow.setSelection( parameters[2].equals("true") ? true : false);  //$NON-NLS-1$
@@ -246,6 +247,11 @@ public class General extends PropertyPage
 		textConfirmation.setText(objectTool.getConfirmationText());
 		textConfirmation.setEnabled(checkConfirmation.getSelection());
 		
+		//Disable option
+		disable = new Button(dialogArea, SWT.CHECK);
+		disable.setText(Messages.get().General_DisableObjectToll);
+		disable.setSelection((objectTool.getFlags() & ObjectTool.DISABLED) > 0);
+		
 		return dialogArea;
 	}
 	
@@ -301,6 +307,15 @@ public class General extends PropertyPage
 			objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.ASK_CONFIRMATION);
 		}
 		objectTool.setConfirmationText(textConfirmation.getText());
+		
+      if (disable.getSelection())
+      {
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.DISABLED);
+      }
+      else
+      {
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.DISABLED);
+      }
 		
 		if (objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP)
 		{

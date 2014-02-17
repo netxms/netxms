@@ -23,17 +23,6 @@
 
 #include "libnxdb.h"
 
-/**
- * Pool connection information
- */
-struct PoolConnectionInfo
-{
-   DB_HANDLE handle;
-   bool inUse;
-   time_t lastAccessTime;
-   time_t connectTime;
-};
-
 static DB_DRIVER m_driver;
 static TCHAR m_server[256];
 static TCHAR m_login[256];
@@ -69,11 +58,14 @@ static void DBConnectionPoolPopulate()
          conn->inUse = false;
          conn->connectTime = time(NULL);
          conn->lastAccessTime = conn->connectTime;
+         conn->srcFile[0] = 0;
+         conn->srcLine = 0;
          m_connections.add(conn);
       }
       else
       {
          __DBDbgPrintf(3, _T("Database Connection Pool: cannot create DB connection %d (%s)"), i, errorText);
+         delete conn;
       }
 	}
 	MutexUnlock(m_poolAccessMutex);
@@ -215,7 +207,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
  * Acquire connection from pool. This function never fails - if it's impossible to acquire
  * pooled connection, fallback connection will be returned.
  */
-DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
+DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *srcFile, int srcLine)
 {
 	MutexLock(m_poolAccessMutex);
 
@@ -227,6 +219,9 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 		{
 			handle = conn->handle;
 			conn->inUse = true;
+         conn->lastAccessTime = time(NULL);
+         strncpy(conn->srcFile, srcFile, 128);
+         conn->srcLine = srcLine;
 			break;
 		}
 	}
@@ -236,11 +231,21 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 	   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       PoolConnectionInfo *conn = new PoolConnectionInfo;
       conn->handle = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
-      conn->inUse = true;
-      conn->connectTime = time(NULL);
-      conn->lastAccessTime = conn->connectTime;
-      m_connections.add(conn);
-      handle = conn->handle;
+      if (conn->handle != NULL)
+      {
+         conn->inUse = true;
+         conn->connectTime = time(NULL);
+         conn->lastAccessTime = conn->connectTime;
+         strncpy(conn->srcFile, srcFile, 128);
+         conn->srcLine = srcLine;
+         m_connections.add(conn);
+         handle = conn->handle;
+      }
+      else
+      {
+         __DBDbgPrintf(3, _T("Database Connection Pool: cannot create additional DB connection (%s)"), errorText);
+         delete conn;
+      }
 	}
 
 	MutexUnlock(m_poolAccessMutex);
@@ -271,6 +276,8 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
 		{
          conn->inUse = false;
          conn->lastAccessTime = time(NULL);
+         conn->srcFile[0] = 0;
+         conn->srcLine = 0;
 			break;
 		}
 	}
@@ -301,4 +308,21 @@ int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount()
          count++;
 	MutexUnlock(m_poolAccessMutex);
    return count;
+}
+
+/**
+ * Get copy of active DB connections.
+ * Returned list must be deleted by the caller.
+ */
+ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList()
+{
+   ObjectArray<PoolConnectionInfo> *list = new ObjectArray<PoolConnectionInfo>(32, 32, true);
+	MutexLock(m_poolAccessMutex);
+   for(int i = 0; i < m_connections.size(); i++)
+      if (m_connections.get(i)->inUse)
+      {
+         list->add((PoolConnectionInfo *)nx_memdup(m_connections.get(i), sizeof(PoolConnectionInfo)));
+      }
+	MutexUnlock(m_poolAccessMutex);
+   return list;
 }

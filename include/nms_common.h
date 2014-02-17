@@ -84,7 +84,7 @@
 /**
  * Wrappers for 64-bit integer constants
  */
-#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__)
+#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C)
 #define _LL(x) (x ## LL)
 #define _ULL(x) (x ## ULL)
 #elif defined(_MSC_VER)
@@ -534,24 +534,24 @@ typedef void * HMODULE;
 typedef int mode_t;
 #endif
 
-#if SIZEOF_LONG == 8
-typedef long INT64;
-#elif HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
+#if HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
 typedef long long INT64;
 #elif HAVE_INT64_T
 typedef int64_t INT64;
+#elif SIZEOF_LONG == 8
+typedef long INT64;
 #else
 #error Target system does not have signed 64bit integer type
 #endif
 
-#if SIZEOF_LONG == 8
-typedef unsigned long UINT64;
-#elif HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
+#if HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
 typedef unsigned long long UINT64;
 #elif HAVE_UINT64_T
 typedef uint64_t UINT64;
 #elif HAVE_U_INT64_T
 typedef u_int64_t UINT64;
+#elif SIZEOF_LONG == 8
+typedef unsigned long UINT64;
 #else
 #error Target system does not have unsigned 64bit integer type
 #endif

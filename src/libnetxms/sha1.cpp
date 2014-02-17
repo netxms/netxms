@@ -81,6 +81,10 @@ A million repetitions of "a"
 #include <config.h>
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "sha1.h"
 
 /* #include <process.h> */	/* prototype for exit() - JHB */
@@ -227,10 +231,17 @@ unsigned char finalcount[8];
     }
     /* Wipe variables */
     i = 0;	/* JHB */
+#ifdef _WIN32
+    SecureZeroMemory(context->buffer, 64);
+    SecureZeroMemory(context->state, 20);
+    SecureZeroMemory(context->count, 8);
+    SecureZeroMemory(finalcount, 8);	/* SWR */
+#else
     memset(context->buffer, 0, 64);
     memset(context->state, 0, 20);
     memset(context->count, 0, 8);
     memset(finalcount, 0, 8);	/* SWR */
+#endif
 #ifdef SHA1HANDSOFF  /* make SHA1Transform overwrite it's own static vars */
     SHA1Transform(context->state, context->buffer);
 #endif

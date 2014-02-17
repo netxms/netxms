@@ -192,7 +192,10 @@ static ARP_CACHE *SysGetLocalArpCache()
             TCHAR *pTemp = _tcsdup(list.getValue(i));
             TCHAR *pBuf = pTemp;
             if (_tcslen(pBuf) < 20)     // Invalid line
+            {
+               free(pTemp);
                continue;
+            }
 
             // MAC address
             for(j = 0; j < 6; j++)

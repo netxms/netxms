@@ -83,7 +83,7 @@ public class ScriptEditor extends Composite
 	 */
 	public void setText(String text)
 	{
-		editor.setText(text);
+		editor.setText((text != null) ? text : "");
 	}
 	
 	/**

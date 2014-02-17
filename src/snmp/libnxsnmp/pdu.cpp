@@ -451,8 +451,6 @@ BOOL SNMP_PDU::parseV3Header(BYTE *header, UINT32 headerLength)
 	UINT32 securityModel;
    if (!BER_DecodeContent(type, currPos, length, (BYTE *)&securityModel))
       return FALSE;   // Error parsing content
-   currPos += length;
-   remLength -= length + idLength;
 	m_securityModel = (int)securityModel;
 
 	return TRUE;
@@ -541,8 +539,6 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, UINT32 dataLength)
    if (type != ASN_OCTET_STRING)
       return FALSE;
 	memcpy(m_salt, currPos, min(length, 8));
-   currPos += length;
-   remLength -= length + idLength;
 
 	return TRUE;
 }
@@ -1155,13 +1151,15 @@ UINT32 SNMP_PDU::encodeV3Header(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityCo
  */
 UINT32 SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityContext *securityContext)
 {
-	BYTE securityParameters[1024], sequence[1040];
 	UINT32 bytes;
-	UINT32 engineBoots = securityContext->getAuthoritativeEngine().getBoots();
-	UINT32 engineTime = securityContext->getAuthoritativeEngine().getTime();
 
 	if ((securityContext != NULL) && (securityContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM))
 	{
+   	BYTE securityParameters[1024], sequence[1040];
+
+	   UINT32 engineBoots = securityContext->getAuthoritativeEngine().getBoots();
+	   UINT32 engineTime = securityContext->getAuthoritativeEngine().getTime();
+
 		bytes = BER_Encode(ASN_OCTET_STRING, securityContext->getAuthoritativeEngine().getId(),
 		                   securityContext->getAuthoritativeEngine().getIdLen(), securityParameters, 1024);
 		bytes += BER_Encode(ASN_INTEGER, (BYTE *)&engineBoots, sizeof(UINT32), &securityParameters[bytes], 1024 - bytes);

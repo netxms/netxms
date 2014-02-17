@@ -115,7 +115,6 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 			char szFileName[512];
 			FILE *hFile;
 			char szProcStat[1024] = {0}; 
-			char szBuff[1024] = {0}; 
 			char *pProcName = NULL, *pProcStat = NULL;
 			unsigned long nPid;
 
@@ -166,18 +165,13 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 					memset(processCmdLine, 0, sizeof(processCmdLine));
 
 					int len = fread(processCmdLine, 1, sizeof(processCmdLine) - 1, hFile);
-					if (len > 0) // got a valid record in format: argv[0]\x00argv[1]\x00...
+					if (len > 0)
 					{
-						int j;
-						//char *pArgs;
-
-						/* Commented out by victor: to behave identicaly on different platforms,
-						   argv[0] should be matched as well
-						j = strlen(szBuff) + 1;
-						pArgs = szBuff + j; // skip first (argv[0])
-						len -= j;*/
+						// got a valid record in format: argv[0]\x00argv[1]\x00...
+						// Note: to behave identicaly on different platforms,
+						// full command line including argv[0] should be matched
 						// replace 0x00 with spaces
-						for(j = 0; j < len - 1; j++)
+						for(int j = 0; j < len - 1; j++)
 						{
 							if (processCmdLine[j] == 0)
 							{

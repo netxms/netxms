@@ -47,3 +47,8 @@ libtre          BSD-like
 scilexer        BSD-like
 sqlite          BSD-like
 zlib            BSD-like
+
+
+Third party code within NetXMS:
+
+ICE		public domain

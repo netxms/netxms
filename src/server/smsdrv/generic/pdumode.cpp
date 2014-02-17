@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Generic SMS driver
-** Copyright (C) 2003-2010 Alex Kirhenshtein
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -21,15 +21,21 @@
 **
 **/
 
-#include "main.h"
+#include "generic_smsdrv.h"
 
+/**
+ * Pack 7-bit characters into 8-bit characters
+ */
 static bool SMSPack7BitChars(const char* input, char* output, int* outputLength, const int maxOutputLen)
 {
 	int	bits = 0;
 	int i;
 	unsigned char octet;
 	int used = 0;
-	const int inputLength = (int)strlen(input);
+	
+   int inputLength = (int)strlen(input);
+   if (inputLength > 160)
+      inputLength = 160;
 
 	for (i = 0; i < inputLength; i++)
 	{
@@ -57,7 +63,10 @@ static bool SMSPack7BitChars(const char* input, char* output, int* outputLength,
 	return true;
 }
 
-bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer, const int pduBufferSize)
+/**
+ * Create SMS PDU from phone number and message text
+ */
+bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer)
 {
 	const int bufferSize = 512;
 	char phoneNumberFormatted[32];
@@ -97,7 +106,7 @@ bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduB
 		payloadHex[i*2 + 1]	= bin2hex(payload[i]&0xF);
 	}
 	payloadHex[i*2] = '\0';
-	snprintf(pduBuffer, pduBufferSize, "0011000%X%X%s0000AA%02X%s", (int)strlen(phoneNumber), numberFormat, 
+	snprintf(pduBuffer, PDU_BUFFER_SIZE, "0011000%X%X%s0000AA%02X%s", (int)strlen(phoneNumber), numberFormat, 
 		phoneNumberFormatted, (int)strlen(message), payloadHex);
 
 	return true;

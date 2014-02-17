@@ -262,11 +262,9 @@ connect_failure_0:
 	return NULL;
 }
 
-
-//
-// Disconnect from database
-//
-
+/**
+ * Disconnect from database
+ */
 extern "C" void EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
 {
 	MutexLock(pConn->mutexQuery);
@@ -278,10 +276,9 @@ extern "C" void EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
 	free(pConn);
 }
 
-//
-// Prepare statement
-//
-
+/**
+ * Prepare statement
+ */
 extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	long iResult;

@@ -6,7 +6,7 @@ netsvc_la_CPPFLAGS=-I@top_srcdir@/include
 netsvc_la_LDFLAGS = -module -avoid-version
 netsvc_la_LIBADD = ../../../libnetxms/libnetxms.la -lcurl
 
-EXTRA_DIST = netsvc.h
+EXTRA_DIST = netsvc.h netsvc.vcproj
 
 if !STATIC_BUILD
 install-exec-hook:

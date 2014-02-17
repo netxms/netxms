@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003-2013 NetXMS Team
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@
 #include <dbghelp.h>
 #endif
 
-#ifdef __sun
+#ifndef _WIN32
 #include <signal.h>
 #endif
 
@@ -52,7 +52,7 @@ BOOL g_bCheckDB = FALSE;
  * Help text
  */
 static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T("\n")
-                           _T("Copyright (c) 2003-2013 NetXMS Team\n\n")
+                           _T("Copyright (c) 2003-2014 Raden Solutions\n\n")
                            _T("Usage: netxmsd [<options>]\n\n")
                            _T("Valid options are:\n")
                            _T("   -e          : Run database check on startup\n")
@@ -60,7 +60,6 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
                            _T("               : Default is ") DEFAULT_CONFIG_FILE _T("\n")
                            _T("   -d          : Run as daemon/service\n")
                            _T("   -D <level>  : Set debug level (valid levels are 0..9)\n")
-                           _T("   -q          : Disable interactive console\n")
                            _T("   -h          : Display help and exit\n")
 #ifdef _WIN32
                            _T("   -I          : Install Windows service\n")
@@ -69,6 +68,7 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
 #else
                            _T("   -p <file>   : Specify pid file.\n")
 #endif
+                           _T("   -q          : Disable interactive console\n")
 #ifdef _WIN32
                            _T("   -R          : Remove Windows service\n")
                            _T("   -s          : Start Windows service\n")
@@ -115,7 +115,6 @@ static BOOL ExecAndWait(char *pszCommand)
    return bSuccess;
 }
 
-
 /**
  * Create minidump of given process
  */
@@ -153,9 +152,9 @@ static void CreateMiniDump(DWORD pid)
 #endif
 
 #ifdef _WIN32
-#define VALID_OPTIONS   "c:CdD:qehIL:P:RsSv"
+#define VALID_OPTIONS   "c:CdD:ehIL:P:qRsSv"
 #else
-#define VALID_OPTIONS   "c:CdD:qehp:v"
+#define VALID_OPTIONS   "c:CdD:ehp:qv"
 #endif
 
 /**
@@ -250,6 +249,16 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #endif
 				useLogin = TRUE;
 				break;
+#ifndef _WIN32
+			case 'p':   // PID file
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPIDFile, MAX_PATH);
+				g_szPIDFile[MAX_PATH - 1] = 0;
+#else
+				nx_strncpy(g_szPIDFile, optarg, MAX_PATH);
+#endif
+				break;
+#endif
 			case 'P':
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, 256);
@@ -323,10 +332,9 @@ int main(int argc, char* argv[])
    FILE *fp;
 #endif
 
-#if defined(__sun) || defined(_AIX) || defined(__hpux)
+#ifndef _WIN32
    signal(SIGPIPE, SIG_IGN);
    signal(SIGHUP, SIG_IGN);
-   signal(SIGINT, SIG_IGN);
    signal(SIGQUIT, SIG_IGN);
    signal(SIGUSR1, SIG_IGN);
    signal(SIGUSR2, SIG_IGN);

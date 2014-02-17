@@ -186,6 +186,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private String timeFormat;
    private String shortTimeFormat;
    private int defaultDciRetentionTime;
+   private int alarmStatusFlowStrict;
    private int defaultDciPollingInterval;
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
@@ -693,7 +694,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
          long data = msg.getVariableAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
-         sendNotification(new NXCNotification(code, data));
+         if(code == NXCNotification.ALARM_STATUS_FLOW_CHANGED)
+         {
+            alarmStatusFlowStrict = (int)data;
+         }
+         else
+         {
+            sendNotification(new NXCNotification(code, data));
+         }
       }
       
       /**
@@ -1199,7 +1207,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
-      if (msg == null) throw new NXCException(RCC.TIMEOUT);
+      if (msg == null) 
+         throw new NXCException(RCC.TIMEOUT);
       return msg;
    }
 
@@ -1212,7 +1221,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public NXCPMessage waitForMessage(final int code, final long id) throws NXCException
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
-      if (msg == null) throw new NXCException(RCC.TIMEOUT);
+      if (msg == null) 
+         throw new NXCException(RCC.TIMEOUT);
       return msg;
    }
 
@@ -1499,6 +1509,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          defaultDciRetentionTime = response.getVariableAsInteger(NXCPCodes.VID_RETENTION_TIME);
          if (defaultDciRetentionTime == 0) defaultDciRetentionTime = 30;
 
+         alarmStatusFlowStrict = response.getVariableAsInteger(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
+         
          Logger.info("NXCSession.connect", "succesfully connected and logged in, userId=" + userId);
          isConnected = true;
       }
@@ -2149,7 +2161,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          msg = waitForMessage(NXCPCodes.CMD_ALARM_DATA, rqId);
          long alarmId = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_ID);
-         if (alarmId == 0) break; // ALARM_ID == 0 indicates end of list
+         if (alarmId == 0) 
+            break; // ALARM_ID == 0 indicates end of list
          alarmList.put(alarmId, new Alarm(msg));
       }
 
@@ -2221,11 +2234,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void acknowledgeAlarm(final long alarmId, boolean sticky) throws IOException, NXCException
+   public void acknowledgeAlarm(final long alarmId, boolean sticky, int time) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_ACK_ALARM);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
       msg.setVariableInt16(NXCPCodes.VID_STICKY_FLAG, sticky ? 1 : 0);
+      msg.setVariableInt32(NXCPCodes.VID_TIMESTAMP, time);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -2239,7 +2253,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    public void acknowledgeAlarm(final long alarmId) throws IOException, NXCException
    {
-      acknowledgeAlarm(alarmId, false);
+      acknowledgeAlarm(alarmId, false, 0);
    }
 
    /**
@@ -2348,6 +2362,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
+    * Delete alarm's note (comment). 
+    *
+    * @param alarmId alarm ID
+    * @param noteId  note ID or 0 for creating new note
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAlarmNote(long alarmId, long noteId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM_NOTE);
+      msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      msg.setVariableInt32(NXCPCodes.VID_NOTE_ID, (int) noteId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
     * Create or update alarm's note (comment). To create new note, set nodeId to 0.
     *
     * @param alarmId alarm ID
@@ -2362,6 +2393,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
       msg.setVariableInt32(NXCPCodes.VID_NOTE_ID, (int) noteId);
       msg.setVariable(NXCPCodes.VID_COMMENTS, text);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Changes state of alarm status flow. Strict or not - terminate state can be set only after 
+    * resolve state or after any state. 
+    * 
+    * @param state state of alarm status flow - strict or not (1 or 0)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void setAlarmFlowState(int state) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_STATUS_FLOW);
+      msg.setVariableInt32(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE, state);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -3276,9 +3323,33 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       // appropriate notification without waiting for actual server update
       synchronized(objectList)
       {
-         objectList.remove(objectId);
+         AbstractObject object = objectList.get(objectId);
+         if (object != null)
+         {
+            objectList.remove(objectId);
+            removeOrphanedObjects(object);
+         }
       }
       sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, objectId));
+   }
+   
+   /**
+    * Remove orphaned objects (with last parent left)
+    * 
+    * @param parent
+    */
+   private void removeOrphanedObjects(AbstractObject parent)
+   {
+      Iterator<Long> it = parent.getChildren();
+      while(it.hasNext())
+      {
+         AbstractObject object = objectList.get(it.next());
+         if ((object != null) && (object.getParentCount() == 1))
+         {
+            objectList.remove(object.getObjectId());
+            removeOrphanedObjects(object);
+         }
+      }
    }
 
    /**
@@ -3302,14 +3373,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void modifyObject(final NXCObjectModificationData data, final Object userData)
-      throws IOException, NXCException
+   public void modifyObject(final NXCObjectModificationData data, final Object userData) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_OBJECT);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) data.getObjectId());
 
       long flags = data.getFlags();
-      if ((flags == 0) && (userData == null)) return; // Nothing to change
 
       // Object name
       if ((flags & NXCObjectModificationData.MODIFY_NAME) != 0)
@@ -3677,7 +3746,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          msg.setVariableInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
       }
 
-      if (userData != null) modifyCustomObject(data, userData, msg);
+      modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -3739,7 +3808,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       data.setInheritAccessRights(inheritAccessRights);
       modifyObject(data);
    }
-
+   
    /**
     * Change report's definition (wrapper for modifyObject())
     *
@@ -3819,6 +3888,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+
+   /**
+    * Get effective rights of currently logged in user to given object.
+    * 
+    * @param objectId
+    * @return
+    * @throws IOException
+    * @throws NXCException
+    */
+   public int getEffectiveRights(final long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EFFECTIVE_RIGHTS);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getVariableAsInteger(NXCPCodes.VID_EFFECTIVE_RIGHTS);
+   }
+
 
    /**
     * Common internal implementation for bindObject, unbindObject, and
@@ -5128,6 +5214,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+   
+   /**
+    * Delete object tool.
+    *
+    * @param toolId Object tool ID
+    * @param enable true if object tool should be enabled, false if disabled
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void changeObjecToolDisableStatuss(long toolId, boolean enable) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_OBJECT_TOOL_STATUS);
+      msg.setVariableInt32(NXCPCodes.VID_TOOL_ID, (int) toolId);
+      msg.setVariableInt32(NXCPCodes.VID_STATE, enable ? 1 : 0);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 
    /**
     * Execute object tool of "table" type against given node.
@@ -5900,6 +6003,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE);
+      if(serverFileName.equals(""))
+      {
+         serverFileName = localFile.getName();
+      }
       msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -6617,6 +6724,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public final int getDefaultDciPollingInterval()
    {
       return defaultDciPollingInterval;
+   }
+   
+   /**
+    * @return the alarmStatusFlowStrict
+    */
+   public final int getAlarmStatusFlowStrict()
+   {
+      return alarmStatusFlowStrict;
    }
 
    /**

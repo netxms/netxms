@@ -330,6 +330,7 @@ char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_text_ptr(xmpp_stanza_t * const stanz
 char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_name(xmpp_stanza_t * const stanza);
 
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_add_child_ex(xmpp_stanza_t *stanza, xmpp_stanza_t *child, int do_clone);
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_ns(xmpp_stanza_t * const stanza, const char * const ns);
 /* set_attribute adds/replaces attributes */
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_attribute(xmpp_stanza_t * const stanza, 

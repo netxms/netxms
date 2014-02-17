@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 NetXMS Team
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -383,6 +383,13 @@ void ClientSession::readThread()
          break;
       }
 
+      // Receive timeout
+      if (iErr == 3)
+      {
+         debugPrintf(5, _T("RecvNXCPMessageEx: receive timeout"));
+         break;
+      }
+
       // Check if message is too large
       if (iErr == 1)
       {
@@ -404,6 +411,12 @@ void ClientSession::readThread()
       {
          debugPrintf(4, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
+      }
+
+      if (g_debugLevel >= 8)
+      {
+         String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+         debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
       }
 
       // Special handling for raw messages
@@ -742,7 +755,8 @@ void ClientSession::processingThread()
           (m_wCurrentCmd != CMD_LOGIN) &&
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
           (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION) &&
-          (m_wCurrentCmd != CMD_GET_MY_CONFIG))
+          (m_wCurrentCmd != CMD_GET_MY_CONFIG) &&
+          (m_wCurrentCmd != CMD_REGISTER_AGENT))
       {
          delete pMsg;
          continue;
@@ -888,8 +902,14 @@ void ClientSession::processingThread()
          case CMD_GET_ALARM_NOTES:
 				getAlarmNotes(pMsg);
             break;
+         case CMD_SET_ALARM_STATUS_FLOW:
+            updateAlarmStatusFlow(pMsg);
+            break;
          case CMD_UPDATE_ALARM_NOTE:
 				updateAlarmNote(pMsg);
+            break;
+         case CMD_DELETE_ALARM_NOTE:
+            deleteAlarmNote(pMsg);
             break;
          case CMD_GET_ALARM:
             getAlarm(pMsg);
@@ -1032,6 +1052,9 @@ void ClientSession::processingThread()
          case CMD_DELETE_OBJECT_TOOL:
             deleteObjectTool(pMsg);
             break;
+         case CMD_CHANGE_OBJECT_TOOL_STATUS:
+            changeObjectToolStatus(pMsg);
+            break;
          case CMD_GENERATE_OBJECT_TOOL_ID:
             generateObjectToolId(pMsg->GetId());
             break;
@@ -1126,13 +1149,13 @@ void ClientSession::processingThread()
             importConfiguration(pMsg);
             break;
 			case CMD_GET_GRAPH_LIST:
-				SendGraphList(pMsg->GetId());
+				sendGraphList(pMsg->GetId());
 				break;
 			case CMD_SAVE_GRAPH:
-			   SaveGraph(pMsg);
+			   saveGraph(pMsg);
             break;
 			case CMD_DELETE_GRAPH:
-				DeleteGraph(pMsg);
+				deleteGraph(pMsg);
 				break;
 			case CMD_ADD_CA_CERTIFICATE:
 				AddCACertificate(pMsg);
@@ -1338,6 +1361,9 @@ void ClientSession::processingThread()
          case CMD_GET_SUBNET_ADDRESS_MAP:
             getSubnetAddressMap(pMsg);
             break;
+         case CMD_GET_EFFECTIVE_RIGHTS:
+            getEffectiveRights(pMsg);
+            break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -1434,6 +1460,11 @@ void ClientSession::sendMessage(CSCPMessage *msg)
 		debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
 
 	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
+   if ((g_debugLevel >= 8) && (msg->GetCode() != CMD_ADM_MESSAGE))
+   {
+      String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+      debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+   }
    if (m_pCtx != NULL)
    {
       CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -1748,6 +1779,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
 			msg.SetVariable(VID_POLLING_INTERVAL, ConfigReadULong(_T("DefaultDCIPollingInterval"), 60));
 			msg.SetVariable(VID_RETENTION_TIME, ConfigReadULong(_T("DefaultDCIRetentionTime"), 30));
+			msg.SetVariable(VID_ALARM_STATUS_FLOW_STATE, ConfigReadInt(_T("StrictAlarmStatusFlow"), 0));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
@@ -1799,7 +1831,8 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
          msg.SetCode(CMD_EVENT_DB_RECORD);
          msg.SetId(dwRqId);
 
-         hResult = DBAsyncSelect(g_hCoreDB, _T("SELECT event_code,event_name,severity,flags,message,description FROM event_cfg"));
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         hResult = DBAsyncSelect(hdb, _T("SELECT event_code,event_name,severity,flags,message,description FROM event_cfg"));
          if (hResult != NULL)
          {
             while(DBFetch(hResult))
@@ -1820,6 +1853,7 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
             }
             DBFreeAsyncResult(hResult);
          }
+         DBConnectionPoolReleaseConnection(hdb);
 
          // End-of-list indicator
          msg.SetVariable(VID_EVENT_CODE, (UINT32)0);
@@ -1865,9 +1899,11 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
    {
       TCHAR szQuery[8192], szName[MAX_EVENT_NAME];
 
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       // Check if event with specific code exists
       UINT32 dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
-		bool bEventExist = IsDatabaseRecordExist(g_hCoreDB, _T("event_cfg"), _T("event_code"), dwEventCode);
+		bool bEventExist = IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), dwEventCode);
 
       // Check that we are not trying to create event below 100000
       if (bEventExist || (dwEventCode >= FIRST_USER_EVENT_ID))
@@ -1899,7 +1935,7 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
 
             safe_free(pszDescription);
 
-            if (DBQuery(g_hCoreDB, szQuery))
+            if (DBQuery(hdb, szQuery))
             {
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
                ReloadEvents();
@@ -1924,6 +1960,7 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_INVALID_EVENT_CODE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -2014,7 +2051,6 @@ void ClientSession::generateEventCode(UINT32 dwRqId)
  */
 void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 {
-   UINT32 dwTimeStamp;
    CSCPMessage msg;
 
    // Send confirmation message
@@ -2031,7 +2067,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
 
    // Get client's last known time stamp
-   dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
+   UINT32 dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
 
    // Prepare message
    msg.SetCode(CMD_OBJECT);
@@ -2049,6 +2085,13 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             object->commentsToMessage(&msg);
+         if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            // mask passwords
+            msg.SetVariable(VID_SHARED_SECRET, _T("********"));
+            msg.SetVariable(VID_SNMP_AUTH_PASSWORD, _T("********"));
+            msg.SetVariable(VID_SNMP_PRIV_PASSWORD, _T("********"));
+         }
          sendMessage(&msg);
          msg.deleteAllVariables();
       }
@@ -2106,6 +2149,13 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             object->commentsToMessage(&msg);
+         if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            // mask passwords
+            msg.SetVariable(VID_SHARED_SECRET, _T("********"));
+            msg.SetVariable(VID_SNMP_AUTH_PASSWORD, _T("********"));
+            msg.SetVariable(VID_SNMP_PRIV_PASSWORD, _T("********"));
+         }
          sendMessage(&msg);
          msg.deleteAllVariables();
       }
@@ -2143,6 +2193,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
    msg.SetId(dwRqId);
 
    MutexLock(m_mutexSendEvents);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Retrieve events from database
    switch(g_nDBSyntax)
@@ -2151,7 +2202,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
          dwNumRows = 0;
-         hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM event_log"));
+         hTempResult = DBSelect(hdb, _T("SELECT count(*) FROM event_log"));
          if (hTempResult != NULL)
          {
             if (DBGetNumRows(hTempResult) > 0)
@@ -2188,7 +2239,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
          szQuery[0] = 0;
          break;
    }
-   hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+   hResult = DBAsyncSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -2232,6 +2283,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
    	sendMessage(&msg);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
    MutexUnlock(m_mutexSendEvents);
 }
 
@@ -2795,11 +2847,9 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
    sendMessage(&msg);
 }
 
-
-//
-// Notify client on user database update
-//
-
+/**
+ * Notify client on user database update
+ */
 void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 {
    CSCPMessage msg;
@@ -2825,11 +2875,9 @@ void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *obje
    }
 }
 
-
-//
-// Change management status for the object
-//
-
+/**
+ * Change management status for the object
+ */
 void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -3035,15 +3083,13 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
                   if (m_pOpenDCIList[i] == dwObjectId)
                   {
                      m_dwOpenDCIListSize--;
-                     memmove(&m_pOpenDCIList[i], &m_pOpenDCIList[i + 1],
-                             sizeof(UINT32) * (m_dwOpenDCIListSize - i));
+                     memmove(&m_pOpenDCIList[i], &m_pOpenDCIList[i + 1], sizeof(UINT32) * (m_dwOpenDCIListSize - i));
                      break;
                   }
             }
 
             // Queue template update
-            if ((object->Type() == OBJECT_TEMPLATE) ||
-					 (object->Type() == OBJECT_CLUSTER))
+            if ((object->Type() == OBJECT_TEMPLATE) || (object->Type() == OBJECT_CLUSTER))
                ((Template *)object)->queueUpdate();
          }
          else
@@ -4098,11 +4144,9 @@ void ClientSession::processEPPRecord(CSCPMessage *pRequest)
    }
 }
 
-
-//
-// Send compiled MIB file to client
-//
-
+/**
+ * Send compiled MIB file to client
+ */
 void ClientSession::sendMib(CSCPMessage *request)
 {
    TCHAR szBuffer[MAX_PATH];
@@ -4113,11 +4157,9 @@ void ClientSession::sendMib(CSCPMessage *request)
 	sendFile(szBuffer, request->GetId(), 0);
 }
 
-
-//
-// Send timestamp of compiled MIB file to client
-//
-
+/**
+ * Send timestamp of compiled MIB file to client
+ */
 void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -4847,7 +4889,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
       // User should have "acknowledge alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0));
+			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
       }
       else
       {
@@ -4984,10 +5026,9 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
 }
 
 
-//
-// Update alarm comment
-//
-
+/**
+ * Update alarm comment
+ */
 void ClientSession::updateAlarmNote(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -5025,7 +5066,59 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
    sendMessage(&msg);
 }
 
+/**
+ * Delete alarm comment
+ */
+void ClientSession::deleteAlarmNote(CSCPMessage *request)
+{
+   CSCPMessage msg;
 
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   if (object != NULL)
+   {
+      // User should have "acknowledge alarm" right to the object
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      {
+			UINT32 noteId = request->GetVariableLong(VID_NOTE_ID);
+			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmNoteByID(alarmId, noteId));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms object will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+void ClientSession::updateAlarmStatusFlow(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+   int status = request->GetVariableLong(VID_ALARM_STATUS_FLOW_STATE);
+
+   ConfigWriteInt(_T("StrictAlarmStatusFlow"), status, false);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+   // Send response
+   sendMessage(&msg);
+}
 //
 // Create new action
 //
@@ -5066,11 +5159,9 @@ void ClientSession::createAction(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Update existing action's data
-//
-
+/**
+ * Update existing action's data
+ */
 void ClientSession::updateAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -5093,11 +5184,9 @@ void ClientSession::updateAction(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete action
-//
-
+/**
+ * Delete action
+ */
 void ClientSession::deleteAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -5130,11 +5219,9 @@ void ClientSession::deleteAction(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Process changes in actions
-//
-
+/**
+ * Process changes in actions
+ */
 void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
 {
    UPDATE_INFO *pUpdate;
@@ -5153,11 +5240,9 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
    }
 }
 
-
-//
-// Send all actions to client
-//
-
+/**
+ * Send all actions to client
+ */
 void ClientSession::sendAllActions(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -5720,11 +5805,9 @@ void ClientSession::LockPackageDB(UINT32 dwRqId, BOOL bLock)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of all installed packages to client
-//
-
+/**
+ * Send list of all installed packages to client
+ */
 void ClientSession::SendAllPackages(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -5740,7 +5823,8 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
    {
       if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
       {
-         hResult = DBAsyncSelect(g_hCoreDB, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         hResult = DBAsyncSelect(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
          if (hResult != NULL)
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -5773,6 +5857,7 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
          {
             msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
          }
+         DBConnectionPoolReleaseConnection(hdb);
       }
       else
       {
@@ -5790,11 +5875,9 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
       sendMessage(&msg);
 }
 
-
-//
-// Install package to server
-//
-
+/**
+ * Install package to server
+ */
 void ClientSession::InstallPackage(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6588,11 +6671,11 @@ void ClientSession::setupEncryption(CSCPMessage *request)
    msg.deleteAllVariables();
 
    // Wait for encryption setup
-   ConditionWait(m_condEncryptionSetup, 3000);
+   ConditionWait(m_condEncryptionSetup, 30000);
 
    // Send response
    msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
+   msg.SetId(request->GetId());
    msg.SetVariable(VID_RCC, m_dwEncryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -6840,7 +6923,8 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT tool_id,user_id FROM object_tools_acl"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT tool_id,user_id FROM object_tools_acl"));
    if (hResult != NULL)
    {
       dwAclSize = DBGetNumRows(hResult);
@@ -6852,7 +6936,7 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
       }
       DBFreeResult(hResult);
 
-      hResult = DBSelect(g_hCoreDB, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,matching_oid,confirmation_text FROM object_tools"));
+      hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,matching_oid,confirmation_text FROM object_tools"));
       if (hResult != NULL)
       {
          dwNumTools = DBGetNumRows(hResult);
@@ -6925,6 +7009,7 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
    }
+   DBConnectionPoolReleaseConnection(hdb);
 
    // Send response
    sendMessage(&msg);
@@ -6947,9 +7032,11 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=%d"), dwToolId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -6981,7 +7068,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 
             // Access list
             _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
-            hResult = DBSelect(g_hCoreDB, szQuery);
+            hResult = DBSelect(hdb, szQuery);
             if (hResult != NULL)
             {
                iNumRows = DBGetNumRows(hResult);
@@ -7002,7 +7089,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT col_name,col_oid,col_format,col_substr ")
                                      _T("FROM object_tools_table_columns WHERE tool_id=%d ")
                                      _T("ORDER BY col_number"), dwToolId);
-                  hResult = DBSelect(g_hCoreDB, szQuery);
+                  hResult = DBSelect(hdb, szQuery);
                   if (hResult != NULL)
                   {
                      iNumRows = DBGetNumRows(hResult);
@@ -7041,6 +7128,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -7094,6 +7182,34 @@ void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
    {
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
       msg.SetVariable(VID_RCC, DeleteObjectToolFromDB(dwToolId));
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Change Object Tool status (enabled/disabled)
+ */
+void ClientSession::changeObjectToolStatus(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   UINT32 toolID, enable;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   {
+      toolID = pRequest->GetVariableLong(VID_TOOL_ID);
+      enable = pRequest->GetVariableLong(VID_STATE);
+      msg.SetVariable(VID_RCC, ChangeObjectToolStatus(toolID, enable == 0 ? false : true));
    }
    else
    {
@@ -7273,11 +7389,9 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Send script list
-//
-
+/**
+ * Send script list
+ */
 void ClientSession::sendScriptList(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -7314,11 +7428,9 @@ void ClientSession::sendScriptList(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Send script
-//
-
+/**
+ * Send script
+ */
 void ClientSession::sendScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -7661,7 +7773,8 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
          szQuery[0] = 0;
          break;
    }
-   hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBAsyncSelect(hdb, szQuery);
    if (hResult != NULL)
    {
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -7704,6 +7817,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
 		sendMessage(&msg);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
    MutexUnlock(m_mutexSendSyslog);
 }
 
@@ -7794,7 +7908,9 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             szQuery[0] = 0;
             break;
       }
-      hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      hResult = DBAsyncSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -7824,6 +7940,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
          msg.setEndOfSequence();
       }
 
+      DBConnectionPoolReleaseConnection(hdb);
       MutexUnlock(m_mutexSendTrapLog);
    }
    else
@@ -8652,6 +8769,7 @@ void ClientSession::pushDCIData(CSCPMessage *pRequest)
       // Cleanup
       for(i = 0; i < dwNumItems; i++)
          safe_free(ppValueList[i]);
+      safe_free(ppValueList);
       free(ppItemList);
       free(dcTargetList);
    }
@@ -9094,12 +9212,10 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of available graphs to client
-//
-
-void ClientSession::SendGraphList(UINT32 dwRqId)
+/**
+ * Send list of available graphs to client
+ */
+void ClientSession::sendGraphList(UINT32 dwRqId)
 {
    CSCPMessage msg;
 	DB_RESULT hResult;
@@ -9112,10 +9228,11 @@ void ClientSession::SendGraphList(UINT32 dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-	pACL = LoadGraphACL(0, &nACLSize);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	pACL = LoadGraphACL(hdb, 0, &nACLSize);
 	if (nACLSize != -1)
 	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
+		hResult = DBSelect(hdb, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
 		if (hResult != NULL)
 		{
 			pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
@@ -9179,21 +9296,21 @@ void ClientSession::SendGraphList(UINT32 dwRqId)
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
    sendMessage(&msg);
 }
 
-//
-// Save graph
-//
-
-void ClientSession::SaveGraph(CSCPMessage *pRequest)
+/**
+ * Save graph
+ */
+void ClientSession::saveGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	BOOL bNew, bSuccess;
-	UINT32 id, graphId, graphUserId, graphAccess;
+	UINT32 id, graphId, graphUserId, graphAccess, accessRightStatus;
 	UINT16 overwrite;
 	TCHAR szQuery[16384], *pszEscName, *pszEscData, *pszTemp, dwGraphName[255];
-	int i, nACLSize, accessRightStatus;
+	int i, nACLSize;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -9204,7 +9321,7 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 
    GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName);
 
-   if(nameUniq.graphId == graphId)
+   if (nameUniq.graphId == graphId)
    {
       nameUniq.status = RCC_SUCCESS;
    }
@@ -9221,10 +9338,10 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 		bNew = FALSE;
 	}
 
-   if( accessRightStatus == RCC_SUCCESS && ( nameUniq.status == RCC_SUCCESS || (overwrite && bNew) ) )
+   if (accessRightStatus == RCC_SUCCESS && (nameUniq.status == RCC_SUCCESS || (overwrite && bNew)))
    {
       bSuccess = TRUE;
-      if(nameUniq.status != RCC_SUCCESS )
+      if (nameUniq.status != RCC_SUCCESS)
       {
          bNew = FALSE;
          graphId = nameUniq.graphId;
@@ -9241,16 +9358,14 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 	{
 		debugPrintf(5, _T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), graphId);
 		bSuccess = FALSE;
-		if (DBBegin(g_hCoreDB))
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		if (DBBegin(hdb))
 		{
 			pRequest->GetVariableStr(VID_NAME, szQuery, 256);
 			pszEscName = EncodeSQLString(szQuery);
 			pszTemp = pRequest->GetVariableStr(VID_GRAPH_CONFIG);
-			if (pszTemp != NULL)
-			{
-				pszEscData = EncodeSQLString(CHECK_NULL(pszTemp));
-				free(pszTemp);
-			}
+			pszEscData = EncodeSQLString(CHECK_NULL_EX(pszTemp));
+			safe_free(pszTemp);
 			if (bNew)
 			{
 				_sntprintf(szQuery, 16384, _T("INSERT INTO graphs (graph_id,owner_id,name,config) VALUES (%d,%d,'%s','%s')"),
@@ -9267,7 +9382,7 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 			free(pszEscName);
 			free(pszEscData);
 
-			if (DBQuery(g_hCoreDB, szQuery))
+			if (DBQuery(hdb, szQuery))
 			{
 				// Insert new ACL
 				nACLSize = (int)pRequest->GetVariableLong(VID_ACL_SIZE);
@@ -9277,7 +9392,7 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 					graphAccess = pRequest->GetVariableLong(id++);
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO graph_acl (graph_id,user_id,user_rights) VALUES (%d,%d,%d)"),
 					          graphId, graphUserId, graphAccess);
-					if (!DBQuery(g_hCoreDB, szQuery))
+					if (!DBQuery(hdb, szQuery))
 					{
 						bSuccess = FALSE;
 						msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
@@ -9292,31 +9407,30 @@ void ClientSession::SaveGraph(CSCPMessage *pRequest)
 
 			if (bSuccess)
 			{
-				DBCommit(g_hCoreDB);
+				DBCommit(hdb);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 				msg.SetVariable(VID_GRAPH_ID, graphId);
 				notify(NX_NOTIFY_GRAPHS_CHANGED);
 			}
 			else
 			{
-				DBRollback(g_hCoreDB);
+				DBRollback(hdb);
 			}
 		}
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 		}
+      DBConnectionPoolReleaseConnection(hdb);
 	}
 
    sendMessage(&msg);
 }
 
-
-//
-// Delete graph
-//
-
-void ClientSession::DeleteGraph(CSCPMessage *pRequest)
+/**
+ * Delete graph
+ */
+void ClientSession::deleteGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	UINT32 dwGraphId, dwOwner;
@@ -9328,15 +9442,17 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	dwGraphId = pRequest->GetVariableLong(VID_GRAPH_ID);
 	_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
-	hResult = DBSelect(g_hCoreDB, szQuery);
+	hResult = DBSelect(hdb, szQuery);
 	if (hResult != NULL)
 	{
 		if (DBGetNumRows(hResult) > 0)
 		{
 			dwOwner = DBGetFieldULong(hResult, 0, 0);
-			pACL = LoadGraphACL(dwGraphId, &nACLSize);
+			pACL = LoadGraphACL(hdb, dwGraphId, &nACLSize);
 			if (nACLSize != -1)
 			{
 				if ((m_dwUserId == 0) ||
@@ -9344,10 +9460,10 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_READ))
 				{
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graphs WHERE graph_id=%d"), dwGraphId);
-					if (DBQuery(g_hCoreDB, szQuery))
+					if (DBQuery(hdb, szQuery))
 					{
 						_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
-						DBQuery(g_hCoreDB, szQuery);
+						DBQuery(hdb, szQuery);
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
 						notify(NX_NOTIFY_GRAPHS_CHANGED);
 					}
@@ -9378,6 +9494,7 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
    sendMessage(&msg);
 }
 
@@ -9770,11 +9887,9 @@ void ClientSession::sendSMS(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Send SNMP community list
-//
-
+/**
+ * Send SNMP community list
+ */
 void ClientSession::SendCommunityList(UINT32 dwRqId)
 {
    CSCPMessage msg;
@@ -9788,7 +9903,8 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT community FROM snmp_communities"));
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
 		if (hResult != NULL)
 		{
 			count = DBGetNumRows(hResult);
@@ -9805,6 +9921,7 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 		}
+      DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
@@ -9814,11 +9931,9 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 	sendMessage(&msg);
 }
 
-
-//
-// Update SNMP community list
-//
-
+/**
+ * Update SNMP community list
+ */
 void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -9831,27 +9946,28 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-		if (DBBegin(g_hCoreDB))
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		if (DBBegin(hdb))
 		{
-			DBQuery(g_hCoreDB, _T("DELETE FROM snmp_communities"));
+			DBQuery(hdb, _T("DELETE FROM snmp_communities"));
 			count = pRequest->GetVariableLong(VID_NUM_STRINGS);
 			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
 			{
 				pRequest->GetVariableStr(id++, value, 256);
-				String escValue = DBPrepareString(g_hCoreDB, value);
+				String escValue = DBPrepareString(hdb, value);
 				_sntprintf(query, 1024, _T("INSERT INTO snmp_communities (id,community) VALUES(%d,%s)"), i + 1, (const TCHAR *)escValue);
-				if (!DBQuery(g_hCoreDB, query))
+				if (!DBQuery(hdb, query))
 					break;
 			}
 
 			if (i == count)
 			{
-				DBCommit(g_hCoreDB);
+				DBCommit(hdb);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				DBRollback(g_hCoreDB);
+				DBRollback(hdb);
 				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 			}
 		}
@@ -9859,6 +9975,7 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 		}
+      DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
@@ -10029,11 +10146,9 @@ void ClientSession::onSituationChange(CSCPMessage *msg)
    }
 }
 
-
-//
-// Register agent
-//
-
+/**
+ * Register agent
+ */
 void ClientSession::registerAgent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -10042,40 +10157,33 @@ void ClientSession::registerAgent(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+	if (ConfigReadInt(_T("EnableAgentRegistration"), 0))
 	{
-		if (ConfigReadInt(_T("EnableAgentRegistration"), 0))
+		if (m_clientAddr->sa_family == AF_INET)
 		{
-			if (m_clientAddr->sa_family == AF_INET)
+			node = FindNodeByIP(0, ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));
+			if (node != NULL)
 			{
-				node = FindNodeByIP(0, ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));
-				if (node != NULL)
-				{
-					// Node already exist, force configuration poll
-					node->setRecheckCapsFlag();
-					node->forceConfigurationPoll();
-				}
-				else
-				{
-					NEW_NODE *info;
-
-					info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-					info->dwIpAddr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
-					info->dwNetMask = 0;
-					info->zoneId = 0;	// Add to default zone
-					info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
-					g_nodePollerQueue.Put(info);
-				}
-				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				// Node already exist, force configuration poll
+				node->setRecheckCapsFlag();
+				node->forceConfigurationPoll();
 			}
 			else
 			{
-				msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
+				NEW_NODE *info;
+
+				info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+				info->dwIpAddr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
+				info->dwNetMask = 0;
+				info->zoneId = 0;	// Add to default zone
+				info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
+				g_nodePollerQueue.Put(info);
 			}
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
 		}
 		else
 		{
-	      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
 		}
 	}
 	else
@@ -10086,11 +10194,9 @@ void ClientSession::registerAgent(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Get file from server
-//
-
+/**
+ * Get file from server
+ */
 void ClientSession::getServerFile(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -10536,7 +10642,7 @@ void ClientSession::queryServerLog(CSCPMessage *request)
 	if (log != NULL)
 	{
 		INT64 rowCount;
-		msg.SetVariable(VID_RCC, log->query(new LogFilter(request), &rowCount) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		msg.SetVariable(VID_RCC, log->query(new LogFilter(request), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
 		msg.SetVariable(VID_NUM_ROWS, (QWORD)rowCount);
 		log->unlock();
 	}
@@ -10566,7 +10672,7 @@ void ClientSession::getServerLogQueryData(CSCPMessage *request)
 		INT64 startRow = request->GetVariableInt64(VID_START_ROW);
 		INT64 numRows = request->GetVariableInt64(VID_NUM_ROWS);
 		bool refresh = request->GetVariableShort(VID_FORCE_RELOAD) ? true : false;
-		data = log->getData(startRow, numRows, refresh);
+		data = log->getData(startRow, numRows, refresh, getUserId()); // pass user id from session
 		log->unlock();
 		if (data != NULL)
 		{
@@ -10870,7 +10976,7 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 		}
 		else
 		{
-			debugPrintf(5, _T("findIpAddress(%s): subnet not found"), ipAddrText, subnet->Name());
+			debugPrintf(5, _T("findIpAddress(%s): subnet not found"), ipAddrText);
 		}
 	}
 
@@ -11020,15 +11126,23 @@ static void SendLibraryImageDelete(ClientSession *pSession, void *pArg)
 	pSession->onLibraryImageChange((uuid_t *)pArg, true);
 }
 
-
-//
-// Update library image from client
-//
-
+/**
+ * Update library image from client
+ */
 void ClientSession::updateLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	UINT32 rcc = RCC_SUCCESS;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+   if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
+   {
+	   msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(&msg);
+      return;
+   }
 
 	uuid_t guid;
 	uuid_clear(guid);
@@ -11073,11 +11187,13 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	//debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guidText, name, category, (int)imageSize);
 	debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s"), guidText, name, category);
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	if (rcc == RCC_SUCCESS)
 	{
 		TCHAR query[MAX_DB_STRING];
 		_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
-		DB_RESULT result = DBSelect(g_hCoreDB, query);
+		DB_RESULT result = DBSelect(hdb, query);
 		if (result != NULL)
 		{
 			int count = DBGetNumRows(result);
@@ -11111,7 +11227,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 			if (query[0] != 0)
 			{
-				if (DBQuery(g_hCoreDB, query))
+				if (DBQuery(hdb, query))
 				{
 					// DB up to date, update file)
 					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
@@ -11124,7 +11240,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 						{
 							m_dwFileRqId = request->GetId();
 							m_dwUploadCommand = CMD_MODIFY_IMAGE;
-              memcpy(m_uploadImageGuid, guid, UUID_LENGTH);
+                     memcpy(m_uploadImageGuid, guid, UUID_LENGTH);
 						}
 						else
 						{
@@ -11155,6 +11271,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 		msg.SetVariable(VID_GUID, guid, UUID_LENGTH);
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
 
@@ -11164,11 +11281,9 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	}
 }
 
-
-//
-// Delete image from library
-//
-
+/**
+ * Delete image from library
+ */
 void ClientSession::deleteLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -11180,12 +11295,21 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
+   if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
+   {
+	   msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(&msg);
+      return;
+   }
+
 	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
 	uuid_to_string(guid, guidText);
 	debugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
-	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult != NULL)
 	{
 		if (DBGetNumRows(hResult) > 0)
@@ -11193,7 +11317,7 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 			if (DBGetFieldLong(hResult, 0, 0) == 0)
 			{
 				_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND guid = '%s'"), guidText);
-				if (DBQuery(g_hCoreDB, query))
+				if (DBQuery(hdb, query))
 				{
 					// TODO: remove from FS?
 				}
@@ -11217,6 +11341,8 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 	{
 		rcc = RCC_DB_FAILURE;
 	}
+
+   DBConnectionPoolReleaseConnection(hdb);
 
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
@@ -11259,7 +11385,8 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
       _tcscat(query, (const TCHAR *)DBPrepareString(g_hCoreDB, category));
 	}
 
-	DB_RESULT result = DBSelect(g_hCoreDB, query);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_RESULT result = DBSelect(hdb, query);
 	if (result != NULL)
 	{
 		int count = DBGetNumRows(result);
@@ -11289,6 +11416,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 		rcc = RCC_DB_FAILURE;
 	}
 
+   DBConnectionPoolReleaseConnection(hdb);
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
 }
@@ -11666,6 +11794,7 @@ void ClientSession::receiveFile(CSCPMessage *request)
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
                _T("Started upload of file \"%s\" to server"), fileName);
+            NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
          }
          else
          {
@@ -11687,9 +11816,9 @@ void ClientSession::receiveFile(CSCPMessage *request)
 }
 
 
-//
-// Delete file in store
-//
+/**
+ * Delete file in store
+ */
 
 void ClientSession::deleteFile(CSCPMessage *request)
 {
@@ -11706,12 +11835,14 @@ void ClientSession::deleteFile(CSCPMessage *request)
       request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
 
-      _tcscpy(fileName, g_szDataDir);
-		_tcscat(fileName, DDIR_FILES);
-      _tcscat(fileName, FS_PATH_SEPARATOR);
-      _tcscat(fileName, cleanFileName);
-      if (_tunlink(fileName) == 0)
+      _tcscpy(m_szCurrFileName, g_szDataDir);
+      _tcscat(m_szCurrFileName, DDIR_FILES);
+      _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
+      _tcscat(m_szCurrFileName, cleanFileName);
+
+      if (_tunlink(m_szCurrFileName) == 0)
       {
+         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
       else
@@ -11922,11 +12053,9 @@ void ClientSession::deleteReportResults(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Render report execution results into document
-//
-
+/**
+ * Render report execution results into document
+ */
 void ClientSession::renderReport(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -11971,6 +12100,8 @@ void ClientSession::renderReport(CSCPMessage *request)
 	}
 #else
 	int ret = _tsystem(buffer);
+   if ((ret == -1) && (errno == ECHILD))
+      ret = 0;
 #endif
 
 	if (ret == 0)
@@ -12587,6 +12718,33 @@ void ClientSession::getSubnetAddressMap(CSCPMessage *request)
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get effective rights for object
+ */
+void ClientSession::getEffectiveRights(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      msg.SetVariable(VID_EFFECTIVE_RIGHTS, object->getUserRights(m_dwUserId));
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
    }
    else  // No object with given ID
    {

@@ -613,8 +613,18 @@ void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 
-void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...);
-void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...);
+void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
+   __attribute__ ((format(printf, 2, 3)))
+#endif
+;
+
+void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
+#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
+   __attribute__ ((format(printf, 2, 3)))
+#endif
+;
+
 void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args);
 
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
@@ -629,20 +639,16 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
 						                 UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
                                    void *pUserArg, BOOL bVerbose);
 
-
-//
-// Variables
-//
-
+/**
+ * Variables
+ */
 extern UINT32 LIBNXSRV_EXPORTABLE g_dwFlags;
 extern UINT32 LIBNXSRV_EXPORTABLE g_dwSNMPTimeout;
 extern UINT32 LIBNXSRV_EXPORTABLE g_debugLevel;
 
-
-//
-// Helper finctions for checking server flags
-//
-
+/**
+ * Helper finctions for checking server flags
+ */
 inline bool IsStandalone()
 {
 	return !(g_dwFlags & AF_DAEMON) ? true : false;

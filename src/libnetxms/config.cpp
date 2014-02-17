@@ -943,7 +943,10 @@ static void StartElement(void *userData, const char *name, const char **attrs)
    {
       if (!stricmp(name, ps->topLevelTag))
       {
-         ps->stack[ps->level++] = ps->config->getEntry(_T("/"));
+         ps->stack[ps->level] = ps->config->getEntry(_T("/"));
+         ps->charData[ps->level] = _T("");
+         ps->trimValue[ps->level] = XMLGetAttrBoolean(attrs, "trim", true);
+         ps->level++;
       }
       else
       {
@@ -1001,7 +1004,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
  */
 static void EndElement(void *userData, const char *name)
 {
-   XML_PARSER_STATE *ps = (XML_PARSER_STATE *) userData;
+   XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
 
    if (ps->level > MAX_STACK_DEPTH)
    {

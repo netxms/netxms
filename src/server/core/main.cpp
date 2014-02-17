@@ -33,6 +33,7 @@
 #ifdef _WIN32
 #include <errno.h>
 #include <psapi.h>
+#include <conio.h>
 #define open	_open
 #define write	_write
 #define close	_close
@@ -1187,6 +1188,20 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			}
 		}
+		else if (IsCommand(_T("DBCP"), szBuffer, 4))
+		{
+         ObjectArray<PoolConnectionInfo> *list = DBConnectionPoolGetConnectionList();
+         for(int i = 0; i < list->size(); i++)
+         {
+            PoolConnectionInfo *c = list->get(i);
+            TCHAR accessTime[64];
+            struct tm *ltm = localtime(&c->lastAccessTime);
+            _tcsftime(accessTime, 64, _T("%d.%b.%Y %H:%M:%S"), ltm);
+            ConsolePrintf(pCtx, _T("%p %s %hs:%d\n"), c->handle, accessTime, c->srcFile, c->srcLine);
+         }
+         ConsolePrintf(pCtx, _T("%d database connections in use\n\n"), list->size());
+         delete list;
+      }
 		else if (IsCommand(_T("FDB"), szBuffer, 3))
 		{
 			// Get argument
@@ -1607,6 +1622,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
 				_T("   show components <node>    - Show physical components of given node\n")
+            _T("   show dbcp                 - Show active sessions in database connection pool\n")
 				_T("   show fdb <node>           - Show forwarding database for node\n")
 				_T("   show flags                - Show internal server flags\n")
 				_T("   show index <index>        - Show internal index\n")
@@ -1660,12 +1676,14 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 	sigemptyset(&signals);
 	sigaddset(&signals, SIGTERM);
 	sigaddset(&signals, SIGINT);
-	sigaddset(&signals, SIGPIPE);
 	sigaddset(&signals, SIGSEGV);
 	sigaddset(&signals, SIGCHLD);
 	sigaddset(&signals, SIGHUP);
 	sigaddset(&signals, SIGUSR1);
 	sigaddset(&signals, SIGUSR2);
+#if !defined(__sun) && !defined(_AIX) && !defined(__hpux)
+	sigaddset(&signals, SIGPIPE);
+#endif
 
 	sigprocmask(SIG_BLOCK, &signals, NULL);
 
@@ -1719,78 +1737,99 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 {
 	nxlog_write(MSG_SERVER_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
-	if (IsStandalone() && ((g_dwFlags & AF_DEBUG_CONSOLE_DISABLED) == 0))
-	{
-		char *ptr, szCommand[256];
-		struct __console_ctx ctx;
+	if (IsStandalone())
+   {
+      if (!(g_dwFlags & AF_DEBUG_CONSOLE_DISABLED))
+	   {
+		   char *ptr, szCommand[256];
+		   struct __console_ctx ctx;
 #ifdef UNICODE
-		WCHAR wcCommand[256];
+   		WCHAR wcCommand[256];
 #endif
 
-		ctx.hSocket = -1;
-		ctx.socketMutex = INVALID_MUTEX_HANDLE;
-		ctx.pMsg = NULL;
-		ctx.session = NULL;
-      ctx.output = NULL;
-		WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" Ready\n")
-				          _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
-				          _T("System Console\n\n"));
+		   ctx.hSocket = -1;
+		   ctx.socketMutex = INVALID_MUTEX_HANDLE;
+		   ctx.pMsg = NULL;
+		   ctx.session = NULL;
+         ctx.output = NULL;
+		   WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" Ready\n")
+				             _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
+				             _T("System Console\n\n"));
 
 #if USE_READLINE
-		// Initialize readline library if we use it
-		rl_bind_key('\t', RL_INSERT_CAST rl_insert);
+		   // Initialize readline library if we use it
+		   rl_bind_key('\t', RL_INSERT_CAST rl_insert);
 #endif
 
-		while(1)
-		{
+		   while(1)
+		   {
 #if USE_READLINE
-			ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
+   			ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
 #else
-			WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
-			fflush(stdout);
-			if (fgets(szCommand, 255, stdin) == NULL)
-				break;   // Error reading stdin
-			ptr = strchr(szCommand, '\n');
-			if (ptr != NULL)
-				*ptr = 0;
-			ptr = szCommand;
+			   WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
+			   fflush(stdout);
+			   if (fgets(szCommand, 255, stdin) == NULL)
+				   break;   // Error reading stdin
+			   ptr = strchr(szCommand, '\n');
+			   if (ptr != NULL)
+				   *ptr = 0;
+			   ptr = szCommand;
 #endif
 
-			if (ptr != NULL)
-			{
+			   if (ptr != NULL)
+			   {
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, wcCommand, 256);
-				wcCommand[255] = 0;
-				StrStrip(wcCommand);
-				if (wcCommand[0] != 0)
-				{
-					if (ProcessConsoleCommand(wcCommand, &ctx) == CMD_EXIT_SHUTDOWN)
+				   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, wcCommand, 256);
+				   wcCommand[255] = 0;
+				   StrStrip(wcCommand);
+				   if (wcCommand[0] != 0)
+				   {
+					   if (ProcessConsoleCommand(wcCommand, &ctx) == CMD_EXIT_SHUTDOWN)
 #else
-				StrStrip(ptr);
-				if (*ptr != 0)
-				{
-					if (ProcessConsoleCommand(ptr, &ctx) == CMD_EXIT_SHUTDOWN)
+				   StrStrip(ptr);
+				   if (*ptr != 0)
+				   {
+					   if (ProcessConsoleCommand(ptr, &ctx) == CMD_EXIT_SHUTDOWN)
 #endif
-						break;
+						   break;
 #if USE_READLINE
-					add_history(ptr);
+					   add_history(ptr);
 #endif
-				}
+				   }
 #if USE_READLINE
-				free(ptr);
+				   free(ptr);
 #endif
-			}
-			else
-			{
-				_tprintf(_T("\n"));
-			}
-		}
+			   }
+			   else
+			   {
+				   _tprintf(_T("\n"));
+			   }
+		   }
 
 #if USE_READLINE
-		free(ptr);
+   		free(ptr);
 #endif
-		m_nShutdownReason = SHUTDOWN_FROM_CONSOLE;
-		Shutdown();
+		   m_nShutdownReason = SHUTDOWN_FROM_CONSOLE;
+		   Shutdown();
+      }
+      else
+      {
+         // standalone with debug console disabled
+#ifdef _WIN32
+         _tprintf(_T("Server running. Press ESC to shutdown.\n"));
+         while(1)
+         {
+            if (_getch() == 27)
+               break;
+         }
+         _tprintf(_T("Server shutting down...\n"));
+         Shutdown();
+#else
+         _tprintf(_T("Server running. Press Ctrl+C to shutdown.\n"));
+         // Shutdown will be called from signal handler
+   		ConditionWait(m_condShutdown, INFINITE);
+#endif
+      }
 	}
 	else
 	{

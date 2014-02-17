@@ -517,9 +517,8 @@ check_step:
  */
 bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
 {
-   const TCHAR *pszCurr;
-	TCHAR szValue[256];
-   TCHAR *realSchedule = pszSchedule;
+   TCHAR szValue[256], expandedSchedule[1024];
+   const TCHAR *realSchedule = pszSchedule;
 
    if (_tcslen(pszSchedule) > 4 && !_tcsncmp(pszSchedule, _T("%["), 2))
    {
@@ -547,7 +546,8 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
                      if (temp != NULL)
                      {
                         DbgPrintf(7, _T("DCObject::matchSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
-                        realSchedule = _tcsdup(temp);
+                        nx_strncpy(expandedSchedule, temp, 1024);
+                        realSchedule = expandedSchedule;
                      }
                   }
                }
@@ -569,44 +569,44 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
    }
 
    // Minute
-   pszCurr = ExtractWord(realSchedule, szValue);
+   const TCHAR *pszCurr = ExtractWord(realSchedule, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_min))
-         return false;
+      return false;
 
    // Hour
    pszCurr = ExtractWord(pszCurr, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_hour))
-         return false;
+      return false;
 
    // Day of month
    pszCurr = ExtractWord(pszCurr, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_mday))
-         return false;
+      return false;
 
    // Month
    pszCurr = ExtractWord(pszCurr, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1))
-         return false;
+      return false;
 
    // Day of week
    pszCurr = ExtractWord(pszCurr, szValue);
-	for(int i = 0; szValue[i] != 0; i++)
-		if (szValue[i] == _T('7'))
-			szValue[i] = _T('0');
+   for(int i = 0; szValue[i] != 0; i++)
+      if (szValue[i] == _T('7'))
+         szValue[i] = _T('0');
    if (!MatchScheduleElement(szValue, pCurrTime->tm_wday))
-		return false;
+      return false;
 
-	// Seconds
-	szValue[0] = _T('\0');
-	ExtractWord(pszCurr, szValue);
-	if (szValue[0] != _T('\0'))
-	{
-		if (bWithSeconds)
-			*bWithSeconds = TRUE;
-		return MatchScheduleElement(szValue, pCurrTime->tm_sec, currTimestamp);
-	}
+   // Seconds
+   szValue[0] = _T('\0');
+   ExtractWord(pszCurr, szValue);
+   if (szValue[0] != _T('\0'))
+   {
+      if (bWithSeconds)
+         *bWithSeconds = TRUE;
+      return MatchScheduleElement(szValue, pCurrTime->tm_sec, currTimestamp);
+   }
 
-	return true;
+   return true;
 }
 
 /**
@@ -855,15 +855,14 @@ void DCObject::updateFromTemplate(DCObject *src)
    setTransformationScript(src->m_transformationScriptSource);
 
    // Copy schedules
-	UINT32 i;
-   for(i = 0; i < m_dwNumSchedules; i++)
+   for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       safe_free(m_ppScheduleList[i]);
    safe_free_and_null(m_ppScheduleList);
    m_dwNumSchedules = src->m_dwNumSchedules;
    if (m_dwNumSchedules > 0)
    {
       m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-      for(i = 0; i < m_dwNumSchedules; i++)
+      for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       {
          m_ppScheduleList[i] = _tcsdup(src->m_ppScheduleList[i]);
       }

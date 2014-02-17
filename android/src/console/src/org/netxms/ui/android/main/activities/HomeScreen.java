@@ -8,9 +8,9 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
 import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
-import org.netxms.ui.android.main.fragments.NodeInfoFragment;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,7 +20,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,12 +42,11 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public static final int ACTIVITY_ALARMS = 1;
 	public static final int ACTIVITY_DASHBOARDS = 2;
 	public static final int ACTIVITY_NODES = 3;
-	public static final int ACTIVITY_GRAPHS = 4;
-	public static final int ACTIVITY_MACADDRESS = 5;
-	public static final int ACTIVITY_TEST = 6;
+	public static final int ACTIVITY_ENTIRENETWORK = 4;
+	public static final int ACTIVITY_GRAPHS = 5;
+	public static final int ACTIVITY_MACADDRESS = 6;
 	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
 
-	private static final String TAG = "nxclient/HomeScreen";
 	private ActivityListAdapter adapter;
 	private TextView statusText;
 
@@ -98,6 +96,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	 * 
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
 	 */
+	@SuppressLint("InlinedApi")
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
@@ -152,7 +151,10 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 					startActivity(new Intent(this, AlarmBrowserFragment.class));
 					break;
 				case ACTIVITY_NODES:
-					startActivity(new Intent(this, NodeBrowser.class));
+					startActivity(new Intent(this, NodeBrowser.class).putExtra("parentId", GenericObject.SERVICEROOT));
+					break;
+				case ACTIVITY_ENTIRENETWORK:
+					startActivity(new Intent(this, NodeBrowser.class).putExtra("parentId", GenericObject.NETWORK));
 					break;
 				case ACTIVITY_GRAPHS:
 					startActivity(new Intent(this, GraphBrowser.class));
@@ -163,18 +165,13 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 				case ACTIVITY_DASHBOARDS:
 					startActivity(new Intent(this, DashboardBrowser.class));
 					break;
-				case ACTIVITY_TEST:
-					Log.d(TAG, "ACTIVITY_TEST");
-					Intent newIntent = new Intent(this, NodeInfoFragment.class);
-					newIntent.putExtra("objectId", (long)345);
-					startActivity(newIntent);
-					break;
 				default:
 					break;
 			}
 		else
 			showToast(getString(R.string.notify_disconnected));
 	}
+
 	/**
 	 * @param text
 	 */
@@ -206,6 +203,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	{
 		refreshPendingAlarms();
 		ArrayList<AbstractObject> objList = new ArrayList<AbstractObject>();
+		objList.add(service.findObjectById(GenericObject.NETWORK));
 		objList.add(service.findObjectById(GenericObject.SERVICEROOT));
 		objList.add(service.findObjectById(GenericObject.DASHBOARDROOT));
 		adapter.setTopNodes(objList);

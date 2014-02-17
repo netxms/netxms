@@ -52,6 +52,7 @@ public class ObjectSelectionDialog extends Dialog
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
 	private boolean multiSelection;
+	List<Object> currentObject;
 
 	/**
 	 * Create filter for node selection - it allows node objects and possible
@@ -168,13 +169,33 @@ public class ObjectSelectionDialog extends Dialog
 	}
 	
 	/**
+    * Create object selection dialog.
+    * 
+    * @param parentShell parent shell
+    * @param rootObjects list of root objects (set to null to show entire object tree)
+    * @param classFilter set of allowed object classes (set to null to show all classes)
+    */
+   public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter)
+   {
+      super(parentShell);
+      setShellStyle(getShellStyle() | SWT.RESIZE);
+      this.rootObjects = rootObjects;
+      this.classFilter = classFilter;
+      multiSelection = true;
+      session = (NXCSession)ConsoleSharedData.getSession();
+      this.currentObject = new ArrayList<Object>();
+   }
+
+	
+	/**
 	 * Create object selection dialog.
 	 * 
 	 * @param parentShell parent shell
 	 * @param rootObjects list of root objects (set to null to show entire object tree)
 	 * @param classFilter set of allowed object classes (set to null to show all classes)
+	 * @param currentObject object list selected for move (the same object can't be selected as a move terget)
 	 */
-	public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter)
+	public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter, List<Object> currentObject)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
@@ -182,6 +203,7 @@ public class ObjectSelectionDialog extends Dialog
 		this.classFilter = classFilter;
 		multiSelection = true;
 		session = (NXCSession)ConsoleSharedData.getSession();
+		this.currentObject = currentObject;
 	}
 
 	/*
@@ -266,6 +288,14 @@ public class ObjectSelectionDialog extends Dialog
 			{
 				selectedObjects = new long[1];
 				selectedObjects[0] = objectId;
+				for (int i = 0; i < currentObject.size(); i++)
+				{
+				   if(((AbstractObject)currentObject.get(i)).getObjectId() == objectId)
+				   {
+				      MessageDialogHelper.openWarning(getShell(), Messages.get().ObjectSelectionDialog_Warning, Messages.get().ObjectSelectionDialog_SameObjecsAstargetAndSourceWarning);
+		            return;
+				   }
+				}
 			}
 			else
 			{

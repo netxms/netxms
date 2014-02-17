@@ -34,7 +34,9 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
+import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -51,10 +53,12 @@ public class AbstractChart extends PropertyPage
 	private Combo legendPosition;
 	private Button checkShowTitle;
 	private Button checkShowLegend;
+   private Button checkExtendedLegend;
 	private Button checkShowGrid;
 	private Button checkShowIn3D;
 	private Button checkTranslucent;
 	private Button checkTransposed;
+   private YAxisRangeEditor yAxisRange;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -113,6 +117,17 @@ public class AbstractChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		checkShowLegend.setLayoutData(gd);
 
+      if (config instanceof LineChartConfig)
+      {
+         checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
+         checkExtendedLegend.setText(Messages.get().AbstractChart_ExtendedLegend);
+         checkExtendedLegend.setSelection(((LineChartConfig)config).isExtendedLegend());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkExtendedLegend.setLayoutData(gd);
+      }
+      
 		if (config instanceof ComparisonChartConfig)
 		{
 			checkShowIn3D = new Button(optionsGroup, SWT.CHECK);
@@ -182,6 +197,17 @@ public class AbstractChart extends PropertyPage
 		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().AbstractChart_RefreshInterval, 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
 		
+		if(!(config instanceof PieChartConfig))
+      {
+	      yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
+	      gd = new GridData();
+	      gd.horizontalSpan = layout.numColumns;
+	      gd.horizontalAlignment = SWT.FILL;
+	      gd.grabExcessHorizontalSpace = true;
+	      yAxisRange.setLayoutData(gd);
+	      yAxisRange.setSelection(config.isAutoScale(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+      }
+		
 		return dialogArea;
 	}
 	
@@ -216,6 +242,12 @@ public class AbstractChart extends PropertyPage
 		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
 		config.setRefreshRate(refreshRate.getSelection());
+		if(!(config instanceof PieChartConfig))
+      {
+   		config.setAutoScale(yAxisRange.isAuto());
+   		config.setMinYScaleValue(yAxisRange.getMinY());
+         config.setMaxYScaleValue(yAxisRange.getMaxY());
+      }
 		if (config instanceof ComparisonChartConfig)
 		{
 			((ComparisonChartConfig)config).setShowIn3D(checkShowIn3D.getSelection());
@@ -234,6 +266,7 @@ public class AbstractChart extends PropertyPage
 			((LineChartConfig)config).setTimeRange(timeRange.getSelection());
 			((LineChartConfig)config).setTimeUnits(timeUnits.getSelectionIndex());
 			((LineChartConfig)config).setShowGrid(checkShowGrid.getSelection());
+         ((LineChartConfig)config).setExtendedLegend(checkExtendedLegend.getSelection());
 		}
 		return true;
 	}
