@@ -323,7 +323,7 @@ static UINT64 s_swapTotal = 0;
  */
 static void UpdateSwapInfo()
 {
-   TCHAR METHOD_NAME[] = "UpdateSwapInfo";
+   static TCHAR METHOD_NAME[] = _T("UpdateSwapInfo");
 
    int num = swapctl(SC_GETNSWP, NULL);
    if (num == -1)
