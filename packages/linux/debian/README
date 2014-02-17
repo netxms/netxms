@@ -1,7 +1,8 @@
 Building binary packages for Debian:
 
 0. Prerequisites:
-	Packages libssl-dev, libexpat1-dev, libreadline5-dev, and libsensors4-dev must be installed
+	Packages: libssl-dev libexpat1-dev libreadline6-dev libsensors4-dev unixodbc-dev libpq-dev libmysqlclient-dev
+	Oracle Instant Client 11.2 unpacked into /opt/instantclient_11_2
 
 1. Configure and build NetXMS as following:
 
