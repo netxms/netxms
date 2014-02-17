@@ -987,7 +987,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		try
 		{
-			session.acknowledgeAlarm(id, sticky);
+			session.acknowledgeAlarm(id, sticky, 0);
 		}
 		catch (Exception e)
 		{
