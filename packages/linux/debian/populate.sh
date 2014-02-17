@@ -99,6 +99,7 @@ cp -P /usr/lib/libnxsms_nxagent.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsms_portech.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsnmp.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsrv.so* netxms-server/usr/lib/
+cp -P /usr/lib/libstrophe.so* netxms-server/usr/lib/
 cp /usr/share/netxms/mibs/*.txt netxms-server/usr/share/netxms/mibs/
 cp /usr/share/netxms/sql/* netxms-server/usr/share/netxms/sql/
 cp ../../../contrib/startup/debian/netxmsd netxms-server/etc/init.d/
