@@ -10338,7 +10338,7 @@ void ClientSession::cancelFileMonitoring(CSCPMessage *request)
             {
                rcc = response->GetVariableLong(VID_RCC);
                msg.SetVariable(VID_RCC, rcc);
-               debugPrintf(6, _T("File monitoring canceled sucessfully"));
+               debugPrintf(6, _T("File monitoring cancelled sucessfully"));
             }
             else
             {
