@@ -268,6 +268,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_dwActiveChannels = 0;
 	m_console = NULL;
    m_loginTime = time(NULL);
+   m_musicTypeList.add(_tcsdup(_T("wav")));
 }
 
 /**
@@ -312,6 +313,7 @@ ClientSession::~ClientSession()
 		delete m_console->pMsg;
 		free(m_console);
 	}
+   m_musicTypeList.clear();
 }
 
 /**
@@ -10201,40 +10203,50 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	TCHAR name[MAX_PATH], fname[MAX_PATH];
-	int i;
+	TCHAR *lastPointRef;
+	bool musicFile;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
+   pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
+   for(int i = 0; i < m_musicTypeList.getSize(); i++)
+   {
+      lastPointRef = _tcsrchr(name, _T('.'));
+      if(lastPointRef != NULL)
+      {
+         lastPointRef = lastPointRef+1;
+         if(_tcscmp(lastPointRef, m_musicTypeList.getValue(i)) == 0 ? true : false)
+         {
+            musicFile = true;
+            break;
+         }
+      }
+   }
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFile)
 	{
-		pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
-		for(i = (int)_tcslen(name) - 1; i >= 0; i--)
-			if ((name[i] == _T('\\')) || (name[i] == '/'))
-				break;
-		i++;
       _tcscpy(fname, g_szDataDir);
-      _tcscat(fname, DDIR_SHARED_FILES);
+      _tcscat(fname, DDIR_FILES);
       _tcscat(fname, FS_PATH_SEPARATOR);
-      _tcscat(fname, name);
-		debugPrintf(4, _T("Requested file %s"), name);
+      _tcscat(fname, GetCleanFileName(name));
+		debugPrintf(4, _T("Requested file %s"), fname);
 		if (_taccess(fname, 0) == 0)
 		{
-			debugPrintf(5, _T("Sending file %s"), name);
+			debugPrintf(5, _T("Sending file %s"), fname);
 			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, 0, NULL, NULL, m_mutexSocketWrite))
 			{
-				debugPrintf(5, _T("File %s was succesfully sent"), name);
+				debugPrintf(5, _T("File %s was succesfully sent"), fname);
 		      msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				debugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), name);
+				debugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), fname);
 		      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 			}
 		}
 		else
 		{
-			debugPrintf(5, _T("Unable to send file %s: access() failed"), name);
+			debugPrintf(5, _T("Unable to send file %s: access() failed"), fname);
 	      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 		}
 	}
@@ -10289,7 +10301,7 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 }
 
 /**
- * Get file from agent
+ * Cancel file monitoring
  */
 void ClientSession::cancelFileMonitoring(CSCPMessage *request)
 {
@@ -11553,59 +11565,112 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 }
 
 
-//
-// Send to client list of files in server's file store
-//
+/**
+ * Send to client list of files in server's file store
+ */
 
 void ClientSession::listServerFileStore(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	TCHAR path[MAX_PATH];
+	bool musicFiles = true;
+	bool correctType = false;
+	StringList extensionList;
+	UINT32 lenght, base;
+	TCHAR * lastPointRef;
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	_tcscpy(path, g_szDataDir);
-	_tcscat(path, DDIR_FILES);
-	_TDIR *dir = _topendir(path);
-	if (dir != NULL)
-	{
-		_tcscat(path, FS_PATH_SEPARATOR);
-		int pos = (int)_tcslen(path);
+	lenght = request->GetVariableLong(VID_EXTENSION_COUNT);
+	DbgPrintf(8, _T("ClientSession::listServerFileStore: Lenght of filter type array is %d."), lenght);
+   base = VID_EXTENSION_LIST_BASE;
 
-		struct _tdirent *d;
-#ifdef _WIN32
-		struct _stat st;
-#else
-		struct stat st;
-#endif
-		UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
-		while((d = _treaddir(dir)) != NULL)
-		{
-			if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
-			{
-				nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
-				if (_tstat(path, &st) == 0)
-				{
-					if (S_ISREG(st.st_mode))
-					{
-						msg.SetVariable(varId++, d->d_name);
-						msg.SetVariable(varId++, (QWORD)st.st_size);
-						msg.SetVariable(varId++, (QWORD)st.st_mtime);
-						varId += 7;
-						count++;
-					}
-				}
-			}
-		}
-		_tclosedir(dir);
-		msg.SetVariable(VID_INSTANCE_COUNT, count);
-		msg.SetVariable(VID_RCC, RCC_SUCCESS);
-	}
+	if (0 == lenght)
+      musicFiles = false;
+	for(int i = 0; i < lenght; i++)
+   {
+      extensionList.add(request->GetVariableStr(base++));
+      for(int j = 0; j < m_musicTypeList.getSize(); j++)
+      {
+         if(_tcscmp(extensionList.getValue(i), m_musicTypeList.getValue(j)) != 0 ? true : false )
+         {
+            musicFiles = false;
+         }
+      }
+   }
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFiles)
+	{
+
+      _tcscpy(path, g_szDataDir);
+      _tcscat(path, DDIR_FILES);
+      _TDIR *dir = _topendir(path);
+      if (dir != NULL)
+      {
+         _tcscat(path, FS_PATH_SEPARATOR);
+         int pos = (int)_tcslen(path);
+
+         struct _tdirent *d;
+   #ifdef _WIN32
+         struct _stat st;
+   #else
+         struct stat st;
+   #endif
+         UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
+         while((d = _treaddir(dir)) != NULL)
+         {
+            if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
+            {
+               if(lenght != 0)
+               {
+                  correctType = false;
+                  lastPointRef = _tcsrchr(d->d_name, _T('.'));
+                  lastPointRef = lastPointRef+1;
+                  for(int j = 0; j < extensionList.getSize(); j++)
+                  {
+                     if(lastPointRef != NULL)
+                     {
+                        if(_tcscmp(lastPointRef, extensionList.getValue(j)) == 0 ? true : false )
+                        {
+                           correctType = true;
+                           break;
+                        }
+                     }
+                  }
+                  if(!correctType)
+                  {
+                     continue;
+                  }
+               }
+               nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
+               if (_tstat(path, &st) == 0)
+               {
+                  if (S_ISREG(st.st_mode))
+                  {
+                     msg.SetVariable(varId++, d->d_name);
+                     msg.SetVariable(varId++, (QWORD)st.st_size);
+                     msg.SetVariable(varId++, (QWORD)st.st_mtime);
+                     varId += 7;
+                     count++;
+                  }
+               }
+            }
+         }
+         _tclosedir(dir);
+         msg.SetVariable(VID_INSTANCE_COUNT, count);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+      }
+   }
 	else
 	{
-		msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
+	extensionList.clear();
 
 	sendMessage(&msg);
 }

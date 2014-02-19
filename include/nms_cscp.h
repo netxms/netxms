@@ -962,6 +962,7 @@ typedef struct
 #define VID_ALARM_STATUS_FLOW_STATE ((UINT32)461)
 #define VID_GROUPS                  ((UINT32)462)
 #define VID_EFFECTIVE_RIGHTS        ((UINT32)463)
+#define VID_EXTENSION_COUNT         ((UINT32)464)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1126,9 +1127,9 @@ typedef struct
 
 #define VID_RADIO_LIST_BASE         ((UINT32)0x30000000)
 
-#define VID_RADIO_LIST_BASE         ((UINT32)0x30000000)
-
 #define VID_RULE_LIST_BASE          ((UINT32)0x10000000)
+
+#define VID_EXTENSION_LIST_BASE     ((UINT32)0x10000000)
 
 //
 // Inline functions

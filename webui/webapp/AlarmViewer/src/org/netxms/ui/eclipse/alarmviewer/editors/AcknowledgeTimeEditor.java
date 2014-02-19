@@ -216,9 +216,12 @@ public class AcknowledgeTimeEditor extends FieldEditor
       {
          list.removeAll();
          String[] array = AlarmAcknowledgeTimeFunctions.getValues();
-         for(int i = 0; i < array.length; i++)
+         if(array != null)
          {
-            list.add(array[i]);
+	         for(int i = 0; i < array.length; i++)
+	         {
+	            list.add(array[i]);
+	         }
          }
       }
    }

@@ -421,6 +421,7 @@ private:
    CONDITION m_condEncryptionSetup;
    UINT32 m_dwActiveChannels;     // Active data channels
 	CONSOLE_CTX m_console;			// Server console context
+	StringList m_musicTypeList;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
