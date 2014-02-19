@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -116,10 +117,10 @@ public class ObjectToolsCache
     * 
     * @param session
     */
-   public static void attachSession(NXCSession session)
+   public static void attachSession(Display display, NXCSession session)
    {
    	ObjectToolsCache instance = new ObjectToolsCache(session);
-   	ConsoleSharedData.setProperty("ObjectToolsCache", instance);
+   	ConsoleSharedData.setProperty(display, "ObjectToolsCache", instance);
    }
 		
 	/**

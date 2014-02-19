@@ -33,6 +33,6 @@ public class LoginListener implements ConsoleLoginListener
 	@Override
 	public void afterLogin(NXCSession session, Display display)
 	{
-		SummaryTablesCache.attachSession(session);
+		SummaryTablesCache.attachSession(display, session);
 	}
 }
