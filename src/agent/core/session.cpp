@@ -721,9 +721,9 @@ void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 		TCHAR fileName[MAX_PATH];
 		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
 		DebugPrintf(m_dwIndex, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
-                  fileName, pRequest->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
+                  fileName, pRequest->GetVariableShort(VID_FILE_FOLLOW) > 0 ? _T("true") : _T("false"));
 		bool result = sendFile(pRequest->GetId(), fileName, pRequest->GetVariableLong(VID_FILE_OFFSET), pRequest->GetVariableLong(VID_FILE_SIZE_LIMIT));
-		if(pRequest->GetVariableShort(VID_FILE_FOLLOW) && result)
+		if(pRequest->GetVariableShort(VID_FILE_FOLLOW) > 0 ? true : false && result)
       {
          TCHAR* fName = _tcsdup(fileName);
          g_monitorFileList.addMonitoringFile(fName);
