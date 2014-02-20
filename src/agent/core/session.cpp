@@ -719,17 +719,21 @@ void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 	if (m_bMasterServer)
 	{
 		TCHAR fileName[MAX_PATH];
+		TCHAR fileNameCode[MAX_PATH];
 		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+		pRequest->GetVariableStr(VID_NAME, fileNameCode, MAX_PATH);
 		DebugPrintf(m_dwIndex, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
                   fileName, pRequest->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
 		bool result = sendFile(pRequest->GetId(), fileName, pRequest->GetVariableLong(VID_FILE_OFFSET), pRequest->GetVariableLong(VID_FILE_SIZE_LIMIT));
 		if(pRequest->GetVariableShort(VID_FILE_FOLLOW) && result)
       {
-         TCHAR* fName = _tcsdup(fileName);
-         g_monitorFileList.addMonitoringFile(fName);
+         TCHAR* fileID = _tcsdup(fileNameCode);
+         TCHAR* realName = _tcsdup(fileName);
+         g_monitorFileList.addMonitoringFile(fileID);
          FollowData *flData = new FollowData();
          flData->cbArg = this;
-         flData->pszFile = fName;
+         flData->pszFile = realName;
+         flData->fileId = fileID;
          flData->offset = 0;
          ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void*)flData);
       }

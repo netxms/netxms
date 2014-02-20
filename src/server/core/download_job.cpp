@@ -89,7 +89,7 @@ bool FileDownloadJob::run()
 	bool success = false;
 
    MONITORED_FILE * newFile = new MONITORED_FILE();
-   _tcscpy(newFile->fileName, m_remoteFile);
+   _tcscpy(newFile->fileName, m_localFile);
    newFile->nodeID = m_node->Id();
    newFile->session = m_session;
 
@@ -148,6 +148,7 @@ bool FileDownloadJob::run()
 
             msg.SetVariable(VID_FILE_SIZE_LIMIT, m_maxFileSize);
             msg.SetVariable(VID_FILE_FOLLOW, (INT16)(m_follow ? 1 : 0));
+            msg.SetVariable(VID_NAME, m_localFile);
 
 				response = conn->customRequest(&msg, m_localFile, appendFile, progressCallback, this);
 				if (response != NULL)

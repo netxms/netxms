@@ -6144,7 +6144,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public File downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException, NXCException
+   public TailFile downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException,
+         NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -6152,9 +6153,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       msg.setVariableInt32(NXCPCodes.VID_FILE_SIZE_LIMIT , (int)maxFileSize);
       msg.setVariableInt16(NXCPCodes.VID_FILE_FOLLOW, follow ? 1 : 0);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId()); // first confirmation - server job started
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
+      TailFile f = new TailFile();
+      f.setId(response.getVariableAsString(NXCPCodes.VID_NAME));
+
       waitForRCC(msg.getMessageId()); // second confirmation - file downloaded to server
-      return waitForFile(msg.getMessageId(), 3600000);
+      f.setFile(waitForFile(msg.getMessageId(), 3600000));
+      return f;
    }
    
    /**

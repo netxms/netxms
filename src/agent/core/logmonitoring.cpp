@@ -163,7 +163,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             pMsg = new CSCPMessage();
             pMsg->SetCode(CMD_FILE_MONITORING);
             pMsg->SetId(0);
-            pMsg->SetVariable(VID_FILE_NAME, flData->pszFile, MAX_PATH);
+            pMsg->SetVariable(VID_FILE_NAME, flData->fileId, MAX_PATH);
 
             lseek(hFile, flData->offset, SEEK_SET);
             readBytes = (BYTE*)malloc(readSize);
@@ -196,13 +196,14 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
       }
 
       ThreadSleep(threadSleepTime);
-      if(!g_monitorFileList.checkFileMonitored(flData->pszFile))
+      if(!g_monitorFileList.checkFileMonitored(flData->fileId))
       {
          follow = false;
       }
    }
-   delete flData->pszFile;
-   delete flData;
+   delete_and_null(flData->pszFile);
+   delete_and_null(flData->fileId);
+   delete_and_null(flData);
    close(hFile);
    return THREAD_OK;
 };

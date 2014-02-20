@@ -10280,6 +10280,7 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 				FileDownloadJob::buildServerFileName(object->Id(), remoteFile, localFile, MAX_PATH);
             bool follow = request->GetVariableShort(VID_FILE_FOLLOW) ? true : false;
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->GetVariableLong(VID_FILE_SIZE_LIMIT), follow, this, request->GetId());
+				msg.SetVariable(VID_NAME, localFile);
 				msg.SetVariable(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
 			}
 			else
@@ -10337,8 +10338,17 @@ void ClientSession::cancelFileMonitoring(CSCPMessage *request)
             if (response != NULL)
             {
                rcc = response->GetVariableLong(VID_RCC);
-               msg.SetVariable(VID_RCC, rcc);
-               debugPrintf(6, _T("File monitoring cancelled sucessfully"));
+               if(rcc == RCC_SUCCESS)
+               {
+                  msg.SetVariable(VID_RCC, rcc);
+                  debugPrintf(6, _T("File monitoring cancelled sucessfully"));
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+
+                  debugPrintf(6, _T("Error on agent: %d"), rcc);
+               }
             }
             else
             {
