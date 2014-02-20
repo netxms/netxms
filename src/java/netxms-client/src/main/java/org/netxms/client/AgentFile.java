@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,43 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.base;
+package org.netxms.client;
 
-import java.util.UUID;
+import java.io.File;
 
 /**
- * Common constants
+ * Information about file received from agent
  */
-public final class NXCommon
+public class AgentFile
 {
-	// Version information
-	public static final String VERSION = "1.2.13";
-	
-	public static final UUID EMPTY_GUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+   private String id;
+   private File file;
+
+   /**
+    * Create new agent file object
+    * 
+    * @param id
+    * @param file
+    */
+   public AgentFile(String id, File file)
+   {
+      this.id = id;
+      this.file = file;
+   }
+
+   /**
+    * @return the id
+    */
+   public String getId()
+   {
+      return id;
+   }
+
+   /**
+    * @return the file
+    */
+   public File getFile()
+   {
+      return file;
+   }
 }

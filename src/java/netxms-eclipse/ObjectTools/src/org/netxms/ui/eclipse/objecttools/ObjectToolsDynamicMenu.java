@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.IWorkbenchContribution;
 import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
+import org.netxms.client.AgentFile;
 import org.netxms.client.NXCSession;
-import org.netxms.client.TailFile;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -463,7 +463,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            final TailFile file = session.downloadFileFromAgent(node.getObjectId(), fileName, maxFileSize, follow);
+            final AgentFile file = session.downloadFileFromAgent(node.getObjectId(), fileName, maxFileSize, follow);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

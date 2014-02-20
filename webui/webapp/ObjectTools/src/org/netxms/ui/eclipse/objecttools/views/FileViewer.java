@@ -59,6 +59,7 @@ public class FileViewer extends ViewPart
 	
 	private long nodeId;
 	private String remoteFileName;
+   private String fileID;
 	private File currentFile;
 	private Text textViewer;
 	private final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -132,23 +133,23 @@ public class FileViewer extends ViewPart
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
       
-      actionClear = new Action("&Clear output", SharedIcons.CLEAR_LOG) {
+      actionClear = new Action(Messages.get().FileViewer_ClearOutput, SharedIcons.CLEAR_LOG) {
          @Override
          public void run()
          {
-            textViewer.setText("");
+            textViewer.setText(""); //$NON-NLS-1$
          }
       };
       actionClear.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.clear_output"); //$NON-NLS-1$
       handlerService.activateHandler(actionClear.getActionDefinitionId(), new ActionHandler(actionClear));
 
-      actionScrollLock = new Action("&Scroll lock", Action.AS_CHECK_BOX) { 
+      actionScrollLock = new Action(Messages.get().FileViewer_ScrollLock, Action.AS_CHECK_BOX) { 
          @Override
          public void run()
          {
          }
       };
-      actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif"));
+      actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
       actionScrollLock.setChecked(false);
       actionScrollLock.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.scroll_lock"); //$NON-NLS-1$
       handlerService.activateHandler(actionScrollLock.getActionDefinitionId(), new ActionHandler(actionScrollLock));
@@ -231,9 +232,10 @@ public class FileViewer extends ViewPart
 	/**
 	 * @param file
 	 */
-	public void showFile(File file, boolean follow)
+   public void showFile(File file, boolean follow, String id)
 	{
 		currentFile = file;
+      fileID = id;
 		textViewer.setText(loadFile(currentFile));
 		this.follow = follow;
 		if (follow)
@@ -252,7 +254,7 @@ public class FileViewer extends ViewPart
             {
                while(continueWork)
                {
-                  final String s = session.waitForFileTail(remoteFileName, 3000);
+                  final String s = session.waitForFileTail(fileID, 3000);
                   if (s != null)
                   {
                      runInUIThread(new Runnable() {                  
@@ -294,7 +296,7 @@ public class FileViewer extends ViewPart
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.cancelFileMonitoring(nodeId, remoteFileName);
+               session.cancelFileMonitoring(nodeId, fileID);
             }
             
             @Override

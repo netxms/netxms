@@ -6138,13 +6138,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    /**
     * Download file from remote host via agent.
     *
-    * @param nodeId         node object ID
+    * @param nodeId node object ID
     * @param remoteFileName fully qualified file name on remote system
-    * @return handle to local copy of remote file
+    * @param maxFileSize maximum download size
+    * @param follow if set to true, server will send file updates as they appear (like for tail -f command) 
+    * @return agent file handle which contains server assigned ID and handle for local file
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public TailFile downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException,
+   public AgentFile downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException,
          NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
@@ -6155,12 +6157,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
-      TailFile f = new TailFile();
-      f.setId(response.getVariableAsString(NXCPCodes.VID_NAME));
+      final String id = response.getVariableAsString(NXCPCodes.VID_NAME);
 
       waitForRCC(msg.getMessageId()); // second confirmation - file downloaded to server
-      f.setFile(waitForFile(msg.getMessageId(), 3600000));
-      return f;
+      return new AgentFile(id, waitForFile(msg.getMessageId(), 3600000));
    }
    
    /**
