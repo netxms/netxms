@@ -219,6 +219,23 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
       {
          result->get(i)->sendMessage(pMsg);
       }
+      if(result->size() == 0)
+      {
+         DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
+         Node *node = (Node *)object;
+         AgentConnection *conn = node->createAgentConnection();
+         if(conn != NULL)
+         {
+            CSCPMessage request;
+            request.SetId(conn->generateRequestId());
+            request.SetCode(CMD_CANCEL_FILE_MONITORING);
+            request.SetVariable(VID_FILE_NAME, remoteFile);
+            request.SetVariable(VID_OBJECT_ID, node->Id());
+            CSCPMessage* response = conn->customRequest(&request);
+            delete response;
+         }
+         delete conn;
+      }
 	}
 	else
 	{

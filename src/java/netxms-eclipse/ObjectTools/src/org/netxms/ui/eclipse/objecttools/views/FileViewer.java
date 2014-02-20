@@ -62,6 +62,7 @@ public class FileViewer extends ViewPart
 	
 	private long nodeId;
 	private String remoteFileName;
+   private String fileID;
 	private File currentFile;
 	private StyledText textViewer;
 	private final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -271,9 +272,10 @@ public class FileViewer extends ViewPart
 	/**
 	 * @param file
 	 */
-	public void showFile(File file, boolean follow)
+   public void showFile(File file, boolean follow, String id)
 	{
 		currentFile = file;
+      fileID = id;
 		textViewer.setText(loadFile(currentFile));
       	textViewer.setTopIndex(textViewer.getLineCount());
 		this.follow = follow;
@@ -293,7 +295,7 @@ public class FileViewer extends ViewPart
             {
                while(continueWork)
                {
-                  final String s = session.waitForFileTail(remoteFileName, 3000);
+                  final String s = session.waitForFileTail(fileID, 3000);
                   if (s != null)
                   {
                      runInUIThread(new Runnable() {                  
@@ -339,7 +341,7 @@ public class FileViewer extends ViewPart
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.cancelFileMonitoring(nodeId, remoteFileName);
+               session.cancelFileMonitoring(nodeId, fileID);
             }
             
             @Override

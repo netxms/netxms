@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -176,7 +176,7 @@
 //
 // Request types for H_FileTime
 //
- 
+
 #define FILETIME_ATIME           1
 #define FILETIME_MTIME           2
 #define FILETIME_CTIME           3
@@ -210,7 +210,7 @@ typedef struct
    int iType;
    union
    {
-      TCHAR *pszCmdLine;      // to TCHAR 
+      TCHAR *pszCmdLine;      // to TCHAR
       struct __subagentAction
       {
          LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *);
@@ -410,7 +410,7 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, Config *),
                   const TCHAR *pszEntryPoint);
 BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
-BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg, 
+BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
 BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
@@ -475,6 +475,7 @@ struct MONITORED_FILE
 struct FollowData
 {
    const TCHAR *pszFile;
+   const TCHAR *fileId;
    long offset;
 	void *cbArg;
 };
@@ -522,19 +523,19 @@ TCHAR *GetPdhErrorText(UINT32 dwError, TCHAR *pszBuffer, int iBufSize);
 
 extern UINT32 g_dwFlags;
 extern TCHAR g_szLogFile[];
-extern TCHAR g_szSharedSecret[]; 
-extern TCHAR g_szConfigFile[];  
-extern TCHAR g_szFileStore[];     
-extern TCHAR g_szConfigServer[]; 
-extern TCHAR g_szRegistrar[];  
-extern TCHAR g_szListenAddress[]; 
+extern TCHAR g_szSharedSecret[];
+extern TCHAR g_szConfigFile[];
+extern TCHAR g_szFileStore[];
+extern TCHAR g_szConfigServer[];
+extern TCHAR g_szRegistrar[];
+extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_masterAgent[];
 extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];
 extern UINT32 g_dwServerCount;
 extern time_t g_tmAgentStartTime;
-extern TCHAR g_szPlatformSuffix[]; 
+extern TCHAR g_szPlatformSuffix[];
 extern UINT32 g_dwStartupDelay;
 extern UINT32 g_dwIdleTimeout;
 extern UINT32 g_dwMaxSessions;
