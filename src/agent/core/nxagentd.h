@@ -352,7 +352,7 @@ public:
 
    void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
    void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
-	bool sendFile(UINT32 requestId, const TCHAR *file, long offset, long sizeLimit);
+	bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
 
 	UINT32 getServerAddress() { return m_dwHostAddr; }
 

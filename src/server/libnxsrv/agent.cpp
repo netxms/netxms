@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Server Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -119,7 +119,7 @@ AgentConnection::~AgentConnection()
 
    // Wait for receiver thread termination
    ThreadJoin(m_hReceiverThread);
-   
+
 	// Close socket if active
 	lock();
    if (m_hSocket != -1)
@@ -214,7 +214,7 @@ void AgentConnection::receiverThread()
       // Check if we get too large message
       if (error == 1)
       {
-         printMsg(_T("Received too large message %s (%d bytes)"), 
+         printMsg(_T("Received too large message %s (%d bytes)"),
                   NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                   ntohl(pRawMsg->dwSize));
          continue;
@@ -261,7 +261,7 @@ void AgentConnection::receiverThread()
                {
                   close(m_hCurrFile);
                   m_hCurrFile = -1;
-            
+
                   onFileDownload(TRUE);
                }
 					else
@@ -277,7 +277,7 @@ void AgentConnection::receiverThread()
                // I/O error
                close(m_hCurrFile);
                m_hCurrFile = -1;
-         
+
                onFileDownload(FALSE);
             }
 			}
@@ -321,7 +321,7 @@ void AgentConnection::receiverThread()
 		m_hCurrFile = -1;
 		onFileDownload(FALSE);
 	}
-	
+
 	if (error == 0)
       shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
@@ -541,7 +541,7 @@ void AgentConnection::disconnect()
  * Set authentication data
  */
 void AgentConnection::setAuthData(int method, const TCHAR *secret)
-{ 
+{
    m_iAuthMethod = method;
 #ifdef UNICODE
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
@@ -1055,7 +1055,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 
    msg.SetCode(CMD_TRANSFER_FILE);
    msg.SetId(dwRqId);
-   for(i = (int)_tcslen(localFile) - 1; 
+   for(i = (int)_tcslen(localFile) - 1;
        (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &localFile[i + 1]);
    if (destinationFile != NULL)
@@ -1076,7 +1076,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    {
 		m_fileUploadInProgress = true;
 		NXCPEncryptionContext *ctx = acquireEncryptionContext();
-      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, 0, progressCallback, cbArg, m_mutexSocketWrite))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
@@ -1104,7 +1104,7 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 
    msg.SetCode(CMD_UPGRADE_AGENT);
    msg.SetId(dwRqId);
-   for(i = (int)_tcslen(pszPkgName) - 1; 
+   for(i = (int)_tcslen(pszPkgName) - 1;
        (i >= 0) && (pszPkgName[i] != '\\') && (pszPkgName[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &pszPkgName[i + 1]);
 
@@ -1125,8 +1125,8 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 // Check status of network service via agent
 //
 
-UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, 
-                                           WORD wPort, WORD wProto, 
+UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType,
+                                           WORD wPort, WORD wProto,
                                            const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
    UINT32 dwRqId, dwResult;
@@ -1142,9 +1142,9 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
    msg.SetId(dwRqId);
    msg.SetVariable(VID_IP_ADDRESS, dwIpAddr);
    msg.SetVariable(VID_SERVICE_TYPE, (WORD)iServiceType);
-   msg.SetVariable(VID_IP_PORT, 
-      (wPort != 0) ? wPort : 
-         m_wDefaultPort[((iServiceType >= NETSRV_CUSTOM) && 
+   msg.SetVariable(VID_IP_PORT,
+      (wPort != 0) ? wPort :
+         m_wDefaultPort[((iServiceType >= NETSRV_CUSTOM) &&
                          (iServiceType <= NETSRV_HTTP)) ? iServiceType : 0]);
    msg.SetVariable(VID_IP_PROTO, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
    msg.SetVariable(VID_SERVICE_REQUEST, pszRequest);
@@ -1340,7 +1340,7 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 
             // We expect text file, so replace all non-printable characters with spaces
             for(i = 0; i < *pdwSize; i++)
-               if (((*ppszConfig)[i] < _T(' ')) && 
+               if (((*ppszConfig)[i] < _T(' ')) &&
                    ((*ppszConfig)[i] != _T('\t')) &&
                    ((*ppszConfig)[i] != _T('\r')) &&
                    ((*ppszConfig)[i] != _T('\n')))
@@ -1493,7 +1493,7 @@ void AgentConnection::setProxy(UINT32 dwAddr, WORD wPort, int iAuthMethod, const
    if (pszSecret != NULL)
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                           pszSecret, -1, m_szProxySecret, MAX_SECRET_LENGTH, NULL, NULL);
 #else
       nx_strncpy(m_szProxySecret, pszSecret, MAX_SECRET_LENGTH);
@@ -1547,9 +1547,9 @@ UINT32 AgentConnection::enableTraps()
 }
 
 
-//
-// Send custom request to agent
-//
+/**
+ * Send custom request to agent
+ */
 
 CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool appendFile,
 														  void (*downloadProgressCallback)(size_t, void *), void *cbArg)
@@ -1627,7 +1627,7 @@ UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, 
 		DbgPrintf(4, _T("AgentConnection::PrepareFileDownload(): cannot open file %s (%s); append=%d rqId=%d"),
 		          fileName, _tcserror(errno), append, rqId);
 	}
-	else 
+	else
 	{
 		if (append)
 			lseek(m_hCurrFile, 0, SEEK_END);

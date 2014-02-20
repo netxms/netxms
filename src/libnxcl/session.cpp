@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Client Library
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
@@ -194,7 +194,7 @@ CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTime
 {
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return NULL;
-   return m_msgWaitQueue.waitForMessage(wCode, dwId, 
+   return m_msgWaitQueue.waitForMessage(wCode, dwId,
       dwTimeOut == 0 ? m_dwCommandTimeout : dwTimeOut);
 }
 
@@ -207,7 +207,7 @@ CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dw
 {
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return NULL;
-   return m_msgWaitQueue.waitForRawMessage(wCode, dwId, 
+   return m_msgWaitQueue.waitForRawMessage(wCode, dwId,
       dwTimeOut == 0 ? m_dwCommandTimeout : dwTimeOut);
 }
 
@@ -394,7 +394,7 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
 
       i = m_pItemList->dwNumItems;
       m_pItemList->dwNumItems++;
-      m_pItemList->pItems = (NXC_DCI *)realloc(m_pItemList->pItems, 
+      m_pItemList->pItems = (NXC_DCI *)realloc(m_pItemList->pItems,
                                     sizeof(NXC_DCI) * m_pItemList->dwNumItems);
       m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
       m_pItemList->pItems[i].dwTemplateId = pMsg->GetVariableLong(VID_TEMPLATE_ID);
@@ -423,7 +423,7 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
       for(j = 0, dwId = VID_DCI_SCHEDULE_BASE; j < m_pItemList->pItems[i].dwNumSchedules; j++, dwId++)
          m_pItemList->pItems[i].ppScheduleList[j] = pMsg->GetVariableStr(dwId);
       m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
-      m_pItemList->pItems[i].pThresholdList = 
+      m_pItemList->pItems[i].pThresholdList =
          (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
       for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
       {
@@ -554,7 +554,7 @@ void NXCL_Session::DeleteEDBRecord(UINT32 dwEventCode)
          safe_free(m_ppEventTemplates[i]->pszDescription);
          safe_free(m_ppEventTemplates[i]->pszMessage);
          free(m_ppEventTemplates[i]);
-         memmove(&m_ppEventTemplates[i], m_ppEventTemplates[i + 1], 
+         memmove(&m_ppEventTemplates[i], m_ppEventTemplates[i + 1],
                  sizeof(NXC_EVENT_TEMPLATE *) * (m_dwNumTemplates - i));
          break;
       }
@@ -570,7 +570,7 @@ void NXCL_Session::AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate, BOOL bLo
 {
    if (bLock)
       MutexLock(m_mutexEventAccess);
-   m_ppEventTemplates = (NXC_EVENT_TEMPLATE **)realloc(m_ppEventTemplates, 
+   m_ppEventTemplates = (NXC_EVENT_TEMPLATE **)realloc(m_ppEventTemplates,
       sizeof(NXC_EVENT_TEMPLATE *) * (m_dwNumTemplates + 1));
    m_ppEventTemplates[m_dwNumTemplates] = pEventTemplate;
    m_dwNumTemplates++;
@@ -848,9 +848,9 @@ UINT32 NXCL_Session::LoadUserDB(void)
 // Send file to server
 //
 
-UINT32 NXCL_Session::SendFile(UINT32 dwRqId, TCHAR *pszFileName, long sizeLimit)
+UINT32 NXCL_Session::SendFile(UINT32 dwRqId, TCHAR *pszFileName, long ofset)
 {
-   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, 0, sizeLimit, NULL, NULL, m_mutexSendMsg) ? RCC_SUCCESS : RCC_IO_ERROR;
+   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, ofset, NULL, NULL, m_mutexSendMsg) ? RCC_SUCCESS : RCC_IO_ERROR;
 }
 
 

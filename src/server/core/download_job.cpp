@@ -145,8 +145,11 @@ bool FileDownloadJob::run()
 				}
 
             //default - get parameters
-
-            msg.SetVariable(VID_FILE_SIZE_LIMIT, m_maxFileSize);
+            if (m_maxFileSize > 0)
+            {
+               msg.SetVariable(VID_FILE_OFFSET, -m_maxFileSize);
+               appendFile = false;
+            }
             msg.SetVariable(VID_FILE_FOLLOW, (INT16)(m_follow ? 1 : 0));
             msg.SetVariable(VID_NAME, m_localFile);
 
@@ -202,7 +205,7 @@ bool FileDownloadJob::run()
 	{
 	   response.SetVariable(VID_RCC, RCC_SUCCESS);
 		m_session->sendMessage(&response);
-		m_session->sendFile(m_localFile, m_requestId, m_maxFileSize);
+		m_session->sendFile(m_localFile, m_requestId, 0);
 		if(m_follow)
 		{
          g_monitoringList.addMonitoringFile(newFile);

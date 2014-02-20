@@ -674,7 +674,7 @@ public:
    void sendMessage(CSCPMessage *pMsg);
    void sendRawMessage(CSCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
-	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long sizeLimit);
+	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset);
 
    UINT32 getIndex() { return m_dwIndex; }
    void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }

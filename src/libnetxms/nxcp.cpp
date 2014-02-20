@@ -538,7 +538,7 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId,
  * Send file over CSCP
  */
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
-                                           NXCPEncryptionContext *pCtx, long offset, long sizeLimit,
+                                           NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex)
 {
@@ -555,14 +555,11 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
       NX_STAT_STRUCT st;
       NX_FSTAT(hFile, &st);
       long fileSize = (long)st.st_size;
-      long bytesToRead = (fileSize - offset) > fileSize ? (0 - offset) : (fileSize - offset);
+      if (labs(offset) > fileSize)
+         offset = 0;
+      long bytesToRead = (offset < 0) ? (0 - offset) : (fileSize - offset);
 
-      if (sizeLimit > 0)
-      {
-         offset = bytesToRead > sizeLimit ?  -sizeLimit : offset;
-      }
-
-		if (lseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) != -1)
+		if (lseek(hFile, offset, (offset < 0) ? SEEK_END : SEEK_SET) != -1)
 		{
 			// Allocate message and prepare it's header
 			pMsg = (CSCP_MESSAGE *)malloc(FILE_BUFFER_SIZE + CSCP_HEADER_SIZE + 8);

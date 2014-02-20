@@ -724,7 +724,7 @@ void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 		pRequest->GetVariableStr(VID_NAME, fileNameCode, MAX_PATH);
 		DebugPrintf(m_dwIndex, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
                   fileName, pRequest->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
-		bool result = sendFile(pRequest->GetId(), fileName, pRequest->GetVariableLong(VID_FILE_OFFSET), pRequest->GetVariableLong(VID_FILE_SIZE_LIMIT));
+		bool result = sendFile(pRequest->GetId(), fileName, (int)pRequest->GetVariableLong(VID_FILE_OFFSET));
 		if(pRequest->GetVariableShort(VID_FILE_FOLLOW) && result)
       {
          TCHAR* fileID = _tcsdup(fileNameCode);
@@ -864,9 +864,9 @@ static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 	((CommSession *)cbArg)->updateTimeStamp();
 }
 
-bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, long sizeLimit)
+bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset)
 {
-	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, sizeLimit, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
+	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
 }
 
 

@@ -1530,9 +1530,9 @@ void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
 /**
  * Send file to client
  */
-BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long sizeLimit)
+BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long ofset)
 {
-	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, sizeLimit, NULL, NULL, m_mutexSocketWrite);
+	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, ofset, NULL, NULL, m_mutexSocketWrite);
 }
 
 /**
@@ -10233,7 +10233,7 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 		if (_taccess(fname, 0) == 0)
 		{
 			debugPrintf(5, _T("Sending file %s"), fname);
-			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, 0, NULL, NULL, m_mutexSocketWrite))
+			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite))
 			{
 				debugPrintf(5, _T("File %s was succesfully sent"), fname);
 		      msg.SetVariable(VID_RCC, RCC_SUCCESS);
