@@ -364,6 +364,11 @@ public:
 struct StringSetEntry;
 
 /**
+ * NXCP message
+ */
+class CSCPMessage;
+
+/**
  * String set class
  */
 class LIBNETXMS_EXPORTABLE StringSet
@@ -376,14 +381,21 @@ public:
    ~StringSet();
 
    void add(const TCHAR *str);
+   void addPreallocated(TCHAR *str);
    void remove(const TCHAR *str);
    void clear();
 
    int size();
-   bool exist(const TCHAR *str);
+   bool contains(const TCHAR *str);
 
    void addAll(StringSet *src);
+   void addAll(TCHAR **strings, int count);
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
+
+   void fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId);
+   void addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
+
+   String getAll(const TCHAR *separator);
 };
 
 /**
@@ -1140,7 +1152,7 @@ extern "C"
 	int wsystem(const WCHAR *_cmd);
 #endif
 #if !HAVE_WMKSTEMP
-	int wmkstemp(const WCHAR *_template);
+	int wmkstemp(WCHAR *_template);
 #endif
 #if !HAVE_WACCESS
 	int waccess(const WCHAR *_path, int mode);

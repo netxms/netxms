@@ -1207,7 +1207,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
-      if (msg == null) throw new NXCException(RCC.TIMEOUT);
+      if (msg == null) 
+         throw new NXCException(RCC.TIMEOUT);
       return msg;
    }
 
@@ -1220,7 +1221,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public NXCPMessage waitForMessage(final int code, final long id) throws NXCException
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
-      if (msg == null) throw new NXCException(RCC.TIMEOUT);
+      if (msg == null) 
+         throw new NXCException(RCC.TIMEOUT);
       return msg;
    }
 
@@ -3321,9 +3323,33 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       // appropriate notification without waiting for actual server update
       synchronized(objectList)
       {
-         objectList.remove(objectId);
+         AbstractObject object = objectList.get(objectId);
+         if (object != null)
+         {
+            objectList.remove(objectId);
+            removeOrphanedObjects(object);
+         }
       }
       sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, objectId));
+   }
+   
+   /**
+    * Remove orphaned objects (with last parent left)
+    * 
+    * @param parent
+    */
+   private void removeOrphanedObjects(AbstractObject parent)
+   {
+      Iterator<Long> it = parent.getChildren();
+      while(it.hasNext())
+      {
+         AbstractObject object = objectList.get(it.next());
+         if ((object != null) && (object.getParentCount() == 1))
+         {
+            objectList.remove(object.getObjectId());
+            removeOrphanedObjects(object);
+         }
+      }
    }
 
    /**
@@ -3782,7 +3808,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       data.setInheritAccessRights(inheritAccessRights);
       modifyObject(data);
    }
-
+   
    /**
     * Change report's definition (wrapper for modifyObject())
     *
@@ -3862,6 +3888,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+
+   /**
+    * Get effective rights of currently logged in user to given object.
+    * 
+    * @param objectId
+    * @return
+    * @throws IOException
+    * @throws NXCException
+    */
+   public int getEffectiveRights(final long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EFFECTIVE_RIGHTS);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getVariableAsInteger(NXCPCodes.VID_EFFECTIVE_RIGHTS);
+   }
+
 
    /**
     * Common internal implementation for bindObject, unbindObject, and
@@ -5960,6 +6003,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE);
+      if(serverFileName.equals(""))
+      {
+         serverFileName = localFile.getName();
+      }
       msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

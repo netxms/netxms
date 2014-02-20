@@ -73,6 +73,7 @@ struct NXCORE_LOG
 	const TCHAR *name;
 	const TCHAR *table;
 	const TCHAR *idColumn;
+	const TCHAR *relatedObjectIdColumn;
 	UINT32 requiredAccess;
 	LOG_COLUMN columns[32];
 };
@@ -170,8 +171,9 @@ private:
 	DB_RESULT m_resultSet;
 
 	void buildQueryColumnList();
+	String buildObjectAccessConstraint(const UINT32 userId);
 	void deleteQueryResults();
-	bool queryInternal(INT64 *rowCount);
+	bool queryInternal(INT64 *rowCount, const UINT32 userId);
 	Table *createTable();
 
 public:
@@ -181,8 +183,8 @@ public:
 	void lock() { MutexLock(m_lock); }
 	void unlock() { MutexUnlock(m_lock); }
 
-	bool query(LogFilter *filter, INT64 *rowCount);
-	Table *getData(INT64 startRow, INT64 numRows, bool refresh);
+	bool query(LogFilter *filter, INT64 *rowCount, const UINT32 userId);
+	Table *getData(INT64 startRow, INT64 numRows, bool refresh, const UINT32 userId);
 	void getColumnInfo(CSCPMessage &msg);
 };
 

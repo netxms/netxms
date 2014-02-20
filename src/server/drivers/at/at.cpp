@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Allied Telesis switches
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -68,7 +68,26 @@ int AlliedTelesisDriver::isPotentialDevice(const TCHAR *oid)
 bool AlliedTelesisDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
    TCHAR buffer[256];
-   return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.8.33.1.1.0"), NULL, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS;
+   return (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.8.33.1.1.0"), NULL, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS) ||
+          (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.1.4.167.81.1.3.0"), NULL, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS);
+}
+
+/**
+ * Do additional checks on the device required by driver.
+ * Driver can set device's custom attributes and driver's data from within this method.
+ * Driver is responsible for destroying previously created data object.
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData pointer to pointer to driver-specific data
+ */
+void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
+{
+   TCHAR buffer[256];
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.1.4.167.81.1.3.0"), NULL, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS)
+   {
+      attributes->set(_T(".alliedTelesis.isGS950"), _T("true"));
+   }
 }
 
 /**
@@ -82,31 +101,56 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
    if (ifList != NULL)
    {
-      TCHAR oid[256];
+      bool isGS950 = attributes->getBoolean(_T(".alliedTelesis.isGS950"), false);
 
       // Find physical ports
       for(int i = 0; i < ifList->getSize(); i++)
       {
-         SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-
          NX_INTERFACE_INFO *iface = ifList->get(i);
-         _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.9.1.1.1.2.%d"), iface->dwIndex);  // module
-         request->bindVariable(new SNMP_Variable(oid));
-         _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.9.1.1.1.3.%d"), iface->dwIndex);  // port
-         request->bindVariable(new SNMP_Variable(oid));
-
-         SNMP_PDU *response;
-         UINT32 rcc = snmp->doRequest(request, &response, g_dwSNMPTimeout, 3);
-	      delete request;
-         if (rcc == SNMP_ERR_SUCCESS)
+         if (isGS950)
          {
-            if (response->getNumVariables() == 2)
+            // GS950 does not support atiIfExtnTable so we use ifConnectorPresent from ifXTable
+            // to identify physical ports
+            TCHAR oid[256];
+            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.31.1.1.1.17.%d"), iface->dwIndex); // ifConnectorPresent
+            UINT32 cp;
+            if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &cp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
             {
-               iface->dwSlotNumber = response->getVariable(0)->GetValueAsInt();
-               iface->dwPortNumber = response->getVariable(1)->GetValueAsInt();
-               iface->isPhysicalPort = true;
+               if (cp == 1)   // 1 == true
+               {
+                  iface->isPhysicalPort = true;
+                  iface->dwSlotNumber = 0;
+                  iface->dwPortNumber = iface->dwIndex;
+               }
             }
-            delete response;
+         }
+         else
+         {
+            SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+
+            TCHAR oid[256];
+            _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.9.1.1.1.2.%d"), iface->dwIndex);  // module
+            request->bindVariable(new SNMP_Variable(oid));
+            _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.9.1.1.1.3.%d"), iface->dwIndex);  // port
+            request->bindVariable(new SNMP_Variable(oid));
+
+            SNMP_PDU *response;
+            UINT32 rcc = snmp->doRequest(request, &response, g_dwSNMPTimeout, 3);
+	         delete request;
+            if (rcc == SNMP_ERR_SUCCESS)
+            {
+               if ((response->getNumVariables() == 2) && 
+                   (response->getVariable(0)->GetType() != ASN_NO_SUCH_OBJECT) &&
+                   (response->getVariable(0)->GetType() != ASN_NO_SUCH_INSTANCE) &&
+                   (response->getVariable(1)->GetType() != ASN_NO_SUCH_OBJECT) &&
+                   (response->getVariable(1)->GetType() != ASN_NO_SUCH_INSTANCE))
+               {
+                  iface->dwSlotNumber = response->getVariable(0)->GetValueAsInt();
+                  iface->dwPortNumber = response->getVariable(1)->GetValueAsInt();
+                  iface->isPhysicalPort = true;
+               }
+               delete response;
+            }
          }
       }
    }
@@ -125,27 +169,46 @@ static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 	TCHAR buffer[256];
 	vlan->setName(var->GetValueAsString(buffer, 256));
 	vlanList->add(vlan);
+
    return SNMP_ERR_SUCCESS;
 }
 
 /**
- * Handler for VLAN port enumeration
+ * Parse port list
+ * Format of the input string would be like '1,2,5,7,12..15,18-22,26'
  */
-static UINT32 HandlerVlanPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static void ParsePortList(TCHAR *ports, VlanInfo *vlan, UINT32 slot)
 {
-   VlanList *vlanList = (VlanList *)arg;
+   TCHAR *curr = ports, *next;
 
-   TCHAR vlanName[256];
-   var->GetValueAsString(vlanName, 256);
-   VlanInfo *vlan = vlanList->findByName(vlanName);
-   if (vlan != NULL)
+   do
    {
-      int slot = var->GetName()->getValue()[var->GetName()->getLength() - 2];
-      int port = var->GetName()->getValue()[var->GetName()->getLength() - 1];
-      vlan->add(slot, port);
-   }
+      next = _tcschr(curr, _T(','));
+      if (next != NULL)
+         *next = 0;
 
-   return SNMP_ERR_SUCCESS;
+      TCHAR *ptr = _tcschr(curr, _T('-'));
+      if (ptr == NULL)
+         ptr = _tcschr(curr, _T('.'));
+      if (ptr != NULL)
+      {
+         *ptr = 0;
+         ptr++;
+         if (*ptr == _T('.')) // handle n..m case
+            ptr++;
+         UINT32 start = _tcstoul(curr, NULL, 10);
+         UINT32 end = _tcstoul(ptr, NULL, 10);
+         for(UINT32 p = start; p <= end; p++)
+            vlan->add(slot, p);
+      }
+      else
+      {
+         UINT32 port = _tcstoul(curr, NULL, 10);
+         vlan->add(slot, port);
+      }
+
+      curr = next + 1;
+   } while(next != NULL);
 }
 
 /**
@@ -154,16 +217,44 @@ static UINT32 HandlerVlanPortList(UINT32 version, SNMP_Variable *var, SNMP_Trans
 VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
    VlanList *list = NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
-   if (list != NULL)
+   if ((list != NULL) && (list->getSize() > 0))
       return list;   // retrieved from standard MIBs
 
-   list = new VlanList();
+   if (list == NULL)
+      list = new VlanList();
 
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.8.33.8.1.1.2"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.8.33.8.2.1.3"), HandlerVlanPortList, list, FALSE) != SNMP_ERR_SUCCESS)
-		goto failure;
+   for(int i = 0; i < list->getSize(); i++)
+   {
+      VlanInfo *vlan = list->get(i);
+
+      SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+
+      TCHAR oid[256];
+      _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.8.1.1.5.%d"), vlan->getVlanId()); // tagged ports
+      request->bindVariable(new SNMP_Variable(oid));
+      _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.8.1.1.4.%d"), vlan->getVlanId()); // untagged ports
+      request->bindVariable(new SNMP_Variable(oid));
+      
+      SNMP_PDU *response;
+      if (snmp->doRequest(request, &response, g_dwSNMPTimeout, 3) == SNMP_ERR_SUCCESS)
+      {
+         if ((response->getNumVariables() == 2) && 
+             (response->getVariable(0)->GetType() != ASN_NO_SUCH_OBJECT) &&
+             (response->getVariable(0)->GetType() != ASN_NO_SUCH_INSTANCE) &&
+             (response->getVariable(1)->GetType() != ASN_NO_SUCH_OBJECT) &&
+             (response->getVariable(1)->GetType() != ASN_NO_SUCH_INSTANCE))
+         {
+            TCHAR buffer[1024];
+            ParsePortList(response->getVariable(0)->GetValueAsString(buffer, 1024), vlan, 1);
+            ParsePortList(response->getVariable(1)->GetValueAsString(buffer, 1024), vlan, 1);
+         }
+         delete response;
+      }
+      delete request;
+   }
 
    return list;
 

@@ -8,7 +8,9 @@ import org.eclipse.swt.widgets.Display;
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.filemanager.messages"; //$NON-NLS-1$
-	public String LocalFileSelector_AllFiles;
+	public String GetServerFileList_ErrorMessageFileView;
+   public String GetServerFileList_ErrorMessageFileViewTitle;
+   public String LocalFileSelector_AllFiles;
 	public String LocalFileSelector_None;
 	public String LocalFileSelector_SelectFile;
 	public String LocalFileSelector_Tooltip;
@@ -38,7 +40,18 @@ public class Messages extends NLS
 	public String UploadFileToServer_JobError;
 	public String UploadFileToServer_JobTitle;
 	public String UploadFileToServer_TaskNamePrefix;
-	static
+	public String ViewServerFile_DeletAck;
+   public String ViewServerFile_DeleteConfirmation;
+   public String ViewServerFile_DeleteFileOnServerAction;
+   public String ViewServerFile_DeletFileFromServerJob;
+   public String ViewServerFile_ErrorDeleteFileJob;
+   public String ViewServerFile_FileName;
+   public String ViewServerFile_FileSize;
+   public String ViewServerFile_FileType;
+   public String ViewServerFile_ModificationDate;
+   public String ViewServerFile_ShowFilterAction;
+   public String ViewServerFile_UploadFileOnServerAction;
+   static
 	{
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

@@ -99,6 +99,7 @@ cp -P /usr/lib/libnxsms_nxagent.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsms_portech.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsnmp.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsrv.so* netxms-server/usr/lib/
+cp -P /usr/lib/libstrophe.so* netxms-server/usr/lib/
 cp /usr/share/netxms/mibs/*.txt netxms-server/usr/share/netxms/mibs/
 cp /usr/share/netxms/sql/* netxms-server/usr/share/netxms/sql/
 cp ../../../contrib/startup/debian/netxmsd netxms-server/etc/init.d/
@@ -125,6 +126,17 @@ mkdir netxms-server-mysql/usr/lib/netxms/dbdrv
 cat netxms-server-mysql.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-server-mysql/DEBIAN/control
 cp /usr/lib/netxms/dbdrv/mysql.ddr netxms-server-mysql/usr/lib/netxms/dbdrv/
 cp -P /usr/lib/libnxddr_mysql.so* netxms-server-mysql/usr/lib/
+
+# netxms-server-oracle
+mkdir netxms-server-oracle
+mkdir netxms-server-oracle/DEBIAN
+mkdir netxms-server-oracle/usr
+mkdir netxms-server-oracle/usr/lib
+mkdir netxms-server-oracle/usr/lib/netxms
+mkdir netxms-server-oracle/usr/lib/netxms/dbdrv
+cat netxms-server-oracle.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-server-oracle/DEBIAN/control
+cp /usr/lib/netxms/dbdrv/oracle.ddr netxms-server-oracle/usr/lib/netxms/dbdrv/
+cp -P /usr/lib/libnxddr_oracle.so* netxms-server-oracle/usr/lib/
 
 # netxms-server-odbc
 mkdir netxms-server-odbc

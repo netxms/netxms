@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -457,7 +457,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
  * Delete object from indexes
  * If object has an IP address, this function will delete it from
  * appropriate index. Normally this function should be called from
- * NetObj::Delete() method.
+ * NetObj::deleteObject() method.
  */
 void NetObjDeleteFromIndexes(NetObj *pObject)
 {

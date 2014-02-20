@@ -790,11 +790,9 @@ extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT pResult)
 	}
 }
 
-
-//
-// Perform asynchronous SELECT query
-//
-
+/**
+ * Perform asynchronous SELECT query
+ */
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	BOOL bSuccess = FALSE;
@@ -816,6 +814,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQ
 		   strcat(pszReq, pszQueryUTF8);
 		   if (UnsafeDrvQuery(pConn, pszReq, errorText))
 		   {
+            ((PG_CONN *)pConn)->pFetchBuffer = PQdescribePortal(pConn->pHandle, "cur1");
 			   bSuccess = TRUE;
 		   }
 		   free(pszReq);
@@ -840,11 +839,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQ
 	return (DBDRV_ASYNC_RESULT)pConn;
 }
 
-
-//
-// Fetch next result line from asynchronous SELECT results
-//
-
+/**
+ * Fetch next result line from asynchronous SELECT results
+ */
 extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT pConn)
 {
    BOOL bResult = TRUE;
@@ -876,11 +873,9 @@ extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT pConn)
    return bResult;
 }
 
-
-//
-// Get field length from async quety result
-//
-
+/**
+ * Get field length from async quety result
+ */
 extern "C" LONG EXPORT DrvGetFieldLengthAsync(PG_CONN *pConn, int nColumn)
 {
 	if ((pConn == NULL) || (pConn->pFetchBuffer == NULL))
@@ -903,16 +898,10 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(PG_CONN *pConn, int nColumn)
 	return (LONG)strlen(value);
 }
 
-
-//
-// Get field from current row in async query result
-//
-
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(
-		PG_CONN *pConn,
-		int nColumn,
-		WCHAR *pBuffer,
-		int nBufSize)
+/**
+ * Get field from current row in async query result
+ */
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(PG_CONN *pConn, int nColumn, WCHAR *pBuffer, int nBufSize)
 {
 	char *pszResult;
 
@@ -954,14 +943,12 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(
    return pBuffer;
 }
 
-
-//
-// Get column count in async query result
-//
-
+/**
+ * Get column count in async query result
+ */
 extern "C" int EXPORT DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT hResult)
 {
-	return ((hResult != NULL) && (((PG_CONN *)hResult)->pFetchBuffer != NULL))? PQnfields(((PG_CONN *)hResult)->pFetchBuffer) : 0;
+	return ((hResult != NULL) && (((PG_CONN *)hResult)->pFetchBuffer != NULL)) ? PQnfields(((PG_CONN *)hResult)->pFetchBuffer) : 0;
 }
 
 /**

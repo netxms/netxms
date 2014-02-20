@@ -66,6 +66,26 @@ void StringSet::add(const TCHAR *str)
 }
 
 /**
+ * Add string to set - must be allocated by malloc()
+ */
+void StringSet::addPreallocated(TCHAR *str)
+{
+   StringSetEntry *entry;
+   int keyLen = (int)(_tcslen(str) * sizeof(TCHAR));
+   HASH_FIND(hh, m_data, str, keyLen, entry);
+   if (entry == NULL)
+   {
+      entry = (StringSetEntry *)malloc(sizeof(StringSetEntry));
+      entry->str = str;
+      HASH_ADD_KEYPTR(hh, m_data, entry->str, keyLen, entry);
+   }
+   else
+   {
+      free(str);
+   }
+}
+
+/**
  * Remove string from set
  */
 void StringSet::remove(const TCHAR *str)
@@ -96,7 +116,7 @@ void StringSet::clear()
 /**
  * Check if given string is in set
  */
-bool StringSet::exist(const TCHAR *str)
+bool StringSet::contains(const TCHAR *str)
 {
    StringSetEntry *entry;
    int keyLen = (int)(_tcslen(str) * sizeof(TCHAR));
@@ -134,4 +154,78 @@ void StringSet::addAll(StringSet *src)
    {
       add(entry->str);
    }
+}
+
+/**
+ * Add all entries from TCHAR pointer arrays
+ */
+void StringSet::addAll(TCHAR **strings, int count)
+{
+   for(int i = 0; i < count; i++)
+      if (strings[i] != NULL)
+         add(strings[i]);
+}
+
+/**
+ * Fill NXCP message with string set data
+ *
+ * @param msg NXCP message
+ * @param baseId base ID for data fields
+ * @param countId ID of field where number of strings should be placed
+ */
+void StringSet::fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId)
+{
+   UINT32 varId = baseId;
+   StringSetEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      msg->SetVariable(varId++, entry->str);
+   }
+   msg->SetVariable(countId, varId - baseId);
+}
+
+/**
+ * Add all strings from NXCP message
+ *
+ * @param msg NXCP message
+ * @param baseId base ID for data fields
+ * @param countId ID of field with number of strings
+ * @param clearBeforeAdd if set to true, existing content will be deleted
+ * @param toUppercase if set to true, all strings will be converted to upper case before adding
+ */
+void StringSet::addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase)
+{
+   if (clearBeforeAdd)
+      clear();
+
+   int count = (int)msg->GetVariableLong(countId);
+   UINT32 varId = baseId;
+   for(int i = 0; i < count; i++)
+   {
+      TCHAR *str = msg->GetVariableStr(varId++);
+      if (str != NULL)
+      {
+         if (toUppercase)
+            _tcsupr(str);
+         addPreallocated(str);
+      }
+   }
+}
+
+/**
+ * Get all entries as one string, optionally separated by given separator
+ *
+ * @parm separator optional separator, may be NULL
+ */
+String StringSet::getAll(const TCHAR *separator)
+{
+   String result;
+   StringSetEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if ((separator != NULL) && (result.getSize() > 0))
+         result += separator;
+      result += entry->str;
+   }
+   return result;
 }

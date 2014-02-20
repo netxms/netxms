@@ -25,7 +25,7 @@
 /**
  * VlanList constructor
  */
-VlanList::VlanList(int initialAlloc)
+VlanList::VlanList(int initialAlloc) : RefCountObject()
 {
 	m_allocated = initialAlloc;
 	m_size = 0;

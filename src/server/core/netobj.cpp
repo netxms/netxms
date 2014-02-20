@@ -478,16 +478,15 @@ void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
 
 /**
  * Prepare object for deletion - remove all references, etc.
+ *
+ * @param initiator pointer to parent object which causes recursive deletion or NULL
  */
-void NetObj::deleteObject()
+void NetObj::deleteObject(NetObj *initiator)
 {
-   UINT32 i;
-
    DbgPrintf(4, _T("Deleting object %d [%s]"), m_dwId, m_szName);
 
 	// Prevent object change propagation until it's marked as deleted
-	// (to prevent the object's re-appearance in GUI if client hides the object
-	// after successful call to Session::deleteObject())
+	// (to prevent the object's incorrect appearance in GUI
 	LockData();
    m_isHidden = true;
 	UnlockData();
@@ -501,13 +500,57 @@ void NetObj::deleteObject()
 
    prepareForDeletion();
 
+   DbgPrintf(5, _T("NetObj::deleteObject(): deleting object %d from indexes"), m_dwId);
+   NetObjDeleteFromIndexes(this);
+
+   // Delete references to this object from child objects
+   DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_dwId);
+   ObjectArray<NetObj> *deleteList = NULL;
+   LockChildList(TRUE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->getParentCount() == 1)
+      {
+         // last parent, delete object
+         if (deleteList == NULL)
+            deleteList = new ObjectArray<NetObj>(16, 16, false);
+			deleteList->add(m_pChildList[i]);
+      }
+      else
+      {
+         m_pChildList[i]->DeleteParent(this);
+      }
+		decRefCount();
+   }
+   free(m_pChildList);
+   m_pChildList = NULL;
+   m_dwChildCount = 0;
+   UnlockChildList();
+
+   // Delete orphaned child objects
+   if (deleteList != NULL)
+   {
+      for(int i = 0; i < deleteList->size(); i++)
+      {
+         NetObj *o = deleteList->get(i);
+         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), o->Name(), o->Id());
+         o->deleteObject(this);
+      }
+      delete deleteList;
+   }
+
    // Remove references to this object from parent objects
    DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_dwId);
    LockParentList(TRUE);
-   for(i = 0; i < m_dwParentCount; i++)
+   for(UINT32 i = 0; i < m_dwParentCount; i++)
    {
-      m_pParentList[i]->DeleteChild(this);
-      m_pParentList[i]->calculateCompoundStatus();
+      // If parent is deletion initiator the this is object already
+      // removed from parent's list
+      if (m_pParentList[i] != initiator)
+      {
+         m_pParentList[i]->DeleteChild(this);
+         m_pParentList[i]->calculateCompoundStatus();
+      }
 		decRefCount();
    }
    free(m_pParentList);
@@ -515,32 +558,14 @@ void NetObj::deleteObject()
    m_dwParentCount = 0;
    UnlockParentList();
 
-   // Delete references to this object from child objects
-   DbgPrintf(5, _T("NetObj::Delete(): clearing child list for object %d"), m_dwId);
-   LockChildList(TRUE);
-   for(i = 0; i < m_dwChildCount; i++)
-   {
-      m_pChildList[i]->DeleteParent(this);
-		decRefCount();
-      if (m_pChildList[i]->isOrphaned())
-			m_pChildList[i]->deleteObject();
-   }
-   free(m_pChildList);
-   m_pChildList = NULL;
-   m_dwChildCount = 0;
-   UnlockChildList();
-
    LockData();
    m_isHidden = false;
    m_isDeleted = true;
    Modify();
    UnlockData();
 
-   DbgPrintf(5, _T("NetObj::Delete(): deleting object %d from indexes"), m_dwId);
-   NetObjDeleteFromIndexes(this);
-
    // Notify all other objects about object deletion
-   DbgPrintf(5, _T("NetObj::Delete(): calling OnObjectDelete(%d)"), m_dwId);
+   DbgPrintf(5, _T("NetObj::deleteObject(): calling onObjectDelete(%d)"), m_dwId);
 	g_idxObjectById.forEach(onObjectDeleteCallback, this);
 
    DbgPrintf(4, _T("Object %d successfully deleted"), m_dwId);
@@ -789,7 +814,7 @@ BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
    SAVE_PARAM sp;
 
    // Save access list
-   LockACL();
+   lockACL();
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM acl WHERE object_id=%d"), m_dwId);
    if (DBQuery(hdb, szQuery))
    {
@@ -798,7 +823,7 @@ BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
       m_pAccessList->enumerateElements(EnumerationHandler, &sp);
       bSuccess = TRUE;
    }
-   UnlockACL();
+   unlockACL();
    return bSuccess;
 }
 
@@ -930,14 +955,14 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    {
       UINT32 i, dwNumElements;
 
-      LockACL();
+      lockACL();
       dwNumElements = pRequest->GetVariableLong(VID_ACL_SIZE);
       m_bInheritAccessRights = pRequest->GetVariableShort(VID_INHERIT_RIGHTS);
       m_pAccessList->deleteAll();
       for(i = 0; i < dwNumElements; i++)
          m_pAccessList->addElement(pRequest->GetVariableLong(VID_ACL_USER_BASE + i),
                                    pRequest->GetVariableLong(VID_ACL_RIGHTS_BASE +i));
-      UnlockACL();
+      unlockACL();
    }
 
 	// Change trusted nodes list
@@ -1011,9 +1036,9 @@ UINT32 NetObj::getUserRights(UINT32 userId)
 		return 0;
 
    // Check if have direct right assignment
-   LockACL();
+   lockACL();
    bool hasDirectRights = m_pAccessList->getUserRights(userId, &dwRights);
-   UnlockACL();
+   unlockACL();
 
    if (!hasDirectRights)
    {
@@ -1050,9 +1075,9 @@ BOOL NetObj::checkAccessRights(UINT32 userId, UINT32 requiredRights)
  */
 void NetObj::dropUserAccess(UINT32 dwUserId)
 {
-   LockACL();
+   lockACL();
    bool modified = m_pAccessList->deleteElement(dwUserId);
-   UnlockACL();
+   unlockACL();
    if (modified)
    {
       LockData();
@@ -1564,12 +1589,10 @@ bool NetObj::showThresholdSummary()
 	return false;
 }
 
-int NetObj::getChildCount()
+/**
+ * Must return true if object is a possible event source
+ */
+bool NetObj::isEventSource()
 {
-   return m_dwChildCount;
-}
-
-int NetObj::getParentCount()
-{
-   return m_dwParentCount;
+   return false;
 }

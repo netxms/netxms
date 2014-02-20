@@ -32,22 +32,29 @@ int main(int argc, char *argv[])
 {
 	int ch;
 
+   bool isAgentSecret = false;
+
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "hK:v")) != -1)
+   while((ch = getopt(argc, argv, "hK:va")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxencpasswd [<options>] <login> <password>\n"
+                   "       nxencpasswd [<options>] -s <password>\n"
                    "Valid options are:\n"
                    "   -h           : Display help and exit.\n"
                    "   -v           : Display version and exit.\n"
+                   "   -a           : Encrypt agent's secret.\n"
                    "\n");
 				return 0;
          case 'v':   // Print version and exit
             printf("NetXMS Password Encryption Tool Version " NETXMS_VERSION_STRING_A "\n");
 				return 0;
+         case 'a':   // Obfuscate agent's secret
+            isAgentSecret = true;
+            break;
          case '?':
 				return 1;
          default:
@@ -55,7 +62,7 @@ int main(int argc, char *argv[])
       }
    }
 
-	if (argc - optind < 2)
+	if ((!isAgentSecret && (argc - optind < 2)) || (isAgentSecret && (argc - optind < 1)))
 	{
 		fprintf(stderr, "Required arguments missing. Run nxencpasswd -h for help.\n");
 		return 1;
@@ -67,8 +74,17 @@ int main(int argc, char *argv[])
 	memset(encrypted, 0, 32);
 	memset(key, 0, 16);
 
-	CalculateMD5Hash((BYTE *)argv[optind], strlen(argv[optind]), key);
-	strncpy((char *)plainText, argv[optind + 1], 31);
+   char *login;
+   if (isAgentSecret)
+   {
+      login = (char *)"netxms";
+   }
+   else
+   {
+      login = argv[optind];
+   }
+	CalculateMD5Hash((BYTE *)login, strlen(login), key);
+	strncpy((char *)plainText, isAgentSecret ? argv[optind] : argv[optind + 1], 31);
 	ICEEncryptData(plainText, 32, encrypted, key);
 
 	// Convert encrypted password to base64 encoding and print

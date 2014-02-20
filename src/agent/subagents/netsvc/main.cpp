@@ -36,10 +36,9 @@ UINT32 g_flags = NETSVC_AF_VERIFYPEER;
 char g_certBundle[1024] = {0};
 UINT32 g_timeout = 30;
 
-//
-// Config file definition
-//
-
+/**
+ * Config file definition
+ */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("VerifyPeer"), CT_BOOLEAN, 0, 0, NETSVC_AF_VERIFYPEER, 0, &g_flags },
@@ -48,11 +47,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-
-//
-// Callback for processing data received from cURL
-//
-
+/**
+ * Callback for processing data received from cURL
+ */
 static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
    // TODO: it assumed that size * nmemb will always fit into size_t
@@ -75,13 +72,11 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
    return size * nmemb;
 }
 
-
-//
-// Handler for Service.Status(url, pattern)
-// 
-// TODO: Unicode support!
-//
-
+/**
+ * Handler for Service.Status(url, pattern)
+ * 
+ * TODO: Unicode support!
+ */
 static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *value)
 {
    int ret = SYSINFO_RC_ERROR;
@@ -185,12 +180,11 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
    return ret;
 }
 
-
-//
-// Subagent initialization
-//
-
-static BOOL SubagentInit(Config *config) {
+/**
+ * Subagent initialization
+ */
+static BOOL SubagentInit(Config *config) 
+{
    bool ret = false;
 
 	config->parseTemplate(_T("netsvc"), m_cfgTemplate);
@@ -216,26 +210,25 @@ static BOOL SubagentInit(Config *config) {
    return ret;
 }
 
-//
-//
-// Called by master agent at unload
-//
-
+/**
+ * Called by master agent at unload
+ */
 static void SubagentShutdown()
 {
    curl_global_cleanup();
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Provided parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] = 
 {
    { _T("Service.Check(*)"), H_CheckService, NULL, DCI_DT_INT, _T("Service {instance} status") },
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info = 
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
@@ -249,12 +242,25 @@ static NETXMS_SUBAGENT_INFO m_info =
    0, NULL	// push parameters
 };
 
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(NETSVC)
 {
    *ppInfo = &m_info;
    return TRUE;
 }
+
+#ifdef _WIN32
+
+/**
+ * DLL entry point
+ */
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+	return TRUE;
+}
+
+#endif

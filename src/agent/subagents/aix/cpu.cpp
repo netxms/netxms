@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 //
 
 #define CPU_USAGE_SLOTS			900 		/* 60 sec * 15 min => 900 sec */
-#define MAX_CPU					(64 + 1)	/* 64 + 1 for overall */
+#define MAX_CPU					(4096 + 1)	/* + 1 for overall */
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
@@ -56,11 +56,9 @@ static double *m_cpuPhysicalUsageIoWait;
 static int m_currentSlot = 0;
 static int m_maxCPU = 0;
 
-
-//
-// Stats collector
-//
-
+/**
+ * Stats collector
+ */
 static void CpuUsageCollector()
 {
 	uint64_t user = 0, system = 0, idle = 0, iowait = 0;
@@ -191,11 +189,9 @@ static void CpuUsageCollector()
 	MutexUnlock(m_cpuUsageMutex);
 }
 
-
-//
-// Collector thread
-//
-
+/**
+ * Collector thread
+ */
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *arg)
 {
 	AgentWriteDebugLog(1, "CPU usage collector thread started");
@@ -208,11 +204,9 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Start CPU usage collector
-//
-
+/**
+ * Start CPU usage collector
+ */
 void StartCpuUsageCollector()
 {
 	int i, j;

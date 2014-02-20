@@ -123,6 +123,11 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 dwSourceId, const TCHAR *pszUserT
                IpToStr(va_arg(args, UINT32), buffer);
 					m_parameters.add(buffer);
                break;
+            case 'h':
+               buffer = (TCHAR *)malloc(32 * sizeof(TCHAR));
+               MACToStr(va_arg(args, BYTE *), buffer);
+					m_parameters.add(buffer);
+               break;
             default:
                buffer = (TCHAR *)malloc(64 * sizeof(TCHAR));
                _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), szFormat[i], va_arg(args, UINT32));
@@ -534,22 +539,18 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
    return pText;
 }
 
-
-//
-// Add new parameter to event
-//
-
+/**
+ * Add new parameter to event
+ */
 void Event::addParameter(const TCHAR *name, const TCHAR *value)
 {
 	m_parameters.add(_tcsdup(value));
 	m_parameterNames.add(name);
 }
 
-
-//
-// Set value of named parameter
-//
-
+/**
+ * Set value of named parameter
+ */
 void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 {
 	int index = m_parameterNames.getIndexIgnoreCase(name);
@@ -565,11 +566,9 @@ void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 	}
 }
 
-
-//
-// Fill message with event data
-//
-
+/**
+ * Fill message with event data
+ */
 void Event::prepareMessage(CSCPMessage *pMsg)
 {
 	UINT32 dwId = VID_EVENTLOG_MSG_BASE;
@@ -588,18 +587,17 @@ void Event::prepareMessage(CSCPMessage *pMsg)
 		pMsg->SetVariable(dwId++, (TCHAR *)m_parameters.get(i));
 }
 
-
-//
-// Load event configuration from database
-//
-
+/**
+ * Load event configuration from database
+ */
 static BOOL LoadEvents()
 {
    DB_RESULT hResult;
    UINT32 i;
    BOOL bSuccess = FALSE;
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT event_code,severity,flags,message,description,event_name FROM event_cfg ORDER BY event_code"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT event_code,severity,flags,message,description,event_name FROM event_cfg ORDER BY event_code"));
    if (hResult != NULL)
    {
       m_dwNumTemplates = DBGetNumRows(hResult);
@@ -622,6 +620,7 @@ static BOOL LoadEvents()
       nxlog_write(MSG_EVENT_LOAD_ERROR, EVENTLOG_ERROR_TYPE, NULL);
    }
 
+   DBConnectionPoolReleaseConnection(hdb);
    return bSuccess;
 }
 
@@ -680,11 +679,9 @@ void ShutdownEventSubsystem()
    RWLockDestroy(m_rwlockTemplateAccess);
 }
 
-
-//
-// Reload event templates from database
-//
-
+/**
+ * Reload event templates from database
+ */
 void ReloadEvents()
 {
    UINT32 i;
@@ -705,11 +702,9 @@ void ReloadEvents()
    RWLockUnlock(m_rwlockTemplateAccess);
 }
 
-
-//
-// Delete event template from list
-//
-
+/**
+ * Delete event template from list
+ */
 void DeleteEventTemplateFromList(UINT32 dwEventCode)
 {
    UINT32 i;
@@ -769,10 +764,13 @@ static EVENT_TEMPLATE *FindEventTemplate(UINT32 dwCode)
  * szFormat    - Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:
  *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
  *        d - Decimal integer
  *        D - 64-bit decimal integer
  *        x - Hex integer
  *        a - IP address
+ *        h - MAC (hardware) address
  *        i - Object ID
  * names - names for parameters
  * PostEventEx will put events to specified queue, and PostEvent to system

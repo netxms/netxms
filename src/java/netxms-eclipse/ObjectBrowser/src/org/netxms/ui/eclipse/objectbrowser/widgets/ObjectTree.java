@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -711,7 +711,14 @@ public class ObjectTree extends Composite
 
             IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
             TreePath path = ((TreeSelection)selection).getPaths()[0];
-            AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
+            
+            long parentId = 0;
+            if (path.getSegmentCount() > 1)
+            {
+               final AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
+               if (parent != null)
+                  parentId = parent.getObjectId();
+            }
             
             Iterator<?> it = selection.iterator();
             if(!it.hasNext())
@@ -768,7 +775,7 @@ public class ObjectTree extends Composite
                      break;
                }
 
-               if(((AbstractObject)object).getParents().next() != (parent.getObjectId()))
+               if(((AbstractObject)object).getParents().next() != parentId)
                   return false;
                
                if(!filter.contains(((AbstractObject)target).getObjectClass()) || target.equals(object)){

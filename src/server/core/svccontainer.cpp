@@ -118,7 +118,7 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	int i, iCount, iMostCriticalStatus;
 	int iOldStatus = m_iStatus;
 
-	DbgPrintf(7, _T("#### CalculateCompoundStatus for id %d"), m_dwId);
+	DbgPrintf(7, _T("ServiceContainer::calculateCompoundStatus() for %s [%d]"), m_szName, m_dwId);
 
 	// Calculate own status by selecting the most critical status of the kids
 	LockChildList(FALSE);
@@ -203,11 +203,9 @@ BOOL ServiceContainer::addHistoryRecord()
 	return TRUE;
 }
 
-
-//
-// Initialize uptime statistics (daily, weekly, monthly) by examining slm_service_history
-//
-
+/**
+ * Initialize uptime statistics (daily, weekly, monthly) by examining slm_service_history
+ */
 void ServiceContainer::initUptimeStats()
 {
 	LockData();
@@ -216,14 +214,12 @@ void ServiceContainer::initUptimeStats()
 	m_uptimeWeek = getUptimeFromDBFor(WEEK, &m_downtimeWeek);
 	m_uptimeMonth = getUptimeFromDBFor(MONTH, &m_downtimeMonth);
 	UnlockData();
-	DbgPrintf(7, _T("++++ ServiceContainer::initUptimeStats() id=%d %lf %lf %lf"), m_dwId, m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
+	DbgPrintf(6, _T("ServiceContainer::initUptimeStats() %s [%d] %lf %lf %lf"), m_szName, m_dwId, m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 }
 
-
-//
-// Calculate uptime for given period using data in database
-//
-
+/**
+ * Calculate uptime for given period using data in database
+ */
 double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 {
 	time_t beginTime;

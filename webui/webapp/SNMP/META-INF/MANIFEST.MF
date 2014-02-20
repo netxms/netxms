@@ -2,13 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC SNMP Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.snmp;singleton:=true
-Bundle-Version: 1.2.10
+Bundle-Version: 1.2.12
 Bundle-Activator: org.netxms.ui.eclipse.snmp.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.netxms.ui.eclipse.eventmanager;bundle-version="1.2.6",
- org.netxms.webui.core;bundle-version="1.2.7",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.6",
- org.eclipse.rap.ui;bundle-version="2.0.0"
+Require-Bundle: org.netxms.ui.eclipse.eventmanager;bundle-version="1.2.10",
+ org.netxms.webui.core;bundle-version="1.2.12",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.12",
+ org.eclipse.rap.ui;bundle-version="2.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.snmp.actions,

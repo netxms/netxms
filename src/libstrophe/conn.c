@@ -460,18 +460,18 @@ void conn_disconnect_clean(xmpp_conn_t * const conn)
  */
 void conn_disconnect(xmpp_conn_t * const conn) 
 {
-    xmpp_debug(conn->ctx, "xmpp", "Closing socket.");
-    conn->state = XMPP_STATE_DISCONNECTED;
-    if (conn->tls) {
-	tls_stop(conn->tls);
-	tls_free(conn->tls);
-	conn->tls = NULL;
-    }
-    sock_close(conn->sock);
+   xmpp_debug(conn->ctx, "xmpp", "Closing socket.");
+   conn->state = XMPP_STATE_DISCONNECTED;
+   if (conn->tls) 
+   {
+      tls_stop(conn->tls);
+      tls_free(conn->tls);
+      conn->tls = NULL;
+   }
+   sock_close(conn->sock);
 
-    /* fire off connection handler */
-    conn->conn_handler(conn, XMPP_CONN_DISCONNECT, conn->error,
-		       conn->stream_error, conn->userdata);
+   /* fire off connection handler */
+   conn->conn_handler(conn, XMPP_CONN_DISCONNECT, conn->error, conn->stream_error, conn->userdata);
 }
 
 /* prepares a parser reset.  this is called from handlers. we can't

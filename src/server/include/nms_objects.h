@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -347,8 +347,8 @@ protected:
 
    void LockData() { MutexLock(m_mutexData); }
    void UnlockData() { MutexUnlock(m_mutexData); }
-   void LockACL() { MutexLock(m_mutexACL); }
-   void UnlockACL() { MutexUnlock(m_mutexACL); }
+   void lockACL() { MutexLock(m_mutexACL); }
+   void unlockACL() { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite)
    {
       if (bWrite)
@@ -417,7 +417,7 @@ public:
    void DeleteChild(NetObj *pObject);  // Delete reference to child object
    void DeleteParent(NetObj *pObject); // Delete reference to parent object
 
-   void deleteObject();     // Prepare object for deletion
+   void deleteObject(NetObj *initiator = NULL);     // Prepare object for deletion
 
    bool isHidden() { return m_isHidden; }
    void hide();
@@ -458,13 +458,14 @@ public:
 	ObjectArray<NetObj> *getChildList(int typeFilter);
 	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly, bool updateRefCount);
 
+   int getChildCount() { return (int)m_dwChildCount; }
+   int getParentCount() { return (int)m_dwParentCount; }
+
 	virtual NXSL_Array *getParentsForNXSL();
 	virtual NXSL_Array *getChildrenForNXSL();
 
 	virtual bool showThresholdSummary();
-
-	virtual int getChildCount();
-	virtual int getParentCount();
+   virtual bool isEventSource();
 
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
@@ -525,6 +526,7 @@ protected:
 
    void loadItemsFromDB();
    void destroyItems();
+   void updateInstanceDiscoveryItems(DCItem *dci);
 
    void lockDciAccess(bool writeLock) { if (writeLock) { RWLockWriteLock(m_dciAccessLock, INFINITE); } else { RWLockReadLock(m_dciAccessLock, INFINITE); } }
 	void unlockDciAccess() { RWLockUnlock(m_dciAccessLock); }
@@ -551,16 +553,16 @@ public:
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false);
-   bool updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps,
-                       UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
+   bool updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    bool deleteDCObject(UINT32 dcObjectId, bool needLock);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
    int getItemType(UINT32 dwItemId);
    DCObject *getDCObjectById(UINT32 itemId);
    DCObject *getDCObjectByTemplateId(UINT32 tmplItemId);
    DCObject *getDCObjectByIndex(int index);
-   DCObject *getDCObjectByName(const TCHAR *pszName);
-   DCObject *getDCObjectByDescription(const TCHAR *pszDescription);
+   DCObject *getDCObjectByName(const TCHAR *name);
+   DCObject *getDCObjectByDescription(const TCHAR *description);
+   NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description);
    BOOL lockDCIList(UINT32 dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    BOOL unlockDCIList(UINT32 dwSessionId);
    void setDCIModificationFlag() { m_bDCIListModified = TRUE; }
@@ -628,6 +630,7 @@ public:
    virtual BOOL CreateFromDB(UINT32 dwId);
 
    Node *getParentNode();
+   UINT32 getParentNodeId();
 
    UINT32 getZoneId() { return m_zoneId; }
    UINT32 getIpNetMask() { return m_dwIpNetMask; }
@@ -666,7 +669,8 @@ public:
    void setPortNumber(UINT32 port) { m_portNumber = port; Modify(); }
 	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
 	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; Modify(); }
-	void setPeer(UINT32 nodeId, UINT32 ifId) { m_peerNodeId = nodeId; m_peerInterfaceId = ifId; Modify(); }
+	void setPeer(Node *node, Interface *iface);
+   void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; Modify(); }
    void setDescription(const TCHAR *descr) { nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); }
 
 	void updateZoneId();
@@ -785,6 +789,8 @@ public:
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
    virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
+
+   virtual bool isEventSource();
 };
 
 /**

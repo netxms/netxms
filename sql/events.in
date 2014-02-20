@@ -800,6 +800,26 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   4) Table row' CONCAT CRLF CONCAT
 		'   5) Instance'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_IF_PEER_CHANGED, 'SYS_IF_PEER_CHANGED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'New peer for interface %3 is %7 interface %10 (%12)',
+		'Generated when peer information for interface changes.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'    1) Local interface object ID' CONCAT CRLF CONCAT
+		'    2) Local interface index' CONCAT CRLF CONCAT
+		'    3) Local interface name' CONCAT CRLF CONCAT
+		'    4) Local interface IP address' CONCAT CRLF CONCAT
+		'    5) Local interface MAC address' CONCAT CRLF CONCAT
+		'    6) Peer node object ID' CONCAT CRLF CONCAT
+		'    7) Peer node name' CONCAT CRLF CONCAT
+		'    8) Peer interface object ID' CONCAT CRLF CONCAT
+		'    9) Peer interface index' CONCAT CRLF CONCAT
+		'   10) Peer interface name' CONCAT CRLF CONCAT
+		'   11) Peer interface IP address' CONCAT CRLF CONCAT
+		'   12) Peer interface MAC address'
+	);
 
 /*
 ** SNMP traps

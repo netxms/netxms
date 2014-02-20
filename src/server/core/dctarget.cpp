@@ -188,16 +188,21 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    else
    {
       // Update existing item unless it is disabled
-		if (m_dcObjects->get(i)->getStatus() != ITEM_STATUS_DISABLED || (g_dwFlags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
+      DCObject *curr = m_dcObjects->get(i);
+		if (curr->getStatus() != ITEM_STATUS_DISABLED || (g_dwFlags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
 		{
-			m_dcObjects->get(i)->updateFromTemplate(dcObject);
+			curr->updateFromTemplate(dcObject);
 			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"), 
-				dcObject->getName(), m_dcObjects->get(i)->getStatus());
+				dcObject->getName(), curr->getStatus());
+         if ((curr->getType() == DCO_TYPE_ITEM) && (((DCItem *)curr)->getInstanceDiscoveryMethod() != IDM_NONE))
+         {
+            updateInstanceDiscoveryItems((DCItem *)curr);
+         }
 		}
 		else
 		{
 			DbgPrintf(9, _T("DCO \"%s\" is disabled and ApplyDCIFromTemplateToDisabledDCI not set, no update (%d)"), 
-				dcObject->getName(), m_dcObjects->get(i)->getStatus());
+				dcObject->getName(), curr->getStatus());
 		}
    }
 
@@ -527,4 +532,12 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
       }
    }
    unlockDciAccess();
+}
+
+/**
+ * Must return true if object is a possible event source
+ */
+bool DataCollectionTarget::isEventSource()
+{
+   return true;
 }

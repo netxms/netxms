@@ -664,7 +664,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	public int addParameter(GraphItem item)
 	{
 		items.add(item);
-		return items.size();
+		return items.size() - 1;
 	}
 
 	/* (non-Javadoc)

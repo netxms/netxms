@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.netxms</groupId>
         <artifactId>netxms</artifactId>
-        <version>1.3.0</version>
+        <version>1.2.12</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>

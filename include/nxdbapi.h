@@ -59,7 +59,6 @@
 /**
  * Database syntax codes
  */
-
 #define DB_SYNTAX_MYSQL    0
 #define DB_SYNTAX_PGSQL    1
 #define DB_SYNTAX_MSSQL    2
@@ -69,11 +68,9 @@
 #define DB_SYNTAX_INFORMIX 6
 #define DB_SYNTAX_UNKNOWN	-1
 
-
-//
-// Database connection structures
-//
-
+/**
+ * Database connection structures
+ */
 struct db_driver_t;
 typedef db_driver_t * DB_DRIVER;
 
@@ -89,11 +86,22 @@ typedef db_result_t * DB_RESULT;
 struct db_async_result_t;
 typedef db_async_result_t * DB_ASYNC_RESULT;
 
+/**
+ * Pool connection information
+ */
+struct PoolConnectionInfo
+{
+   DB_HANDLE handle;
+   bool inUse;
+   time_t lastAccessTime;
+   time_t connectTime;
+   char srcFile[128];
+   int srcLine;
+};
 
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode);
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
 														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, void *),
@@ -184,11 +192,13 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 																int basePoolSize, int maxPoolSize, int cooldownTime,
 																int connTTL, DB_HANDLE fallback);
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown();
-DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection();
+DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *srcFile, int srcLine);
+#define DBConnectionPoolAcquireConnection() __DBConnectionPoolAcquireConnection(__FILE__, __LINE__)
 void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection);
 int LIBNXDB_EXPORTABLE DBConnectionPoolGetSize();
 int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount();
 
 void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list));
+ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList();
 
 #endif   /* _nxsrvapi_h_ */

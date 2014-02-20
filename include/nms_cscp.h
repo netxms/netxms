@@ -487,6 +487,7 @@ typedef struct
 #define CMD_CHANGE_OBJECT_TOOL_STATUS  0x011F
 #define CMD_SET_ALARM_STATUS_FLOW      0x0120
 #define CMD_DELETE_ALARM_NOTE          0x0121
+#define CMD_GET_EFFECTIVE_RIGHTS       0x0122
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -960,6 +961,7 @@ typedef struct
 #define VID_FILE_DATA               ((UINT32)460)
 #define VID_ALARM_STATUS_FLOW_STATE ((UINT32)461)
 #define VID_GROUPS                  ((UINT32)462)
+#define VID_EFFECTIVE_RIGHTS        ((UINT32)463)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

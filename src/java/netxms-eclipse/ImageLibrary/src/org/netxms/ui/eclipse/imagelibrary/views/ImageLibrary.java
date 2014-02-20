@@ -76,7 +76,9 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 
 	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -132,7 +134,9 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		});
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -240,6 +244,14 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 	}
 
+	protected void verifyImageFile(String fileName)
+	{
+		if (fileName != null)
+		{
+			new Image(getSite().getShell().getDisplay(), fileName);
+		}
+	}
+
 	/**
 	 * @param galleryItem
 	 * @param name
@@ -254,6 +266,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
+				verifyImageFile(fileName);
 				if (fileName != null)
 				{
 					FileInputStream stream = null;
@@ -280,13 +293,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 
 				session.modifyImage(image, new ProgressListener() {
 					private long prevDone = 0;
-					
+
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
 						monitor.beginTask(Messages.get().ImageLibrary_UpdateImage, (int)workTotal);
 					}
-					
+
 					@Override
 					public void markProgress(long workDone)
 					{
@@ -295,7 +308,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				//ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				// ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				ImageProvider.getInstance().syncMetaData();
 				refreshImages(); /* TODO: update single element */
 
@@ -321,6 +334,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
+				verifyImageFile(fileName);
+
 				final LibraryImage image = new LibraryImage();
 
 				final long fileSize = new File(fileName).length();
@@ -330,7 +345,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					stream = new FileInputStream(fileName);
 					byte imageData[] = new byte[(int)fileSize];
 					stream.read(imageData);
-	
+
 					image.setBinaryData(imageData);
 					image.setName(name);
 					image.setCategory(category);
@@ -343,13 +358,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 
 				session.createImage(image, new ProgressListener() {
 					private long prevDone = 0;
-					
+
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
 						monitor.beginTask(Messages.get().ImageLibrary_UploadImage, (int)workTotal);
 					}
-					
+
 					@Override
 					public void markProgress(long workDone)
 					{
@@ -358,7 +373,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				///ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				// /ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				// TODO: check
 				ImageProvider.getInstance().syncMetaData();
 				refreshImages(); /* TODO: update local copy */

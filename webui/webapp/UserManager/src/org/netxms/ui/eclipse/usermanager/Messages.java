@@ -100,6 +100,7 @@ public class Messages extends NLS
 	public String SystemRights_EditEPP;
 	public String SystemRights_EditServerConfig;
    public String SystemRights_ExecuteXMPPCommands;
+   public String SystemRights_ManageImageLibrary;
 	public String SystemRights_JobError;
 	public String SystemRights_JobTitle;
 	public String SystemRights_LoginAsMobile;

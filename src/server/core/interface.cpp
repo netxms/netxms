@@ -40,6 +40,7 @@ Interface::Interface() : NetObj()
 	m_peerInterfaceId = 0;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
+   memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
 	m_pollCount = 0;
@@ -746,11 +747,9 @@ UINT32 Interface::wakeUp()
    return dwResult;
 }
 
-
-//
-// Get interface's parent node
-//
-
+/**
+ * Get interface's parent node
+ */
 Node *Interface::getParentNode()
 {
    UINT32 i;
@@ -767,11 +766,18 @@ Node *Interface::getParentNode()
    return pNode;
 }
 
+/**
+ * Get ID of parent node object
+ */
+UINT32 Interface::getParentNodeId()
+{
+   Node *node = getParentNode();
+   return (node != NULL) ? node->Id() : 0;
+}
 
-//
-// Change interface's IP address
-//
-
+/**
+ * Change interface's IP address
+ */
 void Interface::setIpAddr(UINT32 dwNewAddr) 
 {
    UpdateInterfaceIndex(m_dwIpAddr, dwNewAddr, this);
@@ -781,11 +787,9 @@ void Interface::setIpAddr(UINT32 dwNewAddr)
    UnlockData();
 }
 
-
-//
-// Change interface's IP subnet mask
-//
-
+/**
+ * Change interface's IP subnet mask
+ */
 void Interface::setIpNetMask(UINT32 dwNetMask) 
 {
    LockData();
@@ -793,7 +797,6 @@ void Interface::setIpNetMask(UINT32 dwNetMask)
    Modify();
    UnlockData();
 }
-
 
 /**
  * Update zone ID. New zone ID taken from parent node.
@@ -834,4 +837,24 @@ void Interface::onObjectDelete(UINT32 dwObjectId)
 		UnlockData();
 	}
 	NetObj::onObjectDelete(dwObjectId);
+}
+
+/**
+ * Set peer information
+ */
+void Interface::setPeer(Node *node, Interface *iface)
+{
+   if ((m_peerNodeId == node->Id()) && (m_peerInterfaceId == iface->Id()))
+      return;
+
+   m_peerNodeId = node->Id();
+   m_peerInterfaceId = iface->Id();
+   Modify();
+
+   static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"), 
+      _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
+      _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"), _T("remoteIfMAC") };
+   PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsahdsddsah", names,
+      m_dwId, m_dwIfIndex, m_szName, m_dwIpAddr, m_bMacAddr, node->Id(), node->Name(),
+      iface->Id(), iface->getIfIndex(), iface->Name(), iface->IpAddr(), iface->getMacAddr());
 }

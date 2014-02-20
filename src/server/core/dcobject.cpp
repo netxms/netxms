@@ -855,15 +855,14 @@ void DCObject::updateFromTemplate(DCObject *src)
    setTransformationScript(src->m_transformationScriptSource);
 
    // Copy schedules
-	UINT32 i;
-   for(i = 0; i < m_dwNumSchedules; i++)
+   for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       safe_free(m_ppScheduleList[i]);
    safe_free_and_null(m_ppScheduleList);
    m_dwNumSchedules = src->m_dwNumSchedules;
    if (m_dwNumSchedules > 0)
    {
       m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-      for(i = 0; i < m_dwNumSchedules; i++)
+      for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       {
          m_ppScheduleList[i] = _tcsdup(src->m_ppScheduleList[i]);
       }

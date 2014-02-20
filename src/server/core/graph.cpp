@@ -25,7 +25,7 @@
 /**
  * Load graph's ACL - load for all graphs if graphId is 0
  */
-GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize)
+GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize)
 {
    int i, nSize;
    GRAPH_ACL_ENTRY *pACL = NULL;
@@ -33,14 +33,14 @@ GRAPH_ACL_ENTRY *LoadGraphACL(UINT32 graphId, int *pnACLSize)
 
    if (graphId == 0)
    {
-      hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,user_id,user_rights FROM graph_acl"));
+      hResult = DBSelect(hdb, _T("SELECT graph_id,user_id,user_rights FROM graph_acl"));
    }
    else
    {
       TCHAR szQuery[256];
 
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), graphId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
    }
    if (hResult != NULL)
    {
@@ -100,14 +100,16 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
    int nACLSize;
    UINT32 rcc = RCC_DB_FAILURE;
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), graphId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
       {
          dwOwner = DBGetFieldULong(hResult, 0, 0);
-         pACL = LoadGraphACL(graphId, &nACLSize);
+         pACL = LoadGraphACL(hdb, graphId, &nACLSize);
          if (nACLSize != -1)
          {
             if ((graphUserId == 0) ||
@@ -133,6 +135,7 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
       }
       DBFreeResult(hResult);
    }
+   DBConnectionPoolReleaseConnection(hdb);
    return rcc;
 };
 

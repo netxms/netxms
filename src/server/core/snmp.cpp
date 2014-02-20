@@ -215,7 +215,8 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 	}
 
 	// Try preconfigured SNMP v3 USM credentials
-	DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_RESULT hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
 	if (hResult != NULL)
 	{
 		char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
@@ -242,12 +243,14 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 		}
 stop_test:
 		DBFreeResult(hResult);
+      DBConnectionPoolReleaseConnection(hdb);
 
 		if (i < count)
 			return new SNMP_SecurityContext(ctx);
 	}
 	else
 	{
+      DBConnectionPoolReleaseConnection(hdb);
 		DbgPrintf(3, _T("SnmpCheckV3CommSettings: DBSelect() failed"));
 	}
 	
@@ -306,7 +309,8 @@ restart_check:
    }
 
 	// Check community from list
-	hResult = DBSelect(g_hCoreDB, _T("SELECT community FROM snmp_communities"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
 	if (hResult != NULL)
 	{
 		char temp[256];
@@ -328,11 +332,13 @@ restart_check:
 		}
 stop_test:
 		DBFreeResult(hResult);
+      DBConnectionPoolReleaseConnection(hdb);
 		if (i < count)
 			return new SNMP_SecurityContext(temp);
 	}
 	else
 	{
+      DBConnectionPoolReleaseConnection(hdb);
 		DbgPrintf(3, _T("SnmpCheckCommSettings: DBSelect() failed"));
 	}
 

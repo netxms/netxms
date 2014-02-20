@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -357,6 +357,43 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
       if (!g_bIgnoreErrors)
          return FALSE;
    }
+   return TRUE;
+}
+
+/**
+ * Upgrade from V305 to V306
+ */
+static BOOL H_UpgradeFromV305(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("ExtendedLogQueryAccessControl"), _T("0"), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("EnableTimedAlarmAck"), _T("1"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("EnableCheckPointSNMP"), _T("0"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='306' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V304 to V305
+ */
+static BOOL H_UpgradeFromV304(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_PEER_CHANGED, _T("SYS_IF_PEER_CHANGED"), SEVERITY_NORMAL, EF_LOG, 
+      _T("New peer for interface %3 is %7 interface %10 (%12)"),
+		_T("Generated when peer information for interface changes.\r\n")
+		_T("Parameters:\r\n")
+		_T("    1) Local interface object ID\r\n")
+		_T("    2) Local interface index\r\n")
+		_T("    3) Local interface name\r\n")
+		_T("    4) Local interface IP address\r\n")
+		_T("    5) Local interface MAC address\r\n")
+		_T("    6) Peer node object ID\r\n")
+		_T("    7) Peer node name\r\n")
+		_T("    8) Peer interface object ID\r\n")
+		_T("    9) Peer interface index\r\n")
+		_T("   10) Peer interface name\r\n")
+		_T("   11) Peer interface IP address\r\n")
+		_T("   12) Peer interface MAC address")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='305' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -4901,11 +4938,9 @@ static BOOL H_UpgradeFromV54(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V53 to V54
-//
-
+/**
+ * Upgrade from V53 to V54
+ */
 static BOOL H_UpgradeFromV53(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
@@ -7380,6 +7415,8 @@ static struct
    { 301, 302, H_UpgradeFromV301 },
    { 302, 303, H_UpgradeFromV302 },
    { 303, 304, H_UpgradeFromV303 },
+   { 304, 305, H_UpgradeFromV304 },
+   { 305, 306, H_UpgradeFromV305 },
    { 0, 0, NULL }
 };
 

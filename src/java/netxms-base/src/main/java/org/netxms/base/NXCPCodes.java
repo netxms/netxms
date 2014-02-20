@@ -313,6 +313,7 @@ public class NXCPCodes
 	public static final int CMD_CHANGE_OBJECT_TOOL_STATUS = 0x011F;
 	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
 	public static final int CMD_DELETE_ALARM_NOTE = 0x0121;
+   public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -785,6 +786,7 @@ public class NXCPCodes
    public static final long VID_FILE_DATA = 460;
    public static final long VID_ALARM_STATUS_FLOW_STATE = 461;
    public static final long VID_GROUPS = 462;
+   public static final long VID_EFFECTIVE_RIGHTS = 463;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -217,7 +217,6 @@ protected:
    void unlock() { MutexUnlock(m_hMutex); }
 
 	BOOL loadCustomSchedules();
-
    bool matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
