@@ -167,7 +167,7 @@ Error in SNMP response packet: %1
 MessageId=
 SymbolicName=MSG_OID_PARSE_ERROR
 Language=English
-Error parsing SNMP OID '%1'
+Error parsing SNMP OID "%1" in %2 (destination IP address %3)
 .
 
 MessageId=
