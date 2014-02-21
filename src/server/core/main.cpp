@@ -335,20 +335,30 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
 	if (ConfigReadInt(_T("EnableNXSLContainerFunctions"), 1))
 		g_dwFlags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
-	if (ConfigReadInt(_T("UseFQDNForNodeNames"), 1))
-		g_dwFlags |= AF_USE_FQDN_FOR_NODE_NAMES;
-	if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 0))
-		g_dwFlags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
+   if (ConfigReadInt(_T("UseFQDNForNodeNames"), 1))
+      g_dwFlags |= AF_USE_FQDN_FOR_NODE_NAMES;
+   if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 0))
+      g_dwFlags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
 
-	if (g_szDataDir[0] == 0)
-	{
-		ConfigReadStr(_T("DataDirectory"), g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
-		DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_szDataDir);
-	}
-	else
-	{
-		DbgPrintf(1, _T("Using data directory %s"), g_szDataDir);
-	}
+   if (g_szDataDir[0] == 0)
+   {
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if (homeDir != NULL)
+      {
+         TCHAR path[MAX_PATH];
+         _sntprintf(path, MAX_PATH, _T("%s/share/netxms"), homeDir);
+         ConfigReadStr(_T("DataDirectory"), g_szDataDir, MAX_PATH, path);
+      }
+      else
+      {
+         ConfigReadStr(_T("DataDirectory"), g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
+      }
+      DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_szDataDir);
+   }
+   else
+   {
+      DbgPrintf(1, _T("Using data directory %s"), g_szDataDir);
+   }
 
    g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
 	g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);

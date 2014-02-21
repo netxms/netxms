@@ -76,7 +76,15 @@ void InitLocalNetInfo()
          un.sysname[i] = tolower(un.sysname[i]);
       if (!strcmp(un.sysname, "hp-ux"))
          strcpy(un.sysname, "hpux");
-      _sntprintf(szName, MAX_PATH, PKGLIBDIR _T("/%hs.nsm"), un.sysname);
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if (homeDir != NULL)
+      {
+         _sntprintf(szName, MAX_PATH, _T("%s/lib/netxms/%hs.nsm"), homeDir, un.sysname);
+      }
+      else
+      {
+         _sntprintf(szName, MAX_PATH, PKGLIBDIR _T("/%hs.nsm"), un.sysname);
+      }
 
       m_hSubAgent = DLOpen(szName, szErrorText);
       if (m_hSubAgent != NULL)

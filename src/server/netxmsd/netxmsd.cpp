@@ -207,7 +207,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 	         _tprintf(help_text);
 	         return FALSE;
 			case 'v':
-				_tprintf(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build of %hs\n"), __DATE__);
+				_tprintf(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n"));
 				return FALSE;
 			case 'c':
 #ifdef UNICODE
