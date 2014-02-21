@@ -38,6 +38,7 @@ import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
+import org.netxms.ui.eclipse.jobs.LoginJob;
 
 /**
  * Workbench advisor for NetXMS console application

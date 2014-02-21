@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.shared;
 
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.Session;
 
 /**
@@ -47,6 +48,16 @@ public class ConsoleSharedData
 		return RWT.getUISession().getAttribute("netxms." + name);
 	}
 	
+   /**
+    * @param display
+    * @param name
+    * @return
+    */
+   public static Object getProperty(Display display, final String name)
+   {
+      return RWT.getUISession(display).getAttribute("netxms." + name);
+   }
+   
 	/**
 	 * Set value of console property
 	 * 
@@ -57,4 +68,16 @@ public class ConsoleSharedData
 	{
 		RWT.getUISession().setAttribute("netxms." + name, value);
 	}
+
+   /**
+    * Set value of console property
+    * 
+    * @param display
+    * @param name
+    * @param value
+    */
+   public static void setProperty(Display display, final String name, final Object value)
+   {
+      RWT.getUISession(display).setAttribute("netxms." + name, value);
+   }
 }
