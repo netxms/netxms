@@ -548,10 +548,13 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_dwId, m_szName, m_iStatus, newStatus);
 		m_iStatus = newStatus;
 		m_pendingStatus = -1;	// Invalidate pending status
-		sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
-		PostEventEx(eventQueue, 
-		            (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
-						pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask, m_dwIfIndex);
+      if (!m_isSystem)
+      {
+		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
+		   PostEventEx(eventQueue, 
+		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
+						   pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask, m_dwIfIndex);
+      }
    }
 	else if (expectedState == IF_EXPECTED_STATE_IGNORE)
 	{
@@ -623,32 +626,36 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transpo
 	{
 	   sendPollerMsg(rqId, _T("      Port PAE state changed to %s...\r\n"), PAE_STATE_TEXT(paeState));
 		modified = true;
+      if (!m_isSystem)
+      {
+		   PostEvent(EVENT_8021X_PAE_STATE_CHANGED, node->Id(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
+		             (UINT32)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_dwId, m_szName);
 
-		PostEvent(EVENT_8021X_PAE_STATE_CHANGED, node->Id(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
-		          (UINT32)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_dwId, m_szName);
-
-		if (paeState == PAE_STATE_FORCE_UNAUTH)
-		{
-			PostEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->Id(), "ds", m_dwId, m_szName);
-		}
+		   if (paeState == PAE_STATE_FORCE_UNAUTH)
+		   {
+			   PostEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->Id(), "ds", m_dwId, m_szName);
+		   }
+      }
 	}
 
 	if (m_dot1xBackendAuthState != (WORD)backendState)
 	{
 	   sendPollerMsg(rqId, _T("      Port backend state changed to %s...\r\n"), BACKEND_STATE_TEXT(backendState));
 		modified = true;
+      if (!m_isSystem)
+      {
+		   PostEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->Id(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
+		             (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_dwId, m_szName);
 
-		PostEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->Id(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
-		          (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_dwId, m_szName);
-
-		if (backendState == BACKEND_STATE_FAIL)
-		{
-			PostEvent(EVENT_8021X_AUTH_FAILED, node->Id(), "ds", m_dwId, m_szName);
-		}
-		else if (backendState == BACKEND_STATE_TIMEOUT)
-		{
-			PostEvent(EVENT_8021X_AUTH_TIMEOUT, node->Id(), "ds", m_dwId, m_szName);
-		}
+		   if (backendState == BACKEND_STATE_FAIL)
+		   {
+			   PostEvent(EVENT_8021X_AUTH_FAILED, node->Id(), "ds", m_dwId, m_szName);
+		   }
+		   else if (backendState == BACKEND_STATE_TIMEOUT)
+		   {
+			   PostEvent(EVENT_8021X_AUTH_TIMEOUT, node->Id(), "ds", m_dwId, m_szName);
+		   }
+      }
 	}
 
 	if (modified)
@@ -850,11 +857,13 @@ void Interface::setPeer(Node *node, Interface *iface)
    m_peerNodeId = node->Id();
    m_peerInterfaceId = iface->Id();
    Modify();
-
-   static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"), 
-      _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
-      _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"), _T("remoteIfMAC") };
-   PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsahdsddsah", names,
-      m_dwId, m_dwIfIndex, m_szName, m_dwIpAddr, m_bMacAddr, node->Id(), node->Name(),
-      iface->Id(), iface->getIfIndex(), iface->Name(), iface->IpAddr(), iface->getMacAddr());
+   if (!m_isSystem)
+   {
+      static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"), 
+         _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
+         _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"), _T("remoteIfMAC") };
+      PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsahdsddsah", names,
+         m_dwId, m_dwIfIndex, m_szName, m_dwIpAddr, m_bMacAddr, node->Id(), node->Name(),
+         iface->Id(), iface->getIfIndex(), iface->Name(), iface->IpAddr(), iface->getMacAddr());
+   }
 }
