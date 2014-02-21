@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Image Library Plugin
 Bundle-SymbolicName: org.netxms.ui.eclipse.imagelibrary;singleton:=true
-Bundle-Version: 1.2.10
+Bundle-Version: 1.2.13
 Bundle-Activator: org.netxms.ui.eclipse.imagelibrary.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui;bundle-version="2.2.0",
  org.netxms.nebula.widgets.gallery;bundle-version="0.5.3",
- org.netxms.webui.core;bundle-version="1.2.10",
+ org.netxms.webui.core;bundle-version="1.2.13",
  org.eclipse.rap.addons.filedialog;bundle-version="0.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console;
+package org.netxms.ui.eclipse.jobs;
 
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
@@ -31,6 +31,8 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.Session;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.TweakletManager;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.console.api.SessionProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -153,6 +155,7 @@ public class LoginJob implements IRunnableWithProgress
       finally
       {
          monitor.setTaskName(""); //$NON-NLS-1$
+         monitor.done();
       }
    }
 
@@ -258,7 +261,7 @@ public class LoginJob implements IRunnableWithProgress
    }
 
    /**
-    * Keep-alive thread
+    * Keep-alive timer
     */
    private final class KeepAliveTimer implements Runnable
    {

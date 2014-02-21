@@ -41,24 +41,6 @@ import org.netxms.ui.eclipse.console.api.SessionProvider;
  */
 public class LoginJob implements IRunnableWithProgress
 {
-   private final class KeepAliveHelper implements Runnable
-   {
-      @Override
-      public void run()
-      {
-         final Session session = (Session)RWT.getUISession(display).getAttribute("netxms.sesion"); //$NON-NLS-1$
-         try
-         {
-            session.checkConnection();
-            Thread.sleep(1000 * 30); // send keepalive every 30 seconds
-         }
-         catch(Exception e)
-         {
-            // ignore everything
-         }
-      }
-   }
-
    private Display display;
    private String server;
    private String loginName;
@@ -163,8 +145,8 @@ public class LoginJob implements IRunnableWithProgress
          callLoginListeners(session);
          monitor.worked(5);
 
-         Runnable keepAliveTimer = new KeepAliveHelper();
-         final Thread thread = new Thread(keepAliveTimer);
+         Runnable keepAliveTimer = new KeepAliveTimer();
+         final Thread thread = new Thread(null, keepAliveTimer, "KeepAliveTimer");
          thread.setDaemon(true);
          thread.start();
       }
@@ -174,6 +156,7 @@ public class LoginJob implements IRunnableWithProgress
       }
       finally
       {
+         monitor.setTaskName(""); //$NON-NLS-1$
          monitor.done();
       }
    }
@@ -277,5 +260,29 @@ public class LoginJob implements IRunnableWithProgress
       this.certificate = certificate;
       this.signature = signature;
       authMethod = NXCSession.AUTH_TYPE_CERTIFICATE;
+   }
+
+   /**
+    * Keep-alive timer
+    */
+   private final class KeepAliveTimer implements Runnable
+   {
+      @Override
+      public void run()
+      {
+         while(true)
+         {
+            final Session session = (Session)RWT.getUISession(display).getAttribute("netxms.sesion"); //$NON-NLS-1$
+            try
+            {
+               Thread.sleep(1000 * 60); // send keep-alive every 60 seconds
+               if (!session.checkConnection())
+                  break;   // session broken, application will exit (handled by workbench advisor)
+            }
+            catch(Exception e)
+            {
+            }
+         }
+      }
    }
 }
