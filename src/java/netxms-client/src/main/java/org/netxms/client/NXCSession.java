@@ -5770,11 +5770,20 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @see org.netxms.api.client.Session#checkConnection()
 	 */
    @Override
-   public void checkConnection() throws IOException, NXCException
+   public boolean checkConnection()
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_KEEPALIVE);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      try
+      {
+         sendMessage(msg);
+         waitForRCC(msg.getMessageId());
+         return true;
+      }
+      catch(Exception e)
+      {
+         sendNotification(new NXCNotification(NXCNotification.CONNECTION_BROKEN));
+         return false;
+      }
    }
 
    /*
