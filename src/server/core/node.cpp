@@ -1308,12 +1308,12 @@ restart_agent_check:
       if (getItemFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0);
-			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %d from agent"), m_szName, m_dwId, m_bootTime);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_szName, m_dwId, (UINT32)m_bootTime);
       }
       else if (getItemFromSNMP(m_wSNMPPort, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0) / 100;   // sysUpTime is in hundredths of a second
-			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %d from SNMP"), m_szName, m_dwId, m_bootTime);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_szName, m_dwId, (UINT32)m_bootTime);
       }
       else
       {
@@ -2674,7 +2674,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          	createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 			}
       }
-		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %ld"), m_szName, m_dwId, dwCount);
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %u"), m_szName, m_dwId, dwCount);
    }
 
 	sendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"));
@@ -4765,7 +4765,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 		DbgPrintf(4, _T("Name for node %d was resolved to %s%s"), m_dwId, m_szName,
 			bNameTruncated ? _T(" (truncated to host)") : _T(""));
 	else
-		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId, m_szName);
+		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId);
 	return bSuccess;
 }
 

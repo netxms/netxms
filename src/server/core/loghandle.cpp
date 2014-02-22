@@ -284,7 +284,7 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 	{
 		*rowCount = DBGetNumRows(m_resultSet);
 		ret = true;
-		DbgPrintf(4, _T("Log query successfull, %d rows fetched in %d ms"), (int)(*rowCount), GetCurrentTimeMs() - qwTimeStart);
+		DbgPrintf(4, _T("Log query successfull, %d rows fetched in %d ms"), (int)(*rowCount), (int)(GetCurrentTimeMs() - qwTimeStart));
 	}
 	DBConnectionPoolReleaseConnection(dbHandle);
 

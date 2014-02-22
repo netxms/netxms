@@ -1964,21 +1964,21 @@ protected:
 	double m_uptimeDay;
 	double m_uptimeWeek;
 	double m_uptimeMonth;
-	LONG m_downtimeDay;
-	LONG m_downtimeWeek;
-	LONG m_downtimeMonth;
-	LONG m_prevDiffDay;
-	LONG m_prevDiffWeek;
-	LONG m_prevDiffMonth;
+	INT32 m_downtimeDay;
+	INT32 m_downtimeWeek;
+	INT32 m_downtimeMonth;
+	INT32 m_prevDiffDay;
+	INT32 m_prevDiffWeek;
+	INT32 m_prevDiffMonth;
 
-	static LONG logRecordId;
-	static LONG getSecondsInMonth();
-	static LONG getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
-	static LONG getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
+	static INT32 logRecordId;
+	static INT32 getSecondsInMonth();
+	static INT32 getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
+	static INT32 getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
 	void initServiceContainer();
 	BOOL addHistoryRecord();
-	double getUptimeFromDBFor(Period period, LONG *downtime);
+	double getUptimeFromDBFor(Period period, INT32 *downtime);
 
 public:
 	ServiceContainer();
@@ -2000,11 +2000,9 @@ public:
 	void updateUptimeStats(time_t currentTime = 0, BOOL updateChilds = FALSE);
 };
 
-
-//
-// Business service root
-//
-
+/**
+ * Business service root
+ */
 class NXCORE_EXPORTABLE BusinessServiceRoot : public ServiceContainer
 {
 public:
