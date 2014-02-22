@@ -641,6 +641,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\macdb.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

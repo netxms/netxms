@@ -2112,6 +2112,12 @@ void NetObjDelete(NetObj *pObject);
 void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *pObject);
 ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
 
+void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap);
+void NXCORE_EXPORTABLE MacDbAddInterface(Interface *iface);
+void NXCORE_EXPORTABLE MacDbAddObject(const BYTE *macAddr, NetObj *object);
+void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr);
+NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr);
+
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);

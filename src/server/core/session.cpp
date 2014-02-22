@@ -11574,36 +11574,32 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
 /**
  * Send to client list of files in server's file store
  */
-
 void ClientSession::listServerFileStore(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	TCHAR path[MAX_PATH];
-	bool musicFiles = true;
 	bool correctType = false;
 	StringList extensionList;
-	UINT32 lenght, base;
-	TCHAR * lastPointRef;
+	TCHAR *lastPointRef;
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	lenght = request->GetVariableLong(VID_EXTENSION_COUNT);
-	DbgPrintf(8, _T("ClientSession::listServerFileStore: Lenght of filter type array is %d."), lenght);
-   base = VID_EXTENSION_LIST_BASE;
+	int length = (int)request->GetVariableLong(VID_EXTENSION_COUNT);
+	DbgPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d."), length);
+   
+   UINT32 varId = VID_EXTENSION_LIST_BASE;
 
-	if (0 == lenght)
-      musicFiles = false;
-	for(int i = 0; i < lenght; i++)
+   bool musicFiles = (length > 0);
+	for(int i = 0; i < length; i++)
    {
-      extensionList.add(request->GetVariableStr(base++));
+      extensionList.add(request->GetVariableStr(varId++));
       for(int j = 0; j < m_musicTypeList.getSize(); j++)
       {
-         if(_tcscmp(extensionList.getValue(i), m_musicTypeList.getValue(j)) != 0 ? true : false )
+         if(_tcscmp(extensionList.getValue(i), m_musicTypeList.getValue(j)))
          {
             musicFiles = false;
          }
@@ -11612,7 +11608,6 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFiles)
 	{
-
       _tcscpy(path, g_szDataDir);
       _tcscat(path, DDIR_FILES);
       _TDIR *dir = _topendir(path);
@@ -11632,7 +11627,7 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
          {
             if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
             {
-               if(lenght != 0)
+               if(length != 0)
                {
                   correctType = false;
                   lastPointRef = _tcsrchr(d->d_name, _T('.'));
@@ -11986,11 +11981,9 @@ void ClientSession::executeReport(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Get report execution results
-//
-
+/**
+ * Get report execution results
+ */
 void ClientSession::getReportResults(CSCPMessage *request)
 {
 	CSCPMessage msg;
