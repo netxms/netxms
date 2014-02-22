@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1665,21 +1665,24 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 			hasChanges = true;
 
       // Check for CheckPoint SNMP agent on port 260
-      DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
-      if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
+      if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
       {
-			pTransport = new SNMP_UDPTransport;
-			((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
-         if (SnmpGet(SNMP_VERSION_1, pTransport,
-                     _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+         DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
+         if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
          {
-            LockData();
-            m_dwFlags |= NF_IS_CPSNMP | NF_IS_ROUTER;
-            m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHABLE;
-            UnlockData();
-            sendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
+			   pTransport = new SNMP_UDPTransport;
+			   ((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
+            if (SnmpGet(SNMP_VERSION_1, pTransport,
+                        _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+            {
+               LockData();
+               m_dwFlags |= NF_IS_CPSNMP | NF_IS_ROUTER;
+               m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHABLE;
+               UnlockData();
+               sendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
+            }
+			   delete pTransport;
          }
-			delete pTransport;
       }
 
       // Generate event if node flags has been changed
@@ -2316,7 +2319,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 			UnlockData();
 		}
    }
-   else
+   else if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
    {
       // Check for CheckPoint SNMP agent on port 161
       DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_szName);
