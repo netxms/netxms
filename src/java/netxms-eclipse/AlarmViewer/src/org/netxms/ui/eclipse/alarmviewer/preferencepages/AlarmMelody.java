@@ -69,7 +69,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
    private Set<String> oldMelodyList = new HashSet<String>();
    private List<String> newMelodyList = new ArrayList<String>();
    private List<Combo> comboList = new ArrayList<Combo>();
-   private String[] severityArray = AlarmNotifier.severityArray;
+   
    /*
     * (non-Javadoc)
     * 
@@ -140,7 +140,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
 
             for(int i = 0; i < 5; i++)
             {
-               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + severityArray[i])); //$NON-NLS-1$
+               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.severityArray[i]));
             }
             melodyList.addAll(currentMelodyList);
 
@@ -180,7 +180,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
          {
             for(int i = 0; i < 5; i++)
             {
-               changeMelody(newMelodyList.get(i), severityArray[i], i);
+               changeMelody(newMelodyList.get(i), AlarmNotifier.severityArray[i], i);
             }
             for(String oldName : oldMelodyList)
             {

@@ -162,7 +162,7 @@ public class HomePage extends AbstractPage
 
    private void okPressed()
    {
-      LoginJob job = new LoginJob(Display.getCurrent(), "10.5.0.111", login.getText(), false, false);
+      LoginJob job = new LoginJob(Display.getCurrent(), "127.0.0.1", login.getText(), false, false);
       job.setPassword(password.getText());
       
       disposeContent();

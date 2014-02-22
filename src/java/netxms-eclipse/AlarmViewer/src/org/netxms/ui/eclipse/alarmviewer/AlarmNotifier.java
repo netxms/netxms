@@ -61,25 +61,26 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class AlarmNotifier
 {
+   public static String[] severityArray = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   
    private static NXCListener listener = null;
    private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
    private static int outstandingAlarms = 0;
    private static long lastReminderTime = 0;
    private static NXCSession session;
-   public static String[] severityArray = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    private static IPreferenceStore ps;
    private static URL workspaceUrl;
 
    /**
     * Initialize alarm notifier
     */
-   public static void init(NXCSession sessionGiven)
+   public static void init(NXCSession session)
    {
-      session = sessionGiven;
+      AlarmNotifier.session = session;
       ps = Activator.getDefault().getPreferenceStore();
       workspaceUrl = Platform.getInstanceLocation().getURL();
-      // Check that required alarm melodies are present localy.
-      checkMelodies(session);
+      // Check that required alarm melodies are present locally.
+      checkMelodies();
 
       lastReminderTime = System.currentTimeMillis();
 
@@ -159,19 +160,22 @@ public class AlarmNotifier
    /**
     * Check if required melodies exist locally and download them from server if required.
     */
-   private static void checkMelodies(NXCSession session)
+   private static void checkMelodies()
    {
-      URL workspaceUrl = Platform.getInstanceLocation().getURL();
       for(int i = 0; i < 5; i++)
       {
-         getMelodyAndDownloadIfRequired(session, workspaceUrl, severityArray[i]);
+         getMelodyAndDownloadIfRequired(severityArray[i]);
       }
    }
 
-   private static String getMelodyAndDownloadIfRequired(NXCSession session, URL workspaceUrl, String severity)
+   /**
+    * @param severity
+    * @return
+    */
+   private static String getMelodyAndDownloadIfRequired(String severity)
    {
       String melodyName = ps.getString("ALARM_NOTIFIER.MELODY." + severity);//$NON-NLS-1$
-      if (!checkMelodyExists(melodyName, workspaceUrl))
+      if (!isMelodyExists(melodyName, workspaceUrl))
       {
          try
          {
@@ -221,7 +225,7 @@ public class AlarmNotifier
       return melodyName;
    }
 
-   private static boolean checkMelodyExists(String melodyName, URL workspaceUrl)
+   private static boolean isMelodyExists(String melodyName, URL workspaceUrl)
    {
       if ((!melodyName.equals("")) && (workspaceUrl != null)) //$NON-NLS-1$
       {
@@ -249,7 +253,6 @@ public class AlarmNotifier
     */
    private static void processNewAlarm(final Alarm alarm)
    {
-
       Integer state = alarmStates.get(alarm.getId());
       if (state != null)
       {
@@ -263,7 +266,7 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      String fileName = getMelodyAndDownloadIfRequired(session, workspaceUrl, severityArray[alarm.getCurrentSeverity()]); //$NON-NLS-1$
+      String fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity()]); //$NON-NLS-1$
 
       if (!fileName.equals("") && fileName != null) //$NON-NLS-1$
       {
@@ -287,15 +290,14 @@ public class AlarmNotifier
          }
          catch(final Exception e)
          {
-            new UIJob("Send error that was not possible to play sound") {
+            Display.getDefault().asyncExec(new Runnable() {
                @Override
-               public IStatus runInUIThread(IProgressMonitor monitor)
+               public void run()
                {
-                  MessageDialogHelper.openError(getDisplay().getActiveShell(), Messages.get().AlarmNotifier_ErrorPlayingSound,
+                  MessageDialogHelper.openError(Display.getDefault().getActiveShell(), Messages.get().AlarmNotifier_ErrorPlayingSound,
                         Messages.get().AlarmNotifier_ErrorPlayingSoundDescription + e.getMessage());
-                  return Status.OK_STATUS;
                }
-            }.schedule();
+            });
          }
       }
 

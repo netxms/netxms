@@ -68,7 +68,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
    private Set<String> oldMelodyList = new HashSet<String>();
    private List<String> newMelodyList = new ArrayList<String>();
    private List<Combo> comboList = new ArrayList<Combo>();
-   private String[] severityArray = AlarmNotifier.severityArray;
+   
    /*
     * (non-Javadoc)
     * 
@@ -135,11 +135,11 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
             {
                melodyList.add(s.getName());
             }
-            melodyList.add("");
+            melodyList.add(""); //$NON-NLS-1$
 
             for(int i = 0; i < 5; i++)
             {
-               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + severityArray[i]));
+               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.severityArray[i]));
             }
             melodyList.addAll(currentMelodyList);
 
@@ -179,7 +179,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
          {
             for(int i = 0; i < 5; i++)
             {
-               changeMelody(newMelodyList.get(i), severityArray[i], i);
+               changeMelody(newMelodyList.get(i), AlarmNotifier.severityArray[i], i);
             }
             for(String oldName : oldMelodyList)
             {
@@ -206,7 +206,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
          {
             if (!checkMelodyExists(melodyName, workspaceUrl))
                downloadMelodie(session, melodyName, workspaceUrl);
-            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, melodyName);
+            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, melodyName); //$NON-NLS-1$
             currentMelodyList.set(id, melodyName);
             oldMelodyList.add(oldMelodyName);
          }
@@ -225,14 +225,14 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
                                     + e.getMessage());
                }
             });
-            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, "");
+            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
          }
       }
    }
 
    private static boolean checkMelodyExists(String melodyName, URL workspaceUrl)
    {
-      if (workspaceUrl != null && melodyName != null && !melodyName.equals(""))
+      if (workspaceUrl != null && melodyName != null && !melodyName.equals("")) //$NON-NLS-1$
       {
          File f = new File(workspaceUrl.getPath(), melodyName);
          return f.isFile();
@@ -257,7 +257,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
       }
       catch(NXCException | IOException e)
       {
-         System.out.println("Not possible to copy inside new file content.");
+         System.out.println("Not possible to copy inside new file content."); //$NON-NLS-1$
       }
       finally
       {

@@ -24,16 +24,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.Session;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
@@ -49,9 +44,11 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class AlarmNotifier
 {
-   private static NXCListener listener = null;
+   public static final String[] severityArray = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   
+   private NXCListener listener = null;
+   private Display display;
    private NXCSession session;
-   public static String[] severityArray = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    private IPreferenceStore ps;
    private URL workspaceUrl;
 
@@ -72,22 +69,30 @@ public class AlarmNotifier
     */
    public static void attachSession(final NXCSession session, final Display display)
    {
-      AlarmNotifier instance = new AlarmNotifier();
-      instance.init(session, display);
-      ConsoleSharedData.setProperty("AlarmNotifier", instance);
+      AlarmNotifier instance = new AlarmNotifier(session, display);
+      ConsoleSharedData.setProperty(display, "AlarmNotifier", instance);
    }
 
    /**
     * Initialize alarm notifier
     */
-   public void init(final NXCSession session, final Display display)
+   private AlarmNotifier(final NXCSession session, final Display display)
    {
       this.session = session;
-      ps = Activator.getDefault().getPreferenceStore();
-      workspaceUrl = Platform.getInstanceLocation().getURL();
-      // Check that required alarm melodies are present localy.
-      checkMelodies(session);
+      this.display = display;
+      
+      display.syncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            ps = Activator.getDefault().getPreferenceStore();
+            workspaceUrl = Platform.getInstanceLocation().getURL();
 
+            // Check that required alarm melodies are present locally
+            checkMelodies();
+         }
+      });
+      
       listener = new NXCListener() {
          @Override
          public void notificationHandler(final SessionNotification n)
@@ -110,19 +115,23 @@ public class AlarmNotifier
    /**
     * Check if required melodies exist locally and download them from server if required.
     */
-   private void checkMelodies(NXCSession session)
+   private void checkMelodies()
    {
-      URL workspaceUrl = Platform.getInstanceLocation().getURL();
       for(int i = 0; i < 5; i++)
       {
-         getMelodyAndDownloadIfRequired(session, workspaceUrl, severityArray[i]);
+         getMelodyAndDownloadIfRequired(severityArray[i]);
       }
    }
 
-   private String getMelodyAndDownloadIfRequired(NXCSession session, URL workspaceUrl, String severity)
+   /**
+    * @param workspaceUrl
+    * @param severity
+    * @return
+    */
+   private String getMelodyAndDownloadIfRequired(String severity)
    {
       String melodyName = ps.getString("ALARM_NOTIFIER.MELODY." + severity);//$NON-NLS-1$
-      if (!checkMelodyExists(melodyName, workspaceUrl))
+      if (!isMelodyExists(melodyName))
       {
          try
          {
@@ -154,28 +163,25 @@ public class AlarmNotifier
          {
             melodyName = "";
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, "");
-            new UIJob("Send error that sound file is not found") {
-               @Override
-               public IStatus runInUIThread(IProgressMonitor monitor)
-               {
-                  MessageDialogHelper
-                        .openError(
-                              getDisplay().getActiveShell(),
-                              "Melody does not exist.",
-                              "Melody was not found "
-                                    + "locally and it was not possible to download it from server. Melody is removed and will not be played. Error: "
-                                    + e.getMessage());
-                  return Status.OK_STATUS;
-               }
-            }.schedule();
+            MessageDialogHelper
+                  .openError(
+                        display.getActiveShell(),
+                        "Error",
+                        String.format("Alarm sound was not found locally and it was not possible to download it from server. Sound is removed and will not be played. Error: %s",
+                              e.getMessage()));
          }
       }
       return melodyName;
    }
 
-   private boolean checkMelodyExists(String melodyName, URL workspaceUrl)
+   /**
+    * @param melodyName
+    * @param workspaceUrl
+    * @return
+    */
+   private boolean isMelodyExists(String melodyName)
    {
-      if ((!melodyName.equals("")) && (workspaceUrl != null))
+      if (!melodyName.isEmpty() && (workspaceUrl != null))
       {
          File f = new File(workspaceUrl.getPath(), melodyName);
          return f.isFile();
@@ -187,16 +193,6 @@ public class AlarmNotifier
    }
 
    /**
-    * Stop alarm notifier
-    */
-   public static void stop()
-   {
-      Session session = ConsoleSharedData.getSession();
-      if ((session != null) && (listener != null))
-         session.removeListener(listener);
-   }
-
-   /**
     * Process new alarm
     */
    private void processNewAlarm(final Alarm alarm)
@@ -204,7 +200,7 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      String fileName = getMelodyAndDownloadIfRequired(session, workspaceUrl, severityArray[alarm.getCurrentSeverity()]); //$NON-NLS-1$
+      String fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity()]);
 
       if (!fileName.equals("") && fileName != null)
       {
