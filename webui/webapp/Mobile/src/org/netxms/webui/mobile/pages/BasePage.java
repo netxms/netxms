@@ -97,7 +97,6 @@ public abstract class BasePage extends AbstractPage
          }
       };
 
-      /*
       swipe = new Swipe(parent, new SwipeItemProvider() {
          @Override
          public int getItemCount()
@@ -112,11 +111,6 @@ public abstract class BasePage extends AbstractPage
          }
       });
       swipe.show(1);
-      */
-      content = new Composite(parent, SWT.NONE);
-      content.setLayout(new FillLayout());
-      createPageContent(content, pageData);
-      
    }
 
    /**

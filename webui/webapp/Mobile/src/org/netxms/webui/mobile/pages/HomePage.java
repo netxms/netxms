@@ -1,8 +1,6 @@
 package org.netxms.webui.mobile.pages;
 
 import java.lang.reflect.InvocationTargetException;
-import java.sql.ClientInfoStatus;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -23,12 +21,11 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.webui.mobile.Activator;
-import org.netxms.webui.mobile.dialogs.ProgressDialog;
 import org.netxms.webui.mobile.widgets.ProgressWidget;
 import com.eclipsesource.tabris.device.ClientDevice;
-import com.eclipsesource.tabris.device.ClientDeviceListener;
 import com.eclipsesource.tabris.device.ClientDevice.ConnectionType;
 import com.eclipsesource.tabris.device.ClientDevice.Orientation;
+import com.eclipsesource.tabris.device.ClientDeviceListener;
 import com.eclipsesource.tabris.ui.AbstractPage;
 import com.eclipsesource.tabris.ui.PageData;
 import com.eclipsesource.tabris.widgets.enhancement.Widgets;
