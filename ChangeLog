@@ -6,7 +6,7 @@
 - Management console:
    - Implemented alarm sounds
    - Fixed "broken pipe" errors
-- Fixed issues: #109   
+- Fixed issues: #109, #438   
 
 
 *

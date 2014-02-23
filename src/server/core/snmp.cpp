@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -267,8 +267,6 @@ SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *ver
 {
 	int i, count, snmpVer = SNMP_VERSION_2C;
 	TCHAR buffer[1024];
-	char defCommunity[MAX_COMMUNITY_LENGTH];
-	DB_RESULT hResult;
 
 	// Check for V3 USM
 	SNMP_SecurityContext *securityContext = SnmpCheckV3CommSettings(pTransport, originalContext, testOids);
@@ -278,6 +276,7 @@ SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *ver
 		return securityContext;
 	}
 
+	char defCommunity[MAX_COMMUNITY_LENGTH];
 	ConfigReadStrA(_T("DefaultCommunityString"), defCommunity, MAX_COMMUNITY_LENGTH, "public");
 
 restart_check:
@@ -296,21 +295,24 @@ restart_check:
       }
 	}
 
-	// Check default community
-	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
-	pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
-   for(int i = 0; i < testOids->getSize(); i++)
+	// Check default community (only if different from current)
+   if ((originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) || strcmp(defCommunity, originalContext->getCommunity()))
    {
-      if (SnmpGet(snmpVer, pTransport, testOids->getValue(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	   {
-		   *version = snmpVer;
-		   return new SNMP_SecurityContext(defCommunity);
-	   }
+   	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
+	   pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
+      for(int i = 0; i < testOids->getSize(); i++)
+      {
+         if (SnmpGet(snmpVer, pTransport, testOids->getValue(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	      {
+		      *version = snmpVer;
+		      return new SNMP_SecurityContext(defCommunity);
+	      }
+      }
    }
 
 	// Check community from list
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
+	DB_RESULT hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
 	if (hResult != NULL)
 	{
 		char temp[256];
@@ -319,14 +321,17 @@ restart_check:
 		for(i = 0; i < count; i++)
 		{
 			DBGetFieldA(hResult, i, 0, temp, 256);
-			DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
-			pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
-         for(int j = 0; j < testOids->getSize(); j++)
+         if ((originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) || strcmp(temp, originalContext->getCommunity()))
          {
-            if (SnmpGet(snmpVer, pTransport, testOids->getValue(j), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	         {
-   				*version = snmpVer;
-               goto stop_test;
+			   DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
+			   pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
+            for(int j = 0; j < testOids->getSize(); j++)
+            {
+               if (SnmpGet(snmpVer, pTransport, testOids->getValue(j), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	            {
+   				   *version = snmpVer;
+                  goto stop_test;
+               }
             }
          }
 		}
