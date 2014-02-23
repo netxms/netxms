@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.networkmaps.widgets;
 
+import java.util.List;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.Viewer;
@@ -34,9 +35,15 @@ import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.base.NXCommon;
+import org.netxms.client.NXCNotification;
+import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
@@ -45,6 +52,7 @@ import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
@@ -63,6 +71,9 @@ public class NetworkMapWidget extends Composite
 	
 	private Color defaultLinkColor = null;
 	private boolean disableGeolocationBackground = false;
+   private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   private SessionListener sessionListener;
+   private NetworkMapPage mapPage = null;
 
 	/**
 	 * @param parent
@@ -88,9 +99,49 @@ public class NetworkMapWidget extends Composite
 			{
 				if (defaultLinkColor != null)
 					defaultLinkColor.dispose();
+		      if (sessionListener != null)
+		         session.removeListener(sessionListener);
 			}
 		});
+		
+      sessionListener = new SessionListener() {
+         @Override
+         public void notificationHandler(final SessionNotification n)
+         {
+            if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+            {
+               getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     onObjectChange((AbstractObject)n.getObject());
+                  }
+               });
+            }
+         }
+      };
+      session.addListener(sessionListener);
 	}
+	
+   /**
+    * Called by session listener when NetXMS object was changed.
+    * 
+    * @param object changed NetXMS object
+    */
+   private void onObjectChange(final AbstractObject object)
+   {
+      if (mapPage == null)
+         return ;
+      
+      NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
+      if (element != null)
+         viewer.refresh(element, true);
+
+      List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());
+      if (links != null)
+         for(NetworkMapLink l : links)
+            viewer.refresh(l);
+   }
 	
 	/**
 	 * Set content from map page
@@ -99,6 +150,7 @@ public class NetworkMapWidget extends Composite
 	 */
 	public void setContent(NetworkMapPage page)
 	{
+	   mapPage = page;
 		viewer.setInput(page);
 	}
 	
@@ -139,7 +191,8 @@ public class NetworkMapWidget extends Composite
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
 		
-		viewer.setInput(mapObject.createMapPage());
+		mapPage = mapObject.createMapPage();
+		viewer.setInput(mapPage);
 	}
 	
 	/**
