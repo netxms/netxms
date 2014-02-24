@@ -10204,7 +10204,6 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	TCHAR name[MAX_PATH], fname[MAX_PATH];
-	TCHAR *lastPointRef;
 	bool musicFile;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -10212,11 +10211,11 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
    pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
    for(int i = 0; i < m_musicTypeList.getSize(); i++)
    {
-      lastPointRef = _tcsrchr(name, _T('.'));
-      if(lastPointRef != NULL)
+      TCHAR *extension = _tcsrchr(name, _T('.'));
+      if (extension != NULL)
       {
-         lastPointRef = lastPointRef+1;
-         if(_tcscmp(lastPointRef, m_musicTypeList.getValue(i)) == 0 ? true : false)
+         extension++;
+         if(!_tcscmp(extension, m_musicTypeList.getValue(i)))
          {
             musicFile = true;
             break;
@@ -11582,9 +11581,7 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	TCHAR path[MAX_PATH];
-	bool correctType = false;
 	StringList extensionList;
-	TCHAR *lastPointRef;
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -11630,21 +11627,21 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
             {
                if(length != 0)
                {
-                  correctType = false;
-                  lastPointRef = _tcsrchr(d->d_name, _T('.'));
-                  lastPointRef = lastPointRef+1;
-                  for(int j = 0; j < extensionList.getSize(); j++)
+                  bool correctType = false;
+                  TCHAR *extension = _tcsrchr(d->d_name, _T('.'));
+                  if (extension != NULL)
                   {
-                     if(lastPointRef != NULL)
+                     extension++;
+                     for(int j = 0; j < extensionList.getSize(); j++)
                      {
-                        if(_tcscmp(lastPointRef, extensionList.getValue(j)) == 0 ? true : false )
+                        if (!_tcscmp(extension, extensionList.getValue(j)))
                         {
                            correctType = true;
                            break;
                         }
                      }
                   }
-                  if(!correctType)
+                  if (!correctType)
                   {
                      continue;
                   }
