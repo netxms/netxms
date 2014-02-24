@@ -104,7 +104,7 @@ AgentConnection::AgentConnection(UINT32 ipAddr, WORD port, int authMethod, const
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
-	m_deleteFileOnDownloadFailure = true;
+   m_deleteFileOnDownloadFailure = true;
 	m_condFileDownload = ConditionCreate(TRUE);
 	m_fileUploadInProgress = false;
 }
@@ -252,33 +252,56 @@ void AgentConnection::receiverThread()
          DbgPrintf(6, _T("Received raw message %s from agent at %s"),
 			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(getIpAddr(), szIpAddr));
 
-			if ((pRawMsg->wCode == CMD_FILE_DATA) &&
-				 (m_hCurrFile != -1) && (pRawMsg->dwId == m_dwDownloadRequestId))
+			if ((pRawMsg->wCode == CMD_FILE_DATA) && (pRawMsg->dwId == m_dwDownloadRequestId))
 			{
-            if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+            if (m_sendToClientMessageCallback != NULL)
             {
+               pRawMsg->wCode = ntohs(pRawMsg->wCode);
+               pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+               m_sendToClientMessageCallback(pRawMsg, m_downloadProgressCallbackArg);
+
                if (ntohs(pRawMsg->wFlags) & MF_END_OF_FILE)
                {
-                  close(m_hCurrFile);
-                  m_hCurrFile = -1;
-
                   onFileDownload(TRUE);
                }
-					else
-					{
-						if (m_downloadProgressCallback != NULL)
-						{
-							m_downloadProgressCallback(_tell(m_hCurrFile), m_downloadProgressCallbackArg);
-						}
-					}
+               else
+               {
+                  if (m_downloadProgressCallback != NULL)
+                  {
+                     m_downloadProgressCallback(pRawMsg->dwSize - (CSCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
+                  }
+               }
             }
             else
             {
-               // I/O error
-               close(m_hCurrFile);
-               m_hCurrFile = -1;
+               if (m_hCurrFile != -1)
+               {
+                  if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  {
+                     if (ntohs(pRawMsg->wFlags) & MF_END_OF_FILE)
+                     {
+                        close(m_hCurrFile);
+                        m_hCurrFile = -1;
 
-               onFileDownload(FALSE);
+                        onFileDownload(TRUE);
+                     }
+                     else
+                     {
+                        if (m_downloadProgressCallback != NULL)
+                        {
+                           m_downloadProgressCallback(_tell(m_hCurrFile), m_downloadProgressCallbackArg);
+                        }
+                     }
+                  }
+               }
+               else
+               {
+                  // I/O error
+                  close(m_hCurrFile);
+                  m_hCurrFile = -1;
+
+                  onFileDownload(FALSE);
+               }
             }
 			}
 		}
@@ -1551,8 +1574,8 @@ UINT32 AgentConnection::enableTraps()
  * Send custom request to agent
  */
 
-CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool appendFile,
-														  void (*downloadProgressCallback)(size_t, void *), void *cbArg)
+CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool append, void (*downloadProgressCallback)(size_t, void *),
+														  void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg)
 {
    UINT32 dwRqId, rcc;
 	CSCPMessage *msg = NULL;
@@ -1561,7 +1584,7 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
    pRequest->SetId(dwRqId);
 	if (recvFile != NULL)
 	{
-		rcc = prepareFileDownload(recvFile, dwRqId, appendFile, downloadProgressCallback, cbArg);
+		rcc = prepareFileDownload(recvFile, dwRqId, append, downloadProgressCallback, fileResendCallback,cbArg);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
@@ -1597,11 +1620,15 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 				}
 				else
 				{
-					close(m_hCurrFile);
-					m_hCurrFile = -1;
-					_tremove(recvFile);
+               if(fileResendCallback != NULL)
+               {
+                  close(m_hCurrFile);
+                  m_hCurrFile = -1;
+                  _tremove(recvFile);
+               }
 				}
 			}
+
 		}
 	}
 
@@ -1609,43 +1636,59 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 }
 
 
-//
-// Prepare for file upload
-//
+/**
+ * Prepare for file upload
+ */
 
-UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append,
-														 void (*downloadProgressCallback)(size_t, void *), void *cbArg)
+UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *),
+                                             void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg)
 {
-	if (m_hCurrFile != -1)
-		return ERR_RESOURCE_BUSY;
+   if(downloadProgressCallback == NULL)
+   {
+      if (m_hCurrFile != -1)
+         return ERR_RESOURCE_BUSY;
 
-	nx_strncpy(m_currentFileName, fileName, MAX_PATH);
-	ConditionReset(m_condFileDownload);
-	m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
-	if (m_hCurrFile == -1)
-	{
-		DbgPrintf(4, _T("AgentConnection::PrepareFileDownload(): cannot open file %s (%s); append=%d rqId=%d"),
-		          fileName, _tcserror(errno), append, rqId);
-	}
-	else
-	{
-		if (append)
-			lseek(m_hCurrFile, 0, SEEK_END);
-	}
-	m_dwDownloadRequestId = rqId;
-	m_downloadProgressCallback = downloadProgressCallback;
-	m_downloadProgressCallbackArg = cbArg;
-	return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
+      nx_strncpy(m_currentFileName, fileName, MAX_PATH);
+      ConditionReset(m_condFileDownload);
+      m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
+      if (m_hCurrFile == -1)
+      {
+         DbgPrintf(4, _T("AgentConnection::PrepareFileDownload(): cannot open file %s (%s); append=%d rqId=%d"),
+                   fileName, _tcserror(errno), append, rqId);
+      }
+      else
+      {
+         if (append)
+            lseek(m_hCurrFile, 0, SEEK_END);
+      }
+
+      m_dwDownloadRequestId = rqId;
+      m_downloadProgressCallback = downloadProgressCallback;
+      m_downloadProgressCallbackArg = cbArg;
+
+      return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
+   }
+   else
+   {
+      ConditionReset(m_condFileDownload);
+      m_sendToClientMessageCallback = fileResendCallback;
+
+      m_dwDownloadRequestId = rqId;
+      m_downloadProgressCallback = downloadProgressCallback;
+      m_downloadProgressCallbackArg = cbArg;
+
+      return ERR_SUCCESS;
+   }
 }
 
 
-//
-// File upload completion handler
-//
+/**
+ * File upload completion handler
+ */
 
 void AgentConnection::onFileDownload(BOOL success)
 {
-	if (!success && m_deleteFileOnDownloadFailure)
+   if (!success && m_deleteFileOnDownloadFailure)
 		_tremove(m_currentFileName);
 	m_fileDownloadSucceeded = success;
 	ConditionSet(m_condFileDownload);

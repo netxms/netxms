@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -130,9 +130,9 @@ void ServerJob::setOwningQueue(ServerJobQueue *queue)
 }
 
 
-//
-// Update progress
-//
+/**
+ * Update progress
+ */
 
 void ServerJob::markProgress(int pctCompleted)
 {
@@ -276,9 +276,9 @@ void ServerJob::setFailureMessage(const TCHAR *msg)
 //
 
 void ServerJob::setDescription(const TCHAR *description)
-{ 
+{
 	safe_free(m_description);
-	m_description = _tcsdup(description); 
+	m_description = _tcsdup(description);
 }
 
 
@@ -307,8 +307,8 @@ void ServerJob::fillMessage(CSCPMessage *msg)
 void ServerJob::createHistoryRecord()
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	
-	DB_STATEMENT hStmt = DBPrepare(hdb, 
+
+	DB_STATEMENT hStmt = DBPrepare(hdb,
 		_T("INSERT INTO job_history (id,time_created,time_started,time_finished,job_type,")
 		_T("description,node_id,user_id,status) VALUES (?,?,0,0,?,?,?,?,?)"));
 	if (hStmt != NULL)
@@ -332,12 +332,12 @@ void ServerJob::createHistoryRecord()
 void ServerJob::updateHistoryRecord(bool onStart)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	
-	DB_STATEMENT hStmt = DBPrepare(hdb, 
-		onStart ? 
-			_T("UPDATE job_history SET time_started=?,status=?,description=?,additional_info=? WHERE id=?") : 
+
+	DB_STATEMENT hStmt = DBPrepare(hdb,
+		onStart ?
+			_T("UPDATE job_history SET time_started=?,status=?,description=?,additional_info=? WHERE id=?") :
 			_T("UPDATE job_history SET time_finished=?,status=?,description=?,additional_info=?,failure_message=? WHERE id=?"));
-	
+
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));

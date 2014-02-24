@@ -477,7 +477,7 @@ struct FollowData
    const TCHAR *pszFile;
    const TCHAR *fileId;
    long offset;
-	void *cbArg;
+	UINT32 serverAddress;
 };
 
 class MonitoredFileList

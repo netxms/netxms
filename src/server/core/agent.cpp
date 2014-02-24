@@ -201,7 +201,7 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
    va_end(args);
 }
 
-/*
+/**
  * Recieve file monitoring information and resend to all required user sessions
  */
 void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)

@@ -1129,6 +1129,7 @@ restart_agent_check:
             m_dwDynamicFlags |= NDF_AGENT_UNREACHABLE;
             PostEventEx(pQueue, EVENT_AGENT_FAIL, m_dwId, NULL);
             m_failTimeAgent = tNow;
+            g_monitoringList.removeDisconectedNode(m_dwId);
          }
       }
 		agentUnlock();
