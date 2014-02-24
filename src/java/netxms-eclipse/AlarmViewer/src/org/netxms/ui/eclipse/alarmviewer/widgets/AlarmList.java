@@ -440,7 +440,7 @@ public class AlarmList extends Composite
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
 		
-		//time based sticky acknowledgment 	
+		//time based sticky acknowledgement	
 		timeAcknowledgeOther = new Action("Other...", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
          public void run()
@@ -469,7 +469,7 @@ public class AlarmList extends Composite
 	   {
 	      settings.put("AlarmList.ackMenuSize", 4); //$NON-NLS-1$
 	      timeAcknowledge = new ArrayList<Action>(4);
-         createDefaultCations();
+         createDefaultIntervals();
          settings.put("AlarmList.ackMenuEntry0", 1 * 60 * 60); //$NON-NLS-1$
          settings.put("AlarmList.ackMenuEntry1", 4 * 60 * 60); //$NON-NLS-1$
          settings.put("AlarmList.ackMenuEntry2", 24 * 60 * 60); //$NON-NLS-1$
@@ -494,7 +494,7 @@ public class AlarmList extends Composite
 	   }
    }
 
-   private void createDefaultCations()
+   private void createDefaultIntervals()
    {
       Action act;
       act = new Action("1 hour(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -578,25 +578,28 @@ public class AlarmList extends Composite
 		
 		int states = getSelectionType(selection.toArray());
 		
-		if(states == 2)
+		if (states == 2)
 		{
    		manager.add(actionAcknowledge);
-   		manager.add(actionStickyAcknowledge);
-   		
-   		initializeTimeAcknowledge();
-         timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$ //$NON-NLS-1$
-         for(Action act : timeAcknowledge)
-         {
-            timeAcknowledgeMenu.add(act);
-         }
-         timeAcknowledgeMenu.add(new Separator());   
-         timeAcknowledgeMenu.add(timeAcknowledgeOther);
-   		manager.add(timeAcknowledgeMenu);
+		   manager.add(actionStickyAcknowledge);
+
+		   if (session.isTimedAlarmAckEnabled())
+		   {
+      		initializeTimeAcknowledge();
+            timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$ //$NON-NLS-1$
+            for(Action act : timeAcknowledge)
+            {
+               timeAcknowledgeMenu.add(act);
+            }
+            timeAcknowledgeMenu.add(new Separator());   
+            timeAcknowledgeMenu.add(timeAcknowledgeOther);
+      		manager.add(timeAcknowledgeMenu);
+		   }
 		}
 		
-		if(states < 4)
+		if (states < 4)
 		   manager.add(actionResolve);
-		if (states == 4 || (session.getAlarmStatusFlowStrict() == 0))
+		if (states == 4 || session.isStrictAlarmStatusFlow())
 		   manager.add(actionTerminate);
 		
 		manager.add(new Separator());
@@ -623,12 +626,13 @@ public class AlarmList extends Composite
 		}
 	}
 
+	// FIXME: comment
 	private int getSelectionType(Object[] array)
    {
       int type = 0;
       for(int i = 0; i < array.length; i++)
       {
-         type |= ((Alarm)array[i]).getState()+2;
+         type |= ((Alarm)array[i]).getState() + 2;
       }
       return type;
    }

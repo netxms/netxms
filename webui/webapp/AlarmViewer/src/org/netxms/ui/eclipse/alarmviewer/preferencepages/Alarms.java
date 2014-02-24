@@ -23,9 +23,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.editors.AcknowledgeTimeEditor;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * "Alarms" preference page
@@ -52,6 +54,9 @@ public class Alarms extends FieldEditorPreferencePage implements IWorkbenchPrefe
 	@Override
 	protected void createFieldEditors()
 	{
-      addField(new AcknowledgeTimeEditor("ALARM_TIME_EDITOR", Messages.get().Alarms_AcknowledgeTimeEditor, getFieldEditorParent())); //$NON-NLS-1$
+      if (((NXCSession)ConsoleSharedData.getSession()).isTimedAlarmAckEnabled())
+      {
+         addField(new AcknowledgeTimeEditor("ALARM_TIME_EDITOR", Messages.get().Alarms_AcknowledgeTimeEditor, getFieldEditorParent())); //$NON-NLS-1$
+      }
 	}
 }

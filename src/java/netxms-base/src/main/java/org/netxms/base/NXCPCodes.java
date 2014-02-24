@@ -788,6 +788,7 @@ public class NXCPCodes
    public static final long VID_GROUPS = 462;
    public static final long VID_EFFECTIVE_RIGHTS = 463;
    public static final long VID_EXTENSION_COUNT = 464;
+   public static final long VID_TIMED_ALARM_ACK_ENABLED = 465;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

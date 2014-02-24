@@ -280,8 +280,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private String timeFormat;
    private String shortTimeFormat;
    private int defaultDciRetentionTime;
-   private int alarmStatusFlowStrict;
    private int defaultDciPollingInterval;
+   private boolean strictAlarmStatusFlow;
+   private boolean timedAlarmAckEnabled;
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
 
@@ -790,7 +791,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          long data = msg.getVariableAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
          if(code == NXCNotification.ALARM_STATUS_FLOW_CHANGED)
          {
-            alarmStatusFlowStrict = (int)data;
+            strictAlarmStatusFlow = ((int)data != 0);
          }
          else
          {
@@ -1603,7 +1604,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          defaultDciRetentionTime = response.getVariableAsInteger(NXCPCodes.VID_RETENTION_TIME);
          if (defaultDciRetentionTime == 0) defaultDciRetentionTime = 30;
 
-         alarmStatusFlowStrict = response.getVariableAsInteger(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
+         strictAlarmStatusFlow = response.getVariableAsBoolean(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
+         timedAlarmAckEnabled = response.getVariableAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
          
          Logger.info("NXCSession.connect", "succesfully connected and logged in, userId=" + userId);
          isConnected = true;
@@ -6864,7 +6866,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
-    * @return the defaultDciRetentionTime
+    * @return the default DCI retention time in days
     */
    public final int getDefaultDciRetentionTime()
    {
@@ -6872,7 +6874,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
-    * @return the defaultDciPollingInterval
+    * @return the default DCI polling interval in seconds
     */
    public final int getDefaultDciPollingInterval()
    {
@@ -6880,11 +6882,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
    
    /**
-    * @return the alarmStatusFlowStrict
+    * @return true if alarm status flow set to "strict" mode
     */
-   public final int getAlarmStatusFlowStrict()
+   public final boolean isStrictAlarmStatusFlow()
    {
-      return alarmStatusFlowStrict;
+      return strictAlarmStatusFlow;
+   }
+
+   /**
+    * @return true if timed alarm acknowledgement is enabled
+    */
+   public boolean isTimedAlarmAckEnabled()
+   {
+      return timedAlarmAckEnabled;
    }
 
    /**

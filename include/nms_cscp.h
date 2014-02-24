@@ -963,6 +963,7 @@ typedef struct
 #define VID_GROUPS                  ((UINT32)462)
 #define VID_EFFECTIVE_RIGHTS        ((UINT32)463)
 #define VID_EXTENSION_COUNT         ((UINT32)464)
+#define VID_TIMED_ALARM_ACK_ENABLED ((UINT32)465)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
