@@ -132,7 +132,15 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(5);
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_event_db);
-         session.syncEventTemplates();
+         try
+         {
+            session.syncEventTemplates();
+         }
+         catch(NXCException e)
+         {
+            if (e.getErrorCode() != RCC.ACCESS_DENIED)
+               throw e;
+         }
          monitor.worked(5);
 
          monitor.setTaskName(Messages.get(display).LoginJob_subscribe);

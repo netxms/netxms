@@ -52,7 +52,10 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmNote;
 import org.netxms.client.events.EventInfo;
@@ -108,6 +111,7 @@ public class AlarmDetails extends ViewPart
 	private LastValuesWidget lastValuesWidget = null;
 	private SortableTreeViewer eventViewer;
 	private Action actionRefresh;
+	private CLabel labelAccessDenied = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -356,6 +360,7 @@ public class AlarmDetails extends ViewPart
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
 		section.setText(Messages.get().AlarmDetails_RelatedEvents);
+		
 		final GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -375,12 +380,19 @@ public class AlarmDetails extends ViewPart
 			}
 		});
 		
+      final Composite content = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      content.setLayout(layout);
+      section.setClient(content);
+      
 		final String[] names = { Messages.get().AlarmDetails_Column_Severity, Messages.get().AlarmDetails_Column_Source, Messages.get().AlarmDetails_Column_Name, Messages.get().AlarmDetails_Column_Message, Messages.get().AlarmDetails_Column_Timestamp };
 		final int[] widths = { 130, 160, 160, 400, 120 };
-		eventViewer = new SortableTreeViewer(section, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
-		section.setClient(eventViewer.getControl());
+		eventViewer = new SortableTreeViewer(content, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
 		eventViewer.setContentProvider(new EventTreeContentProvider());
 		eventViewer.setLabelProvider(new EventTreeLabelProvider());
+		eventViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	}
 
 	/**
@@ -434,7 +446,18 @@ public class AlarmDetails extends ViewPart
 			{
 				final Alarm alarm = session.getAlarm(alarmId);
 				final List<AlarmNote> comments = session.getAlarmNotes(alarmId);
-				final List<EventInfo> events = session.getAlarmEvents(alarmId);
+				
+            List<EventInfo> _events = null;
+            try
+            {
+               _events = session.getAlarmEvents(alarmId);
+            }
+            catch(NXCException e)
+            {
+               if (e.getErrorCode() != RCC.ACCESS_DENIED)
+                  throw e;
+            }
+				final List<EventInfo> events = _events;
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -457,8 +480,25 @@ public class AlarmDetails extends ViewPart
 							}
 						}
 						
-						eventViewer.setInput(events);
-						eventViewer.expandAll();
+						if (events != null)
+						{
+   						eventViewer.setInput(events);
+   						eventViewer.expandAll();
+                     if (labelAccessDenied != null)
+                     {
+                        labelAccessDenied.dispose();
+                        labelAccessDenied = null;
+                     }
+						}
+						else if (labelAccessDenied == null)
+                  {
+                     labelAccessDenied = new CLabel(eventViewer.getControl().getParent(), SWT.NONE);
+                     toolkit.adapt(labelAccessDenied);
+                     labelAccessDenied.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
+                     labelAccessDenied.setText("Cannot get list of related events - access denied");
+                     labelAccessDenied.moveAbove(null);
+                     labelAccessDenied.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+                  }
 						
 						updateLayout();
 					}

@@ -30,7 +30,9 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.Session;
 import org.netxms.base.NXCommon;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.TweakletManager;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
@@ -129,7 +131,15 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(1);
 
          monitor.setTaskName(Messages.get().LoginJob_sync_event_db);
-         session.syncEventTemplates();
+         try
+         {
+            session.syncEventTemplates();
+         }
+         catch(NXCException e)
+         {
+            if (e.getErrorCode() != RCC.ACCESS_DENIED)
+               throw e;
+         }
          monitor.worked(1);
 
          monitor.setTaskName(Messages.get().LoginJob_subscribe);
