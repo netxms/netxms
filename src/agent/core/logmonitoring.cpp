@@ -190,7 +190,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
                   break;
                }
             }
-            if(false)
+            if(!sent)
             {
                g_monitorFileList.removeMonitoringFile(flData->pszFile);
             }
