@@ -1056,9 +1056,11 @@ public:
 
 	Cluster *getMyCluster();
 
+   UINT32 getZoneId() { return m_zoneId; }
    UINT32 getFlags() { return m_dwFlags; }
    UINT32 getRuntimeFlags() { return m_dwDynamicFlags; }
-   UINT32 getZoneId() { return m_zoneId; }
+   void setFlag(UINT32 flag) { m_dwFlags |= flag; }
+   void clearFlag(UINT32 flag) { m_dwFlags &= ~flag; }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
