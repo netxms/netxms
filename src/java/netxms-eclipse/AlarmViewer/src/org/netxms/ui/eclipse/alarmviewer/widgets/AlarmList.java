@@ -599,7 +599,7 @@ public class AlarmList extends Composite
 		
 		if (states < 4)
 		   manager.add(actionResolve);
-		if (states == 4 || session.isStrictAlarmStatusFlow())
+		if (states == 4 || !session.isStrictAlarmStatusFlow())
 		   manager.add(actionTerminate);
 		
 		manager.add(new Separator());
