@@ -47,6 +47,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerFile;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmNotifier;
+import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -109,7 +110,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
          comboList.add(i, newCombo);
       }
 
-      new UIJob("Start alarm melody save") {
+      new UIJob(Messages.get().AlarmMelody_JobGetMelodyList) {
          @Override
          public IStatus runInUIThread(IProgressMonitor monitor)
          {
@@ -125,8 +126,8 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
                   @Override
                   public void run()
                   {
-                     MessageDialogHelper.openError(getShell(), "Not possible to get melody list.",
-                           "Not possible to get melody list. Error: " + e.getMessage());
+                     MessageDialogHelper.openError(getShell(), Messages.get().AlarmMelody_ErrorGettingMelodyList,
+                           Messages.get().AlarmMelody_ErrorGettingMelodyListDescription + e.getMessage());
                   }
                });
             }
@@ -173,7 +174,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
       {
          newMelodyList.add(comboList.get(i).getText());
       }
-      new UIJob("Start alarm melody save") {
+      new UIJob(Messages.get().AlarmMelody_SaveClientSelection) {
          @Override
          public IStatus runInUIThread(IProgressMonitor monitor)
          {
@@ -219,9 +220,8 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
                   MessageDialogHelper
                         .openError(
                               getShell(),
-                              "Melody does not exist.",
-                              "Melody was not found "
-                                    + "locally and it was not possible to download it from server. Melody is removed and will not be played. Error: "
+                              Messages.get().AlarmMelody_ErrorMelodyNotExists,
+                              Messages.get().AlarmMelody_ErrorMelodyNotExistsDescription
                                     + e.getMessage());
                }
             });
