@@ -39,6 +39,12 @@ public class Configuration implements ApplicationConfiguration
    {
       UIConfiguration uiConfiguration = new UIConfiguration();
       
+      /*
+      ActionConfiguration actionNavigation = new ActionConfiguration("action.navigation", ShowNavigationBar.class);
+      actionNavigation.setTitle("Navigation");
+      uiConfiguration.addActionConfiguration(actionNavigation);
+      */
+      
       // Add a top level page
       PageConfiguration homePage = new PageConfiguration("page.home", HomePage.class);
       homePage.setTopLevel(true);
@@ -46,6 +52,7 @@ public class Configuration implements ApplicationConfiguration
       uiConfiguration.addPageConfiguration(homePage);
 
       PageConfiguration page = new PageConfiguration("page.alarms", Alarms.class);
+      page.setTopLevel(true);
       page.setTitle("Alarms");
       uiConfiguration.addPageConfiguration(page);
       
@@ -54,6 +61,7 @@ public class Configuration implements ApplicationConfiguration
       uiConfiguration.addPageConfiguration(page);
       
       page = new PageConfiguration("page.graphs", PredefinedGraphTree.class);
+      page.setTopLevel(true);
       page.setTitle("Graphs");
       uiConfiguration.addPageConfiguration(page);
       

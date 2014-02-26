@@ -7,9 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.SessionNotification;
@@ -21,7 +19,6 @@ import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.webui.mobile.pages.helpers.AlarmListLabelProvider;
-import com.eclipsesource.tabris.ui.AbstractPage;
 import com.eclipsesource.tabris.ui.PageData;
 
 /**
