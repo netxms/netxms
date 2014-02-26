@@ -206,12 +206,12 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
          try
          {
             if (!checkMelodyExists(melodyName, workspaceUrl))
-               downloadMelodie(session, melodyName, workspaceUrl);
+               downloadSoundFile(session, melodyName, workspaceUrl);
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, melodyName); //$NON-NLS-1$
             currentMelodyList.set(id, melodyName);
             oldMelodyList.add(oldMelodyName);
          }
-         catch(NXCException | IOException e)
+         catch(final Exception e)
          {
             getShell().getDisplay().asyncExec(new Runnable() {
                @Override
@@ -243,26 +243,38 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
       }
    }
 
-   private static void downloadMelodie(NXCSession session, String melodyName, URL workspaceUrl) throws NXCException, IOException
+   /**
+    * Download sound file from server
+    * 
+    * @param session
+    * @param melodyName
+    * @param workspaceUrl
+    * @throws NXCException
+    * @throws IOException
+    */
+   private static void downloadSoundFile(NXCSession session, String melodyName, URL workspaceUrl) throws NXCException, IOException
    {
-      File f = new File(workspaceUrl.getPath(), melodyName);
-      f.createNewFile();
+      File serverFile = session.downloadFileFromServer(melodyName);
       FileChannel src = null;
       FileChannel dest = null;
       try
       {
-         src = new FileInputStream(session.downloadFileFromServer(melodyName)).getChannel();
+         src = new FileInputStream(serverFile).getChannel();
+         File f = new File(workspaceUrl.getPath(), melodyName);
+         f.createNewFile();
          dest = new FileOutputStream(f).getChannel();
          dest.transferFrom(src, 0, src.size());
       }
-      catch(NXCException | IOException e)
+      catch(IOException e)
       {
-         System.out.println("Not possible to copy inside new file content."); //$NON-NLS-1$
+         Activator.logError("Cannot copy sound file", e);
       }
       finally
       {
-         src.close();
-         dest.close();
+         if (src != null)
+            src.close();
+         if (dest != null)
+            dest.close();
       }
    }
 

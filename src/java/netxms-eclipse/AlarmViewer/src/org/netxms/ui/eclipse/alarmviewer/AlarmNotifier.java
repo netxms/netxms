@@ -44,7 +44,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -179,31 +178,33 @@ public class AlarmNotifier
       {
          try
          {
-            File f = new File(workspaceUrl.getPath(), melodyName);
             File fileContent = session.downloadFileFromServer(melodyName);
-            f.createNewFile();
-            FileChannel src = null;
-            FileChannel dest = null;
             if (fileContent != null)
             {
+               FileChannel src = null;
+               FileChannel dest = null;
                try
                {
                   src = new FileInputStream(fileContent).getChannel();
+                  File f = new File(workspaceUrl.getPath(), melodyName);
+                  f.createNewFile();
                   dest = new FileOutputStream(f).getChannel();
                   dest.transferFrom(src, 0, src.size());
                }
                catch(IOException e)
                {
-                  System.out.println("Not possible to copy inside new file content."); //$NON-NLS-1$
+                  Activator.logError("Cannot copy sound file", e);
                }
                finally
                {
-                  src.close();
-                  dest.close();
+                  if (src != null)
+                     src.close();
+                  if (dest != null)
+                     dest.close();
                }
             }
          }
-         catch(IOException | NXCException e)
+         catch(final Exception e)
          {
             melodyName = ""; //$NON-NLS-1$
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -216,7 +217,7 @@ public class AlarmNotifier
                               getDisplay().getActiveShell(),
                               Messages.get().AlarmNotifier_ErrorMelodynotExists,
                               Messages.get().AlarmNotifier_ErrorMelodyNotExistsDescription
-                                    + e.getMessage());
+                                    + e.getLocalizedMessage());
                   return Status.OK_STATUS;
                }
             }.schedule();
@@ -225,6 +226,11 @@ public class AlarmNotifier
       return melodyName;
    }
 
+   /**
+    * @param melodyName
+    * @param workspaceUrl
+    * @return
+    */
    private static boolean isMelodyExists(String melodyName, URL workspaceUrl)
    {
       if ((!melodyName.equals("")) && (workspaceUrl != null)) //$NON-NLS-1$

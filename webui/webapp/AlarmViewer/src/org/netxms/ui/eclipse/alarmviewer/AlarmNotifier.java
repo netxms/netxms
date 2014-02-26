@@ -30,7 +30,6 @@ import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -135,31 +134,33 @@ public class AlarmNotifier
       {
          try
          {
-            File f = new File(workspaceUrl.getPath(), melodyName);
             File fileContent = session.downloadFileFromServer(melodyName);
-            f.createNewFile();
-            FileChannel src = null;
-            FileChannel dest = null;
             if (fileContent != null)
             {
+               FileChannel src = null;
+               FileChannel dest = null;
                try
                {
                   src = new FileInputStream(fileContent).getChannel();
+                  File f = new File(workspaceUrl.getPath(), melodyName);
+                  f.createNewFile();
                   dest = new FileOutputStream(f).getChannel();
                   dest.transferFrom(src, 0, src.size());
                }
                catch(IOException e)
                {
-                  System.out.println("Not possible to copy inside new file content.");
+                  Activator.logError("Cannot copy sound file", e);
                }
                finally
                {
-                  src.close();
-                  dest.close();
+                  if (src != null)
+                     src.close();
+                  if (dest != null)
+                     dest.close();
                }
             }
          }
-         catch(IOException | NXCException e)
+         catch(final Exception e)
          {
             melodyName = "";
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, "");
