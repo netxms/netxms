@@ -71,7 +71,7 @@ public class ExportToCsvAction extends Action
 		// "Object Details" view can contain multiple widgets
 		// with "Export to CSV" action defined, so binding it to handler service
 		// will cause handler conflict
-		if (viewPart.getViewSite().getId().equals("org.netxms.ui.eclipse.objectview.view.tabbed_object_view")) //$NON-NLS-1$
+		if ((viewPart == null) || viewPart.getViewSite().getId().equals("org.netxms.ui.eclipse.objectview.view.tabbed_object_view")) //$NON-NLS-1$
 			return;
 		
 		final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);

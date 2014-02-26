@@ -131,10 +131,22 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
 
 	Node *node = (Node *)object->getData();
 	DCObject *dci = byName ? node->getDCObjectByName(argv[1]->getValueAsCString()) : node->getDCObjectByDescription(argv[1]->getValueAsCString());
-	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
-	{
-		*ppResult = ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
-	}
+	if (dci != NULL)
+   {
+      if (dci->getType() == DCO_TYPE_ITEM)
+	   {
+         *ppResult = ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
+	   }
+      else if (dci->getType() == DCO_TYPE_TABLE)
+      {
+         Table *t = ((DCTable *)dci)->getLastValue();
+         *ppResult = (t != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslTableClass, t)) : new NXSL_Value;
+      }
+      else
+      {
+   		*ppResult = new NXSL_Value;	// Return NULL
+      }
+   }
 	else
 	{
 		*ppResult = new NXSL_Value;	// Return NULL if DCI not found

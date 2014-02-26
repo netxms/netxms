@@ -485,16 +485,25 @@ bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize)
  */
 void DumpUsers(CONSOLE_CTX pCtx)
 {
-   int i;
-   TCHAR szGUID[64];
-
    ConsolePrintf(pCtx, _T("Login name           GUID                                 System rights\n")
                        _T("-----------------------------------------------------------------------\n"));
    MutexLock(m_mutexUserDatabaseAccess);
-   for(i = 0; i < m_userCount; i++)
+
+   for(int i = 0; i < m_userCount; i++)
+   {
 		if (!(m_users[i]->getId() & GROUP_FLAG))
-			ConsolePrintf(pCtx, _T("%-20s %-36s 0x%08X\n"), m_users[i]->getName(),
-			              m_users[i]->getGuidAsText(szGUID), m_users[i]->getSystemRights());
+      {
+			DWORD dwSystemRights = m_users[i]->getSystemRights();
+			for(int j = 0; j < m_userCount; j++)
+         {
+				if ((m_users[j]->getId() & GROUP_FLAG) && (((Group *) m_users[j])->isMember(m_users[i]->getId())))
+					dwSystemRights |= ((Group *)m_users[j])->getSystemRights();
+			}
+
+         TCHAR szGUID[64];
+			ConsolePrintf(pCtx, _T("%-20s %-36s 0x%08X\n"), m_users[i]->getName(), m_users[i]->getGuidAsText(szGUID), dwSystemRights);
+		}
+	}
    MutexUnlock(m_mutexUserDatabaseAccess);
    ConsolePrintf(pCtx, _T("\n"));
 }

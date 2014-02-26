@@ -27,7 +27,7 @@
 /**
  * Service log record ID
  */
-LONG ServiceContainer::logRecordId = -1;
+INT32 ServiceContainer::logRecordId = -1;
 
 /**
  * Default constructor for service service object
@@ -192,7 +192,7 @@ BOOL ServiceContainer::addHistoryRecord()
 			DBFreeStatement(hStmt);
 			return FALSE;
 		}
-		DbgPrintf(9, _T("ServiceContainer::addHistoryRecord() ok with id %ld"), ServiceContainer::logRecordId);
+		DbgPrintf(9, _T("ServiceContainer::addHistoryRecord() ok with id %d"), ServiceContainer::logRecordId);
 	}
 	else
 	{
@@ -220,10 +220,10 @@ void ServiceContainer::initUptimeStats()
 /**
  * Calculate uptime for given period using data in database
  */
-double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
+double ServiceContainer::getUptimeFromDBFor(Period period, INT32 *downtime)
 {
 	time_t beginTime;
-	LONG timediffTillNow	= ServiceContainer::getSecondsSinceBeginningOf(period, &beginTime);
+	INT32 timediffTillNow	= ServiceContainer::getSecondsSinceBeginningOf(period, &beginTime);
 	double percentage = 0;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT change_timestamp,new_status FROM slm_service_history ")
@@ -270,12 +270,10 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 	return percentage;
 }
 
-
-//
-// Update uptime counters 
-//
-
-void ServiceContainer::updateUptimeStats(time_t currentTime /* = 0*/, BOOL updateChilds /* = FALSE */)
+/**
+ * Update uptime counters 
+ */
+void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 {
 	LONG timediffTillNow;
 	LONG downtimeBetweenPolls = 0;
@@ -342,12 +340,10 @@ void ServiceContainer::updateUptimeStats(time_t currentTime /* = 0*/, BOOL updat
 	}
 }
 
-
-//
-// Calculate number of seconds since the beginning of given period
-//
-
-LONG ServiceContainer::getSecondsSinceBeginningOf(Period period, time_t *beginTime)
+/**
+ * Calculate number of seconds since the beginning of given period
+ */
+INT32 ServiceContainer::getSecondsSinceBeginningOf(Period period, time_t *beginTime)
 {
 	time_t curTime = time(NULL);
 	struct tm *tms;
@@ -377,15 +373,13 @@ LONG ServiceContainer::getSecondsSinceBeginningOf(Period period, time_t *beginTi
 	if (beginTime != NULL)
 		*beginTime = beginTimeL;
 
-	return LONG(curTime - beginTimeL);
+	return (INT32)(curTime - beginTimeL);
 }
 
-
-//
-// Calculate number of seconds in the current month
-//
-
-LONG ServiceContainer::getSecondsInMonth()
+/**
+ * Calculate number of seconds in the current month
+ */
+INT32 ServiceContainer::getSecondsInMonth()
 {
 	time_t curTime = time(NULL);
 	struct tm *tms;
@@ -406,7 +400,7 @@ LONG ServiceContainer::getSecondsInMonth()
 	else if (month == 1) /* February */
 		days = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) ? 29 : 28;
 
-	return LONG(days * 24 * 3600);
+	return (INT32)(days * 24 * 3600);
 }
 
 /**

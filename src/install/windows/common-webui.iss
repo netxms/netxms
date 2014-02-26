@@ -23,7 +23,7 @@ begin
       'Web interface server settings',
       'Please check default settings and adjust them if required');
   DetailsPage.Add('Port:', False);
-  DetailsPage.Values[0] := GetPreviousData('JettyPort', '8787');
+  DetailsPage.Values[0] := GetPreviousData('JettyPort', '8080');
 end;
 
 Function GetJettyPort: String;
@@ -40,14 +40,14 @@ Function GenerateInstallParameters(Param: String): String;
 var
   strJvmArgument: String;
 begin
-  strJvmArgument := ExpandConstant('--DisplayName="NetXMS WebUI" --Description="NetXMS Web Interface (winstone)" --Install="{app}\WebUI\prunsrv.exe" --LogPath="{app}\WebUI\logs" --LogLevel=Debug --StdOutput=auto --StdError=auto --StartMode=jvm --StopMode=jvm --Jvm=auto --Classpath="{app}\WebUI\winstone-0.9.10.jar" --StartClass=winstone.Launcher ++StartParams=--controlPort=47777 ++StartParams=--ajp13Port=-1 ++StartParams=--warfile ++StartParams="{app}\WebUI\nxmc\nxmc.war" --StopClass=winstone.tools.WinstoneControl ++StopParams=shutdown ++StopParams=--port=47777')
+  strJvmArgument := ExpandConstant('--DisplayName="NetXMS WebUI" --Description="NetXMS Web Interface (jetty)" --Install="{app}\WebUI\prunsrv.exe" --Startup=auto --LogPath="{app}\WebUI\logs" --LogLevel=Debug --StdOutput=auto --StdError=auto --StartMode=jvm --StopMode=jvm --Jvm=auto --Classpath="{app}\WebUI\jetty-runner.jar;{app}\WebUI\start.jar" --StartClass=org.eclipse.jetty.runner.Runner ++StartParams=--stop-port ++StartParams=17003 ++StartParams=--stop-key ++StartParams=nxmc$jetty$key ++StartParams=--classes ++StartParams="{app}\WebUI\nxmc\lib"');
+  strJvmArgument := strJvmArgument + ' ++StartParams=--port ++StartParams=' + GetJettyPort();
+  strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams="{app}\WebUI\nxmc\nxmc.war" --StopClass=org.eclipse.jetty.start.Main ++StopParams=-DSTOP.PORT=17003 ++StopParams=-DSTOP.KEY=nxmc$jetty$key ++StopParams=--stop');
 
   if IsComponentSelected('jre') then
   begin
     strJvmArgument := strJvmArgument + ExpandConstant(' --Jvm="{app}\bin\jre\bin\server\jvm.dll"');
   end;
-
-  strJvmArgument := strJvmArgument + ' ++StartParams=--httpPort=' + GetJettyPort();
 
   Result := strJvmArgument;
 end;

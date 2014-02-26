@@ -96,6 +96,8 @@ void StringSet::remove(const TCHAR *str)
    if (entry != NULL)
    {
       HASH_DEL(m_data, entry);
+      free(entry->str);
+      free(entry);
    }
 }
 

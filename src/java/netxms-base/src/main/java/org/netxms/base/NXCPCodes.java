@@ -787,6 +787,8 @@ public class NXCPCodes
    public static final long VID_ALARM_STATUS_FLOW_STATE = 461;
    public static final long VID_GROUPS = 462;
    public static final long VID_EFFECTIVE_RIGHTS = 463;
+   public static final long VID_EXTENSION_COUNT = 464;
+   public static final long VID_TIMED_ALARM_ACK_ENABLED = 465;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -870,4 +872,5 @@ public class NXCPCodes
 	public static final long VID_RADIO_LIST_BASE = 0x30000000L;
 	public static final long VID_UUID_LIST_BASE = 0x10000000L;
 	public static final long VID_RULE_LIST_BASE = 0x10000000L;
+	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;
 }

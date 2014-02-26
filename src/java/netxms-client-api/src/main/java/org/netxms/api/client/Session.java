@@ -241,13 +241,14 @@ public interface Session
 	public abstract boolean isEncrypted();
 
    /**
-    * Send KEEPALIVE message. Return nothing is connection is fine, exception thrown otherwise
+    * Send KEEPALIVE message. Return true is connection is fine and false otherwise.
+    * If connection is broken, session notification with code CONNECTION_BROKEN
+    * will be sent to all subscribers. Note that this function will not throw exception
+    * in case of error. 
     * 
-    * @return 
-    * @throws IOException
-    * @throws NXCException
+    * @return true if connection is fine
     */
-   public abstract void checkConnection() throws IOException, NetXMSClientException;
+   public abstract boolean checkConnection();
    
    /**
     * Get default date format provided by server

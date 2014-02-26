@@ -367,7 +367,7 @@ static BOOL H_UpgradeFromV305(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("ExtendedLogQueryAccessControl"), _T("0"), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("EnableTimedAlarmAck"), _T("1"), 1, 1));
-   CHK_EXEC(CreateConfigParam(_T("EnableCheckPointSNMP"), _T("0"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("EnableCheckPointSNMP"), _T("0"), 1, 0));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='306' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }

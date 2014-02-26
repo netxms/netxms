@@ -333,7 +333,7 @@ public class AlarmList extends Composite
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
 		
-		//time based sticky acknowledgment 	
+		//time based sticky acknowledgement	
 		timeAcknowledgeOther = new Action("Other...", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
          public void run()
@@ -362,7 +362,7 @@ public class AlarmList extends Composite
 	   {
 	      settings.put("AlarmList.ackMenuSize", 4); //$NON-NLS-1$
 	      timeAcknowledge = new ArrayList<Action>(4);
-         createDefaultCations();
+         createDefaultIntervals();
          settings.put("AlarmList.ackMenuEntry0", 1 * 60 * 60); //$NON-NLS-1$
          settings.put("AlarmList.ackMenuEntry1", 4 * 60 * 60); //$NON-NLS-1$
          settings.put("AlarmList.ackMenuEntry2", 24 * 60 * 60); //$NON-NLS-1$
@@ -387,7 +387,7 @@ public class AlarmList extends Composite
 	   }
    }
 
-   private void createDefaultCations()
+   private void createDefaultIntervals()
    {
       Action act;
       act = new Action("1 hour(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -471,25 +471,28 @@ public class AlarmList extends Composite
 		
 		int states = getSelectionType(selection.toArray());
 		
-		if(states == 2)
+		if (states == 2)
 		{
    		manager.add(actionAcknowledge);
-   		manager.add(actionStickyAcknowledge);
-   		
-   		initializeTimeAcknowledge();
-         timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$
-         for(Action act : timeAcknowledge)
-         {
-            timeAcknowledgeMenu.add(act);
-         }
-         timeAcknowledgeMenu.add(new Separator());   
-         timeAcknowledgeMenu.add(timeAcknowledgeOther);
-   		manager.add(timeAcknowledgeMenu);
+		   manager.add(actionStickyAcknowledge);
+
+		   if (session.isTimedAlarmAckEnabled())
+		   {
+      		initializeTimeAcknowledge();
+            timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$ //$NON-NLS-1$
+            for(Action act : timeAcknowledge)
+            {
+               timeAcknowledgeMenu.add(act);
+            }
+            timeAcknowledgeMenu.add(new Separator());   
+            timeAcknowledgeMenu.add(timeAcknowledgeOther);
+      		manager.add(timeAcknowledgeMenu);
+		   }
 		}
 		
-		if(states < 4)
+		if (states < 4)
 		   manager.add(actionResolve);
-		if (states == 4 || (session.getAlarmStatusFlowStrict() == 0))
+		if (states == 4 || session.isStrictAlarmStatusFlow())
 		   manager.add(actionTerminate);
 		
 		manager.add(new Separator());
@@ -514,12 +517,31 @@ public class AlarmList extends Composite
 		}
 	}
 
+   /**
+    * We add 2 to status to give to outstanding status not zero meaning: 
+    * STATE_OUTSTANDING + 2 = 2 
+    * STATE_ACKNOWLEDGED + 2 = 3
+    * STATE_RESOLVED + 2 = 4 
+    * It is needed as we can't move STATE_OUTSTANDING to STATE_TERMINATED in strict flow mode. Number of status should be meaningful.
+    * 
+    * Then we sum all statuses with or command.
+    * To STATE_ACKNOWLEDGED only from STATE_OUTSTANDING = 2, STATE_ACKNOWLEDGED = 2
+    * To STATE_RESOLVED from STATE_OUTSTANDING and STATE_ACKNOWLEDGED = 2 | 3 = 3, STATE_RESOLVED <=3
+    * To STATE_TERMINATED(not strict mode) from any mode(always active)
+    * To STATE_TERMINATED(strict mode) only from STATE_RESOLVED = 4, STATE_TERMINATED = 4
+    * More results after logical or operation
+    * STATE_OUTSTANDING | STATE_RESOLVED = 6
+    * STATE_ACKNOWLEDGED | STATE_RESOLVED = 7
+    * STATE_OUTSTANDING | STATE_ACKNOWLEDGED | STATE_RESOLVED = 7
+    * 
+    * @param array selected objects array
+    */
 	private int getSelectionType(Object[] array)
    {
       int type = 0;
       for(int i = 0; i < array.length; i++)
       {
-         type |= ((Alarm)array[i]).getState()+2;
+         type |= ((Alarm)array[i]).getState() + 2;
       }
       return type;
    }

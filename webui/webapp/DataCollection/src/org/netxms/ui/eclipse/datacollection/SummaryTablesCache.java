@@ -43,10 +43,10 @@ public class SummaryTablesCache
     * 
     * @param session
     */
-   public static void attachSession(NXCSession session)
+   public static void attachSession(Display display, NXCSession session)
    {
-      SummaryTablesCache instance = new SummaryTablesCache(session);
-      ConsoleSharedData.setProperty("SummaryTablesCache", instance);
+      SummaryTablesCache instance = new SummaryTablesCache(display, session);
+      ConsoleSharedData.setProperty(display, "SummaryTablesCache", instance);
    }
 
    /**
@@ -63,10 +63,10 @@ public class SummaryTablesCache
 	 * Initialize object tools cache. Should be called when connection with
 	 * the server already established.
 	 */
-	private SummaryTablesCache(NXCSession session)
+	private SummaryTablesCache(Display display, NXCSession session)
 	{
 		this.session = session;
-      display = Display.getCurrent();
+      this.display = display;
 		
 		reload();
 		
@@ -103,7 +103,11 @@ public class SummaryTablesCache
 					tables.put(d.getId(), d);
 				}
 			}
-	      SourceProvider.getInstance(display).update();
+			SourceProvider p = SourceProvider.getInstance(display);
+			if (p != null)
+			{
+			   p.update();
+			}
 		}
 		catch(Exception e)
 		{

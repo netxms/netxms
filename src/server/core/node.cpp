@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1129,6 +1129,7 @@ restart_agent_check:
             m_dwDynamicFlags |= NDF_AGENT_UNREACHABLE;
             PostEventEx(pQueue, EVENT_AGENT_FAIL, m_dwId, NULL);
             m_failTimeAgent = tNow;
+            g_monitoringList.removeDisconectedNode(m_dwId);
          }
       }
 		agentUnlock();
@@ -1308,12 +1309,12 @@ restart_agent_check:
       if (getItemFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0);
-			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %d from agent"), m_szName, m_dwId, m_bootTime);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_szName, m_dwId, (UINT32)m_bootTime);
       }
       else if (getItemFromSNMP(m_wSNMPPort, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0) / 100;   // sysUpTime is in hundredths of a second
-			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %d from SNMP"), m_szName, m_dwId, m_bootTime);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_szName, m_dwId, (UINT32)m_bootTime);
       }
       else
       {
@@ -1665,21 +1666,24 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 			hasChanges = true;
 
       // Check for CheckPoint SNMP agent on port 260
-      DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
-      if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
+      if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
       {
-			pTransport = new SNMP_UDPTransport;
-			((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
-         if (SnmpGet(SNMP_VERSION_1, pTransport,
-                     _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+         DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
+         if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
          {
-            LockData();
-            m_dwFlags |= NF_IS_CPSNMP | NF_IS_ROUTER;
-            m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHABLE;
-            UnlockData();
-            sendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
+			   pTransport = new SNMP_UDPTransport;
+			   ((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
+            if (SnmpGet(SNMP_VERSION_1, pTransport,
+                        _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+            {
+               LockData();
+               m_dwFlags |= NF_IS_CPSNMP | NF_IS_ROUTER;
+               m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHABLE;
+               UnlockData();
+               sendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
+            }
+			   delete pTransport;
          }
-			delete pTransport;
       }
 
       // Generate event if node flags has been changed
@@ -2316,7 +2320,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 			UnlockData();
 		}
    }
-   else
+   else if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
    {
       // Check for CheckPoint SNMP agent on port 161
       DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_szName);
@@ -2674,7 +2678,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          	createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 			}
       }
-		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %ld"), m_szName, m_dwId, dwCount);
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %u"), m_szName, m_dwId, dwCount);
    }
 
 	sendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"));
@@ -4765,7 +4769,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 		DbgPrintf(4, _T("Name for node %d was resolved to %s%s"), m_dwId, m_szName,
 			bNameTruncated ? _T(" (truncated to host)") : _T(""));
 	else
-		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId, m_szName);
+		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId);
 	return bSuccess;
 }
 

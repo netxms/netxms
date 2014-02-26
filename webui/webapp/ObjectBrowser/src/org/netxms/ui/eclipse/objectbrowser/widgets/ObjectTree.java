@@ -706,50 +706,36 @@ public class ObjectTree extends Composite
 			@Override
          public boolean validateDrop(Object target, int operation, TransferData transferType)
          {
-            if (!LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
+            if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
                return false;
 
             IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-            TreePath path = ((TreeSelection)selection).getPaths()[0];
-            
-            long parentId = 0;
-            if (path.getSegmentCount() > 1)
-            {
-               final AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
-               if (parent != null)
-                  parentId = parent.getObjectId();
-            }
-            
-            Iterator<?> it = selection.iterator();
-            if(!it.hasNext())
+            if (selection.isEmpty())
                return false;
             
-            Object object;
-            while (it.hasNext())
+            for(final Object object : selection.toList())
             {
-               object = it.next();
                SubtreeType subtree = null;
-               if ((object instanceof AbstractObject)) {
-                  if(obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
+               if ((object instanceof AbstractObject)) 
+               {
+                  if (obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
                     subtree = SubtreeType.INFRASTRUCTURE;
-                  if(obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
+                  else if (obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
                      subtree = SubtreeType.TEMPLATES;
-                  if(obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
+                  else if (obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
                      subtree = SubtreeType.BUSINESS_SERVICES;
-                  if(obj.isValidSelectionForMove(SubtreeType.DASHBOARDS))
+                  else if (obj.isValidSelectionForMove(SubtreeType.DASHBOARDS))
                      subtree = SubtreeType.DASHBOARDS;
-                  if(obj.isValidSelectionForMove(SubtreeType.MAPS))
+                  else if (obj.isValidSelectionForMove(SubtreeType.MAPS))
                      subtree = SubtreeType.MAPS;
-                  if(obj.isValidSelectionForMove(SubtreeType.POLICIES))
+                  else if (obj.isValidSelectionForMove(SubtreeType.POLICIES))
                      subtree = SubtreeType.POLICIES;
-                  
                }
-               Set<Integer> filter;
                
-               if (subtree==null){
+               if (subtree == null)
                	return false;
-               }
                
+               Set<Integer> filter;
                switch(subtree)
                {
                   case INFRASTRUCTURE:
@@ -775,16 +761,11 @@ public class ObjectTree extends Composite
                      break;
                }
 
-               if(((AbstractObject)object).getParents().next() != parentId)
-                  return false;
-               
-               if(!filter.contains(((AbstractObject)target).getObjectClass()) || target.equals(object)){
+               if ((filter == null) || !filter.contains(((AbstractObject)target).getObjectClass()) || target.equals(object))
                   return false;   
-               }       
             }
             return true;
          }
-
       });
    }
 }

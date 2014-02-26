@@ -18,56 +18,58 @@
  */
 package org.netxms.client;
 
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
 /**
  * Test functionality related to server file store
- *
+ * 
  */
 public class ServerFilesTest extends SessionTest
 {
-	public void testFileList() throws Exception
-	{
-		final NXCSession session = connect();
+   public void testFileList() throws Exception
+   {
+      final NXCSession session = connect();
 
-		ServerFile[] files = session.listServerFiles();
-		for(ServerFile f : files)
-			System.out.println(f.getName() + " size=" + f.getSize() + " modified: " + f.getModifyicationTime().toString());
+      ServerFile[] files = session.listServerFiles();
+      for(ServerFile f : files)
+         System.out.println(f.getName() + " size=" + f.getSize() + " modified: " + f.getModifyicationTime().toString());
 
-		session.disconnect();
-	}
-	
-	public void testAgentFileDownload() throws Exception
-	{
-		final NXCSession session = connect();
-		
-		File file = session.downloadFileFromAgent(TestConstants.NodeID, TestConstants.FileName, TestConstants.FileOfset, true);
-		//check that server returned file with correct size (offset should be less than size of file)
-		//assertEquals(file.length(), TestConstants.FileOfset); 
-		String content = null;
-	   try {
-	       FileReader reader = new FileReader(file);
-	       char[] chars = new char[(int) file.length()];
-	       reader.read(chars);
-	       content = new String(chars);
-	       reader.close();
-	   } catch (IOException e) {
-	       e.printStackTrace();
-	   }
-		System.out.println("Downloaded content is: \n" + content);
-		System.out.println("*** Downloaded file: " + file.getAbsolutePath());
-		
-		//get tails of provided file
-		int i = 3;
-		while(i > 0)
-		{
-		   System.out.println("Tail content: \n" + session.waitForFileTail(TestConstants.FileName, 30000));
-		   i--;
-		}
-		session.cancelFileMonitoring(TestConstants.NodeID, TestConstants.FileName);
-		System.out.println("Monitoring have been canceled.\n");
-		session.disconnect();
-	}
+      session.disconnect();
+   }
+
+   public void testAgentFileDownload() throws Exception
+   {
+      final NXCSession session = connect();
+
+      AgentFile file = session.downloadFileFromAgent(TestConstants.NodeID, TestConstants.FileName, TestConstants.FileOfset, true);
+      // check that server returned file with correct size (offset should be less than size of file)
+      // assertEquals(file.length(), TestConstants.FileOfset);
+      String content = null;
+      try
+      {
+         FileReader reader = new FileReader(file.getFile());
+         char[] chars = new char[(int)file.getFile().length()];
+         reader.read(chars);
+         content = new String(chars);
+         reader.close();
+      }
+      catch(IOException e)
+      {
+         e.printStackTrace();
+      }
+      System.out.println("Downloaded content is: \n" + content);
+      System.out.println("*** Downloaded file: " + file.getFile().getAbsolutePath());
+
+      // get tails of provided file
+      int i = 3;
+      while(i > 0)
+      {
+         System.out.println("Tail content: \n" + session.waitForFileTail(TestConstants.FileName, 30000));
+         i--;
+      }
+      session.cancelFileMonitoring(TestConstants.NodeID, TestConstants.FileName);
+      System.out.println("Monitoring have been canceled.\n");
+      session.disconnect();
+   }
 }

@@ -69,7 +69,7 @@ private Messages()
 	public static Messages get(Display display)
 	{
 		CallHelper r = new CallHelper();
-		display.syncExec(r);
+		RWT.getUISession(display).exec(r);
 		return r.messages;
 	}
 
@@ -86,5 +86,4 @@ private Messages()
 			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
 		}
 	}
-
 }

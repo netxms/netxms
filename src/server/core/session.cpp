@@ -268,6 +268,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_dwActiveChannels = 0;
 	m_console = NULL;
    m_loginTime = time(NULL);
+   m_musicTypeList.add(_tcsdup(_T("wav")));
 }
 
 /**
@@ -312,6 +313,7 @@ ClientSession::~ClientSession()
 		delete m_console->pMsg;
 		free(m_console);
 	}
+   m_musicTypeList.clear();
 }
 
 /**
@@ -1528,9 +1530,9 @@ void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
 /**
  * Send file to client
  */
-BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long sizeLimit)
+BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long ofset)
 {
-	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, sizeLimit, NULL, NULL, m_mutexSocketWrite);
+	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, ofset, NULL, NULL, m_mutexSocketWrite);
 }
 
 /**
@@ -1775,11 +1777,12 @@ void ClientSession::login(CSCPMessage *pRequest)
          msg.SetVariable(VID_USER_ID, m_dwUserId);
 			msg.SetVariable(VID_SESSION_ID, m_dwIndex);
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
-         msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
-			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
+         msg.SetVariable(VID_DBCONN_STATUS, (UINT16)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
+			msg.SetVariable(VID_ZONING_ENABLED, (UINT16)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
 			msg.SetVariable(VID_POLLING_INTERVAL, ConfigReadULong(_T("DefaultDCIPollingInterval"), 60));
 			msg.SetVariable(VID_RETENTION_TIME, ConfigReadULong(_T("DefaultDCIRetentionTime"), 30));
-			msg.SetVariable(VID_ALARM_STATUS_FLOW_STATE, ConfigReadInt(_T("StrictAlarmStatusFlow"), 0));
+			msg.SetVariable(VID_ALARM_STATUS_FLOW_STATE, (UINT16)ConfigReadInt(_T("StrictAlarmStatusFlow"), 0));
+			msg.SetVariable(VID_TIMED_ALARM_ACK_ENABLED, (UINT16)ConfigReadInt(_T("EnableTimedAlarmAck"), 0));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
@@ -10201,40 +10204,49 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	TCHAR name[MAX_PATH], fname[MAX_PATH];
-	int i;
+	bool musicFile;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
+   pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
+   for(int i = 0; i < m_musicTypeList.getSize(); i++)
+   {
+      TCHAR *extension = _tcsrchr(name, _T('.'));
+      if (extension != NULL)
+      {
+         extension++;
+         if(!_tcscmp(extension, m_musicTypeList.getValue(i)))
+         {
+            musicFile = true;
+            break;
+         }
+      }
+   }
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFile)
 	{
-		pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
-		for(i = (int)_tcslen(name) - 1; i >= 0; i--)
-			if ((name[i] == _T('\\')) || (name[i] == '/'))
-				break;
-		i++;
       _tcscpy(fname, g_szDataDir);
-      _tcscat(fname, DDIR_SHARED_FILES);
+      _tcscat(fname, DDIR_FILES);
       _tcscat(fname, FS_PATH_SEPARATOR);
-      _tcscat(fname, name);
-		debugPrintf(4, _T("Requested file %s"), name);
+      _tcscat(fname, GetCleanFileName(name));
+		debugPrintf(4, _T("Requested file %s"), fname);
 		if (_taccess(fname, 0) == 0)
 		{
-			debugPrintf(5, _T("Sending file %s"), name);
-			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, 0, NULL, NULL, m_mutexSocketWrite))
+			debugPrintf(5, _T("Sending file %s"), fname);
+			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite))
 			{
-				debugPrintf(5, _T("File %s was succesfully sent"), name);
+				debugPrintf(5, _T("File %s was succesfully sent"), fname);
 		      msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				debugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), name);
+				debugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), fname);
 		      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 			}
 		}
 		else
 		{
-			debugPrintf(5, _T("Unable to send file %s: access() failed"), name);
+			debugPrintf(5, _T("Unable to send file %s: access() failed"), fname);
 	      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 		}
 	}
@@ -10268,6 +10280,7 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 				FileDownloadJob::buildServerFileName(object->Id(), remoteFile, localFile, MAX_PATH);
             bool follow = request->GetVariableShort(VID_FILE_FOLLOW) ? true : false;
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->GetVariableLong(VID_FILE_SIZE_LIMIT), follow, this, request->GetId());
+				msg.SetVariable(VID_NAME, localFile);
 				msg.SetVariable(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
 			}
 			else
@@ -10289,7 +10302,7 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 }
 
 /**
- * Get file from agent
+ * Cancel file monitoring
  */
 void ClientSession::cancelFileMonitoring(CSCPMessage *request)
 {
@@ -10325,8 +10338,17 @@ void ClientSession::cancelFileMonitoring(CSCPMessage *request)
             if (response != NULL)
             {
                rcc = response->GetVariableLong(VID_RCC);
-               msg.SetVariable(VID_RCC, rcc);
-               debugPrintf(6, _T("File monitoring canceled sucessfully"));
+               if(rcc == RCC_SUCCESS)
+               {
+                  msg.SetVariable(VID_RCC, rcc);
+                  debugPrintf(6, _T("File monitoring cancelled sucessfully"));
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+
+                  debugPrintf(6, _T("Error on agent: %d"), rcc);
+               }
             }
             else
             {
@@ -11552,60 +11574,106 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Send to client list of files in server's file store
-//
-
+/**
+ * Send to client list of files in server's file store
+ */
 void ClientSession::listServerFileStore(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	TCHAR path[MAX_PATH];
+	StringList extensionList;
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	_tcscpy(path, g_szDataDir);
-	_tcscat(path, DDIR_FILES);
-	_TDIR *dir = _topendir(path);
-	if (dir != NULL)
-	{
-		_tcscat(path, FS_PATH_SEPARATOR);
-		int pos = (int)_tcslen(path);
+	int length = (int)request->GetVariableLong(VID_EXTENSION_COUNT);
+	DbgPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d."), length);
+   
+   UINT32 varId = VID_EXTENSION_LIST_BASE;
 
-		struct _tdirent *d;
-#ifdef _WIN32
-		struct _stat st;
-#else
-		struct stat st;
-#endif
-		UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
-		while((d = _treaddir(dir)) != NULL)
-		{
-			if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
-			{
-				nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
-				if (_tstat(path, &st) == 0)
-				{
-					if (S_ISREG(st.st_mode))
-					{
-						msg.SetVariable(varId++, d->d_name);
-						msg.SetVariable(varId++, (QWORD)st.st_size);
-						msg.SetVariable(varId++, (QWORD)st.st_mtime);
-						varId += 7;
-						count++;
-					}
-				}
-			}
-		}
-		_tclosedir(dir);
-		msg.SetVariable(VID_INSTANCE_COUNT, count);
-		msg.SetVariable(VID_RCC, RCC_SUCCESS);
-	}
+   bool musicFiles = (length > 0);
+	for(int i = 0; i < length; i++)
+   {
+      extensionList.add(request->GetVariableStr(varId++));
+      for(int j = 0; j < m_musicTypeList.getSize(); j++)
+      {
+         if(_tcscmp(extensionList.getValue(i), m_musicTypeList.getValue(j)))
+         {
+            musicFiles = false;
+         }
+      }
+   }
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFiles)
+	{
+      _tcscpy(path, g_szDataDir);
+      _tcscat(path, DDIR_FILES);
+      _TDIR *dir = _topendir(path);
+      if (dir != NULL)
+      {
+         _tcscat(path, FS_PATH_SEPARATOR);
+         int pos = (int)_tcslen(path);
+
+         struct _tdirent *d;
+   #ifdef _WIN32
+         struct _stat st;
+   #else
+         struct stat st;
+   #endif
+         UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
+         while((d = _treaddir(dir)) != NULL)
+         {
+            if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
+            {
+               if(length != 0)
+               {
+                  bool correctType = false;
+                  TCHAR *extension = _tcsrchr(d->d_name, _T('.'));
+                  if (extension != NULL)
+                  {
+                     extension++;
+                     for(int j = 0; j < extensionList.getSize(); j++)
+                     {
+                        if (!_tcscmp(extension, extensionList.getValue(j)))
+                        {
+                           correctType = true;
+                           break;
+                        }
+                     }
+                  }
+                  if (!correctType)
+                  {
+                     continue;
+                  }
+               }
+               nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
+               if (_tstat(path, &st) == 0)
+               {
+                  if (S_ISREG(st.st_mode))
+                  {
+                     msg.SetVariable(varId++, d->d_name);
+                     msg.SetVariable(varId++, (QWORD)st.st_size);
+                     msg.SetVariable(varId++, (QWORD)st.st_mtime);
+                     varId += 7;
+                     count++;
+                  }
+               }
+            }
+         }
+         _tclosedir(dir);
+         msg.SetVariable(VID_INSTANCE_COUNT, count);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+      }
+   }
 	else
 	{
-		msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
+	extensionList.clear();
 
 	sendMessage(&msg);
 }
@@ -11911,11 +11979,9 @@ void ClientSession::executeReport(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Get report execution results
-//
-
+/**
+ * Get report execution results
+ */
 void ClientSession::getReportResults(CSCPMessage *request)
 {
 	CSCPMessage msg;

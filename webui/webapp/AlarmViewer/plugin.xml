@@ -83,6 +83,12 @@
       </tab>
    </extension>
    <extension
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.alarmviewer.LoginListener">
+      </loginlistener>
+   </extension>
+   <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
             class="org.netxms.ui.eclipse.alarmviewer.PreferenceInitializer">
@@ -94,6 +100,12 @@
             class="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
             id="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
             name="%page.Alarms.name">
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
+            class="org.netxms.ui.eclipse.alarmviewer.preferencepages.AlarmMelody"
+            id="org.netxms.ui.eclipse.alarmviewer.preferencepages.AlarmMelody"
+            name="%page.AlarmMelodies.name">
       </page>
    </extension>
    <extension

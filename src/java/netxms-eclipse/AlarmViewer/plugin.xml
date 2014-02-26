@@ -101,6 +101,12 @@
             id="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
             name="%page.Alarms.name">
       </page>
+      <page
+            category="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
+            class="org.netxms.ui.eclipse.alarmviewer.preferencepages.AlarmMelody"
+            id="org.netxms.ui.eclipse.alarmviewer.preferencepages.AlarmMelody"
+            name="%page.AlarmMelodies.name">
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">

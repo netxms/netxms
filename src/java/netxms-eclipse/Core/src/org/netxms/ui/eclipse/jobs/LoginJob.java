@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console;
+package org.netxms.ui.eclipse.jobs;
 
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
@@ -27,37 +27,23 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.Session;
 import org.netxms.base.NXCommon;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
+import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.TweakletManager;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.console.api.SessionProvider;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Login job
  */
 public class LoginJob implements IRunnableWithProgress
 {
-   private final class KeepAliveHelper implements Runnable
-   {
-      @Override
-      public void run()
-      {
-         final Session session = (Session)RWT.getUISession(display).getAttribute("netxms.sesion"); //$NON-NLS-1$
-         try
-         {
-            session.checkConnection();
-            Thread.sleep(1000 * 30); // send keepalive every 30 seconds
-         }
-         catch(Exception e)
-         {
-            // ignore everything
-         }
-      }
-   }
-
    private Display display;
    private String server;
    private String loginName;
@@ -67,7 +53,6 @@ public class LoginJob implements IRunnableWithProgress
    private String password;
    private Certificate certificate;
    private Signature signature;
-   private String clientAddress;
 
    /**
     * @param display
@@ -83,7 +68,6 @@ public class LoginJob implements IRunnableWithProgress
       this.encryptSession = encryptSession;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
       authMethod = NXCSession.AUTH_TYPE_PASSWORD;
-      clientAddress = RWT.getRequest().getRemoteAddr();
    }
 
    /*
@@ -94,7 +78,7 @@ public class LoginJob implements IRunnableWithProgress
    @Override
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
-      monitor.beginTask(Messages.get(display).LoginJob_connecting, 100);
+      monitor.setTaskName(Messages.get().LoginJob_connecting);
       try
       {
          final String hostName;
@@ -131,39 +115,46 @@ public class LoginJob implements IRunnableWithProgress
                break;
          }
          
-         session.setConnClientInfo("nxweb/" + NXCommon.VERSION); //$NON-NLS-1$
+         session.setConnClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
-         session.setClientType(NXCSession.WEB_CLIENT);
-         session.setClientAddress(clientAddress);
-         monitor.worked(10);
+         monitor.worked(1);
 
          session.connect();
-         monitor.worked(40);
+         monitor.worked(1);
 
-         monitor.setTaskName(Messages.get(display).LoginJob_sync_objects);
+         monitor.setTaskName(Messages.get().LoginJob_sync_objects);
          session.syncObjects();
-         monitor.worked(25);
+         monitor.worked(1);
 
-         monitor.setTaskName(Messages.get(display).LoginJob_sync_users);
+         monitor.setTaskName(Messages.get().LoginJob_sync_users);
          session.syncUserDatabase();
-         monitor.worked(5);
+         monitor.worked(1);
 
-         monitor.setTaskName(Messages.get(display).LoginJob_sync_event_db);
-         session.syncEventTemplates();
-         monitor.worked(5);
+         monitor.setTaskName(Messages.get().LoginJob_sync_event_db);
+         try
+         {
+            session.syncEventTemplates();
+         }
+         catch(NXCException e)
+         {
+            if (e.getErrorCode() != RCC.ACCESS_DENIED)
+               throw e;
+         }
+         monitor.worked(1);
 
-         monitor.setTaskName(Messages.get(display).LoginJob_subscribe);
+         monitor.setTaskName(Messages.get().LoginJob_subscribe);
          session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
-         monitor.worked(5);
+         monitor.worked(1);
 
-         RWT.getUISession(display).setAttribute("netxms.session", session); //$NON-NLS-1$
+         ConsoleSharedData.setSession(session);
 
-         monitor.setTaskName(Messages.get(display).LoginJob_init_extensions);
+         monitor.setTaskName(Messages.get().LoginJob_init_extensions);
+         TweakletManager.postLogin(session);
          callLoginListeners(session);
-         monitor.worked(5);
+         monitor.worked(1);
 
-         Runnable keepAliveTimer = new KeepAliveHelper();
-         final Thread thread = new Thread(keepAliveTimer);
+         Runnable keepAliveTimer = new KeepAliveTimer();
+         final Thread thread = new Thread(null, keepAliveTimer, "KeepAliveTimer");
          thread.setDaemon(true);
          thread.start();
       }
@@ -173,6 +164,7 @@ public class LoginJob implements IRunnableWithProgress
       }
       finally
       {
+         monitor.setTaskName(""); //$NON-NLS-1$
          monitor.done();
       }
    }
@@ -220,7 +212,7 @@ public class LoginJob implements IRunnableWithProgress
          try
          {
             SessionProvider p = (SessionProvider)currentElement.createExecutableExtension("class"); //$NON-NLS-1$
-            return p.createSession(hostName, port, (loginName != null) ? loginName : "?", password, encryptSession);
+            return p.createSession(hostName, port, loginName, password, encryptSession);
          }
          catch(CoreException e)
          {
@@ -263,7 +255,7 @@ public class LoginJob implements IRunnableWithProgress
    public void setPassword(String password)
    {
       this.password = password;
-      authMethod = (loginName != null) ? NXCSession.AUTH_TYPE_PASSWORD : NXCSession.AUTH_TYPE_SSO_TICKET;
+      authMethod = NXCSession.AUTH_TYPE_PASSWORD;
    }
 
    /**
@@ -276,5 +268,29 @@ public class LoginJob implements IRunnableWithProgress
       this.certificate = certificate;
       this.signature = signature;
       authMethod = NXCSession.AUTH_TYPE_CERTIFICATE;
+   }
+
+   /**
+    * Keep-alive timer
+    */
+   private final class KeepAliveTimer implements Runnable
+   {
+      @Override
+      public void run()
+      {
+         while(true)
+         {
+            final Session session = ConsoleSharedData.getSession();
+            try
+            {
+               Thread.sleep(1000 * 60); // send keep-alive every 60 seconds
+               if (!session.checkConnection())
+                  break;   // session broken, application will exit (handled by workbench advisor)
+            }
+            catch(Exception e)
+            {
+            }
+         }
+      }
    }
 }

@@ -18,6 +18,41 @@
  */
 package org.netxms.client;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.ProgressListener;
 import org.netxms.api.client.Session;
@@ -26,7 +61,12 @@ import org.netxms.api.client.images.ImageLibraryManager;
 import org.netxms.api.client.images.LibraryImage;
 import org.netxms.api.client.mt.MappingTable;
 import org.netxms.api.client.mt.MappingTableDescriptor;
-import org.netxms.api.client.reporting.*;
+import org.netxms.api.client.reporting.ReportDefinition;
+import org.netxms.api.client.reporting.ReportParameter;
+import org.netxms.api.client.reporting.ReportRenderFormat;
+import org.netxms.api.client.reporting.ReportResult;
+import org.netxms.api.client.reporting.ReportingJob;
+import org.netxms.api.client.reporting.ReportingServerManager;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.api.client.servermanager.ServerManager;
@@ -36,44 +76,98 @@ import org.netxms.api.client.users.AuthCertificate;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
-import org.netxms.base.*;
+import org.netxms.base.CompatTools;
+import org.netxms.base.EncryptionContext;
+import org.netxms.base.GeoLocation;
+import org.netxms.base.Logger;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPDataInputStream;
+import org.netxms.base.NXCPException;
+import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCPMessageReceiver;
+import org.netxms.base.NXCPMsgWaitQueue;
+import org.netxms.base.NXCommon;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.datacollection.*;
-import org.netxms.client.events.*;
+import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DciPushData;
+import org.netxms.client.datacollection.DciSummaryTable;
+import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.datacollection.ThresholdViolationSummary;
+import org.netxms.client.datacollection.TransformationTestResult;
+import org.netxms.client.datacollection.WinPerfObject;
+import org.netxms.client.events.Alarm;
+import org.netxms.client.events.AlarmNote;
+import org.netxms.client.events.Event;
+import org.netxms.client.events.EventInfo;
+import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.objects.*;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.objects.AgentPolicyConfig;
+import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BusinessServiceRoot;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.ClusterResource;
+import org.netxms.client.objects.ClusterSyncNetwork;
+import org.netxms.client.objects.Condition;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.objects.NetworkMapGroup;
+import org.netxms.client.objects.NetworkMapRoot;
+import org.netxms.client.objects.NetworkService;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.NodeLink;
+import org.netxms.client.objects.PolicyGroup;
+import org.netxms.client.objects.PolicyRoot;
+import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Report;
+import org.netxms.client.objects.ReportGroup;
+import org.netxms.client.objects.ReportRoot;
+import org.netxms.client.objects.ServiceCheck;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TemplateGroup;
+import org.netxms.client.objects.TemplateRoot;
+import org.netxms.client.objects.UnknownObject;
+import org.netxms.client.objects.Zone;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.client.situations.Situation;
-import org.netxms.client.snmp.*;
+import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.client.snmp.SnmpTrapLogRecord;
+import org.netxms.client.snmp.SnmpUsmCredential;
+import org.netxms.client.snmp.SnmpValue;
+import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.client.topology.NetworkPath;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
-
-import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.security.GeneralSecurityException;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateEncodingException;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Communication session with NetXMS server.
@@ -186,8 +280,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private String timeFormat;
    private String shortTimeFormat;
    private int defaultDciRetentionTime;
-   private int alarmStatusFlowStrict;
    private int defaultDciPollingInterval;
+   private boolean strictAlarmStatusFlow;
+   private boolean timedAlarmAckEnabled;
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
 
@@ -696,7 +791,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          long data = msg.getVariableAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
          if(code == NXCNotification.ALARM_STATUS_FLOW_CHANGED)
          {
-            alarmStatusFlowStrict = (int)data;
+            strictAlarmStatusFlow = ((int)data != 0);
          }
          else
          {
@@ -1509,7 +1604,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          defaultDciRetentionTime = response.getVariableAsInteger(NXCPCodes.VID_RETENTION_TIME);
          if (defaultDciRetentionTime == 0) defaultDciRetentionTime = 30;
 
-         alarmStatusFlowStrict = response.getVariableAsInteger(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
+         strictAlarmStatusFlow = response.getVariableAsBoolean(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
+         timedAlarmAckEnabled = response.getVariableAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
          
          Logger.info("NXCSession.connect", "succesfully connected and logged in, userId=" + userId);
          isConnected = true;
@@ -5676,11 +5772,20 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @see org.netxms.api.client.Session#checkConnection()
 	 */
    @Override
-   public void checkConnection() throws IOException, NXCException
+   public boolean checkConnection()
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_KEEPALIVE);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      try
+      {
+         sendMessage(msg);
+         waitForRCC(msg.getMessageId());
+         return true;
+      }
+      catch(Exception e)
+      {
+         sendNotification(new NXCNotification(NXCNotification.CONNECTION_BROKEN));
+         return false;
+      }
    }
 
    /*
@@ -5951,7 +6056,35 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    public ServerFile[] listServerFiles() throws IOException, NXCException
    {
+      return listServerFiles(null);
+   }
+   
+   /**
+    * List files in server's file store.
+    * 
+    * @param filter array with required extension. Will be used as file filter. Give empty array or null if no filter should be
+    *           applyed.
+    * @return list of files in server's file store
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public ServerFile[] listServerFiles(String[] filter) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SERVER_FILES);
+      if(filter != null)
+      {
+         msg.setVariableInt32(NXCPCodes.VID_EXTENSION_COUNT, filter.length);
+         int i = 0;
+         long j = NXCPCodes.VID_EXTENSION_LIST_BASE;
+         for(; i < filter.length; i++, j++)
+         {
+            msg.setVariable(j, filter[i]);
+         }
+      }
+      else
+      {
+         msg.setVariableInt32(NXCPCodes.VID_EXTENSION_COUNT, 0);
+      }
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getVariableAsInteger(NXCPCodes.VID_INSTANCE_COUNT);
@@ -6016,13 +6149,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    /**
     * Download file from remote host via agent.
     *
-    * @param nodeId         node object ID
+    * @param nodeId node object ID
     * @param remoteFileName fully qualified file name on remote system
-    * @return handle to local copy of remote file
+    * @param maxFileSize maximum download size
+    * @param follow if set to true, server will send file updates as they appear (like for tail -f command) 
+    * @return agent file handle which contains server assigned ID and handle for local file
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public File downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException, NXCException
+   public AgentFile downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException,
+         NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -6030,8 +6166,27 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       msg.setVariableInt32(NXCPCodes.VID_FILE_SIZE_LIMIT , (int)maxFileSize);
       msg.setVariableInt16(NXCPCodes.VID_FILE_FOLLOW, follow ? 1 : 0);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId()); // first confirmation - server job started
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
+      final String id = response.getVariableAsString(NXCPCodes.VID_NAME);
+
       waitForRCC(msg.getMessageId()); // second confirmation - file downloaded to server
+      return new AgentFile(id, waitForFile(msg.getMessageId(), 3600000));
+   }
+   
+   /**
+    * Download file from server file storage.
+    *
+    * @param remoteFileName fully qualified file name on remote system
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public File downloadFileFromServer( String remoteFileName) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SERVER_FILE);
+      msg.setVariable(NXCPCodes.VID_FILE_NAME, remoteFileName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
       return waitForFile(msg.getMessageId(), 3600000);
    }
    
@@ -6711,7 +6866,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
-    * @return the defaultDciRetentionTime
+    * @return the default DCI retention time in days
     */
    public final int getDefaultDciRetentionTime()
    {
@@ -6719,7 +6874,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
-    * @return the defaultDciPollingInterval
+    * @return the default DCI polling interval in seconds
     */
    public final int getDefaultDciPollingInterval()
    {
@@ -6727,11 +6882,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
    
    /**
-    * @return the alarmStatusFlowStrict
+    * @return true if alarm status flow set to "strict" mode
     */
-   public final int getAlarmStatusFlowStrict()
+   public final boolean isStrictAlarmStatusFlow()
    {
-      return alarmStatusFlowStrict;
+      return strictAlarmStatusFlow;
+   }
+
+   /**
+    * @return true if timed alarm acknowledgement is enabled
+    */
+   public boolean isTimedAlarmAckEnabled()
+   {
+      return timedAlarmAckEnabled;
    }
 
    /**

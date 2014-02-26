@@ -869,9 +869,9 @@ void AlarmManager::watchdogThread()
 				 ((m_pAlarmList[i].nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
 				 (((time_t)m_pAlarmList[i].dwLastChangeTime + (time_t)m_pAlarmList[i].dwTimeout) < now))
 			{
-				DbgPrintf(5, _T("Alarm timeout: alarm_id=%d, last_change=%d, timeout=%d, now=%d"),
+				DbgPrintf(5, _T("Alarm timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].dwLastChangeTime,
-							 m_pAlarmList[i].dwTimeout, now);
+							 m_pAlarmList[i].dwTimeout, (UINT32)now);
 
 				PostEvent(m_pAlarmList[i].dwTimeoutEvent, m_pAlarmList[i].dwSourceObject, "dssd",
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,
@@ -884,8 +884,8 @@ void AlarmManager::watchdogThread()
 				 ((m_pAlarmList[i].nState & ALARM_STATE_STICKY) != 0) &&
 				 (((time_t)m_pAlarmList[i].ackTimeout <= now)))
 			{
-				DbgPrintf(5, _T("Alarm aknowledgment timeout: alarm_id=%d, timeout=%d, now=%d"),
-				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].ackTimeout, now);
+				DbgPrintf(5, _T("Alarm aknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
+				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].ackTimeout, (UINT32)now);
 
 				PostEvent(m_pAlarmList[i].dwTimeoutEvent, m_pAlarmList[i].dwSourceObject, "dssd",
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,

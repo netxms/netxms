@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -659,7 +659,7 @@ public:
 	bool canRead(UINT32 timeout);
 	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE);
 	bool waitForText(const char *text, int timeout);
-	
+
 	int write(const char *pBuff, int nSize);
 	bool writeLine(const char *line);
 
@@ -727,7 +727,7 @@ typedef struct  __CODE_TO_TEXT
 inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
 {
 	SYSTEMTIME sysTime;
-	
+
 	GetSystemTime(&sysTime);
 	SystemTimeToFileTime(&sysTime, pFt);
 }
@@ -882,10 +882,10 @@ extern "C"
 #if !defined(_WIN32) && !defined(_NETWARE)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
    void LIBNETXMS_EXPORTABLE wcsupr(WCHAR *in);
-#endif   
+#endif
    void LIBNETXMS_EXPORTABLE strupr(char *in);
 #endif
-   
+
 	void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *arg,
 												 int (*compare)(const void *, const void *, void *));
 
@@ -934,7 +934,7 @@ extern "C"
 #else
 #define StrToBin StrToBinA
 #endif
-   
+
    TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
@@ -1057,11 +1057,11 @@ extern "C"
 
 #ifndef _WIN32
 	BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
-   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, UINT32 dwFlags, const WCHAR *pWideCharStr, 
-                                                int cchWideChar, char *pByteStr, int cchByteChar, 
+   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, UINT32 dwFlags, const WCHAR *pWideCharStr,
+                                                int cchWideChar, char *pByteStr, int cchByteChar,
                                                 char *pDefaultChar, BOOL *pbUsedDefChar);
-   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, const char *pByteStr, 
-                                                int cchByteChar, WCHAR *pWideCharStr, 
+   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, const char *pByteStr,
+                                                int cchByteChar, WCHAR *pWideCharStr,
                                                 int cchWideChar);
 
 #if !defined(UNICODE_UCS2) || !HAVE_WCSLEN
@@ -1099,7 +1099,7 @@ extern "C"
 	WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
    char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
    char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
-   
+
 #ifdef _WITH_ENCRYPTION
 	WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
 #endif
@@ -1300,7 +1300,7 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
                                           void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
                                           void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long, long),
+                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long),
                                           bool (* pushData)(const TCHAR *, const TCHAR *, UINT32));
 
 #endif

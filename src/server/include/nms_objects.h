@@ -1056,9 +1056,11 @@ public:
 
 	Cluster *getMyCluster();
 
+   UINT32 getZoneId() { return m_zoneId; }
    UINT32 getFlags() { return m_dwFlags; }
    UINT32 getRuntimeFlags() { return m_dwDynamicFlags; }
-   UINT32 getZoneId() { return m_zoneId; }
+   void setFlag(UINT32 flag) { m_dwFlags |= flag; }
+   void clearFlag(UINT32 flag) { m_dwFlags &= ~flag; }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
@@ -1964,21 +1966,21 @@ protected:
 	double m_uptimeDay;
 	double m_uptimeWeek;
 	double m_uptimeMonth;
-	LONG m_downtimeDay;
-	LONG m_downtimeWeek;
-	LONG m_downtimeMonth;
-	LONG m_prevDiffDay;
-	LONG m_prevDiffWeek;
-	LONG m_prevDiffMonth;
+	INT32 m_downtimeDay;
+	INT32 m_downtimeWeek;
+	INT32 m_downtimeMonth;
+	INT32 m_prevDiffDay;
+	INT32 m_prevDiffWeek;
+	INT32 m_prevDiffMonth;
 
-	static LONG logRecordId;
-	static LONG getSecondsInMonth();
-	static LONG getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
-	static LONG getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
+	static INT32 logRecordId;
+	static INT32 getSecondsInMonth();
+	static INT32 getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
+	static INT32 getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
 	void initServiceContainer();
 	BOOL addHistoryRecord();
-	double getUptimeFromDBFor(Period period, LONG *downtime);
+	double getUptimeFromDBFor(Period period, INT32 *downtime);
 
 public:
 	ServiceContainer();
@@ -2000,11 +2002,9 @@ public:
 	void updateUptimeStats(time_t currentTime = 0, BOOL updateChilds = FALSE);
 };
 
-
-//
-// Business service root
-//
-
+/**
+ * Business service root
+ */
 class NXCORE_EXPORTABLE BusinessServiceRoot : public ServiceContainer
 {
 public:
@@ -2111,6 +2111,12 @@ void NetObjDelete(NetObj *pObject);
 
 void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *pObject);
 ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
+
+void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap);
+void NXCORE_EXPORTABLE MacDbAddInterface(Interface *iface);
+void NXCORE_EXPORTABLE MacDbAddObject(const BYTE *macAddr, NetObj *object);
+void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr);
+NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);

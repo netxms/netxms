@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -337,7 +337,7 @@ static HWND GetConsoleHWND()
 	   hWnd = FindWindowEx(NULL, NULL, _T("ConsoleWindowClass"), NULL);
       if (hWnd == NULL)
          break;
-	   
+
       GetWindowThreadProcessId(hWnd, &wpid);
 	   if (cpid == wpid)
          break;
@@ -406,13 +406,13 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
    DWORD dwResult;
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
-   
+
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
    si.cb = sizeof(STARTUPINFO);
 
    // Create new process
-   if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, 
+   if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE,
                       (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
                       NULL, NULL, &si, &pi))
    {
@@ -539,7 +539,7 @@ static void LoadPlatformSubagent()
          un.sysname[i] = tolower(un.sysname[i]);
       if (!strcmp(un.sysname, "hp-ux"))
          strcpy(un.sysname, "hpux");
-      _sntprintf(szName, MAX_PATH, PKGLIBDIR _T("/%hs.nsm"), un.sysname);
+      _sntprintf(szName, MAX_PATH, _T("%hs.nsm"), un.sysname);
       LoadSubAgent(szName);
    }
 #endif
@@ -549,11 +549,11 @@ static void LoadPlatformSubagent()
 /**
  * Send file to server (subagent API)
  */
-static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, long sizeLimit)
+static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
 {
 	if (session == NULL)
 		return false;
-	return ((CommSession *)session)->sendFile(requestId, file, offset, sizeLimit);
+	return ((CommSession *)session)->sendFile(requestId, file, offset);
 }
 
 /**
@@ -635,6 +635,21 @@ BOOL Initialize()
    if (g_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
       g_debugLevel = 0;
 
+#ifndef _WIN32
+   if (!_tcscmp(g_szDataDirectory, _T("{default}")))
+   {
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if (homeDir != NULL)
+      {
+         _sntprintf(g_szDataDirectory, MAX_PATH, _T("%s/var/netxms"), homeDir);
+      }
+      else
+      {
+         nx_strncpy(g_szDataDirectory, PREFIX _T("/var/netxms"), MAX_PATH);
+      }
+   }
+#endif
+
    // Open log file
 	if (!(g_dwFlags & AF_USE_SYSLOG))
 	{
@@ -663,6 +678,8 @@ BOOL Initialize()
 		g_dwFlags |= AF_SUBAGENT_LOADER;
 		DebugPrintf(INVALID_INDEX, 1, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
 	}
+
+   DebugPrintf(INVALID_INDEX, 1, _T("Data directory: %s"), g_szDataDirectory);
 
 	// Initialize persistent storage
 	s_registry = new Config;
@@ -979,7 +996,7 @@ void Shutdown()
 #ifdef _WIN32
    ConditionSet(m_hCondShutdown);
 #endif
-   
+
    // Remove PID file
 #if !defined(_WIN32)
    _tremove(g_szPidFile);
@@ -1071,7 +1088,7 @@ static void DoRestartActions(UINT32 dwOldPID)
       if (kill(dwOldPID, SIGCONT) == -1)
          break;
    }
-   
+
    // Kill previous instance of agent if it's still running
    if (i == 30)
       kill(dwOldPID, SIGKILL);
@@ -1162,7 +1179,7 @@ int main(int argc, char *argv[])
 #ifdef NETXMS_MEMORY_DEBUG
 	InitMemoryDebugger();
 #endif
-   
+
    // Set locale to C. It shouldn't be needed, according to
    // documentation, but I've seen the cases when agent formats
    // floating point numbers by sprintf inserting comma in place
@@ -1350,7 +1367,17 @@ int main(int argc, char *argv[])
 #if !defined(_WIN32)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
-		if (_taccess(PREFIX _T("/etc/nxagentd.conf"), 4) == 0)
+      TCHAR path[MAX_PATH] = _T("");
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if (homeDir != NULL)
+      {
+         _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf"), homeDir);
+      }
+		if ((path[0] != 0) && (_taccess(path, 4) == 0))
+		{
+			_tcscpy(g_szConfigFile, path);
+		}
+		else if (_taccess(PREFIX _T("/etc/nxagentd.conf"), 4) == 0)
 		{
 			_tcscpy(g_szConfigFile, PREFIX _T("/etc/nxagentd.conf"));
 		}
@@ -1369,7 +1396,17 @@ int main(int argc, char *argv[])
 	}
 	if (!_tcscmp(g_szConfigIncludeDir, _T("{search}")))
 	{
-		if (_taccess(PREFIX _T("/etc/nxagentd.conf.d"), 4) == 0)
+      TCHAR path[MAX_PATH] = _T("");
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if (homeDir != NULL)
+      {
+         _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf.d"), homeDir);
+      }
+		if ((path[0] != 0) && (_taccess(path, 4) == 0))
+		{
+			_tcscpy(g_szConfigIncludeDir, path);
+		}
+		else if (_taccess(PREFIX _T("/etc/nxagentd.conf.d"), 4) == 0)
 		{
 			_tcscpy(g_szConfigIncludeDir, PREFIX _T("/etc/nxagentd.conf.d"));
 		}
@@ -1471,7 +1508,7 @@ int main(int argc, char *argv[])
 												  _T("nxagentd"), MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
 					__try {
 #endif
-					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) || 
+					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||
 						 (!_tcsicmp(g_szLogFile, _T("{eventlog}"))))
 						g_dwFlags |= AF_USE_SYSLOG;
 
@@ -1495,13 +1532,15 @@ int main(int argc, char *argv[])
 					}
 #else    /* _WIN32 */
 					if (g_dwFlags & AF_DAEMON)
+               {
 						if (daemon(0, 0) == -1)
 						{
 							perror("Unable to setup itself as a daemon");
 							iExitCode = 4;
 						}
+               }
 					if (iExitCode == 0)
-            {
+               {
 						m_pid = getpid();
 						if (Initialize())
 						{
@@ -1513,7 +1552,7 @@ int main(int argc, char *argv[])
 							{
 								_ftprintf(fp, _T("%d"), m_pid);
 								fclose(fp);
-							}   
+							}
 							Main();
 							Shutdown();
 						}

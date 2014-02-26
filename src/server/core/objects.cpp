@@ -363,6 +363,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
 			case OBJECT_ACCESSPOINT:
 				g_idxAccessPointById.put(pObject->Id(), pObject);
+            MacDbAddAccessPoint((AccessPoint *)pObject);
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -411,6 +412,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 										 pObject->IpAddr(), pObject->Name(), (int)pObject->Id());
 					}
             }
+            MacDbAddInterface((Interface *)pObject);
             break;
          case OBJECT_ZONE:
 				g_idxZoneByGUID.put(((Zone *)pObject)->getZoneId(), pObject);
@@ -501,6 +503,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
 		case OBJECT_ACCESSPOINT:
 			g_idxAccessPointById.remove(pObject->Id());
+         MacDbRemove(((AccessPoint *)pObject)->getMacAddr());
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -549,6 +552,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					}
 				}
          }
+         MacDbRemove(((Interface *)pObject)->getMacAddr());
          break;
       case OBJECT_ZONE:
 			g_idxZoneByGUID.remove(((Zone *)pObject)->getZoneId());
@@ -581,15 +585,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 }
 
 /**
- * Access point MAC address comparator
- */
-static bool AccessPointMACComparator(NetObj *object, void *macAddr)
-{
-	return ((object->Type() == OBJECT_ACCESSPOINT) && !object->isDeleted() &&
-		     !memcmp(macAddr, ((AccessPoint *)object)->getMacAddr(), 6));
-}
-
-/**
  * Find access point by MAC address
  */
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
@@ -597,7 +592,8 @@ AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-	return (AccessPoint *)g_idxAccessPointById.find(AccessPointMACComparator, (void *)macAddr);
+	NetObj *object = MacDbFind(macAddr);
+   return ((object != NULL) && (object->Type() == OBJECT_ACCESSPOINT)) ? (AccessPoint *)object : NULL;
 }
 
 /**
@@ -713,15 +709,6 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
 }
 
 /**
- * Interface MAC address comparator
- */
-static bool InterfaceMACComparator(NetObj *object, void *macAddr)
-{
-	return ((object->Type() == OBJECT_INTERFACE) && !object->isDeleted() &&
-		     !memcmp(macAddr, ((Interface *)object)->getMacAddr(), 6));
-}
-
-/**
  * Find interface by MAC address
  */
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
@@ -729,7 +716,8 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-	return (Interface *)g_idxObjectById.find(InterfaceMACComparator, (void *)macAddr);
+	NetObj *object = MacDbFind(macAddr);
+   return ((object != NULL) && (object->Type() == OBJECT_INTERFACE)) ? (Interface *)object : NULL;
 }
 
 /**

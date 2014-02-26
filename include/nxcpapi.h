@@ -151,7 +151,7 @@ private:
    void unlock() { MutexUnlock(m_mutexDataAccess); }
    void housekeeperThread();
    void *waitForMessageInternal(UINT16 wIsBinary, UINT16 wCode, UINT32 dwId, UINT32 dwTimeOut);
-   
+
    static THREAD_RESULT THREAD_CALL mwqThreadStarter(void *);
 
 public:
@@ -168,7 +168,7 @@ public:
    {
       return (CSCP_MESSAGE *)waitForMessageInternal(1, wCode, dwId, dwTimeOut);
    }
-   
+
    void clear();
    void setHoldTime(UINT32 dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
 };
@@ -227,7 +227,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
                                          BYTE *pDecryptionBuffer, UINT32 dwTimeout);
 int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuffer,
                                            CSCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
-                                           NXCPEncryptionContext **ppCtx, 
+                                           NXCPEncryptionContext **ppCtx,
                                            BYTE **decryptionBuffer, UINT32 dwTimeout,
 														 UINT32 maxMsgSize);
 CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId, WORD wFlags,
@@ -235,18 +235,18 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId,
                                                         CSCP_MESSAGE *pBuffer);
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
-                                           NXCPEncryptionContext *pCtx, long offset, long sizeLimit,
+                                           NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex);
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
-   
+
 BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));
 UINT32 LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers();
 CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg);
 BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
                                              CSCP_ENCRYPTED_MESSAGE *pMsg,
                                              BYTE *pDecryptionBuffer);
-UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
+UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
                                                   NXCPEncryptionContext **ppCtx,
                                                   CSCPMessage **ppResponse,
                                                   RSA *pPrivateKey, int nNXCPVersion);

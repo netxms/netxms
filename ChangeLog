@@ -1,4 +1,15 @@
 *
+* 1.2.13
+*
+
+- Improved layer 2 topology discovery performance
+- Management console:
+   - Implemented alarm sounds
+   - Fixed "broken pipe" errors
+- Fixed issues: #109, #438   
+
+
+*
 * 1.2.12
 *
 
