@@ -52,6 +52,7 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 
 	m_maxFileSize = maxFileSize;
 	m_follow = follow;
+	m_currentSize = 0;
 
    DbgPrintf(5, _T("FileDownloadJob: job created for file %s at node %s, follow = %s"), m_remoteFile, m_node->Name(), m_follow ? _T("true") : _T("false"));
 }
@@ -69,14 +70,24 @@ FileDownloadJob::~FileDownloadJob()
 }
 
 /**
+ * Send message callback
+ */
+void FileDownloadJob::fileResendCallback(CSCP_MESSAGE *msg, void *arg)
+{
+   msg->dwId = htonl(((FileDownloadJob *)arg)->m_requestId);
+	((FileDownloadJob *)arg)->m_session->sendRawMessage(msg);
+}
+
+/**
  * Progress callback
  */
 void FileDownloadJob::progressCallback(size_t size, void *arg)
 {
-	if (((FileDownloadJob *)arg)->m_fileSize > 0)
-		((FileDownloadJob *)arg)->markProgress((int)((INT64)size * _LL(90) / ((FileDownloadJob *)arg)->m_fileSize));
-	else
-		((FileDownloadJob *)arg)->markProgress(90);
+   ((FileDownloadJob *)arg)->m_currentSize += (INT64)size;
+   if (((FileDownloadJob *)arg)->m_fileSize > 0)
+      ((FileDownloadJob *)arg)->markProgress((int)(((FileDownloadJob *)arg)->m_currentSize * _LL(90) / ((FileDownloadJob *)arg)->m_fileSize));
+   else
+      ((FileDownloadJob *)arg)->markProgress(90);
 }
 
 /**
@@ -114,12 +125,11 @@ bool FileDownloadJob::run()
 		response = conn->customRequest(&msg);
 		if (response != NULL)
 		{
+         m_fileSize = (INT64)response->GetVariableInt64(VID_FILE_SIZE);
 			rcc = response->GetVariableLong(VID_RCC);
 			DbgPrintf(5, _T("FileDownloadJob: Stat request for file %s@%s RCC=%d"), m_remoteFile, m_node->Name(), rcc);
 			if (rcc == ERR_SUCCESS)
 			{
-				m_fileSize = (INT64)response->GetVariableInt64(VID_FILE_SIZE);
-				time_t modTime = (time_t)response->GetVariableInt64(VID_MODIFY_TIME);
 				delete response;
 
 				DbgPrintf(5, _T("FileDownloadJob: Sending download request for file %s@%s"), m_remoteFile, m_node->Name());
@@ -127,33 +137,19 @@ bool FileDownloadJob::run()
 				msg.SetId(conn->generateRequestId());
 				msg.SetVariable(VID_FILE_NAME, m_remoteFile);
 
-				// If file exists, request partial download
-	#ifdef _WIN32
-				struct _stat fs;
-	#else
-				struct stat fs;
-	#endif
-				bool appendFile = false;
-				if (_tstat(m_localFile, &fs) == 0)
-				{
-					if ((m_fileSize > (INT64)fs.st_size) && (modTime <= fs.st_mtime))
-					{
-						msg.SetVariable(VID_FILE_OFFSET, (UINT32)fs.st_size);
-						appendFile = true;
-						DbgPrintf(5, _T("FileDownloadJob: File %s already exist, requesting download from offset %u"), m_localFile, (UINT32)fs.st_size);
-					}
-				}
-
             //default - get parameters
             if (m_maxFileSize > 0)
             {
                msg.SetVariable(VID_FILE_OFFSET, -m_maxFileSize);
-               appendFile = false;
+            }
+            else
+            {
+               msg.SetVariable(VID_FILE_OFFSET, 0);
             }
             msg.SetVariable(VID_FILE_FOLLOW, (INT16)(m_follow ? 1 : 0));
             msg.SetVariable(VID_NAME, m_localFile);
 
-				response = conn->customRequest(&msg, m_localFile, appendFile, progressCallback, this);
+				response = conn->customRequest(&msg, m_localFile, false, progressCallback, fileResendCallback, this);
 				if (response != NULL)
 				{
 					rcc = response->GetVariableLong(VID_RCC);
@@ -191,7 +187,10 @@ bool FileDownloadJob::run()
 			setFailureMessage(_T("Request timed out"));
 		}
 
-		delete conn;
+      if(!m_follow)
+      {
+         delete conn;
+      }
 	}
 	else
 	{
@@ -205,7 +204,6 @@ bool FileDownloadJob::run()
 	{
 	   response.SetVariable(VID_RCC, RCC_SUCCESS);
 		m_session->sendMessage(&response);
-		m_session->sendFile(m_localFile, m_requestId, 0);
 		if(m_follow)
 		{
          g_monitoringList.addMonitoringFile(newFile);

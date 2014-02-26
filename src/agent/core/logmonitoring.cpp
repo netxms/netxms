@@ -180,13 +180,19 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             flData->offset = newOffset;
 
             MutexLock(g_hSessionListAccess);
+            bool sent = false;
             for(UINT32 i = 0; i < g_dwMaxSessions; i++)
             {
-               if (g_pSessionList[i] != NULL)
+               if (g_pSessionList[i] != NULL && flData->serverAddress == g_pSessionList[i]->getServerAddress())
                {
                   g_pSessionList[i]->sendMessage(pMsg);
+                  sent = true;
                   break;
                }
+            }
+            if(!sent)
+            {
+               g_monitorFileList.removeMonitoringFile(flData->pszFile);
             }
             MutexUnlock(g_hSessionListAccess);
 

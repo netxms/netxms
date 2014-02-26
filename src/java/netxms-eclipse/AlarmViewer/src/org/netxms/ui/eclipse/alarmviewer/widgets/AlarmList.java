@@ -626,7 +626,25 @@ public class AlarmList extends Composite
 		}
 	}
 
-	// FIXME: comment
+   /**
+    * We add 2 to status to give to outstanding status not zero meaning: 
+    * STATE_OUTSTANDING + 2 = 2 
+    * STATE_ACKNOWLEDGED + 2 = 3
+    * STATE_RESOLVED + 2 = 4 
+    * It is needed as we can't move STATE_OUTSTANDING to STATE_TERMINATED in strict flow mode. Number of status should be meaningful.
+    * 
+    * Then we sum all statuses with or command.
+    * To STATE_ACKNOWLEDGED only from STATE_OUTSTANDING = 2, STATE_ACKNOWLEDGED = 2
+    * To STATE_RESOLVED from STATE_OUTSTANDING and STATE_ACKNOWLEDGED = 2 | 3 = 3, STATE_RESOLVED <=3
+    * To STATE_TERMINATED(not strict mode) from any mode(always active)
+    * To STATE_TERMINATED(strict mode) only from STATE_RESOLVED = 4, STATE_TERMINATED = 4
+    * More results after logical or operation
+    * STATE_OUTSTANDING | STATE_RESOLVED = 6
+    * STATE_ACKNOWLEDGED | STATE_RESOLVED = 7
+    * STATE_OUTSTANDING | STATE_ACKNOWLEDGED | STATE_RESOLVED = 7
+    * 
+    * @param array selected objects array
+    */
 	private int getSelectionType(Object[] array)
    {
       int type = 0;

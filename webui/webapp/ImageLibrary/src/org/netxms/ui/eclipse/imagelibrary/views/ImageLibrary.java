@@ -261,11 +261,17 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	{
 		final LibraryImage image = (LibraryImage)galleryItem.getData();
 
-		new ConsoleJob(Messages.get().ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-				verifyImageFile(fileName);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  verifyImageFile(fileName);
+               }
+            });
 				if (fileName != null)
 				{
 					FileInputStream stream = null;
@@ -307,7 +313,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				ImageProvider.getInstance(getSite().getShell().getDisplay()).syncMetaData();
+            ImageProvider.getInstance(display).syncMetaData();
 				refreshImages();	/* TODO: update single element */                      
 				
 				monitor.done();
@@ -328,11 +334,17 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-		new ConsoleJob(Messages.get().ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-				verifyImageFile(fileName);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  verifyImageFile(fileName);
+               }
+            });
 
 				final LibraryImage image = new LibraryImage();
 
@@ -372,7 +384,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				});
 				
 				// TODO: check
-				ImageProvider.getInstance(getSite().getShell().getDisplay()).syncMetaData();
+            ImageProvider.getInstance(display).syncMetaData();
 				refreshImages();	/* TODO: update local copy */
 
 				monitor.done();
@@ -487,7 +499,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		new ConsoleJob(Messages.get().ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null, display) {
+		new ConsoleJob(Messages.get(display).ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null, display) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
