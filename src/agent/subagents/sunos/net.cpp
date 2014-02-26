@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -237,6 +237,7 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
          if (if_indextoname(nIndex, szIfName) == NULL)
          {
             szIfName[0] = 0;
+            AgentWriteDebugLog(5, _T("SunOS: H_NetIfAdminStatus: call to if_indextoname(%d) failed (%s)"), nIndex, _tcserror(errno));
          }
       }
    }
@@ -252,7 +253,15 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
             ret_int(pValue, (rq.lifr_flags & IFF_UP) ? 1 : 2);
             nRet = SYSINFO_RC_SUCCESS;
          }
+         else
+         {
+            AgentWriteDebugLog(5, _T("SunOS: H_NetIfAdminStatus: call to ioctl() failed (%s)"), _tcserror(errno));
+         }
          close(nFd);				  
+      }
+      else
+      {
+         AgentWriteDebugLog(5, _T("SunOS: H_NetIfAdminStatus: call to socket() failed (%s)"), _tcserror(errno));
       }
    }
 
