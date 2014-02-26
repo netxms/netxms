@@ -6,7 +6,7 @@
 - Management console:
    - Implemented alarm sounds
    - Fixed "broken pipe" errors
-- Fixed issues: #109, #438   
+- Fixed issues: #109, #438, #471
 
 
 *
@@ -39,7 +39,7 @@
 	- Fix bug in resetting switch preference (settings) 
 	- Implemented "Entire network" root (feature #482)
 	- Manage last alarm from status bar: acknowledge, resolve, terminate (only for Android >= 4.1)
-- Fixed issues: #79, #88, #280, #285, #393, #415, #470, #475, #481, #482, #483,
+- Fixed issues: #79, #88, #280, #285, #393, #396, #415, #470, #475, #481, #482, #483,
                 #484, #486, #487, #490, #497, #500, #502, #504
 
 
