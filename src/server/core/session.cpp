@@ -2378,7 +2378,6 @@ void ClientSession::setConfigVariable(CSCPMessage *pRequest)
 void ClientSession::deleteConfigVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR szName[MAX_OBJECT_NAME], szQuery[1024];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2387,13 +2386,12 @@ void ClientSession::deleteConfigVariable(CSCPMessage *pRequest)
    // Check user rights
    if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
-      pRequest->GetVariableStr(VID_NAME, szName, MAX_OBJECT_NAME);
-      _sntprintf(szQuery, 1024, _T("DELETE FROM config WHERE var_name='%s'"), szName);
-      if (DBQuery(g_hCoreDB, szQuery))
+      TCHAR name[MAX_OBJECT_NAME];
+      pRequest->GetVariableStr(VID_NAME, name, MAX_OBJECT_NAME);
+      if (ConfigDelete(name))
 		{
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
-							  _T("Server configuration variable \"%s\" deleted"), szName);
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0, _T("Server configuration variable \"%s\" deleted"), name);
 		}
       else
 		{

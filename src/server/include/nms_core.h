@@ -758,31 +758,26 @@ struct GRAPH_ACL_AND_ID
 /**
  * Functions
  */
-BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 #ifdef UNICODE
-BOOL NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
+bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 #else
 #define ConfigReadStrA ConfigReadStr
 #endif
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
 UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault);
-BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray,
-                                           int nSize, int nDefault);
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate,
-												  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
-BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate,
-												  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, UINT32 dwValue, BOOL bCreate,
-													 BOOL isVisible = TRUE, BOOL needRestart = FALSE);
-BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray,
-                                            int nSize, BOOL bCreate,
-														  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
+bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, int nSize, int nDefault);
+bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, bool bCreate, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, bool bCreate, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, UINT32 dwValue, bool bCreate, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, int nSize, bool bCreate, bool isVisible = true, bool needRestart = false);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue);
-BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOOL bCreate);
+bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, bool bCreate);
+bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name);
 
-BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 
-BOOL NXCORE_EXPORTABLE LoadConfig();
+bool NXCORE_EXPORTABLE LoadConfig();
 
 void NXCORE_EXPORTABLE Shutdown();
 void NXCORE_EXPORTABLE FastShutdown();
