@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -182,10 +182,13 @@ public class DciList extends Composite
 	 * 
 	 * @return selected DCI
 	 */
-	public List<DciValue> getSelection()
+	@SuppressWarnings("unchecked")
+   public List<DciValue> getSelection()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		return selection.toList();
+		// selection.toList may return list which is actual backing for this selection
+		// so we make a copy for safety
+		return new ArrayList<DciValue>(selection.toList());
 	}
 
 	/**

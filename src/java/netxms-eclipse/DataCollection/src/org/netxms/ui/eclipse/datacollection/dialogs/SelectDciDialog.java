@@ -143,7 +143,8 @@ public class SelectDciDialog extends Dialog
 				objectTree.setFilter(text);
 		}
 
-		dciList = new DciList(null, (fixedNode == 0) ? splitter : dialogArea, SWT.BORDER, null, "SelectDciDialog.dciList", dcObjectType, allowSingleSelection ? SWT.NONE : SWT.MULTI);  //$NON-NLS-1$
+      dciList = new DciList(null, (fixedNode == 0) ? splitter : dialogArea, SWT.BORDER, null,
+            "SelectDciDialog.dciList", dcObjectType, allowSingleSelection ? SWT.NONE : SWT.MULTI); //$NON-NLS-1$
 		dciList.setDcObjectType(dcObjectType);
 		dciList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
