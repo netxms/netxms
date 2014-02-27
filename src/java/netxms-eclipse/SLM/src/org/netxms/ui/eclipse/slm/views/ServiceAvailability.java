@@ -103,7 +103,7 @@ public class ServiceAvailability extends ViewPart
 			@Override
 			public void notificationHandler(final SessionNotification n)
 			{
-				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) && (n.getSubCode() == object.getObjectId()))
+				if (!clientArea.isDisposed() && (n.getCode() == NXCNotification.OBJECT_CHANGED) && (n.getSubCode() == object.getObjectId()))
 				{
 					clientArea.getDisplay().asyncExec(new Runnable() {
 						@Override
