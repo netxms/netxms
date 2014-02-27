@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
+import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -57,11 +58,12 @@ public class SelectDciDialog extends Dialog
 	private SashForm splitter;
 	private ObjectTree objectTree;
 	private DciList dciList;
-	private DciValue selection;
+	private List<DciValue> selection;
 	private int dcObjectType = -1;
 	private long fixedNode;
 	private boolean enableEmptySelection = false;
 	private boolean allowTemplateItems = false;
+	private boolean allowSingleSelection = false;
 	
 	/**
 	 * @param parentShell
@@ -141,7 +143,7 @@ public class SelectDciDialog extends Dialog
 				objectTree.setFilter(text);
 		}
 
-		dciList = new DciList(null, (fixedNode == 0) ? splitter : dialogArea, SWT.BORDER, null, "SelectDciDialog.dciList", dcObjectType);  //$NON-NLS-1$
+		dciList = new DciList(null, (fixedNode == 0) ? splitter : dialogArea, SWT.BORDER, null, "SelectDciDialog.dciList", dcObjectType, allowSingleSelection ? SWT.NONE : SWT.MULTI);  //$NON-NLS-1$
 		dciList.setDcObjectType(dcObjectType);
 		dciList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -228,7 +230,7 @@ public class SelectDciDialog extends Dialog
 	protected void okPressed()
 	{
 		selection = dciList.getSelection();
-		if (selection == null)
+		if (selection == null || selection.size() == 0)
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectDciDialog_Warning, Messages.get().SelectDciDialog_WarningMessage);
 			return;
@@ -240,7 +242,7 @@ public class SelectDciDialog extends Dialog
 	/**
 	 * @return the selection
 	 */
-	public DciValue getSelection()
+	public List<DciValue> getSelection()
 	{
 		return selection;
 	}
@@ -294,4 +296,14 @@ public class SelectDciDialog extends Dialog
 	{
 		this.allowTemplateItems = allowTemplateItems;
 	}
+
+	/**
+    * @param allowSingleSelection false to have multiple selection, true to have single selection
+    * in DCI list. 
+    * By default multiple selection is set. 
+    */
+   public void setSingleSelection(boolean allowSingleSelection)
+   {
+      this.allowSingleSelection = allowSingleSelection;
+   }
 }

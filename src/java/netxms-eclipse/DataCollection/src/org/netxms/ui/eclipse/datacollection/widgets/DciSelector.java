@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
@@ -65,13 +66,14 @@ public class DciSelector extends AbstractSelector
 		SelectDciDialog dlg = new SelectDciDialog(getShell(), fixedNode ? nodeId : 0);
 		dlg.setEnableEmptySelection(true);
 		dlg.setDcObjectType(dcObjectType);
+		dlg.setSingleSelection(true);
 		if (dlg.open() == Window.OK)
 		{
-			DciValue dci = dlg.getSelection();
-			if (dci != null)
+		   List<DciValue> dci = dlg.getSelection();
+			if (dci != null && dci.size() == 1)
 			{
-				setDciId(dci.getNodeId(), dci.getId());
-				dciName = dci.getName();
+				setDciId(dci.get(0).getNodeId(), dci.get(0).getId());
+				dciName = dci.get(0).getName();
 			}
 			else
 			{

@@ -72,7 +72,7 @@ public class DciList extends Composite
 	 * @param _node node to display data for
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 */
-	public DciList(ViewPart viewPart, Composite parent, int style, AbstractNode _node, final String configPrefix, int dcObjectType)
+	public DciList(ViewPart viewPart, Composite parent, int style, AbstractNode _node, final String configPrefix, int dcObjectType, int selectionType)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -85,7 +85,7 @@ public class DciList extends Composite
 		// Setup table columns
 		final String[] names = { Messages.get().DciList_ColID, Messages.get().DciList_ColParam, Messages.get().DciList_ColDescr };
 		final int[] widths = { 70, 150, 250 };
-		viewer = new SortableTableViewer(this, names, widths, 2, SWT.DOWN, SWT.SINGLE | SWT.FULL_SELECTION);
+		viewer = new SortableTableViewer(this, names, widths, 2, SWT.DOWN, selectionType | SWT.FULL_SELECTION);
 	
 		viewer.setLabelProvider(new DciListLabelProvider());
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -182,10 +182,10 @@ public class DciList extends Composite
 	 * 
 	 * @return selected DCI
 	 */
-	public DciValue getSelection()
+	public List<DciValue> getSelection()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		return (DciValue)selection.getFirstElement();
+		return selection.toList();
 	}
 
 	/**
