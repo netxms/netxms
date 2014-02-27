@@ -119,7 +119,17 @@ public class ServiceAvailability extends ViewPart
 		ConsoleSharedData.getSession().addListener(listener);
 	}
 
-	/**
+	/* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      ConsoleSharedData.getSession().removeListener(listener);
+      super.dispose();
+   }
+
+   /**
 	 * @param parent
 	 * @param title
 	 * @return
