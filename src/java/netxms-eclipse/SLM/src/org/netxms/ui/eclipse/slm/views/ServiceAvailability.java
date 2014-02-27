@@ -103,7 +103,7 @@ public class ServiceAvailability extends ViewPart
 			@Override
 			public void notificationHandler(final SessionNotification n)
 			{
-				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) && (n.getSubCode() == object.getObjectId()))
+				if (!clientArea.isDisposed() && (n.getCode() == NXCNotification.OBJECT_CHANGED) && (n.getSubCode() == object.getObjectId()))
 				{
 					clientArea.getDisplay().asyncExec(new Runnable() {
 						@Override
@@ -119,7 +119,17 @@ public class ServiceAvailability extends ViewPart
 		ConsoleSharedData.getSession().addListener(listener);
 	}
 
-	/**
+	/* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      ConsoleSharedData.getSession().removeListener(listener);
+      super.dispose();
+   }
+
+   /**
 	 * @param parent
 	 * @param title
 	 * @return
