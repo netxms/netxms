@@ -274,6 +274,10 @@ typedef unsigned __int64 uint64_t;
 	u_long zero = 0; \
 	ioctlsocket(s, FIONBIO, &zero); \
 }
+#define SetSocketNoDelay(s) { \
+	BOOL val = TRUE; \
+	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(BOOL)); \
+}
 
 #ifdef UNDER_CE
 #define O_RDONLY     0x0004
@@ -409,6 +413,11 @@ typedef int SOCKET;
 #define SetSocketNonBlocking(s) { \
    int f = fcntl(s, F_GETFL); \
    if (f != -1) fcntl(s, F_SETFL, f | O_NONBLOCK); \
+}
+
+#define SetSocketNoDelay(s) { \
+	int val = 1; \
+	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(int)); \
 }
 
 #define SELECT_NFDS(x)  (x)
@@ -606,6 +615,11 @@ typedef int SOCKET;
 #define SetSocketNonBlocking(s) { \
    int f = fcntl(s, F_GETFL); \
    if (f != -1) fcntl(s, F_SETFL, f | O_NONBLOCK); \
+}
+
+#define SetSocketNoDelay(s) { \
+	int val = 1; \
+	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (const void *)&val, sizeof(int)); \
 }
 
 #define SELECT_NFDS(x)  (x)
