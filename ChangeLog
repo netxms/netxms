@@ -3,10 +3,12 @@
 *
 
 - Improved layer 2 topology discovery performance
+- Improved file retrieve from agent
 - Management console:
    - Implemented alarm sounds
    - Fixed "broken pipe" errors
-- Fixed issues: #109, #438, #471
+   - Fixed fail on Web console while picture uplod to image library
+- Fixed issues: #109, #438, #471, #508
 
 
 *
