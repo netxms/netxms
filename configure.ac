@@ -1217,7 +1217,7 @@ fi
 
 AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h alloca.h])
 AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
-AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
+AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h netinet/tcp.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])

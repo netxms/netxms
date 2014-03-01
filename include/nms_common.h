@@ -336,6 +336,7 @@ typedef unsigned __int64 uint64_t;
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <fcntl.h>
@@ -477,6 +478,10 @@ typedef int SOCKET;
 
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+
+#if HAVE_NETINET_TCP_H
+#include <netinet/tcp.h>
 #endif
 
 #if HAVE_NET_NH_H
