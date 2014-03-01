@@ -125,7 +125,10 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value)
          value->addColumn(_T("DISPNAME"), DCI_DT_STRING, _T("Display name"));
          value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
          value->addColumn(_T("STATE"), DCI_DT_STRING, _T("State"));
+         value->addColumn(_T("STARTUP"), DCI_DT_STRING, _T("Startup"));
          value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"));
+         value->addColumn(_T("BINARY"), DCI_DT_STRING, _T("Binary"));
+         value->addColumn(_T("DEPENDENCIES"), DCI_DT_STRING, _T("Dependencies"));
          for(DWORD i = 0; i < count; i++)
          {
             value->addRow();
@@ -159,7 +162,42 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value)
                   value->set(3, (UINT32)services[i].ServiceStatusProcess.dwCurrentState);
                   break;
             }
-            value->set(4, (UINT32)services[i].ServiceStatusProcess.dwProcessId);
+            if (services[i].ServiceStatusProcess.dwProcessId != 0)
+               value->set(5, (UINT32)services[i].ServiceStatusProcess.dwProcessId);
+
+            SC_HANDLE hService = OpenService(hManager, services[i].lpServiceName, SERVICE_QUERY_CONFIG);
+            if (hService != NULL)
+            {
+               BYTE buffer[8192];
+               QUERY_SERVICE_CONFIG *cfg = (QUERY_SERVICE_CONFIG *)&buffer;
+               if (QueryServiceConfig(hService, cfg, 8192, &bytes))
+               {
+                  switch(cfg->dwStartType)
+                  {
+                     case SERVICE_AUTO_START:
+                        value->set(4, _T("Auto"));
+                        break;
+                     case SERVICE_BOOT_START:
+                        value->set(4, _T("Boot"));
+                        break;
+                     case SERVICE_DEMAND_START:
+                        value->set(4, _T("Manual"));
+                        break;
+                     case SERVICE_DISABLED:
+                        value->set(4, _T("Disabled"));
+                        break;
+                     case SERVICE_SYSTEM_START:
+                        value->set(4, _T("System"));
+                        break;
+                     default:
+                        value->set(4, (UINT32)cfg->dwStartType);
+                        break;
+                  }
+                  value->set(6, cfg->lpBinaryPathName);
+                  value->set(7, cfg->lpDependencies);
+               }
+               CloseServiceHandle(hService);
+            }
          }
          rc = SYSINFO_RC_SUCCESS;
       }
