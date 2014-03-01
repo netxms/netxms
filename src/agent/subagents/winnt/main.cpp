@@ -1,6 +1,6 @@
 /*
 ** Windows platform subagent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,9 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 /**
@@ -136,7 +138,7 @@ static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const
 }
 
 /**
- * Subagent information
+ * Supported parameters
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
@@ -181,25 +183,42 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.ServiceState(*)"), H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
 	{ _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT }
 };
-static NETXMS_SUBAGENT_LIST m_enums[] =
+
+/**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("Net.ArpCache"), H_ArpCache, NULL },
    { _T("Net.InterfaceList"), H_InterfaceList, NULL },
    { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
 	{ _T("System.ActiveUserSessions"), H_ActiveUserSessions, NULL },
-	{ _T("System.ProcessList"), H_ProcessList, NULL }
+	{ _T("System.ProcessList"), H_ProcessList, NULL },
+	{ _T("System.Services"), H_ServiceList, NULL }
 };
+
+/**
+ * Supported tables
+ */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
 	{ _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
-	{ _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
+	{ _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
+	{ _T("System.Services"), H_ServiceTable, NULL, _T("Name"), _T("Services") }
 };
+
+/**
+ * Supported actions
+ */
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
 	{ _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
 	{ _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -207,8 +226,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
 	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
 	m_tables,
 	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
