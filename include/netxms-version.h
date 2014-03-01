@@ -30,9 +30,9 @@
  */
 #define NETXMS_VERSION_MAJOR        1
 #define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_RELEASE      12
-#define NETXMS_VERSION_STRING       _T("1.2.12")
-#define NETXMS_VERSION_STRING_A     "1.2.12"
+#define NETXMS_VERSION_RELEASE      13
+#define NETXMS_VERSION_STRING       _T("1.2.13")
+#define NETXMS_VERSION_STRING_A     "1.2.13"
 
 /**
  * Current client-server protocol version
