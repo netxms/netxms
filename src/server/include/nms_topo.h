@@ -260,6 +260,7 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node);
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
+void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen);
 
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, InterfaceList *ifList);
 

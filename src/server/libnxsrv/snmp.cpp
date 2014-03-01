@@ -42,8 +42,22 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId()
  * Note: buffer size is in bytes
  */
 UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
-                                  const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
-                                  UINT32 dwBufferSize, UINT32 dwFlags)
+                                   const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
+                                   UINT32 dwBufferSize, UINT32 dwFlags)
+{
+   return SnmpGetEx(pTransport, szOidStr, oidBinary, dwOidLen, pValue, dwBufferSize, dwFlags, NULL);
+}
+
+/**
+ * Get value for SNMP variable
+ * If szOidStr is not NULL, string representation of OID is used, otherwise -
+ * binary representation from oidBinary and dwOidLen
+ * If SG_RAW_RESULT flag given and dataLen is not NULL actial data length will be stored there
+ * Note: buffer size is in bytes
+ */
+UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
+                                     const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
+                                     UINT32 dwBufferSize, UINT32 dwFlags, UINT32 *dataLen)
 {
    SNMP_PDU *pRqPDU, *pRespPDU;
    UINT32 dwNameLen, pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
@@ -52,7 +66,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
 		return SNMP_ERR_COMM;
 
    // Create PDU and send request
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), dwVersion);
+   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), pTransport->getSnmpVersion());
    if (szOidStr != NULL)
    {
       dwNameLen = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
@@ -87,6 +101,8 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
                if (dwFlags & SG_RAW_RESULT)
                {
 						pVar->getRawValue((BYTE *)pValue, dwBufferSize);
+                  if (dataLen != NULL)
+                     *dataLen = pVar->GetValueLength();
                }
                else if (dwFlags & SG_HSTRING_RESULT)
                {

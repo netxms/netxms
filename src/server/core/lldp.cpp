@@ -162,9 +162,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
    {
 		// Build LLDP ID for remote system
 		TCHAR remoteId[256];
-		_sntprintf(remoteId, 256, _T("%d@"), (int)pRespPDU->getVariable(0)->GetValueAsInt());
-		BinToStr(var->GetValue(), var->GetValueLength(), &remoteId[_tcslen(remoteId)]);
-
+      BuildLldpId(pRespPDU->getVariable(0)->GetValueAsInt(), var->GetValue(), var->GetValueLength(), remoteId, 256);
 		Node *remoteNode = FindNodeByLLDPId(remoteId);
 		if (remoteNode != NULL)
 		{
@@ -227,4 +225,72 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	nbs->setData(1, NULL);	// local port info cache
 	node->callSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1.5"), LLDPTopoHandler, nbs);
 	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
+}
+
+/**
+ * Parse MAC address. Could be without separators or with any separator char.
+ */
+static bool ParseMACAddress(const char *text, int length, BYTE *mac, int *macLength)
+{
+   bool withSeparator = false;
+   char separator = 0;
+   int p = 0;
+   bool hi = true;
+   for(int i = 0; (i < length) && (p < 64); i++)
+   {
+      char c = toupper(text[i]);
+      if ((i % 3 == 2) && withSeparator)
+      {
+         if (c != separator)
+            return false;
+         continue;
+      }
+      if (!isdigit(c) || (c < 'A') || (c > 'F'))
+      {
+         if (i == 2)
+         {
+            withSeparator = true;
+            separator = c;
+            continue;
+         }
+         return false;
+      }
+      if (hi)
+      {
+         mac[p] = (isdigit(c) ? (c - '0') : (c - 'A' + 10)) << 4;
+      }
+      else
+      {
+         mac[p] |= (isdigit(c) ? (c - '0') : (c - 'A' + 10));
+         p++;
+      }
+   }
+   *macLength = p;
+   return true;
+}
+
+/**
+ * Build LLDP ID for node
+ */
+void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen)
+{
+	_sntprintf(id, idLen, _T("%d@"), type);
+   if (type == 4)
+   {
+      // Some D-Link switches returns MAC address for ID type 4 as formatted text instead of raw bytes
+      BYTE macAddr[64];
+      int macLength;
+      if ((length >= MAC_ADDR_LENGTH * 2) && ParseMACAddress((const char *)data, length, macAddr, &macLength))
+      {
+   	   BinToStr(macAddr, macLength, &id[_tcslen(id)]);
+      }
+      else
+      {
+   	   BinToStr(data, length, &id[_tcslen(id)]);
+      }
+   }
+   else
+   {
+	   BinToStr(data, length, &id[_tcslen(id)]);
+   }
 }

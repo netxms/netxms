@@ -2186,22 +2186,22 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 			m_dwFlags |= NF_IS_LLDP;
 			UnlockData();
 
-			if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+         INT32 type;
+         BYTE data[256];
+         UINT32 dataLen;
+			if ((SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), NULL, 0, &type, sizeof(INT32), 0, NULL) == SNMP_ERR_SUCCESS) &&
+             (SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
 			{
-				_tcscat(szBuffer, _T("@"));
-				int len = (int)_tcslen(szBuffer);
-				if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, &szBuffer[len], (4096 - len) * sizeof(TCHAR), SG_HSTRING_RESULT) == SNMP_ERR_SUCCESS)
+            BuildLldpId(type, data, dataLen, szBuffer, 1024);
+				LockData();
+				if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
 				{
-					LockData();
-					if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
-					{
-						safe_free(m_lldpNodeId);
-						m_lldpNodeId = _tcsdup(szBuffer);
-						hasChanges = true;
-						sendPollerMsg(dwRqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
-					}
-					UnlockData();
+					safe_free(m_lldpNodeId);
+					m_lldpNodeId = _tcsdup(szBuffer);
+					hasChanges = true;
+					sendPollerMsg(dwRqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
 				}
+				UnlockData();
 			}
 
 			ObjectArray<LLDP_LOCAL_PORT_INFO> *lldpPorts = GetLLDPLocalPortInfo(pTransport);
