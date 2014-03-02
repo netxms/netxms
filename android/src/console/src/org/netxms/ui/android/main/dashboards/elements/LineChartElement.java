@@ -8,12 +8,14 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.ui.android.helpers.CustomLabel;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.LineChartConfig;
-import org.netxms.ui.android.main.views.ExtendedLineGraphView;
 import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.jjoe64.graphview.GraphView;
@@ -21,6 +23,7 @@ import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphView.LegendAlign;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
+import com.jjoe64.graphview.LineGraphView;
 
 /**
  * Bar chart element
@@ -31,6 +34,7 @@ public class LineChartElement extends AbstractDashboardElement
 
 	private LineChartConfig config;
 	private GraphView graphView = null;
+	private final SharedPreferences sp;
 
 	/**
 	 * @param context
@@ -49,13 +53,15 @@ public class LineChartElement extends AbstractDashboardElement
 			config = new LineChartConfig();
 		}
 
-		graphView = new ExtendedLineGraphView(context, config.getTitle());
+		sp = PreferenceManager.getDefaultSharedPreferences(context);
+		graphView = new LineGraphView(context, config.getTitle());
+		graphView.getGraphViewStyle().setTextSize(Integer.parseInt(sp.getString("global.graph.textsize", "10")));
+		graphView.getGraphViewStyle().setLegendWidth(240);
+		graphView.setCustomLabelFormatter(new CustomLabel(Integer.parseInt(sp.getString("global.multipliers", "1"))));
 		graphView.setShowLegend(config.isShowLegend());
 		graphView.setScalable(false);
 		graphView.setScrollable(false);
 		graphView.setLegendAlign(LegendAlign.TOP);
-		graphView.setLegendWidth(240);
-		graphView.setBackgroundColor(0xFF000000);
 	}
 
 	/* (non-Javadoc)
@@ -109,7 +115,7 @@ public class LineChartElement extends AbstractDashboardElement
 						else
 							color = swapRGB(color);
 						GraphViewSeries series = new GraphViewSeries(items[i].getName(), new GraphViewSeriesStyle(color | 0xFF000000, 3), gvData);
-						graphView.addOrReplaceSeries(i, series);
+						graphView.addSeries(series);
 					}
 					graphView.setViewPort(startTime, endTime - startTime + 1);
 					Log.v(TAG, "refresh(): " + dciData.length + " series added; viewport set to " + startTime + "/" + (endTime - startTime + 1));
