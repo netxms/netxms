@@ -1,41 +1,21 @@
-/**
- * 
- */
-package org.netxms.ui.android.main.views;
+package org.netxms.ui.android.helpers;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.netxms.ui.android.helpers.Multipliers;
+import com.jjoe64.graphview.CustomLabelFormatter;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-
-import com.jjoe64.graphview.LineGraphView;
-
-/**
- * Extended line graph view - tailored for displaying NetXMS data
- */
-public class ExtendedLineGraphView extends LineGraphView
+public class CustomLabel implements CustomLabelFormatter
 {
-	private final SharedPreferences sp;
+	private int m = 1;
 
-	/**
-	 * @param context
-	 * @param title
-	 */
-	public ExtendedLineGraphView(Context context, String title)
+	public CustomLabel(int m)
 	{
-		super(context, title);
-		sp = PreferenceManager.getDefaultSharedPreferences(context);
+		this.m = m;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.jjoe64.graphview.GraphView#formatLabel(double, boolean)
-	 */
 	@Override
-	protected String formatLabel(double value, boolean isValueX)
+	public String formatLabel(double value, boolean isValueX)
 	{
 		if (isValueX)
 		{
@@ -47,7 +27,6 @@ public class ExtendedLineGraphView extends LineGraphView
 			if (value == 0)
 				return "0";
 
-			int m = Integer.parseInt(sp.getString("global.multipliers", "1"));
 			double absValue = Math.abs(value);
 			if (absValue <= 0.01)
 				return String.format("%.5f", value);
@@ -69,7 +48,7 @@ public class ExtendedLineGraphView extends LineGraphView
 				return String.format("%.1f %s", value / Multipliers.getValue(m, Multipliers.G), Multipliers.getLabel(m, Multipliers.G));
 			if (absValue < Multipliers.getValue(m, Multipliers.P))
 				return String.format("%.1f %s", value / Multipliers.getValue(m, Multipliers.T), Multipliers.getLabel(m, Multipliers.T));
-			return super.formatLabel(value, isValueX);
+			return String.format("%.1f %s", value / Multipliers.getValue(m, Multipliers.P), Multipliers.getLabel(m, Multipliers.P));
 		}
 	}
 }

@@ -11,13 +11,16 @@ import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.android.R;
-import org.netxms.ui.android.main.views.ExtendedLineGraphView;
+import org.netxms.ui.android.helpers.CustomLabel;
 
 import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,6 +31,7 @@ import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphView.LegendAlign;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
+import com.jjoe64.graphview.LineGraphView;
 
 /**
  * Draw graph activity
@@ -46,6 +50,7 @@ public class DrawGraph extends AbstractClientActivity
 	private long timeTo = 0;
 	private String graphTitle = "";
 	ProgressDialog dialog;
+	private SharedPreferences sp;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
@@ -53,6 +58,7 @@ public class DrawGraph extends AbstractClientActivity
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
+		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		dialog = new ProgressDialog(this);
 		setContentView(R.layout.graphics);
 		boolean showLegend = getIntent().getBooleanExtra("showLegend", true);
@@ -80,10 +86,14 @@ public class DrawGraph extends AbstractClientActivity
 			timeTo = getIntent().getLongExtra("timeTo", 0);
 			graphTitle = getIntent().getStringExtra("graphTitle");
 		}
-		graphView = new ExtendedLineGraphView(this, "");
+		graphView = new LineGraphView(this, "");
+		graphView.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
+		graphView.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
+		graphView.getGraphViewStyle().setTextSize(Integer.parseInt(sp.getString("global.graph.textsize", "10")));
+		graphView.getGraphViewStyle().setLegendWidth(240);
+		graphView.setCustomLabelFormatter(new CustomLabel(Integer.parseInt(sp.getString("global.multipliers", "1"))));
 		graphView.setShowLegend(showLegend);
 		graphView.setLegendAlign(LegendAlign.TOP);
-		graphView.setLegendWidth(240);
 		graphView.setScalable(true);
 		graphView.setScrollable(true);
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);

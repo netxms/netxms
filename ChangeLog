@@ -10,6 +10,9 @@
    - Implemented alarm sounds
    - Fixed "broken pipe" errors
    - Fixed fail on Web console while picture uplod to image library
+- Android Console:
+	- Fix bug missing hide notification alarm in status bar 
+	- Implemented "Font size in graph/dashboard sessions" (Feature #240) 
 - Fixed issues: #109, #438, #471, #508
 
 

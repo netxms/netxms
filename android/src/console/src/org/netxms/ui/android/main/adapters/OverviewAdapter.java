@@ -29,6 +29,7 @@ import android.widget.TextView;
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
  */
+
 public class OverviewAdapter extends BaseAdapter
 {
 	private final Context context;
@@ -92,6 +93,7 @@ public class OverviewAdapter extends BaseAdapter
 			addPair(r.getString(R.string.overview_location), obj.getGeolocation());
 		}
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 

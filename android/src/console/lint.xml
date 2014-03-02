@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
+    <issue id="DefaultLocale">
+        <ignore path="src/org/netxms/ui/android/helpers/CustomLabel.java" />
+    </issue>
+    <issue id="DrawAllocation">
+        <ignore path="src/com/jjoe64/graphview/GraphView.java" />
+    </issue>
+    <issue id="SimpleDateFormat">
+        <ignore path="src/org/netxms/ui/android/helpers/CustomLabel.java" />
+    </issue>
     <issue id="ViewConstructor" severity="ignore" />
 </lint>

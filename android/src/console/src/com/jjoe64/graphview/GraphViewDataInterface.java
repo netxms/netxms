@@ -17,24 +17,15 @@
  * Copyright Jonas Gehring
  */
 
-package com.jjoe64.graphview.compatible;
+package com.jjoe64.graphview;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.view.ScaleGestureDetector;
-
-@SuppressLint("NewApi")
-public class RealScaleGestureDetector extends ScaleGestureDetector
+/**
+ * the base interface for the graphview data.
+ * you can use your own data models, when they implement
+ * this interface.
+ */
+public interface GraphViewDataInterface
 {
-	public RealScaleGestureDetector(Context context, final com.jjoe64.graphview.compatible.ScaleGestureDetector fakeScaleGestureDetector, final com.jjoe64.graphview.compatible.ScaleGestureDetector.SimpleOnScaleGestureListener fakeListener)
-	{
-		super(context, new android.view.ScaleGestureDetector.SimpleOnScaleGestureListener()
-		{
-			@Override
-			public boolean onScale(ScaleGestureDetector detector)
-			{
-				return fakeListener.onScale(fakeScaleGestureDetector);
-			}
-		});
-	}
+	public double getX();
+	public double getY();
 }
