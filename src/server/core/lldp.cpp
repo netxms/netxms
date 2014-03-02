@@ -28,6 +28,7 @@
 static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LLDP_LOCAL_PORT_INFO *port = new LLDP_LOCAL_PORT_INFO;
+   port->portNumber = var->GetName()->getValue()[11];
 	port->localIdLen = var->getRawValue(port->localId, 256);
 
 	SNMP_ObjectId *oid = var->GetName();
@@ -80,6 +81,7 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
  */
 static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_t idLen, LinkLayerNeighbors *nbs)
 {
+   LLDP_LOCAL_PORT_INFO port;
 	TCHAR ifName[130];
 	Interface *ifc;
 
@@ -118,9 +120,14 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 			}
 			return ifc;
 		case 7:	// local identifier
-			if (node->ifDescrFromLldpLocalId(id, idLen, ifName))
+			if (node->getLldpLocalPortInfo(id, idLen, &port))
 			{
-				ifc = node->findInterface(ifName);	/* TODO: find by cached ifName value */
+            if (node->isBridge())
+               ifc = node->findBridgePort(port.portNumber);
+            else
+               ifc = node->findInterface(port.portNumber, INADDR_ANY);
+            if (ifc == NULL)  // unable to find interface by bridge port number or interface index, try description
+               ifc = node->findInterface(port.ifDescr);	/* TODO: find by cached ifName value */
 			}
 			else
 			{

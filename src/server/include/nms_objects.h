@@ -1120,7 +1120,7 @@ public:
    BOOL getNextHop(UINT32 dwSrcAddr, UINT32 dwDestAddr, UINT32 *pdwNextHop,
                    UINT32 *pdwIfIndex, BOOL *pbIsVPN);
 	ComponentTree *getComponents();
-	bool ifDescrFromLldpLocalId(BYTE *id, size_t idLen, TCHAR *ifName);
+   bool getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
 
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();

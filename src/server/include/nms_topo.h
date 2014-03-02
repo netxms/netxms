@@ -33,6 +33,7 @@ class Interface;
  */
 struct LLDP_LOCAL_PORT_INFO
 {
+   UINT32 portNumber;
 	BYTE localId[256];
 	size_t localIdLen;
 	TCHAR ifDescr[192];

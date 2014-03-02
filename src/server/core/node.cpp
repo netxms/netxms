@@ -650,10 +650,14 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 }
 
 /**
- * Find interface by index and node IP
- * Returns pointer to interface object or NULL if appropriate interface couldn't be found
+ * Find interface by index and/or IP subnet. Interface IP considered matching
+ * if it is from same IP subnet as hostAddr or if hostAddr set to INADDR_ANY.
+ *
+ * @param ifIndex interface index to match or INVALID_INDEX to select first matching interface
+ * @param hostAddr IP address to match or INADDR_ANY to select first matching interface
+ * @return pointer to interface object or NULL if appropriate interface couldn't be found
  */
-Interface *Node::findInterface(UINT32 dwIndex, UINT32 dwHostAddr)
+Interface *Node::findInterface(UINT32 ifIndex, UINT32 hostAddr)
 {
    UINT32 i;
    Interface *pInterface;
@@ -663,11 +667,11 @@ Interface *Node::findInterface(UINT32 dwIndex, UINT32 dwHostAddr)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
-			if ((pInterface->getIfIndex() == dwIndex) || (dwIndex == INVALID_INDEX))
+			if ((pInterface->getIfIndex() == ifIndex) || (ifIndex == INVALID_INDEX))
          {
             if (((pInterface->IpAddr() & pInterface->getIpNetMask()) ==
-                 (dwHostAddr & pInterface->getIpNetMask())) ||
-                (dwHostAddr == INADDR_ANY))
+                 (hostAddr & pInterface->getIpNetMask())) ||
+                (hostAddr == INADDR_ANY))
             {
                UnlockChildList();
                return pInterface;
@@ -4805,7 +4809,7 @@ nxmap_ObjList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool include
 	int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
 
 	MutexLock(m_mutexTopoAccess);
-	if ((m_linkLayerNeighbors != NULL) && (m_linkLayerNeighbors->getSize() > 0))
+	if (m_linkLayerNeighbors != NULL)
 	{
 		MutexUnlock(m_mutexTopoAccess);
 
@@ -5769,13 +5773,13 @@ bool Node::isDataCollectionDisabled()
 }
 
 /**
- * Lookup interface description from LLDP local ID
+ * Get LLDP local port info by LLDP local ID
  *
  * @param id port ID
  * @param idLen port ID length in bytes
- * @param ifName buffer for storing interface description
+ * @param buffer buffer for storing port information
  */
-bool Node::ifDescrFromLldpLocalId(BYTE *id, size_t idLen, TCHAR *ifName)
+bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
 {
 	bool result = false;
 	LockData();
@@ -5786,7 +5790,7 @@ bool Node::ifDescrFromLldpLocalId(BYTE *id, size_t idLen, TCHAR *ifName)
 			LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
 			if ((idLen == port->localIdLen) && !memcmp(id, port->localId, idLen))
 			{
-				nx_strncpy(ifName, port->ifDescr, 130);
+            memcpy(buffer, port, sizeof(LLDP_LOCAL_PORT_INFO));
 				result = true;
 				break;
 			}
