@@ -296,7 +296,9 @@ restart_check:
 	}
 
 	// Check default community (only if different from current)
-   if ((originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) || strcmp(defCommunity, originalContext->getCommunity()))
+   if ((originalContext == NULL) || 
+       (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) || 
+       strcmp(defCommunity, originalContext->getCommunity()))
    {
    	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
 	   pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
@@ -321,7 +323,9 @@ restart_check:
 		for(i = 0; i < count; i++)
 		{
 			DBGetFieldA(hResult, i, 0, temp, 256);
-         if ((originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) || strcmp(temp, originalContext->getCommunity()))
+         if ((originalContext == NULL) || 
+             (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) ||
+             strcmp(temp, originalContext->getCommunity()))
          {
 			   DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
 			   pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
