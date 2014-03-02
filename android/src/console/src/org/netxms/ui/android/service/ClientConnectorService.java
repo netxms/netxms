@@ -204,11 +204,20 @@ public class ClientConnectorService extends Service implements SessionListener
 			else if (intent.getAction().equals(ACTION_CONFIGURE))
 				reconnect(configure());
 			else if (intent.getAction().equals(ACTION_ALARM_ACKNOWLEDGE))
+			{
 				acknowledgeAlarm(intent.getLongExtra("alarmId", 0), false);
+				hideNotification(NOTIFY_ALARM);
+			}
 			else if (intent.getAction().equals(ACTION_ALARM_RESOLVE))
+			{
 				resolveAlarm(intent.getLongExtra("alarmId", 0));
+				hideNotification(NOTIFY_ALARM);
+			}
 			else if (intent.getAction().equals(ACTION_ALARM_TERMINATE))
+			{
 				terminateAlarm(intent.getLongExtra("alarmId", 0));
+				hideNotification(NOTIFY_ALARM);
+			}
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -981,7 +990,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * @param id	id of alarm
-	 * @param sticky	true for sticky acknwledge 
+	 * @param sticky	true for sticky acknowledge 
 	 */
 	public void acknowledgeAlarm(long id, boolean sticky)
 	{
