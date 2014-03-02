@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -245,7 +245,7 @@ static bool ParseMACAddress(const char *text, int length, BYTE *mac, int *macLen
             return false;
          continue;
       }
-      if (!isdigit(c) || (c < 'A') || (c > 'F'))
+      if (!isdigit(c) && ((c < 'A') || (c > 'F')))
       {
          if (i == 2)
          {
@@ -258,11 +258,13 @@ static bool ParseMACAddress(const char *text, int length, BYTE *mac, int *macLen
       if (hi)
       {
          mac[p] = (isdigit(c) ? (c - '0') : (c - 'A' + 10)) << 4;
+         hi = false;
       }
       else
       {
          mac[p] |= (isdigit(c) ? (c - '0') : (c - 'A' + 10));
          p++;
+         hi = true;
       }
    }
    *macLength = p;
