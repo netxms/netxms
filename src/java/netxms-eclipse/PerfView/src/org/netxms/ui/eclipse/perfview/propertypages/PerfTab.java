@@ -50,6 +50,7 @@ public class PerfTab extends PropertyPage
 	private DataCollectionItem dci;
 	private PerfTabGraphSettings settings;
 	private Button checkShow;
+	private Button checkLogScale;
 	private LabeledText title;
 	private LabeledText name;
 	private ColorSelector color;
@@ -135,13 +136,6 @@ public class PerfTab extends PropertyPage
       gd.horizontalSpan = layout.numColumns;
       name.setLayoutData(gd);
       
-      checkShowThresholds = new Button(dialogArea, SWT.CHECK);
-      checkShowThresholds.setText(Messages.get().PerfTab_ShowThresholds);
-      checkShowThresholds.setSelection(settings.isShowThresholds());
-      gd = new GridData();
-      gd.horizontalSpan = layout.numColumns;
-      checkShowThresholds.setLayoutData(gd);
-      
       Group timeGroup = new Group(dialogArea, SWT.NONE);
       timeGroup.setText(Messages.get().PerfTab_TeimePeriod);
       GridLayout timeGroupLayout = new GridLayout();
@@ -176,7 +170,32 @@ public class PerfTab extends PropertyPage
       timeUnits.add(Messages.get().PerfTab_Minutes);
       timeUnits.add(Messages.get().PerfTab_Hours);
       timeUnits.add(Messages.get().PerfTab_Days);
-      timeUnits.select(settings.getTimeUnits());
+      timeUnits.select(settings.getTimeUnits());      
+      
+      Group optionsGroup = new Group(dialogArea, SWT.NONE);
+      optionsGroup.setText(Messages.get().PerfTab_Options);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 3;
+      gd.verticalSpan = 2;
+      optionsGroup.setLayoutData(gd);
+      GridLayout optionsLayout = new GridLayout();
+      optionsGroup.setLayout(optionsLayout);
+      
+      checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
+      checkShowThresholds.setText(Messages.get().PerfTab_ShowThresholds);
+      checkShowThresholds.setSelection(settings.isShowThresholds());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkShowThresholds.setLayoutData(gd);
+      
+      checkLogScale = new Button(optionsGroup, SWT.CHECK);
+      checkLogScale.setText(Messages.get().PerfTab_LogarithmicScale);
+      checkLogScale.setSelection(settings.isLogScaleEnabled());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkLogScale.setLayoutData(gd);
       
       yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
@@ -197,6 +216,7 @@ public class PerfTab extends PropertyPage
 	private void applyChanges(final boolean isApply)
 	{
 		settings.setEnabled(checkShow.getSelection());
+		settings.setLogScaleEnabled(checkLogScale.getSelection());
 		settings.setTitle(title.getText());
 		settings.setName(name.getText());
 		settings.setColor(ColorConverter.rgbToInt(color.getColorValue()));

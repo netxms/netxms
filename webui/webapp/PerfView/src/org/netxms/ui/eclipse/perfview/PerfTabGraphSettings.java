@@ -43,6 +43,9 @@ public class PerfTabGraphSettings
    private boolean autoScale = true;
    
    @Element(required = false)
+   private boolean logScaleEnabled = false;
+   
+   @Element(required = false)
    private int minYScaleValue = 1;
    
    @Element(required = false)
@@ -420,5 +423,21 @@ public class PerfTabGraphSettings
    public void setTimeUnits(int timeUnits)
    {
       this.timeUnits = timeUnits;
+   }
+
+   /**
+    * @return the logScaleEnabled
+    */
+   public boolean isLogScaleEnabled()
+   {
+      return logScaleEnabled;
+   }
+
+   /**
+    * @param logScaleEnabled the logScaleEnabled to set
+    */
+   public void setLogScaleEnabled(boolean logScaleEnabled)
+   {
+      this.logScaleEnabled = logScaleEnabled;
    }
 }

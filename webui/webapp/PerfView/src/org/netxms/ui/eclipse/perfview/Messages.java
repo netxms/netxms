@@ -122,8 +122,10 @@ public class Messages extends NLS
    public String PerfTab_Days;
    public String PerfTab_Hours;
    public String PerfTab_Line;
+   public String PerfTab_LogarithmicScale;
    public String PerfTab_Minutes;
    public String PerfTab_NameInLegend;
+   public String PerfTab_Options;
    public String PerfTab_Order;
    public String PerfTab_ShowOnPerfTab;
    public String PerfTab_ShowThresholds;
