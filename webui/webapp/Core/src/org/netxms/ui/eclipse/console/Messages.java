@@ -196,8 +196,8 @@ private Messages()
 	 */
 	public static Messages get(Display display)
 	{
-      CallHelper r = new CallHelper();
-	   RWT.getUISession(display).exec(r);
+		CallHelper r = new CallHelper();
+		display.syncExec(r);
 		return r.messages;
 	}
 

@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
@@ -56,6 +57,8 @@ public class PerfTab extends PropertyPage
 	private Spinner orderNumber;
 	private Button checkShowThresholds;
 	private DciSelector parentDci;
+   private Spinner timeRange;
+   private Combo timeUnits;
 	private YAxisRangeEditor yAxisRange;
 	
 	/* (non-Javadoc)
@@ -139,6 +142,42 @@ public class PerfTab extends PropertyPage
       gd.horizontalSpan = layout.numColumns;
       checkShowThresholds.setLayoutData(gd);
       
+      Group timeGroup = new Group(dialogArea, SWT.NONE);
+      timeGroup.setText(Messages.get().PerfTab_TeimePeriod);
+      GridLayout timeGroupLayout = new GridLayout();
+      timeGroupLayout.marginWidth = WidgetHelper.OUTER_SPACING;
+      timeGroupLayout.marginHeight = WidgetHelper.OUTER_SPACING;
+      timeGroupLayout.horizontalSpacing = 16;
+      timeGroupLayout.makeColumnsEqualWidth = true;
+      timeGroupLayout.numColumns = 1;
+      timeGroup.setLayout(timeGroupLayout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = timeGroupLayout.numColumns;
+      timeGroup.setLayoutData(gd);
+      
+      Composite timeRangeArea = new Composite(timeGroup, SWT.NONE);
+      timeGroupLayout = new GridLayout();
+      timeGroupLayout.numColumns = 2;
+      timeGroupLayout.marginWidth = 0;
+      timeGroupLayout.marginHeight = 0;
+      timeGroupLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      timeRangeArea.setLayout(timeGroupLayout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      timeRangeArea.setLayoutData(gd);
+      
+      timeRange = WidgetHelper.createLabeledSpinner(timeRangeArea, SWT.BORDER, Messages.get().PerfTab_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeRange.setSelection(settings.getTimeRange());
+      
+      timeUnits = WidgetHelper.createLabeledCombo(timeRangeArea, SWT.READ_ONLY, Messages.get().PerfTab_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeUnits.add(Messages.get().PerfTab_Minutes);
+      timeUnits.add(Messages.get().PerfTab_Hours);
+      timeUnits.add(Messages.get().PerfTab_Days);
+      timeUnits.select(settings.getTimeUnits());
+      
       yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
@@ -170,6 +209,9 @@ public class PerfTab extends PropertyPage
 		settings.setMaxYScaleValue(yAxisRange.getMaxY());
 
 		settings.setParentDciId(parentDci.getDciId());
+		
+		settings.setTimeRange(timeRange.getSelection());
+		settings.setTimeUnits(timeUnits.getSelectionIndex());
 		
 		try
 		{

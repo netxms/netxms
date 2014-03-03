@@ -57,6 +57,7 @@ public class PerfTabGraph extends DashboardComposite
 	private Runnable refreshTimer;
 	private boolean updateInProgress = false;
 	private NXCSession session;
+	private long timeInterval;
 	
 	/**
 	 * @param parent
@@ -76,6 +77,11 @@ public class PerfTabGraph extends DashboardComposite
 		chart.setTitleVisible(true);
 		chart.setChartTitle(settings.getRuntimeTitle());
 		chart.setLegendVisible(false);
+      
+		timeInterval = settings.getTimeRangeMillis();
+      final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
+      final Date to = new Date(System.currentTimeMillis());
+      chart.setTimeRange(from, to);
 		
 		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
@@ -147,7 +153,7 @@ public class PerfTabGraph extends DashboardComposite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Date from = new Date(System.currentTimeMillis() - 3600000);
+				final Date from = new Date(System.currentTimeMillis() - timeInterval);
 				final Date to = new Date(System.currentTimeMillis());
 				synchronized(items)
 				{

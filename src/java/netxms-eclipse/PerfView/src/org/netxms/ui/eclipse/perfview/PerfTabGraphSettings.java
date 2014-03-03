@@ -23,6 +23,7 @@ import java.io.Writer;
 import java.util.List;
 
 import org.netxms.client.datacollection.GraphItemStyle;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -46,6 +47,12 @@ public class PerfTabGraphSettings
    
    @Element(required = false)
    private int maxYScaleValue = 100;
+   
+   @Element(required = false)
+   private int timeRange = 1;
+   
+   @Element(required = false)
+   private int timeUnits = 1;
 	
 	@Element(required=false)
 	private int type = GraphItemStyle.LINE;
@@ -362,5 +369,56 @@ public class PerfTabGraphSettings
    public void setMaxYScaleValue(int maxYScaleValue)
    {
       this.maxYScaleValue = maxYScaleValue;
+   }
+
+   /**
+    * @return the timeInterval
+    */
+   public int getTimeRange()
+   {
+      return timeRange;
+   }
+   
+   /**
+    * Get time range covered by graph in milliseconds
+    * 
+    * @return
+    */
+   public long getTimeRangeMillis()
+   {
+      switch(timeUnits)
+      {
+         case GraphSettings.TIME_UNIT_MINUTE:
+            return (long)timeRange * 60L * 1000L;
+         case GraphSettings.TIME_UNIT_HOUR:
+            return (long)timeRange * 60L * 60L * 1000L;
+         case GraphSettings.TIME_UNIT_DAY:
+            return (long)timeRange * 24L * 60L * 60L * 1000L;
+      }
+      return 0;
+   }
+
+   /**
+    * @param timeInterval the timeInterval to set
+    */
+   public void setTimeRange(int timeInterval)
+   {
+      this.timeRange = timeInterval;
+   }
+
+   /**
+    * @return the timeUnits
+    */
+   public int getTimeUnits()
+   {
+      return timeUnits;
+   }
+
+   /**
+    * @param timeUnits the timeUnits to set
+    */
+   public void setTimeUnits(int timeUnits)
+   {
+      this.timeUnits = timeUnits;
    }
 }
