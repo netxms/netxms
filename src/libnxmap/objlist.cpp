@@ -120,7 +120,9 @@ void nxmap_ObjList::addObject(UINT32 id)
  */
 void nxmap_ObjList::removeObject(UINT32 id)
 {
-   for(UINT32 i = 0; i < m_dwNumObjects; i++)
+   UINT32 i;
+
+   for(i = 0; i < m_dwNumObjects; i++)
    {
       if (m_pdwObjectList[i] == id)
       {
@@ -130,7 +132,7 @@ void nxmap_ObjList::removeObject(UINT32 id)
       }
    }
 
-   for(UINT32 i = 0; i < m_dwNumLinks; i++)
+   for(i = 0; i < m_dwNumLinks; i++)
    {
       if ((m_pLinkList[i].dwId1 == id) || (m_pLinkList[i].dwId2 == id))
       {

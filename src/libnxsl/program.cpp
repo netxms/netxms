@@ -168,7 +168,9 @@ NXSL_Program::NXSL_Program()
  */
 NXSL_Program::~NXSL_Program()
 {
-   for(UINT32 i = 0; i < m_dwCodeSize; i++)
+   UINT32 i;
+
+   for(i = 0; i < m_dwCodeSize; i++)
       delete m_ppInstructionSet[i];
    safe_free(m_ppInstructionSet);
    
@@ -185,7 +187,7 @@ NXSL_Program::~NXSL_Program()
    safe_free(m_pFunctionList);
    safe_free(m_pModuleList);
 
-   for(UINT32 i = 0; i < m_dwNumPreloads; i++)
+   for(i = 0; i < m_dwNumPreloads; i++)
       safe_free(m_ppszPreloadList[i]);
    safe_free(m_ppszPreloadList);
 

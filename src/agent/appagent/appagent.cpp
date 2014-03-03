@@ -112,15 +112,16 @@ static BYTE *EncodeString(BYTE *data, const TCHAR *str)
  */
 static APPAGENT_MSG *ListMetrics()
 {
+   int i;
    int msgLen = sizeof(INT16);
-	for(int i = 0; i < s_config.numMetrics; i++)
+   for(i = 0; i < s_config.numMetrics; i++)
       msgLen += (int)((_tcslen(s_config.metrics[i].name) + _tcslen(s_config.metrics[i].description) + 2) * sizeof(TCHAR) + sizeof(INT16));
 
    APPAGENT_MSG *msg = NewMessage(APPAGENT_CMD_REQUEST_COMPLETED, APPAGENT_RCC_SUCCESS, msgLen);
    *((INT16 *)msg->payload) = (INT16)s_config.numMetrics;
 
    BYTE *curr = (BYTE *)msg->payload + sizeof(INT16);
-	for(int i = 0; i < s_config.numMetrics; i++)
+   for(i = 0; i < s_config.numMetrics; i++)
    {
       *((INT16 *)curr) = (INT16)s_config.metrics[i].type;
       curr = EncodeString(curr + sizeof(INT16), s_config.metrics[i].name);
