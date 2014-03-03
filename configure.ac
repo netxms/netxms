@@ -903,12 +903,18 @@ fi
 
 if test "x$CXX" = "xaCC" ; then
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
-		AC_MSG_CHECKING(whether C compiler accepts +DD32)
+		if test "x$HPUX_HPPA" = "xyes"; then
+			ARCHFLAG="+DA1.1"
+		else
+			ARCHFLAG="+DD32"
+		fi
+		AC_MSG_CHECKING(whether C compiler accepts $ARCHFLAG)
 		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="+DD32 $CPPFLAGS"
+		CPPFLAGS="$ARCHFLAG $CPPFLAGS"
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 			[ 
-				LDFLAGS="+DD32 $LDFLAGS"
+				LDFLAGS="$ARCHFLAG $LDFLAGS"
+				CCASFLAGS="$ARCHFLAG $CCASFLAGS"
 				AC_MSG_RESULT(yes) 
 			], 
 			[ 
@@ -916,12 +922,18 @@ if test "x$CXX" = "xaCC" ; then
 				AC_MSG_RESULT(no)
 			])
 	else
-		AC_MSG_CHECKING(whether C compiler accepts +DD64)
+		if test "x$HPUX_HPPA" = "xyes"; then
+			ARCHFLAG="+DA2.0W"
+		else
+			ARCHFLAG="+DD64"
+		fi
+		AC_MSG_CHECKING(whether C compiler accepts $ARCHFLAG)
 		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="+DD64 $CPPFLAGS"
+		CPPFLAGS="$ARCHFLAG $CPPFLAGS"
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 			[ 
-				LDFLAGS="+DD64 $LDFLAGS"
+				LDFLAGS="$ARCHFLAG $LDFLAGS"
+				CCASFLAGS="$ARCHFLAG $CCASFLAGS"
 				AC_MSG_RESULT(yes) 
 			], 
 			[ 
