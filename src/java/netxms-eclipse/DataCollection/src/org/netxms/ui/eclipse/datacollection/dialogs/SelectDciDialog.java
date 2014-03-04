@@ -86,11 +86,13 @@ public class SelectDciDialog extends Dialog
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
-			newShell.setSize(settings.getInt("SelectDciDialog.cx"), settings.getInt("SelectDciDialog.cy")); //$NON-NLS-1$ //$NON-NLS-2$
+			newShell.setSize(settings.getInt("SelectDciDialog.width"), settings.getInt("SelectDciDialog.hight")); //$NON-NLS-1$ //$NON-NLS-2$
+			newShell.setLocation(settings.getInt("SelectDciDialog.cx"), settings.getInt("SelectDciDialog.cy")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		catch(NumberFormatException e)
 		{
 			newShell.setSize(600, 350);
+         newShell.setLocation(100, 100);
 		}
 	}
 
@@ -200,10 +202,13 @@ public class SelectDciDialog extends Dialog
 	private void saveSettings()
 	{
 		Point size = getShell().getSize();
+		Point pleace = getShell().getLocation();
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 
-		settings.put("SelectDciDialog.cx", size.x); //$NON-NLS-1$
-		settings.put("SelectDciDialog.cy", size.y); //$NON-NLS-1$
+		settings.put("SelectDciDialog.cx", pleace.x); //$NON-NLS-1$
+		settings.put("SelectDciDialog.cy", pleace.y); //$NON-NLS-1$
+		settings.put("SelectDciDialog.width", size.x); //$NON-NLS-1$
+      settings.put("SelectDciDialog.hight", size.y); //$NON-NLS-1$
 		if (fixedNode == 0)
 		{
 			settings.put("SelectDciDialog.Filter", objectTree.getFilter()); //$NON-NLS-1$
