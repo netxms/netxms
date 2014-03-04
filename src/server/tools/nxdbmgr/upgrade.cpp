@@ -47,8 +47,7 @@ static BOOL CreateTable(const TCHAR *pszQuery)
 /**
  * Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
  */
-BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
-                       int iVisible, int iNeedRestart, BOOL bForceUpdate)
+BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue, int iVisible, int iNeedRestart, BOOL bForceUpdate)
 {
    TCHAR szQuery[1024];
    DB_RESULT hResult;
@@ -357,6 +356,17 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
       if (!g_bIgnoreErrors)
          return FALSE;
    }
+   return TRUE;
+}
+
+/**
+ * Upgrade from V306 to V307
+ */
+static BOOL H_UpgradeFromV306(int currVersion, int newVersion)
+{
+	CHK_EXEC(SetColumnNullable(_T("config_clob"), _T("var_value")));
+	CHK_EXEC(ConvertStrings(_T("config_clob"), _T("var_name"), NULL, _T("var_value"), true));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='307' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -1119,9 +1129,6 @@ static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_responce")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_request")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_responce")));
-
-	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value")));
-	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
 
 	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
@@ -7417,6 +7424,7 @@ static struct
    { 303, 304, H_UpgradeFromV303 },
    { 304, 305, H_UpgradeFromV304 },
    { 305, 306, H_UpgradeFromV305 },
+   { 306, 307, H_UpgradeFromV306 },
    { 0, 0, NULL }
 };
 

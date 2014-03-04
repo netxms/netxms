@@ -388,15 +388,21 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *varName, const TCHAR *value, 
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE config SET var_value=? WHERE var_name=?"));
 		if (hStmt == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
 			return false;
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+      }
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
 		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
 	}
    else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)"));
 		if (hStmt == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
 			return false;
+      }
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
 		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(isVisible ? 1 : 0));
@@ -473,24 +479,27 @@ bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name)
  */
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue)
 {
-   DB_RESULT hResult;
-   TCHAR query[256], *result = NULL;
-   bool bSuccess = false;
+   TCHAR *result = NULL;
 
-   if (_tcslen(var) <= 127)
+   if (_tcslen(var) <= 63)
 	{
-		_sntprintf(query, 256, _T("SELECT var_value FROM config_clob WHERE var_name='%s'"), var);
-		hResult = DBSelect(g_hCoreDB, query);
-		if (hResult != NULL)
-		{
-			if (DBGetNumRows(hResult) > 0)
-			{
-				result = DBGetField(hResult, 0, 0, NULL, 0);
-				if (result != NULL)
-					DecodeSQLString(result);
-			}
-			DBFreeResult(hResult);
-		}
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config_clob WHERE var_name=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, var, DB_BIND_STATIC);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+		   if (hResult != NULL)
+		   {
+			   if (DBGetNumRows(hResult) > 0)
+			   {
+				   result = DBGetField(hResult, 0, 0, NULL, 0);
+			   }
+			   DBFreeResult(hResult);
+		   }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
 	}
 
 	// Return default value in case of error
@@ -505,44 +514,62 @@ TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue)
  */
 bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, bool bCreate)
 {
-   DB_RESULT hResult;
-   TCHAR *escValue, *query;
-	size_t len;
-   bool bVarExist = false, success = false;
-
-   if (_tcslen(var) > 127)
+   if (_tcslen(var) > 63)
       return false;
 
-   escValue = EncodeSQLString(CHECK_NULL_EX(value));
-	len = _tcslen(escValue) + 256;
-	query = (TCHAR *)malloc(len * sizeof(TCHAR));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check for variable existence
-   _sntprintf(query, len, _T("SELECT var_value FROM config_clob WHERE var_name='%s'"), var);
-   hResult = DBSelect(g_hCoreDB, query);
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config_clob WHERE var_name=?"));
+	if (hStmt == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+		return false;
+   }
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, var, DB_BIND_STATIC);
+	DB_RESULT hResult = DBSelectPrepared(hStmt);
+   bool bVarExist = false;
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
          bVarExist = true;
       DBFreeResult(hResult);
    }
+	DBFreeStatement(hStmt);
 
    // Don't create non-existing variable if creation flag not set
-   if (bCreate || bVarExist)
+   if (!bCreate && !bVarExist)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return false;
+   }
+
+   // Create or update variable value
+   if (bVarExist)
 	{
-		// Create or update variable value
-		if (bVarExist)
-			_sntprintf(query, len, _T("UPDATE config_clob SET var_value='%s' WHERE var_name='%s'"),
-					     escValue, var);
-		else
-			_sntprintf(query, len, _T("INSERT INTO config_clob (var_name,var_value) VALUES ('%s','%s')"),
-						  var, escValue);
-      success = DBQuery(g_hCoreDB, query) ? true : false;
+		hStmt = DBPrepare(hdb, _T("UPDATE config_clob SET var_value=? WHERE var_name=?"));
+		if (hStmt == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+			return false;
+      }
+		DBBind(hStmt, 1, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, var, DB_BIND_STATIC);
 	}
-
-	free(query);
-	free(escValue);
-
+   else
+	{
+		hStmt = DBPrepare(hdb, _T("INSERT INTO config_clob (var_name,var_value) VALUES (?,?)"));
+		if (hStmt == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+			return false;
+      }
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, var, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
+	}
+   bool success = DBExecute(hStmt) ? true : false;
+	DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
 	if (success)
 		OnConfigVariableChange(true, var, value);
 	return success;

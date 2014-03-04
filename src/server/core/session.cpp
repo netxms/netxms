@@ -2449,11 +2449,9 @@ void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Get value of configuration clob
-//
-
+/**
+ * Get value of configuration clob
+ */
 void ClientSession::getConfigCLOB(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -2485,11 +2483,9 @@ void ClientSession::getConfigCLOB(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Close session forcibly
-//
-
+/**
+ * Close session
+ */
 void ClientSession::kill()
 {
    // We shutdown socket connection, which will cause
