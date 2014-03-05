@@ -805,15 +805,15 @@ UINT32 Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change template version
-   if (pRequest->IsVariableExist(VID_TEMPLATE_VERSION))
+   if (pRequest->isFieldExist(VID_TEMPLATE_VERSION))
       m_dwVersion = pRequest->GetVariableLong(VID_TEMPLATE_VERSION);
 
    // Change flags
-   if (pRequest->IsVariableExist(VID_FLAGS))
+   if (pRequest->isFieldExist(VID_FLAGS))
 		m_flags = pRequest->GetVariableLong(VID_FLAGS);
 
    // Change apply filter
-	if (pRequest->IsVariableExist(VID_AUTOBIND_FILTER))
+	if (pRequest->isFieldExist(VID_AUTOBIND_FILTER))
 	{
 		safe_free(m_applyFilterSource);
 		delete m_applyFilter;

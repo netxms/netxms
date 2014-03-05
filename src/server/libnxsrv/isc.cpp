@@ -426,7 +426,7 @@ BOOL ISC::sendMessage(CSCPMessage *pMsg)
       pMsg->SetId((UINT32)InterlockedIncrement(&m_requestId));
    }
 
-   pRawMsg = pMsg->CreateMessage();
+   pRawMsg = pMsg->createMessage();
    if (m_ctx != NULL)
    {
       pEnMsg = CSCPEncryptMessage(m_ctx, pRawMsg);

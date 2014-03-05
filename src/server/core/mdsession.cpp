@@ -432,7 +432,7 @@ void MobileDeviceSession::sendMessage(CSCPMessage *msg)
    BOOL bResult;
 
 	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
-	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
+	CSCP_MESSAGE *pRawMsg = msg->createMessage();
    if (g_debugLevel >= 8)
    {
       String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
@@ -512,7 +512,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Get client info string
-   if (pRequest->IsVariableExist(VID_CLIENT_INFO))
+   if (pRequest->isFieldExist(VID_CLIENT_INFO))
    {
       TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
       

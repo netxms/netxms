@@ -3732,7 +3732,7 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change primary IP address
-   if (pRequest->IsVariableExist(VID_IP_ADDRESS))
+   if (pRequest->isFieldExist(VID_IP_ADDRESS))
    {
       UINT32 i, dwIpAddr;
 
@@ -3754,7 +3754,7 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       setPrimaryIPAddress(dwIpAddr);
 
 		// Update primary name if it is not set with the same message
-		if (!pRequest->IsVariableExist(VID_PRIMARY_NAME))
+		if (!pRequest->isFieldExist(VID_PRIMARY_NAME))
 		{
 			IpToStr(m_dwIpAddr, m_primaryName);
 		}
@@ -3765,14 +3765,14 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	}
 
    // Change primary host name
-   if (pRequest->IsVariableExist(VID_PRIMARY_NAME))
+   if (pRequest->isFieldExist(VID_PRIMARY_NAME))
    {
 		pRequest->GetVariableStr(VID_PRIMARY_NAME, m_primaryName, MAX_DNS_NAME);
 		m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 	}
 
    // Poller node ID
-   if (pRequest->IsVariableExist(VID_POLLER_NODE_ID))
+   if (pRequest->isFieldExist(VID_POLLER_NODE_ID))
    {
       UINT32 dwNodeId;
       NetObj *pObject;
@@ -3798,30 +3798,30 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
    // Change listen port of native agent
-   if (pRequest->IsVariableExist(VID_AGENT_PORT))
+   if (pRequest->isFieldExist(VID_AGENT_PORT))
       m_wAgentPort = pRequest->GetVariableShort(VID_AGENT_PORT);
 
    // Change authentication method of native agent
-   if (pRequest->IsVariableExist(VID_AUTH_METHOD))
+   if (pRequest->isFieldExist(VID_AUTH_METHOD))
       m_wAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
 
    // Change shared secret of native agent
-   if (pRequest->IsVariableExist(VID_SHARED_SECRET))
+   if (pRequest->isFieldExist(VID_SHARED_SECRET))
       pRequest->GetVariableStr(VID_SHARED_SECRET, m_szSharedSecret, MAX_SECRET_LENGTH);
 
    // Change SNMP protocol version
-   if (pRequest->IsVariableExist(VID_SNMP_VERSION))
+   if (pRequest->isFieldExist(VID_SNMP_VERSION))
 	{
       m_snmpVersion = pRequest->GetVariableShort(VID_SNMP_VERSION);
 		m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
 	}
 
    // Change SNMP port
-   if (pRequest->IsVariableExist(VID_SNMP_PORT))
+   if (pRequest->isFieldExist(VID_SNMP_PORT))
 		m_wSNMPPort = pRequest->GetVariableShort(VID_SNMP_PORT);
 
    // Change SNMP authentication data
-   if (pRequest->IsVariableExist(VID_SNMP_AUTH_OBJECT))
+   if (pRequest->isFieldExist(VID_SNMP_AUTH_OBJECT))
 	{
 		char mbBuffer[256];
 
@@ -3840,23 +3840,23 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	}
 
    // Change proxy node
-   if (pRequest->IsVariableExist(VID_AGENT_PROXY))
+   if (pRequest->isFieldExist(VID_AGENT_PROXY))
       m_dwProxyNode = pRequest->GetVariableLong(VID_AGENT_PROXY);
 
    // Change SNMP proxy node
-   if (pRequest->IsVariableExist(VID_SNMP_PROXY))
+   if (pRequest->isFieldExist(VID_SNMP_PROXY))
       m_dwSNMPProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
 
    // Number of required polls
-   if (pRequest->IsVariableExist(VID_REQUIRED_POLLS))
+   if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
       m_iRequiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
 
    // Enable/disable usage of ifXTable
-   if (pRequest->IsVariableExist(VID_USE_IFXTABLE))
+   if (pRequest->isFieldExist(VID_USE_IFXTABLE))
       m_nUseIfXTable = (BYTE)pRequest->GetVariableShort(VID_USE_IFXTABLE);
 
    // Change flags
-   if (pRequest->IsVariableExist(VID_FLAGS))
+   if (pRequest->isFieldExist(VID_FLAGS))
    {
       m_dwFlags &= NF_SYSTEM_FLAGS;
       m_dwFlags |= pRequest->GetVariableLong(VID_FLAGS) & NF_USER_FLAGS;

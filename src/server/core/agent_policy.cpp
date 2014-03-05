@@ -240,10 +240,10 @@ UINT32 AgentPolicy::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked
    if (!bAlreadyLocked)
       LockData();
 
-	if (pRequest->IsVariableExist(VID_VERSION))
+	if (pRequest->isFieldExist(VID_VERSION))
 		m_version = pRequest->GetVariableLong(VID_VERSION);
 
-	if (pRequest->IsVariableExist(VID_DESCRIPTION))
+	if (pRequest->isFieldExist(VID_DESCRIPTION))
 	{
 		safe_free(m_description);
 		m_description = pRequest->GetVariableStr(VID_DESCRIPTION);

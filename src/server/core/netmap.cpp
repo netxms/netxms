@@ -512,31 +512,31 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
-	if (request->IsVariableExist(VID_MAP_TYPE))
+	if (request->isFieldExist(VID_MAP_TYPE))
 		m_mapType = (int)request->GetVariableShort(VID_MAP_TYPE);
 
-	if (request->IsVariableExist(VID_LAYOUT))
+	if (request->isFieldExist(VID_LAYOUT))
 		m_layout = (int)request->GetVariableShort(VID_LAYOUT);
 
-	if (request->IsVariableExist(VID_FLAGS))
+	if (request->isFieldExist(VID_FLAGS))
 		m_flags = request->GetVariableLong(VID_FLAGS);
 
-	if (request->IsVariableExist(VID_SEED_OBJECT))
+	if (request->isFieldExist(VID_SEED_OBJECT))
 		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
 
-	if (request->IsVariableExist(VID_DISCOVERY_RADIUS))
+	if (request->isFieldExist(VID_DISCOVERY_RADIUS))
 		m_discoveryRadius = (int)request->GetVariableLong(VID_DISCOVERY_RADIUS);
 
-	if (request->IsVariableExist(VID_LINK_COLOR))
+	if (request->isFieldExist(VID_LINK_COLOR))
 		m_defaultLinkColor = (int)request->GetVariableLong(VID_LINK_COLOR);
 
-	if (request->IsVariableExist(VID_LINK_ROUTING))
+	if (request->isFieldExist(VID_LINK_ROUTING))
 		m_defaultLinkRouting = (int)request->GetVariableShort(VID_LINK_ROUTING);
 
-	if (request->IsVariableExist(VID_BACKGROUND_COLOR))
+	if (request->isFieldExist(VID_BACKGROUND_COLOR))
 		m_backgroundColor = (int)request->GetVariableLong(VID_BACKGROUND_COLOR);
 
-	if (request->IsVariableExist(VID_BACKGROUND))
+	if (request->isFieldExist(VID_BACKGROUND))
 	{
 		request->GetVariableBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
 		m_backgroundLatitude = request->GetVariableDouble(VID_BACKGROUND_LATITUDE);
@@ -544,7 +544,7 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		m_backgroundZoom = (int)request->GetVariableShort(VID_BACKGROUND_ZOOM);
 	}
 
-   if (request->IsVariableExist(VID_FILTER))
+   if (request->isFieldExist(VID_FILTER))
    {
       TCHAR *filter = request->GetVariableStr(VID_FILTER);
       if (filter != NULL)
@@ -553,7 +553,7 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
       safe_free(filter);
    }
 
-	if (request->IsVariableExist(VID_NUM_ELEMENTS))
+	if (request->isFieldExist(VID_NUM_ELEMENTS))
 	{
 		m_elements->clear();
 

@@ -1461,7 +1461,7 @@ void ClientSession::sendMessage(CSCPMessage *msg)
 	if (msg->GetCode() != CMD_ADM_MESSAGE)
 		debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
 
-	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
+	CSCP_MESSAGE *pRawMsg = msg->createMessage();
    if ((g_debugLevel >= 8) && (msg->GetCode() != CMD_ADM_MESSAGE))
    {
       String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
@@ -1667,7 +1667,7 @@ void ClientSession::login(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Get client info string
-   if (pRequest->IsVariableExist(VID_CLIENT_INFO))
+   if (pRequest->isFieldExist(VID_CLIENT_INFO))
    {
       TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
 
@@ -1685,7 +1685,7 @@ void ClientSession::login(CSCPMessage *pRequest)
    if (m_clientType == CLIENT_TYPE_WEB)
    {
       _tcscpy(m_webServerAddress, m_workstation);
-      if (pRequest->IsVariableExist(VID_CLIENT_ADDRESS))
+      if (pRequest->isFieldExist(VID_CLIENT_ADDRESS))
       {
          pRequest->GetVariableStr(VID_CLIENT_ADDRESS, m_workstation, 256);
          debugPrintf(5, _T("Real web client address is %s"), m_workstation);
@@ -2565,12 +2565,12 @@ void ClientSession::modifyObject(CSCPMessage *pRequest)
       {
          // If user attempts to change object's ACL, check
          // if he has OBJECT_ACCESS_ACL permission
-         if (pRequest->IsVariableExist(VID_ACL_SIZE))
+         if (pRequest->isFieldExist(VID_ACL_SIZE))
             if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACL))
                dwResult = RCC_ACCESS_DENIED;
 
 			// If user attempts to rename object, check object's name
-			if (pRequest->IsVariableExist(VID_OBJECT_NAME))
+			if (pRequest->isFieldExist(VID_OBJECT_NAME))
 			{
 				TCHAR name[256];
 				pRequest->GetVariableStr(VID_OBJECT_NAME, name, 256);
@@ -2944,11 +2944,11 @@ void ClientSession::setPassword(CSCPMessage *pRequest)
 
 #ifdef UNICODE
       pRequest->GetVariableStr(VID_PASSWORD, newPassword, 256);
-		if (pRequest->IsVariableExist(VID_OLD_PASSWORD))
+		if (pRequest->isFieldExist(VID_OLD_PASSWORD))
 			pRequest->GetVariableStr(VID_OLD_PASSWORD, oldPassword, 256);
 #else
       pRequest->GetVariableStrUTF8(VID_PASSWORD, newPassword, 1024);
-		if (pRequest->IsVariableExist(VID_OLD_PASSWORD))
+		if (pRequest->isFieldExist(VID_OLD_PASSWORD))
 			pRequest->GetVariableStrUTF8(VID_OLD_PASSWORD, oldPassword, 1024);
 #endif
 		else
@@ -3639,7 +3639,7 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 	}
 
 	// Check that all required data present in message
-	if ((dciType == DCO_TYPE_TABLE) && (!request->IsVariableExist(VID_DATA_COLUMN) || !request->IsVariableExist(VID_INSTANCE)))
+	if ((dciType == DCO_TYPE_TABLE) && (!request->isFieldExist(VID_DATA_COLUMN) || !request->isFieldExist(VID_INSTANCE)))
 	{
 		response->SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
 		return false;
@@ -4222,7 +4222,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    pParent = FindObjectById(pRequest->GetVariableLong(VID_PARENT_ID));
    if (iClass == OBJECT_NODE)
    {
-		if (pRequest->IsVariableExist(VID_PRIMARY_NAME))
+		if (pRequest->isFieldExist(VID_PRIMARY_NAME))
 		{
 			pRequest->GetVariableStr(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
 			dwIpAddr = ntohl(ResolveHostName(nodePrimaryName));
@@ -5463,7 +5463,7 @@ void ClientSession::onTrap(CSCPMessage *pRequest)
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
          dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
-			if ((dwEventCode == 0) && pRequest->IsVariableExist(VID_EVENT_NAME))
+			if ((dwEventCode == 0) && pRequest->isFieldExist(VID_EVENT_NAME))
 			{
 				TCHAR eventName[256];
 				pRequest->GetVariableStr(VID_EVENT_NAME, eventName, 256);
@@ -6298,7 +6298,7 @@ void ClientSession::getUserVariable(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Try to read variable from database
@@ -6354,7 +6354,7 @@ void ClientSession::setUserVariable(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Check variable name
@@ -6425,7 +6425,7 @@ void ClientSession::enumUserVariables(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       pRequest->GetVariableStr(VID_SEARCH_PATTERN, szPattern, MAX_VARIABLE_NAME);
@@ -6474,7 +6474,7 @@ void ClientSession::deleteUserVariable(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Try to delete variable from database
@@ -6520,7 +6520,7 @@ void ClientSession::copyUserVariable(CSCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS)
    {
-      dwSrcUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+      dwSrcUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
       dwDstUserId = pRequest->GetVariableLong(VID_DST_USER_ID);
       bMove = (BOOL)pRequest->GetVariableShort(VID_MOVE_FLAG);
       pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
@@ -11171,7 +11171,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	TCHAR mimetype[MAX_DB_STRING] = _T("");
 	TCHAR absFileName[MAX_PATH] = _T("");
 
-	if (request->IsVariableExist(VID_GUID))
+	if (request->isFieldExist(VID_GUID))
 	{
 		request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
 	}
@@ -11384,7 +11384,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	if (request->IsVariableExist(VID_CATEGORY))
+	if (request->isFieldExist(VID_CATEGORY))
 	{
 		request->GetVariableStr(VID_CATEGORY, category, MAX_DB_STRING);
 	}

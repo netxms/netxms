@@ -65,7 +65,7 @@ bool ExternalSubagent::sendMessage(CSCPMessage *msg)
 	TCHAR buffer[256];
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
 
-	CSCP_MESSAGE *rawMsg = msg->CreateMessage();
+	CSCP_MESSAGE *rawMsg = msg->createMessage();
 	MutexLock(m_mutexPipeWrite);
    bool success = SendMessageToPipe(m_pipe, rawMsg);
 	MutexUnlock(m_mutexPipeWrite);

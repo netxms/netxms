@@ -311,17 +311,17 @@ UINT32 SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
-	if (pRequest->IsVariableExist(VID_SLMCHECK_TYPE))
+	if (pRequest->isFieldExist(VID_SLMCHECK_TYPE))
 		m_type = CheckType(pRequest->GetVariableLong(VID_SLMCHECK_TYPE));
 
-	if (pRequest->IsVariableExist(VID_SCRIPT))
+	if (pRequest->isFieldExist(VID_SCRIPT))
 	{
 		TCHAR *script = pRequest->GetVariableStr(VID_SCRIPT);
 		setScript(script);
 		safe_free(script);
 	}
 
-	if (pRequest->IsVariableExist(VID_THRESHOLD_BASE))
+	if (pRequest->isFieldExist(VID_THRESHOLD_BASE))
 	{
 		if (m_threshold == NULL)
 			m_threshold = new Threshold;

@@ -104,7 +104,7 @@ void Table::createFromMessage(CSCPMessage *msg)
 	{
       m_columns->add(new TableColumnDefinition(msg, dwId));
 	}
-   if (msg->IsVariableExist(VID_INSTANCE_COLUMN))
+   if (msg->isFieldExist(VID_INSTANCE_COLUMN))
    {
       TCHAR name[MAX_COLUMN_NAME];
       msg->GetVariableStr(VID_INSTANCE_COLUMN, name, MAX_COLUMN_NAME);

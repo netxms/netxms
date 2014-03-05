@@ -369,11 +369,11 @@ UINT32 Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change cluster type
-   if (pRequest->IsVariableExist(VID_CLUSTER_TYPE))
+   if (pRequest->isFieldExist(VID_CLUSTER_TYPE))
       m_dwClusterType = pRequest->GetVariableLong(VID_CLUSTER_TYPE);
 
    // Change sync subnets
-   if (pRequest->IsVariableExist(VID_NUM_SYNC_SUBNETS))
+   if (pRequest->isFieldExist(VID_NUM_SYNC_SUBNETS))
 	{
       m_dwNumSyncNets = pRequest->GetVariableLong(VID_NUM_SYNC_SUBNETS);
 		if (m_dwNumSyncNets > 0)
@@ -388,7 +388,7 @@ UINT32 Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	}
 
    // Change resource list
-   if (pRequest->IsVariableExist(VID_NUM_RESOURCES))
+   if (pRequest->isFieldExist(VID_NUM_RESOURCES))
 	{
 		UINT32 i, j, dwId, dwCount;
 		CLUSTER_RESOURCE *pList;

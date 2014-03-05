@@ -171,7 +171,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 			
 			response.SetId(pRequest->GetId());
 			response.SetCode(CMD_REQUEST_COMPLETED);
-			pRawMsgOut = response.CreateMessage();
+			pRawMsgOut = response.createMessage();
 			DbgPrintf(5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.GetCode(), buffer));
 			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0, NULL) != (int)ntohl(pRawMsgOut->dwSize))
 				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));

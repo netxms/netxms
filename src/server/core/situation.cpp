@@ -329,12 +329,12 @@ void Situation::CreateMessage(CSCPMessage *msg)
 void Situation::UpdateFromMessage(CSCPMessage *msg)
 {
 	Lock();
-	if (msg->IsVariableExist(VID_NAME))
+	if (msg->isFieldExist(VID_NAME))
 	{
 		safe_free(m_name);
 		m_name = msg->GetVariableStr(VID_NAME);
 	}
-	if (msg->IsVariableExist(VID_COMMENTS))
+	if (msg->isFieldExist(VID_COMMENTS))
 	{
 		safe_free(m_comments);
 		m_comments = msg->GetVariableStr(VID_COMMENTS);

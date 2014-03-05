@@ -348,7 +348,7 @@ public:
 
    void run();
 
-   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
    void sendMessage(CSCPMessage *pMsg);
 
 	UINT32 getIndex() { return m_dwIndex; }
@@ -670,7 +670,7 @@ public:
 
    void run();
 
-   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
    void sendMessage(CSCPMessage *pMsg);
    void sendRawMessage(CSCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);

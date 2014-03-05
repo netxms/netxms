@@ -201,7 +201,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
       {
          if (dwRetCode == RCC_COMPONENT_LOCKED)
          {
-            if (pResponse->IsVariableExist(VID_LOCKED_BY))
+            if (pResponse->isFieldExist(VID_LOCKED_BY))
             {
                TCHAR szBuffer[MAX_LOCKINFO_LEN];
 

@@ -247,7 +247,7 @@ UINT32 NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLoc
       LockData();
 
    // Polling node
-   if (pRequest->IsVariableExist(VID_POLLER_NODE_ID))
+   if (pRequest->isFieldExist(VID_POLLER_NODE_ID))
    {
       UINT32 dwNodeId;
 
@@ -282,34 +282,34 @@ UINT32 NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLoc
    }
 
    // Listen IP address
-   if (pRequest->IsVariableExist(VID_IP_ADDRESS))
+   if (pRequest->isFieldExist(VID_IP_ADDRESS))
       m_dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
 
    // Service type
-   if (pRequest->IsVariableExist(VID_SERVICE_TYPE))
+   if (pRequest->isFieldExist(VID_SERVICE_TYPE))
       m_serviceType = (int)pRequest->GetVariableShort(VID_SERVICE_TYPE);
 
    // IP protocol
-   if (pRequest->IsVariableExist(VID_IP_PROTO))
+   if (pRequest->isFieldExist(VID_IP_PROTO))
       m_proto = pRequest->GetVariableShort(VID_IP_PROTO);
 
    // TCP/UDP port
-   if (pRequest->IsVariableExist(VID_IP_PORT))
+   if (pRequest->isFieldExist(VID_IP_PORT))
       m_port = pRequest->GetVariableShort(VID_IP_PORT);
 
    // Number of required polls
-   if (pRequest->IsVariableExist(VID_REQUIRED_POLLS))
+   if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
       m_requiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
 
    // Check request
-   if (pRequest->IsVariableExist(VID_SERVICE_REQUEST))
+   if (pRequest->isFieldExist(VID_SERVICE_REQUEST))
    {
       safe_free(m_request);
       m_request = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
    }
 
    // Check response
-   if (pRequest->IsVariableExist(VID_SERVICE_RESPONSE))
+   if (pRequest->isFieldExist(VID_SERVICE_RESPONSE))
    {
       safe_free(m_response);
       m_response = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);

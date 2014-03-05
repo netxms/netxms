@@ -289,12 +289,12 @@ UINT32 VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocke
       LockData();
 
    // Peer gateway
-   if (pRequest->IsVariableExist(VID_PEER_GATEWAY))
+   if (pRequest->isFieldExist(VID_PEER_GATEWAY))
       m_dwPeerGateway = pRequest->GetVariableLong(VID_PEER_GATEWAY);
 
    // Network list
-   if ((pRequest->IsVariableExist(VID_NUM_LOCAL_NETS)) &&
-       (pRequest->IsVariableExist(VID_NUM_REMOTE_NETS)))
+   if ((pRequest->isFieldExist(VID_NUM_LOCAL_NETS)) &&
+       (pRequest->isFieldExist(VID_NUM_REMOTE_NETS)))
    {
       m_dwNumLocalNets = pRequest->GetVariableLong(VID_NUM_LOCAL_NETS);
       if (m_dwNumLocalNets > 0)

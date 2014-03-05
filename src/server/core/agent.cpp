@@ -67,7 +67,7 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 		if (acceptTrap)
 		{
 			dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
-			if ((dwEventCode == 0) && pMsg->IsVariableExist(VID_EVENT_NAME))
+			if ((dwEventCode == 0) && pMsg->isFieldExist(VID_EVENT_NAME))
 			{
 				TCHAR eventName[256];
 				pMsg->GetVariableStr(VID_EVENT_NAME, eventName, 256);

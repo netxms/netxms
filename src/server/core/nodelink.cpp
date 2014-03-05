@@ -175,7 +175,7 @@ UINT32 NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
-	if (pRequest->IsVariableExist(VID_NODE_ID))
+	if (pRequest->isFieldExist(VID_NODE_ID))
 	{
 		m_nodeId = pRequest->GetVariableLong(VID_NODE_ID);
 	}

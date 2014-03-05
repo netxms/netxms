@@ -218,7 +218,7 @@ UINT32 Report::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
-	if (request->IsVariableExist(VID_REPORT_DEFINITION))
+	if (request->isFieldExist(VID_REPORT_DEFINITION))
 	{
 		safe_free(m_definition);
 		m_definition = request->GetVariableStr(VID_REPORT_DEFINITION);

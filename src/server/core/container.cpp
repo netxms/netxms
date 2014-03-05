@@ -280,11 +280,11 @@ UINT32 Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change flags
-   if (pRequest->IsVariableExist(VID_FLAGS))
+   if (pRequest->isFieldExist(VID_FLAGS))
 		m_flags = pRequest->GetVariableLong(VID_FLAGS);
 
    // Change auto-bind filter
-	if (pRequest->IsVariableExist(VID_AUTOBIND_FILTER))
+	if (pRequest->isFieldExist(VID_AUTOBIND_FILTER))
 	{
 		TCHAR *script = pRequest->GetVariableStr(VID_AUTOBIND_FILTER);
 		setAutoBindFilter(script);

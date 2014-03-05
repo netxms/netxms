@@ -825,16 +825,14 @@ UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
    return dwRetCode;
 }
 
-
-//
-// Send message to agent
-//
-
+/**
+ * Send message to agent
+ */
 BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
 {
    BOOL bResult;
 
-   CSCP_MESSAGE *pRawMsg = pMsg->CreateMessage();
+   CSCP_MESSAGE *pRawMsg = pMsg->createMessage();
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {

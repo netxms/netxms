@@ -207,6 +207,12 @@ void CommSession::readThread()
       // Update activity timestamp
       m_ts = time(NULL);
 
+      if (g_debugLevel >= 8)
+      {
+         String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+         DebugPrintf(m_dwIndex, 8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+      }
+
       if (m_bProxyConnection)
       {
          // Forward received message to remote peer
@@ -915,11 +921,9 @@ void CommSession::getConfig(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Update agent's configuration file
-//
-
+/**
+ * Update agent's configuration file
+ */
 void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    if (m_bMasterServer)
@@ -928,7 +932,7 @@ void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
       int hFile;
       UINT32 dwSize;
 
-      if (pRequest->IsVariableExist(VID_CONFIG_FILE))
+      if (pRequest->isFieldExist(VID_CONFIG_FILE))
       {
          dwSize = pRequest->GetVariableBinary(VID_CONFIG_FILE, NULL, 0);
          pConfig = (BYTE *)malloc(dwSize);
@@ -1018,7 +1022,7 @@ UINT32 CommSession::setupProxyConnection(CSCPMessage *pRequest)
             msg.SetCode(CMD_REQUEST_COMPLETED);
             msg.SetId(pRequest->GetId());
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            pRawMsg = msg.CreateMessage();
+            pRawMsg = msg.createMessage();
             sendRawMessage(pRawMsg, pSavedCtx);
 				if (pSavedCtx != NULL)
 					pSavedCtx->decRefCount();

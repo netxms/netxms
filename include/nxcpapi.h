@@ -44,22 +44,23 @@ typedef struct
 
 #ifdef __cplusplus
 
+struct MessageField;
+
 /**
  * Parsed NXCP message
  */
 class LIBNETXMS_EXPORTABLE CSCPMessage
 {
 private:
-   WORD m_wCode;
-   WORD m_wFlags;
-   UINT32 m_dwId;
-   UINT32 m_dwNumVar;    // Number of variables
-   CSCP_DF **m_ppVarList;   // List of variables
-   int m_nVersion;      // Protocol version
+   WORD m_code;
+   WORD m_flags;
+   UINT32 m_id;
+   MessageField *m_fields;   // Message fields
+   int m_version;    // Protocol version
 
-   void *set(UINT32 dwVarId, BYTE bType, const void *pValue, UINT32 dwSize = 0);
-   void *get(UINT32 dwVarId, BYTE bType);
-   UINT32 findVariable(UINT32 dwVarId);
+   void *set(UINT32 fieldId, BYTE type, const void *value, UINT32 size = 0);
+   void *get(UINT32 fieldId, BYTE type);
+   CSCP_DF *find(UINT32 fieldId);
 
 public:
    CSCPMessage(int nVersion = NXCP_VERSION);
@@ -68,20 +69,20 @@ public:
    CSCPMessage(const char *xml);
    ~CSCPMessage();
 
-   CSCP_MESSAGE *CreateMessage();
+   CSCP_MESSAGE *createMessage();
 	char *createXML();
 	void processXMLToken(void *state, const char **attrs);
 	void processXMLData(void *state);
 
-   WORD GetCode() { return m_wCode; }
-   void SetCode(WORD wCode) { m_wCode = wCode; }
+   WORD GetCode() { return m_code; }
+   void SetCode(WORD code) { m_code = code; }
 
-   UINT32 GetId() { return m_dwId; }
-   void SetId(UINT32 dwId) { m_dwId = dwId; }
+   UINT32 GetId() { return m_id; }
+   void SetId(UINT32 id) { m_id = id; }
 
-   BOOL IsVariableExist(UINT32 dwVarId) { return (findVariable(dwVarId) != INVALID_INDEX) ? TRUE : FALSE; }
-   bool isEndOfSequence() { return (m_wFlags & MF_END_OF_SEQUENCE) ? TRUE : FALSE; }
-   bool isReverseOrder() { return (m_wFlags & MF_REVERSE_ORDER) ? TRUE : FALSE; }
+   bool isFieldExist(UINT32 varId) { return find(varId) != NULL; }
+   bool isEndOfSequence() { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
+   bool isReverseOrder() { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
 
    void SetVariable(UINT32 dwVarId, INT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
    void SetVariable(UINT32 dwVarId, UINT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
@@ -114,9 +115,9 @@ public:
 
    void deleteAllVariables();
 
-   void disableEncryption() { m_wFlags |= MF_DONT_ENCRYPT; }
-   void setEndOfSequence() { m_wFlags |= MF_END_OF_SEQUENCE; }
-   void setReverseOrderFlag() { m_wFlags |= MF_REVERSE_ORDER; }
+   void disableEncryption() { m_flags |= MF_DONT_ENCRYPT; }
+   void setEndOfSequence() { m_flags |= MF_END_OF_SEQUENCE; }
+   void setReverseOrderFlag() { m_flags |= MF_REVERSE_ORDER; }
 
    static String dump(CSCP_MESSAGE *msg, int version);
 };

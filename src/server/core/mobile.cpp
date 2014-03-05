@@ -242,15 +242,15 @@ void MobileDevice::updateStatus(CSCPMessage *msg)
 
 	m_lastReportTime = time(NULL);
 
-	if (msg->IsVariableExist(VID_BATTERY_LEVEL))
+	if (msg->isFieldExist(VID_BATTERY_LEVEL))
 		m_batteryLevel = (int)msg->GetVariableLong(VID_BATTERY_LEVEL);
 	else
 		m_batteryLevel = -1;
 
-	if (msg->IsVariableExist(VID_GEOLOCATION_TYPE))
+	if (msg->isFieldExist(VID_GEOLOCATION_TYPE))
 		m_geoLocation = GeoLocation(*msg);
 
-	if (msg->IsVariableExist(VID_IP_ADDRESS))
+	if (msg->isFieldExist(VID_IP_ADDRESS))
 		m_dwIpAddr = msg->GetVariableLong(VID_IP_ADDRESS);
 
 	TCHAR temp[32];

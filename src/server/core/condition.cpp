@@ -263,7 +263,7 @@ UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change script
-   if (pRequest->IsVariableExist(VID_SCRIPT))
+   if (pRequest->isFieldExist(VID_SCRIPT))
    {
       TCHAR szError[1024];
 
@@ -277,27 +277,27 @@ UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
    // Change activation event
-   if (pRequest->IsVariableExist(VID_ACTIVATION_EVENT))
+   if (pRequest->isFieldExist(VID_ACTIVATION_EVENT))
       m_activationEventCode = pRequest->GetVariableLong(VID_ACTIVATION_EVENT);
 
    // Change deactivation event
-   if (pRequest->IsVariableExist(VID_DEACTIVATION_EVENT))
+   if (pRequest->isFieldExist(VID_DEACTIVATION_EVENT))
       m_deactivationEventCode = pRequest->GetVariableLong(VID_DEACTIVATION_EVENT);
 
    // Change source object
-   if (pRequest->IsVariableExist(VID_SOURCE_OBJECT))
+   if (pRequest->isFieldExist(VID_SOURCE_OBJECT))
       m_sourceObject = pRequest->GetVariableLong(VID_SOURCE_OBJECT);
 
    // Change active status
-   if (pRequest->IsVariableExist(VID_ACTIVE_STATUS))
+   if (pRequest->isFieldExist(VID_ACTIVE_STATUS))
       m_activeStatus = pRequest->GetVariableShort(VID_ACTIVE_STATUS);
 
    // Change inactive status
-   if (pRequest->IsVariableExist(VID_INACTIVE_STATUS))
+   if (pRequest->isFieldExist(VID_INACTIVE_STATUS))
       m_inactiveStatus = pRequest->GetVariableShort(VID_INACTIVE_STATUS);
 
    // Change DCI list
-   if (pRequest->IsVariableExist(VID_NUM_ITEMS))
+   if (pRequest->isFieldExist(VID_NUM_ITEMS))
    {
       safe_free(m_dciList);
       m_dciCount = pRequest->GetVariableLong(VID_NUM_ITEMS);

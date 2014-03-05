@@ -42,7 +42,7 @@ DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
 	m_flags = msg->GetVariableShort(baseId + 1);
    m_displayName = msg->GetVariableStr(baseId + 3);
 
-   if (msg->IsVariableExist(baseId + 2))
+   if (msg->isFieldExist(baseId + 2))
 	{
 		UINT32 oid[256];
 		UINT32 len = msg->GetVariableInt32Array(baseId + 2, 256, oid);

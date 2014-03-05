@@ -701,11 +701,11 @@ UINT32 Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Number of required polls
-   if (pRequest->IsVariableExist(VID_REQUIRED_POLLS))
+   if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
       m_requiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
 
 	// Expected interface state
-	if (pRequest->IsVariableExist(VID_EXPECTED_STATE))
+	if (pRequest->isFieldExist(VID_EXPECTED_STATE))
 	{
       UINT32 expectedState = pRequest->GetVariableShort(VID_EXPECTED_STATE);
 		m_flags &= ~IF_EXPECTED_STATE_MASK;
@@ -713,7 +713,7 @@ UINT32 Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	}
 
 	// Flags
-	if (pRequest->IsVariableExist(VID_FLAGS))
+	if (pRequest->isFieldExist(VID_FLAGS))
 	{
       UINT32 newFlags = pRequest->GetVariableLong(VID_FLAGS);
       newFlags &= IF_USER_FLAGS_MASK;

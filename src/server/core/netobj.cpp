@@ -924,11 +924,11 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change object's name
-   if (pRequest->IsVariableExist(VID_OBJECT_NAME))
+   if (pRequest->isFieldExist(VID_OBJECT_NAME))
       pRequest->GetVariableStr(VID_OBJECT_NAME, m_szName, MAX_OBJECT_NAME);
 
    // Change object's status calculation/propagation algorithms
-   if (pRequest->IsVariableExist(VID_STATUS_CALCULATION_ALG))
+   if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
    {
       m_iStatusCalcAlg = (int)pRequest->GetVariableShort(VID_STATUS_CALCULATION_ALG);
       m_iStatusPropAlg = (int)pRequest->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
@@ -947,11 +947,11 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
 	// Change image
-	if (pRequest->IsVariableExist(VID_IMAGE))
+	if (pRequest->isFieldExist(VID_IMAGE))
 		pRequest->GetVariableBinary(VID_IMAGE, m_image, UUID_LENGTH);
 
    // Change object's ACL
-   if (pRequest->IsVariableExist(VID_ACL_SIZE))
+   if (pRequest->isFieldExist(VID_ACL_SIZE))
    {
       UINT32 i, dwNumElements;
 
@@ -966,7 +966,7 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
 	// Change trusted nodes list
-   if (pRequest->IsVariableExist(VID_NUM_TRUSTED_NODES))
+   if (pRequest->isFieldExist(VID_NUM_TRUSTED_NODES))
    {
       m_dwNumTrustedNodes = pRequest->GetVariableLong(VID_NUM_TRUSTED_NODES);
 		m_pdwTrustedNodes = (UINT32 *)realloc(m_pdwTrustedNodes, sizeof(UINT32) * m_dwNumTrustedNodes);
@@ -974,7 +974,7 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
    // Change custom attributes
-   if (pRequest->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
+   if (pRequest->isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
    {
       UINT32 i, dwId, dwNumElements;
       TCHAR *name, *value;
@@ -991,12 +991,12 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
 	// Change geolocation
-	if (pRequest->IsVariableExist(VID_GEOLOCATION_TYPE))
+	if (pRequest->isFieldExist(VID_GEOLOCATION_TYPE))
 	{
 		m_geoLocation = GeoLocation(*pRequest);
 	}
 
-	if (pRequest->IsVariableExist(VID_SUBMAP_ID))
+	if (pRequest->isFieldExist(VID_SUBMAP_ID))
 	{
 		m_submapId = pRequest->GetVariableLong(VID_SUBMAP_ID);
 	}

@@ -235,7 +235,7 @@ UINT32 NXCL_Session::WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
          if (dwRetCode == RCC_COMPONENT_LOCKED)
          {
             _tcscpy(m_szLastLock, _T("<unknown>"));
-            if (pResponse->IsVariableExist(VID_LOCKED_BY))
+            if (pResponse->isFieldExist(VID_LOCKED_BY))
             {
                pResponse->GetVariableStr(VID_LOCKED_BY, m_szLastLock, MAX_LOCKINFO_LEN);
             }
@@ -266,7 +266,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
       return FALSE;
 
    DebugPrintf(_T("SendMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
-   pRawMsg = pMsg->CreateMessage();
+   pRawMsg = pMsg->createMessage();
 	MutexLock(m_mutexSendMsg);
    if (m_pCtx != NULL)
    {
