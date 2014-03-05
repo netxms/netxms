@@ -1938,13 +1938,14 @@ void NXSL_Program::removeInstructions(UINT32 start, int count)
 	if ((count <= 0) || (start + (UINT32)count >= m_dwCodeSize))
 		return;
 
-	for(UINT32 i = 0; i < (UINT32)count; i++)
+   UINT32 i;
+	for(i = 0; i < (UINT32)count; i++)
 		delete m_ppInstructionSet[start + i];
 	memmove(&m_ppInstructionSet[start], &m_ppInstructionSet[start + count], sizeof(NXSL_Instruction *) * (m_dwCodeSize - start - count));
 	m_dwCodeSize -= (UINT32)count;
 
 	// Change jump destination addresses
-	for(UINT32 i = 0; i < m_dwCodeSize; i++)
+	for(i = 0; i < m_dwCodeSize; i++)
 	{
 		if (((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
 		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
