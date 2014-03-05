@@ -4,6 +4,7 @@
 
 - Improved layer 2 topology discovery performance
 - Special handling of incorrect LLDP data provided by some D-Link switches 
+- Optimizations in NXCP processing
 - Improved file retrieve from agent
 - Windows agent: added service list and service table (System.Services)
 - Management console:
