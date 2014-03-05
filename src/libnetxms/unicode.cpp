@@ -866,7 +866,7 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *ds
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    return mb_to_ucs2_iconv(src, srcLen, dst, dstLen);
 #else
-   mb_to_ucs2_simple_copy(src, srcLen, dst, dstLen);
+   return mb_to_ucs2_simple_copy(src, srcLen, dst, dstLen);
 #endif
 }
 
