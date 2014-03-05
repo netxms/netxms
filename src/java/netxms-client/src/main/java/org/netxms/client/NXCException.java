@@ -59,7 +59,7 @@ public class NXCException extends NetXMSClientException
    	   ResourceBundle bundle = PropertyResourceBundle.getBundle("messages", new Locale(lang));
    	   try
    	   {
-   	      return bundle.getString(String.format("RCC_%04d", code));
+   	      return String.format(bundle.getString(String.format("RCC_%04d", code)), additionalInfo);
    	   }
    	   catch(MissingResourceException e)
    	   {
