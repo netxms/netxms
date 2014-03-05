@@ -1168,19 +1168,24 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    protected void sendNotification(NXCNotification n)
    {
+      // loop must be on listeners set copy to prevent 
+      // possible deadlock when one of the listeners calls 
+      // syncExec on UI thread while UI thread trying to add
+      // new listener and stays locked inside addListener
+      SessionListener[] list;
       synchronized(listeners)
       {
-         Iterator<SessionListener> it = listeners.iterator();
-         while(it.hasNext())
+         list = listeners.toArray(new SessionListener[listeners.size()]);
+      }
+      for(SessionListener l : list)
+      {
+         try
          {
-            try
-            {
-               it.next().notificationHandler(n);
-            }
-            catch(Exception e)
-            {
-               Logger.error("NXCSession", "Unhandled exception in notification handler", e);
-            }
+            l.notificationHandler(n);
+         }
+         catch(Exception e)
+         {
+            Logger.error("NXCSession", "Unhandled exception in notification handler", e);
          }
       }
    }
