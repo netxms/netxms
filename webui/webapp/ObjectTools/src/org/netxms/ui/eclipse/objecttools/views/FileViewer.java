@@ -25,6 +25,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -33,7 +34,9 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
@@ -42,6 +45,10 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
+import org.netxms.client.AgentFile;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -65,8 +72,11 @@ public class FileViewer extends ViewPart
 	private final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	private boolean follow;
 	private ConsoleJob monitorJob;
+   private ConsoleJob tryToRestartMonitoring;
    private Action actionClear;
 	private Action actionScrollLock;
+   private long offset = 0;
+   private SessionListener listener;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -231,11 +241,13 @@ public class FileViewer extends ViewPart
 
 	/**
 	 * @param file
+	 * @param maxFileSize 
 	 */
-   public void showFile(File file, boolean follow, String id)
+   public void showFile(File file, boolean follow, String id, int maxFileSize)
 	{
 		currentFile = file;
       fileID = id;
+      offset = maxFileSize;
 		textViewer.setText(loadFile(currentFile));
 		this.follow = follow;
 		if (follow)
@@ -280,8 +292,103 @@ public class FileViewer extends ViewPart
    		monitorJob.setUser(false);
    		monitorJob.setSystem(true);
    		monitorJob.start();
+   		
+   		listener = new SessionListener() {
+            
+            @Override
+            public void notificationHandler(SessionNotification n)
+            {
+               switch(n.getCode())
+               {
+                  case NXCNotification.FILE_MONITORING_FAILED:    
+                     //Check that this is applicable on current file
+                     if(nodeId == n.getSubCode())
+                        onFileMonitoringFail();
+                     break;
+               }
+            }
+         };
+   		
+   		session.addListener(listener);
 		}
 	}
+   
+   private void onFileMonitoringFail()
+   {
+      Display d = getSite().getShell().getDisplay();
+      tryToRestartMonitoring = new ConsoleJob(Messages.get(d).FileViewer_RestartFollowingJob, null, Activator.PLUGIN_ID, null, d) {
+         private boolean continueWork = true;
+         
+         @Override
+         protected void canceling() 
+         {
+            continueWork = false;
+         }
+         
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            runInUIThread(new Runnable() {                  
+               @Override
+               public void run()
+               {
+                  if (!textViewer.isDisposed())
+                  {
+                     textViewer.setForeground(new Color(getDisplay(), 255, 0, 0));
+                     textViewer.append(" \n\n" + //$NON-NLS-1$
+                     		"----------------------------------------------------------------------\n" + //$NON-NLS-1$
+                     		Messages.get().FileViewer_NotifyFollowConnectionLost +
+                     		"\n----------------------------------------------------------------------" + //$NON-NLS-1$
+                     		"\n");   //$NON-NLS-1$
+                  }
+               }
+            });    
+            
+            //Try to reconnect in loop every 20 sec.            
+            while(continueWork)
+            {
+               try 
+               {
+                  final AgentFile file = session.downloadFileFromAgent(nodeId, remoteFileName, offset, follow);
+                  
+                  //When successfully connected - display notification to client.
+                  runInUIThread(new Runnable() {                  
+                     @Override
+                     public void run()
+                     {
+                        if (!textViewer.isDisposed())
+                        {
+                           textViewer.append(
+                                 "-------------------------------------------------------------------------------\n" + //$NON-NLS-1$
+                                 Messages.get().FileViewer_NotifyFollowConnectionEnabed +
+                                 "\n-------------------------------------------------------------------------------" + //$NON-NLS-1$
+                           		"\n \n");   //$NON-NLS-1$
+                           textViewer.setForeground(null);
+                           loadFile(file.getFile());
+                        }
+                     }
+                  });         
+                  
+                  continueWork = false;
+               }
+               catch(Exception e)
+               {                  
+               }
+               Thread.sleep(20000);  
+            }      
+            
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(Messages.get().ObjectToolsDynamicMenu_DownloadError, remoteFileName, nodeId);
+         }
+      };
+      tryToRestartMonitoring.setUser(false);
+      tryToRestartMonitoring.setSystem(true);
+      tryToRestartMonitoring.start();      
+   }
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
@@ -292,23 +399,29 @@ public class FileViewer extends ViewPart
       if (follow)
       {
          monitorJob.cancel();
-         final ConsoleJob job = new ConsoleJob(Messages.get().FileViewer_Stop_File_Monitoring, null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
-            {
-               session.cancelFileMonitoring(nodeId, fileID);
-            }
-            
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().FileViewer_Cannot_Stop_File_Monitoring;
-            }
-         };
-         job.setUser(false);
-         job.setSystem(true);
-         job.start();
+         if(tryToRestartMonitoring != null)
+            tryToRestartMonitoring.cancel();
+         if(tryToRestartMonitoring == null || tryToRestartMonitoring.getState() != Job.RUNNING)
+         {
+            final ConsoleJob job = new ConsoleJob(Messages.get().FileViewer_Stop_File_Monitoring, null, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  session.cancelFileMonitoring(nodeId, fileID);
+               }
+               
+               @Override
+               protected String getErrorMessage()
+               {
+                  return Messages.get().FileViewer_Cannot_Stop_File_Monitoring;
+               }
+            };
+            job.setUser(false);
+            job.setSystem(true);
+            job.start();
+         }
       }
+      session.removeListener(listener);
       super.dispose();
    }
 	

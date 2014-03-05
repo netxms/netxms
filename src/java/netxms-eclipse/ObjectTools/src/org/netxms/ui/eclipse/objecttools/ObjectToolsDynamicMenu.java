@@ -474,7 +474,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
                      FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId,
                            IWorkbenchPage.VIEW_ACTIVATE);
-                     view.showFile(file.getFile(), follow, file.getId());
+                     view.showFile(file.getFile(), follow, file.getId(), maxFileSize);
 						}
 						catch(Exception e)
 						{

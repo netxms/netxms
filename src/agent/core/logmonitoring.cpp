@@ -176,7 +176,6 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 #else
             pMsg->SetVariable(VID_FILE_DATA, (char *)readBytes, readSize);
 #endif
-
             flData->offset = newOffset;
 
             MutexLock(g_hSessionListAccess);
