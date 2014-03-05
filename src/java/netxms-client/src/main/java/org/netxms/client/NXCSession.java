@@ -1173,7 +1173,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          Iterator<SessionListener> it = listeners.iterator();
          while(it.hasNext())
          {
-            it.next().notificationHandler(n);
+            try
+            {
+               it.next().notificationHandler(n);
+            }
+            catch(Exception e)
+            {
+               Logger.error("NXCSession", "Unhandled exception in notification handler", e);
+            }
          }
       }
    }
