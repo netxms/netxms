@@ -600,13 +600,13 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	}
 	else if (!_tcscmp(attr, _T("value")))
 	{
-		value = new NXSL_Value(t->GetValueAsString(strValue, 1024));
+		value = new NXSL_Value(t->getValueAsString(strValue, 1024));
 	}
 	else if (!_tcscmp(attr, _T("printableValue")))
 	{
 		bool convToHex = true;
 		t->getValueAsPrintableString(strValue, 1024, &convToHex);
-		value = new NXSL_Value(t->GetValueAsString(strValue, 1024));
+		value = new NXSL_Value(strValue);
 	}
 	else if (!_tcscmp(attr, _T("valueAsIp")))
 	{

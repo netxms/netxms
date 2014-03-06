@@ -109,7 +109,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
    TCHAR model[128];
-   AccessPointInfo *info = new AccessPointInfo((BYTE *)"\x00\x00\x00\x00\x00\x00", AP_UNADOPTED, NULL, var->GetValueAsString(model, 128), NULL);
+   AccessPointInfo *info = new AccessPointInfo((BYTE *)"\x00\x00\x00\x00\x00\x00", AP_UNADOPTED, NULL, var->getValueAsString(model, 128), NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -152,7 +152,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
       {
          TCHAR model[256], name[256];
          AccessPointInfo *ap = new AccessPointInfo((BYTE *)var->GetValue(), AP_ADOPTED, 
-            response->getVariable(1)->GetValueAsString(name, 256), response->getVariable(0)->GetValueAsString(model, 256), serial);
+            response->getVariable(1)->getValueAsString(name, 256), response->getVariable(0)->getValueAsString(model, 256), serial);
          apList->add(ap);
       }
       delete response;

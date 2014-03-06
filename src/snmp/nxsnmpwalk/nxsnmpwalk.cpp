@@ -49,7 +49,7 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
    UINT32 dwResult, dwRootLen, dwNameLen;
    UINT32 pdwRootName[MAX_OID_LEN], pdwName[MAX_OID_LEN];
    TCHAR szBuffer[1024], typeName[256];
-   int i, iExit = 0;
+   int iExit = 0;
    BOOL bRunning = TRUE;
 
    // Initialize WinSock
@@ -125,11 +125,6 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
                      dwNameLen = pVar->GetName()->getLength();
 
                      // Print OID and value
-                     pVar->GetValueAsString(szBuffer, 1024);
-                     for(i = 0; szBuffer[i] != 0; i++)
-                        if (szBuffer[i] < ' ')
-                           szBuffer[i] = '.';
-
 							bool convert = true;
 							pVar->getValueAsPrintableString(szBuffer, 1024, &convert);
 							_tprintf(_T("%s [%s]: %s\n"), pVar->GetName()->getValueAsText(),

@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2013 NetXMS Team
+ ** Copyright (C) 2003-2014 NetXMS Team
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -185,7 +185,7 @@ inline int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCH
    if (iSize >= cchByteChar)
       iSize = cchByteChar - 1;
    for(pSrc = pWideCharStr, iPos = 0, pDest = pByteStr; iPos < iSize; iPos++, pSrc++, pDest++)
-      *pDest = (*pSrc < 256) ? (char) (*pSrc) : '?';
+      *pDest = (*pSrc < 256) ? (char)(*pSrc) : '?';
    *pDest = 0;
 
    return iSize;
@@ -212,17 +212,16 @@ inline int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *p
 #endif /* HAVE_ICONV_IGNORE */
 
    cd = iconv_open(iCodePage == CP_UTF8 ? "UTF-8" : cp, UNICODE_CODEPAGE_NAME);
-   if (cd == (iconv_t) (-1))
+   if (cd == (iconv_t)(-1))
    {
-      return WideCharToMultiByteSimpleCopy(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar,
-         pbUsedDefChar);
+      return WideCharToMultiByteSimpleCopy(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
    }
 
-   inbuf = (const char *) pWideCharStr;
+   inbuf = (const char *)pWideCharStr;
    inbytes = ((cchWideChar == -1) ? wcslen(pWideCharStr) + 1 : cchWideChar) * sizeof(WCHAR);
    outbuf = pByteStr;
    outbytes = cchByteChar;
-   nRet = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   nRet = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    iconv_close(cd);
    if (nRet == -1)
    {
@@ -308,7 +307,7 @@ inline int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pB
    size_t inbytes, outbytes;
 
    cd = iconv_open(UNICODE_CODEPAGE_NAME, iCodePage == CP_UTF8 ? "UTF-8" : m_cpDefault);
-   if (cd == (iconv_t) (-1))
+   if (cd == (iconv_t)(-1))
    {
       return MultiByteToWideCharSimpleCopy(iCodePage, dwFlags, pByteStr, cchByteChar, pWideCharStr, cchWideChar);
    }
@@ -377,9 +376,7 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const
 UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
 {
    char szBuffer[256];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-      pszAddr, -1, szBuffer, 256, NULL, NULL);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pszAddr, -1, szBuffer, 256, NULL, NULL);
    return inet_addr(szBuffer);
 }
 

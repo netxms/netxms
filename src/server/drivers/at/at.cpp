@@ -167,7 +167,7 @@ static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 	VlanInfo *vlan = new VlanInfo(var->GetName()->getValue()[var->GetName()->getLength() - 1], VLAN_PRM_SLOTPORT);
 
 	TCHAR buffer[256];
-	vlan->setName(var->GetValueAsString(buffer, 256));
+	vlan->setName(var->getValueAsString(buffer, 256));
 	vlanList->add(vlan);
 
    return SNMP_ERR_SUCCESS;
@@ -248,8 +248,8 @@ VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
              (response->getVariable(1)->GetType() != ASN_NO_SUCH_INSTANCE))
          {
             TCHAR buffer[1024];
-            ParsePortList(response->getVariable(0)->GetValueAsString(buffer, 1024), vlan, 1);
-            ParsePortList(response->getVariable(1)->GetValueAsString(buffer, 1024), vlan, 1);
+            ParsePortList(response->getVariable(0)->getValueAsString(buffer, 1024), vlan, 1);
+            ParsePortList(response->getVariable(1)->getValueAsString(buffer, 1024), vlan, 1);
          }
          delete response;
       }

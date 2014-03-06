@@ -224,7 +224,7 @@ LONG SNMP_Variable::GetValueAsInt()
  * Get value as string
  * Note: buffer size is in characters
  */
-TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, UINT32 dwBufferSize)
+TCHAR *SNMP_Variable::getValueAsString(TCHAR *pszBuffer, UINT32 dwBufferSize)
 {
    UINT32 dwLen;
 
@@ -257,14 +257,19 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, UINT32 dwBufferSize)
          break;
       case ASN_OCTET_STRING:
          dwLen = min(dwBufferSize - 1, m_dwValueLength);
+         if (dwLen > 0)
+         {
 #ifdef UNICODE
-			// received octet string can contain char sequences invalid for
-			// current code page, so we don't use normal conversion functions here
-			for(UINT32 i = 0; i < dwLen; i++)
-				pszBuffer[i] = ((char *)m_pValue)[i];
+            if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_pValue, dwLen, pszBuffer, dwBufferSize) == 0)
+            {
+               // fallback if conversion fails
+		         for(UINT32 i = 0; i < dwLen; i++)
+			         pszBuffer[i] = ((char *)m_pValue)[i];
+            }
 #else
-         memcpy(pszBuffer, m_pValue, dwLen);
+            memcpy(pszBuffer, m_pValue, dwLen);
 #endif
+         }
          pszBuffer[dwLen] = 0;
          break;
       default:
@@ -289,54 +294,61 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, UINT32 bufferSize
 
    if (m_dwType == ASN_OCTET_STRING)
 	{
-         dwLen = min(bufferSize - 1, m_dwValueLength);
+      dwLen = min(bufferSize - 1, m_dwValueLength);
+      if (dwLen > 0)
+      {
 #ifdef UNICODE
-			// received octet string can contain char sequences invalid for
-			// current code page, so we don't use normal conversion functions here
-			for(UINT32 i = 0; i < dwLen; i++)
-				buffer[i] = ((char *)m_pValue)[i];
+         if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_pValue, dwLen, buffer, bufferSize) == 0)
+         {
+            // fallback if conversion fails
+		      for(UINT32 i = 0; i < dwLen; i++)
+			      buffer[i] = ((char *)m_pValue)[i];
+         }
 #else
          memcpy(buffer, m_pValue, dwLen);
 #endif
-         buffer[dwLen] = 0;
+      }
+      buffer[dwLen] = 0;
 
-			if (convertToHexAllowed)
-			{
-				bool conversionNeeded = false;
-				for(UINT32 i = 0; i < dwLen; i++)
-					if (!_istprint(buffer[i]) && (buffer[i] != 0x0D) && (buffer[i] != 0x0A))
-					{
-						conversionNeeded = true;
-						break;
-					}
-
-				if (conversionNeeded)
+		if (convertToHexAllowed)
+		{
+			bool conversionNeeded = false;
+			for(UINT32 i = 0; i < dwLen; i++)
+				if ((m_pValue[i] < 0x1F) && (m_pValue[i] != 0x0D) && (m_pValue[i] != 0x0A))
 				{
-					TCHAR *hexString = (TCHAR *)malloc((dwLen * 3 + 1) * sizeof(TCHAR));
-					UINT32 i, j;
-					for(i = 0, j = 0; i < dwLen; i++)
-					{
-						hexString[j++] = bin2hex((BYTE)buffer[i] >> 4);
-						hexString[j++] = bin2hex((BYTE)buffer[i] & 15);
-						hexString[j++] = _T(' ');
-					}
-					hexString[j] = 0;
-					nx_strncpy(buffer, hexString, bufferSize);
-					free(hexString);
-					*convertToHex = true;
+               if ((i == dwLen - 1) && (m_pValue[i] == 0))
+                  break;   // 0 at the end is OK
+					conversionNeeded = true;
+					break;
 				}
-			}
-			else
+
+			if (conversionNeeded)
 			{
-				// Replace non-printable characters with question marks
-				for(UINT32 i = 0; i < dwLen; i++)
-					if (!_istprint(buffer[i]))
-						buffer[i] = _T('?');
+				TCHAR *hexString = (TCHAR *)malloc((dwLen * 3 + 1) * sizeof(TCHAR));
+				UINT32 i, j;
+				for(i = 0, j = 0; i < dwLen; i++)
+				{
+					hexString[j++] = bin2hex(m_pValue[i] >> 4);
+					hexString[j++] = bin2hex(m_pValue[i] & 15);
+					hexString[j++] = _T(' ');
+				}
+				hexString[j] = 0;
+				nx_strncpy(buffer, hexString, bufferSize);
+				free(hexString);
+				*convertToHex = true;
 			}
+		}
+		else
+		{
+			// Replace non-printable characters with question marks
+			for(UINT32 i = 0; i < dwLen; i++)
+				if ((buffer[i] < 0x1F) && (buffer[i] != 0x0D) && (buffer[i] != 0x0A))
+					buffer[i] = _T('?');
+		}
 	}
 	else
 	{
-		return GetValueAsString(buffer, bufferSize);
+		return getValueAsString(buffer, bufferSize);
 	}
 
 	return buffer;

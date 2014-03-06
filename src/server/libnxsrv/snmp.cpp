@@ -114,7 +114,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                }
                else if (dwFlags & SG_STRING_RESULT)
                {
-                  pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
+                  pVar->getValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
                }
                else if (dwFlags & SG_PSTRING_RESULT)
                {
@@ -136,10 +136,10 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                         *((UINT32 *)pValue) = ntohl(pVar->GetValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:
-                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
+                        pVar->getValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
                         break;
                      case ASN_OBJECT_ID:
-                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
+                        pVar->getValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
                         break;
                      default:
                         nxlog_write(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "x", pVar->GetType());

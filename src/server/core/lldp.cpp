@@ -44,7 +44,7 @@ static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_
 	delete pRqPDU;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		pRespPDU->getVariable(0)->GetValueAsString(port->ifDescr, 192);
+		pRespPDU->getVariable(0)->getValueAsString(port->ifDescr, 192);
 		delete pRespPDU;
 	}
 	else

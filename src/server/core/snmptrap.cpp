@@ -178,7 +178,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
          if (pVar != NULL)
          {
 				bool convertToHex = true;
-				pszArgList[i] = _tcsdup((s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? pVar->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pVar->GetValueAsString(szBuffer, 256));
+				pszArgList[i] = _tcsdup((s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? pVar->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pVar->getValueAsString(szBuffer, 256));
          }
          else
          {
@@ -196,7 +196,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
             if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
             {
 					bool convertToHex = true;
-					pszArgList[i] = _tcsdup((s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? pdu->getVariable(j)->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pdu->getVariable(j)->GetValueAsString(szBuffer, 256));
+					pszArgList[i] = _tcsdup((s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? pdu->getVariable(j)->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pdu->getVariable(j)->getValueAsString(szBuffer, 256));
                break;
             }
          }
@@ -278,7 +278,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
          dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                 (dwBufPos == 0) ? _T("") : _T("; "),
                                 pVar->GetName()->getValueAsText(), 
-										  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 3000, &convertToHex) : pVar->GetValueAsString(szBuffer, 3000));
+										  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 3000, &convertToHex) : pVar->getValueAsString(szBuffer, 3000));
       }
 
       // Write new trap to database
@@ -370,7 +370,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
                dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                       (dwBufPos == 0) ? _T("") : _T("; "),
                                       pVar->GetName()->getValueAsText(), 
-												  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->GetValueAsString(szBuffer, 512));
+												  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->getValueAsString(szBuffer, 512));
             }
 
             // Generate default event for unmatched traps

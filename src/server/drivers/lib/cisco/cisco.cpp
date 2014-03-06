@@ -34,7 +34,7 @@ static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 	VlanInfo *vlan = new VlanInfo(var->GetName()->getValue()[var->GetName()->getLength() - 1], VLAN_PRM_IFINDEX);
 
 	TCHAR buffer[256];
-	vlan->setName(var->GetValueAsString(buffer, 256));
+	vlan->setName(var->getValueAsString(buffer, 256));
 
 	vlanList->add(vlan);
    return SNMP_ERR_SUCCESS;

@@ -408,7 +408,7 @@ public:
 	size_t getRawValue(BYTE *buffer, size_t bufSize);
    UINT32 GetValueAsUInt();
    LONG GetValueAsInt();
-   TCHAR *GetValueAsString(TCHAR *pszBuffer, UINT32 dwBufferSize);
+   TCHAR *getValueAsString(TCHAR *pszBuffer, UINT32 dwBufferSize);
    TCHAR *getValueAsPrintableString(TCHAR *buffer, UINT32 bufferSize, bool *convertToHex);
    SNMP_ObjectId *GetValueAsObjectId();
    TCHAR *GetValueAsMACAddr(TCHAR *pszBuffer);

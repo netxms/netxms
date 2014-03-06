@@ -140,7 +140,7 @@ bool FileDownloadJob::run()
             //default - get parameters
             if (m_maxFileSize > 0)
             {
-               msg.SetVariable(VID_FILE_OFFSET, -m_maxFileSize);
+               msg.SetVariable(VID_FILE_OFFSET, (UINT32)(-((int)m_maxFileSize)));
             }
             else
             {
