@@ -23,10 +23,9 @@
 #include "dlink.h"
 
 /**
- * Static data
+ * Driver name
  */
 static TCHAR s_driverName[] = _T("DLINK");
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 /**
  * Get driver name
@@ -41,7 +40,7 @@ const TCHAR *DLinkDriver::getName()
  */
 const TCHAR *DLinkDriver::getVersion()
 {
-	return s_driverVersion;
+	return NETXMS_VERSION_STRING;
 }
 
 /**

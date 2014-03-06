@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for Cisco ESW switches
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Driver for Cisco Small Business switches
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,20 +17,20 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: cisco-esw.cpp
+** File: cisco-sb.cpp
 **/
 
-#include "cisco-esw.h"
+#include "cisco-sb.h"
 
 /**
  * Driver name
  */
-static TCHAR s_driverName[] = _T("CISCO-ESW");
+static TCHAR s_driverName[] = _T("CISCO-SB");
 
 /**
  * Get driver name
  */
-const TCHAR *CiscoEswDriver::getName()
+const TCHAR *CiscoSbDriver::getName()
 {
 	return s_driverName;
 }
@@ -38,7 +38,7 @@ const TCHAR *CiscoEswDriver::getName()
 /**
  * Get driver version
  */
-const TCHAR *CiscoEswDriver::getVersion()
+const TCHAR *CiscoSbDriver::getVersion()
 {
 	return NETXMS_VERSION_STRING;
 }
@@ -48,14 +48,15 @@ const TCHAR *CiscoEswDriver::getVersion()
  *
  * @param oid Device OID
  */
-int CiscoEswDriver::isPotentialDevice(const TCHAR *oid)
+int CiscoSbDriver::isPotentialDevice(const TCHAR *oid)
 {
-	if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) != 0)
+	if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.6.1."), 19) != 0)
 		return 0;
 
-	int model = _tcstol(&oid[17], NULL, 10);
-	if (((model >= 1058) && (model <= 1064)) || (model == 1176) || (model == 1177))
-		return 251;
+	if (!_tcsncmp(&oid[19], _T("80."), 3) || !_tcsncmp(&oid[19], _T("81."), 3) ||
+       !_tcsncmp(&oid[19], _T("82."), 3) || !_tcsncmp(&oid[19], _T("83."), 3) ||
+       !_tcsncmp(&oid[19], _T("85."), 3))
+		return 252;
 	return 0;
 }
 
@@ -65,7 +66,7 @@ int CiscoEswDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool CiscoEswDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CiscoSbDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
 }
@@ -76,22 +77,35 @@ bool CiscoEswDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *CiscoEswDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
+   // Check if there are indexes below 49
+   bool highBase = true;
+	for(int i = 0; i < ifList->getSize(); i++)
+   {
+      if (ifList->get(i)->dwIndex < 49)
+      {
+         highBase = false;
+         break;
+      }
+   }
+
 	// Find physical ports
 	for(int i = 0; i < ifList->getSize(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
-		if ((iface->dwType == IFTYPE_ETHERNET_CSMACD) && (iface->dwIndex <= 48))
+		if (iface->dwIndex < 1000)
 		{
 			iface->isPhysicalPort = true;
-			iface->dwSlotNumber = 1;
-			iface->dwPortNumber = iface->dwIndex;
+			iface->dwSlotNumber = (iface->dwIndex - 1) / 110 + 1;
+			iface->dwPortNumber = (iface->dwIndex - 1) % 110 + 1;
+         if (highBase)
+            iface->dwPortNumber -= 48;
 		}
 	}
 
@@ -101,7 +115,7 @@ InterfaceList *CiscoEswDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, CiscoEswDriver);
+DECLARE_NDD_ENTRY_POINT(s_driverName, CiscoSbDriver);
 
 /**
  * DLL entry point

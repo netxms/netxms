@@ -22,14 +22,10 @@
 
 #include "dell-pwc.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Driver name
+ */
 static TCHAR s_driverName[] = _T("DELL-PWC");
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
-
 
 /**
  * Get driver name
@@ -44,7 +40,7 @@ const TCHAR *PowerConnectDriver::getName()
  */
 const TCHAR *PowerConnectDriver::getVersion()
 {
-	return s_driverVersion;
+	return NETXMS_VERSION_STRING;
 }
 
 /**
