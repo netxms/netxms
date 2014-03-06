@@ -154,8 +154,7 @@ Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags,
    if ((FindNodeByIP(zoneId, dwIpAddr) != NULL) ||
        (FindSubnetByIP(zoneId, dwIpAddr) != NULL))
    {
-      DbgPrintf(4, _T("PollNode: Node %s already exist in database"), 
-                IpToStr(dwIpAddr, szIpAddr1));
+      DbgPrintf(4, _T("PollNode: Node %s already exist in database"), IpToStr(dwIpAddr, szIpAddr1));
       return NULL;
    }
 

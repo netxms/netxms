@@ -388,8 +388,7 @@ retry_wait:
          qwTime = GetCurrentTimeMs();
          if ((iErr = select(m_hSocket + 1, &rdfs, NULL, NULL, &tv)) <= 0)
          {
-            if (((iErr == -1) && (errno != EINTR)) ||
-                (iErr == 0))
+            if (((iErr == -1) && (errno != EINTR)) || (iErr == 0))
             {
                return 0;
             }

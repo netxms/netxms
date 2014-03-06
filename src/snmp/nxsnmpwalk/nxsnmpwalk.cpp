@@ -92,9 +92,10 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
          dwNameLen = dwRootLen;
 
          // Walk the MIB
+         UINT32 requestId = 1;
          while(bRunning)
          {
-				pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, getpid(), m_snmpVersion);
+				pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, requestId++, m_snmpVersion);
             pRqPDU->bindVariable(new SNMP_Variable(pdwName, dwNameLen));
             dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, m_timeout, 3);
 
