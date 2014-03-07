@@ -121,7 +121,20 @@ UINT32 LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, UINT32 *pdwNumA
 /**
  * Acknowledge alarm by ID
  */
-UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
+UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, UINT32 alarmId)
+{
+   return NXCAcknowledgeAlarmEx(hSession, alarmId, false, 0);
+}
+
+/**
+ * Acknowledge alarm by ID
+ *
+ * @param hSession session handle
+ * @param alarmId Identifier of alarm to be acknowledged.
+ * @param sticky  if set to true, acknowledged state will be made "sticky" (duplicate alarms with same key will not revert it back to outstanding)
+ * @param timeout timeout for sticky acknowledge in seconds (0 for infinite)
+ */
+UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarmEx(NXC_SESSION hSession, UINT32 alarmId, bool sticky, UINT32 timeout)
 {
    CSCPMessage msg;
    UINT32 dwRqId;
@@ -130,17 +143,17 @@ UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, UINT32 dwAla
 
    msg.SetCode(CMD_ACK_ALARM);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_ALARM_ID, dwAlarmId);
+   msg.SetVariable(VID_ALARM_ID, alarmId);
+   msg.SetVariable(VID_STICKY_FLAG, (UINT16)(sticky ? 1 : 0));
+   msg.SetVariable(VID_TIMESTAMP, timeout);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Terminate alarm by ID
-//
-
+/**
+ * Terminate alarm by ID
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
 {
    CSCPMessage msg;
@@ -156,11 +169,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, UINT32 dwAlarm
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Delete alarm by ID
-//
-
+/**
+ * Delete alarm by ID
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
 {
    CSCPMessage msg;

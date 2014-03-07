@@ -2339,6 +2339,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     *
     * @param alarmId Identifier of alarm to be acknowledged.
     * @param sticky  if set to true, acknowledged state will be made "sticky" (duplicate alarms with same key will not revert it back to outstanding)
+    * @param time timeout for sticky acknowledge in seconds (0 for infinite)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
