@@ -12,6 +12,7 @@
    - Implemented alarm sounds
    - Fixed "broken pipe" errors
    - Fixed fail on Web console while picture uplod to image library
+   - Macros with alarm data in object tools 
 - Added support for sticky acknowledge in nxalarm tool
 - Android Console:
 	- Fix bug missing hide notification alarm in status bar 
