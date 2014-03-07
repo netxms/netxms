@@ -39,6 +39,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.jobs.LoginJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Workbench advisor for NetXMS console application
@@ -204,7 +205,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 
 		if (success)
 		{
-			final Session session = (Session)RWT.getUISession().getAttribute("netxms.session"); //$NON-NLS-1$
+			final Session session = (Session)RWT.getUISession().getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
 			
 			try
 			{
@@ -228,7 +229,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 						{
 							try
 							{
-								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute("netxms.session"); //$NON-NLS-1$
+								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
 								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
 							}
 							catch(Exception e)

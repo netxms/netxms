@@ -34,9 +34,11 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.console.api.SessionProvider;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Login job
@@ -149,7 +151,7 @@ public class LoginJob implements IRunnableWithProgress
          session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
          monitor.worked(5);
 
-         RWT.getUISession(display).setAttribute("netxms.session", session); //$NON-NLS-1$
+         RWT.getUISession(display).setAttribute(ConsoleSharedData.ATTRIBUTE_SESSION, session);
 
          monitor.setTaskName(Messages.get(display).LoginJob_init_extensions);
          callLoginListeners(session);
@@ -282,7 +284,7 @@ public class LoginJob implements IRunnableWithProgress
       {
          while(true)
          {
-            final Session session = (Session)RWT.getUISession(display).getAttribute("netxms.sesion"); //$NON-NLS-1$
+            final Session session = (Session)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
             try
             {
                Thread.sleep(1000 * 60); // send keep-alive every 60 seconds
@@ -291,6 +293,7 @@ public class LoginJob implements IRunnableWithProgress
             }
             catch(Exception e)
             {
+               Activator.logError("Exception in keep-alive thread", e);
             }
          }
       }

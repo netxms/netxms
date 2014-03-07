@@ -27,6 +27,8 @@ import org.netxms.api.client.Session;
  */
 public class ConsoleSharedData
 {
+   public static final String ATTRIBUTE_SESSION = "netxms.session";
+   
 	/**
 	 * Get NetXMS session
 	 * 
@@ -34,7 +36,7 @@ public class ConsoleSharedData
 	 */
 	public static Session getSession()
 	{
-		return (Session)RWT.getUISession().getAttribute("netxms.session");
+		return (Session)RWT.getUISession().getAttribute(ATTRIBUTE_SESSION);
 	}
 
 	/**
