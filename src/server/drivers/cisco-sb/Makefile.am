@@ -1,10 +1,10 @@
 DRIVER = cisco-sb
 
 pkglib_LTLIBRARIES = cisco-sb.la
-cisco_esw_la_SOURCES = cisco-sb.cpp
-cisco_esw_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-cisco_esw_la_LDFLAGS = -module -avoid-version
-cisco_esw_la_LIBADD = ../../../libnetxms/libnetxms.la \
+cisco_sb_la_SOURCES = cisco-sb.cpp
+cisco_sb_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+cisco_sb_la_LDFLAGS = -module -avoid-version
+cisco_sb_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \
 		      ../../libnxsrv/libnxsrv.la
 
