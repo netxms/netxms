@@ -328,20 +328,16 @@ typedef void * NXC_SESSION;
 #define MAP_TYPE_LAYER2_TOPOLOGY 1
 #define MAP_TYPE_IP_TOPOLOGY     2
 
-
-//
-// Components that can be locked by management pack installer
-//
-
+/**
+ * Components that can be locked by management pack installer
+ */
 #define NXMP_LC_EVENTDB    0
 #define NXMP_LC_EPP        1
 #define NXMP_LC_TRAPCFG    2
 
-
-//
-// Service types
-//
-
+/**
+ * Network service types
+ */
 enum
 {
 	NETSRV_CUSTOM,
@@ -354,19 +350,15 @@ enum
 	NETSRV_TELNET
 };
 
-
-//
-// Address list types
-//
-
+/**
+ * Address list types
+ */
 #define ADDR_LIST_DISCOVERY_TARGETS    1
 #define ADDR_LIST_DISCOVERY_FILTER     2
 
-
-//
-// Discovery filter flags
-//
-
+/**
+ * Discovery filter flags
+ */
 #define DFF_ALLOW_AGENT                0x0001
 #define DFF_ALLOW_SNMP                 0x0002
 #define DFF_ONLY_RANGE                 0x0004

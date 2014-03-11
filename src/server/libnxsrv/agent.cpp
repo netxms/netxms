@@ -1141,18 +1141,16 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
    return dwResult;
 }
 
-
-//
-// Check status of network service via agent
-//
-
+/**
+ * Check status of network service via agent
+ */
 UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType,
                                            WORD wPort, WORD wProto,
                                            const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
    UINT32 dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
-   static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80 };
+   static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80, 443, 23 };
 
    if (!m_bIsConnected)
       return ERR_NOT_CONNECTED;
@@ -1166,7 +1164,7 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
    msg.SetVariable(VID_IP_PORT,
       (wPort != 0) ? wPort :
          m_wDefaultPort[((iServiceType >= NETSRV_CUSTOM) &&
-                         (iServiceType <= NETSRV_HTTP)) ? iServiceType : 0]);
+                         (iServiceType <= NETSRV_TELNET)) ? iServiceType : 0]);
    msg.SetVariable(VID_IP_PROTO, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
    msg.SetVariable(VID_SERVICE_REQUEST, pszRequest);
    msg.SetVariable(VID_SERVICE_RESPONSE, pszResponse);
