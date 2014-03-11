@@ -633,7 +633,7 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
 
 UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId();
-UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
+UINT32 LIBNXSRV_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
                                   const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
                                   UINT32 dwBufferSize, UINT32 dwFlags);
 UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,

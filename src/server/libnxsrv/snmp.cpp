@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,11 +41,23 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId()
  * binary representation from oidBinary and dwOidLen
  * Note: buffer size is in bytes
  */
-UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
+UINT32 LIBNXSRV_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
                                    const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
                                    UINT32 dwBufferSize, UINT32 dwFlags)
 {
-   return SnmpGetEx(pTransport, szOidStr, oidBinary, dwOidLen, pValue, dwBufferSize, dwFlags, NULL);
+   if (version != transport->getSnmpVersion())
+   {
+      int v = transport->getSnmpVersion();
+      transport->setSnmpVersion(version);
+      DbgPrintf(7, _T("SnmpGet: transport SNMP version %d changed to %d"), v, version);
+      UINT32 rc = SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, dwBufferSize, dwFlags, NULL);
+      transport->setSnmpVersion(v);
+      return rc;
+   }
+   else
+   {
+      return SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, dwBufferSize, dwFlags, NULL);
+   }
 }
 
 /**
