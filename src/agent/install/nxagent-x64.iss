@@ -36,6 +36,7 @@ Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: igno
 Source: "..\..\..\x64\release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\x64\release\libtre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\install\files\windows\x64\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\install\files\windows\x64\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\install\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\install\files\windows\x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion
 ; Command-line tools
