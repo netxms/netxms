@@ -5291,23 +5291,26 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
    // to find subnet node primary IP
-	pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
-   if (pSubnet != NULL)
+   if (m_dwIpAddr != 0)
    {
-		// Check if node is linked to this subnet
-		if (!pSubnet->isChild(m_dwId))
-		{
-			DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
-						 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
-			pSubnet->AddNode(this);
-		}
-   }
-   else
-   {
-		pSubnet = createSubnet(m_dwIpAddr, 0xFFFFFF00, true);
+	   pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+      if (pSubnet != NULL)
+      {
+		   // Check if node is linked to this subnet
+		   if (!pSubnet->isChild(m_dwId))
+		   {
+			   DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
+						    pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+			   pSubnet->AddNode(this);
+		   }
+      }
+      else
+      {
+		   pSubnet = createSubnet(m_dwIpAddr, 0xFFFFFF00, true);
+      }
    }
 
-	// Check if we have incorrect subnets as parents
+	// Check for incorrect parent subnets
 	LockParentList(FALSE);
 	LockChildList(FALSE);
 	ppUnlinkList = (NetObj **)malloc(sizeof(NetObj *) * m_dwParentCount);
