@@ -1014,7 +1014,6 @@ protected:
    UINT32 getInterfaceCount(Interface **ppInterface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
-	void checkSubnetBinding(InterfaceList *pIfList);
    Subnet *createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
@@ -1130,11 +1129,14 @@ public:
 	void resolveVlanPorts(VlanList *vlanList);
 	void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
    void updateRoutingTable();
+	void checkSubnetBinding(InterfaceList *pIfList);
+
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();
    bool isReadyForDiscoveryPoll();
    bool isReadyForRoutePoll();
    bool isReadyForTopologyPoll();
+   
    void lockForStatusPoll();
    void lockForConfigurationPoll();
    void lockForDiscoveryPoll();

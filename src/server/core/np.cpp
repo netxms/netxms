@@ -205,6 +205,7 @@ Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags,
    if (dwCreationFlags & NXC_NCF_CREATE_UNMANAGED)
    {
       pNode->setMgmtStatus(FALSE);
+      pNode->checkSubnetBinding(NULL);
    }
 
    // Add default DCIs

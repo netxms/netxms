@@ -2558,35 +2558,6 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
             hasChanges = TRUE;
          }
       }
-
-      // Check if address we are using to communicate with node
-      // is configured on one of node's interfaces
-      for(i = 0; i < pIfList->getSize(); i++)
-         if (pIfList->get(i)->dwIpAddr == m_dwIpAddr)
-            break;
-
-      if (i == (UINT32)pIfList->getSize())
-      {
-         // Node is behind NAT
-         if (!(m_dwFlags & NF_BEHIND_NAT))
-         {
-				m_dwFlags |= NF_BEHIND_NAT;
-				hasChanges = TRUE;
-			}
-      }
-      else
-      {
-         // Check if NF_BEHIND_NAT flag set incorrectly
-         if (m_dwFlags & NF_BEHIND_NAT)
-         {
-            m_dwFlags &= ~NF_BEHIND_NAT;
-            hasChanges = TRUE;
-         }
-      }
-
-		checkSubnetBinding(pIfList);
-
-		delete pIfList;
    }
    else     /* pIfList == NULL */
    {
@@ -2684,6 +2655,9 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
       }
 		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %u"), m_szName, m_dwId, dwCount);
    }
+
+   checkSubnetBinding(pIfList);
+	delete pIfList;
 
 	sendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"));
 	return hasChanges;
@@ -5250,66 +5224,69 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 	NetObj **ppUnlinkList;
 	int i, j, count;
 
-	pCluster = getMyCluster();
+   if (pIfList != NULL)
+   {
+	   pCluster = getMyCluster();
 
-	// Check if we have subnet bindings for all interfaces
-	DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_szName, m_dwId);
-	for(i = 0; i < pIfList->getSize(); i++)
-	{
-		NX_INTERFACE_INFO *iface = pIfList->get(i);
-		if (iface->dwIpAddr != 0)
-		{
-			pInterface = findInterface(iface->dwIndex, iface->dwIpAddr);
-			if (pInterface == NULL)
-			{
-				nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
-				break;	// Something goes really wrong
-			}
-			if (pInterface->isExcludedFromTopology())
-				continue;
+	   // Check if we have subnet bindings for all interfaces
+	   DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_szName, m_dwId);
+	   for(i = 0; i < pIfList->getSize(); i++)
+	   {
+		   NX_INTERFACE_INFO *iface = pIfList->get(i);
+		   if (iface->dwIpAddr != 0)
+		   {
+			   pInterface = findInterface(iface->dwIndex, iface->dwIpAddr);
+			   if (pInterface == NULL)
+			   {
+				   nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
+				   break;	// Something goes really wrong
+			   }
+			   if (pInterface->isExcludedFromTopology())
+				   continue;
 
-			// Is cluster interconnect interface?
-			bool isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : false;
+			   // Is cluster interconnect interface?
+			   bool isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : false;
 
-			pSubnet = FindSubnetForNode(m_zoneId, iface->dwIpAddr);
-			if (pSubnet != NULL)
-			{
-				if (isSync)
-				{
-					pSubnet = NULL;	// No further checks on this subnet
-				}
-				else
-				{
-					if (pSubnet->isSyntheticMask())
-					{
-						DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
-									 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
-						pSubnet->setCorrectMask(pInterface->IpAddr() & pInterface->getIpNetMask(), pInterface->getIpNetMask());
-					}
+			   pSubnet = FindSubnetForNode(m_zoneId, iface->dwIpAddr);
+			   if (pSubnet != NULL)
+			   {
+				   if (isSync)
+				   {
+					   pSubnet = NULL;	// No further checks on this subnet
+				   }
+				   else
+				   {
+					   if (pSubnet->isSyntheticMask())
+					   {
+						   DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
+									    pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+						   pSubnet->setCorrectMask(pInterface->IpAddr() & pInterface->getIpNetMask(), pInterface->getIpNetMask());
+					   }
 
-					// Check if node is linked to this subnet
-					if (!pSubnet->isChild(m_dwId))
-					{
-						DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
-									 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
-						pSubnet->AddNode(this);
-					}
-				}
-			}
-			else if (!isSync)
-			{
-            pSubnet = createSubnet(iface->dwIpAddr, iface->dwIpNetMask, false);
-			}
+					   // Check if node is linked to this subnet
+					   if (!pSubnet->isChild(m_dwId))
+					   {
+						   DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
+									    pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+						   pSubnet->AddNode(this);
+					   }
+				   }
+			   }
+			   else if (!isSync)
+			   {
+               pSubnet = createSubnet(iface->dwIpAddr, iface->dwIpNetMask, false);
+			   }
 
-			// Check if subnet mask is correct on interface
-			if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()))
-			{
-				PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
-							 pInterface->getIfIndex(), pInterface->Name(),
-							 pInterface->getIpNetMask(), pSubnet->getIpNetMask());
-			}
-		}
-	}
+			   // Check if subnet mask is correct on interface
+			   if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()))
+			   {
+				   PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
+							    pInterface->getIfIndex(), pInterface->Name(),
+							    pInterface->getIpNetMask(), pSubnet->getIpNetMask());
+			   }
+		   }
+	   }
+   }
 
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
