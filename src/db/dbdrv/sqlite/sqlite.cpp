@@ -244,23 +244,25 @@ extern "C" DWORD EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR
 	DWORD result;
 
 	MutexLock(hConn->mutexQueryLock);
-	if (sqlite3_reset(stmt) == SQLITE_OK)
+	int rc = sqlite3_step(stmt);
+	if ((rc == SQLITE_DONE) || (rc == SQLITE_ROW))
 	{
-		int rc = sqlite3_step(stmt);
-		if ((rc == SQLITE_DONE) || (rc ==SQLITE_ROW))
-		{
-			result = DBERR_SUCCESS;
-		}
-		else
-		{
-			GetErrorMessage(hConn->pdb, errorText);
-			result = DBERR_OTHER_ERROR;
-		}
+	   if (sqlite3_reset(stmt) == SQLITE_OK)
+      {
+   		result = DBERR_SUCCESS;
+      }
+      else
+	   {
+		   GetErrorMessage(hConn->pdb, errorText);
+		   result = DBERR_OTHER_ERROR;
+	   }
 	}
 	else
 	{
 		GetErrorMessage(hConn->pdb, errorText);
 		result = DBERR_OTHER_ERROR;
+
+      sqlite3_reset(stmt);
 	}
 	MutexUnlock(hConn->mutexQueryLock);
 	return result;
@@ -404,48 +406,55 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stm
    memset(result, 0, sizeof(SQLITE_RESULT));
 
    MutexLock(hConn->mutexQueryLock);
-	if (sqlite3_reset(stmt) == SQLITE_OK)
-	{
-		int nCols = sqlite3_column_count(stmt);
-		char **cnames = (char **)malloc(sizeof(char *) * nCols * 2);	// column names + values
-		char **values = &cnames[nCols];
-		bool firstRow = true;
-		while(1)
-		{
-			int rc = sqlite3_step(stmt);
-			if (((rc == SQLITE_DONE) || (rc ==SQLITE_ROW)) && firstRow)
-			{
-				firstRow = false;
-				for(int i = 0; i < nCols; i++)
-					cnames[i] = (char *)sqlite3_column_name(stmt, i);
-			}
 
-			if (rc == SQLITE_ROW)
-			{
-				for(int i = 0; i < nCols; i++)
-					values[i] = (char *)sqlite3_column_text(stmt, i);
-				SelectCallback(result, nCols, values, cnames);
-			}
-			else if (rc == SQLITE_DONE)
-			{
-				*pdwError = DBERR_SUCCESS;
-				break;
-			}
-			else
-			{
-				GetErrorMessage(hConn->pdb, errorText);
-				*pdwError = DBERR_OTHER_ERROR;
-				break;
-			}
-		}
-      safe_free(cnames);
-	}
-	else
+	int nCols = sqlite3_column_count(stmt);
+	char **cnames = (char **)malloc(sizeof(char *) * nCols * 2);	// column names + values
+	char **values = &cnames[nCols];
+	bool firstRow = true;
+	while(1)
 	{
-		GetErrorMessage(hConn->pdb, errorText);
-		*pdwError = DBERR_OTHER_ERROR;
+		int rc = sqlite3_step(stmt);
+		if (((rc == SQLITE_DONE) || (rc ==SQLITE_ROW)) && firstRow)
+		{
+			firstRow = false;
+			for(int i = 0; i < nCols; i++)
+				cnames[i] = (char *)sqlite3_column_name(stmt, i);
+		}
+
+		if (rc == SQLITE_ROW)
+		{
+			for(int i = 0; i < nCols; i++)
+				values[i] = (char *)sqlite3_column_text(stmt, i);
+			SelectCallback(result, nCols, values, cnames);
+		}
+		else if (rc == SQLITE_DONE)
+		{
+			*pdwError = DBERR_SUCCESS;
+			break;
+		}
+		else
+		{
+			GetErrorMessage(hConn->pdb, errorText);
+			*pdwError = DBERR_OTHER_ERROR;
+			break;
+		}
 	}
-	MutexUnlock(hConn->mutexQueryLock);
+   safe_free(cnames);
+
+	if (*pdwError == DBERR_SUCCESS)
+   {
+	   if (sqlite3_reset(stmt) != SQLITE_OK)
+	   {
+		   GetErrorMessage(hConn->pdb, errorText);
+		   *pdwError = DBERR_OTHER_ERROR;
+	   }
+   }
+   else
+   {
+      sqlite3_reset(stmt);
+   }
+
+   MutexUnlock(hConn->mutexQueryLock);
 
 	if (*pdwError != DBERR_SUCCESS)
 	{
