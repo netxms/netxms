@@ -196,6 +196,13 @@ void MobileDeviceSession::readThread()
          break;
       }
 
+      // Receive timeout
+      if (iErr == 3)
+      {
+         debugPrintf(5, _T("RecvNXCPMessageEx: receive timeout"));
+         break;
+      }
+
       // Check if message is too large
       if (iErr == 1)
       {
@@ -225,7 +232,6 @@ void MobileDeviceSession::readThread()
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
       }
 
-      // Special handling for raw messages
       WORD wFlags = ntohs(pRawMsg->wFlags);
       if (!(wFlags & MF_BINARY))
       {
@@ -376,6 +382,9 @@ void MobileDeviceSession::processingThread()
 			case CMD_REPORT_DEVICE_STATUS:
 				updateDeviceStatus(pMsg);
 				break;
+         case CMD_PUSH_DCI_DATA:
+            pushData(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -704,6 +713,108 @@ void MobileDeviceSession::updateDeviceStatus(CSCPMessage *request)
 		device->updateStatus(request);
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
 	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+   sendMessage(&msg);
+}
+
+/**
+ * Push DCI data
+ */
+void MobileDeviceSession::pushData(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
+	if (device != NULL)
+	{
+      int count = (int)request->GetVariableLong(VID_NUM_ITEMS);
+      if (count > 0)
+      {
+         DCItem **dciList = (DCItem **)malloc(sizeof(DCItem *) * count);
+         TCHAR **valueList = (TCHAR **)malloc(sizeof(TCHAR *) * count);
+         memset(valueList, 0, sizeof(TCHAR *) * count);
+
+         int i;
+         UINT32 varId = VID_PUSH_DCI_DATA_BASE;
+         bool ok = true;
+         for(i = 0; (i < count) && ok; i++)
+         {
+            ok = false;
+
+            // find DCI by ID or name (if ID==0)
+            UINT32 dciId = request->GetVariableLong(varId++);
+		      DCObject *pItem;
+            if (dciId != 0)
+            {
+               pItem = device->getDCObjectById(dciId);
+            }
+            else
+            {
+               TCHAR name[MAX_PARAM_NAME];
+               request->GetVariableStr(varId++, name, MAX_PARAM_NAME);
+               pItem = device->getDCObjectByName(name);
+            }
+
+            if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
+            {
+               if (pItem->getDataSource() == DS_PUSH_AGENT)
+               {
+                  dciList[i] = (DCItem *)pItem;
+                  valueList[i] = request->GetVariableStr(varId++);
+                  ok = true;
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_NOT_PUSH_DCI);
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+            }
+         }
+
+         // If all items was checked OK, push data
+         if (ok)
+         {
+            time_t t = (time_t)request->GetVariableLong(VID_TIMESTAMP);
+            if (t == 0)
+            {
+               time(&t);
+            }
+
+            for(i = 0; i < count; i++)
+            {
+			      if (_tcslen(valueList[i]) >= MAX_DCI_STRING_VALUE)
+				      valueList[i][MAX_DCI_STRING_VALUE - 1] = 0;
+			      device->processNewDCValue(dciList[i], t, valueList[i]);
+			      dciList[i]->setLastPollTime(t);
+            }
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_FAILED_DCI_INDEX, i - 1);
+         }
+
+         // Cleanup
+         for(i = 0; i < count; i++)
+            safe_free(valueList[i]);
+         safe_free(valueList);
+         free(dciList);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+      }
+   }
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);

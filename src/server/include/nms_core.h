@@ -338,6 +338,7 @@ private:
    void login(CSCPMessage *pRequest);
    void updateDeviceInfo(CSCPMessage *pRequest);
    void updateDeviceStatus(CSCPMessage *pRequest);
+   void pushData(CSCPMessage *request);
 
 public:
    MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr);

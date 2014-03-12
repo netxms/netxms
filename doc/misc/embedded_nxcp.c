@@ -216,15 +216,41 @@ uint32_t nxcp_finalize()
 #if 0
 
 /**
- * Example
+ * Login
  */
-void example()
+void login(const char *login, const char *passwd, const char *deviceId)
 {
    nxcp_init_message();
-   nxcp_add_int16(1, 120);
-   nxcp_add_string(2, "test message");
+   nxcp_add_string(1, login);
+   nxcp_add_string(2, password);
+   nxcp_add_string(433, deviceId);
    uint32_t l = nxcp_finalize();
    /* now send l bytes from nxcp_message to the network */
+   send(sock, nxcp_message, l, 0);
+}
+
+/**
+ * Data push example
+ */
+void data_push()
+{
+   nxcp_init_message();
+
+   uint32_t id = 0x10000000;
+   
+   // first parameter
+   nxcp_add_int32(id++, 0);
+   nxcp_add_string(id++, "Parameter1");
+   nxcp_add_string(id++, "value1");
+
+   // second parameter
+   nxcp_add_int32(id++, 0);
+   nxcp_add_string(id++, "Parameter2");
+   nxcp_add_string(id++, "value2");
+   
+   // parameter count
+   nxcp_add_int32(111, 2);
+   
    send(sock, nxcp_message, l, 0);
 }
 

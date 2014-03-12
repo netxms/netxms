@@ -194,11 +194,9 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 	return success;
 }
 
-
-//
-// Check zone objects
-//
-
+/**
+ * Check zone objects
+ */
 static void CheckZones()
 {
    DB_RESULT hResult, hResult2;
