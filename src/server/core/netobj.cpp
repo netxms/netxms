@@ -930,19 +930,19 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change object's status calculation/propagation algorithms
    if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
    {
-      m_iStatusCalcAlg = (int)pRequest->GetVariableShort(VID_STATUS_CALCULATION_ALG);
-      m_iStatusPropAlg = (int)pRequest->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
-      m_iFixedStatus = (int)pRequest->GetVariableShort(VID_FIXED_STATUS);
-      m_iStatusShift = pRequest->GetVariableShortAsInt32(VID_STATUS_SHIFT);
-      m_iStatusTranslation[0] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_1);
-      m_iStatusTranslation[1] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_2);
-      m_iStatusTranslation[2] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_3);
-      m_iStatusTranslation[3] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_4);
-      m_iStatusSingleThreshold = (int)pRequest->GetVariableShort(VID_STATUS_SINGLE_THRESHOLD);
-      m_iStatusThresholds[0] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_1);
-      m_iStatusThresholds[1] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_2);
-      m_iStatusThresholds[2] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_3);
-      m_iStatusThresholds[3] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_4);
+      m_iStatusCalcAlg = pRequest->getFieldAsInt16(VID_STATUS_CALCULATION_ALG);
+      m_iStatusPropAlg = pRequest->getFieldAsInt16(VID_STATUS_PROPAGATION_ALG);
+      m_iFixedStatus = pRequest->getFieldAsInt16(VID_FIXED_STATUS);
+      m_iStatusShift = pRequest->getFieldAsInt16(VID_STATUS_SHIFT);
+      m_iStatusTranslation[0] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_1);
+      m_iStatusTranslation[1] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_2);
+      m_iStatusTranslation[2] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_3);
+      m_iStatusTranslation[3] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_4);
+      m_iStatusSingleThreshold = pRequest->getFieldAsInt16(VID_STATUS_SINGLE_THRESHOLD);
+      m_iStatusThresholds[0] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_1);
+      m_iStatusThresholds[1] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_2);
+      m_iStatusThresholds[2] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_3);
+      m_iStatusThresholds[3] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_4);
       bRecalcStatus = TRUE;
    }
 

@@ -80,9 +80,11 @@ public:
    UINT32 GetId() { return m_id; }
    void SetId(UINT32 id) { m_id = id; }
 
-   bool isFieldExist(UINT32 varId) { return find(varId) != NULL; }
    bool isEndOfSequence() { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
    bool isReverseOrder() { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
+
+   bool isFieldExist(UINT32 fieldId) { return find(fieldId) != NULL; }
+   int getFieldType(UINT32 fieldId);
 
    void SetVariable(UINT32 dwVarId, INT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
    void SetVariable(UINT32 dwVarId, UINT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
@@ -102,11 +104,14 @@ public:
    void SetVariableToInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData);
    BOOL SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName);
 
+   INT16 getFieldAsInt16(UINT32 fieldId);
+   INT32 getFieldAsInt32(UINT32 fieldId);
+   INT64 getFieldAsInt64(UINT32 fieldId);
+   double getFieldAsDouble(UINT32 fieldId);
+
    UINT32 GetVariableLong(UINT32 dwVarId);
    UINT64 GetVariableInt64(UINT32 dwVarId);
    UINT16 GetVariableShort(UINT32 dwVarId);
-   INT32 GetVariableShortAsInt32(UINT32 dwVarId);
-   double GetVariableDouble(UINT32 dwVarId);
    TCHAR *GetVariableStr(UINT32 dwVarId, TCHAR *szBuffer = NULL, UINT32 dwBufSize = 0);
 	char *GetVariableStrA(UINT32 dwVarId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
 	char *GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);

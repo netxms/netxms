@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -510,7 +510,27 @@ void *CSCPMessage::get(UINT32 fieldId, BYTE type)
 }
 
 /**
- * get integer field
+ * Get data type of message field.
+ *
+ * @return field type or -1 if field with given ID does not exist
+ */
+int CSCPMessage::getFieldType(UINT32 fieldId)
+{
+   CSCP_DF *field = find(fieldId);
+   return (field != NULL) ? (int)field->bType : -1;
+}
+
+/**
+ * get signed integer field
+ */
+INT32 CSCPMessage::getFieldAsInt32(UINT32 fieldId)
+{
+   char *value = (char *)get(fieldId, CSCP_DT_INTEGER);
+   return (value != NULL) ? *((INT32 *)value) : 0;
+}
+
+/**
+ * get unsigned integer field
  */
 UINT32 CSCPMessage::GetVariableLong(UINT32 dwVarId)
 {
@@ -521,7 +541,16 @@ UINT32 CSCPMessage::GetVariableLong(UINT32 dwVarId)
 }
 
 /**
- * get 16-bit integer variable
+ * get signed 16-bit integer field
+ */
+INT16 CSCPMessage::getFieldAsInt16(UINT32 fieldId)
+{
+   char *value = (char *)get(fieldId, CSCP_DT_INT16);
+   return (value != NULL) ? *((INT16 *)value) : 0;
+}
+
+/**
+ * get unsigned 16-bit integer variable
  */
 UINT16 CSCPMessage::GetVariableShort(UINT32 dwVarId)
 {
@@ -532,18 +561,16 @@ UINT16 CSCPMessage::GetVariableShort(UINT32 dwVarId)
 }
 
 /**
- * get 16-bit integer variable as signel 32-bit integer
+ * get signed 64-bit integer field
  */
-INT32 CSCPMessage::GetVariableShortAsInt32(UINT32 dwVarId)
+INT64 CSCPMessage::getFieldAsInt64(UINT32 fieldId)
 {
-   void *pValue;
-
-   pValue = get(dwVarId, CSCP_DT_INT16);
-   return pValue ? *((short *)pValue) : 0;
+   char *value = (char *)get(fieldId, CSCP_DT_INT64);
+   return (value != NULL) ? *((INT64 *)value) : 0;
 }
 
 /**
- * get 64-bit integer variable
+ * get unsigned 64-bit integer field
  */
 UINT64 CSCPMessage::GetVariableInt64(UINT32 dwVarId)
 {
@@ -556,12 +583,10 @@ UINT64 CSCPMessage::GetVariableInt64(UINT32 dwVarId)
 /**
  * get 64-bit floating point variable
  */
-double CSCPMessage::GetVariableDouble(UINT32 dwVarId)
+double CSCPMessage::getFieldAsDouble(UINT32 fieldId)
 {
-   char *pValue;
-
-   pValue = (char *)get(dwVarId, CSCP_DT_FLOAT);
-   return pValue ? *((double *)pValue) : 0;
+   char *value = (char *)get(fieldId, CSCP_DT_FLOAT);
+   return (value != NULL) ? *((double *)value) : 0;
 }
 
 /**

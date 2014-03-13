@@ -223,7 +223,7 @@ uint32_t nxcp_preprocess_message()
    ((NXCP_MESSAGE_HEADER *)nxcp_message)->code = ntohs(((NXCP_MESSAGE_HEADER *)nxcp_message)->code);
    ((NXCP_MESSAGE_HEADER *)nxcp_message)->size = ntohl(((NXCP_MESSAGE_HEADER *)nxcp_message)->size);
    ((NXCP_MESSAGE_HEADER *)nxcp_message)->numFields = ntohl(((NXCP_MESSAGE_HEADER *)nxcp_message)->numFields);
-   ((NXCP_MESSAGE_HEADER *)nxcp_message)->id = htonl(((NXCP_MESSAGE_HEADER *)nxcp_message)->id);
+   ((NXCP_MESSAGE_HEADER *)nxcp_message)->id = ntohl(((NXCP_MESSAGE_HEADER *)nxcp_message)->id);
    return ((NXCP_MESSAGE_HEADER *)nxcp_message)->id;
 }
 
@@ -232,10 +232,10 @@ uint32_t nxcp_preprocess_message()
  */
 uint32_t nxcp_get_rcc()
 {
-   CSCP_DF *field = (CSCP_DF *)(nxcp_message + 16);
+   NXCP_DF *field = (NXCP_DF *)(nxcp_message + 16);
    if ((field->type == CSCP_DT_INTEGER) && (field->id == htonl(28)))
    {
-      return ntohl(df->df_int32);
+      return ntohl(field->df_int32);
    }
    return 0;
 }

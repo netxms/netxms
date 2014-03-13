@@ -539,8 +539,8 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	if (request->isFieldExist(VID_BACKGROUND))
 	{
 		request->GetVariableBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
-		m_backgroundLatitude = request->GetVariableDouble(VID_BACKGROUND_LATITUDE);
-		m_backgroundLongitude = request->GetVariableDouble(VID_BACKGROUND_LONGITUDE);
+		m_backgroundLatitude = request->getFieldAsDouble(VID_BACKGROUND_LATITUDE);
+		m_backgroundLongitude = request->getFieldAsDouble(VID_BACKGROUND_LONGITUDE);
 		m_backgroundZoom = (int)request->GetVariableShort(VID_BACKGROUND_ZOOM);
 	}
 

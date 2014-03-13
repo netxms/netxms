@@ -224,8 +224,8 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->pszComments = pMsg->GetVariableStr(VID_COMMENTS);
 
 	pObject->geolocation.type = (int)pMsg->GetVariableShort(VID_GEOLOCATION_TYPE);
-	pObject->geolocation.latitude = pMsg->GetVariableDouble(VID_LATITUDE);
-	pObject->geolocation.longitude = pMsg->GetVariableDouble(VID_LONGITUDE);
+	pObject->geolocation.latitude = pMsg->getFieldAsDouble(VID_LATITUDE);
+	pObject->geolocation.longitude = pMsg->getFieldAsDouble(VID_LONGITUDE);
 
 	pObject->dwNumTrustedNodes = pMsg->GetVariableLong(VID_NUM_TRUSTED_NODES);
 	if (pObject->dwNumTrustedNodes > 0)

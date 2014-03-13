@@ -98,8 +98,17 @@ GeoLocation::GeoLocation(const GeoLocation &src)
 GeoLocation::GeoLocation(CSCPMessage &msg)
 {
 	m_type = (int)msg.GetVariableShort(VID_GEOLOCATION_TYPE);
-	m_lat = msg.GetVariableDouble(VID_LATITUDE);
-	m_lon = msg.GetVariableDouble(VID_LONGITUDE);
+
+   if (msg.getFieldType(VID_LATITUDE) == CSCP_DT_INTEGER)
+	   m_lat = (double)msg.getFieldAsInt32(VID_LATITUDE) / 1000000;
+   else
+	   m_lat = msg.getFieldAsDouble(VID_LATITUDE);
+
+   if (msg.getFieldType(VID_LONGITUDE) == CSCP_DT_INTEGER)
+	   m_lon = (double)msg.getFieldAsInt32(VID_LONGITUDE) / 1000000;
+   else
+   	m_lon = msg.getFieldAsDouble(VID_LONGITUDE);
+
 	m_accuracy = (int)msg.GetVariableShort(VID_ACCURACY);
 	m_timestamp = (time_t)msg.GetVariableInt64(VID_GEOLOCATION_TIMESTAMP);
 	posToString(true, m_lat);
