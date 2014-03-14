@@ -233,7 +233,7 @@ uint32_t nxcp_preprocess_message()
 uint32_t nxcp_get_rcc()
 {
    NXCP_DF *field = (NXCP_DF *)(nxcp_message + 16);
-   if ((field->type == CSCP_DT_INTEGER) && (field->id == htonl(28)))
+   if ((field->type == CSCP_DT_INTEGER) && (field->id == htonl(28L)))
    {
       return ntohl(field->df_int32);
    }

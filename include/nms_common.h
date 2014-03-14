@@ -548,6 +548,21 @@ typedef void * HMODULE;
 typedef int mode_t;
 #endif
 
+// We have to use long as INT64 on HP-UX - otherwise
+// there will be compilation errors because of type redefinition in
+// system includes
+#ifdef _HPUX
+
+#ifdef __LP64__
+typedef long INT64;
+typedef unsigned long UINT64;
+#else
+typedef long long INT64;
+typedef unsigned long long UINT64;
+#endif
+
+#else    /* _HPUX */
+
 #if HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
 typedef long long INT64;
 #elif HAVE_INT64_T
@@ -569,6 +584,9 @@ typedef unsigned long UINT64;
 #else
 #error Target system does not have unsigned 64bit integer type
 #endif
+
+#endif   /* _HPUX */
+
 typedef UINT64 QWORD;   // for compatibility
 
 #define INT64_FMT			_T("%lld")
