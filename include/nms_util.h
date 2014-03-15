@@ -1275,6 +1275,14 @@ int strcat_s(char *dst, size_t dstSize, const char *src);
 int wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src);
 #endif
 
+#if !HAVE_STRPTIME
+char LIBNETXMS_EXPORTABLE *strptime(const char *buf, const char *fmt, struct tm *_tm);
+#endif
+
+#if !HAVE_TIMEGM
+time_t LIBNETXMS_EXPORTABLE timegm(struct tm *_tm);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

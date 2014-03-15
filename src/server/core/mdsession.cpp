@@ -784,7 +784,24 @@ void MobileDeviceSession::pushData(CSCPMessage *request)
          // If all items was checked OK, push data
          if (ok)
          {
-            time_t t = (time_t)request->GetVariableLong(VID_TIMESTAMP);
+            time_t t = 0;
+            int ft = request->getFieldType(VID_TIMESTAMP);
+            if (ft == CSCP_DT_INTEGER)
+            {
+               t = (time_t)request->GetVariableLong(VID_TIMESTAMP);
+            }
+            else if (ft == CSCP_DT_STRING)
+            {
+               char ts[256];
+               request->GetVariableStrA(VID_TIMESTAMP, ts, 256);
+
+               struct tm timeBuff;
+               if (strptime(ts, "%Y/%m/%d %H:%M:%S", &timeBuff) != NULL)
+               {
+                  timeBuff.tm_isdst = -1;
+                  t = timegm(&timeBuff);
+               }
+            }
             if (t == 0)
             {
                time(&t);

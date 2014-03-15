@@ -110,7 +110,30 @@ GeoLocation::GeoLocation(CSCPMessage &msg)
    	m_lon = msg.getFieldAsDouble(VID_LONGITUDE);
 
 	m_accuracy = (int)msg.GetVariableShort(VID_ACCURACY);
-	m_timestamp = (time_t)msg.GetVariableInt64(VID_GEOLOCATION_TIMESTAMP);
+
+   m_timestamp = 0;
+   int ft = msg.getFieldType(VID_GEOLOCATION_TIMESTAMP);
+   if (ft == CSCP_DT_INT64)
+   {
+      m_timestamp = (time_t)msg.GetVariableInt64(VID_GEOLOCATION_TIMESTAMP);
+   }
+   else if (ft == CSCP_DT_INTEGER)
+   {
+      m_timestamp = (time_t)msg.GetVariableLong(VID_GEOLOCATION_TIMESTAMP);
+   }
+   else if (ft == CSCP_DT_STRING)
+   {
+      char ts[256];
+      msg.GetVariableStrA(VID_GEOLOCATION_TIMESTAMP, ts, 256);
+
+      struct tm timeBuff;
+      if (strptime(ts, "%Y/%m/%d %H:%M:%S", &timeBuff) != NULL)
+      {
+         timeBuff.tm_isdst = -1;
+         m_timestamp = timegm(&timeBuff);
+      }
+   }
+
 	posToString(true, m_lat);
 	posToString(false, m_lon);
 	m_isValid = true;
