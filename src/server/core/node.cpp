@@ -5218,11 +5218,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
  */
 void Node::checkSubnetBinding(InterfaceList *pIfList)
 {
-	Subnet *pSubnet;
-	Interface *pInterface;
-	Cluster *pCluster;
-	NetObj **ppUnlinkList;
-	int i, j, count;
+	Cluster *pCluster = NULL;
 
    if (pIfList != NULL)
    {
@@ -5230,12 +5226,12 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 
 	   // Check if we have subnet bindings for all interfaces
 	   DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_szName, m_dwId);
-	   for(i = 0; i < pIfList->getSize(); i++)
+	   for(int i = 0; i < pIfList->getSize(); i++)
 	   {
 		   NX_INTERFACE_INFO *iface = pIfList->get(i);
 		   if (iface->dwIpAddr != 0)
 		   {
-			   pInterface = findInterface(iface->dwIndex, iface->dwIpAddr);
+			   Interface *pInterface = findInterface(iface->dwIndex, iface->dwIpAddr);
 			   if (pInterface == NULL)
 			   {
 				   nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
@@ -5247,7 +5243,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			   // Is cluster interconnect interface?
 			   bool isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : false;
 
-			   pSubnet = FindSubnetForNode(m_zoneId, iface->dwIpAddr);
+			   Subnet *pSubnet = FindSubnetForNode(m_zoneId, iface->dwIpAddr);
 			   if (pSubnet != NULL)
 			   {
 				   if (isSync)
@@ -5293,7 +5289,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
    // to find subnet node primary IP
    if (m_dwIpAddr != 0)
    {
-	   pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+	   Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
       if (pSubnet != NULL)
       {
 		   // Check if node is linked to this subnet
@@ -5313,16 +5309,17 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 	// Check for incorrect parent subnets
 	LockParentList(FALSE);
 	LockChildList(FALSE);
-	ppUnlinkList = (NetObj **)malloc(sizeof(NetObj *) * m_dwParentCount);
-	for(i = 0, count = 0; i < (int)m_dwParentCount; i++)
+   ObjectArray<NetObj> unlinkList(m_dwParentCount, 8, false);
+	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
 		if (m_pParentList[i]->Type() == OBJECT_SUBNET)
 		{
-			pSubnet = (Subnet *)m_pParentList[i];
+			Subnet *pSubnet = (Subnet *)m_pParentList[i];
 			if (pSubnet->IpAddr() == (m_dwIpAddr & pSubnet->getIpNetMask()))
             continue;   // primary IP is in given subnet
 
-			for(j = 0; j < (int)m_dwChildCount; j++)
+         UINT32 j;
+			for(j = 0; j < m_dwChildCount; j++)
 			{
 				if (m_pChildList[j]->Type() == OBJECT_INTERFACE)
 				{
@@ -5335,18 +5332,18 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 						{
 							if (pCluster->isSyncAddr(m_pChildList[j]->IpAddr()))
 							{
-								j = (int)m_dwChildCount;	// Cause to unbind from this subnet
+								j = m_dwChildCount;	// Cause to unbind from this subnet
 							}
 						}
 						break;
 					}
 				}
 			}
-			if (j == (int)m_dwChildCount)
+			if (j == m_dwChildCount)
 			{
 				DbgPrintf(4, _T("Node::CheckSubnetBinding(): Subnet %s [%d] is incorrect for node %s [%d]"),
 							 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
-				ppUnlinkList[count++] = pSubnet;
+            unlinkList.add(pSubnet);
 			}
 		}
 	}
@@ -5354,12 +5351,12 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 	UnlockParentList();
 
 	// Unlink for incorrect subnet objects
-	for(i = 0; i < count; i++)
+   for(int n = 0; n < unlinkList.size(); n++)
 	{
-		ppUnlinkList[i]->DeleteChild(this);
-		DeleteParent(ppUnlinkList[i]);
+      NetObj *o = unlinkList.get(n);
+      o->DeleteChild(this);
+		DeleteParent(o);
 	}
-	safe_free(ppUnlinkList);
 }
 
 /**
