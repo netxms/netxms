@@ -187,8 +187,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy
  */
 Node::~Node()
 {
-	if ((m_driver != NULL) && (m_driverData != NULL))
-		m_driver->destroyDriverData(m_driverData);
+	delete m_driverData;
    MutexDestroy(m_hPollerMutex);
    MutexDestroy(m_hAgentAccessMutex);
    MutexDestroy(m_hSmclpAccessMutex);

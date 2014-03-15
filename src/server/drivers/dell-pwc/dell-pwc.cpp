@@ -72,7 +72,7 @@ bool PowerConnectDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oi
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
+void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
 	attributes->set(_T(".powerConnect.slotSize"), _T("52"));
 }
@@ -83,7 +83,7 @@ void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, S
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);

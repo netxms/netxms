@@ -38,9 +38,9 @@ public:
 
 	virtual int isPotentialDevice(const TCHAR *oid);
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable);
-	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
 };
 
 #endif

@@ -100,7 +100,7 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
 /**
  * Get VLANs 
  */
-VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
 	VlanList *list = new VlanList();
 	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)

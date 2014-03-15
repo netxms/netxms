@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,6 +54,20 @@ void AccessPointInfo::addRadioInterface(RadioInterfaceInfo *iface)
 	RadioInterfaceInfo *r = new RadioInterfaceInfo;
 	memcpy(r, iface, sizeof(RadioInterfaceInfo));
 	m_radioInterfaces->add(r);
+}
+
+/**
+ * Driver data constructor
+ */
+DriverData::DriverData()
+{
+}
+
+/**
+ * Driver data destructor
+ */
+DriverData::~DriverData()
+{
 }
 
 /**
@@ -123,13 +137,15 @@ bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
 /**
  * Do additional checks on the device required by driver.
  * Driver can set device's custom attributes and driver's data from within this method.
- * Driver is responsible for destroying previously created data object.
+ * If driver's data was set on previous call, same pointer will be passed on all subsequent calls.
+ * It is driver's responsibility to destroy existing object if it is to be replaced . One data
+ * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
  *
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  * @param driverData pointer to pointer to driver-specific data
  */
-void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
+void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
 }
 
@@ -232,7 +248,7 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
  * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
    LONG i, iNumIf;
    TCHAR szOid[128], szBuffer[256];
@@ -470,7 +486,7 @@ static UINT32 HandlerVlanEgressPorts(UINT32 version, SNMP_Variable *var, SNMP_Tr
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
 	VlanList *list = new VlanList();
 	
@@ -495,7 +511,7 @@ failure:
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
 	return NDD_ORIENTATION_HORIZONTAL;
 }
@@ -509,19 +525,10 @@ int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
 	layout->numberingScheme = NDD_PN_UNKNOWN;
 	layout->rows = 2;
-}
-
-/**
- * Destroy driver data. Default implementation do nothing.
- *
- * @param driverData driver-specific data previously created in analyzeDevice
- */
-void NetworkDeviceDriver::destroyDriverData(void *driverData)
-{
 }
 
 /**
@@ -543,7 +550,7 @@ bool NetworkDeviceDriver::isPerVlanFdbSupported()
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return cluster mode (one of CLUSTER_MODE_STANDALONE, CLUSTER_MODE_ACTIVE, CLUSTER_MODE_STANDBY)
  */
-int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return CLUSTER_MODE_STANDALONE;
 }
@@ -556,7 +563,7 @@ int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attribu
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return true if device is a wireless controller
  */
-bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return false;
 }
@@ -569,7 +576,7 @@ bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, StringMap *
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of access points
  */
-ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return NULL;
 }
@@ -582,7 +589,7 @@ ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transpor
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of associated wireless stations
  */
-ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return NULL;
 }

@@ -951,7 +951,7 @@ protected:
 	TCHAR *m_lldpNodeId;			// lldpLocChassisId combined with lldpLocChassisIdSubtype, or NULL for non-LLDP nodes
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
 	NetworkDeviceDriver *m_driver;
-	void *m_driverData;
+	DriverData *m_driverData;
    ObjectArray<AgentParameterDefinition> *m_paramList; // List of supported parameters
    ObjectArray<AgentTableDefinition> *m_tableList; // List of supported tables
    time_t m_lastDiscoveryPoll;
@@ -1209,8 +1209,8 @@ public:
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 	int getJobCount(const TCHAR *type = NULL) { return m_jobQueue->getJobCount(type); }
 
-	void *getDriverData() { return m_driverData; }
-	void setDriverData(void *data) { m_driverData = data; }
+	DriverData *getDriverData() { return m_driverData; }
+	void setDriverData(DriverData *data) { m_driverData = data; }
 };
 
 /**

@@ -189,7 +189,7 @@ static UINT32 HandlerAccessPorts(UINT32 version, SNMP_Variable *var, SNMP_Transp
 /**
  * Get VLANs 
  */
-VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
 	VlanList *list = new VlanList();
 	

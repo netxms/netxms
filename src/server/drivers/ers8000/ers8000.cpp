@@ -76,7 +76,7 @@ bool PassportDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
+void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
 	int model = _tcstol(&oid[18], NULL, 10);
 	if ((model == 43) || (model == 44) || (model == 45))	// Passport 1600 series
@@ -100,7 +100,7 @@ void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = AvayaERSDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);

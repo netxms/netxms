@@ -101,7 +101,7 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);

@@ -81,7 +81,7 @@ bool AlliedTelesisDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
  * @param attributes Node's custom attributes
  * @param driverData pointer to pointer to driver-specific data
  */
-void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
+void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
    TCHAR buffer[256];
    if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.1.4.167.81.1.3.0"), NULL, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS)
@@ -96,7 +96,7 @@ void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
    if (ifList != NULL)
@@ -214,7 +214,7 @@ static void ParsePortList(TCHAR *ports, VlanInfo *vlan, UINT32 slot)
 /**
  * Get VLANs 
  */
-VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    VlanList *list = NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
    if ((list != NULL) && (list->getSize() > 0))
