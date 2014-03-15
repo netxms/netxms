@@ -333,8 +333,7 @@ public class Messages extends NLS
 	public String OpenSummaryTablesManager_Error;
 	public String RemoveTemplate_JobError;
 	public String RemoveTemplate_JobTitle;
-	public String SelectAgentParamDlg_CurrentValuePrefix;
-	public String SelectAgentParamDlg_CurrentValueSuffix;
+	public String SelectAgentParamDlg_CurrentValue;
 	public String SelectAgentParamDlg_CurrentValueTitle;
 	public String SelectAgentParamDlg_InstanceMessage;
 	public String SelectAgentParamDlg_InstanceTitle;
@@ -354,6 +353,7 @@ public class Messages extends NLS
 	public String SelectInternalParamDlg_DCI_AvgDCIQueueTime;
 	public String SelectInternalParamDlg_DCI_AvgDCQueue;
 	public String SelectInternalParamDlg_DCI_AvgStatusPollerQueue;
+	public String SelectInternalParamDlg_DCI_TotalEventsProcessed;
 	public String SelectInternalParamDlg_DCI_BatteryLevel;
 	public String SelectInternalParamDlg_DCI_ChildObjectStatus;
 	public String SelectInternalParamDlg_DCI_ConditionStatus;

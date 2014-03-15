@@ -17,7 +17,7 @@
 - Android Console:
 	- Fix bug missing hide notification alarm in status bar 
 	- Implemented "Font size in graph/dashboard sessions" (Feature #240) 
-- Fixed issues: #109, #438, #466, #471, #508
+- Fixed issues: #109, #438, #466, #471, #508, #527
 
 
 *
