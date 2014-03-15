@@ -26,7 +26,7 @@ static void SaveResponse(char *host, UINT32 ip, char *buffer)
    snprintf(fileName, 2048, "%s%s%s-%d",
          g_szFailedDir, FS_PATH_SEPARATOR_A,
          host != NULL ? host : IpToStrA(ip, tmp),
-         now);
+         (int)now);
    FILE *f = fopen(fileName, "wb");
    if (f != NULL)
    {

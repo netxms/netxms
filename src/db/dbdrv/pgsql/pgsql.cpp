@@ -45,7 +45,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 	int outPos;
 	for(outPos = 1; *src != 0; src++)
 	{
-		long chval = *src;
+		UINT32 chval = *src;
 		if (chval < 32)
 		{
 			WCHAR buffer[8];
@@ -107,7 +107,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 	int outPos;
 	for(outPos = 1; *src != 0; src++)
 	{
-		long chval = (long)(*((unsigned char *)src));
+		UINT32 chval = (UINT32)(*((unsigned char *)src));
 		if (chval < 32)
 		{
 			char buffer[8];
