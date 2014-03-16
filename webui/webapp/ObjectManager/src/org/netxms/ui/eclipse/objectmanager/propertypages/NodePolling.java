@@ -262,4 +262,19 @@ public class NodePolling extends PropertyPage
 	{
 		return applyChanges(false);
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
+   @Override
+   protected void performDefaults()
+   {
+      super.performDefaults();
+      pollerNode.setObjectId(0);
+      radioDefault.setSelection(true);
+      radioDisable.setSelection(false);
+      radioEnable.setSelection(false);
+      for(Button b : flagButtons)
+         b.setSelection(false);
+   }
 }
