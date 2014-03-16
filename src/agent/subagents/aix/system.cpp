@@ -230,12 +230,10 @@ static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
 	return FALSE;
 }
 
-
-//
-// Handler for System.LoadAvg parameters
-//
-
-static LONG LoadAvgFromPerflib(const char *arg, char *value)
+/**
+ * Handler for System.LoadAvg parameters
+ */
+LONG H_LoadAvg(const char *param, const char *arg, char *value)
 {
 	LONG rc;
 	perfstat_cpu_total_t info;
@@ -249,34 +247,5 @@ static LONG LoadAvgFromPerflib(const char *arg, char *value)
 	{
 		rc = SYSINFO_RC_ERROR;
 	}
-	return rc;
-}
-
-LONG H_LoadAvg(const char *param, const char *arg, char *value)
-{
-	int kmem;
-	LONG rc = SYSINFO_RC_ERROR;
-	struct nlist nl[] = { (char *)"avenrun" }; 
-	long avenrun[3];
-
-	kmem = open("/dev/kmem", O_RDONLY);
-	if (kmem == -1)
-	{
-		return LoadAvgFromPerflib(arg, value);
-	}
-
-	if (knlist(nl, 1, sizeof(struct nlist)) == 0)
-	{
-		if (nl[0].n_value != NULL)
-		{
-			if (kread(kmem, nl[0].n_value, avenrun, sizeof(avenrun)))
-			{
-				ret_double(value, (double)avenrun[*arg - '0'] / 65536.0);
-				rc = SYSINFO_RC_SUCCESS;
-			}
-		}
-	}	
-
-	close(kmem);
 	return rc;
 }
