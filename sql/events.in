@@ -25,7 +25,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Node added',
 		'Generated when new node object added to the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   1) "Discovered" flag - set to 1 if this node was added by network discovery process'
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(

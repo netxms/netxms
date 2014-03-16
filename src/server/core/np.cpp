@@ -217,7 +217,7 @@ Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags,
 		pNode->configurationPoll(NULL, 0, -1, dwNetMask);
 
    pNode->unhide();
-   PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
+   PostEvent(EVENT_NODE_ADDED, pNode->Id(), "d", (int)(discoveredNode ? 1 : 0));
 
    return pNode;
 }
