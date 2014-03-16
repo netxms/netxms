@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
@@ -153,4 +154,16 @@ public class MapAppearance extends PropertyPage
 	{
 		applyChanges(true);
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
+   @Override
+   protected void performDefaults()
+   {
+      super.performDefaults();
+      image.setImageGuid(NXCommon.EMPTY_GUID, true);
+      if (!(object instanceof NetworkMap))
+         submap.setObjectId(0);
+   }
 }

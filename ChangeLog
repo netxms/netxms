@@ -14,6 +14,7 @@
    - Fixed fail on Web console while picture uplod to image library
    - Macros with alarm data in object tools 
 - Added support for sticky acknowledge in nxalarm tool
+- Fixed bug causing excessive memory usage by AIX agent
 - Android Console:
 	- Fix bug missing hide notification alarm in status bar 
 	- Implemented "Font size in graph/dashboard sessions" (Feature #240) 
