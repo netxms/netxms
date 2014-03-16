@@ -57,17 +57,9 @@ public class ObjectBrowser extends BasePage
       Long id = pageData.get("rootObject", Long.class);
       rootObjectId = (id != null) ? id : 2; 
       viewer.setInput(session.findObjectById(rootObjectId).getChildsAsArray());
+      setTitle(session.getObjectName(rootObjectId));
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.webui.mobile.pages.BasePage#getTitle()
-    */
-   @Override
-   protected String getTitle()
-   {
-      return session.getObjectName(rootObjectId);
-   }
-   
    /**
     * @param object
     */

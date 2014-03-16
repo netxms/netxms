@@ -10,8 +10,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import com.eclipsesource.tabris.ui.PageData;
 
 /**
- * @author Victor
- *
+ * Dashboard page
  */
 public class DashboardPage extends BasePage
 {
@@ -29,15 +28,11 @@ public class DashboardPage extends BasePage
       if (dashboard != null)
       {
          dbc = new DashboardControl(parent, SWT.NONE, dashboard, null, false);
+         setTitle(dashboard.getObjectName());
       }
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.webui.mobile.pages.BasePage#getTitle()
-    */
-   @Override
-   protected String getTitle()
-   {
-      return (dashboard != null) ? dashboard.getObjectName() : "Error";
+      else
+      {
+         setTitle("[" + id + "]");
+      }
    }
 }

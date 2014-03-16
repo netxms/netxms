@@ -14,9 +14,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
-import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.webui.mobile.pages.helpers.AlarmListLabelProvider;
 import com.eclipsesource.tabris.ui.PageData;
@@ -27,7 +25,6 @@ import com.eclipsesource.tabris.ui.PageData;
 public class Alarms extends BasePage
 {
    private Display display;
-   private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
    private NXCListener clientListener = null;
    private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private SortableTableViewer viewer;
@@ -38,6 +35,8 @@ public class Alarms extends BasePage
    @Override
    public void createPageContent(Composite parent, PageData pageData)
    {
+      setTitle("Alarms");
+      
       final String[] names = { "Source", "Message" };
       final int[] widths = { -1, -1 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION);
@@ -122,14 +121,5 @@ public class Alarms extends BasePage
             }
          }
       });
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.webui.mobile.pages.BasePage#getTitle()
-    */
-   @Override
-   protected String getTitle()
-   {
-      return "Alarms";
    }
 }
