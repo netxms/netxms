@@ -3581,34 +3581,48 @@ static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
  */
 static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxRows, const TCHAR *condition)
 {
-	TCHAR query[512];
+	TCHAR query[1024];
 
 	switch(g_nDBSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, 512, _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d, tdata_records_%d rec, tdata_rows_%d r")
-			                       _T(" WHERE d.item_id=? AND rec.record_id=d.record_id AND rec.instance=? AND r.row_id=rec.row_id")
-										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC"),
+			_sntprintf(query, 1024,
+                    _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d")
+                    _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
+                    _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
+                    _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
+                    _T("ORDER BY d.tdata_timestamp DESC"),
 			           (int)maxRows, (int)nodeId, (int)nodeId, (int)nodeId, condition);
 			break;
 		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, 512, _T("SELECT * FROM (SELECT d.tdata_timestamp, r.value FROM tdata_%d d, tdata_records_%d rec, tdata_rows_%d r")
-			                       _T(" WHERE d.item_id=? AND rec.record_id=d.record_id AND rec.instance=? AND r.row_id=rec.row_id")
-										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC) WHERE ROWNUM<=%d"),
+			_sntprintf(query, 1024,
+                    _T("SELECT * FROM (")
+                    _T("   SELECT d.tdata_timestamp, r.value FROM tdata_%d d")
+                    _T("      INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id")
+                    _T("      INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id")
+                    _T("   WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s")
+                    _T("   ORDER BY d.tdata_timestamp DESC)")
+                    _T("WHERE ROWNUM<=%d"),
 			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
 			break;
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
-			_sntprintf(query, 512, _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d, tdata_records_%d rec, tdata_rows_%d r")
-			                       _T(" WHERE d.item_id=? AND rec.record_id=d.record_id AND rec.instance=? AND r.row_id=rec.row_id")
-										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC LIMIT %d"),
+			_sntprintf(query, 1024,
+                    _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d")
+                    _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
+                    _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
+                    _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
+                    _T("ORDER BY d.tdata_timestamp DESC LIMIT %d"),
 			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
 			break;
 		case DB_SYNTAX_DB2:
-			_sntprintf(query, 512, _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d, tdata_records_%d rec, tdata_rows_%d r")
-			                       _T(" WHERE d.item_id=? AND rec.record_id=d.record_id AND rec.instance=? AND r.row_id=rec.row_id")
-										  _T(" AND r.column_id=? %s ORDER BY d.tdata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+			_sntprintf(query, 1024,
+                    _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d")
+                    _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
+                    _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
+                    _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
+                    _T("ORDER BY d.tdata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
 			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
 			break;
 		default:
