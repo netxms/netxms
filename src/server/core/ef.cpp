@@ -32,20 +32,16 @@ BOOL EF_SetupSession(ISCSession *, CSCPMessage *request)
 	return TRUE;
 }
 
-
-//
-// Close event forwarding session
-//
-
+/**
+ * Close event forwarding session
+ */
 void EF_CloseSession(ISCSession *)
 {
 }
 
-
-//
-// Process event forwarding session message
-//
-
+/**
+ * Process event forwarding session message
+ */
 BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *response)
 {
 	int i, numArgs;
