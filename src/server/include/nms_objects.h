@@ -963,6 +963,7 @@ protected:
    time_t m_failTimeAgent;
 	time_t m_downSince;
    time_t m_bootTime;
+   time_t m_agentUpTime;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1136,7 +1137,7 @@ public:
    bool isReadyForDiscoveryPoll();
    bool isReadyForRoutePoll();
    bool isReadyForTopologyPoll();
-   
+
    void lockForStatusPoll();
    void lockForConfigurationPoll();
    void lockForDiscoveryPoll();

@@ -58,6 +58,7 @@ Node::Node() : DataCollectionTarget()
    m_lastRTUpdate = 0;
 	m_downSince = 0;
    m_bootTime = 0;
+   m_agentUpTime = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_hSmclpAccessMutex = MutexCreate();
@@ -134,6 +135,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy
    m_lastRTUpdate = 0;
 	m_downSince = 0;
    m_bootTime = 0;
+   m_agentUpTime = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_hSmclpAccessMutex = MutexCreate();
@@ -1132,6 +1134,7 @@ restart_agent_check:
             m_dwDynamicFlags |= NDF_AGENT_UNREACHABLE;
             PostEventEx(pQueue, EVENT_AGENT_FAIL, m_dwId, NULL);
             m_failTimeAgent = tNow;
+            //cancel file monitoring locally(on agent it is canceled if agent have fallen)
             g_monitoringList.removeDisconectedNode(m_dwId);
          }
       }
@@ -1305,6 +1308,7 @@ restart_agent_check:
 		}
 	}
 
+
    // Get uptime and update boot time
    if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
    {
@@ -1327,6 +1331,33 @@ restart_agent_check:
    else
    {
       m_bootTime = 0;
+   }
+
+   // Get agent uptime to check if it was restared
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   {
+      TCHAR buffer[MAX_RESULT_LENGTH];
+      if (getItemFromAgent(_T("Agent.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      {
+         time_t oldAgentuptime = m_agentUpTime;
+         m_agentUpTime = _tcstol(buffer, NULL, 0);
+         if((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
+         {
+            //cancel file monitoring locally(on agent it is canceled if agent have fallen)
+            g_monitoringList.removeDisconectedNode(m_dwId);
+         }
+      }
+      else
+      {
+         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_szName, m_dwId);
+         g_monitoringList.removeDisconectedNode(m_dwId);
+         m_agentUpTime = 0;
+      }
+   }
+   else
+   {
+      g_monitoringList.removeDisconectedNode(m_dwId);
+      m_agentUpTime = 0;
    }
 
    // Send delayed events and destroy delayed event queue
