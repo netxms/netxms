@@ -8,17 +8,21 @@
 - Added driver for Cisco Small Business switches
 - Improved file retrieve from agent
 - Windows agent: added service list and service table (System.Services)
+- Fixed bug with SQL generation on HPUX
+- Fixd Oracle DB initialization error
 - Management console:
    - Implemented alarm sounds
    - Fixed "broken pipe" errors
    - Fixed fail on Web console while picture uplod to image library
    - Macros with alarm data in object tools 
+   - Adde flag ro manage Immage library acess rights "Manage Immage Library".
+   - Fixed immage upload for web console
 - Added support for sticky acknowledge in nxalarm tool
 - Fixed bug causing excessive memory usage by AIX agent
 - Android Console:
 	- Fix bug missing hide notification alarm in status bar 
 	- Implemented "Font size in graph/dashboard sessions" (Feature #240) 
-- Fixed issues: #109, #438, #462, #466, #471, #508, #527
+- Fixed issues: #109, #425, #428, #438, #462, #466, #471, #493, #507, #508, #527
 
 
 *
