@@ -37,6 +37,7 @@
 //
 
 #define SF_IF_ALL_ZONES 0x00000001
+#define SF_GLOBAL_ZONE  0x00000002
 
 
 //
