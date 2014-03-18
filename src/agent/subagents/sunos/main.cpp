@@ -112,6 +112,18 @@ static BOOL SubAgentInit(Config *config)
    if (!config->parseTemplate(_T("SunOS"), s_cfgTemplate))
       return FALSE;
 
+   // try to determine if we are running in global zone
+   if (access("/dev/dump", F_OK) == 0)
+   {
+      g_flags |= SF_GLOBAL_ZONE;
+      AgentWriteDebugLog(2, _T("SunOS: running in global zone"));
+   }
+   else
+   {
+      g_flags &= ~SF_GLOBAL_ZONE;
+      AgentWriteDebugLog(2, _T("SunOS: running in zone"));
+   }
+
    s_cpuStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
    s_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
    s_kstatLock = MutexCreate();

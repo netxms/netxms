@@ -99,6 +99,55 @@ static BOOL GetInterfaceHWAddr(char *pszIfName, char *pszMacAddr)
 }
 
 /**
+ * Resolve interface index to name. Uses if_indextoname
+ * if agent runs in global zone and custom method otherwise.
+ */
+static BOOL IfIndexToName(int ifIndex, char *ifName)
+{
+   if (g_flags & SF_GLOBAL_ZONE)
+      return if_indextoname(ifIndex, ifName) != NULL;
+
+   char baseIfName[IF_NAMESIZE];
+   if (if_indextoname(ifIndex, baseIfName) == NULL)
+      return FALSE;
+   int baseIfNameLen = (int)strlen(baseIfName);
+
+   struct lifnum ln;
+   struct lifconf lc;
+   BOOL success = FALSE;
+
+   int nFd = socket(AF_INET, SOCK_DGRAM, 0);
+   if (nFd >= 0)
+   {
+      ln.lifn_family = AF_INET;
+      ln.lifn_flags = 0;
+      if (ioctl(nFd, SIOCGLIFNUM, &ln) == 0)
+      {
+         lc.lifc_family = AF_INET;
+         lc.lifc_flags = 0;
+         lc.lifc_len = sizeof(struct lifreq) * ln.lifn_count;
+         lc.lifc_buf = (caddr_t)malloc(lc.lifc_len);
+         if (ioctl(nFd, SIOCGLIFCONF, &lc) == 0)
+         {
+            for (int i = 0; i < ln.lifn_count; i++)
+            {
+               if (!strncmp(baseIfName, lc.lifc_req[i].lifr_name, baseIfNameLen) &&
+                   ((lc.lifc_req[i].lifr_name[baseIfNameLen] == ':') || (lc.lifc_req[i].lifr_name[baseIfNameLen] == 0)))
+               {
+                  strcpy(ifName, lc.lifc_req[i].lifr_name);
+                  success = TRUE;
+                  break;
+               }
+            }
+         }
+         free(lc.lifc_buf);
+      }
+      close(nFd);
+   }
+   return success;
+}
+
+/**
  * Interface list
  */
 LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
@@ -173,7 +222,6 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
                }
             }
          }
-
          free(lc.lifc_buf);
       }
       close(nFd);
@@ -200,7 +248,7 @@ LONG H_NetIfDescription(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
       if (*eptr == 0)
       {
          // It's an index, determine name
-         if (if_indextoname(nIndex, szIfName) == NULL)
+         if (!IfIndexToName(nIndex, szIfName))
          {
             szIfName[0] = 0;
          }
@@ -234,10 +282,10 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
       if (*eptr == 0)
       {
          // It's an index, determine name
-         if (if_indextoname(nIndex, szIfName) == NULL)
+         if (!IfIndexToName(nIndex, szIfName))
          {
             szIfName[0] = 0;
-            AgentWriteDebugLog(5, _T("SunOS: H_NetIfAdminStatus: call to if_indextoname(%d) failed (%s)"), nIndex, _tcserror(errno));
+            AgentWriteDebugLog(5, _T("SunOS: H_NetIfAdminStatus: call to IfIndexToName(%d) failed (%s)"), nIndex, _tcserror(errno));
          }
       }
    }
@@ -288,7 +336,7 @@ LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
       if (*eptr == 0)
       {
          // It's an index, determine name
-         if (if_indextoname(nIndex, szIfName) == NULL)
+         if (!IfIndexToName(nIndex, szIfName))
          {
             szIfName[0] = 0;
          }
@@ -382,7 +430,7 @@ LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
       if (*eptr == 0)
       {
          // It's an index, determine name
-         if (if_indextoname(nIndex, szIfName) == NULL)
+         if (!IfIndexToName(nIndex, szIfName))
          {
             szIfName[0] = 0;
          }
