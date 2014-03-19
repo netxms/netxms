@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if test "x$1" = "xpurge"; then
+	update-rc.d nxagentd remove >/dev/null
+	rm -f /etc/nxagentd.conf
+	rm -f /etc/nxagentd.conf.backup
+	rm -f /etc/nxagentd.conf.sample
+fi
