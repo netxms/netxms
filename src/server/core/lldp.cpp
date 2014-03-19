@@ -162,6 +162,9 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 	newOid[oid->getLength() - 4] = 6;	// lldpRemPortIdSubtype
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
+	newOid[oid->getLength() - 4] = 8;	// lldpRemPortDesc
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
+
 	SNMP_PDU *pRespPDU = NULL;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
@@ -178,6 +181,13 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 			BYTE remoteIfId[1024];
 			size_t remoteIfIdLen = pRespPDU->getVariable(1)->getRawValue(remoteIfId, 1024);
 			Interface *ifRemote = FindRemoteInterface(remoteNode, pRespPDU->getVariable(2)->GetValueAsUInt(), remoteIfId, remoteIfIdLen, nbs);
+         if (ifRemote == NULL)
+         {
+            // Try to find remote interface by description
+            TCHAR *ifDescr = pRespPDU->getVariable(3)->getValueAsString((TCHAR *)remoteIfId, 1024 / sizeof(TCHAR));
+            if (ifDescr != NULL)
+               ifRemote = remoteNode->findInterface(ifDescr);
+         }
 
 			LL_NEIGHBOR_INFO info;
 
