@@ -268,7 +268,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_dwActiveChannels = 0;
 	m_console = NULL;
    m_loginTime = time(NULL);
-   m_musicTypeList.add(_tcsdup(_T("wav")));
+   m_musicTypeList.add(_T("wav"));
 }
 
 /**

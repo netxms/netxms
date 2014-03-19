@@ -212,7 +212,8 @@ Node::~Node()
 	if (m_vlans != NULL)
 		m_vlans->decRefCount();
 	delete m_wirelessStations;
-	delete m_components;
+   if (m_components != NULL)
+      m_components->decRefCount();
 	delete m_lldpLocalPortInfo;
 	delete m_softwarePackages;
 	delete m_winPerfObjects;
