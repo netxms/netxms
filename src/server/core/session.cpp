@@ -3609,7 +3609,7 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
 			_sntprintf(query, 1024,
-                    _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d")
+                    _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d")
                     _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
                     _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
                     _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
@@ -3618,7 +3618,7 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 			break;
 		case DB_SYNTAX_DB2:
 			_sntprintf(query, 1024,
-                    _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d")
+                    _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d")
                     _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
                     _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
                     _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
