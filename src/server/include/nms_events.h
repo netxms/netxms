@@ -88,8 +88,8 @@ public:
    void prepareMessage(CSCPMessage *pMsg);
 
    void expandMessageText();
-   TCHAR *expandText(const TCHAR *szTemplate, const TCHAR *pszAlarmMsg = NULL);
-   static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *szTemplate, const TCHAR *pszAlarmMsg);
+   TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL);
+   static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey);
 
    UINT32 getParametersCount() { return m_parameters.size(); }
    const TCHAR *getParameter(int index) { return (TCHAR *)m_parameters.get(index); }

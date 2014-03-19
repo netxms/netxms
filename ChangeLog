@@ -10,10 +10,10 @@
 - Windows agent: added service list and service table (System.Services)
 - Fixed bug with SQL initialization script generation on HP-UX
 - Fixed Oracle DB initialization error
+- New macro %K (alarm key) in event actions
 - Management console:
    - Implemented alarm sounds
    - Fixed "broken pipe" errors
-   - Fixed errors in web console while uploading images to library
    - Macros with alarm data in object tools 
    - Added option "Manage image library" in user access rights property page
    - Fixed image upload in web console

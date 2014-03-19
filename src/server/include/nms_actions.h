@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_actions.h
+** File: nms_actions.h
 **
 **/
 
@@ -30,7 +30,7 @@
 
 BOOL InitActions();
 void CleanupActions();
-BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg);
+BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, const TCHAR *alarmKey);
 UINT32 CreateNewAction(const TCHAR *pszName, UINT32 *pdwId);
 UINT32 DeleteActionFromDB(UINT32 dwActionId);
 UINT32 ModifyActionFromMessage(CSCPMessage *pMsg);

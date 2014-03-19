@@ -454,7 +454,6 @@ bool EPRule::processEvent(Event *pEvent)
 {
    bool bStopProcessing = false;
    UINT32 i;
-   TCHAR *pszText;
 
    // Check disable flag
    if (!(m_dwFlags & RF_DISABLED))
@@ -472,10 +471,12 @@ bool EPRule::processEvent(Event *pEvent)
          // Event matched, perform actions
          if (m_dwNumActions > 0)
          {
-            pszText = pEvent->expandText(m_szAlarmMessage);
+            TCHAR *alarmMessage = pEvent->expandText(m_szAlarmMessage);
+            TCHAR *alarmKey = pEvent->expandText(m_szAlarmKey);
             for(i = 0; i < m_dwNumActions; i++)
-               ExecuteAction(m_pdwActionList[i], pEvent, pszText);
-            free(pszText);
+               ExecuteAction(m_pdwActionList[i], pEvent, alarmMessage, alarmKey);
+            free(alarmMessage);
+            free(alarmKey);
          }
 
 			// Update situation of needed
@@ -487,7 +488,7 @@ bool EPRule::processEvent(Event *pEvent)
 				pSituation = FindSituationById(m_dwSituationId);
 				if (pSituation != NULL)
 				{
-					pszText = pEvent->expandText(m_szSituationInstance);
+					TCHAR *pszText = pEvent->expandText(m_szSituationInstance);
 					for(i = 0; i < m_situationAttrList.getSize(); i++)
 					{
 						pszAttr = pEvent->expandText(m_situationAttrList.getKeyByIndex(i));

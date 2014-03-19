@@ -5545,16 +5545,16 @@ VlanList *Node::getVlans()
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Node::expandText(const TCHAR *pszTemplate)
+TCHAR *Node::expandText(const TCHAR *textTemplate)
 {
    const TCHAR *pCurr;
    UINT32 dwPos, dwSize;
    TCHAR *pText, scriptName[256];
 	int i;
 
-   dwSize = (UINT32)_tcslen(pszTemplate) + 1;
+   dwSize = (UINT32)_tcslen(textTemplate) + 1;
    pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
-   for(pCurr = pszTemplate, dwPos = 0; *pCurr != 0; pCurr++)
+   for(pCurr = textTemplate, dwPos = 0; *pCurr != 0; pCurr++)
    {
       switch(*pCurr)
       {
@@ -5631,20 +5631,20 @@ TCHAR *Node::expandText(const TCHAR *pszTemplate)
 											_tcscpy(&pText[dwPos], temp);
 											dwPos += (UINT32)_tcslen(temp);
 											DbgPrintf(4, _T("Node::expandText(\"%s\"): Script %s executed successfully"),
-														 pszTemplate, scriptName);
+														 textTemplate, scriptName);
 										}
 									}
 								}
 								else
 								{
 									DbgPrintf(4, _T("Node::expandText(\"%s\"): Script %s execution error: %s"),
-												 pszTemplate, scriptName, script->getErrorText());
+												 textTemplate, scriptName, script->getErrorText());
 									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
 								}
 							}
 							else
 							{
-								DbgPrintf(4, _T("Node::expandText(\"%s\"): Cannot find script %s"), pszTemplate, scriptName);
+								DbgPrintf(4, _T("Node::expandText(\"%s\"): Cannot find script %s"), textTemplate, scriptName);
 							}
 							g_pScriptLibrary->unlock();
 						}

@@ -357,7 +357,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 /**
  * Execute action on specific event
  */
-BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
+BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, const TCHAR *alarmKey)
 {
    static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
 
@@ -381,10 +381,10 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 
          TCHAR *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
 
-         pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
+         pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), alarmMsg, alarmKey);
          StrStrip(pszExpandedData);
 
-         pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, pszAlarmMsg);
+         pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, alarmMsg, alarmKey);
          StrStrip(pszExpandedRcpt);
 
          switch(pAction->iType)
@@ -405,7 +405,7 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                if (pszExpandedRcpt[0] != 0)
                {
                   DbgPrintf(3, _T("*actions* Sending mail to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-                  pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, pszAlarmMsg);
+                  pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, alarmMsg, alarmKey);
 					   curr = pszExpandedRcpt;
 					   do
 					   {

@@ -990,7 +990,7 @@ void NXCORE_EXPORTABLE FastShutdown()
 /**
  * Compare given string to command template with abbreviation possibility
  */
-static bool IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
+static bool IsCommand(const TCHAR *cmdTemplate, TCHAR *pszString, int iMinChars)
 {
 	int i;
 
@@ -998,7 +998,7 @@ static bool IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
 	_tcsupr(pszString);
 
 	for(i = 0; pszString[i] != 0; i++)
-		if (pszString[i] != pszTemplate[i])
+		if (pszString[i] != cmdTemplate[i])
 			return false;
 	if (i < iMinChars)
 		return false;

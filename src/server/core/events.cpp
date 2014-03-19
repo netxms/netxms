@@ -173,15 +173,15 @@ void Event::expandMessageText()
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
+TCHAR *Event::expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey)
 {
-	return Event::expandText(this, m_dwSource, pszTemplate, pszAlarmMsg);
+	return Event::expandText(this, m_dwSource, textTemplate, alarmMsg, alarmKey);
 }
 
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
+TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey)
 {
    const TCHAR *pCurr;
    UINT32 dwPos, dwSize, dwParam;
@@ -192,8 +192,8 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 	int i;
 	uuid_t guid;
 
-	DbgPrintf(8, _T("Event::expandText(event=%p sourceObject=%d template='%s' alarmMsg='%s')"),
-	          event, (int)sourceObject, CHECK_NULL(pszTemplate), CHECK_NULL(pszAlarmMsg));
+	DbgPrintf(8, _T("Event::expandText(event=%p sourceObject=%d template='%s' alarmMsg='%s' alarmKey='%s')"),
+	          event, (int)sourceObject, CHECK_NULL(textTemplate), CHECK_NULL(alarmMsg), CHECK_NULL(alarmKey));
 
    pObject = FindObjectById(sourceId);
    if (pObject == NULL)
@@ -202,9 +202,9 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 		if (pObject == NULL)
 			pObject = g_pEntireNet;
    }
-   dwSize = (UINT32)_tcslen(pszTemplate) + 1;
+   dwSize = (UINT32)_tcslen(textTemplate) + 1;
    pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
-   for(pCurr = pszTemplate, dwPos = 0; *pCurr != 0; pCurr++)
+   for(pCurr = textTemplate, dwPos = 0; *pCurr != 0; pCurr++)
    {
       switch(*pCurr)
       {
@@ -330,12 +330,21 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
                   }
                   break;
                case 'A':   // Associated alarm message
-                  if (pszAlarmMsg != NULL)
+                  if (alarmMsg != NULL)
                   {
-                     dwSize += (UINT32)_tcslen(pszAlarmMsg);
+                     dwSize += (UINT32)_tcslen(alarmMsg);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], pszAlarmMsg);
-                     dwPos += (UINT32)_tcslen(pszAlarmMsg);
+                     _tcscpy(&pText[dwPos], alarmMsg);
+                     dwPos += (UINT32)_tcslen(alarmMsg);
+                  }
+                  break;
+               case 'K':   // Associated alarm key
+                  if (alarmKey != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(alarmKey);
+	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], alarmKey);
+                     dwPos += (UINT32)_tcslen(alarmKey);
                   }
                   break;
                case 'u':	// User tag
@@ -417,8 +426,10 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 								if (pObject->Type() == OBJECT_NODE)
 									script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
 								script->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)) : new NXSL_Value);
-								if (pszAlarmMsg != NULL)
-									script->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(pszAlarmMsg));
+								if (alarmMsg != NULL)
+									script->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(alarmMsg));
+								if (alarmKey != NULL)
+									script->setGlobalVariable(_T("$alarmKey"), new NXSL_Value(alarmKey));
 
 								if (script->run(pEnv, 0, NULL, NULL, NULL, NULL, entryPoint) == 0)
 								{
@@ -433,21 +444,21 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 											_tcscpy(&pText[dwPos], temp);
 											dwPos += (UINT32)_tcslen(temp);
 											DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s executed successfully"),
-												(int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName);
+												(int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName);
 										}
 									}
 								}
 								else
 								{
 									DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
-												 (int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName, script->getErrorText());
+												 (int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName, script->getErrorText());
 									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
 								}
 							}
 							else
 							{
 								DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Cannot find script %s"),
-									(int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName);
+									(int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName);
 							}
 							g_pScriptLibrary->unlock();
 						}

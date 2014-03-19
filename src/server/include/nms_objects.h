@@ -1052,7 +1052,7 @@ public:
    virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(UINT32 dwId);
 
-	TCHAR *expandText(const TCHAR *pszTemplate);
+	TCHAR *expandText(const TCHAR *textTemplate);
 
 	Cluster *getMyCluster();
 
