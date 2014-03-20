@@ -64,6 +64,7 @@ f none /opt/netxms/lib/netxms/ndd/baystack.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/cat2900xl.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/catalyst.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/cisco-esw.ndd 0755 root other
+f none /opt/netxms/lib/netxms/ndd/cisco-sb.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/dell-pwc.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/dlink.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/ers8000.ndd 0755 root other
