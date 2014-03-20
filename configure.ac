@@ -166,6 +166,12 @@ AC_ARG_WITH(mdebug,
 	CPPFLAGS="$CPPFLAGS -DNETXMS_MEMORY_DEBUG"
 ])
 
+AC_ARG_WITH(profiler,
+[AS_HELP_STRING(--with-profiler,link with libprofiler from gperftools)],
+[
+	LDFLAGS="$LDFLAGS -lprofiler"
+])
+
 AC_ARG_WITH(internal-libexpat,
 [AS_HELP_STRING(--with-internal-libexpat,force use of bundled libexpat)],
 [
