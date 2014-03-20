@@ -35,6 +35,8 @@ mkdir netxms-agent/usr/bin
 mkdir netxms-agent/usr/lib
 mkdir netxms-agent/usr/lib/netxms
 mkdir netxms-agent/usr/lib/netxms/dbdrv
+mkdir netxms-agent/var
+mkdir netxms-agent/var/netxms
 cat netxms-agent.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-agent/DEBIAN/control
 cp netxms-agent.preinst netxms-agent/DEBIAN/preinst
 cp netxms-agent.postinst netxms-agent/DEBIAN/postinst
@@ -55,7 +57,7 @@ cp -P /usr/lib/libnsm_* netxms-agent/usr/lib/
 cp -P /usr/lib/libnxddr_sqlite.so* netxms-agent/usr/lib/
 cp -P /usr/lib/libnxmap.so* netxms-agent/usr/lib/
 cp -P /usr/lib/libnxcl.so* netxms-agent/usr/lib/
-cp ../../../contrib/startup/debian/nxagentd netxms-agent/etc/init.d/
+cp ../../../../contrib/startup/debian/nxagentd netxms-agent/etc/init.d/
 chmod 755 netxms-agent/etc/init.d/nxagentd
 
 # netxms-server
@@ -70,8 +72,11 @@ mkdir netxms-server/usr/lib/netxms
 mkdir netxms-server/usr/lib/netxms/ndd
 mkdir netxms-server/usr/share
 mkdir netxms-server/usr/share/netxms
+mkdir netxms-server/usr/share/netxms/images
 mkdir netxms-server/usr/share/netxms/mibs
 mkdir netxms-server/usr/share/netxms/sql
+mkdir netxms-server/var
+mkdir netxms-server/var/netxms
 cat netxms-server.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-server/DEBIAN/control
 cp netxms-server.preinst netxms-server/DEBIAN/preinst
 cp netxms-server.postinst netxms-server/DEBIAN/postinst
@@ -102,7 +107,9 @@ cp -P /usr/lib/libnxsrv.so* netxms-server/usr/lib/
 cp -P /usr/lib/libstrophe.so* netxms-server/usr/lib/
 cp /usr/share/netxms/mibs/*.txt netxms-server/usr/share/netxms/mibs/
 cp /usr/share/netxms/sql/* netxms-server/usr/share/netxms/sql/
-cp ../../../contrib/startup/debian/netxmsd netxms-server/etc/init.d/
+cp ../../../../contrib/startup/debian/netxmsd netxms-server/etc/init.d/
+cp ../../../../images/* netxms-server/usr/share/netxms/images/
+rm -f netxms-server/usr/share/netxms/images/Makefile*
 chmod 755 netxms-server/etc/init.d/netxmsd
 
 # netxms-server-pgsql

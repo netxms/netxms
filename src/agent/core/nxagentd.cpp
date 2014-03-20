@@ -645,7 +645,7 @@ BOOL Initialize()
       }
       else
       {
-         nx_strncpy(g_szDataDirectory, PREFIX _T("/var/netxms"), MAX_PATH);
+         nx_strncpy(g_szDataDirectory, _T("/var/netxms"), MAX_PATH);
       }
    }
 #endif
