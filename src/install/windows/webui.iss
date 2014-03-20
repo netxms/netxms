@@ -1,7 +1,7 @@
 ; Installation script for NetXMS WebUI / Windows
 
 #include "setup-webui.iss"
-OutputBaseFilename=netxms-webui-1.2.12
+OutputBaseFilename=netxms-webui-1.2.13
 
 [Files]
 Source: ..\files\windows\x86\prunsrv.exe; DestDir: "{app}\WebUI"; BeforeInstall: StopAllServices; Flags: ignoreversion; Components: webui
