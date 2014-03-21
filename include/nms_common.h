@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -612,7 +612,11 @@ typedef UINT64 QWORD;   // for compatibility
 #endif
 
 #ifndef MAX_PATH
-#define MAX_PATH 256
+#ifdef PATH_MAX
+#define MAX_PATH PATH_MAX
+#else
+#define MAX_PATH 1024
+#endif
 #endif
 
 // Socket compatibility
