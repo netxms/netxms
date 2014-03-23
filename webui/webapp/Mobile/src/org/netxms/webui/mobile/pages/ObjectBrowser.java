@@ -12,10 +12,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.webui.mobile.pages.helpers.ObjectListLabelProvider;
 import com.eclipsesource.tabris.ui.PageData;
 
@@ -24,9 +22,8 @@ import com.eclipsesource.tabris.ui.PageData;
  */
 public class ObjectBrowser extends BasePage
 {
-   private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-   private long rootObjectId = 2;
-   private TableViewer viewer;
+   protected long rootObjectId = 2;
+   protected TableViewer viewer;
    
    /* (non-Javadoc)
     * @see org.netxms.webui.mobile.pages.BasePage#createPageContent(org.eclipse.swt.widgets.Composite, com.eclipsesource.tabris.ui.PageData)
@@ -53,11 +50,19 @@ public class ObjectBrowser extends BasePage
             handleSelection(o);
          }
       });
-      
-      Long id = pageData.get("rootObject", Long.class);
-      rootObjectId = (id != null) ? id : 2; 
+
+      setRootObject(pageData);
       viewer.setInput(session.findObjectById(rootObjectId).getChildsAsArray());
       setTitle(session.getObjectName(rootObjectId));
+   }
+   
+   /**
+    * @param pageData
+    */
+   protected void setRootObject(PageData pageData)
+   {
+      Long id = pageData.get("rootObject", Long.class);
+      rootObjectId = (id != null) ? id : 2; 
    }
 
    /**

@@ -285,6 +285,8 @@ public class LoginJob implements IRunnableWithProgress
          while(true)
          {
             final Session session = (Session)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
+            if (session == null)
+               break;
             try
             {
                Thread.sleep(1000 * 60); // send keep-alive every 60 seconds

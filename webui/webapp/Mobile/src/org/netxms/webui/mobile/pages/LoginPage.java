@@ -93,7 +93,7 @@ public class LoginPage extends AbstractPage
     * "OK" button handler
     */
    private void okPressed()
-   {
+   {      
       LoginJob job = new LoginJob(Display.getCurrent(), "127.0.0.1", login.getText(), false, false);
       job.setPassword(password.getText());
       
@@ -124,13 +124,20 @@ public class LoginPage extends AbstractPage
    {
       UIConfiguration uiConfiguration = getUIConfiguration();
       
+      getUI().getConfiguration();
+      
       PageConfiguration page = new PageConfiguration("page.alarms", Alarms.class);
       page.setTitle("Alarms");
       page.setTopLevel(true);
       uiConfiguration.addPageConfiguration(page);
       
-      page = new PageConfiguration("page.objectBrowser", ObjectBrowser.class);
-      page.setTitle("Object Browser");
+      page = new PageConfiguration("page.infrastructureServices", InfrastructureServices.class);
+      page.setTitle("Infrastructure Services");
+      page.setTopLevel(true);
+      uiConfiguration.addPageConfiguration(page);
+      
+      page = new PageConfiguration("page.dashboards", Dashboards.class);
+      page.setTitle("Dashboards");
       page.setTopLevel(true);
       uiConfiguration.addPageConfiguration(page);
       
@@ -139,10 +146,6 @@ public class LoginPage extends AbstractPage
       page.setTopLevel(true);
       uiConfiguration.addPageConfiguration(page);
       
-      page = new PageConfiguration("page.dashboard", DashboardPage.class);
-      page.setTitle("Dashboard");
-      uiConfiguration.addPageConfiguration(page);
-
       openPage("page.alarms");
       
       uiConfiguration.removePageConfiguration("page.login");      
