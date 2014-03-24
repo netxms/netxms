@@ -390,6 +390,7 @@ public:
 
    void addAll(StringSet *src);
    void addAll(TCHAR **strings, int count);
+   void addAllPreallocated(TCHAR **strings, int count);
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 
    void fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId);

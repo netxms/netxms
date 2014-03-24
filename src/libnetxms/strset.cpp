@@ -169,6 +169,16 @@ void StringSet::addAll(TCHAR **strings, int count)
 }
 
 /**
+ * Add all entries from TCHAR pointer arrays. Takes ownership of pre-allocated strings.
+ */
+void StringSet::addAllPreallocated(TCHAR **strings, int count)
+{
+   for(int i = 0; i < count; i++)
+      if (strings[i] != NULL)
+         addPreallocated(strings[i]);
+}
+
+/**
  * Fill NXCP message with string set data
  *
  * @param msg NXCP message
