@@ -40,6 +40,10 @@ public class Messages extends NLS
 	public static String AddGroupBoxDialog_Height;
 	public static String AddGroupBoxDialog_Title;
 	public static String AddGroupBoxDialog_Width;
+   public static String ClusterResourceListLabelProvider_None;
+   public static String ClusterTab_Owner;
+   public static String ClusterTab_Resource;
+   public static String ClusterTab_VirtualIP;
 	public static String CreateMapGroup_DialogTitle;
 	public static String CreateMapGroup_JobError;
 	public static String CreateMapGroup_JobName;

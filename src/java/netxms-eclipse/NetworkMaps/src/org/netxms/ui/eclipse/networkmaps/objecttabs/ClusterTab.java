@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectview.objecttabs;
+package org.netxms.ui.eclipse.networkmaps.objecttabs;
 
 import java.util.List;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -28,14 +28,15 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapResource;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.ui.eclipse.networkmaps.Messages;
+import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceListComparator;
+import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceListLabelProvider;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
-import org.netxms.ui.eclipse.objectview.Messages;
-import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ClusterResourceListComparator;
-import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ClusterResourceListLabelProvider;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**

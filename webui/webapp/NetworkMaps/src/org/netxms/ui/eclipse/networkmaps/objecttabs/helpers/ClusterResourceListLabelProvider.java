@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectview.objecttabs.helpers;
+package org.netxms.ui.eclipse.networkmaps.objecttabs.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -26,8 +26,8 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.objectview.Messages;
-import org.netxms.ui.eclipse.objectview.objecttabs.ClusterTab;
+import org.netxms.ui.eclipse.networkmaps.Messages;
+import org.netxms.ui.eclipse.networkmaps.objecttabs.ClusterTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**

@@ -75,6 +75,17 @@
    </extension>
 
    <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.networkmaps.objecttabs.ClusterTab"
+            icon="icons/cluster.png"
+            id="org.netxms.ui.eclipse.networkmaps.objecttabs.ClusterTab"
+            name="%tab.name.Cluster"
+            order="15">
+      </tab>
+   </extension>
+
+   <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.Node"

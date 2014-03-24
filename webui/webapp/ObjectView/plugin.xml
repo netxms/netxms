@@ -65,13 +65,6 @@
             order="10">
       </tab>
       <tab
-            class="org.netxms.ui.eclipse.objectview.objecttabs.ClusterTab"
-            icon="icons/cluster.png"
-            id="org.netxms.ui.eclipse.objectview.objecttabs.ClusterTab"
-            name="%tab.name.Cluster"
-            order="15">
-      </tab>
-      <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
             icon="icons/components.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
