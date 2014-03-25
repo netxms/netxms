@@ -486,7 +486,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 	}
 
 	// Check 802.1x state
-	if ((pNode->getFlags() & NF_IS_8021X) && isPhysicalPort())
+	if ((pNode->getFlags() & NF_IS_8021X) && isPhysicalPort() && (snmpTransport != NULL))
 	{
 		DbgPrintf(5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->Name(), m_szName);
 		paeStatusPoll(session, rqId, snmpTransport, pNode);

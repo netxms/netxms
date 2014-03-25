@@ -848,8 +848,8 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 	Node *node = (Node*)obj->getData();
 	if (node != NULL)
 	{
-		SNMP_Transport *trans = node->createSnmpTransport();
-		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslSnmpTransportClass, trans));
+		SNMP_Transport *t = node->createSnmpTransport();
+      *ppResult = (t != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslSnmpTransportClass, t)) : new NXSL_Value;
 	}
 	else
 	{

@@ -1056,43 +1056,47 @@ restart_agent_check:
 
       DbgPrintf(6, _T("StatusPoll(%s): check SNMP"), m_szName);
 		pTransport = createSnmpTransport();
-		if (pTransport == NULL)
-	      DbgPrintf(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_szName);
-
-      SetPollerInfo(nPoller, _T("check SNMP"));
-      sendPollerMsg(dwRqId, _T("Checking SNMP agent connectivity\r\n"));
-		dwResult = SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0);
-      if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
+		if (pTransport != NULL)
       {
-         if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
+         SetPollerInfo(nPoller, _T("check SNMP"));
+         sendPollerMsg(dwRqId, _T("Checking SNMP agent connectivity\r\n"));
+		   dwResult = SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0);
+         if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
          {
-            m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-            PostEventEx(pQueue, EVENT_SNMP_OK, m_dwId, NULL);
-            sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
-         }
-      }
-      else
-      {
-         sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
-         if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
-         {
-            if ((tNow > m_failTimeSNMP + tExpire) &&
-                (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
+            if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
             {
-               m_dwFlags &= ~NF_IS_SNMP;
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-               m_szObjectId[0] = 0;
-               sendPollerMsg(dwRqId, POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
+               PostEventEx(pQueue, EVENT_SNMP_OK, m_dwId, NULL);
+               sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
             }
          }
          else
          {
-            m_dwDynamicFlags |= NDF_SNMP_UNREACHABLE;
-            PostEventEx(pQueue, EVENT_SNMP_FAIL, m_dwId, NULL);
-            m_failTimeSNMP = tNow;
+            sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
+            if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
+            {
+               if ((tNow > m_failTimeSNMP + tExpire) &&
+                   (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
+               {
+                  m_dwFlags &= ~NF_IS_SNMP;
+                  m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
+                  m_szObjectId[0] = 0;
+                  sendPollerMsg(dwRqId, POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
+               }
+            }
+            else
+            {
+               m_dwDynamicFlags |= NDF_SNMP_UNREACHABLE;
+               PostEventEx(pQueue, EVENT_SNMP_FAIL, m_dwId, NULL);
+               m_failTimeSNMP = tNow;
+            }
          }
+		   delete pTransport;
       }
-		delete pTransport;
+      else
+      {
+	      DbgPrintf(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_szName);
+      }
       DbgPrintf(6, _T("StatusPoll(%s): SNMP check finished"), m_szName);
    }
 
