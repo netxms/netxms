@@ -80,11 +80,9 @@ int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
    return nRet;
 }
 
-
-//
-// Calculates x raised to the power of y
-//
-
+/**
+ * Calculates x raised to the power of y
+ */
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -101,11 +99,9 @@ int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
    return nRet;
 }
 
-
-//
-// Calculates natural logarithm
-//
-
+/**
+ * Calculates natural logarithm
+ */
 int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -122,11 +118,9 @@ int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
    return nRet;
 }
 
-
-//
-// Calculates common logarithm
-//
-
+/**
+ * Calculates common logarithm
+ */
 int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -143,11 +137,9 @@ int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
    return nRet;
 }
 
-
-//
-// Calculates x raised to the power of e
-//
-
+/**
+ * Calculates x raised to the power of e
+ */
 int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -164,11 +156,9 @@ int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
    return nRet;
 }
 
-
-//
-// Convert string to uppercase
-//
-
+/**
+ * Convert string to uppercase
+ */
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -190,11 +180,9 @@ int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
    return nRet;
 }
 
-
-//
-// Convert string to lowercase
-//
-
+/**
+ * Convert string to lowercase
+ */
 int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -216,11 +204,9 @@ int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
    return nRet;
 }
 
-
-//
-// String length
-//
-
+/**
+ * String length
+ */
 int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -239,11 +225,9 @@ int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
    return nRet;
 }
 
-
-//
-// Minimal value from the list of values
-//
-
+/**
+ * Minimal value from the list of values
+ */
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int i;
@@ -265,11 +249,9 @@ int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
    return 0;
 }
 
-
-//
-// Maximal value from the list of values
-//
-
+/**
+ * Maximal value from the list of values
+ */
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int i;
@@ -291,11 +273,9 @@ int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
    return 0;
 }
 
-
-//
-// Check if IP address is within given range
-//
-
+/**
+ * Check if IP address is within given range
+ */
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -316,11 +296,9 @@ int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Progr
    return nRet;
 }
 
-
-//
-// Check if IP address is within given subnet
-//
-
+/**
+ * Check if IP address is within given subnet
+ */
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -1137,5 +1115,39 @@ int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
 	_sntprintf(format, 32, _T("%%%d.%df"), width, precision);
 	_sntprintf(buffer, 64, format, argv[0]->getValueAsReal());
 	*ppResult = new NXSL_Value(buffer);
+	return 0;
+}
+
+/**
+ * NXSL function: inList
+ * 
+ * inList(string, separator, value)
+ *
+ * Check if given value is one of the values in given list using separator.
+ *
+ * Examples:
+ *   inList("1,2,3", ",", "1") -> true
+ *   inList("ab|cd|ef", "|", "test") -> false
+ */
+int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   bool result = false;
+   if ((argv[0]->getValueAsCString()[0] != 0) && (argv[1]->getValueAsCString()[0] != 0) && (argv[2]->getValueAsCString()[0] != 0))
+   {
+      const TCHAR *value = argv[2]->getValueAsCString();
+      int count;
+      TCHAR **strings = SplitString(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()[0], &count);
+      for(int i = 0; i < count; i++)
+      {
+         if (!_tcscmp(strings[i], value))
+            result = true;
+         free(strings[i]);
+      }
+      free(strings);
+   }
+   *ppResult = new NXSL_Value(result ? 1 : 0);
 	return 0;
 }

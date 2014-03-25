@@ -37,6 +37,7 @@ int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
 int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -84,6 +85,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("format"), F_format, -1 },
    { _T("gmtime"), F_gmtime, -1 },
    { _T("index"), F_index, -1 },
+   { _T("inList"), F_inList, 3 },
    { _T("left"), F_left, -1 },
    { _T("length"), F_length, 1 },
    { _T("localtime"), F_localtime, -1 },
