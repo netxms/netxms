@@ -3,6 +3,9 @@
 *
 
 - New NXSL function inList
+- New methods in NXSL class Node: enableAgent, enableConfigurationPoll,
+  enableIcmp, enableSnmp, enableStatusPoll, enableTopologyPoll
+- Fixed server crash if SNMP proxy unavailable
 
 
 *
