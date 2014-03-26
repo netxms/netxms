@@ -671,10 +671,7 @@ NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass() : NXSL_Class()
 NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
 	NXSL_Value *value = NULL;
-	SNMP_Variable *t;
-	TCHAR strValue[1024];
-
-	t = (SNMP_Variable *)object->getData();
+	SNMP_Variable *t = (SNMP_Variable *)object->getData();
 	if (!_tcscmp(attr, _T("type")))
 	{
 		value = new NXSL_Value((UINT32)t->GetType());
@@ -685,21 +682,25 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	}
 	else if (!_tcscmp(attr, _T("value")))
 	{
+   	TCHAR strValue[1024];
 		value = new NXSL_Value(t->getValueAsString(strValue, 1024));
 	}
 	else if (!_tcscmp(attr, _T("printableValue")))
 	{
+   	TCHAR strValue[1024];
 		bool convToHex = true;
 		t->getValueAsPrintableString(strValue, 1024, &convToHex);
 		value = new NXSL_Value(strValue);
 	}
 	else if (!_tcscmp(attr, _T("valueAsIp")))
 	{
+   	TCHAR strValue[128];
 		t->GetValueAsIPAddr(strValue);
 		value = new NXSL_Value(strValue);
 	}
 	else if (!_tcscmp(attr, _T("valueAsMac")))
 	{
+   	TCHAR strValue[128];
 		t->GetValueAsMACAddr(strValue);
 		value = new NXSL_Value(strValue);
 	}

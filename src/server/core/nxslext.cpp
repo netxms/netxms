@@ -902,6 +902,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
       {
          SNMP_Variable *pVar = rspPDU->getVariable(0);
 		   *ppResult = new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, pVar));
+         rspPDU->unlinkVariables();
 	   }
       else
       {

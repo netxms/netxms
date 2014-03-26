@@ -51,11 +51,9 @@ SNMP_Variable::SNMP_Variable(const TCHAR *pszName)
    free(pdwOid);
 }
 
-
-//
-// Create variable of ASN_NULL type
-//
-
+/**
+ * Create variable of ASN_NULL type
+ */
 SNMP_Variable::SNMP_Variable(UINT32 *pdwName, UINT32 dwNameLen)
 {
    m_pValue = NULL;
@@ -64,22 +62,18 @@ SNMP_Variable::SNMP_Variable(UINT32 *pdwName, UINT32 dwNameLen)
    m_pName = new SNMP_ObjectId(dwNameLen, pdwName);
 }
 
-
-//
-// SNMP_Variable destructor
-//
-
+/**
+ * SNMP_Variable destructor
+ */
 SNMP_Variable::~SNMP_Variable()
 {
    delete m_pName;
    safe_free(m_pValue);
 }
 
-
-//
-// Parse variable record in PDU
-//
-
+/**
+ * Parse variable record in PDU
+ */
 BOOL SNMP_Variable::Parse(BYTE *pData, UINT32 dwVarLength)
 {
    BYTE *pbCurrPos;

@@ -41,9 +41,14 @@ SNMP_ObjectId::SNMP_ObjectId(SNMP_ObjectId *src)
    m_dwLength = src->m_dwLength;
    m_pdwValue = (UINT32 *)nx_memdup(src->m_pdwValue, sizeof(UINT32) * m_dwLength);
    if (src->m_pszTextValue != NULL)
+   {
       m_pszTextValue = _tcsdup(src->m_pszTextValue);
+   }
    else
+   {
+      m_pszTextValue = NULL;
       convertToText();
+   }
 }
 
 /**
