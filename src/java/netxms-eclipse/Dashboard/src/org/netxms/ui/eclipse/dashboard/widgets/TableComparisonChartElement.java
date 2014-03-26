@@ -152,14 +152,14 @@ public abstract class TableComparisonChartElement extends ElementWidget
 		boolean rebuild = false;
 		for(int i = 0; i < data.getRowCount(); i++)
 		{
-			String instance = data.getCell(i, icIndex);
+			String instance = data.getCellValue(i, icIndex);
 			if (instance == null)
 				continue;
 
 			double value;
 			try
 			{
-				value = Double.parseDouble(data.getCell(i, dcIndex));
+				value = Double.parseDouble(data.getCellValue(i, dcIndex));
 			}
 			catch(NumberFormatException e)
 			{

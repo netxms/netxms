@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,13 @@
  */
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
-import java.util.List;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.TableRow;
 
 /**
  * Label provider for NetXMS table
- *
  */
 public class TableLabelProvider extends LabelProvider implements ITableLabelProvider
 {
@@ -41,15 +40,14 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		List<String> row = (List<String>)element;
+		TableRow row = (TableRow)element;
 		
 		if (columnIndex >= row.size())
 			return null;
 		
-		return row.get(columnIndex);
+		return row.get(columnIndex).getValue();
 	}
 }

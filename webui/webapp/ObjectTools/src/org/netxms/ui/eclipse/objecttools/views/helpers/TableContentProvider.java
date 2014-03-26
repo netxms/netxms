@@ -9,7 +9,6 @@ import org.netxms.client.Table;
 
 /**
  * Content provider for NetXMS table viewer
- *
  */
 public class TableContentProvider implements IStructuredContentProvider
 {

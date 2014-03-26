@@ -20,8 +20,6 @@ package org.netxms.client;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
@@ -74,8 +72,8 @@ public class LogTest extends SessionTest
 		final Table data = log.retrieveData(0, 15);
 		for(int i = 0; i < data.getRowCount(); i++)
 		{
-			List<String> row = data.getRow(i);
-			System.out.println("ROW " + i + ": (" + row.get(0) + ") " + row.get(5));
+			TableRow row = data.getRow(i);
+			System.out.println("ROW " + i + ": (" + row.get(0).getValue() + ") " + row.get(5).getValue());
 		}
 		
 		log.close();
