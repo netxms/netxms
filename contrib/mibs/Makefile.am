@@ -140,6 +140,7 @@ mibs_DATA = \
 	FOUNDRY-SN-SWITCH-GROUP-MIB.txt \
 	FOUNDRY-SN-TRAP-MIB.txt \
 	FOUNDRY-SN-VSRP-MIB.txt \
+	FROGFOOT-RESOURCES-MIB.txt \
 	HCNUM-TC.txt \
 	HOST-RESOURCES-MIB.txt \
 	HOST-RESOURCES-TYPES.txt \
@@ -215,6 +216,7 @@ mibs_DATA = \
 	Mac-Based-Authentication-MIB.txt \
 	MAU-MIB.txt \
 	MCAST-SNOOPING-MIB.txt \
+	MIKROTIK-MIB.txt \
 	MLD-SNOOPING-MIB.txt \
 	MSSQLSERVER-MIB.txt \
 	MSTP-MIB.txt \
