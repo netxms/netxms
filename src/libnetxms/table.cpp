@@ -196,13 +196,20 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
    id = VID_TABLE_DATA_BASE;
 	for(int row = offset; row < stopRow; row++)
 	{
+      TableRow *r = m_data->get(row);
+      if (m_extendedFormat)
+      {
+			msg.SetVariable(id++, r->getObjectId());
+         id += 9;
+      }
 		for(int col = 0; col < m_columns->size(); col++) 
 		{
-			const TCHAR *tmp = m_data->get(row)->getValue(col);
+			const TCHAR *tmp = r->getValue(col);
 			msg.SetVariable(id++, CHECK_NULL_EX(tmp));
          if (m_extendedFormat)
          {
-            msg.SetVariable(id++, (UINT16)m_data->get(row)->getStatus(col));
+            msg.SetVariable(id++, (UINT16)r->getStatus(col));
+            id += 8;
          }
 		}
 	}

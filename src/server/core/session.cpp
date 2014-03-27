@@ -12710,6 +12710,7 @@ void ClientSession::querySummaryTable(CSCPMessage *request)
                                       m_dwUserId, &rcc);
    if (result != NULL)
    {
+      debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       result->fillMessage(msg, 0, -1);
       delete result;

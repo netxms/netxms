@@ -352,6 +352,7 @@ public:
 	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
 	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
 	bool hasActiveThreshold();
+   int getThresholdSeverity();
 	WORD getInstanceDiscoveryMethod() { return m_instanceDiscoveryMethod; }
 	const TCHAR *getInstanceDiscoveryData() { return m_instanceDiscoveryData; }
 	NXSL_Program *getInstanceFilter() { return m_instanceFilter; }

@@ -265,6 +265,7 @@ Table *SummaryTable::createEmptyResultTable()
 {
    Table *result = new Table();
    result->setTitle(m_title);
+   result->setExtendedFormat(true);
    result->addColumn(_T("Node"), DCI_DT_STRING);
    for(int i = 0; i < m_columns->size(); i++)
    {

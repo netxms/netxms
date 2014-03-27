@@ -524,9 +524,11 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
             {
                tableData->addRow();
                tableData->set(0, m_szName);
+               tableData->setObjectId(tableData->getNumRows() - 1, m_dwId);
                rowAdded = true;
             }
             tableData->set(i + 1, ((DCItem *)object)->getLastValue());
+            tableData->setStatus(i + 1, ((DCItem *)object)->getThresholdSeverity());
             tableData->getColumnDefinitions()->get(i + 1)->setDataType(((DCItem *)object)->getDataType());
          }
       }

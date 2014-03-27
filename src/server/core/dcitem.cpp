@@ -1592,6 +1592,26 @@ bool DCItem::hasActiveThreshold()
 }
 
 /**
+ * Get severity of active threshold. If no active threshold exist, returns SEVERITY_NORMAL.
+ */
+int DCItem::getThresholdSeverity()
+{
+   int result = SEVERITY_NORMAL;
+	lock();
+	for(int i = 0; i < getThresholdCount(); i++)
+	{
+      Threshold *t = m_thresholds->get(i);
+		if (t->isReached())
+		{
+			result = t->getCurrentSeverity();
+			break;
+		}
+	}
+	unlock();
+	return result;
+}
+
+/**
  * Returns true if internal cache is loaded. If data collection object
  * does not have cache should return true
  */

@@ -7,6 +7,8 @@
   enableIcmp, enableSnmp, enableStatusPoll, enableTopologyPoll
 - Fixed server crash if SNMP proxy unavailable
 - New MIBs: FROGFOOT-RESOURCES-MIB, MIKROTIK-MIB
+- Management console:
+   - Colored background for DCIs with active thresholds in DCI summary tables
 
 
 *

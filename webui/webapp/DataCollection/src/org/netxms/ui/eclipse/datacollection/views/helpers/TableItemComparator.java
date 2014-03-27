@@ -18,10 +18,10 @@
  */
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
-import java.util.List;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.TableRow;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -43,15 +43,14 @@ public class TableItemComparator extends ViewerComparator
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		final int format = (column < formats.length) ? formats[column] : DataCollectionItem.DT_STRING;
 		
-		final String value1 = ((List<String>)e1).get(column);
-		final String value2 = ((List<String>)e2).get(column);
+		final String value1 = ((TableRow)e1).get(column).getValue();
+		final String value2 = ((TableRow)e2).get(column).getValue();
 		
 		int result;
 		switch(format)

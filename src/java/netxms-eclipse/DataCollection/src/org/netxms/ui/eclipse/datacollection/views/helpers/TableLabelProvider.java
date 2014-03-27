@@ -18,15 +18,19 @@
  */
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
+import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.TableCell;
 import org.netxms.client.TableRow;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * Label provider for NetXMS table
  */
-public class TableLabelProvider extends LabelProvider implements ITableLabelProvider
+public class TableLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -50,4 +54,28 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		
 		return row.get(columnIndex).getValue();
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
+   @Override
+   public Color getForeground(Object element, int columnIndex)
+   {
+      return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
+   @Override
+   public Color getBackground(Object element, int columnIndex)
+   {
+      TableRow row = (TableRow)element;
+      
+      if (columnIndex >= row.size())
+         return null;
+      
+      TableCell cell = row.get(columnIndex);
+      return (cell.getStatus() > 0) ? StatusDisplayInfo.getStatusColor(cell.getStatus()) : null;
+   }
 }
