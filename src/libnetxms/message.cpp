@@ -510,6 +510,15 @@ void *CSCPMessage::get(UINT32 fieldId, BYTE type)
 }
 
 /**
+ * get 16 bit field as boolean
+ */
+bool CSCPMessage::getFieldAsBoolean(UINT32 fieldId)
+{
+   char *value = (char *)get(fieldId, CSCP_DT_INT16);
+   return (value != NULL) ? (*((INT16 *)value) ? true : false) : false;
+}
+
+/**
  * Get data type of message field.
  *
  * @return field type or -1 if field with given ID does not exist

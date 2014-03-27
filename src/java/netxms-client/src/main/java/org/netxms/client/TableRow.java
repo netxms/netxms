@@ -28,6 +28,7 @@ import org.netxms.base.NXCPMessage;
 public class TableRow
 {
    private List<TableCell> cells;
+   private long objectId;
    
    /**
     * Create new row
@@ -36,6 +37,7 @@ public class TableRow
     */
    public TableRow(int rowCount)
    {
+      objectId = 0;
       cells = new ArrayList<TableCell>(rowCount);
       for(int i = 0; i < rowCount; i++)
          cells.add(new TableCell(""));
@@ -48,6 +50,7 @@ public class TableRow
     */
    public TableRow(TableRow src)
    {
+      objectId = src.objectId;
       cells = new ArrayList<TableCell>(src.cells.size());
       for(int i = 0; i < src.cells.size(); i++)
          cells.add(new TableCell(src.get(i)));
@@ -76,11 +79,39 @@ public class TableRow
     * @param baseId
     * @return
     */
-   public long fillMessage(final NXCPMessage msg, long baseId)
+   public long fillMessage(final NXCPMessage msg, long baseId, boolean extendedFormat)
    {
       long varId = baseId;
+      if (extendedFormat)
+      {
+         msg.setVariableInt32(varId++, (int)objectId);
+         varId += 9;
+      }
       for(TableCell c : cells)
+      {
          msg.setVariable(varId++, c.getValue());
+         if (extendedFormat)
+         {
+            msg.setVariableInt16(varId++, c.getStatus());
+            varId += 8;
+         }
+      }
       return varId;
+   }
+
+   /**
+    * @return the objectId
+    */
+   public long getObjectId()
+   {
+      return objectId;
+   }
+
+   /**
+    * @param objectId the objectId to set
+    */
+   public void setObjectId(long objectId)
+   {
+      this.objectId = objectId;
    }
 }

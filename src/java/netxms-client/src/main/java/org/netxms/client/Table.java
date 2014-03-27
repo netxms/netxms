@@ -34,6 +34,7 @@ public class Table
 	private String title;
 	private List<TableColumnDefinition> columns;
 	private List<TableRow> data;
+	private boolean extendedFormat;
 
 	/**
 	 * Create empty table
@@ -44,6 +45,7 @@ public class Table
 		source = DataCollectionObject.AGENT;
 		columns = new ArrayList<TableColumnDefinition>(0);
 		data = new ArrayList<TableRow>(0);
+		extendedFormat = false;
 	}
 
 	/**
@@ -67,18 +69,24 @@ public class Table
 		final int totalRowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
 		data = new ArrayList<TableRow>(totalRowCount);
 
-		final boolean extendedFormat = msg.getVariableAsBoolean(NXCPCodes.VID_TABLE_EXTENDED_FORMAT);
+		extendedFormat = msg.getVariableAsBoolean(NXCPCodes.VID_TABLE_EXTENDED_FORMAT);
 		final int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ROWS);
 		varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{
 			final TableRow row = new TableRow(columnCount);
+			if (extendedFormat)
+			{
+			   row.setObjectId(msg.getVariableAsInt64(varId++));
+			   varId += 9;
+			}
 			for(int j = 0; j < columnCount; j++)
 			{
             row.get(j).setValue(msg.getVariableAsString(varId++));
 			   if (extendedFormat)
 			   {
 	            row.get(j).setStatus(msg.getVariableAsInteger(varId++));
+	            varId += 8;
 			   }
 			}
 			data.add(row);
@@ -91,18 +99,23 @@ public class Table
 	 */
 	public void addDataFromMessage(final NXCPMessage msg)
 	{
-      final boolean extendedFormat = msg.getVariableAsBoolean(NXCPCodes.VID_TABLE_EXTENDED_FORMAT);
 		final int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ROWS);
 		long varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{
 			final TableRow row = new TableRow(columns.size());
+         if (extendedFormat)
+         {
+            row.setObjectId(msg.getVariableAsInt64(varId++));
+            varId += 9;
+         }
          for(int j = 0; j < columns.size(); j++)
          {
              row.get(j).setValue(msg.getVariableAsString(varId++));
              if (extendedFormat)
              {
                 row.get(j).setStatus(msg.getVariableAsInteger(varId++));
+                varId += 8;
              }
          }
 			data.add(row);
@@ -117,6 +130,7 @@ public class Table
 	public void fillMessage(final NXCPMessage msg)
 	{
 		msg.setVariable(NXCPCodes.VID_TABLE_TITLE, title);
+		msg.setVariableInt16(NXCPCodes.VID_TABLE_EXTENDED_FORMAT, extendedFormat ? 1 : 0);
 		
 		msg.setVariableInt32(NXCPCodes.VID_TABLE_NUM_COLS, columns.size());
 		long varId = NXCPCodes.VID_TABLE_COLUMN_INFO_BASE;
@@ -130,7 +144,7 @@ public class Table
 		varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < data.size(); i++)
 		{
-			varId = data.get(i).fillMessage(msg, varId);
+			varId = data.get(i).fillMessage(msg, varId, extendedFormat);
 		}
 	}
 
@@ -377,4 +391,20 @@ public class Table
 			types[i] = columns.get(i).getDataType();
 		return types;
 	}
+
+   /**
+    * @return the extendedFormat
+    */
+   public boolean isExtendedFormat()
+   {
+      return extendedFormat;
+   }
+
+   /**
+    * @param extendedFormat the extendedFormat to set
+    */
+   public void setExtendedFormat(boolean extendedFormat)
+   {
+      this.extendedFormat = extendedFormat;
+   }
 }

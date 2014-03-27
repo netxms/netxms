@@ -108,6 +108,7 @@ public:
    INT32 getFieldAsInt32(UINT32 fieldId);
    INT64 getFieldAsInt64(UINT32 fieldId);
    double getFieldAsDouble(UINT32 fieldId);
+   bool getFieldAsBoolean(UINT32 fieldId);
 
    UINT32 GetVariableLong(UINT32 dwVarId);
    UINT64 GetVariableInt64(UINT32 dwVarId);

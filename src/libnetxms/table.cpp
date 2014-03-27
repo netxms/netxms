@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,16 +23,37 @@
 #include "libnetxms.h"
 
 /**
+ * Create empty table row
+ */
+TableRow::TableRow(int columnCount)
+{
+   m_cells = new ObjectArray<TableCell>(columnCount, 8, true);
+   for(int i = 0; i < columnCount; i++)
+      m_cells->add(new TableCell);
+   m_objectId = 0;
+}
+
+/**
+ * Table row copy constructor
+ */
+TableRow::TableRow(TableRow *src)
+{
+   m_cells = new ObjectArray<TableCell>(src->m_cells->size(), 8, true);
+   for(int i = 0; i < src->m_cells->size(); i++)
+      m_cells->add(new TableCell(src->m_cells->get(i)));
+   m_objectId = src->m_objectId;
+}
+
+/**
  * Create empty table
  */
 Table::Table() : RefCountObject()
 {
-   m_nNumRows = 0;
-   m_nNumCols = 0;
-   m_data = NULL;
+   m_data = new ObjectArray<TableRow>(32, 32, true);
 	m_title = NULL;
    m_source = DS_INTERNAL;
    m_columns = new ObjectArray<TableColumnDefinition>(8, 8, true);
+   m_extendedFormat = false;
 }
 
 /**
@@ -49,16 +70,15 @@ Table::Table(CSCPMessage *msg) : RefCountObject()
  */
 Table::Table(Table *src) : RefCountObject()
 {
-   m_nNumRows = src->m_nNumRows;
-   m_nNumCols = src->m_nNumCols;
-   m_data = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * m_nNumCols);
+   m_extendedFormat = src->m_extendedFormat;
+   m_data = new ObjectArray<TableRow>(src->m_data->size(), 32, true);
 	int i;
-   for(i = 0; i < m_nNumCols * m_nNumRows; i++)
-      m_data[i] = _tcsdup(CHECK_NULL_EX(src->m_data[i]));
+   for(i = 0; i < src->m_data->size(); i++)
+      m_data->add(new TableRow(src->m_data->get(i)));
    m_title = (src->m_title != NULL) ? _tcsdup(src->m_title) : NULL;
    m_source = src->m_source;
-   m_columns = new ObjectArray<TableColumnDefinition>(m_nNumCols, 8, true);
-	for(i = 0; i < m_nNumCols; i++)
+   m_columns = new ObjectArray<TableColumnDefinition>(src->m_columns->size(), 8, true);
+	for(i = 0; i < src->m_columns->size(); i++)
       m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
 }
 
@@ -69,6 +89,7 @@ Table::~Table()
 {
 	destroy();
    delete m_columns;
+   delete m_data;
 }
 
 /**
@@ -76,14 +97,8 @@ Table::~Table()
  */
 void Table::destroy()
 {
-   int i;
-
    m_columns->clear();
-
-   for(i = 0; i < m_nNumRows * m_nNumCols; i++)
-      safe_free(m_data[i]);
-   safe_free(m_data);
-
+   m_data->clear();
 	safe_free(m_title);
 }
 
@@ -95,12 +110,13 @@ void Table::createFromMessage(CSCPMessage *msg)
 	int i;
 	UINT32 dwId;
 
-	m_nNumRows = msg->GetVariableLong(VID_TABLE_NUM_ROWS);
-	m_nNumCols = msg->GetVariableLong(VID_TABLE_NUM_COLS);
+	int rows = msg->GetVariableLong(VID_TABLE_NUM_ROWS);
+	int columns = msg->GetVariableLong(VID_TABLE_NUM_COLS);
 	m_title = msg->GetVariableStr(VID_TABLE_TITLE);
-   m_source = (int)msg->GetVariableShort(VID_DCI_SOURCE_TYPE);
+   m_source = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
+   m_extendedFormat = msg->getFieldAsBoolean(VID_TABLE_EXTENDED_FORMAT);
 
-	for(i = 0, dwId = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, dwId += 10)
+	for(i = 0, dwId = VID_TABLE_COLUMN_INFO_BASE; i < columns; i++, dwId += 10)
 	{
       m_columns->add(new TableColumnDefinition(msg, dwId));
 	}
@@ -118,9 +134,30 @@ void Table::createFromMessage(CSCPMessage *msg)
       }
    }
 
-	m_data = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols * m_nNumRows);
-	for(i = 0, dwId = VID_TABLE_DATA_BASE; i < m_nNumCols * m_nNumRows; i++)
-		m_data[i] = msg->GetVariableStr(dwId++);
+	m_data = new ObjectArray<TableRow>(rows, 32, true);
+	for(i = 0, dwId = VID_TABLE_DATA_BASE; i < rows; i++)
+   {
+      TableRow *row = new TableRow(columns);
+		m_data->add(row);
+      if (m_extendedFormat)
+      {
+         row->setObjectId(msg->GetVariableLong(dwId++));
+         dwId += 9;
+      }
+      for(int j = 0; j < columns; j++)
+      {
+         TCHAR *value = msg->GetVariableStr(dwId++);
+         if (m_extendedFormat)
+         {
+            row->setPreallocated(j, value, msg->getFieldAsInt16(dwId++));
+            dwId += 8;
+         }
+         else
+         {
+            row->setPreallocated(j, value, -1);
+         }
+      }
+   }
 }
 
 /**
@@ -129,6 +166,7 @@ void Table::createFromMessage(CSCPMessage *msg)
 void Table::updateFromMessage(CSCPMessage *msg)
 {
 	destroy();
+   delete m_data; // will be re-created by createFromMessage
 	createFromMessage(msg);
 }
 
@@ -137,36 +175,42 @@ void Table::updateFromMessage(CSCPMessage *msg)
  */
 int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 {
-	int i, row, col;
 	UINT32 id;
 
 	msg.SetVariable(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
-   msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_source);
+   msg.SetVariable(VID_DCI_SOURCE_TYPE, (UINT16)m_source);
+   msg.SetVariable(VID_TABLE_EXTENDED_FORMAT, (UINT16)(m_extendedFormat ? 1 : 0));
 
 	if (offset == 0)
 	{
-		msg.SetVariable(VID_TABLE_NUM_ROWS, (UINT32)m_nNumRows);
-		msg.SetVariable(VID_TABLE_NUM_COLS, (UINT32)m_nNumCols);
+		msg.SetVariable(VID_TABLE_NUM_ROWS, (UINT32)m_data->size());
+		msg.SetVariable(VID_TABLE_NUM_COLS, (UINT32)m_columns->size());
 
-      for(i = 0, id = VID_TABLE_COLUMN_INFO_BASE; i < m_columns->size(); i++, id += 10)
+      id = VID_TABLE_COLUMN_INFO_BASE;
+      for(int i = 0; i < m_columns->size(); i++, id += 10)
          m_columns->get(i)->fillMessage(&msg, id);
 	}
 	msg.SetVariable(VID_TABLE_OFFSET, (UINT32)offset);
 
-	int stopRow = (rowLimit == -1) ? m_nNumRows : min(m_nNumRows, offset + rowLimit);
-	for(i = offset * m_nNumCols, row = offset, id = VID_TABLE_DATA_BASE; row < stopRow; row++)
+	int stopRow = (rowLimit == -1) ? m_data->size() : min(m_data->size(), offset + rowLimit);
+   id = VID_TABLE_DATA_BASE;
+	for(int row = offset; row < stopRow; row++)
 	{
-		for(col = 0; col < m_nNumCols; col++) 
+		for(int col = 0; col < m_columns->size(); col++) 
 		{
-			TCHAR *tmp = m_data[i++];
+			const TCHAR *tmp = m_data->get(row)->getValue(col);
 			msg.SetVariable(id++, CHECK_NULL_EX(tmp));
+         if (m_extendedFormat)
+         {
+            msg.SetVariable(id++, (UINT16)m_data->get(row)->getStatus(col));
+         }
 		}
 	}
-	msg.SetVariable(VID_NUM_ROWS, (UINT32)(row - offset));
+	msg.SetVariable(VID_NUM_ROWS, (UINT32)(stopRow - offset));
 
-	if (row == m_nNumRows)
+	if (stopRow == m_data->size())
 		msg.setEndOfSequence();
-	return row;
+	return stopRow;
 }
 
 /**
@@ -175,25 +219,9 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 int Table::addColumn(const TCHAR *name, INT32 dataType, const TCHAR *displayName, bool isInstance)
 {
    m_columns->add(new TableColumnDefinition(name, displayName, dataType, isInstance));
-   if (m_nNumRows > 0)
-   {
-      TCHAR **ppNewData;
-      int i, nPosOld, nPosNew;
-
-      ppNewData = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * (m_nNumCols + 1));
-      for(i = 0, nPosOld = 0, nPosNew = 0; i < m_nNumRows; i++)
-      {
-         memcpy(&ppNewData[nPosNew], &m_data[nPosOld], sizeof(TCHAR *) * m_nNumCols);
-         ppNewData[nPosNew + m_nNumCols] = NULL;
-         nPosOld += m_nNumCols;
-         nPosNew += m_nNumCols + 1;
-      }
-      safe_free(m_data);
-      m_data = ppNewData;
-   }
-
-   m_nNumCols++;
-	return m_nNumCols - 1;
+   for(int i = 0; i < m_data->size(); i++)
+      m_data->get(i)->addColumn();
+	return m_columns->size() - 1;
 }
 
 /**
@@ -215,13 +243,8 @@ int Table::getColumnIndex(const TCHAR *name)
  */
 int Table::addRow()
 {
-   if (m_nNumCols > 0)
-   {
-      m_data = (TCHAR **)realloc(m_data, sizeof(TCHAR *) * (m_nNumRows + 1) * m_nNumCols);
-      memset(&m_data[m_nNumRows * m_nNumCols], 0, sizeof(TCHAR *) * m_nNumCols);
-   }
-   m_nNumRows++;
-	return m_nNumRows - 1;
+   m_data->add(new TableRow(m_columns->size()));
+	return m_data->size() - 1;
 }
 
 /**
@@ -229,13 +252,7 @@ int Table::addRow()
  */
 void Table::deleteRow(int row)
 {
-   if ((row < 0) || (row >= m_nNumRows))
-      return;
-
-   for(int i = 0; i < m_nNumCols; i++)
-      safe_free(m_data[row * m_nNumCols + i]);
-   m_nNumRows--;
-   memmove(&m_data[row * m_nNumCols], &m_data[(row + 1) * m_nNumCols], sizeof(TCHAR *) * (m_nNumRows - row) * m_nNumCols);
+   m_data->remove(row);
 }
 
 /**
@@ -243,30 +260,12 @@ void Table::deleteRow(int row)
  */
 void Table::deleteColumn(int col)
 {
-   if ((col < 0) || (col >= m_nNumCols))
+   if ((col < 0) || (col >= m_columns->size()))
       return;
 
-   TCHAR **data = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumRows * (m_nNumCols - 1));
-   int spos = 0, dpos = 0;
-   for(int i = 0; i < m_nNumRows; i++)
-   {
-      for(int j = 0; j < m_nNumCols; j++)
-      {
-         if (j == col)
-         {
-            safe_free(m_data[spos]);
-         }
-         else
-         {
-            data[dpos++] = m_data[spos];
-         }
-         spos++;
-      }
-   }
    m_columns->remove(col);
-   m_nNumCols--;
-   safe_free(m_data);
-   m_data = data;
+   for(int i = 0; i < m_data->size(); i++)
+      m_data->get(i)->deleteColumn(col);
 }
 
 /**
@@ -274,12 +273,11 @@ void Table::deleteColumn(int col)
  */
 void Table::setAt(int nRow, int nCol, const TCHAR *pszData)
 {
-   if ((nRow < 0) || (nRow >= m_nNumRows) ||
-       (nCol < 0) || (nCol >= m_nNumCols))
-      return;
-
-   safe_free(m_data[nRow * m_nNumCols + nCol]);
-   m_data[nRow * m_nNumCols + nCol] = _tcsdup(pszData);
+   TableRow *r = m_data->get(nRow);
+   if (r != NULL)
+   {
+      r->setValue(nCol, pszData);
+   }
 }
 
 /**
@@ -287,12 +285,11 @@ void Table::setAt(int nRow, int nCol, const TCHAR *pszData)
  */
 void Table::setPreallocatedAt(int nRow, int nCol, TCHAR *pszData)
 {
-   if ((nRow < 0) || (nRow >= m_nNumRows) ||
-       (nCol < 0) || (nCol >= m_nNumCols))
-      return;
-
-   safe_free(m_data[nRow * m_nNumCols + nCol]);
-   m_data[nRow * m_nNumCols + nCol] = pszData;
+   TableRow *r = m_data->get(nRow);
+   if (r != NULL)
+   {
+      r->setPreallocatedValue(nCol, pszData);
+   }
 }
 
 /**
@@ -355,11 +352,8 @@ void Table::setAt(int nRow, int nCol, double dData)
  */
 const TCHAR *Table::getAsString(int nRow, int nCol)
 {
-   if ((nRow < 0) || (nRow >= m_nNumRows) ||
-       (nCol < 0) || (nCol >= m_nNumCols))
-      return NULL;
-
-   return m_data[nRow * m_nNumCols + nCol];
+   TableRow *r = m_data->get(nRow);
+   return (r != NULL) ? r->getValue(nCol) : NULL;
 }
 
 INT32 Table::getAsInt(int nRow, int nCol)
@@ -403,6 +397,27 @@ double Table::getAsDouble(int nRow, int nCol)
 }
 
 /**
+ * Set status of given cell
+ */
+void Table::setStatusAt(int row, int col, int status)
+{
+   TableRow *r = m_data->get(row);
+   if (r != NULL)
+   {
+      r->setStatus(col, status);
+   }
+}
+
+/**
+ * Get status of given cell
+ */
+int Table::getStatus(int nRow, int nCol)
+{
+   TableRow *r = m_data->get(nRow);
+   return (r != NULL) ? r->getStatus(nCol) : -1;
+}
+
+/**
  * Add all rows from another table.
  * Identical table format assumed.
  *
@@ -410,21 +425,17 @@ double Table::getAsDouble(int nRow, int nCol)
  */
 void Table::addAll(Table *src)
 {
-   if (m_nNumCols != src->m_nNumCols)
-      return;
-
-   m_data = (TCHAR **)realloc(m_data, sizeof(TCHAR *) * (m_nNumRows + src->m_nNumRows) * m_nNumCols);
-   int dpos = m_nNumRows * m_nNumCols;
-   int spos = 0;
-   for(int i = 0; i < src->m_nNumRows; i++)
+   int numColumns = min(m_columns->size(), src->m_columns->size());
+   for(int i = 0; i < src->m_data->size(); i++)
    {
-      for(int j = 0; j < m_nNumCols; j++)
+      TableRow *dstRow = new TableRow(m_columns->size());
+      TableRow *srcRow = src->m_data->get(i);
+      for(int j = 0; j < numColumns; j++)
       {
-         const TCHAR *value = src->m_data[spos++];
-         m_data[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
+         dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j));
       }
+      m_data->add(dstRow);
    }
-   m_nNumRows += src->m_nNumRows;
 }
 
 /**
@@ -432,21 +443,19 @@ void Table::addAll(Table *src)
  */
 void Table::copyRow(Table *src, int row)
 {
-   if (m_nNumCols != src->m_nNumCols)
+   TableRow *srcRow = src->m_data->get(row);
+   if (srcRow == NULL)
       return;
 
-   if ((row < 0) || (row >= src->m_nNumRows))
-      return;
+   int numColumns = min(m_columns->size(), src->m_columns->size());
+   TableRow *dstRow = new TableRow(m_columns->size());
 
-   m_data = (TCHAR **)realloc(m_data, sizeof(TCHAR *) * (m_nNumRows + 1) * m_nNumCols);
-   int dpos = m_nNumRows * m_nNumCols;
-   int spos = row * src->m_nNumCols;
-   for(int i = 0; i < m_nNumCols; i++)
+   for(int j = 0; j < numColumns; j++)
    {
-      const TCHAR *value = src->m_data[spos++];
-      m_data[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
+      dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j));
    }
-   m_nNumRows++;
+
+   m_data->add(dstRow);
 }
 
 /**
@@ -454,23 +463,25 @@ void Table::copyRow(Table *src, int row)
  */
 void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
 {
-   if ((row < 0) || (row >= m_nNumRows))
+   TableRow *r = m_data->get(row);
+   if (r == NULL)
    {
       buffer[0] = 0;
       return;
    }
 
-   TCHAR **data = m_data + row * m_nNumCols;
    String instance;
    bool first = true;
-   for(int i = 0; i < m_nNumCols; i++)
+   for(int i = 0; i < m_columns->size(); i++)
    {
       if (m_columns->get(i)->isInstanceColumn())
       {
          if (!first)
             instance += _T("~~~");
          first = false;
-         instance += data[i];
+         const TCHAR *value = r->getValue(i);
+         if (value != NULL)
+            instance += value;
       }
    }
    nx_strncpy(buffer, (const TCHAR *)instance, bufLen);
@@ -483,7 +494,7 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
  */
 int Table::findRowByInstance(const TCHAR *instance)
 {
-   for(int i = 0; i < m_nNumRows; i++)
+   for(int i = 0; i < m_data->size(); i++)
    {
       TCHAR currInstance[256];
       buildInstanceString(i, currInstance, 256);

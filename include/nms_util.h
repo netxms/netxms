@@ -566,17 +566,75 @@ public:
 };
 
 /**
+ * Table cell
+ */
+class TableCell
+{
+private:
+   TCHAR *m_value;
+   int m_status;
+
+public:
+   TableCell() { m_value = NULL; m_status = -1; }
+   TableCell(const TCHAR *value) { m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = -1; }
+   TableCell(const TCHAR *value, int status) { m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = status; }
+   TableCell(TableCell *src) { m_value = (src->m_value != NULL) ? _tcsdup(src->m_value) : NULL; m_status = src->m_status; }
+   ~TableCell() { safe_free(m_value); }
+
+   void set(const TCHAR *value, int status) { safe_free(m_value); m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = status; }
+   void setPreallocated(TCHAR *value, int status) { safe_free(m_value); m_value = value; m_status = status; }
+
+   const TCHAR *getValue() { return m_value; }
+   void setValue(const TCHAR *value) { safe_free(m_value); m_value = (value != NULL) ? _tcsdup(value) : NULL; }
+   void setPreallocatedValue(TCHAR *value) { safe_free(m_value); m_value = value; }
+
+   int getStatus() { return m_status; }
+   void setStatus(int status) { m_status = status; }
+};
+
+/**
+ * Table row
+ */
+class TableRow
+{
+private:
+   ObjectArray<TableCell> *m_cells;
+   UINT32 m_objectId;
+   
+public:
+   TableRow(int columnCount);
+   TableRow(TableRow *src);
+   ~TableRow() { delete m_cells; }
+
+   void addColumn() { m_cells->add(new TableCell); }
+   void deleteColumn(int index) { m_cells->remove(index); }
+   
+   void set(int index, const TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->set(value, status); }
+   void setPreallocated(int index, TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status); }
+
+   void setValue(int index, const TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setValue(value); }
+   void setPreallocatedValue(int index, TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocatedValue(value); }
+
+   void setStatus(int index, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setStatus(status); }
+
+   const TCHAR *getValue(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getValue() : NULL; }
+   int getStatus(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getStatus() : -1; }
+
+   UINT32 getObjectId() { return m_objectId; }
+   void setObjectId(UINT32 id) { m_objectId = id; }
+};
+
+/**
  * Class for table data storage
  */
 class LIBNETXMS_EXPORTABLE Table : public RefCountObject
 {
 private:
-   int m_nNumRows;
-   int m_nNumCols;
-   TCHAR **m_data;
+   ObjectArray<TableRow> *m_data;
    ObjectArray<TableColumnDefinition> *m_columns;
 	TCHAR *m_title;
    int m_source;
+   bool m_extendedFormat;
 
 	void createFromMessage(CSCPMessage *msg);
 	void destroy();
@@ -593,10 +651,13 @@ public:
    void addAll(Table *src);
    void copyRow(Table *src, int row);
 
-   int getNumRows() { return m_nNumRows; }
-   int getNumColumns() { return m_nNumCols; }
+   int getNumRows() { return m_data->size(); }
+   int getNumColumns() { return m_columns->size(); }
 	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
    int getSource() { return m_source; }
+
+   bool isExtendedFormat() { return m_extendedFormat; }
+   void setExtendedFormat(bool ext) { m_extendedFormat = ext; }
 
    const TCHAR *getColumnName(int col) { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : NULL; }
    INT32 getColumnDataType(int col) { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
@@ -620,13 +681,16 @@ public:
    void setAt(int nRow, int nCol, const TCHAR *pszData);
    void setPreallocatedAt(int nRow, int nCol, TCHAR *pszData);
 
-   void set(int nCol, INT32 nData) { setAt(m_nNumRows - 1, nCol, nData); }
-   void set(int nCol, UINT32 dwData) { setAt(m_nNumRows - 1, nCol, dwData); }
-   void set(int nCol, double dData) { setAt(m_nNumRows - 1, nCol, dData); }
-   void set(int nCol, INT64 nData) { setAt(m_nNumRows - 1, nCol, nData); }
-   void set(int nCol, UINT64 qwData) { setAt(m_nNumRows - 1, nCol, qwData); }
-   void set(int nCol, const TCHAR *pszData) { setAt(m_nNumRows - 1, nCol, pszData); }
-   void setPreallocated(int nCol, TCHAR *pszData) { setPreallocatedAt(m_nNumRows - 1, nCol, pszData); }
+   void set(int nCol, INT32 nData) { setAt(getNumRows() - 1, nCol, nData); }
+   void set(int nCol, UINT32 dwData) { setAt(getNumRows() - 1, nCol, dwData); }
+   void set(int nCol, double dData) { setAt(getNumRows() - 1, nCol, dData); }
+   void set(int nCol, INT64 nData) { setAt(getNumRows() - 1, nCol, nData); }
+   void set(int nCol, UINT64 qwData) { setAt(getNumRows() - 1, nCol, qwData); }
+   void set(int nCol, const TCHAR *pszData) { setAt(getNumRows() - 1, nCol, pszData); }
+   void setPreallocated(int nCol, TCHAR *pszData) { setPreallocatedAt(getNumRows() - 1, nCol, pszData); }
+
+   void setStatusAt(int row, int col, int status);
+   void setStatus(int col, int status) { setStatusAt(getNumRows() - 1, col, status); }
 
    const TCHAR *getAsString(int nRow, int nCol);
    INT32 getAsInt(int nRow, int nCol);
@@ -635,8 +699,13 @@ public:
    UINT64 getAsUInt64(int nRow, int nCol);
    double getAsDouble(int nRow, int nCol);
 
+   int getStatus(int nRow, int nCol);
+
    void buildInstanceString(int row, TCHAR *buffer, size_t bufLen);
    int findRowByInstance(const TCHAR *instance);
+
+   UINT32 getObjectId(int row) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
+   void setObjectId(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
 };
 
 /**
