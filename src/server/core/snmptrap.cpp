@@ -545,7 +545,7 @@ static void FillTrapConfigDataMsg(CSCPMessage &msg, NXC_TRAP_CFG_ENTRY *trap)
 
 	msg.SetVariable(VID_TRAP_ID, trap->dwId);
    msg.SetVariable(VID_TRAP_OID_LEN, trap->dwOidLen); 
-   msg.SetVariableToInt32Array(VID_TRAP_OID, trap->dwOidLen, trap->pdwObjectId);
+   msg.setFieldInt32Array(VID_TRAP_OID, trap->dwOidLen, trap->pdwObjectId);
    msg.SetVariable(VID_EVENT_CODE, trap->dwEventCode);
    msg.SetVariable(VID_DESCRIPTION, trap->szDescription);
    msg.SetVariable(VID_USER_TAG, trap->szUserTag);
@@ -555,7 +555,7 @@ static void FillTrapConfigDataMsg(CSCPMessage &msg, NXC_TRAP_CFG_ENTRY *trap)
    {
       msg.SetVariable(dwId1, trap->pMaps[i].dwOidLen);
       if ((trap->pMaps[i].dwOidLen & 0x80000000) == 0)
-         msg.SetVariableToInt32Array(dwId2, trap->pMaps[i].dwOidLen, trap->pMaps[i].pdwObjectId);
+         msg.setFieldInt32Array(dwId2, trap->pMaps[i].dwOidLen, trap->pMaps[i].pdwObjectId);
       msg.SetVariable(dwId3, trap->pMaps[i].szDescription);
 		msg.SetVariable(dwId4, trap->pMaps[i].dwFlags);
    }
@@ -599,7 +599,7 @@ void CreateTrapCfgMessage(CSCPMessage &msg)
    {
       msg.SetVariable(dwId++, m_pTrapCfg[i].dwId);
       msg.SetVariable(dwId++, m_pTrapCfg[i].dwOidLen); 
-      msg.SetVariableToInt32Array(dwId++, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
+      msg.setFieldInt32Array(dwId++, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
       msg.SetVariable(dwId++, m_pTrapCfg[i].dwEventCode);
       msg.SetVariable(dwId++, m_pTrapCfg[i].szDescription);
    }
@@ -833,7 +833,7 @@ UINT32 UpdateTrapFromMsg(CSCPMessage *pMsg)
          m_pTrapCfg[i].dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
          m_pTrapCfg[i].dwOidLen = pMsg->GetVariableLong(VID_TRAP_OID_LEN);
          m_pTrapCfg[i].pdwObjectId = (UINT32 *)realloc(m_pTrapCfg[i].pdwObjectId, sizeof(UINT32) * m_pTrapCfg[i].dwOidLen);
-         pMsg->GetVariableInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
+         pMsg->getFieldAsInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
          pMsg->GetVariableStr(VID_DESCRIPTION, m_pTrapCfg[i].szDescription, MAX_DB_STRING);
          pMsg->GetVariableStr(VID_USER_TAG, m_pTrapCfg[i].szUserTag, MAX_USERTAG_LENGTH);
 
@@ -853,7 +853,7 @@ UINT32 UpdateTrapFromMsg(CSCPMessage *pMsg)
             {
                m_pTrapCfg[i].pMaps[j].pdwObjectId = 
                   (UINT32 *)malloc(sizeof(UINT32) * m_pTrapCfg[i].pMaps[j].dwOidLen);
-               pMsg->GetVariableInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, 
+               pMsg->getFieldAsInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, 
                                            m_pTrapCfg[i].pMaps[j].pdwObjectId);
             }
             else

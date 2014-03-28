@@ -349,7 +349,7 @@ void Cluster::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
 	pMsg->SetVariable(VID_NUM_SYNC_SUBNETS, m_dwNumSyncNets);
 	if (m_dwNumSyncNets > 0)
-		pMsg->SetVariableToInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
+		pMsg->setFieldInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
 	pMsg->SetVariable(VID_NUM_RESOURCES, m_dwNumResources);
 	for(i = 0, dwId = VID_RESOURCE_LIST_BASE; i < m_dwNumResources; i++, dwId += 6)
 	{
@@ -379,7 +379,7 @@ UINT32 Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		if (m_dwNumSyncNets > 0)
 		{
 			m_pSyncNetList = (IP_NETWORK *)realloc(m_pSyncNetList, sizeof(IP_NETWORK) * m_dwNumSyncNets);
-			pRequest->GetVariableInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
+			pRequest->getFieldAsInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
 		}
 		else
 		{

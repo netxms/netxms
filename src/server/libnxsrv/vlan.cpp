@@ -109,9 +109,9 @@ void VlanList::fillMessage(CSCPMessage *msg)
 		msg->SetVariable(varId++, (UINT16)m_vlans[i]->getVlanId());
 		msg->SetVariable(varId++, m_vlans[i]->getName());
 		msg->SetVariable(varId++, (UINT32)m_vlans[i]->getNumPorts());
-		msg->SetVariableToInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
-		msg->SetVariableToInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIndexes());
-		msg->SetVariableToInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIds());
+		msg->setFieldInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
+		msg->setFieldInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIndexes());
+		msg->setFieldInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIds());
 		varId += 4;
 	}
 }

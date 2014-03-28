@@ -518,7 +518,7 @@ void User::modifyFromMessage(CSCPMessage *msg)
       if (count > 0)
       {
          groups = (UINT32 *)malloc(sizeof(UINT32) * count);
-         msg->GetVariableInt32Array(VID_GROUPS, (UINT32)count, groups);
+         msg->getFieldAsInt32Array(VID_GROUPS, (UINT32)count, groups);
       }
       UpdateGroupMembership(m_id, count, groups);
       safe_free(groups);

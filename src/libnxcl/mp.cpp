@@ -45,11 +45,11 @@ UINT32 LIBNXCL_EXPORTABLE NXCExportConfiguration(NXC_SESSION hSession, TCHAR *ps
    msg.SetId(dwRqId);
    msg.SetVariable(VID_DESCRIPTION, pszDescr);
    msg.SetVariable(VID_NUM_EVENTS, dwNumEvents);
-   msg.SetVariableToInt32Array(VID_EVENT_LIST, dwNumEvents, pdwEventList);
+   msg.setFieldInt32Array(VID_EVENT_LIST, dwNumEvents, pdwEventList);
    msg.SetVariable(VID_NUM_OBJECTS, dwNumTemplates);
-   msg.SetVariableToInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
+   msg.setFieldInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
    msg.SetVariable(VID_NUM_TRAPS, dwNumTraps);
-   msg.SetVariableToInt32Array(VID_TRAP_LIST, dwNumTraps, pdwTrapList);
+   msg.setFieldInt32Array(VID_TRAP_LIST, dwNumTraps, pdwTrapList);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);

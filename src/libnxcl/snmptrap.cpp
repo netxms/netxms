@@ -37,7 +37,7 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
    pMsg->GetVariableStr(VID_USER_TAG, pTrap->szUserTag, MAX_USERTAG_LENGTH);
    pTrap->dwOidLen = pMsg->GetVariableLong(VID_TRAP_OID_LEN);
    pTrap->pdwObjectId = (UINT32 *)malloc(sizeof(UINT32) * pTrap->dwOidLen);
-   pMsg->GetVariableInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
+   pMsg->getFieldAsInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
    pTrap->dwNumMaps = pMsg->GetVariableLong(VID_TRAP_NUM_MAPS);
    pTrap->pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * pTrap->dwNumMaps);
    for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE, dwId4 = VID_TRAP_PFLAGS_BASE;
@@ -47,7 +47,7 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
       if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
       {
          pTrap->pMaps[i].pdwObjectId = (UINT32 *)malloc(sizeof(UINT32) * pTrap->pMaps[i].dwOidLen);
-         pMsg->GetVariableInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
+         pMsg->getFieldAsInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
       }
       else
       {
@@ -284,7 +284,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY
    msg.SetId(dwRqId);
    msg.SetVariable(VID_TRAP_ID, pTrap->dwId);
    msg.SetVariable(VID_TRAP_OID_LEN, pTrap->dwOidLen); 
-   msg.SetVariableToInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
+   msg.setFieldInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
    msg.SetVariable(VID_EVENT_CODE, pTrap->dwEventCode);
    msg.SetVariable(VID_DESCRIPTION, pTrap->szDescription);
    msg.SetVariable(VID_USER_TAG, pTrap->szUserTag);
@@ -294,7 +294,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY
    {
       msg.SetVariable(dwId1, pTrap->pMaps[i].dwOidLen);
       if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
-         msg.SetVariableToInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
+         msg.setFieldInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
       msg.SetVariable(dwId3, pTrap->pMaps[i].szDescription);
 		msg.SetVariable(dwId4, pTrap->pMaps[i].dwFlags);
    }
@@ -395,7 +395,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetTrapCfgRO(NXC_SESSION hSession, UINT32 *pdwNumTr
             (*ppTrapList)[i].dwId = pResponse->GetVariableLong(dwId++);
             (*ppTrapList)[i].dwOidLen = pResponse->GetVariableLong(dwId++);
             (*ppTrapList)[i].pdwObjectId = (UINT32 *)malloc(sizeof(UINT32) * (*ppTrapList)[i].dwOidLen);
-            pResponse->GetVariableInt32Array(dwId++, (*ppTrapList)[i].dwOidLen, (*ppTrapList)[i].pdwObjectId);
+            pResponse->getFieldAsInt32Array(dwId++, (*ppTrapList)[i].dwOidLen, (*ppTrapList)[i].pdwObjectId);
             (*ppTrapList)[i].dwEventCode = pResponse->GetVariableLong(dwId++);
             pResponse->GetVariableStr(dwId++, (*ppTrapList)[i].szDescription, MAX_DB_STRING);
          }

@@ -193,7 +193,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, UINT32 d
          (*ppData)->pszMatchingOID = pResponse->GetVariableStr(VID_TOOL_OID);
          (*ppData)->dwACLSize = pResponse->GetVariableLong(VID_ACL_SIZE);
          (*ppData)->pdwACL = (UINT32 *)malloc(sizeof(UINT32) * (*ppData)->dwACLSize);
-         pResponse->GetVariableInt32Array(VID_ACL, (*ppData)->dwACLSize, (*ppData)->pdwACL);
+         pResponse->getFieldAsInt32Array(VID_ACL, (*ppData)->dwACLSize, (*ppData)->pdwACL);
          if (((*ppData)->wType == TOOL_TYPE_TABLE_SNMP) ||
              ((*ppData)->wType == TOOL_TYPE_TABLE_AGENT))
          {
@@ -293,7 +293,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
    msg.SetVariable(VID_CONFIRMATION_TEXT, CHECK_NULL_EX(pData->pszConfirmationText));
    msg.SetVariable(VID_ACL_SIZE, pData->dwACLSize);
    msg.SetVariable(VID_TOOL_OID, CHECK_NULL_EX(pData->pszMatchingOID));
-   msg.SetVariableToInt32Array(VID_ACL, pData->dwACLSize, pData->pdwACL);
+   msg.setFieldInt32Array(VID_ACL, pData->dwACLSize, pData->pdwACL);
    if ((pData->wType == TOOL_TYPE_TABLE_SNMP) ||
        (pData->wType == TOOL_TYPE_TABLE_AGENT))
    {

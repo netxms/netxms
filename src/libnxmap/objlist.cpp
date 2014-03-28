@@ -45,7 +45,7 @@ nxmap_ObjList::nxmap_ObjList(CSCPMessage *pMsg)
    m_dwNumObjects = pMsg->GetVariableLong(VID_NUM_OBJECTS);
 	m_allocatedObjects = m_dwNumObjects;
    m_pdwObjectList = (UINT32 *)malloc(m_dwNumObjects * sizeof(UINT32));
-	pMsg->GetVariableInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
+	pMsg->getFieldAsInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
    m_dwNumLinks = pMsg->GetVariableLong(VID_NUM_LINKS);
 	m_allocatedLinks = m_dwNumLinks;
    m_pLinkList = (OBJLINK *)malloc(m_dwNumLinks * sizeof(OBJLINK));
@@ -286,7 +286,7 @@ void nxmap_ObjList::createMessage(CSCPMessage *pMsg)
 	// Object list
 	pMsg->SetVariable(VID_NUM_OBJECTS, m_dwNumObjects);
 	if (m_dwNumObjects > 0)
-		pMsg->SetVariableToInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
+		pMsg->setFieldInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
 
 	// Links between objects
 	pMsg->SetVariable(VID_NUM_LINKS, m_dwNumLinks);

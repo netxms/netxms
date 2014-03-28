@@ -101,7 +101,8 @@ public:
 #else
    void SetVariableFromMBString(UINT32 dwVarId, const char *pszValue) { set(dwVarId, CSCP_DT_STRING, pszValue); }
 #endif
-   void SetVariableToInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData);
+   void setFieldInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData);
+   void setFieldInt32Array(UINT32 dwVarId, IntegerArray<UINT32> *data);
    BOOL SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName);
 
    INT16 getFieldAsInt16(UINT32 fieldId);
@@ -109,6 +110,8 @@ public:
    INT64 getFieldAsInt64(UINT32 fieldId);
    double getFieldAsDouble(UINT32 fieldId);
    bool getFieldAsBoolean(UINT32 fieldId);
+   UINT32 getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer);
+   UINT32 getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
 
    UINT32 GetVariableLong(UINT32 dwVarId);
    UINT64 GetVariableInt64(UINT32 dwVarId);
@@ -117,7 +120,6 @@ public:
 	char *GetVariableStrA(UINT32 dwVarId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
 	char *GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
    UINT32 GetVariableBinary(UINT32 dwVarId, BYTE *pBuffer, UINT32 dwBufSize);
-   UINT32 GetVariableInt32Array(UINT32 dwVarId, UINT32 dwNumElements, UINT32 *pdwBuffer);
 
    void deleteAllVariables();
 

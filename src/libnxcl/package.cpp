@@ -268,7 +268,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, UINT32 dwPkgId,
    msg.SetId(dwRqId);
    msg.SetVariable(VID_PACKAGE_ID, dwPkgId);
    msg.SetVariable(VID_NUM_OBJECTS, dwNumObjects);
-   msg.SetVariableToInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+   msg.setFieldInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);

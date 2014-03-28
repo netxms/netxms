@@ -66,8 +66,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, UINT32 *pdwNumGr
 
 						(*ppGraphList)[i].pACL = (NXC_GRAPH_ACL_ENTRY *)malloc(sizeof(NXC_GRAPH_ACL_ENTRY) * (*ppGraphList)[i].dwAclSize);
 						pdwData = (UINT32 *)malloc(sizeof(UINT32) * (*ppGraphList)[i].dwAclSize * 2);
-						pResponse->GetVariableInt32Array(dwId++, (*ppGraphList)[i].dwAclSize, pdwData);
-						pResponse->GetVariableInt32Array(dwId++, (*ppGraphList)[i].dwAclSize, pdwData + (*ppGraphList)[i].dwAclSize);
+						pResponse->getFieldAsInt32Array(dwId++, (*ppGraphList)[i].dwAclSize, pdwData);
+						pResponse->getFieldAsInt32Array(dwId++, (*ppGraphList)[i].dwAclSize, pdwData + (*ppGraphList)[i].dwAclSize);
 						for(j = 0; j < (*ppGraphList)[i].dwAclSize; j++)
 						{
 							(*ppGraphList)[i].pACL[j].dwUserId = pdwData[j];

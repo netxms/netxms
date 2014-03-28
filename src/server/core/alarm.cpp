@@ -848,7 +848,7 @@ void AlarmManager::getAlarmStats(CSCPMessage *pMsg)
    for(int i = 0; i < m_numAlarms; i++)
       dwCount[m_pAlarmList[i].nCurrentSeverity]++;
    unlock();
-   pMsg->SetVariableToInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
+   pMsg->setFieldInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }
 
 /**

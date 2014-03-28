@@ -424,7 +424,7 @@ void FillGroupMembershipInfo(CSCPMessage *msg, UINT32 userId)
    }
    msg->SetVariable(VID_NUM_GROUPS, count);
    if (count > 0)
-      msg->SetVariableToInt32Array(VID_GROUPS, count, list);
+      msg->setFieldInt32Array(VID_GROUPS, count, list);
    free(list);
 }
 

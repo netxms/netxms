@@ -2132,7 +2132,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
    UINT32 dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
 	UINT32 numObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
 	UINT32 *objects = (UINT32 *)malloc(sizeof(UINT32) * numObjects);
-	pRequest->GetVariableInt32Array(VID_OBJECT_LIST, numObjects, objects);
+	pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, numObjects, objects);
 	UINT32 options = pRequest->GetVariableShort(VID_FLAGS);
 
    MutexLock(m_mutexSendObjects);
@@ -3271,7 +3271,7 @@ void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
                iStatus = pRequest->GetVariableShort(VID_DCI_STATUS);
                dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
                pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
-               pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+               pRequest->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
                if (((Template *)object)->setItemStatus(dwNumItems, pdwItemList, iStatus))
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                else
@@ -3398,7 +3398,7 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
                   // Get list of items to be copied/moved
                   dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
                   pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
-                  pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+                  pRequest->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
 
                   // Copy items
                   for(i = 0; i < dwNumItems; i++)
@@ -6106,7 +6106,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
                // Create list of nodes to be upgraded
                dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
                pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * dwNumObjects);
-               pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+               pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
 					nodeList = new ObjectArray<Node>((int)dwNumObjects);
                for(i = 0; i < dwNumObjects; i++)
                {
@@ -7089,7 +7089,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                   pdwAcl = (UINT32 *)malloc(sizeof(UINT32) * iNumRows);
                   for(i = 0; i < iNumRows; i++)
                      pdwAcl[i] = DBGetFieldULong(hResult, i, 0);
-                  msg.SetVariableToInt32Array(VID_ACL, iNumRows, pdwAcl);
+                  msg.setFieldInt32Array(VID_ACL, iNumRows, pdwAcl);
                   free(pdwAcl);
                }
                DBFreeResult(hResult);
@@ -8145,8 +8145,8 @@ void ClientSession::resolveDCINames(CSCPMessage *pRequest)
    dwNumDCI = pRequest->GetVariableLong(VID_NUM_ITEMS);
    pdwNodeList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
    pdwDCIList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
-   pRequest->GetVariableInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
-   pRequest->GetVariableInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
+   pRequest->getFieldAsInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
+   pRequest->getFieldAsInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
 
    for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
    {
@@ -8951,7 +8951,7 @@ void ClientSession::sendDCIEventList(CSCPMessage *request)
             if (pdwEventList != NULL)
             {
                msg.SetVariable(VID_NUM_EVENTS, dwCount);
-               msg.SetVariableToInt32Array(VID_EVENT_LIST, dwCount, pdwEventList);
+               msg.setFieldInt32Array(VID_EVENT_LIST, dwCount, pdwEventList);
                free(pdwEventList);
             }
             else
@@ -8997,7 +8997,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
       if (dwNumTemplates > 0)
       {
          pdwTemplateList = (UINT32 *)malloc(sizeof(UINT32) * dwNumTemplates);
-         pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
+         pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
       }
       else
       {
@@ -9045,7 +9045,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
          str += _T("\t<events>\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_EVENTS);
          pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwCount);
-         pRequest->GetVariableInt32Array(VID_EVENT_LIST, dwCount, pdwList);
+         pRequest->getFieldAsInt32Array(VID_EVENT_LIST, dwCount, pdwList);
          for(i = 0; i < dwCount; i++)
             CreateNXMPEventRecord(str, pdwList[i]);
          safe_free(pdwList);
@@ -9067,7 +9067,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
          str += _T("\t<traps>\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_TRAPS);
          pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwCount);
-         pRequest->GetVariableInt32Array(VID_TRAP_LIST, dwCount, pdwList);
+         pRequest->getFieldAsInt32Array(VID_TRAP_LIST, dwCount, pdwList);
          for(i = 0; i < dwCount; i++)
             CreateNXMPTrapRecord(str, pdwList[i]);
          safe_free(pdwList);
@@ -9283,8 +9283,8 @@ void ClientSession::sendGraphList(UINT32 dwRqId)
 						}
 					}
 					msg.SetVariable(dwId++, dwGraphACLSize);
-					msg.SetVariableToInt32Array(dwId++, dwGraphACLSize, pdwUsers);
-					msg.SetVariableToInt32Array(dwId++, dwGraphACLSize, pdwRights);
+					msg.setFieldInt32Array(dwId++, dwGraphACLSize, pdwUsers);
+					msg.setFieldInt32Array(dwId++, dwGraphACLSize, pdwRights);
 
 					dwId += 3;
 					dwNumGraphs++;
@@ -12082,7 +12082,7 @@ void ClientSession::deleteReportResults(CSCPMessage *request)
 					if (count > 0)
 					{
 						UINT32 *idList = (UINT32 *)malloc(sizeof(UINT32) * count);
-						request->GetVariableInt32Array(VID_RESULT_ID_LIST, (UINT32)count, idList);
+						request->getFieldAsInt32Array(VID_RESULT_ID_LIST, (UINT32)count, idList);
 						for(int i = 0; i < count; i++)
 						{
 							DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, idList[i]);
@@ -12781,7 +12781,7 @@ void ClientSession::getSubnetAddressMap(CSCPMessage *request)
 			if (map != NULL)
 			{
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            msg.SetVariableToInt32Array(VID_ADDRESS_MAP, (UINT32)length, map);
+            msg.setFieldInt32Array(VID_ADDRESS_MAP, (UINT32)length, map);
             free(map);
 			}
 			else

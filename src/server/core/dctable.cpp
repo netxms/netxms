@@ -690,7 +690,7 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 		pMsg->SetVariable(varId++, column->getFlags());
 		SNMP_ObjectId *oid = column->getSnmpOid();
 		if (oid != NULL)
-			pMsg->SetVariableToInt32Array(varId++, oid->getLength(), oid->getValue());
+			pMsg->setFieldInt32Array(varId++, oid->getLength(), oid->getValue());
 		else
 			varId++;
 		pMsg->SetVariable(varId++, column->getDisplayName());

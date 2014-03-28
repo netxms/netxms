@@ -759,23 +759,21 @@ char *CSCPMessage::GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer, UINT32 dw
  * and actual size of data will be returned
  * If pBuffer is NULL, just actual data length is returned
  */
-UINT32 CSCPMessage::GetVariableBinary(UINT32 dwVarId, BYTE *pBuffer, UINT32 dwBufSize)
+UINT32 CSCPMessage::GetVariableBinary(UINT32 fieldId, BYTE *pBuffer, UINT32 dwBufSize)
 {
-   void *pValue;
-   UINT32 dwSize;
-
-   pValue = get(dwVarId, CSCP_DT_BINARY);
-   if (pValue != NULL)
+   UINT32 size;
+   void *value = get(fieldId, CSCP_DT_BINARY);
+   if (value != NULL)
    {
-      dwSize = *((UINT32 *)pValue);
+      size = *((UINT32 *)value);
       if (pBuffer != NULL)
-         memcpy(pBuffer, (BYTE *)pValue + 4, min(dwBufSize, dwSize));
+         memcpy(pBuffer, (BYTE *)value + 4, min(dwBufSize, size));
    }
    else
    {
-      dwSize = 0;
+      size = 0;
    }
-   return dwSize;
+   return size;
 }
 
 /**
@@ -885,33 +883,64 @@ void CSCPMessage::SetVariableFromMBString(UINT32 dwVarId, const char *pszValue)
 #endif
 
 /**
- * set binary variable to an array of UINT32s
+ * set binary field to an array of UINT32s
  */
-void CSCPMessage::SetVariableToInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData)
+void CSCPMessage::setFieldInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData)
 {
-   UINT32 i, *pdwBuffer;
-
-   pdwBuffer = (UINT32 *)set(dwVarId, CSCP_DT_BINARY, pdwData, dwNumElements * sizeof(UINT32));
+   UINT32 *pdwBuffer = (UINT32 *)set(dwVarId, CSCP_DT_BINARY, pdwData, dwNumElements * sizeof(UINT32));
    if (pdwBuffer != NULL)
    {
       pdwBuffer++;   // First UINT32 is a length field
-      for(i = 0; i < dwNumElements; i++)  // Convert UINT32s to network byte order
+      for(UINT32 i = 0; i < dwNumElements; i++)  // Convert UINT32s to network byte order
          pdwBuffer[i] = htonl(pdwBuffer[i]);
    }
 }
 
 /**
- * get binary variable as an array of UINT32s
+ * set binary field to an array of UINT32s
  */
-UINT32 CSCPMessage::GetVariableInt32Array(UINT32 dwVarId, UINT32 dwNumElements, UINT32 *pdwBuffer)
+void CSCPMessage::setFieldInt32Array(UINT32 dwVarId, IntegerArray<UINT32> *data)
 {
-   UINT32 i, dwSize;
+   UINT32 *pdwBuffer = (UINT32 *)set(dwVarId, CSCP_DT_BINARY, data->getBuffer(), data->size() * sizeof(UINT32));
+   if (pdwBuffer != NULL)
+   {
+      pdwBuffer++;   // First UINT32 is a length field
+      for(int i = 0; i < data->size(); i++)  // Convert UINT32s to network byte order
+         pdwBuffer[i] = htonl(pdwBuffer[i]);
+   }
+}
 
-   dwSize = GetVariableBinary(dwVarId, (BYTE *)pdwBuffer, dwNumElements * sizeof(UINT32));
-   dwSize /= sizeof(UINT32);   // Convert bytes to elements
-   for(i = 0; i < dwSize; i++)
-      pdwBuffer[i] = ntohl(pdwBuffer[i]);
-   return dwSize;
+/**
+ * get binary field as an array of 32 bit unsigned integers
+ */
+UINT32 CSCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer)
+{
+   UINT32 size = GetVariableBinary(fieldId, (BYTE *)buffer, numElements * sizeof(UINT32));
+   size /= sizeof(UINT32);   // Convert bytes to elements
+   for(UINT32 i = 0; i < size; i++)
+      buffer[i] = ntohl(buffer[i]);
+   return size;
+}
+
+/**
+ * get binary field as an array of 32 bit unsigned integers
+ */
+UINT32 CSCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data)
+{
+   data->clear();
+
+   UINT32 *value = (UINT32 *)get(fieldId, CSCP_DT_BINARY);
+   if (value != NULL)
+   {
+      UINT32 size = *value;
+      value++;
+      for(UINT32 i = 0; i < size; i++)
+      {
+         data->add(ntohl(*value));
+         value++;
+      }
+   }
+   return (UINT32)data->size();
 }
 
 /**

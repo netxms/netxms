@@ -419,6 +419,7 @@ protected:
 	void (*m_objectDestructor)(void *);
 
    Array(void *data, int initial, int grow, size_t elementSize);
+   void *__getBuffer() { return m_data; }
 
 public:
 	Array(int initial = 0, int grow = 16, bool owner = false);
@@ -480,6 +481,8 @@ public:
 	T get(int index) { return CAST_FROM_POINTER(Array::get(index), T); }
 	void set(int index, T value) { Array::set(index, CAST_TO_POINTER(value, void *)); }
 	void replace(int index, T value) { Array::replace(index, CAST_TO_POINTER(value, void *)); }
+
+   T *getBuffer() { return (T*)__getBuffer(); }
 };
 
 /**

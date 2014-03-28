@@ -282,7 +282,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, UINT32 dwNodeId,
    msg.SetVariable(VID_OBJECT_ID, dwNodeId);
    msg.SetVariable(VID_DCI_STATUS, (WORD)iStatus);
    msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
-   msg.SetVariableToInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+   msg.setFieldInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
@@ -581,7 +581,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, UINT32 dwSrcNodeId, U
    msg.SetVariable(VID_SOURCE_OBJECT_ID, dwSrcNodeId);
    msg.SetVariable(VID_DESTINATION_OBJECT_ID, dwDstNodeId);
    msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
-   msg.SetVariableToInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+   msg.setFieldInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
    msg.SetVariable(VID_MOVE_FLAG, (WORD)bMove);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
@@ -775,8 +775,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, UINT32 dwNumD
       pdwList[i] = pDCIList[i].nodeId;
       pdwList[j] = pDCIList[i].id;
    }
-   msg.SetVariableToInt32Array(VID_NODE_LIST, dwNumDCI, pdwList);
-   msg.SetVariableToInt32Array(VID_DCI_LIST, dwNumDCI, &pdwList[dwNumDCI]);
+   msg.setFieldInt32Array(VID_NODE_LIST, dwNumDCI, pdwList);
+   msg.setFieldInt32Array(VID_DCI_LIST, dwNumDCI, &pdwList[dwNumDCI]);
    free(pdwList);
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);

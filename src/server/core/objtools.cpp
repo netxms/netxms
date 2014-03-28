@@ -639,7 +639,7 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    if (dwAclSize > 0)
    {
       pdwAcl = (UINT32 *)malloc(sizeof(UINT32) * dwAclSize);
-      pMsg->GetVariableInt32Array(VID_ACL, dwAclSize, pdwAcl);
+      pMsg->getFieldAsInt32Array(VID_ACL, dwAclSize, pdwAcl);
       for(i = 0; i < dwAclSize; i++)
       {
          _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (%d,%d)"),

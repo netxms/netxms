@@ -57,7 +57,7 @@ NetworkMapLink::NetworkMapLink(CSCPMessage *msg, UINT32 baseId)
 	m_color = msg->GetVariableLong(baseId + 6);
 	m_statusObject = msg->GetVariableLong(baseId + 7);
 	m_routing = msg->GetVariableShort(baseId + 8);
-	msg->GetVariableInt32Array(baseId + 9, MAX_BEND_POINTS * 2, m_bendPoints);
+	msg->getFieldAsInt32Array(baseId + 9, MAX_BEND_POINTS * 2, m_bendPoints);
 }
 
 
@@ -119,7 +119,7 @@ void NetworkMapLink::fillMessage(CSCPMessage *msg, UINT32 baseId)
 	msg->SetVariable(baseId + 6, m_color);
 	msg->SetVariable(baseId + 7, m_statusObject);
 	msg->SetVariable(baseId + 8, (WORD)m_routing);
-	msg->SetVariableToInt32Array(baseId + 9, MAX_BEND_POINTS *2, m_bendPoints);
+	msg->setFieldInt32Array(baseId + 9, MAX_BEND_POINTS *2, m_bendPoints);
 }
 
 /**

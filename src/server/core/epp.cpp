@@ -164,15 +164,15 @@ EPRule::EPRule(CSCPMessage *pMsg)
 
    m_dwNumActions = pMsg->GetVariableLong(VID_NUM_ACTIONS);
    m_pdwActionList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumActions);
-   pMsg->GetVariableInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
+   pMsg->getFieldAsInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
 
    m_dwNumEvents = pMsg->GetVariableLong(VID_NUM_EVENTS);
    m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumEvents);
-   pMsg->GetVariableInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
+   pMsg->getFieldAsInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
 
    m_dwNumSources = pMsg->GetVariableLong(VID_NUM_SOURCES);
    m_pdwSourceList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumSources);
-   pMsg->GetVariableInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
+   pMsg->getFieldAsInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
 
    pMsg->GetVariableStr(VID_ALARM_KEY, m_szAlarmKey, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_ALARM_MESSAGE, m_szAlarmMessage, MAX_DB_STRING);
@@ -689,11 +689,11 @@ void EPRule::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, m_dwAlarmTimeoutEvent);
    pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComment));
    pMsg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
-   pMsg->SetVariableToInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
+   pMsg->setFieldInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
    pMsg->SetVariable(VID_NUM_EVENTS, m_dwNumEvents);
-   pMsg->SetVariableToInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
+   pMsg->setFieldInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
    pMsg->SetVariable(VID_NUM_SOURCES, m_dwNumSources);
-   pMsg->SetVariableToInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
+   pMsg->setFieldInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
    pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
 	pMsg->SetVariable(VID_SITUATION_ID, m_dwSituationId);
 	pMsg->SetVariable(VID_SITUATION_INSTANCE, m_szSituationInstance);
