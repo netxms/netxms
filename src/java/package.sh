@@ -7,7 +7,7 @@ mvn clean
 mvn -Dmaven.test.skip=true package
 mvn -Dmaven.test.skip=true install
 
-version=`grep '<version>' pom.xml | cut -f 2 -d \> | cut -f 1 -d \<`
+version=`grep '<version>' pom.xml | cut -f 2 -d \> | cut -f 1 -d \<|head -n1`
 
 rm -f \
   netxms-eclipse/Core/jar/netxms-base*.jar \
