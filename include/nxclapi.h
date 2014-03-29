@@ -216,8 +216,8 @@ typedef void * NXC_SESSION;
 /**
  * Node flags
  */
-#define NF_SYSTEM_FLAGS           0x003FFFFF
-#define NF_USER_FLAGS             0xFFC00000
+#define NF_SYSTEM_FLAGS           0x003FFF7F
+#define NF_USER_FLAGS             0xFFC00080
 
 #define NF_IS_SNMP                0x00000001
 #define NF_IS_NATIVE_AGENT        0x00000002
@@ -226,6 +226,7 @@ typedef void * NXC_SESSION;
 #define NF_IS_LOCAL_MGMT          0x00000010
 #define NF_IS_PRINTER             0x00000020
 #define NF_IS_OSPF                0x00000040
+#define NF_REMOTE_AGENT           0x00000080
 #define NF_IS_CPSNMP              0x00000100  /* CheckPoint SNMP agent on port 260 */
 #define NF_IS_CDP                 0x00000200
 #define NF_IS_NDP                 0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */

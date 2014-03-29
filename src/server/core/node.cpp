@@ -1628,7 +1628,7 @@ void Node::updatePrimaryIpAddr()
 		return;
 
 	UINT32 ipAddr = ntohl(ResolveHostName(m_primaryName));
-	if ((ipAddr != m_dwIpAddr) && (ipAddr != INADDR_ANY) && (ipAddr != INADDR_NONE))
+	if ((ipAddr != m_dwIpAddr) && ((ipAddr != INADDR_ANY) || _tcscmp(m_primaryName, _T("0.0.0.0"))) && (ipAddr != INADDR_NONE))
 	{
 		TCHAR buffer1[32], buffer2[32];
 
@@ -1636,8 +1636,17 @@ void Node::updatePrimaryIpAddr()
 			m_szName, (int)m_dwId, IpToStr(m_dwIpAddr, buffer1), IpToStr(ipAddr, buffer2));
 		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_dwId, "aa", ipAddr, m_dwIpAddr);
 
-
-		setPrimaryIPAddress(ipAddr);
+      if (m_dwFlags & NF_REMOTE_AGENT)
+      {
+         LockData();
+         m_dwIpAddr = ipAddr;
+         Modify();
+         UnlockData();
+      }
+      else
+      {
+		   setPrimaryIPAddress(ipAddr);
+      }
 
 		agentLock();
 		delete_and_null(m_pAgentConnection);
@@ -2594,7 +2603,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          }
       }
    }
-   else     /* pIfList == NULL */
+   else if (!(m_dwFlags & NF_REMOTE_AGENT))    /* pIfList == NULL */
    {
       Interface *pInterface;
       UINT32 dwCount;
@@ -3740,6 +3749,52 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (!bAlreadyLocked)
       LockData();
 
+   // Change flags
+   if (pRequest->isFieldExist(VID_FLAGS))
+   {
+      bool wasRemoteAgent = ((m_dwFlags & NF_REMOTE_AGENT) != 0);
+      m_dwFlags &= NF_SYSTEM_FLAGS;
+      m_dwFlags |= pRequest->GetVariableLong(VID_FLAGS) & NF_USER_FLAGS;
+      if (wasRemoteAgent && !(m_dwFlags & NF_REMOTE_AGENT) && (m_dwIpAddr != 0))
+      {
+         if (IsZoningEnabled())
+         {
+		      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		      if (zone != NULL)
+		      {
+			      zone->addToIndex(this);
+		      }
+		      else
+		      {
+			      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneId, m_szName, (int)m_dwId);
+		      }
+         }
+         else
+         {
+				g_idxNodeByAddr.put(m_dwIpAddr, this);
+         }
+      }
+      else if (!wasRemoteAgent && (m_dwFlags & NF_REMOTE_AGENT) && (m_dwIpAddr != 0))
+      {
+         if (IsZoningEnabled())
+         {
+		      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		      if (zone != NULL)
+		      {
+               zone->removeFromIndex(this);
+		      }
+		      else
+		      {
+			      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneId, m_szName, (int)m_dwId);
+		      }
+         }
+         else
+         {
+				g_idxNodeByAddr.remove(m_dwIpAddr);
+         }
+      }
+   }
+
    // Change primary IP address
    if (pRequest->isFieldExist(VID_IP_ADDRESS))
    {
@@ -3863,13 +3918,6 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Enable/disable usage of ifXTable
    if (pRequest->isFieldExist(VID_USE_IFXTABLE))
       m_nUseIfXTable = (BYTE)pRequest->GetVariableShort(VID_USE_IFXTABLE);
-
-   // Change flags
-   if (pRequest->isFieldExist(VID_FLAGS))
-   {
-      m_dwFlags &= NF_SYSTEM_FLAGS;
-      m_dwFlags |= pRequest->GetVariableLong(VID_FLAGS) & NF_USER_FLAGS;
-   }
 
    return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
 }
@@ -4140,7 +4188,7 @@ AgentConnectionEx *Node::createAgentConnection()
  */
 void Node::setPrimaryIPAddress(UINT32 addr)
 {
-	if (addr == m_dwIpAddr)
+	if ((addr == m_dwIpAddr) || (m_dwFlags & NF_REMOTE_AGENT))
 		return;
 
 	if (IsZoningEnabled())
@@ -5322,7 +5370,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
    // to find subnet node primary IP
-   if (m_dwIpAddr != 0)
+   if ((m_dwIpAddr != 0) && !(m_dwFlags & NF_REMOTE_AGENT))
    {
 	   Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
       if (pSubnet != NULL)
@@ -5350,7 +5398,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 		if (m_pParentList[i]->Type() == OBJECT_SUBNET)
 		{
 			Subnet *pSubnet = (Subnet *)m_pParentList[i];
-			if (pSubnet->IpAddr() == (m_dwIpAddr & pSubnet->getIpNetMask()))
+			if ((pSubnet->IpAddr() == (m_dwIpAddr & pSubnet->getIpNetMask())) && !(m_dwFlags & NF_REMOTE_AGENT))
             continue;   // primary IP is in given subnet
 
          UINT32 j;

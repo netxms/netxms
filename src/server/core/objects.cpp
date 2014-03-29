@@ -352,8 +352,27 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
-				if (pObject->IpAddr() != 0)
-					g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
+            if (!(((Node *)pObject)->getFlags() & NF_REMOTE_AGENT))
+            {
+			      if (IsZoningEnabled())
+			      {
+				      Zone *zone = (Zone *)g_idxZoneByGUID.get(((Node *)pObject)->getZoneId());
+				      if (zone != NULL)
+				      {
+					      zone->addToIndex((Node *)pObject);
+				      }
+				      else
+				      {
+					      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
+					                (int)((Node *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+				      }
+               }
+               else
+               {
+                  if (pObject->IpAddr() != 0)
+					      g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
+               }
+            }
             break;
 			case OBJECT_CLUSTER:
             g_idxClusterById.put(pObject->Id(), pObject);
@@ -492,8 +511,27 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
-			if (pObject->IpAddr() != 0)
-				g_idxNodeByAddr.remove(pObject->IpAddr());
+         if (!(((Node *)pObject)->getFlags() & NF_REMOTE_AGENT))
+         {
+			   if (IsZoningEnabled())
+			   {
+				   Zone *zone = (Zone *)g_idxZoneByGUID.get(((Node *)pObject)->getZoneId());
+				   if (zone != NULL)
+				   {
+					   zone->removeFromIndex((Node *)pObject);
+				   }
+				   else
+				   {
+					   DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
+					             (int)((Node *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+				   }
+            }
+            else
+            {
+			      if (pObject->IpAddr() != 0)
+				      g_idxNodeByAddr.remove(pObject->IpAddr());
+            }
+         }
          break;
 		case OBJECT_CLUSTER:
 			g_idxClusterById.remove(pObject->Id());
