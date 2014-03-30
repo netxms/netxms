@@ -507,6 +507,8 @@ public:
    void remove(T *element) { Array::remove((void *)element); }
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *element) { Array::unlink((void *)element); }
+
+   T *getBuffer() { return (T*)__getBuffer(); }
 };
 
 /**

@@ -61,6 +61,7 @@ Array::Array(void *data, int initial, int grow, size_t elementSize)
 	m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = elementSize;
 	m_data = (data != NULL) ? (void **)malloc(m_elementSize * m_allocated) : NULL;
+   memcpy(m_data, data, initial * m_elementSize);
 	m_objectOwner = false;
 	m_objectDestructor = ObjectDestructor;
 }
@@ -79,7 +80,7 @@ Array::~Array()
 }
 
 /**
- * Add pointer-sized element by value
+ * Add element. Pointer sized elements must be passed by value, larger elements - by pointer.
  */
 int Array::add(void *element)
 {
