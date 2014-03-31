@@ -199,6 +199,7 @@
 #define _vftscanf nx_vfwscanf
 #define _vstscanf nx_vswscanf
 #define _tfopen   wfopen
+#define _tfopen64 wfopen64
 #define _tpopen   wpopen
 #define _fgetts   fgetws
 #define _fputts   fputws
@@ -279,6 +280,7 @@
 #define _vftscanf vfscanf
 #define _vstscanf vsscanf
 #define _tfopen   fopen
+#define _tfopen64 fopen64
 #define _tpopen   popen
 #define _fgetts   fgets
 #define _fputts   fputs

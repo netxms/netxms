@@ -1199,6 +1199,9 @@ extern "C"
 #if !HAVE_WFOPEN
 	FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
 #endif
+#if HAVE_FOPEN64 && !HAVE_WFOPEN64
+	FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type);
+#endif
 #if !HAVE_WOPEN
 	int LIBNETXMS_EXPORTABLE wopen(const WCHAR *, int, ...);
 #endif

@@ -1000,6 +1000,23 @@ FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
 
 #endif
 
+#if HAVE_FOPEN64 && !HAVE_WFOPEN64
+
+FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type)
+{
+   char *name, *type;
+   FILE *f;
+
+   name = MBStringFromWideString(_name);
+   type = MBStringFromWideString(_type);
+   f = fopen64(name, type);
+   free(name);
+   free(type);
+   return f;
+}
+
+#endif
+
 #if !HAVE_WOPEN
 
 int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
