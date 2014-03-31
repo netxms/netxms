@@ -72,6 +72,8 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
    m_dwSource = sourceId;
    m_pszMessageText = NULL;
 	m_pszUserTag = (userTag != NULL) ? _tcsdup(userTag) : NULL;
+   if (_tcslen(m_pszUserTag) >= MAX_USERTAG_LENGTH)
+      m_pszUserTag[MAX_USERTAG_LENGTH - 1] = 0;
 	m_pszCustomMessage = NULL;
 	m_parameters.setOwner(true);
 
