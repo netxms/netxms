@@ -690,7 +690,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	public void dispose()
 	{
-		ImageProvider.getInstance(display).removeUpdateListener(this);
+	   ImageProvider p = ImageProvider.getInstance(display);
+	   if (p != null)
+	      p.removeUpdateListener(this);
 		if (defaultLinkColor != null)
 			defaultLinkColor.dispose();
 		super.dispose();

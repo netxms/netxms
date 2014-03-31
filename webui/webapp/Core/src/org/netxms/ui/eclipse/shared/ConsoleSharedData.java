@@ -57,7 +57,7 @@ public class ConsoleSharedData
     */
    public static Object getProperty(Display display, final String name)
    {
-      return RWT.getUISession(display).getAttribute("netxms." + name);
+      return (display != null) ? RWT.getUISession(display).getAttribute("netxms." + name) : null;
    }
    
 	/**
