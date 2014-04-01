@@ -148,10 +148,10 @@ public class DefaultLoginForm extends Window implements LoginForm
 			if (d != null)
 				userImage = d.createImage(false);
 		}
-		catch(MalformedURLException e1)
+		catch(Exception e)
 		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		   Activator.logError("Exception while reading custom image", e);
+		   userImage = null;
 		}
 		
 		final ImageDescriptor customImage = BrandingManager.getInstance().getLoginTitleImage();
