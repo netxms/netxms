@@ -18,8 +18,11 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.util.List;
+import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.maps.elements.NetworkMapObject;
 
 /**
@@ -37,6 +40,7 @@ public class LinkEditor
 	private long statusObject;
 	private int routingAlgorithm;
 	private boolean modified = false;
+	private List<SingleDciConfig> dciList;
 	
 	/**
 	 * @param link
@@ -53,16 +57,17 @@ public class LinkEditor
 		color = link.getColor();
 		statusObject = link.getStatusObject();
 		routingAlgorithm = link.getRouting();
+		dciList = link.getDciAsList();
 	}
 	
 	/**
-	 * 
+	 * Update network map link
 	 */
 	public void update()
 	{
 		mapPage.removeLink(link);
 		long[] bp = link.getBendPoints();
-		link = new NetworkMapLink(name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2);
+		link = new NetworkMapLink(name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2, dciList.toArray(new SingleDciConfig[dciList.size()]), link.getFlags()); 
 		link.setColor(color);
 		link.setStatusObject(statusObject);
 		link.setRouting(routingAlgorithm);
@@ -216,4 +221,20 @@ public class LinkEditor
 	{
 		return modified;
 	}
+
+   /**
+    * @return the config
+    */
+   public List<SingleDciConfig> getDciList()
+   {
+      return dciList;
+   }
+
+   /**
+    * @param config the config to set
+    */
+   public void setDciList(List<SingleDciConfig> dciList)
+   {
+      this.dciList = dciList;
+   }
 }

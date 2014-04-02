@@ -74,13 +74,13 @@ public class VlanMap extends AbstractNetworkMapView
 	protected void buildMapPage()
 	{
 		if (mapPage == null)
-			mapPage = new NetworkMapPage();
+			mapPage = new NetworkMapPage(ID+vlanId);
 		
 		new ConsoleJob(String.format(Messages.get().VlanMap_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NetworkMapPage page = new NetworkMapPage();
+				NetworkMapPage page = new NetworkMapPage(ID+vlanId);
 				collectVlanInfo(page, (Node)rootObject);
 				replaceMapPage(page, getDisplay());
 			}
@@ -89,7 +89,7 @@ public class VlanMap extends AbstractNetworkMapView
 			protected void jobFailureHandler()
 			{
 				// On failure, create map with root object only
-				NetworkMapPage page = new NetworkMapPage();
+				NetworkMapPage page = new NetworkMapPage(ID+vlanId);
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), rootObject.getObjectId()));
 				replaceMapPage(page, getDisplay());
 			}
@@ -158,7 +158,7 @@ public class VlanMap extends AbstractNetworkMapView
 					{
 						Interface peerIf = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
 						page.addLink(new NetworkMapLink(null, NetworkMapLink.NORMAL, rootElementId, nodeElementId,
-								       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???")); //$NON-NLS-1$
+								       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???", "", 0)); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				}
 				catch(NXCException e)

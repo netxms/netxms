@@ -139,8 +139,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		});
 
-		if (mapObject.getMapType() == org.netxms.client.objects.NetworkMap.TYPE_CUSTOM)
-			addDropSupport();
+		addDropSupport();
 			
 		ImageProvider.getInstance().addUpdateListener(this);
 		
@@ -241,6 +240,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	protected void buildMapPage()
 	{
 		mapPage = ((org.netxms.client.objects.NetworkMap)rootObject).createMapPage();
+      addDciToRequestList();
 	}
 
 	/*
@@ -458,6 +458,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			return;
 
 		addObjectsFromList(dlg.getSelectedObjects(), null);
+      addDciToRequestList();
 	}
 
 	/**
@@ -626,6 +627,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 				return Messages.get().PredefinedMap_SaveJobError;
 			}
 		}.start();
+      addDciToRequestList();
 	}
 
 	/**

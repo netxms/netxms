@@ -56,10 +56,11 @@ public class ServiceComponents extends AbstractNetworkMapView
 	@Override
 	protected void buildMapPage()
 	{
-		mapPage = new NetworkMapPage();
+		mapPage = new NetworkMapPage(ID+rootObject.getObjectId());
 		long elementId = mapPage.createElementId();
 		mapPage.addElement(new NetworkMapObject(elementId, rootObject.getObjectId()));
 		addServiceComponents(rootObject, elementId);
+		addDciToRequestList();
 	}
 
 	/**

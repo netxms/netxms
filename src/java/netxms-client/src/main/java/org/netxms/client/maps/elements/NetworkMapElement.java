@@ -34,6 +34,7 @@ public class NetworkMapElement
 	protected int type;
 	protected int x;
 	protected int y;
+	private int flags;
 	
 	/**
 	 * Factory method for creating map element from NXCP message.
@@ -68,6 +69,7 @@ public class NetworkMapElement
 		type = msg.getVariableAsInteger(baseId + 1);
 		x = msg.getVariableAsInteger(baseId + 2);
 		y = msg.getVariableAsInteger(baseId + 3);
+		flags = msg.getVariableAsInteger(baseId + 4);
 	}
 	
 	/**
@@ -79,6 +81,7 @@ public class NetworkMapElement
 		type = MAP_ELEMENT_GENERIC;
 		x = 0;
 		y = 0;
+		flags = 0;
 	}
 	
 	/**
@@ -93,6 +96,7 @@ public class NetworkMapElement
 		msg.setVariableInt16(baseId + 1, type);
 		msg.setVariableInt32(baseId + 2, x);
 		msg.setVariableInt32(baseId + 3, y);
+		msg.setVariableInt32(baseId + 4, flags);
 	}
 
 	/**
@@ -158,4 +162,36 @@ public class NetworkMapElement
 	{
 		return (int)id;
 	}
+
+   /**
+    * @return the flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   /**
+    * @param flags the flags to set
+    */
+   public void setFlags(int flags)
+   {
+      this.flags = flags;
+   }
+   
+   /**
+    * @param flag the flag to be added to current flags
+    */
+   public void addFlag(int flags)
+   {
+      this.flags |= flags;
+   }
+   
+   /**
+    * @param flag the flag 
+    */
+   public void removeFlag(int flags)
+   {
+      this.flags &= ~flags;
+   }
 }

@@ -100,6 +100,7 @@ import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.datacollection.TransformationTestResult;
@@ -113,6 +114,7 @@ import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.log.Log;
+import org.netxms.client.maps.MapDCIInstance;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
@@ -296,7 +298,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    // Event templates
    private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
    private boolean eventTemplatesNeedSync = false;
-
+   
    /**
     * @param connAddress
     * @param connPort
@@ -2904,6 +2906,40 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    {
       return getLastValues(nodeId, false);
    }
+   
+   /**
+    * Get last DCI values for given DCI id list(list can contain simple DCIss and table DCIs) 
+    *
+    * @param dciIDList            List with all required data to get last DCI id
+    * @return List of DCI values
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DciValue[] getLastValues(Set<MapDCIInstance> dciIDList) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_VALUES);
+      msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, dciIDList.size());
+      long base = NXCPCodes.VID_DCI_ID_LIST_BASE;
+      for(MapDCIInstance item : dciIDList)
+      {
+         item.fillMessage(msg, base);
+         base +=10;
+      }
+
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
+      DciValue[] list = new DciValue[count];
+      base = NXCPCodes.VID_DCI_ID_LIST_BASE;
+      for(int i = 0; i < count; i++, base += 10)
+      {
+         list[i] = (DciValue)new SimpleDciValue(response.getVariableAsInt64(base), response.getVariableAsString(base+1), response.getVariableAsInteger(base+2), response.getVariableAsInteger(base+3));
+      }
+
+      return list;
+   }
 
    /**
     * Get last values for given table DCI on given node
@@ -3361,6 +3397,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          case AbstractObject.OBJECT_NETWORKMAP:
             msg.setVariableInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
             msg.setVariableInt32(NXCPCodes.VID_SEED_OBJECT, (int) data.getSeedObjectId());
+            msg.setVariableInt32(NXCPCodes.VID_FLAGS, (int) data.getFlags());
             break;
          case AbstractObject.OBJECT_NETWORKSERVICE:
             msg.setVariableInt16(NXCPCodes.VID_SERVICE_TYPE, data.getServiceType());
@@ -3659,7 +3696,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          for(NetworkMapLink l : data.getMapLinks())
          {
             l.fillMessage(msg, varId);
-            varId += 10;
+            varId += 20;
          }
       }
 
@@ -4144,7 +4181,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       long[] idList = response.getVariableAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
       if (idList.length != count) throw new NXCException(RCC.INTERNAL_ERROR);
 
-      NetworkMapPage page = new NetworkMapPage();
+      NetworkMapPage page = new NetworkMapPage(msg.getMessageId()+"L2Topology");
       for(int i = 0; i < count; i++)
       {
          page.addElement(new NetworkMapObject(page.createElementId(), idList[i]));
@@ -4152,16 +4189,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
       count = response.getVariableAsInteger(NXCPCodes.VID_NUM_LINKS);
       long varId = NXCPCodes.VID_OBJECT_LINKS_BASE;
-      for(int i = 0; i < count; i++, varId += 5)
+      for(int i = 0; i < count; i++, varId += 3)
       {
          NetworkMapObject obj1 = page.findObjectElement(response.getVariableAsInt64(varId++));
          NetworkMapObject obj2 = page.findObjectElement(response.getVariableAsInt64(varId++));
          int type = response.getVariableAsInteger(varId++);
          String port1 = response.getVariableAsString(varId++);
          String port2 = response.getVariableAsString(varId++);
+         String config = response.getVariableAsString(varId++);
+         int flags = response.getVariableAsInteger(varId++);
          if ((obj1 != null) && (obj2 != null))
          {
-            page.addLink(new NetworkMapLink("", type, obj1.getId(), obj2.getId(), port1, port2));
+            page.addLink(new NetworkMapLink("", type, obj1.getId(), obj2.getId(), port1, port2, config, flags));
          }
       }
       return page;

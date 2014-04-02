@@ -37,8 +37,8 @@ import org.netxms.client.objects.AbstractObject;
  */
 public abstract class ObjectTab implements IPluginContribution
 {
-	private String pluginId;
-	private String id;
+	protected String pluginId;
+	protected String id;
 	private ViewPart viewPart;
 	private CTabFolder tabFolder;
 	private CTabItem tabItem;

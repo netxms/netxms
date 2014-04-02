@@ -499,6 +499,7 @@ private:
 	void clearDCIData(CSCPMessage *pRequest);
    void changeDCIStatus(CSCPMessage *pRequest);
    void getLastValues(CSCPMessage *pRequest);
+   void getLastValuesByDciId(CSCPMessage *pRequest);
    void getTableLastValues(CSCPMessage *pRequest);
 	void getThresholdSummary(CSCPMessage *request);
    void openEPP(CSCPMessage *request);

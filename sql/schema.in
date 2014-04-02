@@ -1287,6 +1287,7 @@ CREATE TABLE network_map_elements
 	element_id integer not null,
 	element_type integer not null,
 	element_data SQL_TEXT not null,
+	flags integer not null,
 	PRIMARY KEY(map_id,element_id)
 ) TABLE_TYPE;
 
@@ -1306,6 +1307,8 @@ CREATE TABLE network_map_links
 	status_object integer not null,
 	routing integer not null,
 	bend_points SQL_TEXT4K null,
+	element_data SQL_TEXT null,
+	flags integer not null,
 	PRIMARY KEY(map_id,element1,element2)
 ) TABLE_TYPE;
 

@@ -55,10 +55,11 @@ public class ServiceDependency extends AbstractNetworkMapView
 	@Override
 	protected void buildMapPage()
 	{
-		mapPage = new NetworkMapPage();
+		mapPage = new NetworkMapPage(ID+rootObject.getObjectId());
 		long elementId = mapPage.createElementId();
 		mapPage.addElement(new NetworkMapObject(elementId, rootObject.getObjectId()));
 		addParentServices(rootObject, elementId);
+      addDciToRequestList();
 	}
 
 	/**

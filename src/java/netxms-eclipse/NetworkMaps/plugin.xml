@@ -268,6 +268,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.DataSources"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.DataSourcaes"
+            name="%page.name.DataSources">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">

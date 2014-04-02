@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.networkmaps.views;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -32,6 +33,17 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef4.zest.core.viewers.AbstractZoomableViewer;
+import org.eclipse.gef4.zest.core.viewers.IZoomableWorkbenchPart;
+import org.eclipse.gef4.zest.core.widgets.Graph;
+import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.GraphNode;
+import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.CompositeLayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IContributionItem;
@@ -63,23 +75,13 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.gef4.zest.core.viewers.AbstractZoomableViewer;
-import org.eclipse.gef4.zest.core.viewers.IZoomableWorkbenchPart;
-import org.eclipse.gef4.zest.core.widgets.Graph;
-import org.eclipse.gef4.zest.core.widgets.GraphConnection;
-import org.eclipse.gef4.zest.core.widgets.GraphNode;
-import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.CompositeLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
@@ -94,6 +96,7 @@ import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandler;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.BendpointEditor;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkDciValueProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
@@ -163,6 +166,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	private BendpointEditor bendpointEditor = null;
 	private SessionListener sessionListener;
 	private List<DoubleClickHandlerData> doubleClickHandlers = new ArrayList<DoubleClickHandlerData>(0);
+   private LinkDciValueProvider dciValueProvider;
 
 	/*
 	 * (non-Javadoc)
@@ -173,6 +177,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
+
+      dciValueProvider = LinkDciValueProvider.getinstance();
 
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
       disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND");
@@ -408,6 +414,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			public void run()
 			{
 				mapPage = page;
+				addDciToRequestList();
 				viewer.setInput(mapPage);
 			}
 		});
@@ -1027,8 +1034,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 
 		List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());
 		if (links != null)
+		{
 			for(NetworkMapLink l : links)
 				viewer.refresh(l);
+			addDciToRequestList();
+		}
 
 		if (object.getObjectId() == rootObject.getObjectId())
 			rootObject = object;
@@ -1068,6 +1078,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			IDialogSettings settings = Activator.getDefault().getDialogSettings();
 			settings.put(viewId + ".objectFigureType", labelProvider.getObjectFigureType().ordinal()); //$NON-NLS-1$
 		}
+		removeDciFromRequestList();
 		super.dispose();
 	}
 
@@ -1292,4 +1303,44 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		int priority;
 		Class<?> enabledFor;
 	}
+	
+	/**
+	 * Goes thought all links and trys to add to request list required DCIs.
+	 */
+	protected void addDciToRequestList()
+   {
+      Collection<NetworkMapLink> linkList = mapPage.getLinks();
+      for (NetworkMapLink item : linkList)
+      {
+         if(item.hasDciData())
+         {
+            for (SingleDciConfig value :item.getDciAsList())
+            {
+               if(value.type == SingleDciConfig.ITEM)
+               {
+                  dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
+               }
+               else
+               {
+                  dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
+               }
+            }
+         }
+      }
+   }
+   
+	/**
+    * Removes DCIs from request list 
+    */
+   protected void removeDciFromRequestList()
+   {
+      Collection<NetworkMapLink> linkList = mapPage.getLinks();
+      for (NetworkMapLink item : linkList)
+      {
+         if(item.hasDciData())
+         {
+            dciValueProvider.removeDcis(mapPage);
+         }
+      }
+   }
 }

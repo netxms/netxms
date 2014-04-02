@@ -104,7 +104,7 @@ public class NetworkMap extends GenericObject
 		for(int i = 0; i < count; i++)
 		{
 			links.add(new NetworkMapLink(msg, varId));
-			varId += 10;
+			varId += 20;
 		}
 	}
 

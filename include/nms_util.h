@@ -479,6 +479,7 @@ public:
 
 	int add(T value) { return Array::add(CAST_TO_POINTER(value, void *)); }
 	T get(int index) { return CAST_FROM_POINTER(Array::get(index), T); }
+	int indexOf(T value) { return Array::indexOf(CAST_TO_POINTER(value, void *)); }
 	void set(int index, T value) { Array::set(index, CAST_TO_POINTER(value, void *)); }
 	void replace(int index, T value) { Array::replace(index, CAST_TO_POINTER(value, void *)); }
 

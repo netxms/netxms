@@ -103,6 +103,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Color defaultLinkColor = null;
 	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
 	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
+	private LinkDciValueProvider dciValueProvider;
 	
 	/**
 	 * Create map label provider
@@ -151,6 +152,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		enableLongObjectName = ps.getBoolean("ENABLE_LONG_OBJECT_NAME");
+		dciValueProvider = LinkDciValueProvider.getinstance();
 	}
 
 	/*
@@ -422,14 +424,31 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
-		if (link.hasName())
-		{
-			ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
-			nameLocator.setRelativePosition(PositionConstants.CENTER);
-			final Label label = new ConnectorLabel(link.getName());
-			label.setFont(fontLabel);
-			connection.getConnectionFigure().add(label, nameLocator);
-		}
+		
+		boolean hasDciData = link.hasDciData();
+      boolean hasName = link.hasName();
+      
+      if (hasName || hasDciData)
+      {
+         ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
+         nameLocator.setRelativePosition(PositionConstants.CENTER);
+         
+         String labelString = "";
+         if(hasName)
+            labelString += link.getName();
+         
+         if(hasName && hasDciData)
+            labelString +="\n";
+         
+         if(hasDciData)
+         {
+            labelString += dciValueProvider.getDciDataAsString(link);
+         }
+         
+         final Label label = new ConnectorLabel(labelString);
+         label.setFont(fontLabel);
+         connection.getConnectionFigure().add(label, nameLocator);
+      }
 
 		if (link.getStatusObject() != 0)
 		{

@@ -65,6 +65,7 @@ public class NXCObjectCreationData
 	private boolean createStatusDci;
 	private String deviceId;
 	private int height;
+	private int flags;
 	
 	/**
 	 * Constructor.
@@ -610,4 +611,20 @@ public class NXCObjectCreationData
 	{
 		this.height = height;
 	}
+
+   /**
+    * @return the flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   /**
+    * @param flags the flags to set
+    */
+   public void setFlags(int flags)
+   {
+      this.flags = flags;
+   }
 }

@@ -53,7 +53,7 @@ public class IPNeighbors extends AbstractNetworkMapView
 	 */
 	protected void buildMapPage()
 	{
-		mapPage = new NetworkMapPage();
+		mapPage = new NetworkMapPage(ID+this.toString());
 
 		long rootElementId = mapPage.createElementId();
 		mapPage.addElement(new NetworkMapObject(rootElementId, rootObject.getObjectId()));
@@ -71,6 +71,7 @@ public class IPNeighbors extends AbstractNetworkMapView
 				addNodesFromSubnet((Subnet)object, elementId, rootObject.getObjectId());
 			}
 		}
+		addDciToRequestList();
 	}
 
 	/**
@@ -95,5 +96,6 @@ public class IPNeighbors extends AbstractNetworkMapView
 				}
 			}
 		}
+      addDciToRequestList();
 	}
 }

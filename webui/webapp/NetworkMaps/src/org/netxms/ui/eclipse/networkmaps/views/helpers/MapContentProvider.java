@@ -113,6 +113,13 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 								if (o != null)
 									viewer.refresh(o);
 							}
+							if(page != null && page.getLinks() != null)
+   							for(NetworkMapLink e : page.getLinks())
+                        {
+                           if (!e.hasDciData())
+                              continue;
+                           viewer.refresh(e);
+                        }
 						}
 					}
 				});

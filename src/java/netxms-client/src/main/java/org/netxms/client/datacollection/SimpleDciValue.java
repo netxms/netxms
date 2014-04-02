@@ -34,4 +34,14 @@ public class SimpleDciValue extends DciValue
 	{
 		super(nodeId, msg, base);
 	}
+	
+	/**
+    * @param nodeId
+    * @param msg
+    * @param base
+    */
+   public SimpleDciValue(long id, String value, int dataType, int status)
+   {
+      super(id, value, dataType, status);
+   }
 }

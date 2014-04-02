@@ -104,7 +104,7 @@ public class ClusterTab extends ObjectTab
 		{
 			cluster = null;
 			resourceList.setInput(new ClusterResource[0]);
-			clusterMap.setContent(new NetworkMapPage());
+			clusterMap.setContent(new NetworkMapPage(pluginId+id));
 		}
 		getClientArea().layout(true);
 	}
@@ -125,7 +125,7 @@ public class ClusterTab extends ObjectTab
 	 */
 	private NetworkMapPage buildClusterMap()
 	{
-		NetworkMapPage page = new NetworkMapPage();
+		NetworkMapPage page = new NetworkMapPage(pluginId+id);
 		long id = 1;
 		
 		page.addElement(new NetworkMapObject(id++, cluster.getObjectId()));

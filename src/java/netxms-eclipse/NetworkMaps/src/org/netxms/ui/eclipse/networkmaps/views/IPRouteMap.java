@@ -85,7 +85,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 	protected void buildMapPage()
 	{
 		if (mapPage == null)
-			mapPage = new NetworkMapPage();
+			mapPage = new NetworkMapPage(ID+rootObject.getObjectName()+targetObject.getObjectName());
 		
 		new ConsoleJob(String.format(Messages.get().IPRouteMap_JobTitle, rootObject.getObjectName(), targetObject.getObjectName()),
 				this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
@@ -99,7 +99,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 			protected void jobFailureHandler()
 			{
 				// On failure, create map with root object only
-				NetworkMapPage page = new NetworkMapPage();
+				NetworkMapPage page = new NetworkMapPage(ID+rootObject.getObjectName()+targetObject.getObjectName());
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), rootObject.getObjectId()));
 				replaceMapPage(page, getDisplay());
 			}
@@ -120,7 +120,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 	private void getRoute(Display display) throws Exception
 	{
 		final NetworkPath path = session.getNetworkPath(rootObject.getObjectId(), targetObject.getObjectId());
-		final NetworkMapPage page = new NetworkMapPage();
+		final NetworkMapPage page = new NetworkMapPage(ID+rootObject.getObjectName()+targetObject.getObjectName());
 		long prevElementId = 0;
 		for(final HopInfo h : path.getPath())
 		{

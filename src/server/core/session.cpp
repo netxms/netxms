@@ -1003,6 +1003,9 @@ void ClientSession::processingThread()
          case CMD_GET_LAST_VALUES:
             getLastValues(pMsg);
             break;
+         case CMD_GET_DCI_VALUES:
+            getLastValuesByDciId(pMsg);
+            break;
          case CMD_GET_TABLE_LAST_VALUES:
             getTableLastValues(pMsg);
             break;
@@ -3940,6 +3943,92 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Send latest collected values for all DCIs from given list.
+ * Error message will never be returned. Will be returned only
+ * possible DCI values.
+ */
+void ClientSession::getLastValuesByDciId(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *object;
+   DCObject *dcoObj;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   UINT32 size = pRequest->GetVariableLong(VID_NUM_ITEMS);
+   UINT32 incomingIndex = VID_DCI_VALUES_BASE;
+   UINT32 outgoingIndex = VID_DCI_VALUES_BASE;
+
+   for(int i = 0 ; i < size; i++, incomingIndex+=10)
+   {
+      TCHAR *value;
+      UINT32 type, status;
+
+      object = FindObjectById(pRequest->GetVariableLong(incomingIndex));
+      if (object != NULL)
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) ||
+                (object->Type() == OBJECT_TEMPLATE) || (object->Type() == OBJECT_CLUSTER))
+            {
+               UINT32 dciID = pRequest->GetVariableLong(incomingIndex+1);
+               dcoObj = ((DataCollectionTarget *)object)->getDCObjectById(dciID);
+               if(dcoObj == NULL)
+                  continue;
+
+               if (dcoObj->getType() == DCO_TYPE_TABLE)
+               {
+                  TCHAR * column = pRequest->GetVariableStr(incomingIndex+2);
+                  TCHAR * instance = pRequest->GetVariableStr(incomingIndex+3);
+                  if(column == NULL || instance == NULL || _tcscmp(column, _T("")) == 0 || _tcscmp(instance, _T("")) == 0)
+                  {
+                     continue;
+                  }
+
+                  Table *t = ((DCTable *)dcoObj)->getLastValue();
+                  int columnIndex =  t->getColumnIndex(column);
+                  int rowIndex = t->findRowByInstance(instance);
+                  type = t->getColumnDataType(columnIndex);
+                  value = _tcsdup(t->getAsString(rowIndex, columnIndex));
+                  t->decRefCount();
+
+                  safe_free(column);
+                  safe_free(instance);
+               }
+               else
+               {
+                  if (dcoObj->getType() == DCO_TYPE_ITEM)
+                  {
+                     type = (WORD)((DCItem *)dcoObj)->getDataType();
+                     value = _tcsdup(((DCItem *)dcoObj)->getLastValue());
+                  }
+                  else
+                     continue;
+               }
+
+
+               status = dcoObj->getStatus();
+
+               msg.SetVariable(outgoingIndex, dciID);
+               msg.SetVariable(outgoingIndex+1, value);
+               msg.SetVariable(outgoingIndex+2, type);
+               msg.SetVariable(outgoingIndex+3, status);
+               safe_free(value);
+               outgoingIndex +=10;
+            }
+         }
+      }
+   }
+   // Set result
+   msg.SetVariable(VID_NUM_ITEMS, (outgoingIndex - VID_DCI_VALUES_BASE)/10);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
    // Send response
    sendMessage(&msg);
 }
@@ -11596,7 +11685,7 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
 
 	int length = (int)request->GetVariableLong(VID_EXTENSION_COUNT);
 	DbgPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d."), length);
-   
+
    UINT32 varId = VID_EXTENSION_LIST_BASE;
 
    bool musicFiles = (length > 0);

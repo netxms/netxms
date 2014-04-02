@@ -19,6 +19,7 @@
 package org.netxms.client.datacollection;
 
 import java.util.Date;
+import java.util.IllegalFormatException;
 
 import org.netxms.base.NXCPMessage;
 
@@ -91,7 +92,73 @@ public abstract class DciValue
 		else
 			activeThreshold = null;
 	}
-
+	
+	/**
+	 * Constructor for creating DCIValue from last values message
+	 * 
+	 * @param id
+	 * @param value
+	 * @param dataType
+	 * @param status
+	 */
+	public DciValue(long id, String value, int dataType, int status)
+	{
+	   this.id = id;
+	   this.value = value;
+	   this.dataType = dataType;
+	   this.status = status;
+	}
+	
+	/**
+	 * Returns formated DCI value or string with format error and correct type of DCI value;
+	 * 
+	 * @param formatString the string into which will be placed DCI value 
+	 * @return
+	 */
+	public String format(String formatString)
+	{
+	   Object v;
+	   String dciType = "String";
+	   try
+	   {
+   	   switch(dataType)
+   	   {
+   	      case DataCollectionObject.DT_INT:
+            case DataCollectionObject.DT_UINT:
+               dciType = "Integer";
+   	         v =  Integer.parseInt(value);
+   	         break;
+   	      case DataCollectionObject.DT_FLOAT:
+               dciType = "Float";
+   	         v = Float.parseFloat(value);
+   	         break;
+   	      case DataCollectionItem.DT_INT64:
+   	      case DataCollectionItem.DT_UINT64:
+               dciType = "Long";
+   	         v = Long.parseLong(value);
+   	         break;
+   	      default:
+   	         v = value;
+   	         break;
+   	   }
+	   }	   
+	   catch(NumberFormatException e)
+	   {
+	      v = value;
+	   }
+	   
+	   String result = "";
+	   try
+	   {
+	      result = String.format(formatString, v);
+	   }
+	   catch(IllegalFormatException e)
+	   {
+	      result = "String format exception. DCI type " + dciType;
+	   }
+	   return result;
+	}
+	
 	/**
 	 * @return the id
 	 */

@@ -488,6 +488,7 @@ typedef struct
 #define CMD_SET_ALARM_STATUS_FLOW      0x0120
 #define CMD_DELETE_ALARM_NOTE          0x0121
 #define CMD_GET_EFFECTIVE_RIGHTS       0x0122
+#define CMD_GET_DCI_VALUES             0x0123
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1132,6 +1133,8 @@ typedef struct
 #define VID_RULE_LIST_BASE          ((UINT32)0x10000000)
 
 #define VID_EXTENSION_LIST_BASE     ((UINT32)0x10000000)
+
+#define VID_DCI_VALUES_BASE         ((UINT32)0x10000000)
 
 //
 // Inline functions
