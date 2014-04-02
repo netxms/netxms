@@ -142,7 +142,8 @@ void StringSet::forEach(bool (*cb)(const TCHAR *, void *), void *userData)
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      cb(entry->str, userData);
+      if (!cb(entry->str, userData))
+         break;
    }
 }
 
