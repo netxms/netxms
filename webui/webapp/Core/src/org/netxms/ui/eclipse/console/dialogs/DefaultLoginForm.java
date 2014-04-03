@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.console.dialogs;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 import org.eclipse.jface.dialogs.MessageDialog;
