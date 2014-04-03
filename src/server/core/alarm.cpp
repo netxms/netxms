@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -483,7 +483,7 @@ UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, ClientSession *session, bool 
 /**
  * Resolve and possibly terminate all alarms with given key
  */
-void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool terminate)
+void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *pEvent)
 {
    UINT32 *pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * m_numAlarms);
 
@@ -522,6 +522,21 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
 				memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_numAlarms - i));
 				i--;
 			}
+         else
+         {
+	         // Add record to alarm_events table if alarm is resolved
+	         TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
+	         const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
+	         _sntprintf(valAlarmId, 16, _T("%d"), (int)&m_pAlarmList[i].dwAlarmId);
+	         _sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
+	         _sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
+	         _sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
+	         _sntprintf(valSource, 16, _T("%d"), pEvent->getSourceId());
+	         _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)pEvent->getTimeStamp());
+	         static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
+	         QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
+	                         8, sqlTypes, values);
+         }
       }
    unlock();
 

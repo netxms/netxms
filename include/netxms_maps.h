@@ -94,13 +94,13 @@ public:
 class LIBNXMAP_EXPORTABLE nxmap_ObjList
 {
 protected:
-   IntegerArray<UINT32> m_objectList;
-   ObjectArray<ObjLink> m_linkList;
+   IntegerArray<UINT32> *m_objectList;
+   ObjectArray<ObjLink> *m_linkList;
 
 public:
    nxmap_ObjList();
-   nxmap_ObjList(nxmap_ObjList *old);
-   nxmap_ObjList(CSCPMessage *pMsg);
+   nxmap_ObjList(nxmap_ObjList *src);
+   nxmap_ObjList(CSCPMessage *msg);
    ~nxmap_ObjList();
 
    void addObject(UINT32 id);
@@ -109,10 +109,10 @@ public:
    void removeObject(UINT32 id);
    void clear();
 
-   UINT32 getNumObjects() { return m_objectList.size(); }
-   IntegerArray<UINT32> *getObjects() { return &m_objectList; }
-   UINT32 getNumLinks() { return m_linkList.size(); }
-   ObjectArray<ObjLink> *getLinks() { return &m_linkList; }
+   UINT32 getNumObjects() { return m_objectList->size(); }
+   IntegerArray<UINT32> *getObjects() { return m_objectList; }
+   UINT32 getNumLinks() { return m_linkList->size(); }
+   ObjectArray<ObjLink> *getLinks() { return m_linkList; }
 
 	void createMessage(CSCPMessage *pMsg);
 
@@ -264,7 +264,7 @@ public:
 	TCHAR *getBendPoints(TCHAR *buffer);
 	UINT32 getFlags() { return m_flags; }
 	const TCHAR *getConfig() { return CHECK_NULL_EX(m_config); }
-	bool checkFlagSet(UINT32 flags) { return (m_flags & flags); }
+	bool checkFlagSet(UINT32 flag) { return (m_flags & flag) != 0; }
 
 	void setName(const TCHAR *name);
 	void setConnector1Name(const TCHAR *name);
