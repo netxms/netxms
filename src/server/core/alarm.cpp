@@ -527,7 +527,7 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
 	         // Add record to alarm_events table if alarm is resolved
 	         TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
 	         const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
-	         _sntprintf(valAlarmId, 16, _T("%d"), (int)&m_pAlarmList[i].dwAlarmId);
+	         _sntprintf(valAlarmId, 16, _T("%d"), (int)m_pAlarmList[i].dwAlarmId);
 	         _sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
 	         _sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
 	         _sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
