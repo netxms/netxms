@@ -25,8 +25,8 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			poll.cpp rack.cpp radius.cpp report.cpp report_job.cpp \
 			reporting.cpp rootobj.cpp script.cpp session.cpp \
 			situation.cpp slmcheck.cpp smclp.cpp sms.cpp snmp.cpp \
-			snmptrap.cpp subnet.cpp svccontainer.cpp swpkg.cpp \
-			syncer.cpp syslogd.cpp template.cpp tools.cpp \
+			snmptrap.cpp stp.cpp subnet.cpp svccontainer.cpp \
+			swpkg.cpp syncer.cpp syslogd.cpp template.cpp tools.cpp \
 			tracert.cpp uniroot.cpp upload_job.cpp uptimecalc.cpp \
 			userdb.cpp userdb_objects.cpp vpnconn.cpp vrrp.cpp \
 			watchdog.cpp winperf.cpp xmpp.cpp zone.cpp 
