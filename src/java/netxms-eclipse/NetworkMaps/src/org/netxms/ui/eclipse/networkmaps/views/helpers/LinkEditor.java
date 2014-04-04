@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import java.util.List;
-import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.SingleDciConfig;

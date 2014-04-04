@@ -42,7 +42,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.maps.configs.DciListConfig;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.networkmaps.dialogs.DataSourceEditDlg;
@@ -61,7 +60,6 @@ public class DataSources extends PropertyPage
    public static final int COLUMN_METRIC = 2;
    public static final int COLUMN_LABEL = 3;
 
-   private DciListConfig config;
    private DciListLabelProvider labelProvider;
    private SortableTableViewer viewer;
    private Button addButton;

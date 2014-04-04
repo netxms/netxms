@@ -18,7 +18,6 @@
  */
 package org.netxms.client.maps.configs;
 
-import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.simpleframework.xml.Attribute;
