@@ -839,7 +839,7 @@ void NetworkMap::setFilter(const TCHAR *filter)
 		TCHAR error[256];
 
 		m_filterSource = _tcsdup(filter);
-		m_filter = NXSLCompile(m_filterSource, error, 256);
+		m_filter = NXSLCompileAndCreateVM(m_filterSource, error, 256, new NXSL_ServerEnv);
 		if (m_filter == NULL)
 			nxlog_write(MSG_NETMAP_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
 	}
@@ -857,22 +857,19 @@ void NetworkMap::setFilter(const TCHAR *filter)
  */
 bool NetworkMap::isAllowedOnMap(NetObj *object)
 {
-	NXSL_ServerEnv *pEnv;
-	NXSL_Value *value;
 	bool result = true;
 
 	LockData();
 	if (m_filter != NULL)
 	{
-		pEnv = new NXSL_ServerEnv;
       m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
       if (object->Type() == OBJECT_NODE)
       {
 		   m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
       }
-		if (m_filter->run(pEnv, 0, NULL) == 0)
+		if (m_filter->run(0, NULL))
 		{
-			value = m_filter->getResult();
+			NXSL_Value *value = m_filter->getResult();
 			result = ((value != NULL) && (value->getValueAsInt32() != 0));
 		}
 		else

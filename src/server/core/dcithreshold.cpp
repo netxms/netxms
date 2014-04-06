@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -270,7 +270,6 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
       if (m_script != NULL)
       {
          NXSL_Value *nxslValue = new NXSL_Value(value.getString());
-         NXSL_ServerEnv *env = new NXSL_ServerEnv;
          m_script->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, target)));
          if (target->Type() == OBJECT_NODE)
          {
@@ -278,7 +277,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          }
          m_script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
          m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->Type() == OBJECT_CLUSTER) ? 1 : 0));
-         if (m_script->run(env, 1, &nxslValue) == 0)
+         if (m_script->run(1, &nxslValue))
          {
             nxslValue = m_script->getResult();
             if (nxslValue != NULL)
@@ -807,7 +806,7 @@ void Threshold::setScript(TCHAR *script)
       if (m_scriptSource[0] != 0)
       {
 			/* TODO: add compilation error handling */
-         m_script = (NXSL_Program *)NXSLCompile(m_scriptSource, NULL, 0);
+         m_script = NXSLCompileAndCreateVM(m_scriptSource, NULL, 0, new NXSL_ServerEnv);
       }
       else
       {

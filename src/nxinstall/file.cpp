@@ -30,7 +30,7 @@
  *   1) file name
  *   2) desired access
  */
-int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -48,7 +48,7 @@ int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
  *   1) source file name
  *   2) destination file name
  */
-int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -70,7 +70,7 @@ int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program 
  *   1) old file name
  *   2) new file name
  */
-int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -87,7 +87,7 @@ int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Progra
  * Parameters:
  *   1) file name
  */
-int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -101,7 +101,7 @@ int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Progra
  * Parameters:
  *   1) directory name
  */
-int F_mkdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_mkdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -115,7 +115,7 @@ int F_mkdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
  * Parameters:
  *   1) directory name
  */
-int F_rmdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_rmdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;

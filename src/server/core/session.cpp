@@ -774,7 +774,7 @@ void ClientSession::processingThread()
             sendServerInfo(pMsg->GetId());
             break;
          case CMD_GET_MY_CONFIG:
-            SendConfigForAgent(pMsg);
+            sendConfigForAgent(pMsg);
             break;
          case CMD_GET_OBJECTS:
             sendAllObjects(pMsg);
@@ -3961,7 +3961,7 @@ void ClientSession::getLastValuesByDciId(CSCPMessage *pRequest)
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
-   UINT32 size = pRequest->GetVariableLong(VID_NUM_ITEMS);
+   int size = pRequest->getFieldAsInt32(VID_NUM_ITEMS);
    UINT32 incomingIndex = VID_DCI_VALUES_BASE;
    UINT32 outgoingIndex = VID_DCI_VALUES_BASE;
 
@@ -8574,12 +8574,10 @@ void ClientSession::SwapAgentConfigs(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send config to agent on request
-//
-
-void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
+/**
+ * Send config to agent on request
+ */
+void ClientSession::sendConfigForAgent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szPlatform[MAX_DB_STRING], szError[256], szBuffer[256], *pszText;
@@ -8630,9 +8628,10 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
 
             // Run script
             DbgPrintf(3, _T("Running configuration matching script %d"), dwCfgId);
-            if (pScript->run(new NXSL_ServerEnv, 5, ppArgList) == 0)
+            NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv);
+            if (vm->load(pScript) && vm->run(5, ppArgList))
             {
-               pValue = pScript->getResult();
+               pValue = vm->getResult();
                if (pValue->getValueAsInt32() != 0)
                {
                   DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"),
@@ -8653,10 +8652,10 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
             else
             {
                _sntprintf(szError, 256, _T("AgentCfg::%d"), dwCfgId);
-               PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError,
-                         pScript->getErrorText(), 0);
+               PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError, vm->getErrorText(), 0);
             }
             delete pScript;
+            delete vm;
          }
          else
          {

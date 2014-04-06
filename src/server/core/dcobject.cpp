@@ -330,20 +330,15 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		}
 		else if (!_tcsncmp(macro, _T("script:"), 7))
 		{
-			NXSL_Program *script;
-			NXSL_ServerEnv *pEnv;
-
-	      g_pScriptLibrary->lock();
-			script = g_pScriptLibrary->findScript(&macro[7]);
-			if (script != NULL)
+			NXSL_VM *vm = g_pScriptLibrary->createVM(&macro[7], new NXSL_ServerEnv);
+			if (vm != NULL)
 			{
-				pEnv = new NXSL_ServerEnv;
 				if (m_pNode != NULL)
-					script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+					vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 
-				if (script->run(pEnv) == 0)
+				if (vm->run(0, NULL))
 				{
-					NXSL_Value *result = script->getResult();
+					NXSL_Value *result = vm->getResult();
 					if (result != NULL)
 						temp += CHECK_NULL_EX(result->getValueAsCString());
 		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_dwId, src, &macro[7]);
@@ -351,16 +346,15 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 				else
 				{
 		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
-					          m_dwId, src, &macro[7], script->getErrorText());
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7],
-								 script->getErrorText(), m_dwId);
+					          m_dwId, src, &macro[7], vm->getErrorText());
+					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_dwId);
 				}
+            delete vm;
 			}
 			else
 			{
 	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_dwId, src, &macro[7]);
 			}
-	      g_pScriptLibrary->unlock();
 		}
 		temp += rest;
 		
@@ -530,16 +524,14 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
          {
             *closingBracker = 0;
 
-            g_pScriptLibrary->lock();
-            NXSL_Program *script = g_pScriptLibrary->findScript(scriptName);
-            if (script != NULL)
+            NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+            if (vm != NULL)
             {
-               NXSL_ServerEnv *env = new NXSL_ServerEnv;
-               script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
-               script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
-               if (script->run(env) == 0)
+               vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+               vm->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+               if (vm->run(0, NULL))
                {
-                  NXSL_Value *result = script->getResult();
+                  NXSL_Value *result = vm->getResult();
                   if (result != NULL)
                   {
                      const TCHAR *temp = result->getValueAsCString();
@@ -553,8 +545,9 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
                }
                else
                {
-                  DbgPrintf(4, _T("DCObject::matchSchedule(%%[%s]) script execution failed"), scriptName);
+                  DbgPrintf(4, _T("DCObject::matchSchedule(%%[%s]) script execution failed (%s)"), scriptName, vm->getErrorText());
                }
+               delete vm;
             }
             g_pScriptLibrary->unlock();
          }
@@ -907,7 +900,7 @@ void DCObject::setTransformationScript(const TCHAR *pszScript)
       if (m_transformationScriptSource[0] != 0)
       {
 			/* TODO: add compilation error handling */
-         m_transformationScript = (NXSL_Program *)NXSLCompile(m_transformationScriptSource, NULL, 0);
+         m_transformationScript = NXSLCompileAndCreateVM(m_transformationScriptSource, NULL, 0, new NXSL_ServerEnv);
       }
       else
       {

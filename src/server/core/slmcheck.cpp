@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 NetXMS Team
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,11 +135,9 @@ void SlmCheck::updateFromTemplate(SlmCheck *tmpl)
 	UnlockData();
 }
 
-
-//
-// Compile script if there is one
-//
-
+/**
+ * Compile script if there is one
+ */
 void SlmCheck::compileScript()
 {
 	if (m_type == check_script && m_script != NULL)
@@ -147,17 +145,15 @@ void SlmCheck::compileScript()
 		const int errorMsgLen = 512;
 		TCHAR errorMsg[errorMsgLen];
 
-		m_pCompiledScript = NXSLCompile(m_script, errorMsg, errorMsgLen);
+		m_pCompiledScript = NXSLCompileAndCreateVM(m_script, errorMsg, errorMsgLen, new NXSL_ServerEnv);
 		if (m_pCompiledScript == NULL)
 			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, errorMsg);
 	}
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL SlmCheck::CreateFromDB(UINT32 id)
 {
 	UINT32 thresholdId;
@@ -351,11 +347,9 @@ void SlmCheck::postModify()
 		g_idxServiceCheckById.forEach(UpdateFromTemplateCallback, this);
 }
 
-
-//
-// Set check script
-//
-
+/**
+ * Set check script
+ */
 void SlmCheck::setScript(const TCHAR *script)
 {
 	if (script != NULL)
@@ -367,7 +361,7 @@ void SlmCheck::setScript(const TCHAR *script)
 		{
 			TCHAR error[256];
 
-			m_pCompiledScript = NXSLCompile(m_script, error, 256);
+			m_pCompiledScript = NXSLCompileAndCreateVM(m_script, error, 256, new NXSL_ServerEnv);
 			if (m_pCompiledScript == NULL)
 				nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, error);
 		}
@@ -402,12 +396,11 @@ void SlmCheck::execute()
 			oldStatus = m_iStatus;
 			if (m_pCompiledScript != NULL)
 			{
-				NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
 				NXSL_VariableSystem *pGlobals = NULL;
 
 				m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
 				m_pCompiledScript->setGlobalVariable(_T("$node"), getNodeObjectForNXSL());
-				if (m_pCompiledScript->run(pEnv, 0, NULL, NULL, &pGlobals, &m_nxslConstants) == 0)
+				if (m_pCompiledScript->run(0, NULL, NULL, &pGlobals, &m_nxslConstants))
 				{
 					NXSL_Value *pValue = m_pCompiledScript->getResult();
 					m_iStatus = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;

@@ -570,7 +570,7 @@ private:
    void StartSnmpWalk(CSCPMessage *pRequest);
    void resolveDCINames(CSCPMessage *pRequest);
    UINT32 resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszName);
-   void SendConfigForAgent(CSCPMessage *pRequest);
+   void sendConfigForAgent(CSCPMessage *pRequest);
    void sendAgentCfgList(UINT32 dwRqId);
    void OpenAgentConfig(CSCPMessage *pRequest);
    void SaveAgentConfig(CSCPMessage *pRequest);

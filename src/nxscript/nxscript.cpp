@@ -27,7 +27,7 @@
 static NXSL_TestClass *m_pTestClass;
 
 
-int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	TCHAR *buffer = (TCHAR *)malloc(1024);
 	_tcscpy(buffer, _T("test value"));
@@ -114,6 +114,9 @@ int main(int argc, char *argv[])
 			pEnv = new NXSL_Environment;
 			pEnv->registerFunctionSet(1, &func);
 
+         // Create VM
+         NXSL_VM *vm = new NXSL_VM(pEnv);
+
 			// Prepare arguments
 			if (argc - optind > 1)
 			{
@@ -126,18 +129,20 @@ int main(int argc, char *argv[])
 				ppArgs = NULL;
 			}
 
-			if (pScript->run(pEnv, argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL) == 0)
+         if (vm->load(pScript) &&
+			    vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
 			{
-				NXSL_Value *result = pScript->getResult();
+				NXSL_Value *result = vm->getResult();
 				if (printResult)
                WriteToTerminalEx(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
 			}
 			else
 			{
-				WriteToTerminalEx(_T("%s\n"), pScript->getErrorText());
+				WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
 			}
-			delete pScript;
 			safe_free(ppArgs);
+         delete vm;
+         delete pScript;
 		}
 		else
 		{

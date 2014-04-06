@@ -111,7 +111,7 @@ BOOL Container::CreateFromDB(UINT32 dwId)
 		{
 			TCHAR error[256];
 
-			m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256);
+			m_bindFilter = NXSLCompileAndCreateVM(m_bindFilterSource, error, 256, new NXSL_ServerEnv);
 			if (m_bindFilter == NULL)
 				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
 		}
@@ -308,7 +308,7 @@ void Container::setAutoBindFilter(const TCHAR *script)
 		{
 			TCHAR error[256];
 
-			m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256);
+			m_bindFilter = NXSLCompileAndCreateVM(m_bindFilterSource, error, 256, new NXSL_ServerEnv);
 			if (m_bindFilter == NULL)
 				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
 		}
@@ -330,18 +330,15 @@ void Container::setAutoBindFilter(const TCHAR *script)
  */
 bool Container::isSuitableForNode(Node *node)
 {
-	NXSL_ServerEnv *pEnv;
-	NXSL_Value *value;
 	bool result = false;
 
 	LockData();
 	if ((m_flags & CF_AUTO_BIND) && (m_bindFilter != NULL))
 	{
-		pEnv = new NXSL_ServerEnv;
 		m_bindFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
-		if (m_bindFilter->run(pEnv, 0, NULL) == 0)
+		if (m_bindFilter->run(0, NULL))
 		{
-			value = m_bindFilter->getResult();
+      	NXSL_Value *value = m_bindFilter->getResult();
 			result = ((value != NULL) && (value->getValueAsInt32() != 0));
 		}
 		else

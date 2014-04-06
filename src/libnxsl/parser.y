@@ -187,7 +187,7 @@ ConstDefinition:
 UseStatement:
 	T_USE AnyIdentifier ';'
 {
-	pScript->addPreload($2);
+	pScript->addRequiredModule($2);
 }
 ;
 

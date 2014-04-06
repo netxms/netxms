@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -49,49 +49,42 @@ NXSL_Variable::NXSL_Variable(NXSL_Variable *pSrc)
 	m_isConstant = pSrc->m_isConstant;
 }
 
-
-//
-// Variable destructor
-//
-
+/**
+ * Variable destructor
+ */
 NXSL_Variable::~NXSL_Variable()
 {
    free(m_pszName);
    delete m_pValue;
 }
 
-
-//
-// Set variable's value
-//
-
+/**
+ * Set variable's value
+ */
 void NXSL_Variable::setValue(NXSL_Value *pValue)
 {
    delete m_pValue;
    m_pValue = pValue;
 }
 
-
-//
-// Variable system constructors
-//
-
+/**
+ * Create new variable system
+ */
 NXSL_VariableSystem::NXSL_VariableSystem(bool constant)
 {
-   m_dwNumVariables = 0;
-   m_ppVariableList = NULL;
+   m_variables = new ObjectArray<NXSL_Variable>(16, 16, true);
 	m_isConstant = constant;
 }
 
-NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *pSrc)
+/**
+ * Clone existing variable system
+ */
+NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *src)
 {
-   UINT32 i;
-
-   m_dwNumVariables = pSrc->m_dwNumVariables;
-   m_ppVariableList = (NXSL_Variable **)malloc(sizeof(NXSL_Variable *) * m_dwNumVariables);
-   for(i = 0; i < m_dwNumVariables; i++)
-      m_ppVariableList[i] = new NXSL_Variable(pSrc->m_ppVariableList[i]);
-	m_isConstant = pSrc->m_isConstant;
+   m_variables = new ObjectArray<NXSL_Variable>(src->m_variables->size(), 16, true);
+   for(int i = 0; i < src->m_variables->size(); i++)
+      m_variables->add(new NXSL_Variable(src->m_variables->get(i)));
+	m_isConstant = src->m_isConstant;
 }
 
 /**
@@ -99,11 +92,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *pSrc)
  */
 NXSL_VariableSystem::~NXSL_VariableSystem()
 {
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumVariables; i++)
-      delete m_ppVariableList[i];
-   safe_free(m_ppVariableList);
+   delete m_variables;
 }
 
 /**
@@ -111,14 +100,27 @@ NXSL_VariableSystem::~NXSL_VariableSystem()
  */
 void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 {
-	UINT32 i;
-
-	for(i = 0; i < src->m_dwNumVariables; i++)
+	for(int i = 0; i < src->m_variables->size(); i++)
 	{
-		const TCHAR *name = src->m_ppVariableList[i]->getName();
-		if (find(name) == NULL)
+      NXSL_Variable *v = src->m_variables->get(i);
+      if (find(v->getName()) == NULL)
 		{
-			create(name, new NXSL_Value(src->m_ppVariableList[i]->getValue()));
+         create(v->getName(), new NXSL_Value(v->getValue()));
+		}
+	}
+}
+
+/**
+ * Add all values
+ */
+void NXSL_VariableSystem::addAll(StringObjectMap<NXSL_Value> *src)
+{
+	for(UINT32 i = 0; i < src->getSize(); i++)
+	{
+      const TCHAR *name = src->getKeyByIndex(i);
+      if (find(name) == NULL)
+		{
+         create(name, new NXSL_Value(src->getValueByIndex(i)));
 		}
 	}
 }
@@ -128,11 +130,12 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
  */
 NXSL_Variable *NXSL_VariableSystem::find(const TCHAR *pszName)
 {
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumVariables; i++)
-      if (!_tcscmp(pszName, m_ppVariableList[i]->getName()))
-         return m_ppVariableList[i];
+   for(int i = 0; i < m_variables->size(); i++)
+   {
+      NXSL_Variable *v = m_variables->get(i);
+      if (!_tcscmp(pszName, v->getName()))
+         return v;
+   }
    return NULL;
 }
 
@@ -141,11 +144,7 @@ NXSL_Variable *NXSL_VariableSystem::find(const TCHAR *pszName)
  */
 NXSL_Variable *NXSL_VariableSystem::create(const TCHAR *pszName, NXSL_Value *pValue)
 {
-   NXSL_Variable *pVar;
-
-	pVar = new NXSL_Variable(pszName, (pValue != NULL) ? pValue : new NXSL_Value, m_isConstant);
-   m_ppVariableList = (NXSL_Variable **)realloc(m_ppVariableList, sizeof(NXSL_Variable *) * (m_dwNumVariables + 1));
-   m_ppVariableList[m_dwNumVariables] = pVar;
-   m_dwNumVariables++;
-   return pVar;
+   NXSL_Variable *v = new NXSL_Variable(pszName, (pValue != NULL) ? pValue : new NXSL_Value, m_isConstant);
+	m_variables->add(v);
+   return v;
 }

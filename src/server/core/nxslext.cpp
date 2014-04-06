@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,13 +29,13 @@ extern UINT32 g_nxslNumSituationFunctions;
 extern NXSL_ExtFunction g_nxslSituationFunctions[];
 
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
-int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 
 /**
  * Get node's custom attribute
  * First argument is a node object, and second is an attribute name
  */
-static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	NXSL_Object *object;
 	const TCHAR *value;
@@ -71,7 +71,7 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
  * First argument is a node object, second is an attribute name, third is new value
  * Returns previous value
  */
-static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	NXSL_Object *object;
 	const TCHAR *value;
@@ -108,7 +108,7 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
  * Get interface name by index
  * Parameters: node object and interface index
  */
-static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -138,7 +138,7 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
  * Get interface object by index
  * Parameters: node object and interface index
  */
-static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -170,7 +170,7 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResu
  * Second argument: node id or name
  * Returns node object or null if requested node was not found or access to it was denied
  */
-static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	Node *currNode = NULL, *node = NULL;
 
@@ -237,7 +237,7 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  * Second argument (optional): current node object or null
  * Returns generic object or null if requested object was not found or access to it was denied
  */
-static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	NetObj *object = NULL;
 
@@ -305,7 +305,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
  * First argument: node object
  * Returns array of accessible parent objects
  */
-static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -324,7 +324,7 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  * First argument: NetXMS object (NetObj, Node, or Interface)
  * Returns array of accessible parent objects
  */
-static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -345,7 +345,7 @@ static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult
  * First argument: NetXMS object (NetObj, Node, or Interface)
  * Returns array of accessible child objects
  */
-static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -366,7 +366,7 @@ static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  * First argument: node object
  * Returns array of interface objects
  */
-static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -386,7 +386,7 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  * Second argument: parameter's name
  * Returns parameter's value or null
  */
-static int F_GetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -410,7 +410,7 @@ static int F_GetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  * Second argument: parameter's name
  * Third argument: new value
  */
-static int F_SetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_SetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -438,7 +438,7 @@ static int F_SetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  *     tag - user tag (optional)
  *     ... - optional parameters, will be passed as %1, %2, etc.
  */
-static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (argc < 2)
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -516,7 +516,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
  * Return value:
  *     new node object or null on failure
  */
-static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -561,7 +561,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
  * Return value:
  *     new container object
  */
-static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -599,7 +599,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
  * Return value:
  *     null
  */
-static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -627,7 +627,7 @@ static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * Return value:
  *     null
  */
-static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject() || !argv[1]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -671,7 +671,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
  * Return value:
  *     null
  */
-static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject() || !argv[1]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -711,7 +711,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * Return value:
  *     null
  */
-static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -740,7 +740,7 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * Return value:
  *     null
  */
-static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -766,7 +766,7 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * Return value:
  *     null
  */
-static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -793,7 +793,7 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  * Return value:
  *     null
  */
-static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -836,7 +836,7 @@ static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value *
  * Return value:
  *     new SNMP_Transport object
  */
-static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -869,7 +869,7 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
  * Return value:
  *     new SNMP_VarBind object
  */
-static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	UINT32 len;
 	static UINT32 requestId = 1;
@@ -927,7 +927,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
  * Return value:
  *     value for the given oid
  */
-static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	TCHAR buffer[4096];
 	UINT32 len;
@@ -967,7 +967,7 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * Return value:
  *     value for the given oid
  */
-static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	SNMP_PDU *request = NULL, *response;
 	UINT32 len;
@@ -1052,7 +1052,7 @@ finish:
  * Return value:
  *     an array of VarBind objects
  */
-static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	static UINT32 requestId = 1;
 	UINT32 rootName[MAX_OID_LEN], rootNameLen, name[MAX_OID_LEN], nameLen, result;
@@ -1160,7 +1160,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
  * Return value:
  *     paramater's value on success and null on failure
  */
-static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -1191,7 +1191,7 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResu
  * Return value:
  *     table value on success and null on failure
  */
-static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -1218,7 +1218,7 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  * Optional second argumet is default value
  * Returns variable's value if found, default value if not found, and null if not found and no default value given
  */
-static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if ((argc == 0) || (argc > 2))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;

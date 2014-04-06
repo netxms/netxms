@@ -28,7 +28,7 @@
  * Parameters:
  *   1) path
  */
-int F_chdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_chdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -42,7 +42,7 @@ int F_chdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
  * Parameters:
  *   1) command
  */
-int F_system(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_system(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;

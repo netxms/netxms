@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ EPRule::EPRule(ConfigEntry *config)
    {
       TCHAR szError[256];
 
-      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
       	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
@@ -128,7 +128,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    {
       TCHAR szError[256];
 
-      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
       	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
@@ -195,7 +195,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
    {
       TCHAR szError[256];
 
-      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
       	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
@@ -417,7 +417,7 @@ bool EPRule::matchScript(Event *pEvent)
 	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
 
    // Run script
-   if (m_pScript->run(pEnv, pEvent->getParametersCount(), ppValueList, pLocals, &pGlobals) == 0)
+   if (m_pScript->run(pEvent->getParametersCount(), ppValueList, pLocals, &pGlobals))
    {
       pValue = m_pScript->getResult();
       if (pValue != NULL)

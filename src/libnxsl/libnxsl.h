@@ -45,7 +45,6 @@ typedef void *yyscan_t;
 // Various defines
 //
 
-#define INVALID_ADDRESS    ((UINT32)0xFFFFFFFF)
 #define MAX_STRING_SIZE    8192
 
 /**

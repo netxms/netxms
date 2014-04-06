@@ -107,7 +107,7 @@ private:
 	BYTE m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
    int m_sampleCount;        // Number of samples to calculate function on
    TCHAR *m_scriptSource;
-   NXSL_Program *m_script;
+   NXSL_VM *m_script;
    BOOL m_isReached;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
@@ -211,7 +211,7 @@ protected:
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
-   NXSL_Program *m_transformationScript;  // Compiled transformation script
+   NXSL_VM *m_transformationScript;  // Compiled transformation script
 
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
@@ -320,7 +320,7 @@ protected:
 	WORD m_instanceDiscoveryMethod;
 	TCHAR *m_instanceDiscoveryData;
 	TCHAR *m_instanceFilterSource;
-	NXSL_Program *m_instanceFilter;
+	NXSL_VM *m_instanceFilter;
 
    void transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
@@ -355,7 +355,7 @@ public:
    int getThresholdSeverity();
 	WORD getInstanceDiscoveryMethod() { return m_instanceDiscoveryMethod; }
 	const TCHAR *getInstanceDiscoveryData() { return m_instanceDiscoveryData; }
-	NXSL_Program *getInstanceFilter() { return m_instanceFilter; }
+	NXSL_VM *getInstanceFilter() { return m_instanceFilter; }
 	const TCHAR *getInstance() { return m_instance; }
 	int getSampleCount() { return m_sampleCount; }
 

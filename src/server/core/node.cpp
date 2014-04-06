@@ -5657,22 +5657,17 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
 						}
 						else
 						{
-							NXSL_Program *script;
-							NXSL_ServerEnv *pEnv;
-
 							scriptName[i] = 0;
 							StrStrip(scriptName);
 
-							g_pScriptLibrary->lock();
-							script = g_pScriptLibrary->findScript(scriptName);
-							if (script != NULL)
+                     NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+							if (vm != NULL)
 							{
-								pEnv = new NXSL_ServerEnv;
-								script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+								vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
 
-								if (script->run(pEnv) == 0)
+								if (vm->run(0, NULL))
 								{
-									NXSL_Value *result = script->getResult();
+									NXSL_Value *result = vm->getResult();
 									if (result != NULL)
 									{
 										const TCHAR *temp = result->getValueAsCString();
@@ -5690,15 +5685,15 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
 								else
 								{
 									DbgPrintf(4, _T("Node::expandText(\"%s\"): Script %s execution error: %s"),
-												 textTemplate, scriptName, script->getErrorText());
-									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
+												 textTemplate, scriptName, vm->getErrorText());
+									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
 								}
+                        delete vm;
 							}
 							else
 							{
 								DbgPrintf(4, _T("Node::expandText(\"%s\"): Cannot find script %s"), textTemplate, scriptName);
 							}
-							g_pScriptLibrary->unlock();
 						}
 						break;
 					case '{':	// Custom attribute
@@ -5806,22 +5801,20 @@ void Node::executeHookScript(const TCHAR *hookName)
 {
 	TCHAR scriptName[MAX_PATH] = _T("Hook::");
 	nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
-	NXSL_Program *script = g_pScriptLibrary->findScript(scriptName);
-	if (script == NULL)
+	NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+	if (vm == NULL)
 	{
 		DbgPrintf(7, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_szName, m_dwId, scriptName);
 		return;
 	}
 
-	NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
-	script->lock();	// FIXME: temporary solution, must allow parallel hook execution
-	script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
-	if (script->run(pEnv, 0, NULL) != 0)
+	vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+	if (!vm->run(0, NULL))
 	{
 		DbgPrintf(4, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
-		          m_szName, m_dwId, scriptName, script->getErrorText());
+		          m_szName, m_dwId, scriptName, vm->getErrorText());
 	}
-	script->unlock();	// FIXME
+   delete vm;
 }
 
 /**

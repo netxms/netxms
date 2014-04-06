@@ -487,7 +487,7 @@ UINT32 ListMappingTables(CSCPMessage *msg)
  * Returns: mapped value if key found; otherwise default value or null if default value is not provided
  * Table can be referenced by name or ID
  */
-int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if ((argc < 2) || (argc > 3))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;

@@ -96,6 +96,7 @@ extern "C" {
 #endif
 
 NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize);
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, NXSL_Environment *env);
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize);
 
 #ifdef __cplusplus

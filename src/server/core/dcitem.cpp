@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -843,11 +843,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
    if (m_transformationScript != NULL)
    {
-      NXSL_Value *pValue;
-      NXSL_ServerEnv *pEnv;
-
-      pValue = new NXSL_Value((const TCHAR *)value);
-      pEnv = new NXSL_ServerEnv;
+      NXSL_Value *pValue = new NXSL_Value((const TCHAR *)value);
       m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
       if (m_pNode->Type() == OBJECT_NODE)
       {
@@ -856,7 +852,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
       m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
       m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
 	
-      if (m_transformationScript->run(pEnv, 1, &pValue) == 0)
+      if (m_transformationScript->run(1, &pValue))
       {
          pValue = m_transformationScript->getResult();
          if (pValue != NULL)
@@ -1343,7 +1339,7 @@ void DCItem::setInstanceFilter(const TCHAR *pszScript)
       if (m_instanceFilterSource[0] != 0)
       {
 			/* TODO: add compilation error handling */
-         m_instanceFilter = (NXSL_Program *)NXSLCompile(m_instanceFilterSource, NULL, 0);
+         m_instanceFilter = NXSLCompileAndCreateVM(m_instanceFilterSource, NULL, 0, new NXSL_ServerEnv);
       }
       else
       {
@@ -1504,21 +1500,15 @@ BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), vo
 bool DCItem::testTransformation(Node *node, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
 	bool success = false;
-	NXSL_Program *pScript;
-
-	pScript = NXSLCompile(script, buffer, (int)bufSize);
-   if (pScript != NULL)
+	NXSL_VM *vm = NXSLCompileAndCreateVM(script, buffer, (int)bufSize, new NXSL_ServerEnv);
+   if (vm != NULL)
    {
-      NXSL_Value *pValue;
-      NXSL_ServerEnv *pEnv;
-
-      pValue = new NXSL_Value(value);
-      pEnv = new NXSL_ServerEnv;
-      pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+      NXSL_Value *pValue = new NXSL_Value(value);
+      vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
 	
-		if (pScript->run(pEnv, 1, &pValue) == 0)
+		if (vm->run(1, &pValue))
       {
-         pValue = pScript->getResult();
+         pValue = vm->getResult();
          if (pValue != NULL)
          {
 				if (pValue->isNull())
@@ -1549,7 +1539,7 @@ bool DCItem::testTransformation(Node *node, const TCHAR *script, const TCHAR *va
       }
       else
       {
-			nx_strncpy(buffer, pScript->getErrorText(), bufSize);
+			nx_strncpy(buffer, vm->getErrorText(), bufSize);
       }
    }
 	return success;
@@ -1654,15 +1644,11 @@ void DCItem::filterInstanceList(StringList *instances)
 
 	for(int i = 0; i < instances->getSize(); i++)
 	{
-      NXSL_Value *pValue;
-      NXSL_ServerEnv *pEnv;
-
-		pValue = new NXSL_Value(instances->getValue(i));
-      pEnv = new NXSL_ServerEnv;
+      NXSL_Value *pValue = new NXSL_Value(instances->getValue(i));
       m_instanceFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
       m_instanceFilter->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
 	
-      if (m_instanceFilter->run(pEnv, 1, &pValue) == 0)
+      if (m_instanceFilter->run(1, &pValue))
       {
          pValue = m_instanceFilter->getResult();
          if (pValue != NULL)

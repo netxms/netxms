@@ -405,9 +405,6 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 						}
 						else
 						{
-							NXSL_Program *script;
-							NXSL_ServerEnv *pEnv;
-
 							scriptName[i] = 0;
 
 							// Entry point can be given in form script/entry_point
@@ -420,22 +417,20 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 							}
 							StrStrip(scriptName);
 
-							g_pScriptLibrary->lock();
-							script = g_pScriptLibrary->findScript(scriptName);
-							if (script != NULL)
+							NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+							if (vm != NULL)
 							{
-								pEnv = new NXSL_ServerEnv;
 								if (pObject->Type() == OBJECT_NODE)
-									script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
-								script->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)) : new NXSL_Value);
+									vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
+								vm->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)) : new NXSL_Value);
 								if (alarmMsg != NULL)
-									script->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(alarmMsg));
+									vm->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(alarmMsg));
 								if (alarmKey != NULL)
-									script->setGlobalVariable(_T("$alarmKey"), new NXSL_Value(alarmKey));
+									vm->setGlobalVariable(_T("$alarmKey"), new NXSL_Value(alarmKey));
 
-								if (script->run(pEnv, 0, NULL, NULL, NULL, NULL, entryPoint) == 0)
+								if (vm->run(0, NULL, NULL, NULL, NULL, entryPoint))
 								{
-									NXSL_Value *result = script->getResult();
+									NXSL_Value *result = vm->getResult();
 									if (result != NULL)
 									{
 										const TCHAR *temp = result->getValueAsCString();
@@ -453,8 +448,8 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 								else
 								{
 									DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
-												 (int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName, script->getErrorText());
-									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
+												 (int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName, vm->getErrorText());
+									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
 								}
 							}
 							else
@@ -462,7 +457,6 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 								DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Cannot find script %s"),
 									(int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName);
 							}
-							g_pScriptLibrary->unlock();
 						}
 						break;
 					case '{':	// Custom attribute

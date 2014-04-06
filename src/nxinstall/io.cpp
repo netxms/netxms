@@ -47,7 +47,7 @@ NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
  *   1) file name
  *   2) mode (optional, default "r")
  */
-int F_fopen(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_fopen(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -84,7 +84,7 @@ int F_fopen(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
  * Parameters:
  *   1) file object
  */
-int F_fclose(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_fclose(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -104,7 +104,7 @@ int F_fclose(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
  * Parameters:
  *   1) file object
  */
-int F_feof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_feof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -124,7 +124,7 @@ int F_feof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pro
  * Parameters:
  *   1) file object
  */
-int F_fgets(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_fgets(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -156,7 +156,7 @@ int F_fgets(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
  *   1) file object
  *   2) text to write
  */
-int F_fputs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_fputs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;

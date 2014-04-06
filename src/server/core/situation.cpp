@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -528,7 +528,7 @@ static NXSL_SituationClass m_nxslSituationClass;
 // NXSL function for finding situation
 //
 
-static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	Situation *situation;
 	SituationInstance *instance;
@@ -567,7 +567,7 @@ static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 // NXSL function: get situation instance attribute
 //
 
-static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	NXSL_Object *object;
 	const TCHAR *attrValue;

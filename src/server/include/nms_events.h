@@ -124,7 +124,7 @@ private:
    UINT32 *m_pdwActionList;
    TCHAR *m_pszComment;
    TCHAR *m_pszScript;
-   NXSL_Program *m_pScript;
+   NXSL_VM *m_pScript;
 
    TCHAR m_szAlarmMessage[MAX_EVENT_MSG_LENGTH];
    int m_iAlarmSeverity;

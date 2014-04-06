@@ -52,6 +52,32 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszE
 }
 
 /**
+ * Compile script and create VM
+ */
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, NXSL_Environment *env)
+{
+   NXSL_Program *p = NXSLCompile(pszSource, pszError, nBufSize);
+   if (p == NULL)
+   {
+      delete env;
+      return NULL;
+   }
+
+   NXSL_VM *vm = new NXSL_VM(env);
+   if (!vm->load(p))
+   {
+      if (pszError != NULL)
+      {
+         nx_strncpy(pszError, vm->getErrorText(), nBufSize);
+      }
+      delete vm;
+      vm = NULL;
+   }
+   delete p;
+   return vm;
+}
+
+/**
  * Load file into memory
  */
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize)

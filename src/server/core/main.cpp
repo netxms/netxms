@@ -1490,6 +1490,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		pArg = ExtractWord(pArg, szBuffer);
 
 		bool libraryLocked = true;
+      bool destroyCompiledScript = false;
 		g_pScriptLibrary->lock();
 
 		NXSL_Program *compiledScript = g_pScriptLibrary->findScript(szBuffer);
@@ -1497,6 +1498,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			g_pScriptLibrary->unlock();
 			libraryLocked = false;
+         destroyCompiledScript = true;
 			char *script;
 			UINT32 fileSize;
 			if ((script = (char *)LoadFile(szBuffer, &fileSize)) != NULL)
@@ -1526,27 +1528,44 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
 			pEnv->setConsole(pCtx);
-				
-			NXSL_Value *argv[32];
-			int argc = 0;
-			while(argc < 32)
-			{
-				pArg = ExtractWord(pArg, szBuffer);
-				if (szBuffer[0] == 0)
-					break;
-				argv[argc++] = new NXSL_Value(szBuffer);
-			}
 
-			if (compiledScript->run(pEnv, argc, argv) == 0)
-			{
-				NXSL_Value *pValue = compiledScript->getResult();
-				int retCode = pValue->getValueAsInt32();
-				ConsolePrintf(pCtx, _T("INFO: Script finished with rc=%d\n\n"), retCode);
-			}
-			else
-			{
-				ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), compiledScript->getErrorText());
-			}
+         NXSL_VM *vm = new NXSL_VM(pEnv);
+         if (vm->load(compiledScript))
+         {	
+            if (libraryLocked)
+            {
+      			g_pScriptLibrary->unlock();
+               libraryLocked = false;
+            }
+
+			   NXSL_Value *argv[32];
+			   int argc = 0;
+			   while(argc < 32)
+			   {
+				   pArg = ExtractWord(pArg, szBuffer);
+				   if (szBuffer[0] == 0)
+					   break;
+				   argv[argc++] = new NXSL_Value(szBuffer);
+			   }
+
+			   if (vm->run(argc, argv))
+			   {
+				   NXSL_Value *pValue = vm->getResult();
+				   int retCode = pValue->getValueAsInt32();
+				   ConsolePrintf(pCtx, _T("INFO: Script finished with rc=%d\n\n"), retCode);
+			   }
+			   else
+			   {
+				   ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), vm->getErrorText());
+			   }
+         }
+         else
+         {
+			   ConsolePrintf(pCtx, _T("ERROR: VM creation failed: %s\n\n"), vm->getErrorText());
+         }
+         delete vm;
+         if (destroyCompiledScript)
+            delete compiledScript;
 		}
 		if (libraryLocked)
 			g_pScriptLibrary->unlock();

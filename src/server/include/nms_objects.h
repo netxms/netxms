@@ -276,7 +276,7 @@ private:
    TCHAR m_title[MAX_DB_STRING];
    UINT32 m_flags;
    ObjectArray<SummaryTableColumn> *m_columns;
-   NXSL_Program *m_filter;
+   NXSL_VM *m_filter;
 
    SummaryTable(DB_RESULT hResult);
 
@@ -519,7 +519,7 @@ protected:
    BOOL m_bDCIListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	TCHAR *m_applyFilterSource;
-	NXSL_Program *m_applyFilter;
+	NXSL_VM *m_applyFilter;
 	RWLOCK m_dciAccessLock;
 
    virtual void prepareForDeletion();
@@ -1428,7 +1428,7 @@ private:
 protected:
 	UINT32 m_flags;
    UINT32 m_dwCategory;
-	NXSL_Program *m_bindFilter;
+	NXSL_VM *m_bindFilter;
 	TCHAR *m_bindFilterSource;
 
 public:
@@ -1581,7 +1581,7 @@ protected:
    UINT32 m_dciCount;
    INPUT_DCI *m_dciList;
    TCHAR *m_scriptSource;
-   NXSL_Program *m_script;
+   NXSL_VM *m_script;
    UINT32 m_activationEventCode;
    UINT32 m_deactivationEventCode;
    UINT32 m_sourceObject;
@@ -1759,7 +1759,7 @@ protected:
 	ObjectArray<NetworkMapElement> *m_elements;
 	ObjectArray<NetworkMapLink> *m_links;
 	TCHAR *m_filterSource;
-	NXSL_Program *m_filter;
+	NXSL_VM *m_filter;
 
 	void updateObjects(nxmap_ObjList *objects);
 	UINT32 objectIdFromElementId(UINT32 eid);
@@ -1914,7 +1914,7 @@ protected:
 	Threshold *m_threshold;
 	enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
 	TCHAR *m_script;
-	NXSL_Program *m_pCompiledScript;
+	NXSL_VM *m_pCompiledScript;
 	TCHAR m_reason[256];
 	bool m_isTemplate;
 	UINT32 m_templateId;

@@ -430,8 +430,6 @@ static BOOL AcceptNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 zoneId, BYTE
    TCHAR szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[16];
    UINT32 dwTemp;
    AgentConnection *pAgentConn;
-   NXSL_Program *pScript;
-   NXSL_Value *pValue;
    BOOL bResult = FALSE;
 	SNMP_Transport *pTransport;
 
@@ -646,30 +644,28 @@ static BOOL AcceptNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 zoneId, BYTE
    }
    else
    {
-      g_pScriptLibrary->lock();
-      pScript = g_pScriptLibrary->findScript(szFilter);
-      if (pScript != NULL)
+      NXSL_VM *vm = g_pScriptLibrary->createVM(szFilter, new NXSL_ServerEnv);
+      if (vm != NULL)
       {
          DbgPrintf(4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);
-         pValue = new NXSL_Value(new NXSL_Object(&m_nxslDiscoveryClass, &data));
-         if (pScript->run(new NXSL_ServerEnv, 1, &pValue) == 0)
+         NXSL_Value *pValue = new NXSL_Value(new NXSL_Object(&m_nxslDiscoveryClass, &data));
+         if (vm->run(1, &pValue))
          {
-            bResult = (pScript->getResult()->getValueAsInt32() != 0) ? TRUE : FALSE;
+            bResult = (vm->getResult()->getValueAsInt32() != 0) ? TRUE : FALSE;
             DbgPrintf(4, _T("AcceptNewNode(%s): Filter script result: %d"), szIpAddr, bResult);
          }
          else
          {
             DbgPrintf(4, _T("AcceptNewNode(%s): Filter script execution error: %s"),
-                      szIpAddr, pScript->getErrorText());
-            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szFilter,
-                      pScript->getErrorText(), 0);
+                      szIpAddr, vm->getErrorText());
+            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szFilter, vm->getErrorText(), 0);
          }
+         delete vm;
       }
       else
       {
          DbgPrintf(4, _T("AcceptNewNode(%s): Cannot find filter script %s"), szIpAddr, szFilter);
       }
-      g_pScriptLibrary->unlock();
    }
 
    return bResult;

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -430,11 +430,7 @@ void DCTable::transform(Table *value)
    if (m_transformationScript == NULL)
       return;
 
-   NXSL_Value *nxslValue;
-   NXSL_ServerEnv *pEnv;
-
-   nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
-   pEnv = new NXSL_ServerEnv;
+   NXSL_Value *nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
    m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
    if (m_pNode->Type() == OBJECT_NODE)
    {
@@ -443,7 +439,7 @@ void DCTable::transform(Table *value)
    m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
    m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
 
-   if (m_transformationScript->run(pEnv, 1, &nxslValue) != 0)
+   if (m_transformationScript->run(1, &nxslValue))
    {
       TCHAR szBuffer[1024];
 

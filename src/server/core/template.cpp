@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
 		TCHAR error[256];
 
 		m_applyFilterSource = _tcsdup(filter);
-		m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256);
+		m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
 		if (m_applyFilter == NULL)
 			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
 	}
@@ -198,7 +198,7 @@ BOOL Template::CreateFromDB(UINT32 dwId)
 		{
 			TCHAR error[256];
 
-			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256);
+			m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
 			if (m_applyFilter == NULL)
 				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
 		}
@@ -822,7 +822,7 @@ UINT32 Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		{
 			TCHAR error[256];
 
-			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256);
+			m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
 			if (m_applyFilter == NULL)
 				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
 		}
@@ -1036,18 +1036,15 @@ void Template::prepareForDeletion()
  */
 bool Template::isApplicable(Node *node)
 {
-	NXSL_ServerEnv *pEnv;
-	NXSL_Value *value;
 	bool result = false;
 
 	LockData();
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
 	{
-		pEnv = new NXSL_ServerEnv;
 		m_applyFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
-		if (m_applyFilter->run(pEnv, 0, NULL) == 0)
+		if (m_applyFilter->run(0, NULL))
 		{
-			value = m_applyFilter->getResult();
+	      NXSL_Value *value = m_applyFilter->getResult();
 			result = ((value != NULL) && (value->getValueAsInt32() != 0));
 		}
 		else

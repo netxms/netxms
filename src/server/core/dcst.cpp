@@ -151,7 +151,7 @@ SummaryTable::SummaryTable(DB_RESULT hResult)
       if (*filterSource != 0)
       {
          TCHAR errorText[1024];
-         m_filter = NXSLCompile(filterSource, errorText, 1024);
+         m_filter = NXSLCompileAndCreateVM(filterSource, errorText, 1024, new NXSL_ServerEnv);
          if (m_filter == NULL)
          {
             DbgPrintf(4, _T("Error compiling filter script for DCI summary table: %s"), errorText);
@@ -243,7 +243,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
    m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
    if (object->Type() == OBJECT_NODE)
       m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
-   if (m_filter->run(env) == 0)
+   if (m_filter->run())
    {
       NXSL_Value *value = m_filter->getResult();
       if (value != NULL)
