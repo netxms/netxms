@@ -29,6 +29,8 @@ import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.netxms.base.Logger;
+import org.netxms.base.LoggingFacility;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.osgi.framework.BundleContext;
@@ -56,6 +58,30 @@ public class Activator extends AbstractUIPlugin
 		super.start(context);
 		plugin = this;
 		SharedIcons.init();
+		
+		Logger.setLoggingFacility(new LoggingFacility() {
+         @Override
+         public void writeLog(int level, String tag, String message, Throwable t)
+         {
+            int s;
+            switch(level)
+            {
+               case LoggingFacility.ERROR:
+                  s = Status.ERROR;
+                  break;
+               case LoggingFacility.WARNING:
+                  s = Status.WARNING;
+                  break;
+               case LoggingFacility.INFO:
+                  s = Status.INFO;
+                  break;
+               default:
+                  s = Status.OK;
+                  break;
+            }
+            log(s, tag + ": " + message, t);
+         }
+      });
 	}
 
 	/*
@@ -166,19 +192,19 @@ public class Activator extends AbstractUIPlugin
 	 * 
 	 * @param msg
 	 */
-	public static void logError(String msg, Exception e)
+	public static void logError(String msg, Throwable t)
 	{
-		log(Status.ERROR, msg, e);
+		log(Status.ERROR, msg, t);
 	}
 
 	/**
 	 * Log via platform logging facilities
 	 * 
 	 * @param msg
-	 * @param e
+	 * @param t
 	 */
-	public static void log(int status, String msg, Exception e)
+	public static void log(int status, String msg, Throwable t)
 	{
-		getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, e));
+		getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, t));
 	}
 }

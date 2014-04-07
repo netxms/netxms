@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -57,6 +58,7 @@ import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.ProgressListener;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.api.client.images.ImageLibraryManager;
 import org.netxms.api.client.images.LibraryImage;
 import org.netxms.api.client.mt.MappingTable;
@@ -261,7 +263,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private int recvBufferSize = 4194304; // Default is 4MB
    private int commandTimeout = 30000; // Default is 30 sec
 
-   // Notification listeners
+   // Notification listeners and queue
+   private LinkedBlockingQueue<SessionNotification> notificationQueue = new LinkedBlockingQueue<SessionNotification>(8192);
    private Set<SessionListener> listeners = new HashSet<SessionListener>(0);
    private Set<ServerConsoleListener> consoleListeners = new HashSet<ServerConsoleListener>(0);
 
@@ -269,7 +272,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
    
    // Received file updates(for file monitoring)
-   private Map<String, String> recievdUpdates = new HashMap<String, String>();
+   private Map<String, String> recievedUpdates = new HashMap<String, String>();
 
    // Server information
    private String serverVersion = "(unknown)";
@@ -591,8 +594,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                         }
                         if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
                         {
-                           sendNotification(
-                              new NXCNotification(NXCNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
+                           sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
                         }
                      }
                      else
@@ -811,10 +813,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          String fileName = msg.getVariableAsString(NXCPCodes.VID_FILE_NAME);
          String fileContent = msg.getVariableAsString(NXCPCodes.VID_FILE_DATA);
          
-         synchronized(recievdUpdates)
+         synchronized(recievedUpdates)
          {
-            recievdUpdates.put(fileName, fileContent);
-            recievdUpdates.notifyAll();
+            recievedUpdates.put(fileName, fileContent);
+            recievedUpdates.notifyAll();
          }
       }
 
@@ -1116,10 +1118,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    @Override
    public void addListener(SessionListener listener)
    {
+      boolean changed;
       synchronized(listeners)
       {
-         listeners.add(listener);
+         changed = listeners.add(listener);
       }
+      if (changed)
+         notificationQueue.offer(new NXCNotification(NXCNotification.UPDATE_LISTENER_LIST));
    }
 
    /*
@@ -1131,10 +1136,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    @Override
    public void removeListener(SessionListener listener)
    {
+      boolean changed;
       synchronized(listeners)
       {
-         listeners.remove(listener);
+         changed = listeners.remove(listener);
       }
+      if (changed)
+         notificationQueue.offer(new NXCNotification(NXCNotification.UPDATE_LISTENER_LIST));
    }
 
    /**
@@ -1162,6 +1170,68 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          consoleListeners.remove(listener);
       }
    }
+   
+   /**
+    * Notification processor
+    */
+   private class NotificationProcessor extends Thread
+   {
+      private SessionListener[] cachedListenerList = new SessionListener[0];
+      
+      NotificationProcessor()
+      {
+         setDaemon(true);
+         start();
+      }
+
+      /* (non-Javadoc)
+       * @see java.lang.Thread#run()
+       */
+      @Override
+      public void run()
+      {
+         while(true)
+         {
+            SessionNotification n;
+            try
+            {
+               n = notificationQueue.take();
+            }
+            catch(InterruptedException e)
+            {
+               continue;
+            }
+            
+            if (n.getCode() == NXCNotification.STOP_PROCESSING_THREAD)
+               break;
+            
+            if (n.getCode() == NXCNotification.UPDATE_LISTENER_LIST)
+            {
+               synchronized(listeners)
+               {
+                  cachedListenerList = listeners.toArray(new SessionListener[listeners.size()]);
+               }
+               continue;
+            }
+
+            // loop must be on listeners set copy to prevent 
+            // possible deadlock when one of the listeners calls 
+            // syncExec on UI thread while UI thread trying to add
+            // new listener and stays locked inside addListener
+            for(SessionListener l : cachedListenerList)
+            {
+               try
+               {
+                  l.notificationHandler(n);
+               }
+               catch(Exception e)
+               {
+                  Logger.error("NXCSession.NotificationProcessor", "Unhandled exception in notification handler", e);
+               }
+            }
+         }
+      }
+   }
 
    /**
     * Call notification handlers on all registered listeners
@@ -1170,25 +1240,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    protected void sendNotification(NXCNotification n)
    {
-      // loop must be on listeners set copy to prevent 
-      // possible deadlock when one of the listeners calls 
-      // syncExec on UI thread while UI thread trying to add
-      // new listener and stays locked inside addListener
-      SessionListener[] list;
-      synchronized(listeners)
+      if (!notificationQueue.offer(n))
       {
-         list = listeners.toArray(new SessionListener[listeners.size()]);
-      }
-      for(SessionListener l : list)
-      {
-         try
-         {
-            l.notificationHandler(n);
-         }
-         catch(Exception e)
-         {
-            Logger.error("NXCSession", "Unhandled exception in notification handler", e);
-         }
+         Logger.debug("NXCSession.sendNotification", "Notification processing queue is full");
       }
    }
 
@@ -1438,19 +1492,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
       while(timeRemaining > 0)
       {
-         synchronized(recievdUpdates)
+         synchronized(recievedUpdates)
          {
-            tail = recievdUpdates.get(fileName);
+            tail = recievedUpdates.get(fileName);
             if (tail != null)
             {
-               recievdUpdates.remove(fileName);
+               recievedUpdates.remove(fileName);
                break;
             }
 
             long startTime = System.currentTimeMillis();
             try
             {
-               recievdUpdates.wait(timeRemaining);
+               recievedUpdates.wait(timeRemaining);
             }
             catch(InterruptedException e)
             {
@@ -1511,6 +1565,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          msgWaitQueue = new NXCPMsgWaitQueue(commandTimeout);
          recvThread = new ReceiverThread();
          housekeeperThread = new HousekeeperThread();
+         new NotificationProcessor();
 
          // get server information
          Logger.debug("NXCSession.connect", "connection established, retrieving server info");
@@ -1657,6 +1712,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          {
          }
       }
+      
+      // cause notification processing thread to stop
+      notificationQueue.clear();
+      notificationQueue.offer(new NXCNotification(NXCNotification.STOP_PROCESSING_THREAD));
 
       if (recvThread != null)
       {
