@@ -8,7 +8,9 @@
 - Fixed server crash if SNMP proxy unavailable
 - New MIBs: FROGFOOT-RESOURCES-MIB, MIKROTIK-MIB
 - Management console:
+   - DCI values can be shown on network map links
    - Colored background for DCIs with active thresholds in DCI summary tables
+- Fixed issues: #536
 
 
 *
