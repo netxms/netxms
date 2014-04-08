@@ -2495,10 +2495,11 @@ AC_CONFIG_FILES([
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
 	src/server/smsdrv/Makefile
+	src/server/smsdrv/dummy/Makefile
 	src/server/smsdrv/generic/Makefile
 	src/server/smsdrv/nxagent/Makefile
 	src/server/smsdrv/portech/Makefile
-	src/server/smsdrv/dummy/Makefile
+	src/server/smsdrv/websms/Makefile
 	src/server/tools/Makefile
 	src/server/tools/nxaction/Makefile
 	src/server/tools/nxadm/Makefile
