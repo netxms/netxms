@@ -23,11 +23,9 @@
 
 #include "libnxsl.h"
 
-
-//
-// Constructors
-//
-
+/**
+ * Create instruction without operand
+ */
 NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode)
 {
    m_nOpCode = nOpCode;
@@ -35,6 +33,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode)
    m_nStackItems = 0;
 }
 
+/**
+ * Create instruction with constant operand
+ */
 NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue)
 {
    m_nOpCode = nOpCode;
@@ -43,6 +44,10 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue)
    m_nStackItems = 0;
 }
 
+/**
+ * Create instruction with string operand.
+ * String must be dynamically allocated.
+ */
 NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString)
 {
    m_nOpCode = nOpCode;
@@ -56,6 +61,10 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString)
    m_nStackItems = 0;
 }
 
+/**
+ * Create instruction with string operand and non-zero stack item count.
+ * String must be dynamically allocated.
+ */
 NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems)
 {
    m_nOpCode = nOpCode;
@@ -69,6 +78,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int 
    m_nStackItems = nStackItems;
 }
 
+/**
+ * Create instruction with address operand
+ */
 NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr)
 {
    m_nOpCode = nOpCode;
@@ -76,6 +88,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr)
    m_operand.m_dwAddr = dwAddr;
 }
 
+/**
+ * Create instruction without operand and non-zero stack item count
+ */
 NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, int nStackItems)
 {
    m_nOpCode = nOpCode;
@@ -83,6 +98,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, int nStackItems)
    m_nStackItems = nStackItems;
 }
 
+/**
+ * Copy constructor
+ */
 NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
 {
    m_nOpCode = pSrc->m_nOpCode;
@@ -97,6 +115,8 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
       case OPCODE_ARRAY:
       case OPCODE_BIND:
       case OPCODE_CALL_EXTERNAL:
+      case OPCODE_CALL_METHOD:
+      case OPCODE_CASE_CONST:
       case OPCODE_DEC:
       case OPCODE_DECP:
       case OPCODE_GET_ATTRIBUTE:
@@ -106,6 +126,7 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
       case OPCODE_INCP:
 		case OPCODE_NAME:
       case OPCODE_PUSH_VARIABLE:
+      case OPCODE_SAFE_GET_ATTR:
       case OPCODE_SET:
       case OPCODE_SET_ATTRIBUTE:
          m_operand.m_pszString = _tcsdup(pSrc->m_operand.m_pszString);
@@ -116,29 +137,33 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
    }
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Instruction::~NXSL_Instruction()
 {
    switch(m_nOpCode)
    {
-      case OPCODE_PUSH_VARIABLE:
-      case OPCODE_CALL_EXTERNAL:
-      case OPCODE_SET:
-      case OPCODE_BIND:
       case OPCODE_ARRAY:
-      case OPCODE_INC:
+      case OPCODE_BIND:
+      case OPCODE_CALL_EXTERNAL:
+      case OPCODE_CALL_METHOD:
+      case OPCODE_CASE_CONST:
       case OPCODE_DEC:
-      case OPCODE_INCP:
       case OPCODE_DECP:
       case OPCODE_GET_ATTRIBUTE:
-      case OPCODE_SET_ATTRIBUTE:
+      case OPCODE_GLOBAL:
+      case OPCODE_GLOBAL_ARRAY:
+      case OPCODE_INC:
+      case OPCODE_INCP:
 		case OPCODE_NAME:
+      case OPCODE_PUSH_VARIABLE:
+      case OPCODE_SAFE_GET_ATTR:
+      case OPCODE_SET:
+      case OPCODE_SET_ATTRIBUTE:
          safe_free(m_operand.m_pszString);
          break;
+		case OPCODE_CASE:
       case OPCODE_PUSH_CONSTANT:
          delete m_operand.m_pConstant;
          break;
