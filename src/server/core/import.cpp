@@ -33,10 +33,10 @@ static bool IsEventExist(const TCHAR *name, Config *config)
 	ConfigEntry *eventsRoot = config->getEntry(_T("/events"));
 	if (eventsRoot != NULL)
 	{
-		ConfigEntryList *events = eventsRoot->getSubEntries(_T("event#*"));
-		for(int i = 0; i < events->getSize(); i++)
+		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
+		for(int i = 0; i < events->size(); i++)
 		{
-			ConfigEntry *event = events->getEntry(i);
+			ConfigEntry *event = events->get(i);
 			if (!_tcsicmp(event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")), name))
          {
             delete events;
@@ -59,10 +59,10 @@ static bool ValidateDci(Config *config, ConfigEntry *dci, const TCHAR *templateN
 		return true;
 
 	bool success = true;
-	ConfigEntryList *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-	for(int i = 0; i < thresholds->getSize(); i++)
+	ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+	for(int i = 0; i < thresholds->size(); i++)
 	{
-		ConfigEntry *threshold = thresholds->getEntry(i);
+		ConfigEntry *threshold = thresholds->get(i);
 		if (!IsEventExist(threshold->getSubEntryValue(_T("activationEvent")), config))
 		{
 			_sntprintf(errorText, errorTextLen,
@@ -98,10 +98,10 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 	bool success = true;
 	const TCHAR *name = root->getSubEntryValue(_T("name"), 0, _T("<unnamed>"));
 
-	ConfigEntryList *dcis = dcRoot->getSubEntries(_T("dci#*"));
-	for(int i = 0; i < dcis->getSize(); i++)
+	ObjectArray<ConfigEntry> *dcis = dcRoot->getSubEntries(_T("dci#*"));
+	for(int i = 0; i < dcis->size(); i++)
 	{
-		if (!ValidateDci(config, dcis->getEntry(i), name, errorText, errorTextLen))
+		if (!ValidateDci(config, dcis->get(i), name, errorText, errorTextLen))
 		{
 			success = false;
 			break;
@@ -111,10 +111,10 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 
    if (success)
    {
-	   ConfigEntryList *dctables = dcRoot->getSubEntries(_T("dctable#*"));
-	   for(int i = 0; i < dctables->getSize(); i++)
+	   ObjectArray<ConfigEntry> *dctables = dcRoot->getSubEntries(_T("dctable#*"));
+	   for(int i = 0; i < dctables->size(); i++)
 	   {
-		   if (!ValidateDci(config, dctables->getEntry(i), name, errorText, errorTextLen))
+		   if (!ValidateDci(config, dctables->get(i), name, errorText, errorTextLen))
 		   {
 			   success = false;
 			   break;
@@ -132,7 +132,7 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen)
 {
    int i;
-	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL;
+	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
    bool success = false;
 
@@ -143,9 +143,9 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 	if (eventsRoot != NULL)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
-		for(i = 0; i < events->getSize(); i++)
+		for(i = 0; i < events->size(); i++)
 		{
-			ConfigEntry *event = events->getEntry(i);
+			ConfigEntry *event = events->get(i);
 			DbgPrintf(6, _T("ValidateConfig(): validating event %s"), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
 		
 			UINT32 code = event->getSubEntryValueUInt(_T("code"));
@@ -191,9 +191,9 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 	if (trapsRoot != NULL)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
-		for(i = 0; i < traps->getSize(); i++)
+		for(i = 0; i < traps->size(); i++)
 		{
-			ConfigEntry *trap = traps->getEntry(i);
+			ConfigEntry *trap = traps->get(i);
 			DbgPrintf(6, _T("ValidateConfig(): validating trap \"%s\""), trap->getSubEntryValue(_T("description"), 0, _T("<unnamed>")));
 			if (!IsEventExist(trap->getSubEntryValue(_T("event")), config))
 			{
@@ -208,9 +208,9 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 	if (templatesRoot != NULL)
 	{
 		templates = templatesRoot->getSubEntries(_T("template#*"));
-		for(i = 0; i < templates->getSize(); i++)
+		for(i = 0; i < templates->size(); i++)
 		{
-			if (!ValidateTemplate(config, templates->getEntry(i), errorText, errorTextLen))
+			if (!ValidateTemplate(config, templates->get(i), errorText, errorTextLen))
 				goto stop_processing;
 		}
 	}
@@ -294,14 +294,14 @@ static UINT32 ImportTrap(ConfigEntry *trap)
 	ConfigEntry *parametersRoot = trap->findEntry(_T("parameters"));
 	if (parametersRoot != NULL)
 	{
-		ConfigEntryList *parameters = parametersRoot->getOrderedSubEntries(_T("parameter#*"));
-		if (parameters->getSize() > 0)
+		ObjectArray<ConfigEntry> *parameters = parametersRoot->getOrderedSubEntries(_T("parameter#*"));
+		if (parameters->size() > 0)
 		{
-			tc.dwNumMaps = parameters->getSize();
+			tc.dwNumMaps = parameters->size();
 			tc.pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * tc.dwNumMaps);
-			for(int i = 0; i < parameters->getSize(); i++)
+			for(int i = 0; i < parameters->size(); i++)
 			{
-				ConfigEntry *parameter = parameters->getEntry(i);
+				ConfigEntry *parameter = parameters->get(i);
 
 				int position = parameter->getSubEntryValueInt(_T("position"), 0, -1);
 				if (position > 0)
@@ -338,7 +338,7 @@ static UINT32 ImportTrap(ConfigEntry *trap)
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
 {
-	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL;
+	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot;
 	UINT32 rcc = RCC_SUCCESS;
 	int i;
@@ -350,15 +350,15 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	if (eventsRoot != NULL)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
-		DbgPrintf(5, _T("ImportConfig(): %d events to import"), events->getSize());
-		for(i = 0; i < events->getSize(); i++)
+		DbgPrintf(5, _T("ImportConfig(): %d events to import"), events->size());
+		for(i = 0; i < events->size(); i++)
 		{
-			rcc = ImportEvent(events->getEntry(i));
+			rcc = ImportEvent(events->get(i));
 			if (rcc != RCC_SUCCESS)
 				goto stop_processing;
 		}
 
-		if (events->getSize() > 0)
+		if (events->size() > 0)
 		{
 			ReloadEvents();
 			NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
@@ -371,10 +371,10 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	if (trapsRoot != NULL)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
-		DbgPrintf(5, _T("ImportConfig(): %d SNMP traps to import"), traps->getSize());
-		for(i = 0; i < traps->getSize(); i++)
+		DbgPrintf(5, _T("ImportConfig(): %d SNMP traps to import"), traps->size());
+		for(i = 0; i < traps->size(); i++)
 		{
-			rcc = ImportTrap(traps->getEntry(i));
+			rcc = ImportTrap(traps->get(i));
 			if (rcc != RCC_SUCCESS)
 				goto stop_processing;
 		}
@@ -386,9 +386,9 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	if (templatesRoot != NULL)
 	{
 		templates = templatesRoot->getSubEntries(_T("template#*"));
-		for(i = 0; i < templates->getSize(); i++)
+		for(i = 0; i < templates->size(); i++)
 		{
-			Template *object = new Template(templates->getEntry(i));
+			Template *object = new Template(templates->get(i));
 			NetObjInsert(object, TRUE);
 			object->AddParent(g_pTemplateRoot);
 			g_pTemplateRoot->AddChild(object);
@@ -402,9 +402,9 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	if (rulesRoot != NULL)
 	{
 		rules = rulesRoot->getSubEntries(_T("rule#*"));
-		for(i = 0; i < rules->getSize(); i++)
+		for(i = 0; i < rules->size(); i++)
 		{
-         EPRule *rule = new EPRule(rules->getEntry(i));
+         EPRule *rule = new EPRule(rules->get(i));
          g_pEventPolicy->importRule(rule);
 		}
 		DbgPrintf(5, _T("ImportConfig(): event processing policy rules imported"));

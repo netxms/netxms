@@ -64,12 +64,12 @@ EPRule::EPRule(ConfigEntry *config)
 	ConfigEntry *eventsRoot = config->findEntry(_T("events"));
    if (eventsRoot != NULL)
    {
-		ConfigEntryList *events = eventsRoot->getSubEntries(_T("event#*"));
+		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
       m_dwNumEvents = 0;
-      m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * events->getSize());
-      for(int i = 0; i < events->getSize(); i++)
+      m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * events->size());
+      for(int i = 0; i < events->size(); i++)
       {
-         EVENT_TEMPLATE *e = FindEventTemplateByName(events->getEntry(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
+         EVENT_TEMPLATE *e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
          if (e != NULL)
          {
             m_pdwEventList[m_dwNumEvents++] = e->dwCode;

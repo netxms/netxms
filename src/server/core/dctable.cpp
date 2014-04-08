@@ -216,11 +216,11 @@ DCTable::DCTable(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
 	if (columnsRoot != NULL)
 	{
-		ConfigEntryList *columns = columnsRoot->getSubEntries(_T("column#*"));
-		m_columns = new ObjectArray<DCTableColumn>(columns->getSize(), 8, true);
-		for(int i = 0; i < columns->getSize(); i++)
+		ObjectArray<ConfigEntry> *columns = columnsRoot->getSubEntries(_T("column#*"));
+		m_columns = new ObjectArray<DCTableColumn>(columns->size(), 8, true);
+		for(int i = 0; i < columns->size(); i++)
 		{
-			m_columns->add(new DCTableColumn(columns->getEntry(i)));
+			m_columns->add(new DCTableColumn(columns->get(i)));
 		}
 		delete columns;
 	}
@@ -232,11 +232,11 @@ DCTable::DCTable(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
 	if (thresholdsRoot != NULL)
 	{
-		ConfigEntryList *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-		m_thresholds = new ObjectArray<DCTableThreshold>(thresholds->getSize(), 8, true);
-		for(int i = 0; i < thresholds->getSize(); i++)
+		ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+		m_thresholds = new ObjectArray<DCTableThreshold>(thresholds->size(), 8, true);
+		for(int i = 0; i < thresholds->size(); i++)
 		{
-			m_thresholds->add(new DCTableThreshold(thresholds->getEntry(i)));
+			m_thresholds->add(new DCTableThreshold(thresholds->get(i)));
 		}
 		delete thresholds;
 	}

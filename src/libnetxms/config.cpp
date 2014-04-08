@@ -145,38 +145,40 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
 /**
  * Get all subentries with names matched to mask
  */
-ConfigEntryList* ConfigEntry::getSubEntries(const TCHAR *mask)
+ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask)
 {
-   ConfigEntry *e, **list = NULL;
-   int count = 0, allocated = 0;
-
-   for(e = m_first; e != NULL; e = e->getNext())
+   ObjectArray<ConfigEntry> *list = new ObjectArray<ConfigEntry>(16, 16, false);
+   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
       if ((mask == NULL) || MatchString(mask, e->getName(), FALSE))
       {
-         if (count == allocated)
-         {
-            allocated += 10;
-            list = (ConfigEntry **) realloc(list, sizeof(ConfigEntry *) * allocated);
-         }
-         list[count++] = e;
+         list->add(e);
       }
-   return new ConfigEntryList(list, count);
+   return list;
+}
+
+/**
+ * Comparator for ConfigEntryList::sortById()
+ */
+static int CompareById(const void *p1, const void *p2)
+{
+   ConfigEntry *e1 = *((ConfigEntry **)p1);
+   ConfigEntry *e2 = *((ConfigEntry **)p2);
+   return e1->getId() - e2->getId();
 }
 
 /**
  * Get all subentries with names matched to mask ordered by id
  */
-ConfigEntryList* ConfigEntry::getOrderedSubEntries(const TCHAR *mask)
+ObjectArray<ConfigEntry> *ConfigEntry::getOrderedSubEntries(const TCHAR *mask)
 {
-   ConfigEntryList *list = getSubEntries(mask);
-   list->sortById();
+   ObjectArray<ConfigEntry> *list = getSubEntries(mask);
+   list->sort(CompareById);
    return list;
 }
 
-/*
- * Get value
+/**
+ * Get entry value
  */
-
 const TCHAR* ConfigEntry::getValue(int index)
 {
    if ((index < 0) || (index >= m_valueCount))
@@ -184,30 +186,46 @@ const TCHAR* ConfigEntry::getValue(int index)
    return m_values[index];
 }
 
+/**
+ * Get entry value as integer
+ */
 INT32 ConfigEntry::getValueInt(int index, INT32 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
+/**
+ * Get entry value as unsigned integer
+ */
 UINT32 ConfigEntry::getValueUInt(int index, UINT32 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
+/**
+ * Get entry value as 64 bit integer
+ */
 INT64 ConfigEntry::getValueInt64(int index, INT64 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
+/**
+ * Get entry value as 64 bit unsigned integer
+ */
 UINT64 ConfigEntry::getValueUInt64(int index, UINT64 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
+/**
+ * Get entry value as boolean
+ * (consider non-zero numerical value or strings "yes", "true", "on" as true)
+ */
 bool ConfigEntry::getValueBoolean(int index, bool defaultValue)
 {
    const TCHAR *value = getValue(index);
@@ -222,6 +240,9 @@ bool ConfigEntry::getValueBoolean(int index, bool defaultValue)
    }
 }
 
+/**
+ * Get entry value as GUID
+ */
 bool ConfigEntry::getValueUUID(int index, uuid_t uuid)
 {
    const TCHAR *value = getValue(index);
@@ -232,10 +253,9 @@ bool ConfigEntry::getValueUUID(int index, uuid_t uuid)
    return false;
 }
 
-/*
- * Set value
+/**
+ * Set value (replace all existing values)
  */
-
 void ConfigEntry::setValue(const TCHAR *value)
 {
    for(int i = 0; i < m_valueCount; i++)
@@ -245,10 +265,9 @@ void ConfigEntry::setValue(const TCHAR *value)
    m_values[0] = _tcsdup(value);
 }
 
-/*
- *  Add value
+/**
+ * Add value
  */
-
 void ConfigEntry::addValue(const TCHAR *value)
 {
    m_values = (TCHAR **) realloc(m_values, sizeof(TCHAR *) * (m_valueCount + 1));
@@ -256,10 +275,9 @@ void ConfigEntry::addValue(const TCHAR *value)
    m_valueCount++;
 }
 
-/*
+/**
  * Get summary length of all values as if they was concatenated with separator character
  */
-
 int ConfigEntry::getConcatenatedValuesLength()
 {
    int i, len;
@@ -364,9 +382,15 @@ void ConfigEntry::createXml(String &xml, int level)
       *ptr = 0;
 
    if (m_id == 0)
-      xml.addFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
+      xml.addFormattedString(_T("%*s<%s"), level * 4, _T(""), name);
    else
-      xml.addFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
+      xml.addFormattedString(_T("%*s<%s id=\"%d\""), level * 4, _T(""), name, m_id);
+   for(UINT32 j = 0; j < m_attributes.getSize(); j++)
+   {
+      if (_tcscmp(m_attributes.getKeyByIndex(j), _T("id")))
+         xml.addFormattedString(_T(" %s=\"%s\""), m_attributes.getKeyByIndex(j), m_attributes.getValueByIndex(j));
+   }
+   xml += _T(">");
 
    if (m_first != NULL)
    {
@@ -391,24 +415,6 @@ void ConfigEntry::createXml(String &xml, int level)
    }
 
    free(name);
-}
-
-/**
- * Comparator for ConfigEntryList::sortById()
- */
-static int CompareById(const void *p1, const void *p2)
-{
-   ConfigEntry *e1 = *((ConfigEntry **) p1);
-   ConfigEntry *e2 = *((ConfigEntry **) p2);
-   return e1->getId() - e2->getId();
-}
-
-/**
- *  Sort entry list
- */
-void ConfigEntryList::sortById()
-{
-   qsort(m_list, m_size, sizeof(ConfigEntry *), CompareById);
 }
 
 /**
@@ -557,7 +563,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 /**
  * Get value
  */
-const TCHAR * Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
+const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
 {
    const TCHAR *value;
    ConfigEntry *entry = getEntry(path);
@@ -612,6 +618,9 @@ bool Config::getValueBoolean(const TCHAR *path, bool defaultValue)
    }
 }
 
+/**
+ * Get value at given path as UUID
+ */
 bool Config::getValueUUID(const TCHAR *path, uuid_t uuid)
 {
    const TCHAR *value = getValue(path);
@@ -625,31 +634,28 @@ bool Config::getValueUUID(const TCHAR *path, uuid_t uuid)
    }
 }
 
-/*
+/**
  * Get subentries
  */
-
-ConfigEntryList * Config::getSubEntries(const TCHAR *path, const TCHAR *mask)
+ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *mask)
 {
    ConfigEntry *entry = getEntry(path);
    return (entry != NULL) ? entry->getSubEntries(mask) : NULL;
 }
 
-/*
+/**
  * Get subentries ordered by id
  */
-
-ConfigEntryList * Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask)
+ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask)
 {
    ConfigEntry *entry = getEntry(path);
    return (entry != NULL) ? entry->getOrderedSubEntries(mask) : NULL;
 }
 
-/*
+/**
  * Get entry
  */
-
-ConfigEntry * Config::getEntry(const TCHAR *path)
+ConfigEntry *Config::getEntry(const TCHAR *path)
 {
    const TCHAR *curr, *end;
    TCHAR name[256];
@@ -984,10 +990,23 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          else
             nx_strncpy(entryName, name, MAX_PATH);
 #endif
-         ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(entryName);
+         // Only do merge on top level by default, otherwise add sub-entry with same name
+         bool merge = XMLGetAttrBoolean(attrs, "merge", (ps->level == 1));
+         ps->stack[ps->level] = merge ? ps->stack[ps->level - 1]->findEntry(entryName) : NULL;
          if (ps->stack[ps->level] == NULL)
-            ps->stack[ps->level] = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file,
-               XML_GetCurrentLineNumber(ps->parser), (int) id);
+         {
+            ConfigEntry *e = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser), (int)id);
+            ps->stack[ps->level] = e;
+            // add all attributes to the entry
+            for(int i = 0; attrs[i] != NULL; i += 2)
+            {
+#ifdef UNICODE
+               e->setAttributePreallocated(WideStringFromMBString(attrs[i]), WideStringFromMBString(attrs[i + 1]));
+#else
+               e->setAttribute(attrs[i], attrs[i + 1]);
+#endif
+            }
+         }
          ps->charData[ps->level] = _T("");
          ps->trimValue[ps->level] = XMLGetAttrBoolean(attrs, "trim", true);
          ps->level++;

@@ -254,14 +254,14 @@ UINT32 GetPolicyInventory(CommSession *session, CSCPMessage *msg)
 {
 	Config *registry = OpenRegistry();
 
-	ConfigEntryList *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
+	ObjectArray<ConfigEntry> *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
 	if (list != NULL)
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)list->getSize());
+		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)list->size());
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
-		for(int i = 0; i < list->getSize(); i++, varId += 7)
+		for(int i = 0; i < list->size(); i++, varId += 7)
 		{
-			ConfigEntry *e = list->getEntry(i);
+			ConfigEntry *e = list->get(i);
 			uuid_t guid;
 
 			if (MatchString(_T("policy-*"), e->getName(), TRUE))

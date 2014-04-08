@@ -208,3 +208,11 @@ int Array::indexOf(void *element)
    }
    return -1;
 }
+
+/**
+ * Sort array elements
+ */
+void Array::sort(int (*cb)(const void *, const void *))
+{
+   qsort(m_data, m_size, m_elementSize, cb);
+}

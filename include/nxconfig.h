@@ -27,13 +27,9 @@
 #include <nms_util.h>
 #include <uuid.h>
 
-
-//
-// Config entry
-//
-
-class ConfigEntryList;
-
+/**
+ * Config entry
+ */
 class LIBNETXMS_EXPORTABLE ConfigEntry
 {
 private:
@@ -47,6 +43,7 @@ private:
 	TCHAR *m_file;
 	int m_line;
 	int m_id;
+   StringMap m_attributes;
 
 	void addEntry(ConfigEntry *entry);
 	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
@@ -79,6 +76,10 @@ public:
 	bool getSubEntryValueBoolean(const TCHAR *name, int index = 0, bool defaultValue = false);
 	bool getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index = 0);
 
+   const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
+   void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); }
+   void setAttributePreallocated(TCHAR *name, TCHAR *value) { m_attributes.setPreallocated(name, value); }
+
 	const TCHAR *getFile() { return m_file; }
 	int getLine() { return m_line; }
 
@@ -89,31 +90,12 @@ public:
 
 	ConfigEntry *createEntry(const TCHAR *name);
 	ConfigEntry *findEntry(const TCHAR *name);
-	ConfigEntryList *getSubEntries(const TCHAR *mask);
-	ConfigEntryList *getOrderedSubEntries(const TCHAR *mask);
+	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *mask);
+	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *mask);
 	void unlinkEntry(ConfigEntry *entry);
 
 	void print(FILE *file, int level);
 	void createXml(String &xml, int level = 0);
-};
-
-/**
- * List of config entries
- */
-class ConfigEntryList
-{
-private:
-	ConfigEntry **m_list;
-	int m_size;
-
-public:
-	ConfigEntryList(ConfigEntry **list, int size) { m_list = list; m_size = size; }
-	~ConfigEntryList() { safe_free(m_list); }
-
-	int getSize() { return m_size; }
-	ConfigEntry *getEntry(int index) { return ((index >= 0) && (index < m_size)) ? m_list[index] : NULL; }
-
-	void sortById();
 };
 
 /**
@@ -158,8 +140,8 @@ public:
 	UINT64 getValueUInt64(const TCHAR *path, UINT64 defaultValue);
 	bool getValueBoolean(const TCHAR *path, bool defaultValue);
 	bool getValueUUID(const TCHAR *path, uuid_t uuid);
-	ConfigEntryList *getSubEntries(const TCHAR *path, const TCHAR *mask);
-	ConfigEntryList *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
+	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *path, const TCHAR *mask);
+	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
 
 	bool setValue(const TCHAR *path, const TCHAR *value);
 	bool setValue(const TCHAR *path, INT32 value);

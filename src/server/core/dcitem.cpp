@@ -217,11 +217,11 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
 	if (thresholdsRoot != NULL)
 	{
-		ConfigEntryList *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-		m_thresholds = new ObjectArray<Threshold>(thresholds->getSize(), 8, true);
-		for(int i = 0; i < thresholds->getSize(); i++)
+		ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+		m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, true);
+		for(int i = 0; i < thresholds->size(); i++)
 		{
-			m_thresholds->add(new Threshold(thresholds->getEntry(i), this));
+			m_thresholds->add(new Threshold(thresholds->get(i), this));
 		}
 		delete thresholds;
 	}

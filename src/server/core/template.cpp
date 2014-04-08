@@ -96,17 +96,17 @@ Template::Template(ConfigEntry *config) : NetObj()
 	ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
 	if (dcRoot != NULL)
 	{
-		ConfigEntryList *dcis = dcRoot->getSubEntries(_T("dci#*"));
-		for(int i = 0; i < dcis->getSize(); i++)
+		ObjectArray<ConfigEntry> *dcis = dcRoot->getSubEntries(_T("dci#*"));
+		for(int i = 0; i < dcis->size(); i++)
 		{
-			m_dcObjects->add(new DCItem(dcis->getEntry(i), this));
+			m_dcObjects->add(new DCItem(dcis->get(i), this));
 		}
 		delete dcis;
 
-		ConfigEntryList *dctables = dcRoot->getSubEntries(_T("dctable#*"));
-		for(int i = 0; i < dctables->getSize(); i++)
+		ObjectArray<ConfigEntry> *dctables = dcRoot->getSubEntries(_T("dctable#*"));
+		for(int i = 0; i < dctables->size(); i++)
 		{
-			m_dcObjects->add(new DCTable(dctables->getEntry(i), this));
+			m_dcObjects->add(new DCTable(dctables->get(i), this));
 		}
 		delete dctables;
    }
