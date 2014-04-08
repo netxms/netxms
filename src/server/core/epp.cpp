@@ -54,8 +54,8 @@ EPRule::EPRule(UINT32 dwId)
 EPRule::EPRule(ConfigEntry *config)
 {
    m_dwId = 0;
-   config->getSubEntryValueUUID(_T("guid"), m_guid);
-   m_dwFlags = config->getSubEntryValueUInt(_T("flags"));
+   config->getSubEntryValueAsUUID(_T("guid"), m_guid);
+   m_dwFlags = config->getSubEntryValueAsUInt(_T("flags"));
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
    m_dwNumActions = 0;
@@ -78,9 +78,9 @@ EPRule::EPRule(ConfigEntry *config)
    }
 
    m_pszComment = _tcsdup(config->getSubEntryValue(_T("comments"), 0, _T("")));
-   m_iAlarmSeverity = config->getSubEntryValueInt(_T("alarmSeverity"));
-	m_dwAlarmTimeout = config->getSubEntryValueUInt(_T("alarmTimeout"));
-	m_dwAlarmTimeoutEvent = config->getSubEntryValueUInt(_T("alarmTimeout"), 0, EVENT_ALARM_TIMEOUT);
+   m_iAlarmSeverity = config->getSubEntryValueAsInt(_T("alarmSeverity"));
+	m_dwAlarmTimeout = config->getSubEntryValueAsUInt(_T("alarmTimeout"));
+	m_dwAlarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeout"), 0, EVENT_ALARM_TIMEOUT);
    nx_strncpy(m_szAlarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
    nx_strncpy(m_szAlarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
 

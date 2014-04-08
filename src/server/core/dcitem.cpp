@@ -191,9 +191,9 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
 DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 {
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
-   m_dataType = (BYTE)config->getSubEntryValueInt(_T("dataType"));
-   m_deltaCalculation = (BYTE)config->getSubEntryValueInt(_T("delta"));
-   m_sampleCount = (BYTE)config->getSubEntryValueInt(_T("samples"));
+   m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
+   m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
+   m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -201,17 +201,17 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
 	m_customUnitName = NULL;
-	m_snmpRawValueType = (WORD)config->getSubEntryValueInt(_T("snmpRawValueType"));
-	m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueInt(_T("instanceDiscoveryMethod"));
+	m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
+	m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
 	const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
 	m_instanceDiscoveryData = (value != NULL) ? _tcsdup(value) : NULL;
 	m_instanceFilterSource = NULL;
 	m_instanceFilter = NULL;
 	setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
 
-	if (config->getSubEntryValueInt(_T("allThresholds")))
+	if (config->getSubEntryValueAsInt(_T("allThresholds")))
 		m_flags |= DCF_ALL_THRESHOLDS;
-	if (config->getSubEntryValueInt(_T("rawValueInOctetString")))
+	if (config->getSubEntryValueAsInt(_T("rawValueInOctetString")))
 		m_flags |= DCF_RAW_VALUE_OCTET_STRING;
 
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));

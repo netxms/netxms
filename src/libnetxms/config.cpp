@@ -189,7 +189,7 @@ const TCHAR* ConfigEntry::getValue(int index)
 /**
  * Get entry value as integer
  */
-INT32 ConfigEntry::getValueInt(int index, INT32 defaultValue)
+INT32 ConfigEntry::getValueAsInt(int index, INT32 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
@@ -198,7 +198,7 @@ INT32 ConfigEntry::getValueInt(int index, INT32 defaultValue)
 /**
  * Get entry value as unsigned integer
  */
-UINT32 ConfigEntry::getValueUInt(int index, UINT32 defaultValue)
+UINT32 ConfigEntry::getValueAsUInt(int index, UINT32 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -207,7 +207,7 @@ UINT32 ConfigEntry::getValueUInt(int index, UINT32 defaultValue)
 /**
  * Get entry value as 64 bit integer
  */
-INT64 ConfigEntry::getValueInt64(int index, INT64 defaultValue)
+INT64 ConfigEntry::getValueAsInt64(int index, INT64 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
@@ -216,7 +216,7 @@ INT64 ConfigEntry::getValueInt64(int index, INT64 defaultValue)
 /**
  * Get entry value as 64 bit unsigned integer
  */
-UINT64 ConfigEntry::getValueUInt64(int index, UINT64 defaultValue)
+UINT64 ConfigEntry::getValueAsUInt64(int index, UINT64 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -226,7 +226,7 @@ UINT64 ConfigEntry::getValueUInt64(int index, UINT64 defaultValue)
  * Get entry value as boolean
  * (consider non-zero numerical value or strings "yes", "true", "on" as true)
  */
-bool ConfigEntry::getValueBoolean(int index, bool defaultValue)
+bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue)
 {
    const TCHAR *value = getValue(index);
    if (value != NULL)
@@ -243,7 +243,7 @@ bool ConfigEntry::getValueBoolean(int index, bool defaultValue)
 /**
  * Get entry value as GUID
  */
-bool ConfigEntry::getValueUUID(int index, uuid_t uuid)
+bool ConfigEntry::getValueAsUUID(int index, uuid_t uuid)
 {
    const TCHAR *value = getValue(index);
    if (value != NULL)
@@ -307,37 +307,40 @@ const TCHAR* ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const T
    return (value != NULL) ? value : defaultValue;
 }
 
-INT32 ConfigEntry::getSubEntryValueInt(const TCHAR *name, int index, INT32 defaultValue)
+INT32 ConfigEntry::getSubEntryValueAsInt(const TCHAR *name, int index, INT32 defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT32 ConfigEntry::getSubEntryValueUInt(const TCHAR *name, int index, UINT32 defaultValue)
+UINT32 ConfigEntry::getSubEntryValueAsUInt(const TCHAR *name, int index, UINT32 defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-INT64 ConfigEntry::getSubEntryValueInt64(const TCHAR *name, int index, INT64 defaultValue)
+INT64 ConfigEntry::getSubEntryValueAsInt64(const TCHAR *name, int index, INT64 defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT64 ConfigEntry::getSubEntryValueUInt64(const TCHAR *name, int index, UINT64 defaultValue)
+UINT64 ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, UINT64 defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-bool ConfigEntry::getSubEntryValueBoolean(const TCHAR *name, int index, bool defaultValue)
+/**
+ * Get sub-entry value as boolean
+ * (consider non-zero numerical value or strings "yes", "true", "on" as true)
+ */
+bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    if (value != NULL)
    {
-      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
-         || (_tcstol(value, NULL, 0) != 0);
+      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
    }
    else
    {
@@ -345,7 +348,10 @@ bool ConfigEntry::getSubEntryValueBoolean(const TCHAR *name, int index, bool def
    }
 }
 
-bool ConfigEntry::getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index)
+/**
+ * Get sub-entry value as UUID
+ */
+bool ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, uuid_t uuid, int index)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    if (value != NULL)
@@ -356,6 +362,107 @@ bool ConfigEntry::getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index
    {
       return false;
    }
+}
+
+/**
+ * Get attribute as integer
+ */
+INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get attribute as unsigned integer
+ */
+UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get attribute as 64 bit integer
+ */
+INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   return (value != NULL) ? _tcstoll(value, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get attribute as unsigned 64 bit integer
+ */
+UINT64 ConfigEntry::getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   return (value != NULL) ? _tcstoull(value, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get attribute as boolean
+ * (consider non-zero numerical value or strings "yes", "true", "on" as true)
+ */
+bool ConfigEntry::getAttributeAsBoolean(const TCHAR *name, bool defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   if (value != NULL)
+   {
+      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
+   }
+   else
+   {
+      return defaultValue;
+   }
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, INT32 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%d"), (int)value);
+   setAttribute(name, buffer);
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, UINT32 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%u"), (unsigned int)value);
+   setAttribute(name, buffer);
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, INT64 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, INT64_FMT, value);
+   setAttribute(name, buffer);
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, UINT64 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, UINT64_FMT, value);
+   setAttribute(name, buffer);
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, bool value)
+{
+   setAttribute(name, value ? _T("true") : _T("false"));
 }
 
 /**
@@ -580,31 +687,31 @@ const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
    return value;
 }
 
-INT32 Config::getValueInt(const TCHAR *path, INT32 defaultValue)
+INT32 Config::getValueAsInt(const TCHAR *path, INT32 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT32 Config::getValueUInt(const TCHAR *path, UINT32 defaultValue)
+UINT32 Config::getValueAsUInt(const TCHAR *path, UINT32 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-INT64 Config::getValueInt64(const TCHAR *path, INT64 defaultValue)
+INT64 Config::getValueAsInt64(const TCHAR *path, INT64 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT64 Config::getValueUInt64(const TCHAR *path, UINT64 defaultValue)
+UINT64 Config::getValueAsUInt64(const TCHAR *path, UINT64 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-bool Config::getValueBoolean(const TCHAR *path, bool defaultValue)
+bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue)
 {
    const TCHAR *value = getValue(path);
    if (value != NULL)
@@ -621,7 +728,7 @@ bool Config::getValueBoolean(const TCHAR *path, bool defaultValue)
 /**
  * Get value at given path as UUID
  */
-bool Config::getValueUUID(const TCHAR *path, uuid_t uuid)
+bool Config::getValueAsUUID(const TCHAR *path, uuid_t uuid)
 {
    const TCHAR *value = getValue(path);
    if (value != NULL)

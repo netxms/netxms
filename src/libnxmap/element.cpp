@@ -41,9 +41,9 @@ NetworkMapElement::NetworkMapElement(UINT32 id, UINT32 flags)
 NetworkMapElement::NetworkMapElement(UINT32 id, Config *config, UINT32 flags)
 {
 	m_id = id;
-	m_type = config->getValueInt(_T("/type"), MAP_ELEMENT_GENERIC);
-	m_posX = config->getValueInt(_T("/posX"), 0);
-	m_posY = config->getValueInt(_T("/posY"), 0);
+	m_type = config->getValueAsInt(_T("/type"), MAP_ELEMENT_GENERIC);
+	m_posX = config->getValueAsInt(_T("/posX"), 0);
+	m_posY = config->getValueAsInt(_T("/posY"), 0);
 	m_flags = flags;
 }
 
@@ -117,7 +117,7 @@ NetworkMapObject::NetworkMapObject(UINT32 id, UINT32 objectId, UINT32 flags) : N
 
 NetworkMapObject::NetworkMapObject(UINT32 id, Config *config, UINT32 flags) : NetworkMapElement(id, config, flags)
 {
-	m_objectId = config->getValueUInt(_T("/objectId"), 0);
+	m_objectId = config->getValueAsUInt(_T("/objectId"), 0);
 }
 
 
@@ -181,11 +181,11 @@ NetworkMapDecoration::NetworkMapDecoration(UINT32 id, LONG decorationType, UINT3
  */
 NetworkMapDecoration::NetworkMapDecoration(UINT32 id, Config *config, UINT32 flags) : NetworkMapElement(id, config, flags)
 {
-	m_decorationType = config->getValueInt(_T("/decorationType"), 0);
-	m_color = config->getValueUInt(_T("/color"), 0);
+	m_decorationType = config->getValueAsInt(_T("/decorationType"), 0);
+	m_color = config->getValueAsUInt(_T("/color"), 0);
 	m_title = _tcsdup(config->getValue(_T("/title"), _T("")));
-	m_width = config->getValueInt(_T("/width"), 0);
-	m_height = config->getValueInt(_T("/height"), 0);
+	m_width = config->getValueAsInt(_T("/width"), 0);
+	m_height = config->getValueAsInt(_T("/height"), 0);
 }
 
 /**

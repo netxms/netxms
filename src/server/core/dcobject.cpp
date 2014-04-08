@@ -154,9 +154,9 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
    nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_szName), MAX_DB_STRING);
 	nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
-	m_source = (BYTE)config->getSubEntryValueInt(_T("origin"));
-   m_iPollingInterval = config->getSubEntryValueInt(_T("interval"));
-   m_iRetentionTime = config->getSubEntryValueInt(_T("retention"));
+	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
+   m_iPollingInterval = config->getSubEntryValueAsInt(_T("interval"));
+   m_iRetentionTime = config->getSubEntryValueAsInt(_T("retention"));
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
@@ -170,7 +170,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	m_dwProxyNode = 0;
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_pszPerfTabSettings = (perfTabSettings != NULL) ? _tcsdup(perfTabSettings) : NULL;
-	m_snmpPort = (WORD)config->getSubEntryValueInt(_T("snmpPort"));
+	m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
    m_dwNumSchedules = 0;
    m_ppScheduleList = NULL;
 
@@ -178,7 +178,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	m_transformationScript = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
    
-	if (config->getSubEntryValueInt(_T("advancedSchedule")))
+	if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
 		m_flags |= DCF_ADVANCED_SCHEDULE;
 
 	ConfigEntry *schedules = config->findEntry(_T("schedules"));

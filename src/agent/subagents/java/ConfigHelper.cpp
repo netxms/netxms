@@ -316,7 +316,7 @@ namespace org_netxms_agent
       if ((config != NULL) && (jpath != NULL))
       {
          TCHAR *path = CStringFromJavaString(jenv, jpath);
-         INT32 result = config->getValueInt(path, (INT32)jvalue);
+         INT32 result = config->getValueAsInt(path, (INT32)jvalue);
          free(path);
          return (jint) result;
       }
@@ -334,7 +334,7 @@ namespace org_netxms_agent
       if ((config != NULL) && (jpath != NULL))
       {
          TCHAR *path = CStringFromJavaString(jenv, jpath);
-         INT64 result = config->getValueInt64(path, (long)jvalue);
+         INT64 result = config->getValueAsInt64(path, (long)jvalue);
          free(path);
          return (jlong)result;
       }
@@ -352,7 +352,7 @@ namespace org_netxms_agent
       if ((config != NULL) && (jpath != NULL))
       {
          TCHAR *path = CStringFromJavaString(jenv, jpath);
-         bool result = config->getValueBoolean(path, jvalue ? true : false);
+         bool result = config->getValueAsBoolean(path, jvalue ? true : false);
          free(path);
          return (jboolean) result;
       }
@@ -788,7 +788,7 @@ namespace org_netxms_agent
       {
          return jdefaultValue;
       }
-      return (jint) configEntry->getValueInt((INT32) jindex, (INT32) jdefaultValue);
+      return (jint) configEntry->getValueAsInt((INT32) jindex, (INT32) jdefaultValue);
    }
 
    /*
@@ -803,7 +803,7 @@ namespace org_netxms_agent
       {
          return jdefaultValue;
       }
-      return (jlong) configEntry->getValueInt64((INT32) jindex, (INT64) jdefaultValue);
+      return (jlong) configEntry->getValueAsInt64((INT32) jindex, (INT64) jdefaultValue);
    }
 
    /*
@@ -818,7 +818,7 @@ namespace org_netxms_agent
       {
          return jdefaultValue;
       }
-      return (jboolean)configEntry->getValueBoolean((INT32) jindex, jdefaultValue ? true : false);
+      return (jboolean)configEntry->getValueAsBoolean((INT32) jindex, jdefaultValue ? true : false);
    }
 
    /*
@@ -846,7 +846,7 @@ namespace org_netxms_agent
       if (jname != NULL)
       {
          TCHAR *name = CStringFromJavaString(jenv, jname);
-         jresult = (jint) configEntry->getSubEntryValueInt(name, (int) jindex, (INT32) jdefaultValue );
+         jresult = (jint) configEntry->getSubEntryValueAsInt(name, (int) jindex, (INT32) jdefaultValue );
          free(name);
       }
       return jresult;
@@ -868,7 +868,7 @@ namespace org_netxms_agent
       if (jname != NULL)
       {
          TCHAR *name = CStringFromJavaString(jenv, jname);
-         jresult = (jlong) configEntry->getSubEntryValueInt64(name, (int) jindex, (INT64) jdefaultValue );
+         jresult = (jlong) configEntry->getSubEntryValueAsInt64(name, (int) jindex, (INT64) jdefaultValue );
          free(name);
       }
       return jresult;
@@ -890,7 +890,7 @@ namespace org_netxms_agent
       if (jname != NULL)
       {
          TCHAR *name = CStringFromJavaString(jenv, jname);
-         jresult = (jboolean) configEntry->getSubEntryValueBoolean(name, (int)jindex, jdefaultValue ? true : false);
+         jresult = (jboolean) configEntry->getSubEntryValueAsBoolean(name, (int)jindex, jdefaultValue ? true : false);
          free(name);
       }
       return jresult;

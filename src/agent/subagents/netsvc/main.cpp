@@ -52,11 +52,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-   // TODO: it assumed that size * nmemb will always fit into size_t
    RequestData *data = (RequestData *)userdata;
    if ((data->allocated - data->size) < (size * nmemb))
    {
-      // TODO: add check for realloc == NULL
       char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
       if (newData == NULL)
       {
@@ -158,6 +156,8 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                   retCode = PC_ERR_CONNECT;
                }
             }
+            safe_free(data->data);
+            free(data);
             curl_easy_cleanup(curl);
          }
          else
@@ -194,7 +194,7 @@ static BOOL SubagentInit(Config *config)
    if (ret)
    {
       AgentWriteDebugLog(3, _T("cURL version: %hs"), curl_version());
-#if HAVE_DECL_CURL_VERSION_INFO
+#if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
       curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
       char protocols[1024] = {0};
       const char * const *p = version->protocols;

@@ -253,7 +253,7 @@ DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
          ConfigEntry *c = conditions->get(i);
          const TCHAR *column = c->getSubEntryValue(_T("column"), 0, _T(""));
          const TCHAR *value = c->getSubEntryValue(_T("value"), 0, _T(""));
-         int op = c->getSubEntryValueInt(_T("operation"));
+         int op = c->getSubEntryValueAsInt(_T("operation"));
 			m_conditions->add(new DCTableCondition(column, op, value));
 		}
 		delete conditions;

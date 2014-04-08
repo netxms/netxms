@@ -137,18 +137,18 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    m_targetId = parentItem->getTarget()->Id();
    m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
    m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
-   m_function = (BYTE)config->getSubEntryValueInt(_T("function"), 0, F_LAST);
-   m_operation = (BYTE)config->getSubEntryValueInt(_T("condition"), 0, OP_EQ);
+   m_function = (BYTE)config->getSubEntryValueAsInt(_T("function"), 0, F_LAST);
+   m_operation = (BYTE)config->getSubEntryValueAsInt(_T("condition"), 0, OP_EQ);
    m_dataType = parentItem->getDataType();
 	m_value = config->getSubEntryValue(_T("value"), 0, _T(""));
-   m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != NULL) ? config->getSubEntryValueInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueInt(_T("param1"), 0, 1);
+   m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != NULL) ? config->getSubEntryValueAsInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueAsInt(_T("param1"), 0, 1);
    m_scriptSource = NULL;
    m_script = NULL;
    const TCHAR *script = config->getSubEntryValue(_T("script"));
    setScript((script != NULL) ? _tcsdup(script) : NULL);
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
-	m_repeatInterval = config->getSubEntryValueInt(_T("repeatInterval"), 0, -1);
+	m_repeatInterval = config->getSubEntryValueAsInt(_T("repeatInterval"), 0, -1);
 	m_lastEventTimestamp = 0;
 	m_numMatches = 0;
 }

@@ -57,6 +57,7 @@ SUBAGENT_LIBS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
+SMSDRV_DIRS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
@@ -413,6 +414,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
+	SMSDRV_DIRS="websms"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images"
 	SERVER_INCLUDE="include"
@@ -1379,6 +1381,7 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
 fi
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
+  SMSDRV_DIRS="$SMSDRV_DIRS websms"
 fi
 
 #--------------------------------------------------------------------
@@ -2303,6 +2306,7 @@ AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
+AC_SUBSR(SMSDRV_DIRS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CLIENT_COMPONENTS)

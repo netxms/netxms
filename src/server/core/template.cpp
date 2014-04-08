@@ -82,8 +82,8 @@ Template::Template(ConfigEntry *config) : NetObj()
 
 	// Name and version
 	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
-	m_dwVersion = config->getSubEntryValueUInt(_T("version"), 0, 0x00010000);
-	m_flags = config->getSubEntryValueUInt(_T("flags"), 0, 0);
+	m_dwVersion = config->getSubEntryValueAsUInt(_T("version"), 0, 0x00010000);
+	m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
 
 	// Auto-apply filter
 	m_applyFilter = NULL;

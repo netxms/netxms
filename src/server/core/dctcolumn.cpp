@@ -101,7 +101,7 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 DCTableColumn::DCTableColumn(ConfigEntry *e)
 {
    nx_strncpy(m_name, e->getSubEntryValue(_T("name"), 0, _T("")), MAX_COLUMN_NAME);
-   m_flags = (UINT16)e->getSubEntryValueUInt(_T("flags"));
+   m_flags = (UINT16)e->getSubEntryValueAsUInt(_T("flags"));
    m_displayName = _tcsdup(e->getSubEntryValue(_T("displayName"), 0, _T("")));
 
    const TCHAR *oid = e->getSubEntryValue(_T("snmpOid"));

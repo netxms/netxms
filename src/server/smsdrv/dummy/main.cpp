@@ -23,7 +23,6 @@
 
 #include <nms_common.h>
 #include <nxsrvapi.h>
-#include <nxdbapi.h>
 #include <nms_util.h>
 
 #ifdef _WIN32
@@ -32,18 +31,27 @@
 #define EXPORT
 #endif
 
+/**
+ * Init driver
+ */
 extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 {
 	DbgPrintf(1, _T("Dummy SMS Driver loaded, set debug=6 or higher to see actual messages"));
 	return TRUE;
 }
 
+/**
+ * Send SMS
+ */
 extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	DbgPrintf(6, _T("DummySMS: phone=\"%s\", text=\"%s\""), pszPhoneNumber, pszText);
    return TRUE;
 }
 
+/**
+ * Unload driver
+ */
 extern "C" void EXPORT SMSDriverUnload()
 {
 }

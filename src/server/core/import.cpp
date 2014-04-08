@@ -148,7 +148,7 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 			ConfigEntry *event = events->get(i);
 			DbgPrintf(6, _T("ValidateConfig(): validating event %s"), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
 		
-			UINT32 code = event->getSubEntryValueUInt(_T("code"));
+			UINT32 code = event->getSubEntryValueAsUInt(_T("code"));
 			if ((code >= FIRST_USER_EVENT_ID) || (code == 0))
 			{
 				ConfigEntry *e = event->findEntry(_T("name"));
@@ -239,7 +239,7 @@ static UINT32 ImportEvent(ConfigEntry *event)
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-	UINT32 code = event->getSubEntryValueUInt(_T("code"), 0, 0);
+	UINT32 code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
 	if ((code == 0) || (code >= FIRST_USER_EVENT_ID))
 		code = CreateUniqueId(IDG_EVENT);
 
@@ -250,16 +250,16 @@ static UINT32 ImportEvent(ConfigEntry *event)
    if (IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
    {
       _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
-                 (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueInt(_T("severity")),
-					  event->getSubEntryValueInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
+                 (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
+					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
 					  (const TCHAR *)DBPrepareString(hdb, descr), code);
    }
    else
    {
       _sntprintf(query, 8192, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
                               _T("message,description) VALUES (%d,%s,%d,%d,%s,%s)"),
-                 code, (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueInt(_T("severity")),
-					  event->getSubEntryValueInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
+                 code, (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
+					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
 					  (const TCHAR *)DBPrepareString(hdb, descr));
    }
 	UINT32 rcc = DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE;
@@ -303,7 +303,7 @@ static UINT32 ImportTrap(ConfigEntry *trap)
 			{
 				ConfigEntry *parameter = parameters->get(i);
 
-				int position = parameter->getSubEntryValueInt(_T("position"), 0, -1);
+				int position = parameter->getSubEntryValueAsInt(_T("position"), 0, -1);
 				if (position > 0)
 				{
 					// Positional parameter
@@ -318,7 +318,7 @@ static UINT32 ImportTrap(ConfigEntry *trap)
 					tc.pMaps[i].pdwObjectId = (UINT32 *)nx_memdup(temp, sizeof(UINT32) * tc.pMaps[i].dwOidLen);
 				}
 				nx_strncpy(tc.pMaps[i].szDescription, parameter->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
-				tc.pMaps[i].dwFlags = parameter->getSubEntryValueUInt(_T("flags"), 0, 0);
+				tc.pMaps[i].dwFlags = parameter->getSubEntryValueAsUInt(_T("flags"), 0, 0);
 			}
 		}
 		delete parameters;
