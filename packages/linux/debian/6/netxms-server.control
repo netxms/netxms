@@ -4,6 +4,6 @@ Section: net
 Priority: optional
 Architecture: @arch@
 Essential: no
-Depends: netxms-agent (= @version@), libreadline6
+Depends: netxms-agent (= @version@), libreadline6, libcurl3
 Maintainer: Victor Kirhenshtein <victor@netxms.org>
 Description: NetXMS server

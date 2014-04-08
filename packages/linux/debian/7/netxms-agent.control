@@ -4,6 +4,6 @@ Section: net
 Priority: optional
 Architecture: @arch@
 Essential: no
-Depends: netxms-base (= @version@), libsensors4
+Depends: netxms-base (= @version@), libsensors4, libcurl3
 Maintainer: Victor Kirhenshtein <victor@netxms.org>
 Description: NetXMS agent

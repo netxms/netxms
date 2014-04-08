@@ -99,9 +99,11 @@ cp -P /usr/lib/libavaya-ers.so* netxms-server/usr/lib/
 cp -P /usr/lib/libcisco.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxcore.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsl.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxsms_dummy.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsms_generic.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsms_nxagent.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsms_portech.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxsms_websms.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsnmp.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsrv.so* netxms-server/usr/lib/
 cp -P /usr/lib/libstrophe.so* netxms-server/usr/lib/
