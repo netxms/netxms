@@ -251,19 +251,6 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, UINT32 dw
 {
    UINT32 dwResult;
 
-#ifdef UNICODE
-   char szHostName[256];
-
-	if (pszHostName != NULL)
-	{
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-								  pszHostName, -1, szHostName, 256, NULL, NULL);
-	}
-#define HOSTNAME_VAR szHostName
-#else
-#define HOSTNAME_VAR pszHostName
-#endif
-
    // Fill in remote address structure
    memset(&m_peerAddr, 0, sizeof(struct sockaddr_in));
    m_peerAddr.sin_family = AF_INET;
@@ -272,17 +259,7 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, UINT32 dw
    // Resolve hostname
    if (pszHostName != NULL)
    {
-      struct hostent *hs;
-
-      hs = gethostbyname(HOSTNAME_VAR);
-      if (hs != NULL)
-      {
-         memcpy(&m_peerAddr.sin_addr.s_addr, hs->h_addr, sizeof(UINT32));
-      }
-      else
-      {
-         m_peerAddr.sin_addr.s_addr = inet_addr(HOSTNAME_VAR);
-      }
+      m_peerAddr.sin_addr.s_addr = ResolveHostName(pszHostName);
    }
    else
    {
