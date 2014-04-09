@@ -1161,23 +1161,28 @@ UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name)
  */
 UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name)
 {
-   UINT32 dwAddr;
-   struct hostent *hs;
-   dwAddr = inet_addr(name);
-   if ((dwAddr == INADDR_NONE) || (dwAddr == INADDR_ANY))
+   UINT32 addr = inet_addr(name);
+   if ((addr == INADDR_NONE) || (addr == INADDR_ANY))
    {
-      hs = gethostbyname(name);
+#if HAVE_GETHOSTBYNAME2_R
+      struct hostent h, *hs = NULL;
+      char buffer[1024];
+      int err;
+      gethostbyname2_r(name, AF_INET, &h, buffer, 1024, &hs, &err);
+#else
+      struct hostent *hs = gethostbyname(name);
+#endif
       if (hs != NULL)
       {
-         memcpy(&dwAddr, hs->h_addr, sizeof(UINT32));
+         memcpy(&addr, hs->h_addr, sizeof(UINT32));
       }
       else
       {
-         dwAddr = INADDR_NONE;
+         addr = INADDR_NONE;
       }
    }
 
-   return dwAddr;
+   return addr;
 }
 
 #ifndef VER_PLATFORM_WIN32_WINDOWS
