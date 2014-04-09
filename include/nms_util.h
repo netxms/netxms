@@ -986,11 +986,12 @@ extern "C"
 	TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer);
 	TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
-   UINT32 LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
+   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name);
+   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name);
 #ifdef UNICODE
-   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName);
+#define ResolveHostName ResolveHostNameW
 #else
-#define ResolveHostNameA ResolveHostName
+#define ResolveHostName ResolveHostNameA
 #endif
 
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, UINT32 dwSize);

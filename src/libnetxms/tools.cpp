@@ -1141,30 +1141,32 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 }
 
 /**
- * Resolve host name to IP address
+ * Resolve host name to IP address (UNICODE version)
  *
- * @param pszName host name or IP address
+ * @param name host name or IP address
  * @return IP address in network byte order
  */
-UINT32 LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
+UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name)
+{
+   char mbName[256];
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, name, -1, mbName, 256, NULL, NULL);
+   return ResolveHostNameA(mbName);
+}
+
+/**
+ * Resolve host name to IP address (multibyte version)
+ *
+ * @param name host name or IP address
+ * @return IP address in network byte order
+ */
+UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name)
 {
    UINT32 dwAddr;
    struct hostent *hs;
-#ifdef UNICODE
-   char szBuffer[256];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pszName, -1, szBuffer, 256, NULL, NULL);
-   dwAddr = inet_addr(szBuffer);
-#else
-   dwAddr = inet_addr(pszName);
-#endif
+   dwAddr = inet_addr(name);
    if ((dwAddr == INADDR_NONE) || (dwAddr == INADDR_ANY))
    {
-#ifdef UNICODE
-      hs = gethostbyname(szBuffer);
-#else
-      hs = gethostbyname(pszName);
-#endif
+      hs = gethostbyname(name);
       if (hs != NULL)
       {
          memcpy(&dwAddr, hs->h_addr, sizeof(UINT32));
@@ -1177,32 +1179,6 @@ UINT32 LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 
    return dwAddr;
 }
-
-#ifdef UNICODE
-
-UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName)
-{
-   UINT32 dwAddr;
-   struct hostent *hs;
-   dwAddr = inet_addr(pszName);
-   if ((dwAddr == INADDR_NONE) || (dwAddr == INADDR_ANY))
-   {
-      hs = gethostbyname(pszName);
-      if (hs != NULL)
-      {
-         memcpy(&dwAddr, hs->h_addr, sizeof(UINT32));
-      }
-      else
-      {
-         dwAddr = INADDR_NONE;
-      }
-   }
-
-   return dwAddr;
-}
-
-#endif
-
 
 #ifndef VER_PLATFORM_WIN32_WINDOWS
 #define VER_PLATFORM_WIN32_WINDOWS 1
