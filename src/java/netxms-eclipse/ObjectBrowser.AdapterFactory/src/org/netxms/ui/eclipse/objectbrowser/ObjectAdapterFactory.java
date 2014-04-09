@@ -52,7 +52,8 @@ public class ObjectAdapterFactory implements IAdapterFactory
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{
 		if ((adapterType == IWorkbenchAdapter.class) && 
-		    (adaptableObject instanceof AbstractObject))
+		    (adaptableObject instanceof AbstractObject) &&
+		    (((AbstractObject)adaptableObject).getObjectClass() < AbstractObject.OBJECT_CUSTOM))
 		{
 			return new ObjectAdapter();
 		}

@@ -143,11 +143,9 @@ BOOL VPNConnector::CreateFromDB(UINT32 dwId)
    return bResult;
 }
 
-
-//
-// Save interface object to database
-//
-
+/**
+ * Save VPN connector object to database
+ */
 BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
@@ -249,11 +247,9 @@ Node *VPNConnector::GetParentNode()
    return pNode;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void VPNConnector::CreateMessage(CSCPMessage *pMsg)
 {
    UINT32 i, dwId;
@@ -276,11 +272,9 @@ void VPNConnector::CreateMessage(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 UINT32 VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    UINT32 i, dwId;
@@ -332,12 +326,10 @@ UINT32 VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocke
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Check if given address falls into one of the local nets
-//
-
-BOOL VPNConnector::IsLocalAddr(UINT32 dwIpAddr)
+/**
+ * Check if given address falls into one of the local nets
+ */
+BOOL VPNConnector::isLocalAddr(UINT32 dwIpAddr)
 {
    UINT32 i;
    BOOL bResult = FALSE;
@@ -355,12 +347,10 @@ BOOL VPNConnector::IsLocalAddr(UINT32 dwIpAddr)
    return bResult;
 }
 
-
-//
-// Check if given address falls into one of the remote nets
-//
-
-BOOL VPNConnector::IsRemoteAddr(UINT32 dwIpAddr)
+/**
+ * Check if given address falls into one of the remote nets
+ */
+BOOL VPNConnector::isRemoteAddr(UINT32 dwIpAddr)
 {
    UINT32 i;
    BOOL bResult = FALSE;
@@ -378,12 +368,10 @@ BOOL VPNConnector::IsRemoteAddr(UINT32 dwIpAddr)
    return bResult;
 }
 
-
-//
-// Get address of peer gateway
-//
-
-UINT32 VPNConnector::GetPeerGatewayAddr(void)
+/**
+ * Get address of peer gateway
+ */
+UINT32 VPNConnector::getPeerGatewayAddr()
 {
    NetObj *pObject;
    UINT32 dwAddr = 0;

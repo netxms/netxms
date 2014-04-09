@@ -116,8 +116,10 @@ public class ObjectAdapter implements IWorkbenchAdapter
 				return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_SLMCHECK:
 				return Activator.getImageDescriptor(((ServiceCheck)object).isTemplate() ? "icons/service_check_template.gif" : "icons/service_check.gif"); //$NON-NLS-1$ //$NON-NLS-2$
+         case AbstractObject.OBJECT_VPNCONNECTOR:
+            return Activator.getImageDescriptor("icons/vpn.png"); //$NON-NLS-1$
 			default:
-				return null;
+				return SharedIcons.UNKNOWN_OBJECT;
 		}
 	}
 

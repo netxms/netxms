@@ -96,10 +96,10 @@ BOOL CDCIPerfTabPage::OnInitDialog()
 #endif
 		if (config.loadXmlConfigFromMemory(xml, (int)strlen(xml)))
 		{
-			m_showOnPerfTab = config.getValueBoolean(_T("/enabled"), false);
+			m_showOnPerfTab = config.getValueAsBoolean(_T("/enabled"), false);
 			m_graphTitle = config.getValue(_T("/title"), _T(""));
-			m_graphColor = config.getValueUInt(_T("/color"), 0x00C000);
-			m_showThresholds = config.getValueBoolean(_T("/showThresholds"), false);
+			m_graphColor = config.getValueAsUInt(_T("/color"), 0x00C000);
+			m_showThresholds = config.getValueAsBoolean(_T("/showThresholds"), false);
 
 			SendDlgItemMessage(IDC_CHECK_SHOW, BM_SETCHECK, m_showOnPerfTab ? BST_CHECKED : BST_UNCHECKED, 0);
 			SetDlgItemText(IDC_EDIT_TITLE, m_graphTitle);

@@ -157,6 +157,7 @@ import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.UnknownObject;
+import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
@@ -405,57 +406,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       final int objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
 
       AbstractObject object = createCustomObjectFromMessage(objectClass, msg);
-      if (object != null) return object;
+      if (object != null) 
+         return object;
 
       switch(objectClass)
       {
-         case AbstractObject.OBJECT_INTERFACE:
-            object = new Interface(msg, this);
-            break;
-         case AbstractObject.OBJECT_SUBNET:
-            object = new Subnet(msg, this);
-            break;
-         case AbstractObject.OBJECT_CONTAINER:
-            object = new Container(msg, this);
-            break;
-         case AbstractObject.OBJECT_RACK:
-            object = new Rack(msg, this);
-            break;
-         case AbstractObject.OBJECT_CONDITION:
-            object = new Condition(msg, this);
-            break;
-         case AbstractObject.OBJECT_MOBILEDEVICE:
-            object = new MobileDevice(msg, this);
-            break;
-         case AbstractObject.OBJECT_NODE:
-            object = new Node(msg, this);
-            break;
          case AbstractObject.OBJECT_ACCESSPOINT:
             object = new AccessPoint(msg, this);
-            break;
-         case AbstractObject.OBJECT_CLUSTER:
-            object = new Cluster(msg, this);
-            break;
-         case AbstractObject.OBJECT_TEMPLATE:
-            object = new Template(msg, this);
-            break;
-         case AbstractObject.OBJECT_TEMPLATEROOT:
-            object = new TemplateRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_TEMPLATEGROUP:
-            object = new TemplateGroup(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORK:
-            object = new EntireNetwork(msg, this);
-            break;
-         case AbstractObject.OBJECT_SERVICEROOT:
-            object = new ServiceRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_POLICYROOT:
-            object = new PolicyRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_POLICYGROUP:
-            object = new PolicyGroup(msg, this);
             break;
          case AbstractObject.OBJECT_AGENTPOLICY:
             object = new AgentPolicy(msg, this);
@@ -463,47 +420,95 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
             object = new AgentPolicyConfig(msg, this);
             break;
-         case AbstractObject.OBJECT_NETWORKMAPROOT:
-            object = new NetworkMapRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORKMAPGROUP:
-            object = new NetworkMapGroup(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORKMAP:
-            object = new NetworkMap(msg, this);
-            break;
-         case AbstractObject.OBJECT_DASHBOARDROOT:
-            object = new DashboardRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_DASHBOARD:
-            object = new Dashboard(msg, this);
-            break;
-         case AbstractObject.OBJECT_ZONE:
-            object = new Zone(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORKSERVICE:
-            object = new NetworkService(msg, this);
-            break;
-         case AbstractObject.OBJECT_REPORTROOT:
-            object = new ReportRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_REPORTGROUP:
-            object = new ReportGroup(msg, this);
-            break;
-         case AbstractObject.OBJECT_REPORT:
-            object = new Report(msg, this);
+         case AbstractObject.OBJECT_BUSINESSSERVICE:
+            object = new BusinessService(msg, this);
             break;
          case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
             object = new BusinessServiceRoot(msg, this);
             break;
-         case AbstractObject.OBJECT_BUSINESSSERVICE:
-            object = new BusinessService(msg, this);
+         case AbstractObject.OBJECT_CLUSTER:
+            object = new Cluster(msg, this);
+            break;
+         case AbstractObject.OBJECT_CONDITION:
+            object = new Condition(msg, this);
+            break;
+         case AbstractObject.OBJECT_CONTAINER:
+            object = new Container(msg, this);
+            break;
+         case AbstractObject.OBJECT_DASHBOARD:
+            object = new Dashboard(msg, this);
+            break;
+         case AbstractObject.OBJECT_DASHBOARDROOT:
+            object = new DashboardRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_INTERFACE:
+            object = new Interface(msg, this);
+            break;
+         case AbstractObject.OBJECT_MOBILEDEVICE:
+            object = new MobileDevice(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORK:
+            object = new EntireNetwork(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORKMAP:
+            object = new NetworkMap(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORKMAPGROUP:
+            object = new NetworkMapGroup(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORKMAPROOT:
+            object = new NetworkMapRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORKSERVICE:
+            object = new NetworkService(msg, this);
+            break;
+         case AbstractObject.OBJECT_NODE:
+            object = new Node(msg, this);
             break;
          case AbstractObject.OBJECT_NODELINK:
             object = new NodeLink(msg, this);
             break;
+         case AbstractObject.OBJECT_POLICYGROUP:
+            object = new PolicyGroup(msg, this);
+            break;
+         case AbstractObject.OBJECT_POLICYROOT:
+            object = new PolicyRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_RACK:
+            object = new Rack(msg, this);
+            break;
+         case AbstractObject.OBJECT_REPORT:
+            object = new Report(msg, this);
+            break;
+         case AbstractObject.OBJECT_REPORTGROUP:
+            object = new ReportGroup(msg, this);
+            break;
+         case AbstractObject.OBJECT_REPORTROOT:
+            object = new ReportRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_SERVICEROOT:
+            object = new ServiceRoot(msg, this);
+            break;
          case AbstractObject.OBJECT_SLMCHECK:
             object = new ServiceCheck(msg, this);
+            break;
+         case AbstractObject.OBJECT_SUBNET:
+            object = new Subnet(msg, this);
+            break;
+         case AbstractObject.OBJECT_TEMPLATE:
+            object = new Template(msg, this);
+            break;
+         case AbstractObject.OBJECT_TEMPLATEGROUP:
+            object = new TemplateGroup(msg, this);
+            break;
+         case AbstractObject.OBJECT_TEMPLATEROOT:
+            object = new TemplateRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_VPNCONNECTOR:
+            object = new VPNConnector(msg, this);
+            break;
+         case AbstractObject.OBJECT_ZONE:
+            object = new Zone(msg, this);
             break;
          default:
             object = new GenericObject(msg, this);
@@ -3951,6 +3956,30 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          msg.setVariableInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
       }
 
+      if ((flags & NXCObjectModificationData.MODIFY_PEER_GATEWAY) != 0)
+      {
+         msg.setVariableInt32(NXCPCodes.VID_PEER_GATEWAY, (int)data.getPeerGatewayId());
+      }
+
+      if ((flags & NXCObjectModificationData.MODIFY_VPN_NETWORKS) != 0)
+      {
+         long varId = NXCPCodes.VID_VPN_NETWORK_BASE;
+
+         msg.setVariableInt32(NXCPCodes.VID_NUM_LOCAL_NETS, data.getLocalNetworks().size());
+         for(IpAddressListElement e : data.getLocalNetworks())
+         {
+            msg.setVariable(varId++, e.getAddr1());
+            msg.setVariable(varId++, e.getAddr2());
+         }
+
+         msg.setVariableInt32(NXCPCodes.VID_NUM_REMOTE_NETS, data.getRemoteNetworks().size());
+         for(IpAddressListElement e : data.getRemoteNetworks())
+         {
+            msg.setVariable(varId++, e.getAddr1());
+            msg.setVariable(varId++, e.getAddr2());
+         }
+      }
+      
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

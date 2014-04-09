@@ -751,9 +751,9 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   BOOL IsLocalAddr(UINT32 dwIpAddr);
-   BOOL IsRemoteAddr(UINT32 dwIpAddr);
-   UINT32 GetPeerGatewayAddr();
+   BOOL isLocalAddr(UINT32 dwIpAddr);
+   BOOL isRemoteAddr(UINT32 dwIpAddr);
+   UINT32 getPeerGatewayAddr();
 };
 
 /**
