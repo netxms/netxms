@@ -1,0 +1,27 @@
+DROP TABLE "REPORTING_RESULTS";
+DROP SEQUENCE HIBERNATE_SEQUENCE;
+
+CREATE TABLE REPORTING_RESULTS
+(
+  ID decimal(10) PRIMARY KEY NOT NULL,
+  EXECUTIONTIME timestamp,
+  REPORTID raw(255),
+  JOBID raw(255),
+  USERID decimal(10)
+);
+
+CREATE TABLE REPORT_NOTIFICATION
+(
+  ID decimal(10) PRIMARY KEY not null,
+  jobid raw(255) not null,
+  mail varchar(255) not null,
+  report_name varchar(255),
+  attach_report integer default 0 not null
+);
+
+CREATE SEQUENCE HIBERNATE_SEQUENCE
+  INCREMENT BY 1
+  MINVALUE 1
+  MAXVALUE 9999999999999999999999999999
+  CACHE 20
+  NOCYCLE;

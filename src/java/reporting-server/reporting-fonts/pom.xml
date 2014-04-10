@@ -1,0 +1,42 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.netxms</groupId>
+	<artifactId>reporting-fonts</artifactId>
+	<version>4.4.12</version>
+	<description>JasperReports Library Font Extension for NetXMS reports</description>
+	<name>NetXMS JasperReports Font Extension</name>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Built-By>D8 Corporation</Built-By>
+						</manifestEntries>
+						<manifestSections>
+							<manifestSection>
+								<name>com/netxms/resources/fonts/</name>
+								<manifestEntries>
+									<Specification-Title>JasperReports Library Font Extension</Specification-Title>
+									<Specification-Version>${pom.version}</Specification-Version>
+									<Specification-Vendor>Raden Solutions</Specification-Vendor>
+									<Implementation-Title>com.netxms.resources.fonts</Implementation-Title>
+									<Implementation-Version>${pom.version}</Implementation-Version>
+									<Implementation-Vendor>Raden Solutions</Implementation-Vendor>
+								</manifestEntries>
+							</manifestSection>
+						</manifestSections>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<organization>
+		<name>Raden Solutions</name>
+	</organization>
+</project>

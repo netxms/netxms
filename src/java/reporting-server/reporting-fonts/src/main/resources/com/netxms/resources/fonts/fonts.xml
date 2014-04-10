@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<fontFamilies>
+
+	<fontFamily name="Times New Roman">
+		<normal>com/netxms/resources/fonts/arial/Arial.ttf</normal>
+		<bold>com/netxms/resources/fonts/arial/Arial_Bold.ttf</bold>
+		<italic>com/netxms/resources/fonts/arial/Arial_Italic.ttf</italic>
+		<boldItalic>com/netxms/resources/fonts/arial/Arial_Bold_Italic.ttf</boldItalic>
+		<pdfEncoding>Identity-H</pdfEncoding>
+		<pdfEmbedded>true</pdfEmbedded>
+		<exportFonts>
+			<export key="net.sf.jasperreports.html">Arial, Helvetica, sans-serif</export>
+			<export key="net.sf.jasperreports.xhtml">Arial, Helvetica, sans-serif</export>
+		</exportFonts>
+	</fontFamily>
+
+</fontFamilies>
