@@ -4049,6 +4049,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
+   @Deprecated
    public void setReportDefinition(final long objectId, final String definition) throws IOException, NXCException
    {
       NXCObjectModificationData data = new NXCObjectModificationData(objectId);
@@ -4063,6 +4064,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException           if socket or file I/O error occurs
     * @throws NXCException          if NetXMS server returns an error or operation was timed out
     */
+   @Deprecated
    public void setReportDefinition(final long objectId, final File file)
       throws FileNotFoundException, IOException, NXCException
    {
@@ -7268,22 +7270,97 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       return file;
    }
 
+   /**
+    * @param reportId - current report uuid
+    * @throws NetXMSClientException
+    * @throws IOException
+    */
    @Override
-   public void scheduleReport(
-      UUID reportId, Date startTime, int daysOfWeek, int daysOfMonth, Map<String, String> parameters)
-      throws NetXMSClientException, IOException
-   {
-      // TODO Auto-generated method stub
+	public void scheduleReport(ReportingJob reportingJob, Map<String, String> parameters) throws NetXMSClientException, IOException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_SCHEDULE_EXECUTION);
+		msg.setVariableInt32(NXCPCodes.VID_USER_ID, reportingJob.getUserId());
+		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportingJob.getReportId());
+		msg.setVariable(NXCPCodes.VID_RS_JOB_ID, reportingJob.getJobId());
+		msg.setVariableInt32(NXCPCodes.VID_RS_JOB_TYPE, reportingJob.getType());
+		msg.setVariableInt64(NXCPCodes.VID_TIMESTAMP, reportingJob.getStartTime().getTime());
+		msg.setVariableInt32(NXCPCodes.VID_DAY_OF_WEEK, reportingJob.getDaysOfWeek());
+		msg.setVariableInt32(NXCPCodes.VID_DAY_OF_MONTH, reportingJob.getDaysOfMonth());
 
-   }
+		msg.setVariableInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
+		long varId = NXCPCodes.VID_PARAM_LIST_BASE;
+		for(Entry<String, String> e : parameters.entrySet())
+		{
+			msg.setVariable(varId++, e.getKey());
+			msg.setVariable(varId++, e.getValue());
+		}
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 
+   /**
+    * @param reportId - current report uuid
+    * @throws NetXMSClientException
+    * @throws IOException
+    */
    @Override
-   public List<ReportingJob> listScheduledJobs()
+   public List<ReportingJob> listScheduledJobs(UUID reportId) throws NetXMSClientException, IOException
    {
-      // TODO Auto-generated method stub
-      return null;
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_LIST_SCHEDULES);
+      msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
+      msg.setVariableInt32(NXCPCodes.VID_USER_ID, userId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+		
+      List<ReportingJob> result = new ArrayList<ReportingJob>();
+      long varId = NXCPCodes.VID_ROW_DATA_BASE;
+      int num = response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
+      for (int i = 0; i < num; i++)
+      {
+         result.add(new ReportingJob(response, varId));
+         varId += 20;
+      }
+      return result;
    }
-
+   
+   /**
+    * @param reportId - current report uuid
+    * @param jobId - schedule uuid
+    * @throws NetXMSClientException
+    * @throws IOException
+    */
+   @Override
+   public void deleteReportSchedule(UUID reportId, UUID jobId) throws NetXMSClientException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_DELETE_SCHEDULE);
+      msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
+      msg.setVariable(NXCPCodes.VID_JOB_ID, jobId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+	/**
+	 * Send notification in reporting server. When job is done then send a notice to mail
+	 * 
+	 * @param mails
+	 * @param attachReportToMail
+	 * @throws NetXMSClientException
+	 * @throws IOException
+	 */
+	public void sendReportNotification(UUID scheduleJobId, List<String> mails, ReportRenderFormat format, String reportName) throws NetXMSClientException, IOException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_ADD_REPORT_NOTIFY);
+		msg.setVariable(NXCPCodes.VID_RS_JOB_ID, scheduleJobId);
+		msg.setVariableInt32(NXCPCodes.VID_RENDER_FORMAT, (format != null ? format.getCode() : 0));
+		msg.setVariable(NXCPCodes.VID_RS_REPORT_NAME, reportName);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, mails.size());
+		long varId = NXCPCodes.VID_ITEM_LIST;
+		for (int i = 0; i < mails.size(); i++)
+			msg.setVariable(varId + i, mails.get(i));
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+   
    /**
     * @param clientAddress the clientAddress to set
     */

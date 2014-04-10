@@ -313,9 +313,10 @@ public class NXCPCodes
 	public static final int CMD_CHANGE_OBJECT_TOOL_STATUS = 0x011F;
 	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
 	public static final int CMD_DELETE_ALARM_NOTE = 0x0121;
-   public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
-   public static final int CMD_GET_DCI_VALUES = 0x0123;
-
+	public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
+	public static final int VID_RS_REPORT_NAME  = 0x0123;
+	public static final int CMD_GET_DCI_VALUES = 0x0124;
+	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
 	public static final int CMD_RS_GET_REPORT_DEFINITION = 0x1101;
@@ -323,6 +324,11 @@ public class NXCPCodes
 	public static final int CMD_RS_LIST_RESULTS = 0x1103;
 	public static final int CMD_RS_RENDER_RESULT = 0x1104;
 	public static final int CMD_RS_DELETE_RESULT = 0x1105;
+	public static final int CMD_RS_LIST_SCHEDULES = 0x1106;
+	public static final int CMD_RS_DELETE_SCHEDULE = 0x1107;
+	public static final int CMD_RS_NOTIFY = 0x1108;
+	public static final int CMD_RS_ADD_REPORT_NOTIFY = 0x1109;
+	public static final int CMD_RS_SEND_MAIL_NOTIFY = 0x1110;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME = 1;
@@ -790,6 +796,8 @@ public class NXCPCodes
    public static final long VID_EFFECTIVE_RIGHTS = 463;
    public static final long VID_EXTENSION_COUNT = 464;
    public static final long VID_TIMED_ALARM_ACK_ENABLED = 465;
+   public static final long VID_RS_JOB_ID = 466;
+   public static final long VID_RS_JOB_TYPE = 467;
    public static final long VID_TABLE_EXTENDED_FORMAT = 466;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
@@ -875,5 +883,4 @@ public class NXCPCodes
 	public static final long VID_UUID_LIST_BASE = 0x10000000L;
 	public static final long VID_RULE_LIST_BASE = 0x10000000L;
 	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;
-	public static final long VID_DCI_ID_LIST_BASE = 0x10000000L;
 }

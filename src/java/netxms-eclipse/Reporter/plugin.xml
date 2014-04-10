@@ -36,5 +36,18 @@
             class="org.netxms.ui.eclipse.reporter.StandardTypesControlFactory">
       </customControlFactory>
    </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.reporter.propertypages.General"
+            id="org.netxms.ui.eclipse.reporter.propertypages.General#0"
+            name="General">
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.reporter.propertypages.Notification"
+            id="org.netxms.ui.eclipse.reporter.propertypages.Notification#1"
+            name="Notification">
+      </page>
+   </extension>
 
 </plugin>

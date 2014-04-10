@@ -4,6 +4,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
+import org.netxms.ui.eclipse.reporter.widgets.DateFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.FieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.StringFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.TimestampFieldEditor;
@@ -23,7 +24,11 @@ public class StandardTypesControlFactory implements CustomControlFactory
 		FieldEditor fieldEditor = null;
 		final String type = parameter.getType();
 		System.out.println(parameter);
-		if (type.equals("START_DATE") || type.equals("END_DATE") || type.equals("TIMESTAMP"))
+		if (type.equals("START_DATE") || type.equals("END_DATE"))
+		{
+			fieldEditor = new DateFieldEditor(parameter, toolkit, parent);
+		}
+		else if (type.equals("TIMESTAMP"))
 		{
 			fieldEditor = new TimestampFieldEditor(parameter, toolkit, parent);
 		}
