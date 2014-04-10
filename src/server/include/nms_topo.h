@@ -56,18 +56,20 @@ struct HOP_INFO
 class NetworkPath
 {
 private:
+   UINT32 m_sourceAddress;
 	int m_hopCount;
 	int m_allocated;
 	HOP_INFO *m_path;
 	bool m_complete;
 
 public:
-	NetworkPath();
+	NetworkPath(UINT32 srcAddr);
 	~NetworkPath();
 
 	void addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn);
 	void setComplete() { m_complete = true; }
 
+   UINT32 getSourceAddress() { return m_sourceAddress; }
 	bool isComplete() { return m_complete; }
 	int getHopCount() { return m_hopCount; }
 	HOP_INFO *getHopInfo(int index) { return ((index >= 0) && (index < m_hopCount)) ? &m_path[index] : NULL; }

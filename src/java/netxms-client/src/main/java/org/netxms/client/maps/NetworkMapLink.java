@@ -487,4 +487,28 @@ public class NetworkMapLink
       }
       return dciList;
    }
+
+   /**
+    * @param name the name to set
+    */
+   public void setName(String name)
+   {
+      this.name = name;
+   }
+
+   /**
+    * @param connectorName1 the connectorName1 to set
+    */
+   public void setConnectorName1(String connectorName1)
+   {
+      this.connectorName1 = connectorName1;
+   }
+
+   /**
+    * @param connectorName2 the connectorName2 to set
+    */
+   public void setConnectorName2(String connectorName2)
+   {
+      this.connectorName2 = connectorName2;
+   }
 }

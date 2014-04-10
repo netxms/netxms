@@ -3517,13 +3517,12 @@ UINT32 Node::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
       if ((m_dwFlags & NF_IS_NATIVE_AGENT) || (m_dwFlags & NF_IS_SNMP))
 		{
 			TCHAR arg[256] = _T("");
-			UINT32 destAddr, nextHop, ifIndex;
-			BOOL isVpn;
-
 	      AgentGetParameterArg(param, 1, arg, 256);
-			destAddr = ntohl(_t_inet_addr(arg));
+			UINT32 destAddr = ntohl(_t_inet_addr(arg));
 			if ((destAddr > 0) && (destAddr < 0xE0000000))
 			{
+			   bool isVpn;
+   			UINT32 nextHop, ifIndex;
 				if (getNextHop(m_dwIpAddr, destAddr, &nextHop, &ifIndex, &isVpn))
 				{
 					IpToStr(nextHop, buffer);
@@ -4368,48 +4367,76 @@ ROUTING_TABLE *Node::getRoutingTable()
 }
 
 /**
+ * Get outward interface for routing to given destination address
+ */
+bool Node::getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIndex)
+{
+   bool found = false;
+   routingTableLock();
+   if (m_pRoutingTable != NULL)
+   {
+      for(int i = 0; i < m_pRoutingTable->iNumEntries; i++)
+		{
+         if ((destAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr)
+         {
+            *srcIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
+            Interface *iface = findInterface(m_pRoutingTable->pRoutes[i].dwIfIndex, INADDR_ANY);
+            *srcAddr = ((iface != NULL) && (iface->IpAddr() != 0)) ? iface->IpAddr() : m_dwIpAddr;  // use primary IP if outward interface does not have Ip address or cannot be found
+            found = true;
+            break;
+         }
+		}
+   }
+	else
+	{
+		DbgPrintf(6, _T("Node::getOutwardInterface(%s [%d]): no routing table"), m_szName, m_dwId);
+	}
+   routingTableUnlock();
+   return found;
+}
+
+/**
  * Get next hop for given destination address
  */
-BOOL Node::getNextHop(UINT32 dwSrcAddr, UINT32 dwDestAddr, UINT32 *pdwNextHop, UINT32 *pdwIfIndex, BOOL *pbIsVPN)
+bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *ifIndex, bool *isVpn)
 {
    UINT32 i;
-   BOOL nextHopFound = FALSE;
+   bool nextHopFound = false;
 
 	// Check directly connected networks and VPN connectors
-	BOOL nonFunctionalInterfaceFound = FALSE;
+	bool nonFunctionalInterfaceFound = false;
 	LockChildList(FALSE);
 	for(i = 0; i < m_dwChildCount; i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_VPNCONNECTOR)
 		{
-			if (((VPNConnector *)m_pChildList[i])->isRemoteAddr(dwDestAddr) &&
-				 ((VPNConnector *)m_pChildList[i])->isLocalAddr(dwSrcAddr))
+			if (((VPNConnector *)m_pChildList[i])->isRemoteAddr(destAddr) &&
+				 ((VPNConnector *)m_pChildList[i])->isLocalAddr(srcAddr))
 			{
-				*pdwNextHop = ((VPNConnector *)m_pChildList[i])->getPeerGatewayAddr();
-				*pdwIfIndex = m_pChildList[i]->Id();
-				*pbIsVPN = TRUE;
-				nextHopFound = TRUE;
+				*nextHop = ((VPNConnector *)m_pChildList[i])->getPeerGatewayAddr();
+				*ifIndex = m_pChildList[i]->Id();
+				*isVpn = true;
+				nextHopFound = true;
 				break;
 			}
 		}
-		else if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
-					(m_pChildList[i]->IpAddr() != 0))
+		else if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() != 0))
 		{
 			UINT32 mask = ((Interface *)m_pChildList[i])->getIpNetMask();
-			if ((dwDestAddr & mask) == (m_pChildList[i]->IpAddr() & mask))
+			if ((destAddr & mask) == (m_pChildList[i]->IpAddr() & mask))
 			{
-				*pdwNextHop = dwDestAddr;
-				*pdwIfIndex = ((Interface *)m_pChildList[i])->getIfIndex();
-				*pbIsVPN = FALSE;
+				*nextHop = destAddr;
+				*ifIndex = ((Interface *)m_pChildList[i])->getIfIndex();
+				*isVpn = false;
 				if (m_pChildList[i]->Status() == SEVERITY_NORMAL)  /* TODO: use separate link status */
 				{
 					// found operational interface
-					nextHopFound = TRUE;
+					nextHopFound = true;
 					break;
 				}
 				// non-operational interface found, continue search
 				// but will use this interface if other suitable interfaces will not be found
-				nonFunctionalInterfaceFound = TRUE;
+				nonFunctionalInterfaceFound = true;
 			}
 		}
 	}
@@ -4424,12 +4451,22 @@ BOOL Node::getNextHop(UINT32 dwSrcAddr, UINT32 dwDestAddr, UINT32 *pdwNextHop, U
       for(i = 0; i < (UINT32)m_pRoutingTable->iNumEntries; i++)
 		{
          if ((!nextHopFound || (m_pRoutingTable->pRoutes[i].dwDestMask == 0xFFFFFFFF)) &&
-			    ((dwDestAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr))
+			    ((destAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr))
          {
-            *pdwNextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
-            *pdwIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
-            *pbIsVPN = FALSE;
-            nextHopFound = TRUE;
+            Interface *iface = findInterface(m_pRoutingTable->pRoutes[i].dwIfIndex, INADDR_ANY);
+            if ((m_pRoutingTable->pRoutes[i].dwNextHop == 0) && (iface != NULL) && (iface->getIpNetMask() == 0xFFFFFFFF))
+            {
+               // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
+               // where each vif has netmask 255.255.255.255 and next hop in routing table set to 0.0.0.0
+               *nextHop = destAddr;
+            }
+            else
+            {
+               *nextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
+            }
+            *ifIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
+            *isVpn = false;
+            nextHopFound = true;
             break;
          }
 		}

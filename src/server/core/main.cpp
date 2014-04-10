@@ -1606,10 +1606,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 						pTrace = TraceRoute((Node *)pObject1, (Node *)pObject2);
 						if (pTrace != NULL)
 						{
-							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s):\n"),
+                     TCHAR sourceIp[32];
+							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
 									pObject1->Name(), pObject2->Name(), pTrace->getHopCount(),
-									pTrace->isComplete() ? _T("complete") : _T("incomplete"));
-							for(i = 0; i < pTrace->getHopCount(); i++)
+									pTrace->isComplete() ? _T("complete") : _T("incomplete"),
+                           IpToStr(pTrace->getSourceAddress(), sourceIp));
+ 							for(i = 0; i < pTrace->getHopCount(); i++)
 							{
 								HOP_INFO *hop = pTrace->getHopInfo(i);
 								ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),

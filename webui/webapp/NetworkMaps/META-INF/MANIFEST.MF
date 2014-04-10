@@ -6,11 +6,11 @@ Bundle-Version: 1.2.14
 Bundle-Activator: org.netxms.ui.eclipse.networkmaps.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.13",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.14",
  org.netxms.ui.eclipse.imagelibrary;bundle-version="1.2.13",
  org.netxms.ui.eclipse.osm;bundle-version="1.2.10",
  org.eclipse.rap.ui;bundle-version="2.2.0",
- org.netxms.webui.core;bundle-version="1.2.13",
+ org.netxms.webui.core;bundle-version="1.2.14",
  org.netxms.gef4.zest.layouts;bundle-version="2.0.2",
  org.netxms.gef4.zest.core;bundle-version="2.0.2",
  org.netxms.gef4.zest.jface;bundle-version="2.0.2",

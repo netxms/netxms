@@ -28,6 +28,7 @@ import org.eclipse.draw2d.BendpointConnectionRouter;
 import org.eclipse.draw2d.ConnectionEndpointLocator;
 import org.eclipse.draw2d.ConnectionLocator;
 import org.eclipse.draw2d.ConnectionRouter;
+import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
@@ -407,6 +408,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
 		NetworkMapLink link = (NetworkMapLink)connection.getData();
+
+		if (link.getType() == NetworkMapLink.VPN)
+		{
+		   connection.setLineStyle(Graphics.LINE_DOT);
+		}
 		
 		if (link.hasConnectorName1())
 		{

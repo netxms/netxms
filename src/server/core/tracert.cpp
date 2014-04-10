@@ -24,8 +24,9 @@
 /**
  * Network path constructor
  */
-NetworkPath::NetworkPath()
+NetworkPath::NetworkPath(UINT32 srcAddr)
 {
+   m_sourceAddress = srcAddr;
 	m_hopCount = 0;
 	m_allocated = 0;
 	m_path = NULL;
@@ -84,19 +85,22 @@ void NetworkPath::fillMessage(CSCPMessage *msg)
  */
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
 {
-   UINT32 dwNextHop, dwIfIndex, dwHopCount;
-   Node *pCurr, *pNext;
-   NetworkPath *pTrace;
-   BOOL bIsVPN;
+   UINT32 srcAddr, srcIfIndex;
+   if (!pSrc->getOutwardInterface(pDest->IpAddr(), &srcAddr, &srcIfIndex))
+      srcAddr = pSrc->IpAddr();
 
-   pTrace = new NetworkPath;
-   
-   for(pCurr = pSrc, dwHopCount = 0; (pCurr != pDest) && (pCurr != NULL) && (dwHopCount < 30); pCurr = pNext, dwHopCount++)
+   NetworkPath *path = new NetworkPath(srcAddr);
+
+   int hopCount = 0;
+   Node *pCurr, *pNext;
+   for(pCurr = pSrc; (pCurr != pDest) && (pCurr != NULL) && (hopCount < 30); pCurr = pNext, hopCount++)
    {
-      if (pCurr->getNextHop(pSrc->IpAddr(), pDest->IpAddr(), &dwNextHop, &dwIfIndex, &bIsVPN))
+      UINT32 dwNextHop, dwIfIndex;
+      bool isVpn;
+      if (pCurr->getNextHop(srcAddr, pDest->IpAddr(), &dwNextHop, &dwIfIndex, &isVpn))
       {
 			pNext = FindNodeByIP(pSrc->getZoneId(), dwNextHop);
-			pTrace->addHop(dwNextHop, pCurr, dwIfIndex, bIsVPN ? true : false);
+			path->addHop(dwNextHop, pCurr, dwIfIndex, isVpn);
          if ((pNext == pCurr) || (dwNextHop == 0))
             pNext = NULL;     // Directly connected subnet or too many hops, stop trace
       }
@@ -107,9 +111,9 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
    }
 	if (pCurr == pDest)
 	{
-		pTrace->addHop(0, pCurr, 0, false);
-		pTrace->setComplete();
+		path->addHop(0, pCurr, 0, false);
+		path->setComplete();
 	}
 
-   return pTrace;
+   return path;
 }

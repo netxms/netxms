@@ -32,6 +32,10 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.PositionConstants;
+import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
+import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
+import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.GraphNode;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -42,10 +46,6 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
-import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
-import org.eclipse.gef4.zest.core.widgets.GraphConnection;
-import org.eclipse.gef4.zest.core.widgets.GraphNode;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
@@ -407,6 +407,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
 		NetworkMapLink link = (NetworkMapLink)connection.getData();
+
+		if (link.getType() == NetworkMapLink.VPN)
+		{
+		   connection.setLineStyle(SWT.LINE_DOT);
+		}
 		
 		if (link.hasConnectorName1())
 		{
