@@ -867,7 +867,7 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
       {
 		   m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
       }
-		if (m_filter->run(0, NULL))
+		if (m_filter->run())
 		{
 			NXSL_Value *value = m_filter->getResult();
 			result = ((value != NULL) && (value->getValueAsInt32() != 0));

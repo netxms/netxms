@@ -4382,10 +4382,10 @@ BOOL Node::getNextHop(UINT32 dwSrcAddr, UINT32 dwDestAddr, UINT32 *pdwNextHop, U
 	{
 		if (m_pChildList[i]->Type() == OBJECT_VPNCONNECTOR)
 		{
-			if (((VPNConnector *)m_pChildList[i])->IsRemoteAddr(dwDestAddr) &&
-				 ((VPNConnector *)m_pChildList[i])->IsLocalAddr(dwSrcAddr))
+			if (((VPNConnector *)m_pChildList[i])->isRemoteAddr(dwDestAddr) &&
+				 ((VPNConnector *)m_pChildList[i])->isLocalAddr(dwSrcAddr))
 			{
-				*pdwNextHop = ((VPNConnector *)m_pChildList[i])->GetPeerGatewayAddr();
+				*pdwNextHop = ((VPNConnector *)m_pChildList[i])->getPeerGatewayAddr();
 				*pdwIfIndex = m_pChildList[i]->Id();
 				*pbIsVPN = TRUE;
 				nextHopFound = TRUE;
@@ -5665,7 +5665,7 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
 							{
 								vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
 
-								if (vm->run(0, NULL))
+								if (vm->run())
 								{
 									NXSL_Value *result = vm->getResult();
 									if (result != NULL)
@@ -5809,7 +5809,7 @@ void Node::executeHookScript(const TCHAR *hookName)
 	}
 
 	vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
-	if (!vm->run(0, NULL))
+	if (!vm->run())
 	{
 		DbgPrintf(4, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
 		          m_szName, m_dwId, scriptName, vm->getErrorText());

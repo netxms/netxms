@@ -250,10 +250,10 @@ bool SummaryTable::filter(DataCollectionTarget *object)
       {
          result = value->getValueAsInt32() ? true : false;
       }
-      else
-      {
-         DbgPrintf(4, _T("Error executing filter script for DCI summary table: %s"), m_filter->getErrorText());
-      }
+   }
+   else
+   {
+      DbgPrintf(4, _T("Error executing filter script for DCI summary table: %s"), m_filter->getErrorText());
    }
    return result;
 }

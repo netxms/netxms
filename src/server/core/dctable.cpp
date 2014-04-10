@@ -439,7 +439,7 @@ void DCTable::transform(Table *value)
    m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
    m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
 
-   if (m_transformationScript->run(1, &nxslValue))
+   if (!m_transformationScript->run(1, &nxslValue))
    {
       TCHAR szBuffer[1024];
 

@@ -378,11 +378,9 @@ void SlmCheck::setScript(const TCHAR *script)
 	Modify();
 }
 
-
-//
-// Execute check
-//
-
+/**
+ * Execute check
+ */
 void SlmCheck::execute()
 {
 	if (m_isTemplate)

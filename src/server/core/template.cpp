@@ -1042,7 +1042,7 @@ bool Template::isApplicable(Node *node)
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
 	{
 		m_applyFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
-		if (m_applyFilter->run(0, NULL))
+		if (m_applyFilter->run())
 		{
 	      NXSL_Value *value = m_applyFilter->getResult();
 			result = ((value != NULL) && (value->getValueAsInt32() != 0));

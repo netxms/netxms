@@ -209,7 +209,7 @@ bool NXSL_VM::load(NXSL_Program *program)
 
 /**
  * Run program
- * Returns 0 on success and -1 on error
+ * Returns true on success and false on error
  */
 bool NXSL_VM::run(UINT32 argc, NXSL_Value **argv,
                   NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
