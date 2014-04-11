@@ -31,6 +31,7 @@ public class HopInfo
 	private InetAddress nextHop;
 	private int ifIndex;
 	private boolean isVpn;
+	private String name;
 	
 	/**
 	 * Create hop info object from NXCP message
@@ -44,6 +45,7 @@ public class HopInfo
 		nextHop = msg.getVariableAsInetAddress(baseId + 1);
 		ifIndex = msg.getVariableAsInteger(baseId + 2);
 		isVpn = msg.getVariableAsBoolean(baseId + 3);
+		name = msg.getVariableAsString(baseId + 4);
 	}
 
 	/**
@@ -77,4 +79,12 @@ public class HopInfo
 	{
 		return isVpn;
 	}
+
+   /**
+    * @return the name
+    */
+   public String getName()
+   {
+      return (name != null) ? name : "";
+   }
 }

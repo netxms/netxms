@@ -11,6 +11,7 @@
 - Management console:
    - DCI values can be shown on network map links
    - Colored background for DCIs with active thresholds in DCI summary tables
+   - IP route visualisation improved
 - Fixed issues: #536
 
 

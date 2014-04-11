@@ -3523,7 +3523,8 @@ UINT32 Node::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
 			{
 			   bool isVpn;
    			UINT32 nextHop, ifIndex;
-				if (getNextHop(m_dwIpAddr, destAddr, &nextHop, &ifIndex, &isVpn))
+            TCHAR name[MAX_OBJECT_NAME];
+				if (getNextHop(m_dwIpAddr, destAddr, &nextHop, &ifIndex, &isVpn, name))
 				{
 					IpToStr(nextHop, buffer);
 				}
@@ -4398,10 +4399,11 @@ bool Node::getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIn
 /**
  * Get next hop for given destination address
  */
-bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *ifIndex, bool *isVpn)
+bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name)
 {
    UINT32 i;
    bool nextHopFound = false;
+   *name = 0;
 
 	// Check directly connected networks and VPN connectors
 	bool nonFunctionalInterfaceFound = false;
@@ -4416,6 +4418,7 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
 				*nextHop = ((VPNConnector *)m_pChildList[i])->getPeerGatewayAddr();
 				*ifIndex = m_pChildList[i]->Id();
 				*isVpn = true;
+            nx_strncpy(name, m_pChildList[i]->Name(), MAX_OBJECT_NAME);
 				nextHopFound = true;
 				break;
 			}
@@ -4428,6 +4431,7 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
 				*nextHop = destAddr;
 				*ifIndex = ((Interface *)m_pChildList[i])->getIfIndex();
 				*isVpn = false;
+            nx_strncpy(name, m_pChildList[i]->Name(), MAX_OBJECT_NAME);
 				if (m_pChildList[i]->Status() == SEVERITY_NORMAL)  /* TODO: use separate link status */
 				{
 					// found operational interface
@@ -4466,6 +4470,14 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
             }
             *ifIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
             *isVpn = false;
+            if (iface != NULL)
+            {
+               nx_strncpy(name, iface->Name(), MAX_OBJECT_NAME);
+            }
+            else
+            {
+               _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), m_pRoutingTable->pRoutes[i].dwIfIndex);
+            }
             nextHopFound = true;
             break;
          }

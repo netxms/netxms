@@ -12282,11 +12282,9 @@ void ClientSession::renderReport(CSCPMessage *request)
 	}
 }
 
-
-//
-// Get network path between two nodes
-//
-
+/**
+ * Get network path between two nodes
+ */
 void ClientSession::getNetworkPath(CSCPMessage *request)
 {
 	CSCPMessage msg;

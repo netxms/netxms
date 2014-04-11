@@ -48,6 +48,7 @@ struct HOP_INFO
    NetObj *object;    // Current hop object
    UINT32 ifIndex;     // Interface index or VPN connector object ID
    bool isVpn;        // TRUE if next hop is behind VPN tunnel
+   TCHAR name[MAX_OBJECT_NAME];
 };
 
 /**
@@ -66,7 +67,7 @@ public:
 	NetworkPath(UINT32 srcAddr);
 	~NetworkPath();
 
-	void addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn);
+	void addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name);
 	void setComplete() { m_complete = true; }
 
    UINT32 getSourceAddress() { return m_sourceAddress; }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,15 +120,22 @@ public class IPRouteMap extends AbstractNetworkMapView
 	private void getRoute(Display display) throws Exception
 	{
 		final NetworkPath path = session.getNetworkPath(rootObject.getObjectId(), targetObject.getObjectId());
-		final NetworkMapPage page = new NetworkMapPage(ID+rootObject.getObjectName()+targetObject.getObjectName());
+		final NetworkMapPage page = new NetworkMapPage(ID + "@" + rootObject.getObjectName() + "@" + targetObject.getObjectName());
 		long prevElementId = 0;
+		HopInfo prevHop = null;
 		for(final HopInfo h : path.getPath())
 		{
 			final long elementId = page.createElementId();
 			page.addElement(new NetworkMapObject(elementId, h.getNodeId()));
 			if (prevElementId != 0)
-				page.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, prevElementId, elementId));
+			{
+			   NetworkMapLink link = new NetworkMapLink(prevHop.isVpn() ? NetworkMapLink.VPN : NetworkMapLink.NORMAL, prevElementId, elementId);
+			   if (!prevHop.getName().isEmpty())
+			      link.setName(prevHop.getName());
+				page.addLink(link);
+			}
 			prevElementId = elementId;
+			prevHop = h;
 		}
 		replaceMapPage(page, display);
 	}
