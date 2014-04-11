@@ -753,6 +753,7 @@ public:
 
    BOOL isLocalAddr(UINT32 dwIpAddr);
    BOOL isRemoteAddr(UINT32 dwIpAddr);
+   UINT32 getPeerGatewayId() { return m_dwPeerGateway; }
    UINT32 getPeerGatewayAddr();
 };
 
@@ -1034,7 +1035,7 @@ protected:
 	void updateContainerMembership();
 	BOOL updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask);
 
-	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool includeEndNodes);
+	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
 	virtual bool isDataCollectionDisabled();
 
@@ -1335,7 +1336,7 @@ inline void Node::lockForRoutePoll()
  */
 class NXCORE_EXPORTABLE Subnet : public NetObj
 {
-	friend void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool includeEndNodes);
+	friend void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes);
 
 protected:
    UINT32 m_dwIpNetMask;

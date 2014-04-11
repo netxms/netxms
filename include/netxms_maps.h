@@ -104,7 +104,7 @@ public:
    ~nxmap_ObjList();
 
    void addObject(UINT32 id);
-   void linkObjects(UINT32 id1, UINT32 id2);
+   void linkObjects(UINT32 id1, UINT32 id2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = NULL);
    void linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2);
    void removeObject(UINT32 id);
    void clear();

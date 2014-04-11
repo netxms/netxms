@@ -194,7 +194,7 @@ void nxmap_ObjList::removeObject(UINT32 id)
 /**
  * Link two objects
  */
-void nxmap_ObjList::linkObjects(UINT32 id1, UINT32 id2)
+void nxmap_ObjList::linkObjects(UINT32 id1, UINT32 id2, int linkType, const TCHAR *linkName)
 {
    bool linkExists = false;
    if ((m_objectList->indexOf(id1) != -1) && (m_objectList->indexOf(id2) != -1))  // if both objects exist
@@ -211,10 +211,11 @@ void nxmap_ObjList::linkObjects(UINT32 id1, UINT32 id2)
       }
       if (!linkExists)
       {
-         ObjLink *obj = new ObjLink();
-         obj->id1 = id1;
-         obj->id2 = id2;
-			m_linkList->add(obj);
+         ObjLink *link = new ObjLink();
+         link->id1 = id1;
+         link->id2 = id2;
+         link->type = linkType;
+			m_linkList->add(link);
       }
    }
 }

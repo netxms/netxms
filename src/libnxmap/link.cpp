@@ -105,11 +105,9 @@ void NetworkMapLink::setConfig(const TCHAR *name)
 	m_config = (name != NULL) ? _tcsdup(name) : NULL;
 }
 
-
-//
-// Set connector 2 name
-//
-
+/**
+ * Set connector 2 name
+ */
 void NetworkMapLink::setConnector2Name(const TCHAR *name)
 {
 	safe_free(m_connectorName2);

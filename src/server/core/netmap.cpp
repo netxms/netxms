@@ -771,7 +771,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 		{
 			UINT32 e1 = elementIdFromObjectId(objects->getLinks()->get(i)->id1);
 			UINT32 e2 = elementIdFromObjectId(objects->getLinks()->get(i)->id2);
-			NetworkMapLink *l = new NetworkMapLink(e1, e2, LINK_TYPE_NORMAL);
+         NetworkMapLink *l = new NetworkMapLink(e1, e2, objects->getLinks()->get(i)->type);
 			l->setConnector1Name(objects->getLinks()->get(i)->port1);
 			l->setConnector2Name(objects->getLinks()->get(i)->port2);
 			l->setConfig(objects->getLinks()->get(i)->config);

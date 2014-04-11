@@ -4944,24 +4944,27 @@ nxmap_ObjList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool include
 {
 	int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
 	nxmap_ObjList *pResult = new nxmap_ObjList;
-	buildIPTopologyInternal(*pResult, nDepth, 0, includeEndNodes);
+	buildIPTopologyInternal(*pResult, nDepth, 0, false, includeEndNodes);
 	return pResult;
 }
 
 /**
  * Build IP topology
  */
-void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool includeEndNodes)
+void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes)
 {
 	topology.addObject(m_dwId);
 	if (seedSubnet != 0)
-		topology.linkObjects(seedSubnet, m_dwId);
+      topology.linkObjects(seedSubnet, m_dwId, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL);
 
 	if (nDepth > 0)
 	{
+      UINT32 i;
+      int j;
+
 		ObjectArray<Subnet> subnets;
 		LockParentList(FALSE);
-		for(UINT32 i = 0; i < m_dwParentCount; i++)
+		for(i = 0; i < m_dwParentCount; i++)
 		{
 			if ((m_pParentList[i]->Id() == seedSubnet) || (m_pParentList[i]->Type() != OBJECT_SUBNET))
 				continue;
@@ -4973,13 +4976,36 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 s
 		}
 		UnlockParentList();
 
-		for(int j = 0; j < subnets.size(); j++)
+		for(j = 0; j < subnets.size(); j++)
 		{
 			Subnet *s = subnets.get(j);
 			s->buildIPTopologyInternal(topology, nDepth, m_dwId, includeEndNodes);
 			s->decRefCount();
 		}
-	}
+
+      ObjectArray<Node> peers;
+		LockChildList(FALSE);
+		for(i = 0; i < m_dwChildCount; i++)
+		{
+			if (m_pChildList[i]->Type() != OBJECT_VPNCONNECTOR)
+				continue;
+
+         Node *node = (Node *)FindObjectById(((VPNConnector *)m_pChildList[i])->getPeerGatewayId(), OBJECT_NODE);
+         if ((node != NULL) && (node->Id() != seedSubnet) && !topology.isObjectExist(node->Id()))
+         {
+            node->incRefCount();
+			   peers.add(node);
+         }
+		}
+		UnlockChildList();
+
+		for(j = 0; j < peers.size(); j++)
+		{
+			Node *n = peers.get(j);
+			n->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, true, includeEndNodes);
+			n->decRefCount();
+		}
+   }
 }
 
 /**
