@@ -5428,7 +5428,10 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			   }
 			   else if (!isSync)
 			   {
-               pSubnet = createSubnet(iface->dwIpAddr, iface->dwIpNetMask, false);
+				   // Ignore mask 255.255.255.255 - some point-to-point interfaces can have such mask
+				   // Ignore mask 255.255.255.254 - it's invalid
+				   if ((iface->dwIpNetMask != 0xFFFFFFFF) && (iface->dwIpNetMask != 0xFFFFFFFE))
+                  pSubnet = createSubnet(iface->dwIpAddr, iface->dwIpNetMask, false);
 			   }
 
 			   // Check if subnet mask is correct on interface
