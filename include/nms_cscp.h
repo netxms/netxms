@@ -488,8 +488,7 @@ typedef struct
 #define CMD_SET_ALARM_STATUS_FLOW      0x0120
 #define CMD_DELETE_ALARM_NOTE          0x0121
 #define CMD_GET_EFFECTIVE_RIGHTS       0x0122
-#define VID_RS_REPORT_NAME             0x0123
-#define CMD_GET_DCI_VALUES             0x0124
+#define CMD_GET_DCI_VALUES             0x0123
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -973,6 +972,7 @@ typedef struct
 #define VID_RS_JOB_ID               ((UINT32)466)
 #define VID_RS_JOB_TYPE             ((UINT32)467)
 #define VID_TABLE_EXTENDED_FORMAT   ((UINT32)468)
+#define VID_RS_REPORT_NAME          ((UINT32)469)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

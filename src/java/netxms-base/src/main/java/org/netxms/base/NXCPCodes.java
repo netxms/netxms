@@ -314,8 +314,7 @@ public class NXCPCodes
 	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
 	public static final int CMD_DELETE_ALARM_NOTE = 0x0121;
 	public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
-	public static final int VID_RS_REPORT_NAME  = 0x0123;
-	public static final int CMD_GET_DCI_VALUES = 0x0124;
+	public static final int CMD_GET_DCI_VALUES = 0x0123;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -799,6 +798,7 @@ public class NXCPCodes
    public static final long VID_RS_JOB_ID = 466;
    public static final long VID_RS_JOB_TYPE = 467;
    public static final long VID_TABLE_EXTENDED_FORMAT = 468;
+   public static final long VID_RS_REPORT_NAME  = 469;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
