@@ -29,9 +29,7 @@ import org.simpleframework.xml.Root;
  */
 @Root(name="dci")
 public class SingleDciConfig
-{
-	public static final String UNSET_COLOR = "UNSET"; //$NON-NLS-1$
-	
+{	
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
 	
@@ -84,7 +82,7 @@ public class SingleDciConfig
 		this.formatString = src.formatString;
 		this.setInstance(src.getInstance());
 		this.setColumn(src.getColumn());
-	}
+	}	  
 
 	/**
 	 * Create DCI info from DciValue object

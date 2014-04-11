@@ -164,7 +164,6 @@ public class MapDCIInstance
    {
       if (type == DataCollectionItem.DCO_TYPE_TABLE && (column.isEmpty() || instance.isEmpty()))
       {
-         System.out.println("For empty Table type: " + column + instance);
          return;
       }
       msg.setVariableInt32(base++, (int)nodeID);

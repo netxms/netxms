@@ -52,6 +52,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -271,6 +272,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			return new DecorationFigure((NetworkMapDecoration)element, this, viewer);
 		}
+		if (element instanceof NetworkMapDCIContainer)
+      {
+         return new DCIContainerFigure((NetworkMapDCIContainer)element, this, viewer);
+      }
 		return null;
 	}
 

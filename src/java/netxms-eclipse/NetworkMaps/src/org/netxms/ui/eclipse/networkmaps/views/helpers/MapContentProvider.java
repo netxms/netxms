@@ -30,6 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -114,12 +115,23 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 									viewer.refresh(o);
 							}
 							if(page != null && page.getLinks() != null)
+							{
    							for(NetworkMapLink e : page.getLinks())
                         {
                            if (!e.hasDciData())
                               continue;
                            viewer.refresh(e);
                         }
+							}
+							if(page != null && page.getElements() != null)
+                     {
+                        for(NetworkMapElement e : page.getElements())
+                        {
+                           if (!(e instanceof NetworkMapDCIContainer) || !((NetworkMapDCIContainer)e).hasDciData())
+                              continue;
+                           viewer.updateDecorationFigure(e);
+                        }
+                     }
 						}
 					}
 				});
@@ -162,7 +174,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 
 		List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>(((NetworkMapPage)inputElement).getElements().size());
 		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
-			if (!(e instanceof NetworkMapDecoration))
+			if (!(e instanceof NetworkMapDecoration) && !(e instanceof NetworkMapDCIContainer))
 				elements.add(e);
 		return elements.toArray();
 	}
@@ -230,15 +242,15 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	 * @param inputElement
 	 * @return
 	 */
-	public List<NetworkMapDecoration> getDecorations(Object inputElement)
+	public List<NetworkMapElement> getDecorations(Object inputElement)
 	{
 		if (!(inputElement instanceof NetworkMapPage))
 			return null;
 
-		List<NetworkMapDecoration> elements = new ArrayList<NetworkMapDecoration>(((NetworkMapPage)inputElement).getElements().size());
+		List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>(((NetworkMapPage)inputElement).getElements().size());
 		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
-			if (e instanceof NetworkMapDecoration)
-				elements.add((NetworkMapDecoration)e);
+			if ((e instanceof NetworkMapDecoration) || (e instanceof NetworkMapDCIContainer))
+				elements.add((NetworkMapElement)e);
 		return elements;
 	}
 }

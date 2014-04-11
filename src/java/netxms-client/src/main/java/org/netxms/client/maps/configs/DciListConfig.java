@@ -20,6 +20,7 @@ package org.netxms.client.maps.configs;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -60,6 +61,18 @@ public class DciListConfig
    
 	@ElementArray(required = true)
 	private SingleDciConfig[] dciList = new SingleDciConfig[0];
+	
+	@Element(required=false)
+	private int backgroundColor;
+	
+	@Element(required=false)
+   private int textColor;
+	
+	@Element(required=false)
+   private int borderColor;
+	
+	@Element(required=false)
+   private boolean borderRequired;
 
 	/**
 	 * @return the dciList
@@ -76,4 +89,68 @@ public class DciListConfig
 	{
 		this.dciList = dciList;
 	}
+
+   /**
+    * @return the backgroundColor
+    */
+   public int getBackgroundColor()
+   {
+      return backgroundColor;
+   }
+
+   /**
+    * @param backgroundColor the backgroundColor to set
+    */
+   public void setBackgroundColor(int backgroundColor)
+   {
+      this.backgroundColor = backgroundColor;
+   }
+
+   /**
+    * @return the textColor
+    */
+   public int getTextColor()
+   {
+      return textColor;
+   }
+
+   /**
+    * @param textColor the textColor to set
+    */
+   public void setTextColor(int textColor)
+   {
+      this.textColor = textColor;
+   }
+
+   /**
+    * @return the borderColor
+    */
+   public int getBorderColor()
+   {
+      return borderColor;
+   }
+
+   /**
+    * @param borderColor the borderColor to set
+    */
+   public void setBorderColor(int borderColor)
+   {
+      this.borderColor = borderColor;
+   }
+
+   /**
+    * @return the borderRequired
+    */
+   public boolean isBorderRequired()
+   {
+      return borderRequired;
+   }
+
+   /**
+    * @param borderRequired the borderRequired to set
+    */
+   public void setBorderRequired(boolean borderRequired)
+   {
+      this.borderRequired = borderRequired;
+   }
 }

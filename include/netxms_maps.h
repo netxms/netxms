@@ -123,9 +123,10 @@ public:
 /**
  * Map element types
  */
-#define MAP_ELEMENT_GENERIC      0
-#define MAP_ELEMENT_OBJECT       1
-#define MAP_ELEMENT_DECORATION   2
+#define MAP_ELEMENT_GENERIC         0
+#define MAP_ELEMENT_OBJECT          1
+#define MAP_ELEMENT_DECORATION      2
+#define MAP_ELEMENT_DCI_CONTAINER   3
 
 /**
  * Decoration types
@@ -223,6 +224,26 @@ public:
 
 	LONG getWidth() { return m_width; }
 	LONG getHeight() { return m_height; }
+};
+
+/**
+ * DCI map conatainer
+ */
+class LIBNXMAP_EXPORTABLE NetworkMapDCIContainer : public NetworkMapElement
+{
+protected:
+	TCHAR* m_xmlDCIList;
+
+public:
+	NetworkMapDCIContainer(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
+	NetworkMapDCIContainer(UINT32 id, Config *config, UINT32 flags = 0);
+	NetworkMapDCIContainer(CSCPMessage *msg, UINT32 baseId);
+	virtual ~NetworkMapDCIContainer();
+
+	virtual void updateConfig(Config *config);
+	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+
+	TCHAR* getObjectDCIList() { return m_xmlDCIList; }
 };
 
 /**

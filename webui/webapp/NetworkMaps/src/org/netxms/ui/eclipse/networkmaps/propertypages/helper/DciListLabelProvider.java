@@ -30,7 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
-import org.netxms.ui.eclipse.networkmaps.propertypages.DataSources;
+import org.netxms.ui.eclipse.networkmaps.propertypages.LinkDataSources;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -109,15 +109,15 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	   SingleDciConfig dci = (SingleDciConfig)element;
 		switch(columnIndex)
 		{
-			case DataSources.COLUMN_POSITION:
+			case LinkDataSources.COLUMN_POSITION:
 				return Integer.toString(elementList.indexOf(dci) + 1);
-			case DataSources.COLUMN_NODE:
+			case LinkDataSources.COLUMN_NODE:
 				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-			case DataSources.COLUMN_METRIC:
+			case LinkDataSources.COLUMN_METRIC:
 				String name = dciNameCache.get(new NodeItemPair(dci.getNodeId(), dci.dciId));
 				return (name != null) ? name : "Unresolved name of DCI";
-			case DataSources.COLUMN_LABEL:
+			case LinkDataSources.COLUMN_LABEL:
 				return dci.name;
 		}
 		return null;

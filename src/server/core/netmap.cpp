@@ -423,6 +423,9 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
 						case MAP_ELEMENT_DECORATION:
 							e = new NetworkMapDecoration(id, config, flags);
 							break;
+                  case MAP_ELEMENT_DCI_CONTAINER:
+                     e = new NetworkMapDCIContainer(id, config, flags);
+                     break;
 						default:		// Unknown type, create generic element
 							e = new NetworkMapElement(id, config, flags);
 							break;
@@ -581,6 +584,9 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 					case MAP_ELEMENT_DECORATION:
 						e = new NetworkMapDecoration(request, varId);
 						break;
+               case MAP_ELEMENT_DCI_CONTAINER:
+                  e = new NetworkMapDCIContainer(request, varId);
+                  break;
 					default:		// Unknown type, create generic element
 						e = new NetworkMapElement(request, varId);
 						break;

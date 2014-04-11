@@ -269,12 +269,32 @@
          </enabledWhen>
       </page>
       <page
-            class="org.netxms.ui.eclipse.networkmaps.propertypages.DataSources"
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.LinkDataSources"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.DataSourcaes"
             name="%page.name.DataSources">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.DCIContainerDataSources"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.MapDCIContainerDataSource"
+            name="Data Source">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.maps.elements.NetworkMapDCIContainer">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.GeneralDCIContainerPropertyPage"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.MapDCIContainerGeneral#0"
+            name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.maps.elements.NetworkMapDCIContainer">
             </instanceof>
          </enabledWhen>
       </page>
@@ -313,6 +333,11 @@
             description="%command.description.Remove"
             id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"
             name="%command.name.Remove">
+      </command>
+      <command
+            description="Add new DCI container on Map"
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIContainer"
+            name="Add DCI Container">
       </command>
    </extension>
    <extension

@@ -262,4 +262,21 @@ public class LinkDciValueProvider
       }
       return result;
    }
+   
+   public String getDciDataAsString(List<SingleDciConfig> DCIList)
+   {
+      String result = "";
+      for(int i = 0; i < DCIList.size();)
+      {
+         DciValue v = getDciLastValue(DCIList.get(i).dciId); 
+         if(v != null)
+         {
+            String formatString = DCIList.get(i).getFormatString();
+            result += v.format(formatString.isEmpty() ? "%s" : formatString);
+         }
+         if(++i != DCIList.size())
+            result += "\n";
+      }
+      return result;
+   }
 }

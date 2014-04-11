@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 import org.eclipse.gef4.zest.core.widgets.GraphItem;
 import org.eclipse.gef4.zest.core.widgets.GraphNode;
 import org.eclipse.gef4.zest.core.widgets.LayoutFilter;
+import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 
 /**
@@ -53,9 +54,9 @@ public class GraphLayoutFilter implements LayoutFilter
 		if (item instanceof GraphNode)
 		{
 			if (filterDecoration)
-				return item.getData() instanceof NetworkMapDecoration;
+				return (item.getData() instanceof NetworkMapDecoration || item.getData() instanceof NetworkMapDCIContainer);
 			else
-				return !(item.getData() instanceof NetworkMapDecoration);
+				return !(item.getData() instanceof NetworkMapDecoration || item.getData() instanceof NetworkMapDCIContainer);
 		}
 		return false;
 	}

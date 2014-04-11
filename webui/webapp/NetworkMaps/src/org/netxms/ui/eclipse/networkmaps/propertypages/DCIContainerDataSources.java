@@ -43,17 +43,17 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.networkmaps.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.networkmaps.propertypages.helper.DciListLabelProvider;
-import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * DCI list editor for dashboard element
  */
-public class DataSources extends PropertyPage
+public class DCIContainerDataSources extends PropertyPage
 {
    public static final int COLUMN_POSITION = 0;
    public static final int COLUMN_NODE = 1;
@@ -67,7 +67,7 @@ public class DataSources extends PropertyPage
    private Button deleteButton;
    private Button upButton;
    private Button downButton;
-   private LinkEditor link;
+   private NetworkMapDCIContainer container;
    private List<SingleDciConfig> dciList = null;
 
    /*
@@ -78,9 +78,9 @@ public class DataSources extends PropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      link = (LinkEditor)getElement().getAdapter(LinkEditor.class);
+      container = (NetworkMapDCIContainer)getElement().getAdapter(NetworkMapDCIContainer.class);
       
-      dciList = link.getDciList();
+      dciList = container.getDciAsList();
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
       labelProvider = new DciListLabelProvider(dciList);
@@ -354,8 +354,7 @@ public class DataSources extends PropertyPage
     */
    private boolean applyChanges(final boolean isApply)
    {
-      link.setDciList(dciList);      
-      link.update();
+      container.setObjectDCIArray(dciList.toArray(new SingleDciConfig[dciList.size()]));      
       return true;
    }
 
