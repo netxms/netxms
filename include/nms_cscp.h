@@ -496,6 +496,10 @@ typedef struct
 #define CMD_RS_LIST_RESULTS            0x1103
 #define CMD_RS_RENDER_RESULT           0x1104
 #define CMD_RS_DELETE_RESULT           0x1105
+#define CMD_RS_LIST_SCHEDULES          0x1106
+#define CMD_RS_DELETE_SCHEDULE         0x1107
+#define CMD_RS_NOTIFY                  0x1108
+#define CMD_RS_ADD_REPORT_NOTIFY       0x1109
 
 /**
  * Variable identifiers

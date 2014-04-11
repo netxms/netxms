@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -179,8 +179,7 @@ void ISC::receiverThread()
       Lock();
 		nSocket = m_socket;
 		Unlock();
-      if ((err = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
-                                 &m_ctx, pDecryptionBuffer, m_recvTimeout)) <= 0)
+      if ((err = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE, &m_ctx, pDecryptionBuffer, m_recvTimeout)) <= 0)
 		{
 			PrintMsg(_T("ISC::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), err, WSAGetLastError());
          break;
@@ -227,7 +226,15 @@ void ISC::receiverThread()
 		{
 			// Create message object from raw message
 			pMsg = new CSCPMessage(pRawMsg, m_protocolVersion);
-			m_msgWaitQueue->put(pMsg);
+         if (onMessage(pMsg))
+         {
+            // message was consumed by handler
+            delete pMsg;
+         }
+         else
+         {
+			   m_msgWaitQueue->put(pMsg);
+         }
 		}
    }
 
@@ -564,4 +571,13 @@ UINT32 ISC::connectToService(UINT32 service)
  */
 void ISC::onBinaryMessage(CSCP_MESSAGE *rawMsg)
 {
+}
+
+/**
+ * Incoming message handler. Default implementation do nothing and return false.
+ * Should return true if message was consumed and shou8ld not be put into wait queue
+ */
+bool ISC::onMessage(CSCPMessage *msg)
+{
+   return false;
 }

@@ -586,6 +586,7 @@ protected:
 
    virtual void PrintMsg(const TCHAR *format, ...);
    virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
+   virtual bool onMessage(CSCPMessage *msg);
 
 public:
    ISC();

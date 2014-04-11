@@ -70,6 +70,7 @@ class RSConnector : public ISC
 {
 protected:
    virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
+   virtual bool onMessage(CSCPMessage *msg);
 
 public:
    RSConnector(UINT32 addr, WORD port) : ISC(addr, port)
@@ -84,6 +85,19 @@ public:
       va_end(args);
    }
 };
+
+/**
+ * Custom handler for reporting server messages
+ */
+bool RSConnector::onMessage(CSCPMessage *msg)
+{
+   if (msg->GetCode() == CMD_RS_NOTIFY)
+   {
+      NotifyClientSessions(msg->GetVariableLong(VID_NOTIFICATION_CODE), msg->GetVariableLong(VID_NOTIFICATION_DATA));
+      return true;
+   }
+   return false;
+}
 
 /**
  * Custom handler for binary messages
