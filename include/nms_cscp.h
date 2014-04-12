@@ -969,9 +969,9 @@ typedef struct
 #define VID_EFFECTIVE_RIGHTS        ((UINT32)463)
 #define VID_EXTENSION_COUNT         ((UINT32)464)
 #define VID_TIMED_ALARM_ACK_ENABLED ((UINT32)465)
-#define VID_RS_JOB_ID               ((UINT32)466)
-#define VID_RS_JOB_TYPE             ((UINT32)467)
-#define VID_TABLE_EXTENDED_FORMAT   ((UINT32)468)
+#define VID_TABLE_EXTENDED_FORMAT   ((UINT32)466)
+#define VID_RS_JOB_ID               ((UINT32)467)
+#define VID_RS_JOB_TYPE             ((UINT32)468)
 #define VID_RS_REPORT_NAME          ((UINT32)469)
 
 // Base variabe for single threshold in message

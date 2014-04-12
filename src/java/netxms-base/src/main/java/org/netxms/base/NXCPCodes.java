@@ -795,9 +795,9 @@ public class NXCPCodes
    public static final long VID_EFFECTIVE_RIGHTS = 463;
    public static final long VID_EXTENSION_COUNT = 464;
    public static final long VID_TIMED_ALARM_ACK_ENABLED = 465;
-   public static final long VID_RS_JOB_ID = 466;
-   public static final long VID_RS_JOB_TYPE = 467;
-   public static final long VID_TABLE_EXTENDED_FORMAT = 468;
+   public static final long VID_TABLE_EXTENDED_FORMAT = 466;
+   public static final long VID_RS_JOB_ID = 467;
+   public static final long VID_RS_JOB_TYPE = 468;
    public static final long VID_RS_REPORT_NAME  = 469;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
