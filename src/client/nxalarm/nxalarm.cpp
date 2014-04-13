@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
             printf("Usage: nxalarm [<options>] <server> <command> [<alarm_id>]\n"
 				       "Possible commands are:\n"
 						 "   ack <id>       : Acknowledge alarm\n"
-						 "   close <id>     : Notify system that incident associated with alarm is closed\n"
 						 "   list           : List active alarms\n"
+						 "   open <id>      : OPen helpdesk issue from alarm\n"
 						 "   terminate <id> : Terminate alarm\n"
                    "Valid options are:\n"
                    "   -D             : Turn on debug mode.\n"
@@ -256,11 +256,14 @@ int main(int argc, char *argv[])
 			if (rcc != RCC_SUCCESS)
 				_tprintf(_T("Cannot acknowledge alarm: %s\n"), NXCGetErrorText(rcc));
 		}
-		else if (!stricmp(argv[optind + 1], "close"))
+		else if (!stricmp(argv[optind + 1], "open"))
 		{
-			rcc = NXCCloseAlarm(session, alarmId);
-			if (rcc != RCC_SUCCESS)
-				_tprintf(_T("Cannot close alarm: %s\n"), NXCGetErrorText(rcc));
+         TCHAR hdref[MAX_HELPDESK_REF_LEN];
+			rcc = NXCOpenHelpdeskIssue(session, alarmId, hdref);
+			if (rcc == RCC_SUCCESS)
+				_tprintf(_T("Helpdesk issue open, reference ID is \"%s\"\n"), hdref);
+         else
+				_tprintf(_T("Cannot open helpdesk issue: %s\n"), NXCGetErrorText(rcc));
 		}
 		else if (!stricmp(argv[optind + 1], "terminate"))
 		{

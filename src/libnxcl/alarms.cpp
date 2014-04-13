@@ -187,49 +187,35 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Set helpdesk state to "Open"
-//
-
-UINT32 LIBNXCL_EXPORTABLE NXCOpenAlarm(NXC_SESSION hSession, UINT32 dwAlarmId, TCHAR *pszHelpdeskRef)
+/**
+ * Create helpdesk issue from alarm
+ */
+UINT32 LIBNXCL_EXPORTABLE NXCOpenHelpdeskIssue(NXC_SESSION hSession, UINT32 dwAlarmId, TCHAR *pszHelpdeskRef)
 {
    CSCPMessage msg;
-   UINT32 dwRqId;
+   UINT32 dwRqId, rcc;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_SET_ALARM_HD_STATE);
+   msg.SetCode(CMD_OPEN_HELPDESK_ISSUE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_ALARM_ID, dwAlarmId);
-   msg.SetVariable(VID_HELPDESK_STATE, (WORD)ALARM_HELPDESK_OPEN);
-	msg.SetVariable(VID_HELPDESK_REF, CHECK_NULL_EX(pszHelpdeskRef));
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   CSCPMessage *pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      rcc = pResponse->GetVariableLong(VID_RCC);
+      if (rcc == RCC_SUCCESS)
+         pResponse->GetVariableStr(VID_HELPDESK_REF, pszHelpdeskRef, MAX_HELPDESK_REF_LEN);
+      delete pResponse;
+   }
+   else
+   {
+      rcc = RCC_TIMEOUT;
+   }
+   return rcc;
 }
-
-
-//
-// Set helpdesk state to "Closed"
-//
-
-UINT32 LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
-{
-   CSCPMessage msg;
-   UINT32 dwRqId;
-
-   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
-
-   msg.SetCode(CMD_SET_ALARM_HD_STATE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_ALARM_ID, dwAlarmId);
-   msg.SetVariable(VID_HELPDESK_STATE, (WORD)ALARM_HELPDESK_CLOSED);
-   ((NXCL_Session *)hSession)->SendMsg(&msg);
-
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
-}
-
 
 //
 // Format text from alarm data
