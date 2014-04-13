@@ -577,6 +577,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hdlink.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\hk.cpp"
 				>
 			</File>
@@ -872,6 +876,10 @@
 			>
 			<File
 				RelativePath="..\..\..\include\dbdrv.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\hdlink.h"
 				>
 			</File>
 			<File

@@ -58,6 +58,7 @@ SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
 SMSDRV_DIRS=""
+HDLINK_DIRS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
@@ -415,6 +416,7 @@ AC_ARG_WITH(dist,
 	MODULES="libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
 	SMSDRV_DIRS="websms"
+   HDLINK_DIRS="jira"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images"
 	SERVER_INCLUDE="include"
@@ -1382,6 +1384,7 @@ fi
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
   SMSDRV_DIRS="$SMSDRV_DIRS websms"
+  HDLINK_DIRS="$HDLINK_DIRS jira"
 fi
 
 #--------------------------------------------------------------------
@@ -2307,6 +2310,7 @@ AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(SMSDRV_DIRS)
+AC_SUBST(HDLINK_DIRS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CLIENT_COMPONENTS)
@@ -2491,6 +2495,8 @@ AC_CONFIG_FILES([
 	src/server/drivers/ping3/Makefile
 	src/server/drivers/procurve/Makefile
 	src/server/drivers/symbol-ws/Makefile
+	src/server/hdlink/Makefile
+	src/server/hdlink/jira/Makefile
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile

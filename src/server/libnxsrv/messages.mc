@@ -938,4 +938,28 @@ Language=English
 Unable to configure serial port %1
 .
 
+MessageId=
+SymbolicName=MSG_HDLINK_LOADED
+Language=English
+Helpdesk link module "%1" loaded successfully
+.
+
+MessageId=
+SymbolicName=MSG_NO_HDLINK_ENTRY_POINT
+Language=English
+Unable to find entry point in helpdesk link module "%1"
+.
+
+MessageId=
+SymbolicName=MSG_HDLINK_INIT_FAILED
+Language=English
+Initialization of helpdesk link module "%1" failed
+.
+
+MessageId=
+SymbolicName=MSG_HDLINK_API_VERSION_MISMATCH
+Language=English
+Helpdesk link module "%1" cannot be loaded because of API version mismatch (module: %3; server: %2)
+.
+
 ;#endif

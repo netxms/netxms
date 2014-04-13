@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <netxmsdb.h>
 #include <netxms_mt.h>
+#include <hdlink.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -773,6 +774,10 @@ retry_db_lock:
 	// Initialize alarms
 	if (!g_alarmMgr.init())
 		return FALSE;
+
+   // Initialize helpdesk link
+   SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
+   LoadHelpDeskLink();
 
 	// Initialize data collection subsystem
 	if (!InitDataCollector())

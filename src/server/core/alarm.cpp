@@ -158,6 +158,22 @@ static void FillAlarmEventsMessage(CSCPMessage *msg, UINT32 alarmId)
 }
 
 /**
+ * Resolve alarm by helpdesk reference
+ */
+void ResolveAlarmByHDRef(const TCHAR *hdref)
+{
+   g_alarmMgr.resolveByHDRef(hdref, false);
+}
+
+/**
+ * Terminate alarm by helpdesk reference
+ */
+void TerminateAlarmByHDRef(const TCHAR *hdref)
+{
+   g_alarmMgr.resolveByHDRef(hdref, true);
+}
+
+/**
  * Alarm manager constructor
  */
 AlarmManager::AlarmManager()
@@ -544,6 +560,44 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
    for(int i = 0; i < numObjects; i++)
       updateObjectStatus(pdwObjectList[i]);
    free(pdwObjectList);
+}
+
+/**
+ * Resolve and possibly terminate alarm with given helpdesk reference.
+ * Auitomatically change alarm's helpdesk state to "closed"
+ */
+void AlarmManager::resolveByHDRef(const TCHAR *hdref, bool terminate)
+{
+   UINT32 objectId = 0;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
+      {
+         objectId = m_pAlarmList[i].dwSourceObject;
+			if (terminate)
+            m_pAlarmList[i].dwTermByUser = 0;
+			else
+            m_pAlarmList[i].dwResolvedByUser = 0;
+         m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
+			m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
+			m_pAlarmList[i].ackTimeout = 0;
+         if (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_IGNORED)
+            m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_CLOSED;
+			notifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+         updateAlarmInDB(&m_pAlarmList[i]);
+			if (terminate)
+			{
+				m_numAlarms--;
+				memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_numAlarms - i));
+			}
+         DbgPrintf(5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
+         break;
+      }
+   unlock();
+
+   if (objectId != 0)
+      updateObjectStatus(objectId);
 }
 
 /**

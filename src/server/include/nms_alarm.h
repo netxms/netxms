@@ -58,6 +58,7 @@ public:
    UINT32 ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 time);
    UINT32 resolveById(UINT32 dwAlarmId, ClientSession *session, bool terminate);
    void resolveByKey(const TCHAR *key, bool useRegexp, bool terminate, Event *pEvent);
+   void resolveByHDRef(const TCHAR *hdref, bool terminate);
    void deleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
    bool deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
 	UINT32 updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
@@ -81,6 +82,9 @@ public:
 void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm);
 void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId);
 void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
+void ResolveAlarmByHDRef(const TCHAR *hdref);
+void TerminateAlarmByHDRef(const TCHAR *hdref);
+void LoadHelpDeskLink();
 
 /**
  * Global instance of alarm manager
