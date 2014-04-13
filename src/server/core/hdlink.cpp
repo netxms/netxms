@@ -89,3 +89,14 @@ void LoadHelpDeskLink()
       nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", file, errorText);
    }
 }
+
+/**
+ * Create helpdesk issue
+ */
+UINT32 CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref)
+{
+   if (s_link == NULL)
+      return RCC_NO_HDLINK;
+
+   return s_link->openIssue(description, hdref);
+}

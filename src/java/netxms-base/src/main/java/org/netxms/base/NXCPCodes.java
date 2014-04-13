@@ -27,7 +27,7 @@ public class NXCPCodes
 	public static final int CMD_LOGIN = 0x0001;
 	public static final int CMD_LOGIN_RESP = 0x0002;
 	public static final int CMD_KEEPALIVE = 0x0003;
-	public static final int CMD_SET_ALARM_HD_STATE = 0x0004;
+	public static final int CMD_OPEN_HELPDESK_ISSUE = 0x0004;
 	public static final int CMD_GET_OBJECTS = 0x0005;
 	public static final int CMD_OBJECT = 0x0006;
 	public static final int CMD_DELETE_OBJECT = 0x0007;

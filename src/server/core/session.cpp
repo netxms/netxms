@@ -160,6 +160,7 @@ DEFINE_THREAD_STARTER(getNetworkPath)
 DEFINE_THREAD_STARTER(queryParameter)
 DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(getAlarmEvents)
+DEFINE_THREAD_STARTER(openHelpdeskIssue)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
 
 /**
@@ -930,6 +931,9 @@ void ClientSession::processingThread()
             break;
          case CMD_DELETE_ALARM:
             deleteAlarm(pMsg);
+            break;
+         case CMD_OPEN_HELPDESK_ISSUE:
+            CALL_IN_NEW_THREAD(openHelpdeskIssue, pMsg);
             break;
          case CMD_CREATE_ACTION:
             createAction(pMsg);
@@ -5075,6 +5079,46 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(), _T("Access denied on delete alarm on object %s"), object->Name());
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms object will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Open issue in helpdesk system from given alarm
+ */
+void ClientSession::openHelpdeskIssue(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE_ISSUE))
+      {
+         TCHAR hdref[MAX_HELPDESK_REF_LEN];
+         msg.SetVariable(VID_RCC, g_alarmMgr.openHelpdeskIssue(alarmId, this, hdref));
+         msg.SetVariable(VID_HELPDESK_REF, hdref);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+            _T("Access denied on creating issue from alarm on object %s"), object->Name());
       }
    }
    else

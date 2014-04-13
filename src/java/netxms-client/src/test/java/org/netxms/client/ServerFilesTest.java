@@ -23,7 +23,6 @@ import java.io.IOException;
 
 /**
  * Test functionality related to server file store
- * 
  */
 public class ServerFilesTest extends SessionTest
 {

@@ -601,6 +601,39 @@ void AlarmManager::resolveByHDRef(const TCHAR *hdref, bool terminate)
 }
 
 /**
+ * Open issue in helpdesk system
+ */
+UINT32 AlarmManager::openHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == alarmId)
+      {
+         if (m_pAlarmList[i].nHelpDeskState == ALARM_HELPDESK_IGNORED)
+         {
+            /* TODO: unlock alarm list before call */
+            rcc = CreateHelpdeskIssue(m_pAlarmList[i].szMessage, m_pAlarmList[i].szHelpDeskRef);
+            if (rcc == RCC_SUCCESS)
+            {
+               m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_OPEN;
+			      notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+               updateAlarmInDB(&m_pAlarmList[i]);
+               DbgPrintf(5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szHelpDeskRef);
+            }
+         }
+         else
+         {
+            rcc = RCC_OUT_OF_STATE_REQUEST;
+         }
+         break;
+      }
+   unlock();
+   return rcc;
+}
+
+/**
  * Delete alarm with given ID
  */
 void AlarmManager::deleteAlarm(UINT32 dwAlarmId, bool objectCleanup)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -2477,37 +2477,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
-    * Set alarm's helpdesk state to "Open".
+    * Open issue in helpdesk system from given alarm
     *
-    * @param alarmId   Identifier of alarm to be changed.
-    * @param reference Helpdesk reference string.
+    * @param alarmId alarm identifier
+    * @return helpdesk issue identifier
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void openAlarm(final long alarmId, final String reference) throws IOException, NXCException
+   public String openHelpdeskIssue(final long alarmId) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_HELPDESK_ISSUE);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-      msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, Alarm.HELPDESK_STATE_OPEN);
-      msg.setVariable(NXCPCodes.VID_HELPDESK_REF, reference);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Set alarm's helpdesk state to "Closed".
-    *
-    * @param alarmId Identifier of alarm to be changed.
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void closeAlarm(final long alarmId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
-      msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-      msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, Alarm.HELPDESK_STATE_CLOSED);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      return waitForRCC(msg.getMessageId()).getVariableAsString(NXCPCodes.VID_HELPDESK_REF);
    }
 
    /**
@@ -7298,10 +7280,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		waitForRCC(msg.getMessageId());
 	}
 
-   /**
-    * @param reportId - current report uuid
-    * @throws NetXMSClientException
-    * @throws IOException
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.reporting.ReportingServerManager#listScheduledJobs(java.util.UUID)
     */
    @Override
    public List<ReportingJob> listScheduledJobs(UUID reportId) throws NetXMSClientException, IOException
@@ -7323,11 +7303,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       return result;
    }
    
-   /**
-    * @param reportId - current report uuid
-    * @param jobId - schedule uuid
-    * @throws NetXMSClientException
-    * @throws IOException
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.reporting.ReportingServerManager#deleteReportSchedule(java.util.UUID, java.util.UUID)
     */
    @Override
    public void deleteReportSchedule(UUID reportId, UUID jobId) throws NetXMSClientException, IOException

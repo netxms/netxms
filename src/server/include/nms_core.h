@@ -455,6 +455,7 @@ private:
 	DECLARE_THREAD_STARTER(renderReport)
 	DECLARE_THREAD_STARTER(getNetworkPath)
 	DECLARE_THREAD_STARTER(getAlarmEvents)
+	DECLARE_THREAD_STARTER(openHelpdeskIssue)
 	DECLARE_THREAD_STARTER(forwardToReportingServer)
 
    void readThread();
@@ -516,6 +517,7 @@ private:
    void acknowledgeAlarm(CSCPMessage *request);
    void resolveAlarm(CSCPMessage *request, bool terminate);
    void deleteAlarm(CSCPMessage *request);
+   void openHelpdeskIssue(CSCPMessage *request);
 	void getAlarmNotes(CSCPMessage *pRequest);
 	void updateAlarmNote(CSCPMessage *pRequest);
 	void deleteAlarmNote(CSCPMessage *request);

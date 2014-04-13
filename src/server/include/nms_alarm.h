@@ -61,6 +61,7 @@ public:
    void resolveByHDRef(const TCHAR *hdref, bool terminate);
    void deleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
    bool deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
+   UINT32 openHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref);
 	UINT32 updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
 	UINT32 deleteAlarmNoteByID(UINT32 alarmId, UINT32 noteId);
 
@@ -85,6 +86,7 @@ void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
 void ResolveAlarmByHDRef(const TCHAR *hdref);
 void TerminateAlarmByHDRef(const TCHAR *hdref);
 void LoadHelpDeskLink();
+UINT32 CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref);
 
 /**
  * Global instance of alarm manager

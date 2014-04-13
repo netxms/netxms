@@ -201,7 +201,7 @@ typedef struct
 #define CMD_LOGIN                      0x0001
 #define CMD_LOGIN_RESP                 0x0002
 #define CMD_KEEPALIVE                  0x0003
-#define CMD_SET_ALARM_HD_STATE         0x0004
+#define CMD_OPEN_HELPDESK_ISSUE        0x0004
 #define CMD_GET_OBJECTS                0x0005
 #define CMD_OBJECT                     0x0006
 #define CMD_DELETE_OBJECT              0x0007

@@ -39,7 +39,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_LOGIN"),
       _T("CMD_LOGIN_RESP"),
       _T("CMD_KEEPALIVE"),
-      _T("CMD_SET_ALARM_HD_STATE"),
+      _T("CMD_OPEN_HELPDESK_ISSUE"),
       _T("CMD_GET_OBJECTS"),
       _T("CMD_OBJECT"),
       _T("CMD_DELETE_OBJECT"),
