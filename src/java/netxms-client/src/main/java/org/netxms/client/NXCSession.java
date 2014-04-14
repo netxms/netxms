@@ -667,7 +667,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                      processFileTransferError(msg);
                      break;
                   case NXCPCodes.CMD_NOTIFY:
-                     processNotificationMessage(msg);
+                     processNotificationMessage(msg, true);
+                     break;
+                  case NXCPCodes.CMD_RS_NOTIFY:
+                     processNotificationMessage(msg, false);
                      break;
                   case NXCPCodes.CMD_EVENTLOG_RECORDS:
                      processNewEvents(msg);
@@ -794,18 +797,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
        *
        * @param msg NXCP message
        */
-      private void processNotificationMessage(final NXCPMessage msg)
+      private void processNotificationMessage(final NXCPMessage msg, boolean shiftCode)
       {
-         int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
+         int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE);
+         if (shiftCode)
+            code += NXCNotification.NOTIFY_BASE;
          long data = msg.getVariableAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
          if(code == NXCNotification.ALARM_STATUS_FLOW_CHANGED)
          {
             strictAlarmStatusFlow = ((int)data != 0);
          }
-         else
-         {
-            sendNotification(new NXCNotification(code, data));
-         }
+         sendNotification(new NXCNotification(code, data));
       }
       
       /**

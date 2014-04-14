@@ -18,6 +18,7 @@
  */
 package org.netxms.api.client.reporting;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
@@ -53,10 +54,16 @@ public class ReportingJob
 	 */
 	public ReportingJob(UUID reportId, int userId)
 	{
-		jobId = UUID.randomUUID();
-		this.reportId = reportId;
-		this.userId = userId;
-		startTime = new Date();
+	   jobId = UUID.randomUUID();
+	   this.reportId = reportId;
+	   this.userId = userId;
+	   startTime = new Date();
+	   daysOfWeek = 0;
+	   daysOfMonth = 0;
+	   type = TYPE_ONCE;
+	   SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy;MM;dd;HH;mm");
+	   timeFrom = dateFormat.format(new Date());
+	   timeTo = dateFormat.format(new Date());	
 	}
 	
 	/**

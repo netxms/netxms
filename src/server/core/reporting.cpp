@@ -87,13 +87,21 @@ public:
 };
 
 /**
+ * Callback for session enumeration
+ */
+static void NotifyUserSessions(ClientSession *session, void *arg)
+{
+   session->sendMessage((CSCPMessage *)arg);
+}
+
+/**
  * Custom handler for reporting server messages
  */
 bool RSConnector::onMessage(CSCPMessage *msg)
 {
    if (msg->GetCode() == CMD_RS_NOTIFY)
    {
-      NotifyClientSessions(msg->GetVariableLong(VID_NOTIFICATION_CODE), msg->GetVariableLong(VID_NOTIFICATION_DATA));
+      EnumerateClientSessions(NotifyUserSessions, msg);
       return true;
    }
    return false;
