@@ -42,11 +42,21 @@
             class="org.netxms.ui.eclipse.reporter.propertypages.General"
             id="org.netxms.ui.eclipse.reporter.propertypages.General#0"
             name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.api.client.reporting.ReportingJob">
+            </instanceof>
+         </enabledWhen>
       </page>
       <page
             class="org.netxms.ui.eclipse.reporter.propertypages.Notification"
             id="org.netxms.ui.eclipse.reporter.propertypages.Notification#1"
             name="Notification">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.api.client.reporting.ReportingJob">
+            </instanceof>
+         </enabledWhen>
       </page>
    </extension>
 
