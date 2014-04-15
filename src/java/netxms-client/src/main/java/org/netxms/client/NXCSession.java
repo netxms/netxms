@@ -2594,7 +2594,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    	updateAlarmComment(alarmId, 0, text);
    }
 
-   
+   /**
+    * Create alarm comment by helpdesk reference.
+    * 
+    * @param helpdeskReference
+    * @param text
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void createAlarmComment(final String helpdeskReference, String text) throws IOException, NXCException {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ALARM_COMMENT);
+      msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, 0);
+      msg.setVariable(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);
+      msg.setVariable(NXCPCodes.VID_COMMENTS, text);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
    /**
     * Update alarm comment.
     * If alarmId == 0 — new comment will be created.
