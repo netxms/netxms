@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -144,7 +144,6 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 
 	// get mail encoding from DB
 	ConfigReadStrA(_T("MailEncoding"), szEncoding, sizeof(szEncoding) / sizeof(TCHAR), "iso-8859-1");
-   BOOL encodeSubject = ConfigReadInt(_T("MailBase64Subjects"), 0) != 0;
 
    // Fill in address structure
    memset(&sa, 0, sizeof(sa));
@@ -236,6 +235,13 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      // subject
+                     bool encodeSubject = false;
+                     for(char *p = pszSubject; *p != 0; p++)
+                        if (*p & 0x80)
+                        {
+                           encodeSubject = true;
+                           break;
+                        }
                      if (encodeSubject)
                      {
                         char *encodedSubject = NULL;
