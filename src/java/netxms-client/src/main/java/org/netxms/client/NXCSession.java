@@ -281,6 +281,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private String serverTimeZone;
    private byte[] serverChallenge = new byte[CLIENT_CHALLENGE_SIZE];
    private boolean zoningEnabled = false;
+   private boolean helpdeskLinkActive = false;
    private String tileServerURL;
    private String dateFormat;
    private String timeFormat;
@@ -1673,6 +1674,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
          passwordExpired = response.getVariableAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
          zoningEnabled = response.getVariableAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
+         helpdeskLinkActive = response.getVariableAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
 
          defaultDciPollingInterval = response.getVariableAsInteger(NXCPCodes.VID_POLLING_INTERVAL);
          if (defaultDciPollingInterval == 0) defaultDciPollingInterval = 60;
@@ -1892,6 +1894,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public boolean isZoningEnabled()
    {
       return zoningEnabled;
+   }
+
+   /**
+    * Get status of helpdesk integration module on server.
+    * 
+    * @return true if helpdesk integration module loaded on server
+    */
+   public boolean isHelpdeskLinkActive()
+   {
+      return helpdeskLinkActive;
    }
 
    /*

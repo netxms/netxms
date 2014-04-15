@@ -97,9 +97,10 @@ public class AlarmList extends Composite
 	public static final int COLUMN_MESSAGE = 3;
 	public static final int COLUMN_COUNT = 4;
 	public static final int COLUMN_COMMENTS = 5;
-	public static final int COLUMN_ACK_BY = 6;
-	public static final int COLUMN_CREATED = 7;
-	public static final int COLUMN_LASTCHANGE = 8;
+   public static final int COLUMN_HELPDESK_REF = 6;
+	public static final int COLUMN_ACK_BY = 7;
+	public static final int COLUMN_CREATED = 8;
+	public static final int COLUMN_LASTCHANGE = 9;
 	
 	private final IViewPart viewPart;
 	private NXCSession session = null;
@@ -118,6 +119,7 @@ public class AlarmList extends Composite
 	private Action actionTerminate;
 	private Action actionShowAlarmDetails;
 	private Action actionShowObjectDetails;
+   private Action actionCreateIssue;
 	private Action actionExportToCsv;
 	private MenuManager timeAcknowledgeMenu;
 	private List<Action> timeAcknowledge;
@@ -138,8 +140,19 @@ public class AlarmList extends Composite
 		this.viewPart = viewPart;	
 		
 		// Setup table columns
-		final String[] names = { Messages.get().AlarmList_ColumnSeverity, Messages.get().AlarmList_ColumnState, Messages.get().AlarmList_ColumnSource, Messages.get().AlarmList_ColumnMessage, Messages.get().AlarmList_ColumnCount, Messages.get().AlarmList_Comments, Messages.get().AlarmList_AckBy, Messages.get().AlarmList_ColumnCreated, Messages.get().AlarmList_ColumnLastChange };
-		final int[] widths = { 100, 100, 150, 300, 70, 70, 100, 100, 100 };
+		final String[] names = { 
+		      Messages.get().AlarmList_ColumnSeverity, 
+		      Messages.get().AlarmList_ColumnState, 
+		      Messages.get().AlarmList_ColumnSource, 
+		      Messages.get().AlarmList_ColumnMessage, 
+		      Messages.get().AlarmList_ColumnCount, 
+		      Messages.get().AlarmList_Comments, 
+            "Helpdesk ID", 
+		      Messages.get().AlarmList_AckBy, 
+		      Messages.get().AlarmList_ColumnCreated, 
+		      Messages.get().AlarmList_ColumnLastChange
+		   };
+		final int[] widths = { 100, 100, 150, 300, 70, 70, 120, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
@@ -429,6 +442,14 @@ public class AlarmList extends Composite
 		};
 		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
 		
+      actionCreateIssue = new Action("Create &ticket in helpdesk system", Activator.getImageDescriptor("icons/helpdesk_ticket.png")) { //$NON-NLS-1$
+         @Override
+         public void run()
+         {
+            createIssue();
+         }
+      };
+      
 		actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
 			@Override
 			public void run()
@@ -457,6 +478,9 @@ public class AlarmList extends Composite
       timeAcknowledgeOther.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledgeOther");  //$NON-NLS-1$
 	}
 
+	/**
+	 * 
+	 */
 	private void initializeTimeAcknowledge()
    {
 	   IDialogSettings settings = Activator.getDefault().getDialogSettings();
@@ -494,6 +518,9 @@ public class AlarmList extends Composite
 	   }
    }
 
+   /**
+    * 
+    */
    private void createDefaultIntervals()
    {
       Action act;
@@ -623,6 +650,11 @@ public class AlarmList extends Composite
 			manager.add(new Separator());
 			manager.add(actionShowAlarmDetails);
 			manager.add(actionComments);
+			if (session.isHelpdeskLinkActive() && (((Alarm)selection.getFirstElement()).getHelpdeskState() == Alarm.HELPDESK_STATE_IGNORED))
+			{
+	         manager.add(new Separator());
+	         manager.add(actionCreateIssue);
+			}
 		}
 	}
 
@@ -776,8 +808,7 @@ public class AlarmList extends Composite
 			}
 		}.start();
 	}
-	
-	
+		
 	/**
 	 * Resolve selected alarms
 	 */
@@ -845,6 +876,31 @@ public class AlarmList extends Composite
 			}
 		}.start();
 	}
+
+   /**
+    * Create helpdesk ticket (issue) from selected alarms
+    */
+   private void createIssue()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      final long id = ((Alarm)selection.getFirstElement()).getId();
+      new ConsoleJob("Create helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.openHelpdeskIssue(id);
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot create helpdesk ticket from alarm";
+         }
+      }.start();
+   }
 
 	/**
 	 * Show details for selected object

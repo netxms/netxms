@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,6 +116,15 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 				return RegionalSettings.getDateTimeFormat().format(((Alarm)element).getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:
 				return RegionalSettings.getDateTimeFormat().format(((Alarm)element).getLastChangeTime());
+         case AlarmList.COLUMN_HELPDESK_REF:
+            switch(((Alarm)element).getHelpdeskState())
+            {
+               case Alarm.HELPDESK_STATE_OPEN:
+                  return ((Alarm)element).getHelpdeskReference();
+               case Alarm.HELPDESK_STATE_CLOSED:
+                  return ((Alarm)element).getHelpdeskReference() + " (closed)";
+            }
+            return null;
 		}
 		return null;
 	}
