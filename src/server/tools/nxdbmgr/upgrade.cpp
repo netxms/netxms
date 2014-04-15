@@ -360,6 +360,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V308 to V309
+ */
+static BOOL H_UpgradeFromV308(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("HelpDeskLink"), _T("none"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='309' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V307 to V308
  */
 static BOOL H_UpgradeFromV307(int currVersion, int newVersion)
@@ -7465,6 +7475,7 @@ static struct
    { 305, 306, H_UpgradeFromV305 },
    { 306, 307, H_UpgradeFromV306 },
    { 307, 308, H_UpgradeFromV307 },
+   { 308, 309, H_UpgradeFromV308 },
    { 0, 0, NULL }
 };
 
