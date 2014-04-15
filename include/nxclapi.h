@@ -77,7 +77,6 @@ typedef void * NXC_SESSION;
 #define MAX_AGENT_VERSION_LEN    64
 #define MAX_PLATFORM_NAME_LEN    64
 #define MAX_PACKAGE_NAME_LEN     64
-#define MAX_HELPDESK_REF_LEN     64
 #define GROUP_EVERYONE           ((UINT32)0x80000000)
 #define INVALID_UID              ((UINT32)0xFFFFFFFF)
 #define OBJECT_STATUS_COUNT      9

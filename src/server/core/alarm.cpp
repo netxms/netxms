@@ -606,6 +606,7 @@ void AlarmManager::resolveByHDRef(const TCHAR *hdref, bool terminate)
 UINT32 AlarmManager::openHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
+   *hdref = 0;
 
    lock();
    for(int i = 0; i < m_numAlarms; i++)
@@ -620,6 +621,7 @@ UINT32 AlarmManager::openHelpdeskIssue(UINT32 alarmId, ClientSession *session, T
                m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_OPEN;
 			      notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
                updateAlarmInDB(&m_pAlarmList[i]);
+               nx_strncpy(hdref, m_pAlarmList[i].szHelpDeskRef, MAX_HELPDESK_REF_LEN);
                DbgPrintf(5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szHelpDeskRef);
             }
          }

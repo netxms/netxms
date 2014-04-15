@@ -132,7 +132,7 @@
 #define AF_WRITE_FULL_DUMP                     0x00080000
 #define AF_RESOLVE_NODE_NAMES                  0x00100000
 #define AF_CATCH_EXCEPTIONS                    0x00200000
-#define AF_INTERNAL_CA                         0x00400000
+#define AF_HELPDESK_LINK_ACTIVE                0x00400000
 #define AF_DB_CONNECTION_POOL_READY            0x00800000
 #define AF_DB_LOCKED                           0x01000000
 #define AF_ENABLE_MULTIPLE_DB_CONN             0x02000000

@@ -17,6 +17,8 @@ include_HEADERS = \
 	dbdrv.h \
 	geolocation.h \
 	ieee8021x.h \
+	jansson.h \
+	jansson_config.h \
 	netxmsdb.h \
 	netxms_getopt.h \
 	netxms_isc.h \

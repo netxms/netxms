@@ -207,7 +207,10 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenHelpdeskIssue(NXC_SESSION hSession, UINT32 dwAl
    {
       rcc = pResponse->GetVariableLong(VID_RCC);
       if (rcc == RCC_SUCCESS)
+      {
+         pszHelpdeskRef[0] = 0;
          pResponse->GetVariableStr(VID_HELPDESK_REF, pszHelpdeskRef, MAX_HELPDESK_REF_LEN);
+      }
       delete pResponse;
    }
    else

@@ -1276,7 +1276,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_WRITE_FULL_DUMP));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_INTERNAL_CA));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_HELPDESK_LINK_ACTIVE));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));

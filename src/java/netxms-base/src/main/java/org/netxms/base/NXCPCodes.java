@@ -799,6 +799,7 @@ public class NXCPCodes
    public static final long VID_RS_JOB_ID = 467;
    public static final long VID_RS_JOB_TYPE = 468;
    public static final long VID_RS_REPORT_NAME  = 469;
+   public static final long VID_HELPDESK_LINK_ACTIVE = 470;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

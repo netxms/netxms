@@ -973,6 +973,7 @@ typedef struct
 #define VID_RS_JOB_ID               ((UINT32)467)
 #define VID_RS_JOB_TYPE             ((UINT32)468)
 #define VID_RS_REPORT_NAME          ((UINT32)469)
+#define VID_HELPDESK_LINK_ACTIVE    ((UINT32)470)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
