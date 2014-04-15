@@ -62,14 +62,14 @@ public:
    void deleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
    bool deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
    UINT32 openHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref);
-	UINT32 updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
-	UINT32 deleteAlarmNoteByID(UINT32 alarmId, UINT32 noteId);
+	UINT32 updateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
+	UINT32 deleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId);
 
    UINT32 getAlarm(UINT32 dwAlarmId, CSCPMessage *msg);
    UINT32 getAlarmEvents(UINT32 dwAlarmId, CSCPMessage *msg);
    void sendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession);
    void getAlarmStats(CSCPMessage *pMsg);
-	UINT32 getAlarmNotes(UINT32 alarmId, CSCPMessage *msg);
+	UINT32 getAlarmComments(UINT32 alarmId, CSCPMessage *msg);
 
    NetObj *getAlarmSourceObject(UINT32 dwAlarmId);
    int getMostCriticalStatusForObject(UINT32 dwObjectId);

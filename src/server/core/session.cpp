@@ -902,17 +902,17 @@ void ClientSession::processingThread()
          case CMD_GET_ALL_ALARMS:
             sendAllAlarms(pMsg->GetId());
             break;
-         case CMD_GET_ALARM_NOTES:
-				getAlarmNotes(pMsg);
+         case CMD_GET_ALARM_COMMENTS:
+				getAlarmComments(pMsg);
             break;
          case CMD_SET_ALARM_STATUS_FLOW:
             updateAlarmStatusFlow(pMsg);
             break;
-         case CMD_UPDATE_ALARM_NOTE:
-				updateAlarmNote(pMsg);
+         case CMD_UPDATE_ALARM_COMMENT:
+				updateAlarmComment(pMsg);
             break;
-         case CMD_DELETE_ALARM_NOTE:
-            deleteAlarmNote(pMsg);
+         case CMD_DELETE_ALARM_COMMENT:
+            deleteAlarmComment(pMsg);
             break;
          case CMD_GET_ALARM:
             getAlarm(pMsg);
@@ -5136,7 +5136,7 @@ void ClientSession::openHelpdeskIssue(CSCPMessage *request)
 /**
  * Get comments for given alarm
  */
-void ClientSession::getAlarmNotes(CSCPMessage *request)
+void ClientSession::getAlarmComments(CSCPMessage *request)
 {
    CSCPMessage msg;
 
@@ -5152,7 +5152,7 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
       // User should have "view alarms" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-			msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmNotes(alarmId, &msg));
+			msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmComments(alarmId, &msg));
       }
       else
       {
@@ -5174,7 +5174,7 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
 /**
  * Update alarm comment
  */
-void ClientSession::updateAlarmNote(CSCPMessage *request)
+void ClientSession::updateAlarmComment(CSCPMessage *request)
 {
    CSCPMessage msg;
 
@@ -5190,9 +5190,9 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
       // User should have "acknowledge alarm" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-			UINT32 noteId = request->GetVariableLong(VID_NOTE_ID);
+			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
-			msg.SetVariable(VID_RCC, g_alarmMgr.updateAlarmNote(alarmId, noteId, CHECK_NULL(text), m_dwUserId));
+			msg.SetVariable(VID_RCC, g_alarmMgr.updateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
 			safe_free(text);
       }
       else
@@ -5214,7 +5214,7 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
 /**
  * Delete alarm comment
  */
-void ClientSession::deleteAlarmNote(CSCPMessage *request)
+void ClientSession::deleteAlarmComment(CSCPMessage *request)
 {
    CSCPMessage msg;
 
@@ -5230,8 +5230,8 @@ void ClientSession::deleteAlarmNote(CSCPMessage *request)
       // User should have "acknowledge alarm" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-			UINT32 noteId = request->GetVariableLong(VID_NOTE_ID);
-			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmNoteByID(alarmId, noteId));
+			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
+			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmCommentByID(alarmId, commentId));
       }
       else
       {

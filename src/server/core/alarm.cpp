@@ -1029,9 +1029,9 @@ static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 }
 
 /**
- * Update alarm's note
+ * Update alarm's comment
  */
-UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
+UINT32 AlarmManager::updateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
    bool newNote = false;
@@ -1102,11 +1102,10 @@ UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR 
    return rcc;
 }
 
-
 /**
- * Delete note
+ * Delete comment
  */
-UINT32 AlarmManager::deleteAlarmNoteByID(UINT32 alarmId, UINT32 noteId)
+UINT32 AlarmManager::deleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
@@ -1146,11 +1145,10 @@ UINT32 AlarmManager::deleteAlarmNoteByID(UINT32 alarmId, UINT32 noteId)
    return rcc;
 }
 
-
 /**
- * Get alarm's notes
+ * Get alarm's comments
  */
-UINT32 AlarmManager::getAlarmNotes(UINT32 alarmId, CSCPMessage *msg)
+UINT32 AlarmManager::getAlarmComments(UINT32 alarmId, CSCPMessage *msg)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	UINT32 rcc = RCC_DB_FAILURE;
