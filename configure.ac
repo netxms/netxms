@@ -70,7 +70,7 @@ ODBC_LIBS=""
 FORCE_INTERNAL_EXPAT="no"
 USE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_LIBTRE="no"
-USE_INTERNAL_ZLIB="no"
+FORCE_INTERNAL_JANSSON="no"
 FORCE_INTERNAL_ZLIB="no"
 FORCE_32BIT_BUILD="no"
 FORCE_INTERNAL_GETOPT="no"
@@ -184,6 +184,12 @@ AC_ARG_WITH(internal-libtre,
 [AS_HELP_STRING(--with-internal-libtre,force use of bundled libtre)],
 [
 	FORCE_INTERNAL_LIBTRE="yes"
+])
+
+AC_ARG_WITH(internal-libjansson,
+[AS_HELP_STRING(--with-internal-libjansson,force use of bundled libjansson)],
+[
+        FORCE_INTERNAL_JANSSON="yes"
 ])
 
 AC_ARG_WITH(internal-zlib,
@@ -413,7 +419,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
+	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
 	SMSDRV_DIRS="websms"
    HDLINK_DIRS="jira"
@@ -1361,6 +1367,17 @@ if test "x$HAVE_LIBTRE" = "xno"; then
 	AC_DEFINE(TRE_APPROX, 1, [ Define if you want to enable approximate matching functionality. ])
 fi
 
+if test "x$FORCE_INTERNAL_JANSSON" = "xyes"; then
+	HAVE_JANSSON=no
+else
+	HAVE_JANSSON=yes
+	AC_CHECK_HEADER(jansson.h,,HAVE_JANSSON=no)
+	AC_CHECK_LIB(jansson, json_object, [ HAVE_JANSSON=yes ], [ HAVE_JANSSON=no ])
+fi
+if test "x$HAVE_JANSSON" = "xno"; then
+	MODULES="jansson $MODULES"
+fi
+
 if test "x$DISABLE_LMSENSORS" = "xno"; then
 	HAVE_LMSENSORS=yes
 	AC_CHECK_HEADER(sensors/sensors.h,,HAVE_LMSENSORS=no)
@@ -2291,6 +2308,7 @@ AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's sh
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
+AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
@@ -2463,6 +2481,7 @@ AC_CONFIG_FILES([
 	src/db/libnxdb/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
+	src/jansson/Makefile
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
@@ -2616,6 +2635,11 @@ if test "x${HAVE_LIBTRE}" = "xno"; then
 	echo "Use internal libtre     : YES"
 else
 	echo "Use internal libtre     : NO"
+fi
+if test "x${HAVE_JANSSON}" = "xno"; then
+	echo "Use internal libjansson : YES"
+else
+	echo "Use internal libjansson : NO"
 fi
 if test "x${NEED_ZLIB}" = "xyes"; then
 	if test "x${HAVE_ZLIB}" = "xno"; then

@@ -33,31 +33,56 @@ static HelpDeskLink *s_link = NULL;
  */
 void LoadHelpDeskLink()
 {
-   TCHAR file[MAX_PATH], errorText[256];
+   TCHAR name[MAX_PATH], errorText[256];
 
-   ConfigReadStr(_T("HelpDeskLink"), file, MAX_PATH, _T("none"));
-   if ((file[0] == 0) || !_tcsicmp(file, _T("none")))
+   ConfigReadStr(_T("HelpDeskLink"), name, MAX_PATH, _T("none"));
+   if ((name[0] == 0) || !_tcsicmp(name, _T("none")))
    {
       DbgPrintf(2, _T("Helpdesk link disabled"));
       return;
    }
 
-   HMODULE hModule = DLOpen(file, errorText);
+#if !defined(_WIN32) && !defined(_NETWARE)
+   TCHAR fullName[MAX_PATH];
+
+   if (_tcschr(name, _T('/')) == NULL)
+   {
+      // Assume that module name without path given
+      // Try to load it from pkglibdir
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if (homeDir != NULL)
+      {
+         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, name);
+      }
+      else
+      {
+         _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, name);
+      }
+   }
+   else
+   {
+      nx_strncpy(fullName, name, MAX_PATH);
+   }
+   HMODULE hModule = DLOpen(fullName, errorText);
+#else
+   HMODULE hModule = DLOpen(name, errorText);
+#endif
+
    if (hModule != NULL)
    {
-		int *apiVersion = (int *)DLGetSymbolAddr(hModule, "hdlinkAPIVersion", errorText);
+      int *apiVersion = (int *)DLGetSymbolAddr(hModule, "hdlinkAPIVersion", errorText);
       HelpDeskLink *(* CreateInstance)() = (HelpDeskLink *(*)())DLGetSymbolAddr(hModule, "hdlinkCreateInstance", errorText);
 
       if ((apiVersion != NULL) && (CreateInstance != NULL))
       {
          if (*apiVersion == HDLINK_API_VERSION)
          {
-				s_link = CreateInstance();
+            s_link = CreateInstance();
 				if (s_link != NULL)
 				{
                if (s_link->init())
                {
-					   nxlog_write(MSG_HDLINK_LOADED, EVENTLOG_INFORMATION_TYPE, "s", s_link->getName());
+					   nxlog_write(MSG_HDLINK_LOADED, EVENTLOG_INFORMATION_TYPE, "ss", s_link->getName(), s_link->getVersion());
                   g_dwFlags |= AF_HELPDESK_LINK_ACTIVE;
                }
 				   else
@@ -69,25 +94,25 @@ void LoadHelpDeskLink()
 				}
 				else
 				{
-					nxlog_write(MSG_HDLINK_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", file);
+					nxlog_write(MSG_HDLINK_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", name);
 					DLClose(hModule);
 				}
          }
          else
          {
-            nxlog_write(MSG_HDLINK_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd", file, NDDRV_API_VERSION, *apiVersion);
+            nxlog_write(MSG_HDLINK_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd", name, NDDRV_API_VERSION, *apiVersion);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(MSG_NO_HDLINK_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", file);
+         nxlog_write(MSG_NO_HDLINK_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", name);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", file, errorText);
+      nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", name, errorText);
    }
 }
 

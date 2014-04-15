@@ -941,7 +941,7 @@ Unable to configure serial port %1
 MessageId=
 SymbolicName=MSG_HDLINK_LOADED
 Language=English
-Helpdesk link module "%1" loaded successfully
+Helpdesk link module %1 (version %2) loaded successfully
 .
 
 MessageId=
