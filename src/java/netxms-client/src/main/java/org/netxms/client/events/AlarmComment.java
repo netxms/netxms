@@ -25,7 +25,7 @@ import org.netxms.base.NXCPMessage;
  * Alarm note (comment)
  *
  */
-public class AlarmNote
+public class AlarmComment
 {
 	private long id;
 	private long alarmId;
@@ -39,7 +39,7 @@ public class AlarmNote
 	 * @param msg NXCP message
 	 * @param baseId base variable ID
 	 */
-	public AlarmNote(NXCPMessage msg, long baseId)
+	public AlarmComment(NXCPMessage msg, long baseId)
 	{
 		id = msg.getVariableAsInt64(baseId);
 		alarmId = msg.getVariableAsInt64(baseId + 1);

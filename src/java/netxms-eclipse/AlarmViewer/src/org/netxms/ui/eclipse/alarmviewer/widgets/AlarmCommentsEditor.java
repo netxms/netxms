@@ -30,7 +30,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.AlarmNote;
+import org.netxms.client.events.AlarmComment;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
@@ -50,7 +50,7 @@ public class AlarmCommentsEditor extends Composite
 	 * @param style
 	 * @param note
 	 */
-	public AlarmCommentsEditor(Composite parent, FormToolkit toolkit, ImageCache imageCache, AlarmNote note, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction)
+	public AlarmCommentsEditor(Composite parent, FormToolkit toolkit, ImageCache imageCache, AlarmComment note, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction)
 	{
 		super(parent, SWT.BORDER);
 		

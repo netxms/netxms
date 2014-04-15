@@ -94,7 +94,7 @@ public class NXCPCodes
 	public static final int CMD_GET_CURRENT_USER_ATTR = 0x0044;
 	public static final int CMD_SET_CURRENT_USER_ATTR = 0x0045;
 	public static final int CMD_GET_ALL_ALARMS = 0x0046;
-	public static final int CMD_GET_ALARM_NOTES = 0x0047;
+	public static final int CMD_GET_ALARM_COMMENTS = 0x0047;
 	public static final int CMD_ACK_ALARM = 0x0048;
 	public static final int CMD_ALARM_UPDATE = 0x0049;
 	public static final int CMD_ALARM_DATA = 0x004A;
@@ -281,7 +281,7 @@ public class NXCPCodes
 	public static final int CMD_GET_FILE_DETAILS = 0x00FF;
 	public static final int CMD_IMAGE_LIBRARY_UPDATE = 0x0100;
 	public static final int CMD_GET_NODE_COMPONENTS = 0x0101;
-	public static final int CMD_UPDATE_ALARM_NOTE = 0x0102;
+	public static final int CMD_UPDATE_ALARM_COMMENT = 0x0102;
 	public static final int CMD_GET_ALARM = 0x0103;
 	public static final int CMD_GET_TABLE_LAST_VALUES = 0x0104;
 	public static final int CMD_GET_TABLE_DCI_DATA = 0x0105;
@@ -312,7 +312,7 @@ public class NXCPCodes
 	public static final int CMD_CANCEL_FILE_MONITORING = 0x011E;
 	public static final int CMD_CHANGE_OBJECT_TOOL_STATUS = 0x011F;
 	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
-	public static final int CMD_DELETE_ALARM_NOTE = 0x0121;
+	public static final int CMD_DELETE_ALARM_COMMENT = 0x0121;
 	public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
 	public static final int CMD_GET_DCI_VALUES = 0x0123;
 	
@@ -739,7 +739,7 @@ public class NXCPCodes
 	public static final long VID_IS_PHYS_PORT = 407;
 	public static final long VID_CREATE_STATUS_DCI = 408;
 	public static final long VID_NUM_COMMENTS = 409;
-	public static final long VID_NOTE_ID = 410;
+	public static final long VID_COMMENT_ID = 410;
 	public static final long VID_DCOBJECT_TYPE = 411;
 	public static final long VID_INSTANCE_COLUMN = 412;
 	public static final long VID_DATA_COLUMN = 413;

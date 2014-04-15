@@ -108,7 +108,7 @@ import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.datacollection.TransformationTestResult;
 import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.events.AlarmNote;
+import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.events.EventProcessingPolicy;
@@ -2540,62 +2540,76 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
-    * Get list of notes (comments) for given alarm.
+    * Get list of comments for given alarm.
     *
     * @param alarmId alarm ID
-    * @return list of alarm's notes
+    * @return list of alarm comments
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<AlarmNote> getAlarmNotes(long alarmId) throws IOException, NXCException
+   public List<AlarmComment> getAlarmComments(long alarmId) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM_NOTES);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM_COMMENTS);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
-      final List<AlarmNote> notes = new ArrayList<AlarmNote>(count);
+      final List<AlarmComment> comments = new ArrayList<AlarmComment>(count);
       long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         notes.add(new AlarmNote(response, varId));
+         comments.add(new AlarmComment(response, varId));
          varId += 10;
       }
-      return notes;
+      return comments;
    }
 
    /**
-    * Delete alarm's note (comment). 
+    * Delete alarm comment. 
     *
     * @param alarmId alarm ID
-    * @param noteId  note ID or 0 for creating new note
+    * @param commentId  comment ID
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteAlarmNote(long alarmId, long noteId) throws IOException, NXCException
+   public void deleteAlarmComment(long alarmId, long commentId) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM_NOTE);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM_COMMENT);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-      msg.setVariableInt32(NXCPCodes.VID_NOTE_ID, (int) noteId);
+      msg.setVariableInt32(NXCPCodes.VID_COMMENT_ID, (int) commentId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
    
    /**
-    * Create or update alarm's note (comment). To create new note, set nodeId to 0.
+    * Create alarm comment.
+    * 
+    * @param alarmId
+    * @param text
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void createAlarmComment(long alarmId, String text) throws IOException, NXCException {
+   	updateAlarmComment(alarmId, 0, text);
+   }
+
+   
+   /**
+    * Update alarm comment.
+    * If alarmId == 0 — new comment will be created.
     *
     * @param alarmId alarm ID
-    * @param noteId  note ID or 0 for creating new note
+    * @param commentId  comment ID or 0 for creating new comment
     * @param text    message text
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateAlarmNote(long alarmId, long noteId, String text) throws IOException, NXCException
+   public void updateAlarmComment(long alarmId, long commentId, String text) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ALARM_NOTE);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ALARM_COMMENT);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-      msg.setVariableInt32(NXCPCodes.VID_NOTE_ID, (int) noteId);
+      msg.setVariableInt32(NXCPCodes.VID_COMMENT_ID, (int) commentId);
       msg.setVariable(NXCPCodes.VID_COMMENTS, text);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
