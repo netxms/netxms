@@ -131,7 +131,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env)
    m_pGlobals = new NXSL_VariableSystem(false);
    m_pLocals = NULL;
    m_functions = NULL;
-   m_modules = NULL;
+   m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
    m_dwSubLevel = 0;    // Level of current subroutine
    m_env = (env != NULL) ? env : new NXSL_Environment;
    m_pRetValue = NULL;
@@ -194,6 +194,7 @@ bool NXSL_VM::load(NXSL_Program *program)
    }
 
    // Load modules
+   m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
    for(i = 0; i < program->m_requiredModules.getSize(); i++)
    {
       if (!m_env->loadModule(this, program->m_requiredModules.getValue(i)))
