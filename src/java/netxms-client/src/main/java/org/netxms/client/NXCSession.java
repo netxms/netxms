@@ -3712,7 +3712,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
       if ((flags & NXCObjectModificationData.MODIFY_MAP_LAYOUT) != 0)
       {
-         msg.setVariableInt16(NXCPCodes.VID_LAYOUT, data.getMapLayout());
+         msg.setVariableInt16(NXCPCodes.VID_LAYOUT, data.getMapLayout().getValue());
       }
 
       if ((flags & NXCObjectModificationData.MODIFY_MAP_BACKGROUND) != 0)

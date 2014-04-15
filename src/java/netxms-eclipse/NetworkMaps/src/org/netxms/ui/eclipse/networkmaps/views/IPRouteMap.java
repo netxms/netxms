@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -75,7 +76,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		setLayoutAlgorithm(LAYOUT_HTREE, true);
+		setLayoutAlgorithm(MapLayoutAlgorithm.HTREE, true);
 	}
 
 	/* (non-Javadoc)

@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
@@ -124,7 +125,7 @@ public class NXCObjectModificationData
 	private long[] trustedNodes;
 	private GeoLocation geolocation;
 	private InetAddress primaryIpAddress;
-	private int mapLayout;
+	private MapLayoutAlgorithm mapLayout;
 	private UUID mapBackground;
 	private GeoLocation mapBackgroundLocation;
 	private int mapBackgroundZoom;
@@ -610,7 +611,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the mapLayout
 	 */
-	public int getMapLayout()
+	public MapLayoutAlgorithm getMapLayout()
 	{
 		return mapLayout;
 	}
@@ -618,7 +619,7 @@ public class NXCObjectModificationData
 	/**
 	 * @param mapLayout the mapLayout to set
 	 */
-	public void setMapLayout(int mapLayout)
+	public void setMapLayout(MapLayoutAlgorithm mapLayout)
 	{
 		this.mapLayout = mapLayout;
 		flags |= MODIFY_MAP_LAYOUT;
