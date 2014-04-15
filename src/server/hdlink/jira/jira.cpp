@@ -327,7 +327,66 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
  */
 UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
 {
-   return RCC_NOT_IMPLEMENTED;
+   UINT32 rcc = RCC_HDLINK_COMM_FAILURE;
+   lock();
+   DbgPrintf(4, _T("Jira: add comment to issue \"%s\" (comment text \"%s\")"), hdref, comment);
+   if ((m_curl != NULL) || ((rcc = connect()) == RCC_SUCCESS))
+   {
+      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
+      memset(data, 0, sizeof(RequestData));
+      curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
+
+      curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
+
+      // Build request
+      json_t *root = json_object();
+#ifdef UNICODE
+      char *mbtext = UTF8StringFromWideString(comment);
+      json_object_set_new(root, "body", json_string(mbtext));
+      free(mbtext);
+#else
+      json_object_set_new(root, "body", comment);
+#endif
+      char *request = json_dumps(root, 0);
+      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
+      json_decref(root);
+
+      char url[MAX_PATH];
+#ifdef UNICODE
+      char *mbref = UTF8StringFromWideString(hdref);
+      snprintf(url, MAX_PATH, "%s/rest/api/2/issue/%s/comment", m_serverUrl, mbref);
+      free(mbref);
+#else
+      snprintf(url, MAX_PATH, "%s/rest/api/2/issue/%s/comment", m_serverUrl, hdref);
+#endif
+      curl_easy_setopt(m_curl, CURLOPT_URL, url);
+
+      if (curl_easy_perform(m_curl) == CURLE_OK)
+      {
+         data->data[data->size] = 0;
+         DbgPrintf(7, _T("Jira: POST request completed, data: %hs"), data->data);
+         long response = 500;
+         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
+         if (response == 201)
+         {
+            rcc = RCC_SUCCESS;
+            DbgPrintf(4, _T("Jira: added comment to issue \"%s\""), hdref);
+         }
+         else
+         {
+            DbgPrintf(4, _T("Jira: cannot add comment to issue (HTTP response code %03d)"), response);
+            rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
+         }
+      }
+      else
+      {
+         DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+      }
+      free(request);
+      free(data);
+   }
+   unlock();
+   return rcc;
 }
 
 /**

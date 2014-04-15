@@ -126,3 +126,14 @@ UINT32 CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref)
 
    return s_link->openIssue(description, hdref);
 }
+
+/**
+ * Add comment to helpdesk issue
+ */
+UINT32 AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text)
+{
+   if (s_link == NULL)
+      return RCC_NO_HDLINK;
+
+   return s_link->addComment(hdref, text);
+}

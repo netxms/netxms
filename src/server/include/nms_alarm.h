@@ -58,7 +58,7 @@ public:
    UINT32 ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 time);
    UINT32 resolveById(UINT32 dwAlarmId, ClientSession *session, bool terminate);
    void resolveByKey(const TCHAR *key, bool useRegexp, bool terminate, Event *pEvent);
-   void resolveByHDRef(const TCHAR *hdref, bool terminate);
+   UINT32 resolveByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate);
    void deleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
    bool deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
    UINT32 openHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref);
@@ -72,6 +72,7 @@ public:
 	UINT32 getAlarmComments(UINT32 alarmId, CSCPMessage *msg);
 
    NetObj *getAlarmSourceObject(UINT32 dwAlarmId);
+   NetObj *getAlarmSourceObject(const TCHAR *hdref);
    int getMostCriticalStatusForObject(UINT32 dwObjectId);
 
    ObjectArray<NXC_ALARM> *getAlarms(UINT32 objectId);
@@ -83,10 +84,11 @@ public:
 void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm);
 void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId);
 void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
-void ResolveAlarmByHDRef(const TCHAR *hdref);
-void TerminateAlarmByHDRef(const TCHAR *hdref);
+UINT32 ResolveAlarmByHDRef(const TCHAR *hdref);
+UINT32 TerminateAlarmByHDRef(const TCHAR *hdref);
 void LoadHelpDeskLink();
 UINT32 CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref);
+UINT32 AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text);
 
 /**
  * Global instance of alarm manager

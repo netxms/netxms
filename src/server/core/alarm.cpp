@@ -160,17 +160,17 @@ static void FillAlarmEventsMessage(CSCPMessage *msg, UINT32 alarmId)
 /**
  * Resolve alarm by helpdesk reference
  */
-void ResolveAlarmByHDRef(const TCHAR *hdref)
+UINT32 ResolveAlarmByHDRef(const TCHAR *hdref)
 {
-   g_alarmMgr.resolveByHDRef(hdref, false);
+   return g_alarmMgr.resolveByHDRef(hdref, NULL, false);
 }
 
 /**
  * Terminate alarm by helpdesk reference
  */
-void TerminateAlarmByHDRef(const TCHAR *hdref)
+UINT32 TerminateAlarmByHDRef(const TCHAR *hdref)
 {
-   g_alarmMgr.resolveByHDRef(hdref, true);
+   return g_alarmMgr.resolveByHDRef(hdref, NULL, true);
 }
 
 /**
@@ -463,14 +463,17 @@ UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, ClientSession *session, bool 
          if (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_OPEN)
          {
             dwObject = m_pAlarmList[i].dwSourceObject;
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), dwObject,
-               _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-               dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(dwObject, _T("")));
+            if (session != NULL)
+            {
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), dwObject,
+                  _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                  dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(dwObject, _T("")));
+            }
 
 				if (terminate)
-               m_pAlarmList[i].dwTermByUser = session->getUserId();
+               m_pAlarmList[i].dwTermByUser = (session != NULL) ? session->getUserId() : 0;
 				else
-               m_pAlarmList[i].dwResolvedByUser = session->getUserId();
+               m_pAlarmList[i].dwResolvedByUser = (session != NULL) ? session->getUserId() : 0;
             m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
 				m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
 				m_pAlarmList[i].ackTimeout = 0;
@@ -566,19 +569,27 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
  * Resolve and possibly terminate alarm with given helpdesk reference.
  * Auitomatically change alarm's helpdesk state to "closed"
  */
-void AlarmManager::resolveByHDRef(const TCHAR *hdref, bool terminate)
+UINT32 AlarmManager::resolveByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate)
 {
    UINT32 objectId = 0;
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
 
    lock();
    for(int i = 0; i < m_numAlarms; i++)
       if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
       {
          objectId = m_pAlarmList[i].dwSourceObject;
+         if (session != NULL)
+         {
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), objectId,
+               _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+               m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(objectId, _T("")));
+         }
+
 			if (terminate)
-            m_pAlarmList[i].dwTermByUser = 0;
+            m_pAlarmList[i].dwTermByUser = (session != NULL) ? session->getUserId() : 0;
 			else
-            m_pAlarmList[i].dwResolvedByUser = 0;
+            m_pAlarmList[i].dwResolvedByUser = (session != NULL) ? session->getUserId() : 0;
          m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
 			m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
 			m_pAlarmList[i].ackTimeout = 0;
@@ -592,12 +603,14 @@ void AlarmManager::resolveByHDRef(const TCHAR *hdref, bool terminate)
 				memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_numAlarms - i));
 			}
          DbgPrintf(5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
+         rcc = RCC_SUCCESS;
          break;
       }
    unlock();
 
    if (objectId != 0)
       updateObjectStatus(objectId);
+   return rcc;
 }
 
 /**
@@ -871,38 +884,34 @@ UINT32 AlarmManager::getAlarmEvents(UINT32 dwAlarmId, CSCPMessage *msg)
 NetObj *AlarmManager::getAlarmSourceObject(UINT32 dwAlarmId)
 {
    UINT32 dwObjectId = 0;
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
 
-   // First, look at our in-memory list
    lock();
-   int i;
-   for(i = 0; i < m_numAlarms; i++)
+   for(int i = 0; i < m_numAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
          dwObjectId = m_pAlarmList[i].dwSourceObject;
          break;
       }
    unlock();
+   return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
+}
 
-   // If not found, search database
-   if (i == m_numAlarms)
-   {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT source_object_id FROM alarms WHERE alarm_id=%d"), dwAlarmId);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != NULL)
+/**
+ * Get source object for given alarm helpdesk reference
+ */
+NetObj *AlarmManager::getAlarmSourceObject(const TCHAR *hdref)
+{
+   UINT32 dwObjectId = 0;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
       {
-         if (DBGetNumRows(hResult) > 0)
-         {
-            dwObjectId = DBGetFieldULong(hResult, 0, 0);
-         }
-         DBFreeResult(hResult);
+         dwObjectId = m_pAlarmList[i].dwSourceObject;
+         break;
       }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
-
-   return FindObjectById(dwObjectId);
+   unlock();
+   return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
 }
 
 /**
@@ -1094,6 +1103,10 @@ UINT32 AlarmManager::updateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCH
             if(newNote)
                m_pAlarmList[i].noteCount++;
 				notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+            if (m_pAlarmList[i].nHelpDeskState == ALARM_HELPDESK_OPEN)
+            {
+               AddHelpdeskIssueComment(m_pAlarmList[i].szHelpDeskRef, text);
+            }
 			}
          break;
       }

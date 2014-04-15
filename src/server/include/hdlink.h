@@ -72,6 +72,6 @@ public:
 /**
  * Init call for server
  */
-void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(void (*__resolve)(const TCHAR *), void (*__close)(const TCHAR *));
+void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(UINT32 (*__resolve)(const TCHAR *), UINT32 (*__close)(const TCHAR *));
 
 #endif   /* _nddrv_h_ */

@@ -5025,14 +5025,31 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
    msg.SetId(pRequest->GetId());
 
    // Get alarm id and it's source object
-   UINT32 dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   UINT32 dwAlarmId;
+   TCHAR hdref[MAX_HELPDESK_REF_LEN];
+   NetObj *object;
+   bool byHelpdeskRef;
+   if (pRequest->isFieldExist(VID_HELPDESK_REF))
+   {
+      pRequest->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      byHelpdeskRef = true;
+   }
+   else
+   {
+      dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
+      object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+      byHelpdeskRef = false;
+   }
    if (object != NULL)
    {
       // User should have "terminate alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.resolveById(dwAlarmId, this, terminate));
+         msg.SetVariable(VID_RCC, 
+            byHelpdeskRef ? 
+            g_alarmMgr.resolveByHDRef(hdref, this, terminate) : 
+            g_alarmMgr.resolveById(dwAlarmId, this, terminate));
       }
       else
       {
@@ -5170,7 +5187,6 @@ void ClientSession::getAlarmComments(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
 /**
  * Update alarm comment
  */
@@ -5249,6 +5265,9 @@ void ClientSession::deleteAlarmComment(CSCPMessage *request)
    sendMessage(&msg);
 }
 
+/**
+ * Update alarm status flow mode
+ */
 void ClientSession::updateAlarmStatusFlow(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -5264,10 +5283,10 @@ void ClientSession::updateAlarmStatusFlow(CSCPMessage *request)
    // Send response
    sendMessage(&msg);
 }
-//
-// Create new action
-//
 
+/**
+ * Create new server action
+ */
 void ClientSession::createAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

@@ -25,13 +25,13 @@
 /**
  * Server entry points for alarm resolve and close
  */
-static void (*__resolveAlarmByHdRef)(const TCHAR *hdref);
-static void (*__closeAlarmByHdRef)(const TCHAR *hdref);
+static UINT32 (*__resolveAlarmByHdRef)(const TCHAR *hdref);
+static UINT32 (*__closeAlarmByHdRef)(const TCHAR *hdref);
 
 /**
  * Initialize server entry points
  */
-void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(void (*__resolve)(const TCHAR *), void (*__close)(const TCHAR *))
+void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(UINT32 (*__resolve)(const TCHAR *), UINT32 (*__close)(const TCHAR *))
 {
    __resolveAlarmByHdRef = __resolve;
    __closeAlarmByHdRef = __close;
