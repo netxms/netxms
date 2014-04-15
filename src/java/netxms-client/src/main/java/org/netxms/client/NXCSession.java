@@ -2434,6 +2434,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
+    * Acknowledge alarm by helpdesk reference.
+    *
+    * @param helpdeskReference Helpdesk issue reference (e.g. JIRA issue key)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void acknowledgeAlarm(String helpdeskReference) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_ACK_ALARM);
+      msg.setVariable(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Resolve alarm.
     *
     * @param alarmId Identifier of alarm to be resolved.
@@ -2449,6 +2464,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
+    * Resolve alarm by helpdesk reference.
+    *
+    * @param helpdeskReference  Identifier of alarm to be resolved.
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void resolveAlarm(final String helpdeskReference) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_ALARM);
+      msg.setVariable(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Terminate alarm.
     *
     * @param alarmId Identifier of alarm to be terminated.
@@ -2459,6 +2489,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Terminate alarm by helpdesk reference.
+    *
+    * @param helpdeskReference  Identifier of alarm to be resolved.
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void terminateAlarm(final String helpdeskReference) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
+      msg.setVariable(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
