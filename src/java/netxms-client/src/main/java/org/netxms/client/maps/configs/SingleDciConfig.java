@@ -34,7 +34,7 @@ public class SingleDciConfig
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
 	
 	@Attribute
-	private long nodeId;
+	public long nodeId;
 	
 	@Attribute
 	public long dciId;
@@ -62,10 +62,11 @@ public class SingleDciConfig
 	{
 		nodeId = 0;
 		dciId = 0;
-		type = ITEM;
+		setType(ITEM);
 		name = ""; //$NON-NLS-1$
 		setInstance(""); //$NON-NLS-1$
 		setColumn(""); //$NON-NLS-1$
+		setFormatString("");//$NON-NLS-1$
 	}
 
 	/**
@@ -77,7 +78,7 @@ public class SingleDciConfig
 	{
 		this.nodeId = src.nodeId;
 		this.dciId = src.dciId;
-		this.type = src.type;
+		this.setType(src.getType());
 		this.name = src.name;
 		this.formatString = src.formatString;
 		this.setInstance(src.getInstance());
@@ -93,7 +94,7 @@ public class SingleDciConfig
 	{
 		nodeId = dci.getNodeId();
 		dciId = dci.getId();
-		type = dci.getDcObjectType();
+		setType(dci.getDcObjectType());
 		name = dci.getDescription();
 		formatString = "";
 		setInstance(""); //$NON-NLS-1$
@@ -171,5 +172,45 @@ public class SingleDciConfig
    public void setNodeId(long nodeId)
    {
       this.nodeId = nodeId;
+   }
+
+   /**
+    * @return the dciId
+    */
+   public long getDciId()
+   {
+      return dciId;
+   }
+
+   /**
+    * @param dciId the dciId to set
+    */
+   public void setDciId(long dciId)
+   {
+      this.dciId = dciId;
+   }
+
+   /**
+    * @param name the name to set
+    */
+   public void setName(String name)
+   {
+      this.name = name;
+   }
+
+   /**
+    * @return the type
+    */
+   public int getType()
+   {
+      return type;
+   }
+
+   /**
+    * @param type the type to set
+    */
+   public void setType(int type)
+   {
+      this.type = type;
    }
 }

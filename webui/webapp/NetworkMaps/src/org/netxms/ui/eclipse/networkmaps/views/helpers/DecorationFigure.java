@@ -100,8 +100,6 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 				setSize(decoration.getWidth(), decoration.getHeight());
 			}
 		}
-		
-		addMouseListener(this);
 	}
 	
 	/**

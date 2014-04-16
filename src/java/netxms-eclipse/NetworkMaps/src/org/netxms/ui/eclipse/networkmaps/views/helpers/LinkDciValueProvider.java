@@ -112,7 +112,7 @@ public class LinkDciValueProvider
 			}
 			try
 			{
-				Thread.sleep(60000);
+				Thread.sleep(30000); 
 			}
 			catch(InterruptedException e1)
 			{
@@ -264,5 +264,10 @@ public class LinkDciValueProvider
             result += "\n";
       }
       return result;
+   }
+   
+   public DciValue getLastDciData(SingleDciConfig dci)
+   {
+      return getDciLastValue(dci.dciId); 
    }
 }

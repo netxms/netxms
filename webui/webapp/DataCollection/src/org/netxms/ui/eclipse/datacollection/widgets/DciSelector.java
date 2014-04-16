@@ -42,6 +42,7 @@ public class DciSelector extends AbstractSelector
 	private String emptySelectionName = Messages.get().DciSelector_None;
 	private NXCSession session;
 	private int dcObjectType = -1;
+   private int dciObjectType = -1;
 	private String dciName = null;
 	private boolean fixedNode = false; 
 
@@ -74,6 +75,7 @@ public class DciSelector extends AbstractSelector
 			{
 				setDciId(dci.get(0).getNodeId(), dci.get(0).getId());
 				dciName = dci.get(0).getName();
+				dciObjectType = dci.get(0).getDcObjectType();
 			}
 			else
 			{
@@ -225,4 +227,20 @@ public class DciSelector extends AbstractSelector
 	{
 		return dciName;
 	}
+
+   /**
+    * @return the dciObjectType
+    */
+   public int getDciObjectType()
+   {
+      return dciObjectType;
+   }
+
+   /**
+    * @param dciObjectType the dciObjectType to set
+    */
+   public void setDciObjectType(int dciObjectType)
+   {
+      this.dciObjectType = dciObjectType;
+   }
 }

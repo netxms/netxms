@@ -127,6 +127,7 @@ public:
 #define MAP_ELEMENT_OBJECT          1
 #define MAP_ELEMENT_DECORATION      2
 #define MAP_ELEMENT_DCI_CONTAINER   3
+#define MAP_ELEMENT_DCI_IMAGE       4
 
 /**
  * Decoration types
@@ -244,6 +245,26 @@ public:
 	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
 
 	TCHAR* getObjectDCIList() { return m_xmlDCIList; }
+};
+
+/**
+ * DCI map image
+ */
+class LIBNXMAP_EXPORTABLE NetworkMapDCIImage : public NetworkMapElement
+{
+protected:
+	TCHAR* m_config;
+
+public:
+	NetworkMapDCIImage(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
+	NetworkMapDCIImage(UINT32 id, Config *config, UINT32 flags = 0);
+	NetworkMapDCIImage(CSCPMessage *msg, UINT32 baseId);
+	virtual ~NetworkMapDCIImage();
+
+	virtual void updateConfig(Config *config);
+	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+
+	TCHAR* getObjectDCIList() { return m_config; }
 };
 
 /**

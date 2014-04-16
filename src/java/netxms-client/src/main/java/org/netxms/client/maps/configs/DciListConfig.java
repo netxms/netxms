@@ -32,6 +32,21 @@ import org.simpleframework.xml.core.Persister;
 @Root(name="config")
 public class DciListConfig
 {
+   @ElementArray(required = true)
+   private SingleDciConfig[] dciList = new SingleDciConfig[0];
+   
+   @Element(required=false)
+   private int backgroundColor;
+   
+   @Element(required=false)
+   private int textColor;
+   
+   @Element(required=false)
+   private int borderColor;
+   
+   @Element(required=false)
+   private boolean borderRequired;
+   
    /**
     * Create DCI list object from XML document
     * 
@@ -58,21 +73,6 @@ public class DciListConfig
       serializer.write(this, writer);
       return writer.toString();
    }
-   
-	@ElementArray(required = true)
-	private SingleDciConfig[] dciList = new SingleDciConfig[0];
-	
-	@Element(required=false)
-	private int backgroundColor;
-	
-	@Element(required=false)
-   private int textColor;
-	
-	@Element(required=false)
-   private int borderColor;
-	
-	@Element(required=false)
-   private boolean borderRequired;
 
 	/**
 	 * @return the dciList

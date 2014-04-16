@@ -82,8 +82,10 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.configs.DCIImageConfiguration;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
+import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
@@ -1350,6 +1352,21 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
                      dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
                   }
                }
+            }
+         }
+         
+         if(element instanceof NetworkMapDCIImage)
+         {
+            NetworkMapDCIImage item = (NetworkMapDCIImage)element;
+            DCIImageConfiguration config = item.getImageOptions();
+            SingleDciConfig value = config.getDci();
+            if(value.type == SingleDciConfig.ITEM)
+            {
+               dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
+            }
+            else
+            {
+               dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
             }
          }
       }

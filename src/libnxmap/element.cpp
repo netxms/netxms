@@ -312,3 +312,69 @@ void NetworkMapDCIContainer::fillMessage(CSCPMessage *msg, UINT32 baseId)
 	NetworkMapElement::fillMessage(msg, baseId);
 	msg->SetVariable(baseId + 10, m_xmlDCIList);
 }
+
+/**************************
+ * Network Map DCI Image
+ **************************/
+
+/**
+ * DCI image default constructor
+ */
+
+NetworkMapDCIImage::NetworkMapDCIImage(UINT32 id, TCHAR* config, UINT32 flags) : NetworkMapElement(id, flags)
+{
+	m_type = MAP_ELEMENT_DCI_IMAGE;
+   m_config = _tcsdup(config);
+}
+
+
+/**
+ * DCI image config constructor
+ */
+
+NetworkMapDCIImage::NetworkMapDCIImage(UINT32 id, Config *config, UINT32 flags) : NetworkMapElement(id, config, flags)
+{
+   m_config = _tcsdup(config->getValue(_T("/DCIList"), _T("")));
+}
+
+
+/**
+ * DCI image NXCP constructor
+ */
+
+NetworkMapDCIImage::NetworkMapDCIImage(CSCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
+{
+   m_config = msg->GetVariableStr(baseId + 10);
+}
+
+
+/**
+ * DCI image destructor
+ */
+
+NetworkMapDCIImage::~NetworkMapDCIImage()
+{
+   safe_free(m_config);
+}
+
+
+/**
+ * Update image's persistent configuration
+ */
+
+void NetworkMapDCIImage::updateConfig(Config *config)
+{
+	NetworkMapElement::updateConfig(config);
+	config->setValue(_T("/DCIList"), m_config);
+}
+
+
+/**
+ * Fill NXCP message with container's data
+ */
+
+void NetworkMapDCIImage::fillMessage(CSCPMessage *msg, UINT32 baseId)
+{
+	NetworkMapElement::fillMessage(msg, baseId);
+	msg->SetVariable(baseId + 10, m_config);
+}
