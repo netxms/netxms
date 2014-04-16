@@ -12,10 +12,8 @@ libnxjansson_la_SOURCES = \
 	utf.c \
 	value.c
 libnxjansson_la_CPPFLAGS=-I@top_srcdir@/include
-libnxjansson_la_LDFLAGS = \
-	-no-undefined \
-	-export-symbols-regex '^json_' \
-	-version-info 10:0:6
+libnxjansson_la_LDFLAGS = -no-undefined -export-symbols-regex '^json_' -version-info 10:0:6
+libnxjansson_la_LIBADD = -lm
 
 EXTRA_DIST = \
 	hashtable.h \
