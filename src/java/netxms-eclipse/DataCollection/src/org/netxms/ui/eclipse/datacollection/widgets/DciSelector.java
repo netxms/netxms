@@ -227,6 +227,14 @@ public class DciSelector extends AbstractSelector
 	{
 		return dciName;
 	}
+	
+	  /**
+    * @return the dciName
+    */
+   public final String getDciToolTipInfo()
+   {
+       return getText();
+   }
 
    /**
     * @return the dciObjectType

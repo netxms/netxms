@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import java.util.UUID;
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -63,6 +64,7 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
 		{			
 			setSize(DEFAULT_SIZE, DEFAULT_SIZE);
 		}
+		setToolTip(new Label(dciImageConfiguration.getDci().getName()));
 	}
 
 	/* (non-Javadoc)

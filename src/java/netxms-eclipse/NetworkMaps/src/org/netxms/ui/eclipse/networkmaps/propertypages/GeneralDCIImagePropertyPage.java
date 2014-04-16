@@ -137,7 +137,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       
       dciConf.setDciId(dci.getDciId());
       dciConf.setNodeId(dci.getNodeId());
-      dciConf.setName(dci.getDciName());
+      dciConf.setName(dci.getDciToolTipInfo());
       dciConf.setType(dci.getDciObjectType());
       dciConf.setColumn(instanceColumn.getText());
       dciConf.setInstance(dataColumn.getText());    
