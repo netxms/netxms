@@ -100,7 +100,7 @@ public class TableLastValues extends AbstractClientActivity
 		{
 			for(int j = 0; j < table.getColumnCount(); j++)
 			{
-				int len = table.getCell(i, j).length();
+				int len = table.getCell(i, j).getValue().length();
 				if (len > widths[j])
 					widths[j] = len;
 			}
@@ -114,7 +114,7 @@ public class TableLastValues extends AbstractClientActivity
 			{
 				if (j > 0)
 					sb.append(" | ");
-				String value = table.getCell(i, j);
+				String value = table.getCell(i, j).getValue();
 				sb.append(value);
 				for(int k = value.length(); k < widths[j]; k++)
 					sb.append(' ');
