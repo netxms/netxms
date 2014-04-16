@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="%product.name" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.13" useFeatures="false" includeLaunchers="true">
+<product name="%product.name" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.14" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/Core/icons/launcher/128x128.png"/>
       <text>
          NetXMS Management Console
 
-Version 1.2.13
+Version 1.2.14
 Copyright (c) 2003-2014 Raden Solutions
       </text>
    </aboutInfo>
