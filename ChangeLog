@@ -10,9 +10,10 @@
 - SMS driver for websms.ru service
 - Management console:
    - DCI values can be shown on network map links
+   - DCI value can be shown on map as immage, that checnges depending on DCI value
    - Colored background for DCIs with active thresholds in DCI summary tables
    - IP route visualisation improved
-- Fixed issues: #535, #536
+- Fixed issues: #417, #535, #536
 
 
 *

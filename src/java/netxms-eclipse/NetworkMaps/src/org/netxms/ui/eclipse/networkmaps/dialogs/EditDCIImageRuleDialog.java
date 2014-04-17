@@ -119,7 +119,7 @@ public class EditDCIImageRuleDialog extends Dialog
             rule.getComment(), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
       image = new ImageSelector(dialogArea, SWT.NONE);
-      image.setLabel("Default image");
+      image.setLabel("Image");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
