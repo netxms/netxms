@@ -1546,11 +1546,9 @@ UINT32 AgentConnection::setupProxyConnection()
       return ERR_CONNECTION_BROKEN;
 }
 
-
-//
-// Enable trap receiving on connection
-//
-
+/**
+ * Enable trap receiving on connection
+ */
 UINT32 AgentConnection::enableTraps()
 {
    CSCPMessage msg(m_nProtocolVersion);
@@ -1565,11 +1563,9 @@ UINT32 AgentConnection::enableTraps()
       return ERR_CONNECTION_BROKEN;
 }
 
-
 /**
  * Send custom request to agent
  */
-
 CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool append, void (*downloadProgressCallback)(size_t, void *),
 														  void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg)
 {
@@ -1616,7 +1612,7 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 				}
 				else
 				{
-               if(fileResendCallback != NULL)
+               if (fileResendCallback != NULL)
                {
                   close(m_hCurrFile);
                   m_hCurrFile = -1;
@@ -1631,15 +1627,13 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 	return msg;
 }
 
-
 /**
- * Prepare for file upload
+ * Prepare for file download
  */
-
 UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *),
-                                             void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg)
+                                             void (*fileResendCallback)(CSCP_MESSAGE *, void *), void *cbArg)
 {
-   if(downloadProgressCallback == NULL)
+   if (fileResendCallback == NULL)
    {
       if (m_hCurrFile != -1)
          return ERR_RESOURCE_BUSY;
@@ -1677,11 +1671,9 @@ UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, 
    }
 }
 
-
 /**
  * File upload completion handler
  */
-
 void AgentConnection::onFileDownload(BOOL success)
 {
    if (!success && m_deleteFileOnDownloadFailure)
@@ -1690,11 +1682,9 @@ void AgentConnection::onFileDownload(BOOL success)
 	ConditionSet(m_condFileDownload);
 }
 
-
-//
-// Enable trap receiving on connection
-//
-
+/**
+ * Enable trap receiving on connection
+ */
 UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 {
    CSCPMessage msg(m_nProtocolVersion);
@@ -1726,11 +1716,9 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 	return rcc;
 }
 
-
-//
-// Uninstall policy by GUID
-//
-
+/**
+ * Uninstall policy by GUID
+ */
 UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
 {
 	UINT32 rqId, rcc;
