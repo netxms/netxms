@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.networkmaps.propertypages.helper;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.maps.configs.DCIImageRule;
 import org.netxms.ui.eclipse.networkmaps.propertypages.DCIImageRuleList;
 

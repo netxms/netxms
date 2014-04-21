@@ -32,7 +32,6 @@ import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
-import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceListComparator;
 import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceListLabelProvider;

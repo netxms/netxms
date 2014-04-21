@@ -20,39 +20,22 @@ package org.netxms.ui.eclipse.networkmaps.dialogs;
 
 import java.util.UUID;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.base.NXCommon;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.configs.DCIImageRule;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
-import org.netxms.ui.eclipse.nxsl.dialogs.ScriptEditDialog;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Threshold configuration dialog

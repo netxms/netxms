@@ -47,7 +47,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.events.AlarmNote;
+import org.netxms.client.events.AlarmComment;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
@@ -276,7 +276,7 @@ public class AlarmComments extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final Alarm alarm = session.getAlarm(alarmId);
-				final List<AlarmNote> comments = session.getAlarmNotes(alarmId);
+				final List<AlarmComment> comments = session.getAlarmComments(alarmId);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -286,8 +286,8 @@ public class AlarmComments extends ViewPart
 						for(AlarmCommentsEditor e : editors.values())
 							e.dispose();
 						
-						for(AlarmNote n : comments)
-							editors.put(n.getId(), createEditor(n));
+						for(AlarmComment c : comments)
+							editors.put(c.getId(), createEditor(c));
 						
 						updateLayout();
 					}
@@ -317,7 +317,7 @@ public class AlarmComments extends ViewPart
 	 * @param note alarm note associated with this widget
 	 * @return
 	 */
-	private AlarmCommentsEditor createEditor(final AlarmNote note)
+	private AlarmCommentsEditor createEditor(final AlarmComment note)
 	{
 	   HyperlinkAdapter editAction = new HyperlinkAdapter()
       {
@@ -367,7 +367,7 @@ public class AlarmComments extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.updateAlarmNote(alarmId, noteId, dlg.getText());
+            session.updateAlarmComment(alarmId, noteId, dlg.getText());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -397,7 +397,7 @@ public class AlarmComments extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.deleteAlarmNote(alarmId, noteId);
+            session.deleteAlarmComment(alarmId, noteId);
             runInUIThread(new Runnable() {
                @Override
                public void run()

@@ -22,6 +22,7 @@ import java.util.Iterator;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -96,6 +97,6 @@ public class ServiceComponents extends AbstractNetworkMapView
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		setLayoutAlgorithm(LAYOUT_SPARSE_VTREE, true);
+		setLayoutAlgorithm(MapLayoutAlgorithm.SPARSE_VTREE, true);
 	}
 }

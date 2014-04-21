@@ -57,7 +57,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.events.AlarmNote;
+import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -442,7 +442,7 @@ public class AlarmDetails extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final Alarm alarm = session.getAlarm(alarmId);
-				final List<AlarmNote> comments = session.getAlarmNotes(alarmId);
+				final List<AlarmComment> comments = session.getAlarmComments(alarmId);
 				
             List<EventInfo> _events = null;
             try
@@ -464,7 +464,7 @@ public class AlarmDetails extends ViewPart
 						for(AlarmCommentsEditor e : editors.values())
 							e.dispose();
 						
-						for(AlarmNote n : comments)
+						for(AlarmComment n : comments)
 							editors.put(n.getId(), createEditor(n));
 						
 						if (lastValuesWidget == null)
@@ -528,7 +528,7 @@ public class AlarmDetails extends ViewPart
 	 * @param note alarm note associated with this widget
 	 * @return
 	 */
-	private AlarmCommentsEditor createEditor(final AlarmNote note)
+	private AlarmCommentsEditor createEditor(final AlarmComment note)
 	{
 	   HyperlinkAdapter editAction = new HyperlinkAdapter()
       {
@@ -578,7 +578,7 @@ public class AlarmDetails extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.updateAlarmNote(alarmId, noteId, dlg.getText());
+            session.updateAlarmComment(alarmId, noteId, dlg.getText());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -608,7 +608,7 @@ public class AlarmDetails extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.deleteAlarmNote(alarmId, noteId);
+            session.deleteAlarmComment(alarmId, noteId);
             runInUIThread(new Runnable() {
                @Override
                public void run()

@@ -50,6 +50,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
@@ -117,7 +118,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		mapObject = (org.netxms.client.objects.NetworkMap)rootObject;
 		setPartName(rootObject.getObjectName());
 
-		if (mapObject.getLayout() == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
+		if (mapObject.getLayout() == MapLayoutAlgorithm.MANUAL)
 		{
 			automaticLayoutEnabled = false;
 		}
@@ -528,7 +529,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, dciContainer);
       if (dlg != null)
       {
-         if (dlg.open() == dlg.OK)
+         if (dlg.open() == Window.OK)
          {        
             mapPage.addElement(dciContainer);
             saveMap();
@@ -547,7 +548,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, dciImage);
       if (dlg != null)
       {
-         if (dlg.open() == dlg.OK)
+         if (dlg.open() == Window.OK)
          {        
             mapPage.addElement(dciImage);
             saveMap();
@@ -683,7 +684,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
-		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : NetworkMap.LAYOUT_MANUAL);
+		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : MapLayoutAlgorithm.MANUAL);
 		md.setConnectionRouting(routingAlgorithm);
 		
 		int flags = mapObject.getFlags();

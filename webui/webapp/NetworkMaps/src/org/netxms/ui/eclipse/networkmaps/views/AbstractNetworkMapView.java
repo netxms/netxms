@@ -79,6 +79,7 @@ import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.DCIImageConfiguration;
@@ -137,7 +138,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected NetworkMapPage mapPage;
 	protected ExtendedGraphViewer viewer;
 	protected MapLabelProvider labelProvider;
-	protected int layoutAlgorithm = LAYOUT_SPRING;
+	protected MapLayoutAlgorithm layoutAlgorithm = MapLayoutAlgorithm.SPRING;
 	protected int routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
 	protected boolean allowManualLayout = false; // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
@@ -426,17 +427,19 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	/**
 	 * Set layout algorithm for map
 	 * 
-	 * @param alg
+	 * @param alg Layout algorithm
+	 * @param forceChange
 	 */
-	protected void setLayoutAlgorithm(int alg, boolean forceChange)
+	protected void setLayoutAlgorithm(MapLayoutAlgorithm alg, boolean forceChange)
 	{
-		if (alg == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
+		if (alg == MapLayoutAlgorithm.MANUAL)
 		{
 			if (!automaticLayoutEnabled)
 				return; // manual layout already
 
 			automaticLayoutEnabled = false;
-			actionSetAlgorithm[layoutAlgorithm].setChecked(false);
+			// TODO: rewrite, enum value should not be used as index
+			actionSetAlgorithm[layoutAlgorithm.getValue()].setChecked(false);
 			actionEnableAutomaticLayout.setChecked(false);
 			return;
 		}
@@ -454,19 +457,19 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 
 		switch(alg)
 		{
-			case LAYOUT_SPRING:
+			case SPRING:
 				algorithm = new SpringLayoutAlgorithm();
 				break;
-			case LAYOUT_RADIAL:
+			case RADIAL:
 				algorithm = new RadialLayoutAlgorithm();
 				break;
-			case LAYOUT_HTREE:
+			case HTREE:
 				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.LEFT_RIGHT);
 				break;
-			case LAYOUT_VTREE:
+			case VTREE:
 				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				break;
-			case LAYOUT_SPARSE_VTREE:
+			case SPARSE_VTREE:
 				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				((TreeLayoutAlgorithm)algorithm).setNodeSpace(new Dimension(100, 100));
 				break;
@@ -478,9 +481,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 
 		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { algorithm, new ExpansionAlgorithm() }));
 
-		actionSetAlgorithm[layoutAlgorithm].setChecked(false);
+		actionSetAlgorithm[layoutAlgorithm.getValue()].setChecked(false);
 		layoutAlgorithm = alg;
-		actionSetAlgorithm[layoutAlgorithm].setChecked(true);
+		actionSetAlgorithm[layoutAlgorithm.getValue()].setChecked(true);
 	}
 
 	/**
@@ -611,7 +614,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionSetAlgorithm = new Action[layoutAlgorithmNames.length];
 		for(int i = 0; i < layoutAlgorithmNames.length; i++)
 		{
-			final int alg = i;
+			final MapLayoutAlgorithm alg = MapLayoutAlgorithm.getByValue(i);
 			actionSetAlgorithm[i] = new Action(layoutAlgorithmNames[i], Action.AS_RADIO_BUTTON) {
 				@Override
 				public void run()
@@ -620,7 +623,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 					viewer.setInput(mapPage);
 				}
 			};
-			actionSetAlgorithm[i].setChecked(layoutAlgorithm == i);
+			actionSetAlgorithm[i].setChecked(layoutAlgorithm.getValue() == i);
 			actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
 		}
 

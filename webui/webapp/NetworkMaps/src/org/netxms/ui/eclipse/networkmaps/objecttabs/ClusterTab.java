@@ -24,6 +24,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -31,7 +32,6 @@ import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
-import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceListComparator;
 import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceListLabelProvider;
@@ -72,7 +72,7 @@ public class ClusterTab extends ObjectTab
 		gd.grabExcessHorizontalSpace = true;
 		gd.grabExcessVerticalSpace = true;
 		clusterMap.setLayoutData(gd);
-		clusterMap.setMapLayout(NetworkMap.LAYOUT_VTREE);
+		clusterMap.setMapLayout(MapLayoutAlgorithm.VTREE);
 		
 		final String[] names = { Messages.get().ClusterTab_Resource, Messages.get().ClusterTab_VirtualIP, Messages.get().ClusterTab_Owner };
 		final int[] widths = { 200, 120, 150 };
