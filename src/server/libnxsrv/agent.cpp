@@ -107,6 +107,7 @@ AgentConnection::AgentConnection(UINT32 ipAddr, WORD port, int authMethod, const
    m_deleteFileOnDownloadFailure = true;
 	m_condFileDownload = ConditionCreate(TRUE);
 	m_fileUploadInProgress = false;
+   m_sendToClientMessageCallback = NULL;
 }
 
 /**
@@ -1656,16 +1657,19 @@ UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, 
       m_downloadProgressCallback = downloadProgressCallback;
       m_downloadProgressCallbackArg = cbArg;
 
+      m_sendToClientMessageCallback = NULL;
+
       return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
    }
    else
    {
       ConditionReset(m_condFileDownload);
-      m_sendToClientMessageCallback = fileResendCallback;
 
       m_dwDownloadRequestId = rqId;
       m_downloadProgressCallback = downloadProgressCallback;
       m_downloadProgressCallbackArg = cbArg;
+
+      m_sendToClientMessageCallback = fileResendCallback;
 
       return ERR_SUCCESS;
    }
