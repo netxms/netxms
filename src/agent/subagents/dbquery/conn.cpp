@@ -169,6 +169,12 @@ DB_HANDLE GetConnectionHandle(const TCHAR *dbid)
       if (!_tcsicmp(dbid, s_dbConnections.get(i)->getId()))
       {
          hdb = s_dbConnections.get(i)->getHandle();
+         if (hdb == NULL)
+         {
+            // Try to (re)connect to database
+            s_dbConnections.get(i)->connect();
+            hdb = s_dbConnections.get(i)->getHandle();
+         }
          break;
       }
    MutexUnlock(s_dbConnectionsLock);

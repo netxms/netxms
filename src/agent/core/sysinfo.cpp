@@ -163,24 +163,22 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
    return nRet;
 }
 
-
-//
-// Handler for File.Size(*) and File.Count(*)
-// Accepts the following arguments:
-//    path, pattern, recursive, size, age
-// where
-//    path    : path to directory or file to check
-//    pattern : pattern for file name matching
-//    recursive : recursion flag; if set to 1 or true, agent will scan subdirectories
-//    size      : size filter; if < 0, only files with size less than abs(value) will match;
-//                if > 0, only files with size greater than value will match
-//    age       : age filter; if < 0, only files created after now - abs(value) will match;
-//                if > 0, only files created before now - value will match
-//
-
+/**
+ * Handler for File.Size(*) and File.Count(*)
+ * Accepts the following arguments:
+ *    path, pattern, recursive, size, age
+ * where
+ *    path    : path to directory or file to check
+ *    pattern : pattern for file name matching
+ *    recursive : recursion flag; if set to 1 or true, agent will scan subdirectories
+ *    size      : size filter; if < 0, only files with size less than abs(value) will match;
+ *                if > 0, only files with size greater than value will match
+ *    age       : age filter; if < 0, only files created after now - abs(value) will match;
+ *                if > 0, only files created before now - value will match
+ */
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   TCHAR szPath[MAX_PATH], szRealPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10], szBuffer[128];
+   TCHAR szPath[MAX_PATH], szRealPath[MAX_PATH], szPattern[MAX_PATH], szRealPattern[MAX_PATH], szRecursive[10], szBuffer[128];
    bool bRecursive = false;
 
    unsigned int uFileCount = 0;
@@ -209,11 +207,13 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    if (szPattern[0] == 0)
       _tcscpy(szPattern, _T("*"));
 
-	// Expand strftime macros in the path
-	if (ExpandFileName(szPath, szRealPath, MAX_PATH) == NULL)
+	// Expand strftime macros in the path and in the pattern
+	if ((ExpandFileName(szPath, szRealPath, MAX_PATH) == NULL) ||
+	    (ExpandFileName(szPattern, szRealPattern, MAX_PATH) == NULL))
 		return SYSINFO_RC_UNSUPPORTED;
 
-   nRet = GetDirInfo(szRealPath, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
+   DebugPrintf(INVALID_INDEX, 6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"));
+   nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
 
    switch(CAST_FROM_POINTER(arg, int))
    {
@@ -231,11 +231,9 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return nRet;
 }
 
-
-//
-// Calculate MD5 hash for file
-//
-
+/**
+ * Calculate MD5 hash for file
+ */
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
