@@ -394,7 +394,13 @@ UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
  */
 bool JiraLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
 {
-   _sntprintf(url, size, _T("%s/%s"), m_serverUrl, hdref);
+#ifdef UNICODE
+   WCHAR serverUrl[MAX_PATH];
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_serverUrl, -1, serverUrl, MAX_PATH);
+   _sntprintf(url, size, _T("%s/browse/%s"), serverUrl, hdref);
+#else
+   _sntprintf(url, size, _T("%s/browse/%s"), m_serverUrl, hdref);
+#endif
    return true;
 }
 

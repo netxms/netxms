@@ -326,7 +326,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_SET_ALARM_STATUS_FLOW"),
       _T("CMD_DELETE_ALARM_COMMENT"),
       _T("CMD_GET_EFFECTIVE_RIGHTS"),
-      _T("CMD_GET_DCI_VALUES")
+      _T("CMD_GET_DCI_VALUES"),
+      _T("CMD_GET_HELPDESK_URL")
    };
 
    if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_DCI_VALUES))

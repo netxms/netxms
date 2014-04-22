@@ -137,3 +137,14 @@ UINT32 AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text)
 
    return s_link->addComment(hdref, text);
 }
+
+/**
+ * Create helpdesk issue
+ */
+UINT32 GetHelpdeskIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
+{
+   if (s_link == NULL)
+      return RCC_NO_HDLINK;
+
+   return s_link->getIssueUrl(hdref, url, size) ? RCC_SUCCESS : RCC_HDLINK_INTERNAL_ERROR;
+}

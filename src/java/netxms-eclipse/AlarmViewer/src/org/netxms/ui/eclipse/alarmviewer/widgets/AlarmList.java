@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -75,6 +77,7 @@ import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmToolTip;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -120,6 +123,7 @@ public class AlarmList extends Composite
 	private Action actionShowAlarmDetails;
 	private Action actionShowObjectDetails;
    private Action actionCreateIssue;
+   private Action actionShowIssue;
 	private Action actionExportToCsv;
 	private MenuManager timeAcknowledgeMenu;
 	private List<Action> timeAcknowledge;
@@ -442,11 +446,19 @@ public class AlarmList extends Composite
 		};
 		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
 		
-      actionCreateIssue = new Action("Create &ticket in helpdesk system", Activator.getImageDescriptor("icons/helpdesk_ticket.png")) { //$NON-NLS-1$
+      actionCreateIssue = new Action("Create &ticket in helpdesk system", Activator.getImageDescriptor("icons/helpdesk_ticket.png")) {
          @Override
          public void run()
          {
             createIssue();
+         }
+      };
+      
+      actionShowIssue = new Action("Show helpdesk ticket in &web browser", SharedIcons.BROWSER) {
+         @Override
+         public void run()
+         {
+            showIssue();
          }
       };
       
@@ -650,10 +662,17 @@ public class AlarmList extends Composite
 			manager.add(new Separator());
 			manager.add(actionShowAlarmDetails);
 			manager.add(actionComments);
-			if (session.isHelpdeskLinkActive() && (((Alarm)selection.getFirstElement()).getHelpdeskState() == Alarm.HELPDESK_STATE_IGNORED))
+			if (session.isHelpdeskLinkActive())
 			{
 	         manager.add(new Separator());
-	         manager.add(actionCreateIssue);
+	         if (((Alarm)selection.getFirstElement()).getHelpdeskState() == Alarm.HELPDESK_STATE_IGNORED)
+	         {
+	            manager.add(actionCreateIssue);
+	         }
+	         else
+	         {
+	            manager.add(actionShowIssue);
+	         }
 			}
 		}
 	}
@@ -898,6 +917,47 @@ public class AlarmList extends Composite
          protected String getErrorMessage()
          {
             return "Cannot create helpdesk ticket from alarm";
+         }
+      }.start();
+   }
+
+   /**
+    * Show in web browser helpdesk ticket (issue) linked to selected alarm
+    */
+   private void showIssue()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      final long id = ((Alarm)selection.getFirstElement()).getId();
+      new ConsoleJob("Show helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final String url = session.getHelpdeskIssueUrl(id);
+            runInUIThread(new Runnable() { 
+               @Override
+               public void run()
+               {
+                  try
+                  {
+                     final IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
+                     browser.openURL(new URL(url));
+                  }
+                  catch(Exception e)
+                  {
+                     Activator.logError("Exception in AlarmList.showIssue (url=\"" + url + "\")", e);
+                     MessageDialogHelper.openError(getShell(), "Error", "Internal error: unable to open web browser");
+                  }
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get URL for helpdesk ticket";
          }
       }.start();
    }

@@ -649,6 +649,31 @@ UINT32 AlarmManager::openHelpdeskIssue(UINT32 alarmId, ClientSession *session, T
 }
 
 /**
+ * Get helpdesk issue URL for given alarm
+ */
+UINT32 AlarmManager::getHelpdeskIssueUrl(UINT32 alarmId, TCHAR *url, size_t size)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == alarmId)
+      {
+         if ((m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_IGNORED) && (m_pAlarmList[i].szHelpDeskRef[0] != 0))
+         {
+            rcc = GetHelpdeskIssueUrl(m_pAlarmList[i].szHelpDeskRef, url, size);
+         }
+         else
+         {
+            rcc = RCC_OUT_OF_STATE_REQUEST;
+         }
+         break;
+      }
+   unlock();
+   return rcc;
+}
+
+/**
  * Delete alarm with given ID
  */
 void AlarmManager::deleteAlarm(UINT32 dwAlarmId, bool objectCleanup)

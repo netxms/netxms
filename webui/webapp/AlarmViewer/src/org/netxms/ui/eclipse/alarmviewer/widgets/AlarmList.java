@@ -37,6 +37,8 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -67,6 +69,7 @@ import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -108,6 +111,7 @@ public class AlarmList extends Composite
 	private Action actionShowAlarmDetails;
 	private Action actionShowObjectDetails;
    private Action actionCreateIssue;
+   private Action actionShowIssue;
 	private Action actionExportToCsv;
 	private MenuManager timeAcknowledgeMenu;
 	private List<Action> timeAcknowledge;
@@ -335,11 +339,19 @@ public class AlarmList extends Composite
 		};
 		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
 		
-      actionCreateIssue = new Action("Create &ticket in helpdesk system", Activator.getImageDescriptor("icons/helpdesk_ticket.png")) { //$NON-NLS-1$
+      actionCreateIssue = new Action("Create &ticket in helpdesk system", Activator.getImageDescriptor("icons/helpdesk_ticket.png")) {
          @Override
          public void run()
          {
             createIssue();
+         }
+      };
+      
+      actionShowIssue = new Action("Show helpdesk ticket in &web browser", SharedIcons.BROWSER) {
+         @Override
+         public void run()
+         {
+            showIssue();
          }
       };
       
@@ -541,10 +553,17 @@ public class AlarmList extends Composite
 			manager.add(new Separator());
 			manager.add(actionShowAlarmDetails);
 			manager.add(actionComments);
-			if (session.isHelpdeskLinkActive() && (((Alarm)selection.getFirstElement()).getHelpdeskState() == Alarm.HELPDESK_STATE_IGNORED))
+			if (session.isHelpdeskLinkActive())
 			{
 	         manager.add(new Separator());
-	         manager.add(actionCreateIssue);
+	         if (((Alarm)selection.getFirstElement()).getHelpdeskState() == Alarm.HELPDESK_STATE_IGNORED)
+	         {
+	            manager.add(actionCreateIssue);
+	         }
+	         else
+	         {
+	            manager.add(actionShowIssue);
+	         }
 			}
 		}
 	}
@@ -789,6 +808,39 @@ public class AlarmList extends Composite
          protected String getErrorMessage()
          {
             return "Cannot create helpdesk ticket from alarm";
+         }
+      }.start();
+   }
+
+   /**
+    * Show in web browser helpdesk ticket (issue) linked to selected alarm
+    */
+   private void showIssue()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      final long id = ((Alarm)selection.getFirstElement()).getId();
+      new ConsoleJob("Show helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final String url = session.getHelpdeskIssueUrl(id);
+            runInUIThread(new Runnable() { 
+               @Override
+               public void run()
+               {
+                  UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
+                  launcher.openURL(url);
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get URL for helpdesk ticket";
          }
       }.start();
    }

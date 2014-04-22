@@ -28,7 +28,8 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.rap.rwt.widgets.ExternalBrowser;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -63,7 +64,6 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Dynamic object tools menu creator
  */
-@SuppressWarnings("deprecation")
 public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkbenchContribution
 {
 	private IEvaluationService evalService;
@@ -463,9 +463,8 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	private void openURL(final NodeInfo node, final ObjectTool tool)
 	{
 		final String url = substituteMacros(tool.getData(), node);
-		
-		final String sid = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId());
-		ExternalBrowser.open(sid, url, ExternalBrowser.LOCATION_BAR | ExternalBrowser.NAVIGATION_BAR | ExternalBrowser.STATUS);
+      final UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
+      launcher.openURL(url);
 	}
 	
 	/**
