@@ -519,6 +519,7 @@ private:
    void deleteAlarm(CSCPMessage *request);
    void openHelpdeskIssue(CSCPMessage *request);
    void getHelpdeskUrl(CSCPMessage *request);
+   void unlinkHelpdeskIssue(CSCPMessage *request);
 	void getAlarmComments(CSCPMessage *pRequest);
 	void updateAlarmComment(CSCPMessage *pRequest);
 	void deleteAlarmComment(CSCPMessage *request);

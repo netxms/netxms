@@ -63,6 +63,8 @@ public:
    bool deleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
    UINT32 openHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref);
    UINT32 getHelpdeskIssueUrl(UINT32 alarmId, TCHAR *url, size_t size);
+   UINT32 unlinkIssueById(UINT32 dwAlarmId, ClientSession *session);
+   UINT32 unlinkIssueByHDRef(const TCHAR *hdref, ClientSession *session);
 	UINT32 updateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
 	UINT32 deleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId);
 

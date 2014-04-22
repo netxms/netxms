@@ -2566,6 +2566,36 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getVariableAsString(NXCPCodes.VID_URL);
    }
+   
+   /**
+    * Unlink helpdesk issue from alarm.
+    * 
+    * @param helpdeskReference
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void unlinkHelpdeskIssue(String helpdeskReference) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLINK_HELPDESK_ISSUE);
+      msg.setVariable(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Unlink helpdesk issue from alarm.
+    * 
+    * @param helpdeskReference
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void unlinkHelpdeskIssue(long alarmId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLINK_HELPDESK_ISSUE);
+      msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 
    /**
     * Get list of comments for given alarm.

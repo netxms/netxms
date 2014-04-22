@@ -490,6 +490,7 @@ typedef struct
 #define CMD_GET_EFFECTIVE_RIGHTS       0x0122
 #define CMD_GET_DCI_VALUES             0x0123
 #define CMD_GET_HELPDESK_URL           0x0124
+#define CMD_UNLINK_HELPDESK_ISSUE      0x0125
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

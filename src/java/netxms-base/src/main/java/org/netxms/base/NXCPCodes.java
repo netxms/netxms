@@ -316,6 +316,7 @@ public class NXCPCodes
 	public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
 	public static final int CMD_GET_DCI_VALUES = 0x0123;
 	public static final int CMD_GET_HELPDESK_URL = 0x0124;
+	public static final int CMD_UNLINK_HELPDESK_ISSUE = 0x0125;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

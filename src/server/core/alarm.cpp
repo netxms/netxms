@@ -674,6 +674,64 @@ UINT32 AlarmManager::getHelpdeskIssueUrl(UINT32 alarmId, TCHAR *url, size_t size
 }
 
 /**
+ * Unlink helpdesk issue from alarm
+ */
+UINT32 AlarmManager::unlinkIssueById(UINT32 dwAlarmId, ClientSession *session)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+      {
+         if (session != NULL)
+         {
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
+               _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"), m_pAlarmList[i].szHelpDeskRef,
+               m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, 
+               GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
+         }
+         m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_IGNORED;
+			notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+         updateAlarmInDB(&m_pAlarmList[i]);
+         rcc = RCC_SUCCESS;
+         break;
+      }
+   unlock();
+
+   return rcc;
+}
+
+/**
+ * Unlink helpdesk issue from alarm
+ */
+UINT32 AlarmManager::unlinkIssueByHDRef(const TCHAR *hdref, ClientSession *session)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
+      {
+         if (session != NULL)
+         {
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
+               _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"), m_pAlarmList[i].szHelpDeskRef,
+               m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, 
+               GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
+         }
+         m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_IGNORED;
+			notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+         updateAlarmInDB(&m_pAlarmList[i]);
+         rcc = RCC_SUCCESS;
+         break;
+      }
+   unlock();
+
+   return rcc;
+}
+
+/**
  * Delete alarm with given ID
  */
 void AlarmManager::deleteAlarm(UINT32 dwAlarmId, bool objectCleanup)

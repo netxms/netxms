@@ -938,6 +938,9 @@ void ClientSession::processingThread()
          case CMD_GET_HELPDESK_URL:
             getHelpdeskUrl(pMsg);
             break;
+         case CMD_UNLINK_HELPDESK_ISSUE:
+            unlinkHelpdeskIssue(pMsg);
+            break;
          case CMD_CREATE_ACTION:
             createAction(pMsg);
             break;
@@ -5180,6 +5183,62 @@ void ClientSession::getHelpdeskUrl(CSCPMessage *request)
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
             _T("Access denied on getting helpdesk URL for alarm on object %s"), object->Name());
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms object will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Unlink helpdesk issue from alar,
+ */
+void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   UINT32 dwAlarmId;
+   TCHAR hdref[MAX_HELPDESK_REF_LEN];
+   NetObj *object;
+   bool byHelpdeskRef;
+   if (request->isFieldExist(VID_HELPDESK_REF))
+   {
+      request->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      byHelpdeskRef = true;
+   }
+   else
+   {
+      dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
+      object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+      byHelpdeskRef = false;
+   }
+   if (object != NULL)
+   {
+      // User should have "create issue" right to the object
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE_ISSUE))
+      {
+         msg.SetVariable(VID_RCC, 
+            byHelpdeskRef ? 
+            g_alarmMgr.unlinkIssueByHDRef(hdref, this) : 
+            g_alarmMgr.unlinkIssueById(dwAlarmId, this));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+            _T("Access denied on unlinking helpdesk issue from alarm on object %s"), object->Name());
       }
    }
    else
