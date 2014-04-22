@@ -390,6 +390,15 @@ UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
 }
 
 /**
+ * Get URL to view issue in helpdesk system
+ */
+bool JiraLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
+{
+   _sntprintf(url, size, _T("%s/%s"), m_serverUrl, hdref);
+   return true;
+}
+
+/**
  * Module entry point
  */
 DECLARE_HDLINK_ENTRY_POINT(s_moduleName, JiraLink);

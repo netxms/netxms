@@ -74,6 +74,7 @@ public:
    virtual bool checkConnection();
    virtual UINT32 openIssue(const TCHAR *description, TCHAR *hdref);
    virtual UINT32 addComment(const TCHAR *hdref, const TCHAR *comment);
+   virtual bool getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
 };
 
 #endif

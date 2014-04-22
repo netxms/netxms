@@ -136,3 +136,11 @@ void HelpDeskLink::onCloseIssue(const TCHAR *hdref)
 {
    __closeAlarmByHdRef(hdref);
 }
+
+/**
+ * Get URL to view issue in helpdesk system
+ */
+bool HelpDeskLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
+{
+   return false;
+}
