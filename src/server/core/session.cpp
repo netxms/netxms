@@ -4993,14 +4993,31 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Get alarm id and it's source object
-   UINT32 dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   UINT32 dwAlarmId;
+   TCHAR hdref[MAX_HELPDESK_REF_LEN];
+   NetObj *object;
+   bool byHelpdeskRef;
+   if (pRequest->isFieldExist(VID_HELPDESK_REF))
+   {
+      pRequest->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      byHelpdeskRef = true;
+   }
+   else
+   {
+      dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
+      object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+      byHelpdeskRef = false;
+   }
    if (object != NULL)
    {
       // User should have "acknowledge alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
+			msg.SetVariable(VID_RCC, 
+            byHelpdeskRef ?
+            g_alarmMgr.ackByHDRef(hdref, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)) :
+            g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
       }
       else
       {

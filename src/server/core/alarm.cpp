@@ -406,6 +406,30 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 }
 
 /**
+ * Do acknowledge
+ */
+UINT32 AlarmManager::doAck(NXC_ALARM *alarm, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
+{
+   if ((alarm->nState & ALARM_STATE_MASK) != ALARM_STATE_OUTSTANDING)
+      return RCC_ALARM_NOT_OUTSTANDING;
+
+   WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), alarm->dwSourceObject,
+      _T("Acknowledged alarm %d (%s) on object %s"), alarm->dwAlarmId, alarm->szMessage,
+      GetObjectName(alarm->dwSourceObject, _T("")));
+
+   UINT32 endTime = acknowledgmentActionTime != 0 ? (UINT32)time(NULL) + acknowledgmentActionTime : 0;
+   alarm->ackTimeout = endTime;
+   alarm->nState = ALARM_STATE_ACKNOWLEDGED;
+	if (sticky)
+      alarm->nState |= ALARM_STATE_STICKY;
+   alarm->dwAckByUser = session->getUserId();
+   alarm->dwLastChangeTime = (UINT32)time(NULL);
+   notifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
+   updateAlarmInDB(alarm);
+   return RCC_SUCCESS;
+}
+
+/**
  * Acknowledge alarm with given ID
  */
 UINT32 AlarmManager::ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
@@ -416,28 +440,30 @@ UINT32 AlarmManager::ackById(UINT32 dwAlarmId, ClientSession *session, bool stic
    for(int i = 0; i < m_numAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
-         if ((m_pAlarmList[i].nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING)
-         {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
-               _T("Acknowledged alarm %d (%s) on object %s"), dwAlarmId, m_pAlarmList[i].szMessage,
-               GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
+         dwRet = doAck(&m_pAlarmList[i], session, sticky, acknowledgmentActionTime);
+         dwObject = m_pAlarmList[i].dwSourceObject;
+         break;
+      }
+   unlock();
 
-            UINT32 endTime = acknowledgmentActionTime != 0 ? (UINT32)time(NULL) + acknowledgmentActionTime : 0;
-            m_pAlarmList[i].ackTimeout = endTime;
-            m_pAlarmList[i].nState = ALARM_STATE_ACKNOWLEDGED;
-				if (sticky)
-	            m_pAlarmList[i].nState |= ALARM_STATE_STICKY;
-            m_pAlarmList[i].dwAckByUser = session->getUserId();
-            m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
-            dwObject = m_pAlarmList[i].dwSourceObject;
-            notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
-            updateAlarmInDB(&m_pAlarmList[i]);
-            dwRet = RCC_SUCCESS;
-         }
-         else
-         {
-            dwRet = RCC_ALARM_NOT_OUTSTANDING;
-         }
+   if (dwRet == RCC_SUCCESS)
+      updateObjectStatus(dwObject);
+   return dwRet;
+}
+
+/**
+ * Acknowledge alarm with given helpdesk reference
+ */
+UINT32 AlarmManager::ackByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
+{
+   UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
+      {
+         dwRet = doAck(&m_pAlarmList[i], session, sticky, acknowledgmentActionTime);
+         dwObject = m_pAlarmList[i].dwSourceObject;
          break;
       }
    unlock();

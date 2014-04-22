@@ -46,6 +46,8 @@ private:
    void notifyClients(UINT32 dwCode, NXC_ALARM *pAlarm);
    void updateObjectStatus(UINT32 dwObjectId);
 
+   UINT32 doAck(NXC_ALARM *alarm, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
+
 public:
    AlarmManager();
    ~AlarmManager();
@@ -56,6 +58,7 @@ public:
    void newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 	              int iSeverity, UINT32 dwTimeout, UINT32 dwTimeoutEvent, Event *pEvent, UINT32 ackTimeout);
    UINT32 ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 time);
+   UINT32 ackByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, UINT32 time);
    UINT32 resolveById(UINT32 dwAlarmId, ClientSession *session, bool terminate);
    void resolveByKey(const TCHAR *key, bool useRegexp, bool terminate, Event *pEvent);
    UINT32 resolveByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate);
