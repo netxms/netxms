@@ -345,7 +345,7 @@ UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
       json_object_set_new(root, "body", json_string(mbtext));
       free(mbtext);
 #else
-      json_object_set_new(root, "body", comment);
+      json_object_set_new(root, "body", json_string(comment));
 #endif
       char *request = json_dumps(root, 0);
       curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
