@@ -208,6 +208,7 @@ public:
 	virtual ~FileDownloadJob();
 
 	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
+	TCHAR *getLocalFileName();
 };
 
 /**

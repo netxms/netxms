@@ -236,6 +236,7 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
          }
          delete conn;
       }
+      delete result;
 	}
 	else
 	{

@@ -1,4 +1,4 @@
-/* 
+/*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
  ** Copyright (C) 2003-2013 Raden Solutions
@@ -1201,6 +1201,7 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
    {
       success = false;
    }
+   safe_free(xml);
 
    return success;
 }

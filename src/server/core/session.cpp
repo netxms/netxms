@@ -5079,9 +5079,9 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
       // User should have "terminate alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
-         msg.SetVariable(VID_RCC, 
-            byHelpdeskRef ? 
-            g_alarmMgr.resolveByHDRef(hdref, this, terminate) : 
+         msg.SetVariable(VID_RCC,
+            byHelpdeskRef ?
+            g_alarmMgr.resolveByHDRef(hdref, this, terminate) :
             g_alarmMgr.resolveById(dwAlarmId, this, terminate));
       }
       else
@@ -10553,7 +10553,7 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 void ClientSession::getAgentFile(CSCPMessage *request)
 {
    CSCPMessage msg;
-	TCHAR remoteFile[MAX_PATH], localFile[MAX_PATH];
+	TCHAR remoteFile[MAX_PATH];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(request->GetId());
@@ -10566,10 +10566,9 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 			if (object->Type() == OBJECT_NODE)
 			{
 				request->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
-				FileDownloadJob::buildServerFileName(object->Id(), remoteFile, localFile, MAX_PATH);
             bool follow = request->GetVariableShort(VID_FILE_FOLLOW) ? true : false;
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->GetVariableLong(VID_FILE_SIZE_LIMIT), follow, this, request->GetId());
-				msg.SetVariable(VID_NAME, localFile);
+				msg.SetVariable(VID_NAME, job->getLocalFileName());
 				msg.SetVariable(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
 			}
 			else
@@ -10620,6 +10619,7 @@ void ClientSession::cancelFileMonitoring(CSCPMessage *request)
          Node *node = (Node *)object;
          node->incRefCount();
          AgentConnection *conn = node->createAgentConnection();
+         debugPrintf(6, _T("Cancel file monitoring %s"), remoteFile);
          if(conn != NULL)
          {
             request->SetId(conn->generateRequestId());

@@ -58,6 +58,14 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 }
 
 /**
+ * Returns localFileName
+ */
+TCHAR* FileDownloadJob::getLocalFileName()
+{
+   return m_localFile;
+}
+
+/**
  * Destructor for download job
  */
 FileDownloadJob::~FileDownloadJob()
@@ -254,9 +262,9 @@ const TCHAR *FileDownloadJob::getAdditionalInfo()
 }
 
 
-//
-// Build name of staging file on server
-//
+/**
+ * Build file ID
+ **/
 
 TCHAR *FileDownloadJob::buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize)
 {
@@ -264,7 +272,6 @@ TCHAR *FileDownloadJob::buildServerFileName(UINT32 nodeId, const TCHAR *remoteFi
 	TCHAR hashStr[128];
 
 	CalculateMD5Hash((BYTE *)remoteFile, _tcslen(remoteFile) * sizeof(TCHAR), hash);
-	_sntprintf(buffer, bufferSize, _T("%s") DDIR_FILES FS_PATH_SEPARATOR _T("agent_file_%u_%s"),
-	           g_szDataDir, nodeId, BinToStr(hash, MD5_DIGEST_SIZE, hashStr));
+	_sntprintf(buffer, bufferSize, _T("agent_file_%u_%s"), nodeId, BinToStr(hash, MD5_DIGEST_SIZE, hashStr));
 	return buffer;
 }
