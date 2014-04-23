@@ -1639,8 +1639,6 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	struct tm *loc = localtime(&t);
 #endif
 	gmtOffset = loc->tm_gmtoff / 3600;
-	if (loc->tm_isdst)
-		gmtOffset++;
 #ifdef UNICODE
 	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-',
 	         abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
