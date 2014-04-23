@@ -1582,7 +1582,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	WCHAR wst[4], wdt[8], *curr;
 	int i;
 
-	GetTimeZoneInformation(&tz);
+	DWORD mode = GetTimeZoneInformation(&tz);
 
 	// Create 3 letter abbreviation for standard name
 	for(i = 0, curr = tz.StandardName; (*curr != 0) && (i < 3); curr++)
@@ -1600,34 +1600,26 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 		wdt[i++] = L'X';
 	wdt[i] = 0;
 
+   LONG bias = (mode == TIME_ZONE_ID_DAYLIGHT) ? (tz.Bias + tz.DaylightBias) : tz.Bias;
 #ifdef UNICODE
-	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (tz.Bias > 0) ? '-' : '+',
-	         abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (bias > 0) ? '-' : '+',
+	         abs(bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #else
-	sprintf(szBuffer, "%S%c%02d%S", wst, (tz.Bias > 0) ? '-' : '+',
-	        abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+	sprintf(szBuffer, "%S%c%02d%S", wst, (bias > 0) ? '-' : '+',
+	        abs(bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #endif
-#elif HAVE_DECL_TIMEZONE
-#ifdef UNICODE
-	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (timezone > 0) ? '-' : '+',
-	         (int)(abs(timezone) / 3600), (tzname[1] != NULL) ? tzname[1] : "");
-#else
-	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (timezone > 0) ? '-' : '+',
-	        (int)(abs(timezone) / 3600), (tzname[1] != NULL) ? tzname[1] : "");
-#endif
-#elif HAVE_TM_GMTOFF
-	time_t t;
-	struct tm *loc;
+
+#elif HAVE_TM_GMTOFF  /* not Windows but have tm_gmtoff */
+
+	time_t t = time(NULL);
 	int gmtOffset;
 #if HAVE_LOCALTIME_R
 	struct tm tmbuff;
 #endif
-
-	t = time(NULL);
 #if HAVE_LOCALTIME_R
-	loc = localtime_r(&t, &tmbuff);
+	struct tm *loc = localtime_r(&t, &tmbuff);
 #else
-	loc = localtime(&t);
+	struct tm *loc = localtime(&t);
 #endif
 	gmtOffset = loc->tm_gmtoff / 3600;
 	if (loc->tm_isdst)
@@ -1639,9 +1631,27 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-',
 	        abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
 #endif
+
+#else /* not Windows and no tm_gmtoff */
+
+   time_t t = time(NULL);
+#if HAVE_GMTIME_R
+	struct tm *gmt = gmtime_r(&t, &tmbuff);
 #else
-	szBuffer[0] = 0;
+	struct tm *gmt = gmtime(&t);
 #endif
+   gmt->tm_isdst = -1;
+   int gmtOffset = (int)((t - mktime(gmt)) / 3600);
+#ifdef UNICODE
+	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-',
+	         abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
+#else
+	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-',
+	        abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
+#endif
+
+#endif
+
 	msg.SetVariable(VID_TIMEZONE, szBuffer);
 	debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
