@@ -596,6 +596,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
 		value = new NXSL_Value(dci->getId());
    }
+   else if ((dci->getType() == DCO_TYPE_ITEM) && !_tcscmp(attr, _T("instance")))
+   {
+		value = new NXSL_Value(((DCItem *)dci)->getInstance());
+   }
    else if (!_tcscmp(attr, _T("lastPollTime")))
    {
 		value = new NXSL_Value((INT64)dci->getLastPollTime());

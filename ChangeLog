@@ -9,6 +9,7 @@
 - New MIBs: FROGFOOT-RESOURCES-MIB, MIKROTIK-MIB
 - SMS driver for websms.ru service
 - Macro expansion supported in pattern in agent parameters File.Size and File.Count
+- Attribute "instance" added to NXSL class "DCI"
 - Management console:
    - DCI values can be shown on network map links
    - DCI value can be shown on map as immage, that checnges depending on DCI value
