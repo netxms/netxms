@@ -297,8 +297,7 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 									break;
 							}
 							int offset = abs(effectiveBias);
-							sprintf(&szBuffer[strlen(szBuffer)], "%c%02d%02d\r\n", effectiveBias < 0 ? '+' : '-',
-							        offset / 60, offset % 60);
+							sprintf(&szBuffer[strlen(szBuffer)], "%c%02d%02d\r\n", effectiveBias <= 0 ? '+' : '-', offset / 60, offset % 60);
 #else
                      strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
 #endif

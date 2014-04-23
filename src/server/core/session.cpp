@@ -1582,7 +1582,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	WCHAR wst[4], wdt[8], *curr;
 	int i;
 
-	DWORD mode = GetTimeZoneInformation(&tz);
+	DWORD tzType = GetTimeZoneInformation(&tz);
 
 	// Create 3 letter abbreviation for standard name
 	for(i = 0, curr = tz.StandardName; (*curr != 0) && (i < 3); curr++)
@@ -1600,13 +1600,30 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 		wdt[i++] = L'X';
 	wdt[i] = 0;
 
-   LONG bias = (mode == TIME_ZONE_ID_DAYLIGHT) ? (tz.Bias + tz.DaylightBias) : tz.Bias;
+	LONG effectiveBias;
+	switch(tzType)
+	{
+		case TIME_ZONE_ID_STANDARD:
+			effectiveBias = tz.Bias + tz.StandardBias;
+			break;
+		case TIME_ZONE_ID_DAYLIGHT:
+			effectiveBias = tz.Bias + tz.DaylightBias;
+			break;
+		case TIME_ZONE_ID_UNKNOWN:
+			effectiveBias = tz.Bias;
+			break;
+		default:		// error
+			effectiveBias = 0;
+			debugPrintf(4, _T("GetTimeZoneInformation() call failed"));
+			break;
+	}
+
 #ifdef UNICODE
-	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (bias > 0) ? '-' : '+',
-	         abs(bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (effectiveBias > 0) ? '-' : '+',
+	         abs(effectiveBias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #else
-	sprintf(szBuffer, "%S%c%02d%S", wst, (bias > 0) ? '-' : '+',
-	        abs(bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+	sprintf(szBuffer, "%S%c%02d%S", wst, (effectiveBias > 0) ? '-' : '+',
+	        abs(effectiveBias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #endif
 
 #elif HAVE_TM_GMTOFF  /* not Windows but have tm_gmtoff */
