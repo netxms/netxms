@@ -27,8 +27,8 @@
 
 #include "netsvc.h"
 
-#ifndef CURL_MAX_HTTP_HEADER
 // workaround for older cURL versions
+#ifndef CURL_MAX_HTTP_HEADER
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
 #endif
 
