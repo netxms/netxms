@@ -35,6 +35,7 @@ static TCHAR s_ipAddress[32] = _T("10.0.0.1");
 static TCHAR s_ipNetMask[32] = _T("255.0.0.0");
 static TCHAR s_ifName[64] = _T("eth0");
 static TCHAR s_macAddress[16] = _T("000000000000");
+static TCHAR s_hostName[128] = _T("dummy0");
 static TCHAR s_paramConfigFile[MAX_PATH] = _T("");
 
 
@@ -114,6 +115,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("Net.Interface.MTU(*)"), H_Constant, _T("1500"), DCI_DT_UINT, DCIDESC_NET_INTERFACE_MTU },
    { _T("Net.Interface.OperStatus(*)"), H_Constant, _T("1"), DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
    { _T("Net.IP.Forwarding"), H_Constant, _T("0"), DCI_DT_INT, DCIDESC_NET_IP_FORWARDING }
+   { _T("System.Hostname"), H_Constant, s_hostName, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME }
 };
 
 /**
@@ -149,6 +151,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("IpAddress"), CT_STRING, 0, 0, 32, 0, s_ipAddress },
    { _T("IpNetMask"), CT_STRING, 0, 0, 32, 0, s_ipNetMask },
    { _T("MacAddress"), CT_STRING, 0, 0, 16, 0, s_macAddress },
+   { _T("HostName"), CT_STRING, 0, 0, 32, 0, s_hostName },
    { _T("ParametersConfig"), CT_STRING, 0, 0, MAX_PATH, 0, s_paramConfigFile },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
