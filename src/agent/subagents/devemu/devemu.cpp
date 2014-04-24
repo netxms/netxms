@@ -53,7 +53,7 @@ static bool s_shutdown = false;
 static LONG H_InterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
    TCHAR buffer[256];
-   _sntprintf(buffer, 256, _T("1 %s/%d 6 %s %s"), s_ipAddress, 
+   _sntprintf(buffer, 256, _T("1 %s/%d 6 %s %s"), s_ipAddress,
               BitsInMask(ntohl(_t_inet_addr(s_ipNetMask))), s_macAddress, s_ifName);
    value->add(buffer);
    value->add(_T("255 127.0.0.1/8 24 000000000000 lo0"));
@@ -91,7 +91,7 @@ static LONG H_Value(const TCHAR *pszParam, const TCHAR *arg, TCHAR *pValue)
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config) 
+static BOOL SubagentInit(Config *config)
 {
    return TRUE;
 }
@@ -127,17 +127,17 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info = 
+static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("DEVEMU"), NETXMS_VERSION_STRING,
    SubagentInit, SubagentShutdown, NULL,
    0, NULL, // parameters
-	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
-	s_lists,
-   0, NULL,	// tables
-   0, NULL,	// actions
-   0, NULL	// push parameters
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   s_lists,
+   0, NULL, // tables
+   0, NULL, // actions
+   0, NULL  // push parameters
 };
 
 /**
@@ -160,21 +160,21 @@ static void LoadConfiguration(bool initial)
    {
       parameters = new StructArray<NETXMS_SUBAGENT_PARAM>(m_info.parameters, m_info.numParameters);
    }
-   
+
    // do load
-   FILE * file = _tfopen(s_paramConfigFile, _T("r"));
+   FILE *file = _tfopen(s_paramConfigFile, _T("r"));
    if (file == NULL)
    {
       AgentWriteDebugLog(3, _T("Cannot open DEVEMU configuration file (%s)"), s_paramConfigFile);
       return;
    }
-   
+
    MutexLock(s_valuesMutex);
    s_values->clear();
 
    TCHAR line[10240];
    int type;
-   while(_fgetts(line, 10240, file) != NULL)
+   while (_fgetts(line, 10240, file) != NULL)
    {
       TCHAR *ptr = line;
       while (*ptr != 0)
@@ -190,7 +190,7 @@ static void LoadConfiguration(bool initial)
       {
          continue;
       }
-      
+
       TCHAR *name = line;
       TCHAR *value = _tcschr(name, _T(':'));
       if (value == NULL) continue;
@@ -207,18 +207,18 @@ static void LoadConfiguration(bool initial)
          *description = 0;
          description++;
       }
-      
+
       s_values->set(name, value);
 
       if (initial)
       {
-         NETXMS_SUBAGENT_PARAM* param = new NETXMS_SUBAGENT_PARAM();
+         NETXMS_SUBAGENT_PARAM *param = new NETXMS_SUBAGENT_PARAM();
          _tcscpy(param->name, name);
          param->handler = H_Value;
          param->arg = _tcsdup(name);
          param->dataType = type;
          _tcscpy(param->description, description == NULL ? _T("") : description);
-         
+
          parameters->add(param);
 
          delete param;
@@ -226,11 +226,12 @@ static void LoadConfiguration(bool initial)
    }
 
    MutexUnlock(s_valuesMutex);
-   
+
    if (initial)
    {
       m_info.numParameters = parameters->size();
-      m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(), parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+      m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
+                          parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
       delete parameters;
    }
 }
@@ -242,7 +243,7 @@ THREAD_RESULT THREAD_CALL MonitorChanges(void *args)
 {
    int threadSleepTime = 1;
 
-   while(!s_shutdown)
+   while (!s_shutdown)
    {
       int ret = CALL_STAT(s_paramConfigFile, &fileStats);
       if (ret != 0)
@@ -251,9 +252,10 @@ THREAD_RESULT THREAD_CALL MonitorChanges(void *args)
       }
       else
       {
-         if(fileLastModifyTime != fileStats.st_mtime)
+         if (fileLastModifyTime != fileStats.st_mtime)
          {
-            AgentWriteDebugLog(6, _T("DEVEMU configuration file changed (was: %ld, now: %ld)"), fileLastModifyTime, fileStats.st_mtime);
+            AgentWriteDebugLog(6, _T("DEVEMU configuration file changed (was: %ld, now: %ld)"), fileLastModifyTime,
+                               fileStats.st_mtime);
             fileLastModifyTime = fileStats.st_mtime;
             LoadConfiguration(false);
          }
@@ -267,14 +269,14 @@ THREAD_RESULT THREAD_CALL MonitorChanges(void *args)
  */
 DECLARE_SUBAGENT_ENTRY_POINT(DEVEMU)
 {
-	if (m_info.parameters != NULL)
-		return FALSE;	// Most likely another instance of DEVEMU subagent already loaded
+   if (m_info.parameters != NULL)
+      return FALSE;  // Most likely another instance of DEVEMU subagent already loaded
 
    if (!config->parseTemplate(_T("DEVEMU"), m_cfgTemplate))
       return FALSE;
-   
+
    LoadConfiguration(true);
-   
+
    ThreadCreateEx(MonitorChanges, 0, NULL);
 
    *ppInfo = &m_info;
@@ -290,7 +292,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+   return TRUE;
 }
 
 #endif
