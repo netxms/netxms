@@ -1,0 +1,47 @@
+This subagent is created to emulate any node. There also can be configured node parameters.
+
+============================================================================================
+NODE CONFIGURATION
+============================================================================================
+To create node, there should be created next section in agent file:
+
+[devemu]
+MacAddress=10.0.0.1
+IpAddress=255.0.0.0
+IpNetMask=eth0
+MacAddress=000000000000
+ParametersConfig=/home/zev/config.my
+
+--------------------------------------------
+***Where "/home/zev/config.my" is path to file with parameters list.***
+
+============================================================================================
+PARAMETER CONFIGURATION
+============================================================================================
+Parameter definition syntaxys:
+
+name:value:type:description
+
+Where type is:
+DCI_DT_INT         0
+DCI_DT_UINT        1
+DCI_DT_INT64       2
+DCI_DT_UINT64      3
+DCI_DT_STRING      4
+DCI_DT_FLOAT       5
+DCI_DT_NULL        6
+DCI_DT_DEPRECATED  255
+
+--------------------------------------------
+***Predifined in code parameters****
+   "Net.Interface.AdminStatus(*)" = "1"
+   "Net.Interface.Link(*)" = "1"
+   "Net.Interface.MTU(*)" = "1500"
+   "Net.Interface.OperStatus(*)" = "1"
+   "Net.IP.Forwarding" = "0"
+
+============================================================================================
+TABLE PARAMETER CONFIGURATION
+============================================================================================
+For table parameters should be used DBQuery subagent. 
+Table data should be selected from DB.  

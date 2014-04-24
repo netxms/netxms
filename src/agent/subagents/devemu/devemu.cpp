@@ -35,7 +35,7 @@ static TCHAR s_ipAddress[32] = _T("10.0.0.1");
 static TCHAR s_ipNetMask[32] = _T("255.0.0.0");
 static TCHAR s_ifName[64] = _T("eth0");
 static TCHAR s_macAddress[16] = _T("000000000000");
-static TCHAR s_paramConfigFile[MAX_PATH] = _T("/home/zev/config.my");
+static TCHAR s_paramConfigFile[MAX_PATH] = _T("");
 
 
 /**
