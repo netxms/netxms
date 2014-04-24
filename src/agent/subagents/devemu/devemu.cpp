@@ -114,7 +114,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("Net.Interface.Link(*)"), H_Constant, _T("1"), DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
    { _T("Net.Interface.MTU(*)"), H_Constant, _T("1500"), DCI_DT_UINT, DCIDESC_NET_INTERFACE_MTU },
    { _T("Net.Interface.OperStatus(*)"), H_Constant, _T("1"), DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
-   { _T("Net.IP.Forwarding"), H_Constant, _T("0"), DCI_DT_INT, DCIDESC_NET_IP_FORWARDING }
+   { _T("Net.IP.Forwarding"), H_Constant, _T("0"), DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
    { _T("System.Hostname"), H_Constant, s_hostName, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME }
 };
 
@@ -161,7 +161,7 @@ static void LoadConfiguration(bool initial)
    StructArray<NETXMS_SUBAGENT_PARAM> *parameters = NULL;
    if (initial)
    {
-      parameters = new StructArray<NETXMS_SUBAGENT_PARAM>(m_info.parameters, m_info.numParameters);
+      parameters = new StructArray<NETXMS_SUBAGENT_PARAM>(s_parameters, sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM));
    }
 
    // do load
