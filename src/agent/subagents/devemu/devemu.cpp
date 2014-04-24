@@ -20,6 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nxstat.h>
 
 #ifdef _WIN32
 #define DEVEMU_EXPORTABLE __declspec(dllexport) __cdecl
@@ -34,7 +35,17 @@ static TCHAR s_ipAddress[32] = _T("10.0.0.1");
 static TCHAR s_ipNetMask[32] = _T("255.0.0.0");
 static TCHAR s_ifName[64] = _T("eth0");
 static TCHAR s_macAddress[16] = _T("000000000000");
-static TCHAR s_paramConfigFile[MAX_PATH] = _T("");
+static TCHAR s_paramConfigFile[MAX_PATH] = _T("/home/zev/config.my");
+
+
+/**
+ * Variables
+ */
+static NX_STAT_STRUCT fileStats;
+static time_t fileLastModifyTime = 0;
+static StringMap *s_values = new StringMap();
+static MUTEX s_valuesMutex = MutexCreate();
+static bool s_shutdown = false;
 
 /**
  * Interface list
@@ -59,6 +70,25 @@ static LONG H_Constant(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 }
 
 /**
+ * Handler for configured values
+ */
+static LONG H_Value(const TCHAR *pszParam, const TCHAR *arg, TCHAR *pValue)
+{
+   MutexLock(s_valuesMutex);
+   const TCHAR *value = s_values->get(arg);
+   if (value == NULL)
+   {
+      ret_string(pValue, _T(""));
+   }
+   else
+   {
+      ret_string(pValue, value);
+   }
+   MutexUnlock(s_valuesMutex);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Subagent initialization
  */
 static BOOL SubagentInit(Config *config) 
@@ -71,6 +101,7 @@ static BOOL SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
+   s_shutdown = true;
 }
 
 /**
@@ -122,6 +153,115 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
+static void LoadConfiguration(bool initial)
+{
+   StructArray<NETXMS_SUBAGENT_PARAM> *parameters = NULL;
+   if (initial)
+   {
+      parameters = new StructArray<NETXMS_SUBAGENT_PARAM>(m_info.parameters, m_info.numParameters);
+   }
+   
+   // do load
+   FILE * file = _tfopen(s_paramConfigFile, _T("r"));
+   if (file == NULL)
+   {
+      AgentWriteDebugLog(3, _T("Cannot open DEVEMU configuration file (%s)"), s_paramConfigFile);
+      return;
+   }
+   
+   MutexLock(s_valuesMutex);
+   s_values->clear();
+
+   TCHAR line[10240];
+   int type;
+   while(_fgetts(line, 10240, file) != NULL)
+   {
+      TCHAR *ptr = line;
+      while (*ptr != 0)
+      {
+         if (*ptr == _T('\n') || *ptr == _T('\r'))
+         {
+            *ptr = 0;
+            break;
+         }
+         ptr++;
+      }
+      if (line[0] == 0 || line[0] == _T('#'))
+      {
+         continue;
+      }
+      
+      TCHAR *name = line;
+      TCHAR *value = _tcschr(name, _T(':'));
+      if (value == NULL) continue;
+      *value = 0;
+      value++;
+      TCHAR *typeStr = _tcschr(value, _T(':'));
+      if (typeStr == NULL) continue;
+      *typeStr = 0;
+      typeStr++;
+      // atoi
+      TCHAR *description = _tcschr(typeStr, _T(':'));
+      if (description != NULL)
+      {
+         *description = 0;
+         description++;
+      }
+      
+      s_values->set(name, value);
+
+      if (initial)
+      {
+         NETXMS_SUBAGENT_PARAM* param = new NETXMS_SUBAGENT_PARAM();
+         _tcscpy(param->name, name);
+         param->handler = H_Value;
+         param->arg = _tcsdup(name);
+         param->dataType = type;
+         _tcscpy(param->description, description == NULL ? _T("") : description);
+         
+         parameters->add(param);
+
+         delete param;
+      }
+   }
+
+   MutexUnlock(s_valuesMutex);
+   
+   if (initial)
+   {
+      m_info.numParameters = parameters->size();
+      m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(), parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+      delete parameters;
+   }
+}
+
+/**
+ * Check file for changes and if required - re-load configuration
+ */
+THREAD_RESULT THREAD_CALL MonitorChanges(void *args)
+{
+   int threadSleepTime = 1;
+
+   while(!s_shutdown)
+   {
+      int ret = CALL_STAT(s_paramConfigFile, &fileStats);
+      if (ret != 0)
+      {
+         AgentWriteDebugLog(3, _T("Cannot stat DEVEMU configuration file (%s)"), s_paramConfigFile);
+      }
+      else
+      {
+         if(fileLastModifyTime != fileStats.st_mtime)
+         {
+            AgentWriteDebugLog(6, _T("DEVEMU configuration file changed (was: %ld, now: %ld)"), fileLastModifyTime, fileStats.st_mtime);
+            fileLastModifyTime = fileStats.st_mtime;
+            LoadConfiguration(false);
+         }
+      }
+      ThreadSleep(threadSleepTime);
+   }
+}
+
 /**
  * Entry point for NetXMS agent
  */
@@ -132,15 +272,12 @@ DECLARE_SUBAGENT_ENTRY_POINT(DEVEMU)
 
    if (!config->parseTemplate(_T("DEVEMU"), m_cfgTemplate))
       return FALSE;
+   
+   LoadConfiguration(true);
+   
+   ThreadCreateEx(MonitorChanges, 0, NULL);
 
-   StructArray<NETXMS_SUBAGENT_PARAM> *parameters = new StructArray<NETXMS_SUBAGENT_PARAM>(s_parameters, sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM));
-
-   // Add parameters from configuration
-
-   m_info.numParameters = parameters->size();
-   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(), parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
    *ppInfo = &m_info;
-   delete parameters;
    return TRUE;
 }
 
