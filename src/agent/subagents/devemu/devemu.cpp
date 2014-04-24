@@ -202,17 +202,20 @@ static void LoadConfiguration(bool initial)
       value++;
 
       TCHAR *name = line;
+
+      TCHAR *description = NULL;
       TCHAR *typeStr = _tcschr(name, _T(':'));
       if (typeStr != NULL)
       {
          *typeStr = 0;
          typeStr++;
-      }
-      TCHAR *description = _tcschr(typeStr, _T(':'));
-      if (description != NULL)
-      {
-         *description = 0;
-         description++;
+
+         description = _tcschr(typeStr, _T(':'));
+         if (description != NULL)
+         {
+            *description = 0;
+            description++;
+         }
       }
 
       s_values->set(name, value);
