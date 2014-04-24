@@ -137,15 +137,16 @@ public class AlarmNotifier
             File fileContent = session.downloadFileFromServer(melodyName);
             if (fileContent != null)
             {
-               FileChannel src = null;
-               FileChannel dest = null;
+               FileInputStream src = null;
+               FileOutputStream dest = null;
                try
                {
-                  src = new FileInputStream(fileContent).getChannel();
+                  src = new FileInputStream(fileContent);
                   File f = new File(workspaceUrl.getPath(), melodyName);
                   f.createNewFile();
-                  dest = new FileOutputStream(f).getChannel();
-                  dest.transferFrom(src, 0, src.size());
+                  dest = new FileOutputStream(f);
+                  FileChannel fcSrc = src.getChannel();
+                  dest.getChannel().transferFrom(fcSrc, 0, fcSrc.size());
                }
                catch(IOException e)
                {
