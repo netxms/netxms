@@ -173,7 +173,6 @@ static void LoadConfiguration(bool initial)
    s_values->clear();
 
    TCHAR line[10240];
-   int type;
    while (_fgetts(line, 10240, file) != NULL)
    {
       TCHAR *ptr = line;
@@ -191,16 +190,24 @@ static void LoadConfiguration(bool initial)
          continue;
       }
 
-      TCHAR *name = line;
-      TCHAR *value = _tcschr(name, _T(':'));
+      // Format: name:type:description=value
+      //    name - string
+      //    type - string, possible values: INT, UINT, INT64, UINT64, STRING, FLOAT
+      //    description - string, can't contain "="
+      //    value - string
+
+      TCHAR *value = _tcschr(line, _T('='));
       if (value == NULL) continue;
       *value = 0;
       value++;
-      TCHAR *typeStr = _tcschr(value, _T(':'));
-      if (typeStr == NULL) continue;
-      *typeStr = 0;
-      typeStr++;
-      // atoi
+
+      TCHAR *name = line;
+      TCHAR *typeStr = _tcschr(name, _T(':'));
+      if (typeStr != NULL)
+      {
+         *typeStr = 0;
+         typeStr++;
+      }
       TCHAR *description = _tcschr(typeStr, _T(':'));
       if (description != NULL)
       {
@@ -216,7 +223,7 @@ static void LoadConfiguration(bool initial)
          _tcscpy(param->name, name);
          param->handler = H_Value;
          param->arg = _tcsdup(name);
-         param->dataType = type;
+         param->dataType = NxDCIDataTypeFromText(typeStr == NULL ? _T("STRING") : typeStr);
          _tcscpy(param->description, description == NULL ? _T("") : description);
 
          parameters->add(param);
@@ -262,6 +269,8 @@ THREAD_RESULT THREAD_CALL MonitorChanges(void *args)
       }
       ThreadSleep(threadSleepTime);
    }
+
+   return THREAD_OK;
 }
 
 /**
