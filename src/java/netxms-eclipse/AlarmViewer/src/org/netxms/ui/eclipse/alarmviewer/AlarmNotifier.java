@@ -208,19 +208,18 @@ public class AlarmNotifier
          {
             melodyName = ""; //$NON-NLS-1$
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
-            new UIJob(Messages.get().AlarmNotifier_JobSoundNotFoundError) {
+            Display.getDefault().asyncExec(new Runnable() {
                @Override
-               public IStatus runInUIThread(IProgressMonitor monitor)
+               public void run()
                {
                   MessageDialogHelper
-                        .openError(
-                              getDisplay().getActiveShell(),
-                              Messages.get().AlarmNotifier_ErrorMelodynotExists,
-                              Messages.get().AlarmNotifier_ErrorMelodyNotExistsDescription
-                                    + e.getLocalizedMessage());
-                  return Status.OK_STATUS;
+                  .openError(
+                        Display.getDefault().getActiveShell(),
+                        Messages.get().AlarmNotifier_ErrorMelodynotExists,
+                        Messages.get().AlarmNotifier_ErrorMelodyNotExistsDescription
+                              + e.getLocalizedMessage());
                }
-            }.schedule();
+            });
          }
       }
       return melodyName;

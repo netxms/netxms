@@ -94,13 +94,11 @@ public class Messages extends NLS
    public String AlarmNotifier_ErrorMelodyNotExistsDescription;
    public String AlarmNotifier_ErrorPlayingSound;
    public String AlarmNotifier_ErrorPlayingSoundDescription;
-   public String AlarmNotifier_JobSoundNotFoundError;
    public String AlarmNotifier_ToolTip_Header;
    public String AlarmReminderDialog_Dismiss;
    public String AlarmReminderDialog_OutstandingAlarms;
    public String Alarms_AcknowledgeTimeEditor;
    public String Alarms_Blinking;
-   public String Alarms_SetAlarmFlowToStrict;
    public String Alarms_ShowDetailedTooltips;
    public String Alarms_ShowPopup;
    public String Alarms_ShowReminder;
