@@ -725,7 +725,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 		if (e->getType() != MAP_ELEMENT_OBJECT)
 			continue;
 
-		if (!objects->isObjectExist(((NetworkMapObject *)e)->getObjectId()) && (e->getFlags() && AUTO_GENERATED) )
+		if (!objects->isObjectExist(((NetworkMapObject *)e)->getObjectId()) && (e->getFlags() & AUTO_GENERATED) )
 		{
 			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: object element %d removed"), m_szName, e->getId());
 			m_elements->remove(i);
