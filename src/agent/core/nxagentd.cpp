@@ -291,6 +291,7 @@ static void SaveRegistry()
 #ifdef UNICODE
 		char *utf8xml = UTF8StringFromWideString((const WCHAR *)xml);
 		fputs(utf8xml, f);
+		safe_free(utf8xml);
 #else
 		fputs((const char *)xml, f);
 #endif

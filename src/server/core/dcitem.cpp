@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -159,7 +159,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 /**
  * Constructor for creating new DCItem from scratch
  */
-DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType, 
+DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 	: DCObject(dwId, szName, iSource, iPollingInterval, iRetentionTime, pNode, pszDescription, systemTag)
@@ -239,6 +239,8 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 DCItem::~DCItem()
 {
 	delete m_thresholds;
+
+	safe_free(m_instanceDiscoveryData);
 	safe_free(m_instanceFilterSource);
 	delete m_instanceFilter;
 	safe_free(m_customUnitName);
@@ -312,7 +314,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("items"), _T("item_id"), m_dwId))
 	{
-		hStmt = DBPrepare(hdb, 
+		hStmt = DBPrepare(hdb,
 		           _T("UPDATE items SET node_id=?,template_id=?,name=?,source=?,")
                  _T("datatype=?,polling_interval=?,retention_time=?,status=?,")
                  _T("delta_calculation=?,transformation=?,description=?,")
@@ -324,7 +326,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	}
    else
 	{
-		hStmt = DBPrepare(hdb, 
+		hStmt = DBPrepare(hdb,
 		           _T("INSERT INTO items (node_id,template_id,name,source,")
                  _T("datatype,polling_interval,retention_time,status,delta_calculation,")
                  _T("transformation,description,instance,template_item_id,flags,")
@@ -442,7 +444,7 @@ void DCItem::checkThresholds(ItemValue &value)
       {
          case ACTIVATED:
             PostEventWithNames(t->getEventCode(), m_pNode->Id(), "ssssisd",
-					paramNamesReach, m_szName, m_szDescription, t->getStringValue(), 
+					paramNamesReach, m_szName, m_szDescription, t->getStringValue(),
                (const TCHAR *)checkValue, m_dwId, m_instance, 0);
 				evt = FindEventTemplateByCode(t->getEventCode());
 				if (evt != NULL)
@@ -452,7 +454,7 @@ void DCItem::checkThresholds(ItemValue &value)
             break;
          case DEACTIVATED:
             PostEventWithNames(t->getRearmEventCode(), m_pNode->Id(), "ssisss",
-					paramNamesRearm, m_szName, m_szDescription, m_dwId, m_instance, 
+					paramNamesRearm, m_szName, m_szDescription, m_dwId, m_instance,
 					t->getStringValue(), (const TCHAR *)checkValue);
             break;
          case ALREADY_ACTIVE:
@@ -463,8 +465,8 @@ void DCItem::checkThresholds(ItemValue &value)
 					dwInterval = (UINT32)t->getRepeatInterval();
 				if ((dwInterval != 0) && (t->getLastEventTimestamp() + (time_t)dwInterval < now))
 				{
-					PostEventWithNames(t->getEventCode(), m_pNode->Id(), "ssssisd", 
-						paramNamesReach, m_szName, m_szDescription, t->getStringValue(), 
+					PostEventWithNames(t->getEventCode(), m_pNode->Id(), "ssssisd",
+						paramNamesReach, m_szName, m_szDescription, t->getStringValue(),
 						(const TCHAR *)checkValue, m_dwId, m_instance, 1);
 					evt = FindEventTemplateByCode(t->getEventCode());
 					if (evt != NULL)
@@ -574,7 +576,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    {
       newThresholds[i] = pMsg->GetVariableLong(dwId);
    }
-   
+
    // Check if some thresholds was deleted, and reposition others if needed
    Threshold **ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
    memset(ppNewList, 0, sizeof(Threshold *) * dwNum);
@@ -637,7 +639,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 		delete_and_null(m_thresholds);
 	}
 
-	safe_free(ppNewList);     
+	safe_free(ppNewList);
    safe_free(newThresholds);
    updateCacheSize();
    unlock();
@@ -851,7 +853,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
       }
       m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
       m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
-	
+
       if (m_transformationScript->run(1, &pValue))
       {
          pValue = m_transformationScript->getResult();
@@ -1382,7 +1384,7 @@ void DCItem::createNXMPRecord(String &str)
 	UINT32 i;
 
    lock();
-   
+
    str.addFormattedString(_T("\t\t\t\t<dci id=\"%d\">\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
@@ -1406,8 +1408,8 @@ void DCItem::createNXMPRecord(String &str)
                           (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_deltaCalculation, (m_flags & DCF_ADVANCED_SCHEDULE) ? 1 : 0,
-                          (m_flags & DCF_ALL_THRESHOLDS) ? 1 : 0, 
-								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0, 
+                          (m_flags & DCF_ALL_THRESHOLDS) ? 1 : 0,
+								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0,
 								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_instanceDiscoveryMethod);
 
 	if (m_transformationScriptSource != NULL)
@@ -1504,7 +1506,7 @@ bool DCItem::testTransformation(Node *node, const TCHAR *script, const TCHAR *va
    {
       NXSL_Value *pValue = new NXSL_Value(value);
       vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
-	
+
 		if (vm->run(1, &pValue))
       {
          pValue = vm->getResult();
@@ -1646,7 +1648,7 @@ void DCItem::filterInstanceList(StringList *instances)
       NXSL_Value *pValue = new NXSL_Value(instances->getValue(i));
       m_instanceFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
       m_instanceFilter->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
-	
+
       if (m_instanceFilter->run(1, &pValue))
       {
          pValue = m_instanceFilter->getResult();

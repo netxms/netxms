@@ -217,6 +217,7 @@ Node::~Node()
 	delete m_lldpLocalPortInfo;
 	delete m_softwarePackages;
 	delete m_winPerfObjects;
+	safe_free(m_sysName);
 }
 
 /**
