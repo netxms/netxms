@@ -135,26 +135,26 @@
         </dependency>
 
         <!-- DB Drivers -->
-        <!--
         <dependency>
             <groupId>postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.1-901.jdbc4</version>
             <scope>runtime</scope>
         </dependency>
-        -->
+        <!--
         <dependency>
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
             <version>11.2.0.3</version>
             <scope>runtime</scope>
         </dependency>
+        -->
 
         <!-- NetXMS reporting fonts -->
         <dependency>
-            <groupId>com.d8.stronghold</groupId>
+            <groupId>com.radensolutions</groupId>
             <artifactId>reporting-fonts</artifactId>
-            <version>4.3.13</version>
+            <version>1.0.0</version>
             <scope>runtime</scope>
         </dependency>
 		<dependency>

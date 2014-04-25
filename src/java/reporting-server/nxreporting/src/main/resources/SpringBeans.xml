@@ -46,7 +46,7 @@
             <props>
                 <prop key="hibernate.dialect">${system.datasource.dialect}</prop>
                 <prop key="hibernate.show_sql">true</prop>
-                <!--<prop key="hibernate.hbm2ddl.auto">create</prop>-->
+                <prop key="hibernate.hbm2ddl.auto">create</prop>
             </props>
         </property>
     </bean>
