@@ -655,7 +655,7 @@ UINT32 AlarmManager::openHelpdeskIssue(UINT32 alarmId, ClientSession *session, T
          {
             /* TODO: unlock alarm list before call */
             const TCHAR *nodeName = GetObjectName(m_pAlarmList[i].dwSourceObject, _T("[unknown]"));
-            int messageLen = _tcslen(nodeName) + _tcslen(m_pAlarmList[i].szMessage) + 32;
+            int messageLen = (_tcslen(nodeName) + _tcslen(m_pAlarmList[i].szMessage) + 32) * sizeof(TCHAR);
             TCHAR *message = (TCHAR *)malloc(messageLen);
             _sntprintf(message, messageLen, _T("%s: %s"), nodeName, m_pAlarmList[i].szMessage);
             rcc = CreateHelpdeskIssue(message, m_pAlarmList[i].szHelpDeskRef);
