@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.TableThreshold;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.propertypages.TableColumns.TableColumnDataProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.TableConditionsEditor;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -41,15 +42,17 @@ public class EditTableThresholdDialog extends Dialog
 	private EventSelector activationEvent;
 	private EventSelector deactivationEvent;
 	private TableConditionsEditor conditionsEditor;
+	private TableColumnDataProvider columnCallback;
 	
 	/**
 	 * @param parentShell
 	 * @param threshold
 	 */
-	public EditTableThresholdDialog(Shell parentShell, TableThreshold threshold)
+	public EditTableThresholdDialog(Shell parentShell, TableThreshold threshold, TableColumnDataProvider columnCallback)
 	{
 		super(parentShell);
 		this.threshold = threshold;
+		this.columnCallback = columnCallback;
 	}
 
 	/* (non-Javadoc)
@@ -86,7 +89,7 @@ public class EditTableThresholdDialog extends Dialog
 		
 		new Label(dialogArea, SWT.NONE).setText(Messages.get().EditTableThresholdDialog_Conditions);
 		
-		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER);
+		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER, columnCallback);
 		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd.widthHint = 700;
 		gd.heightHint = 400;

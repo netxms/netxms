@@ -89,6 +89,7 @@ public class TableColumns extends PropertyPage
 	{
 		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
 		dci = editor.getObjectAsTable();
+		editor.setCallback(new TableColumnDataProvider());
 
 		columns = new ArrayList<ColumnDefinition>();
 		for(ColumnDefinition c : dci.getColumns())
@@ -544,4 +545,15 @@ public class TableColumns extends PropertyPage
 		job.setUser(false);
 		job.start();
 	}
+   
+   public class TableColumnDataProvider 
+   {
+      public List<String> getList()
+      {
+         List<String> list = new ArrayList<String>();
+         for(int i=0; i < columns.size(); i++)
+            list.add(columns.get(i).getName());
+         return list;
+      }
+   }
 }

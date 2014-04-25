@@ -336,7 +336,7 @@ public class TableThresholds extends PropertyPage
 		if (selection.size() == 1)
 		{
 			final TableThreshold t = (TableThreshold)selection.getFirstElement();
-			EditTableThresholdDialog dlg = new EditTableThresholdDialog(getShell(), t);
+			EditTableThresholdDialog dlg = new EditTableThresholdDialog(getShell(), t, editor.getCallback());
 			if (dlg.open() == Window.OK)
 			{
 				thresholdList.update(t, null);
@@ -351,7 +351,7 @@ public class TableThresholds extends PropertyPage
 	private void addThreshold()
 	{
 		final TableThreshold t = new TableThreshold();
-		final EditTableThresholdDialog dlg = new EditTableThresholdDialog(getShell(), t);
+		final EditTableThresholdDialog dlg = new EditTableThresholdDialog(getShell(), t, editor.getCallback());
 		if (dlg.open() == Window.OK)
 		{
 			thresholds.add(t);

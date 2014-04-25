@@ -21,6 +21,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.netxms.client.datacollection.TableCondition;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.propertypages.TableColumns.TableColumnDataProvider;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
@@ -32,17 +33,20 @@ public class TableConditionsEditor extends Composite
 	private ScrolledForm form;
 	private ImageHyperlink addColumnLink;
 	private List<GroupEditor> groups = new ArrayList<GroupEditor>();
+	private TableColumnDataProvider columnCallback = null;
+	private List<String> columnList;
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public TableConditionsEditor(Composite parent, int style)
+	public TableConditionsEditor(Composite parent, int style, TableColumnDataProvider columnCallback)
 	{
 		super(parent, style);
 
 		setLayout(new FillLayout());
 		
+		this.columnCallback = columnCallback;
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
 		form.getBody().setLayout(new GridLayout());
@@ -202,7 +206,7 @@ public class TableConditionsEditor extends Composite
 			conditions.add(editor);
 			if (initialData != null)
 			{
-				editor.column.setText(initialData.getColumn());
+				editor.column.select(columnCallback == null ? -1 :columnList.indexOf(initialData.getColumn()));
 				editor.operation.select(initialData.getOperation());
 				editor.value.setText(initialData.getValue());
 			}
@@ -234,9 +238,17 @@ public class TableConditionsEditor extends Composite
 		
 		public ConditionEditor(Composite parent, final GroupEditor group)
 		{
-			column = new CCombo(parent, SWT.BORDER);
+			column = new CCombo(parent, SWT.BORDER | SWT.READ_ONLY);
 			toolkit.adapt(column);
 			column.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+			if(columnCallback != null)
+			{
+			   columnList = columnCallback.getList();
+   			for(String s : columnList)
+   			{
+   			   column.add(s);
+   			}
+			}
 
 			operation = new CCombo(parent, SWT.BORDER | SWT.READ_ONLY);
 			toolkit.adapt(operation);
@@ -281,7 +293,7 @@ public class TableConditionsEditor extends Composite
 		 */
 		public TableCondition getCondition()
 		{
-			return new TableCondition(column.getText(), operation.getSelectionIndex(), value.getText());
+			return new TableCondition(columnCallback == null? column.getText() : columnList.get(column.getSelectionIndex()), operation.getSelectionIndex(), value.getText());
 		}	
 	}
 }
