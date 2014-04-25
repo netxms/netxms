@@ -654,7 +654,11 @@ UINT32 AlarmManager::openHelpdeskIssue(UINT32 alarmId, ClientSession *session, T
          if (m_pAlarmList[i].nHelpDeskState == ALARM_HELPDESK_IGNORED)
          {
             /* TODO: unlock alarm list before call */
-            rcc = CreateHelpdeskIssue(m_pAlarmList[i].szMessage, m_pAlarmList[i].szHelpDeskRef);
+            const TCHAR *nodeName = GetObjectName(m_pAlarmList[i].dwSourceObject, _T("[unknown]"));
+            TCHAR *message = (TCHAR *)malloc(_tcslen(nodeName) + _tcslen(m_pAlarmList[i].szMessage) + 32);
+            _stprintf(message, _T("%s: %s"), nodeName, m_pAlarmList[i].szMessage);
+            rcc = CreateHelpdeskIssue(message, m_pAlarmList[i].szHelpDeskRef);
+            free(message);
             if (rcc == RCC_SUCCESS)
             {
                m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_OPEN;
