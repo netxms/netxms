@@ -48,6 +48,11 @@ static StringMap *s_values = new StringMap();
 static MUTEX s_valuesMutex = MutexCreate();
 static bool s_shutdown = false;
 
+static BOOL SubagentInit(Config *config);
+static void SubagentShutdown();
+
+
+
 /**
  * Interface list
  */
@@ -60,6 +65,30 @@ static LONG H_InterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList
    value->add(_T("255 127.0.0.1/8 24 000000000000 lo0"));
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST s_lists[] =
+{
+   { _T("Net.InterfaceList"), H_InterfaceList, NULL }
+};
+
+/**
+ * Subagent information
+ */
+static NETXMS_SUBAGENT_INFO m_info =
+{
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("DEVEMU"), NETXMS_VERSION_STRING,
+   SubagentInit, SubagentShutdown, NULL,
+   0, NULL, // parameters
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   s_lists,
+   0, NULL, // tables
+   0, NULL, // actions
+   0, NULL  // push parameters
+};
 
 /**
  * Handler for constant values
@@ -102,6 +131,8 @@ static BOOL SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
+   delete s_values;
+   safe_free(m_info.parameters);
    s_shutdown = true;
 }
 
@@ -119,30 +150,6 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 };
 
 /**
- * Supported lists
- */
-static NETXMS_SUBAGENT_LIST s_lists[] =
-{
-   { _T("Net.InterfaceList"), H_InterfaceList, NULL }
-};
-
-/**
- * Subagent information
- */
-static NETXMS_SUBAGENT_INFO m_info =
-{
-   NETXMS_SUBAGENT_INFO_MAGIC,
-   _T("DEVEMU"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL,
-   0, NULL, // parameters
-   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
-   s_lists,
-   0, NULL, // tables
-   0, NULL, // actions
-   0, NULL  // push parameters
-};
-
-/**
  * Configuration file template
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
@@ -156,7 +163,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-static void LoadConfiguration(bool initial)
+static bool LoadConfiguration(bool initial)
 {
    StructArray<NETXMS_SUBAGENT_PARAM> *parameters = NULL;
    if (initial)
@@ -169,7 +176,14 @@ static void LoadConfiguration(bool initial)
    if (file == NULL)
    {
       AgentWriteDebugLog(3, _T("Cannot open DEVEMU configuration file (%s)"), s_paramConfigFile);
-      return;
+      if (initial)
+      {
+         m_info.numParameters = parameters->size();
+         m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
+                           parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+         delete parameters;
+      }
+      return false;
    }
 
    MutexLock(s_valuesMutex);
@@ -247,6 +261,7 @@ static void LoadConfiguration(bool initial)
                           parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
       delete parameters;
    }
+   return true;
 }
 
 /**
@@ -290,9 +305,8 @@ DECLARE_SUBAGENT_ENTRY_POINT(DEVEMU)
    if (!config->parseTemplate(_T("DEVEMU"), m_cfgTemplate))
       return FALSE;
 
-   LoadConfiguration(true);
-
-   ThreadCreateEx(MonitorChanges, 0, NULL);
+   if(LoadConfiguration(true))
+      ThreadCreateEx(MonitorChanges, 0, NULL);
 
    *ppInfo = &m_info;
    return TRUE;
