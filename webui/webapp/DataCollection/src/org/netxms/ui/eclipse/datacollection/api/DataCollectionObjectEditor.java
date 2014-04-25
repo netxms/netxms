@@ -28,6 +28,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.propertypages.TableColumns.TableColumnDataProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 /**
@@ -38,6 +39,7 @@ public class DataCollectionObjectEditor
 	DataCollectionObject object;
 	private Runnable timer;
 	private Set<DataCollectionObjectListener> listeners = new HashSet<DataCollectionObjectListener>(); 
+	private TableColumnDataProvider callback;
 
 	/**
 	 * @param object
@@ -157,4 +159,14 @@ public class DataCollectionObjectEditor
 	{
 		return (DataCollectionTable)object;
 	}
+
+   public TableColumnDataProvider getCallback()
+   {
+      return callback;
+   }
+   
+   public void setCallback(TableColumnDataProvider callback)
+   {
+      this.callback = callback;
+   }
 }
