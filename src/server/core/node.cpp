@@ -559,12 +559,10 @@ InterfaceList *Node::getInterfaceList()
    if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP) &&
        (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_driver != NULL))
    {
-		SNMP_Transport *pTransport;
-		bool useIfXTable;
-
-		pTransport = createSnmpTransport();
+		SNMP_Transport *pTransport = createSnmpTransport();
 		if (pTransport != NULL)
 		{
+   		bool useIfXTable;
 			if (m_nUseIfXTable == IFXTABLE_DEFAULT)
 			{
 				useIfXTable = (ConfigReadInt(_T("UseIfXTable"), 1) != 0) ? true : false;
@@ -1668,7 +1666,6 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 
    UINT32 dwOldFlags = m_dwFlags;
    TCHAR szBuffer[4096];
-	SNMP_Transport *pTransport;
    bool hasChanges = false;
 
    SetPollerInfo(nPoller, _T("wait for lock"));
@@ -1719,7 +1716,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
          DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
          if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
          {
-			   pTransport = new SNMP_UDPTransport;
+			   SNMP_Transport *pTransport = new SNMP_UDPTransport;
 			   ((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
             if (SnmpGet(SNMP_VERSION_1, pTransport,
                         _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
