@@ -11,6 +11,7 @@ IpAddress=255.0.0.0
 IpNetMask=eth0
 MacAddress=000000000000
 ParametersConfig=/home/zev/config.my
+HostName=dummy0
 
 --------------------------------------------
 ***Where "/home/zev/config.my" is path to file with parameters list.***
@@ -20,17 +21,12 @@ PARAMETER CONFIGURATION
 ============================================================================================
 Parameter definition syntaxys:
 
-name:value:type:description
+name:type:description=value
 
-Where type is:
-DCI_DT_INT         0
-DCI_DT_UINT        1
-DCI_DT_INT64       2
-DCI_DT_UINT64      3
-DCI_DT_STRING      4
-DCI_DT_FLOAT       5
-DCI_DT_NULL        6
-DCI_DT_DEPRECATED  255
+name - string
+type - string, possible values: INT, UINT, INT64, UINT64, STRING, FLOAT
+description - string, can't contain "="
+value - string
 
 --------------------------------------------
 ***Predifined in code parameters****
@@ -39,6 +35,7 @@ DCI_DT_DEPRECATED  255
    "Net.Interface.MTU(*)" = "1500"
    "Net.Interface.OperStatus(*)" = "1"
    "Net.IP.Forwarding" = "0"
+   "System.Hostname" = HostName(dummy0)
 
 ============================================================================================
 TABLE PARAMETER CONFIGURATION
