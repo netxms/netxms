@@ -480,8 +480,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iCo
 /**
  * Get field value from result
  */
-extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn,
-                                     WCHAR *pwszBuffer, int nBufLen)
+extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn, WCHAR *pwszBuffer, int nBufLen)
 {
    if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
        (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
@@ -491,6 +490,22 @@ extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn
                           -1, pwszBuffer, nBufLen);
       pwszBuffer[nBufLen - 1] = 0;
       return pwszBuffer;
+   }
+   return NULL;
+}
+
+/**
+ * Get field value from result as UTF8 string
+ */
+extern "C" char EXPORT *DrvGetFieldUTF8(DBDRV_RESULT hResult, int iRow, int iColumn, char *buffer, int nBufLen)
+{
+   if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
+       (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
+       (iRow >= 0) && (iColumn >= 0))
+   {
+      strncpy(buffer, ((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn], nBufLen);
+      buffer[nBufLen - 1] = 0;
+      return buffer;
    }
    return NULL;
 }

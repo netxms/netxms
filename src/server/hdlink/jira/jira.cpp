@@ -86,11 +86,11 @@ const TCHAR *JiraLink::getVersion()
  */
 bool JiraLink::init()
 {
-   ConfigReadStrA(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
-   ConfigReadStrA(_T("JiraLogin"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
-   ConfigReadStrA(_T("JiraPassword"), m_password, JIRA_MAX_PASSWORD_LEN, "");
-   ConfigReadStrA(_T("JiraProjectCode"), m_projectCode, JIRA_MAX_PROJECT_CODE_LEN, "NETXMS");
-   ConfigReadStrA(_T("JiraIssueType"), m_issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
+   ConfigReadStrUTF8(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
+   ConfigReadStrUTF8(_T("JiraLogin"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
+   ConfigReadStrUTF8(_T("JiraPassword"), m_password, JIRA_MAX_PASSWORD_LEN, "");
+   ConfigReadStrUTF8(_T("JiraProjectCode"), m_projectCode, JIRA_MAX_PROJECT_CODE_LEN, "NETXMS");
+   ConfigReadStrUTF8(_T("JiraIssueType"), m_issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
    DbgPrintf(5, _T("Jira: server URL set to %hs"), m_serverUrl);
    return true;
 }

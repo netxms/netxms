@@ -387,10 +387,8 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
    }
    else
    {
-      LONG nLen;
       WCHAR *pszTemp;
-
-      nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
+      LONG nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
       if (nLen == -1)
       {
          pszTemp = NULL;
@@ -408,6 +406,55 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
 #endif
 }
 
+/**
+ * Get field's value as UTF8 string. If buffer is NULL, dynamically allocated string will be returned.
+ * Caller is responsible for destroying it by calling free().
+ */
+char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, int nBufLen)
+{
+   if (hResult->m_driver->m_fpDrvGetFieldUTF8 != NULL)
+   {
+      if (pszBuffer != NULL)
+      {
+         return hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszBuffer, nBufLen);
+      }
+      else
+      {
+         char *pszTemp;
+         LONG nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
+         if (nLen == -1)
+         {
+            pszTemp = NULL;
+         }
+         else
+         {
+            nLen *= 2;  // increase buffer size because driver may return field length in characters
+            pszTemp = (char *)malloc(nLen);
+            hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszTemp, nLen);
+         }
+         return pszTemp;
+      }
+   }
+   else
+   {
+      LONG nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
+      if (nLen == -1)
+         return NULL;
+      nLen *= 2;  // increase buffer size because driver may return field length in characters
+
+      WCHAR *wtemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+      hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, wtemp, nLen);
+      char *value = (pszBuffer != NULL) ? pszBuffer : (char *)malloc(nLen);
+      WideCharToMultiByte(CP_UTF8, 0, wtemp, -1, value, (pszBuffer != NULL) ? nBufLen : nLen, NULL, NULL);
+      free(wtemp);
+      return value;
+   }
+}
+
+/**
+ * Get field's value as multibyte string. If buffer is NULL, dynamically allocated string will be returned.
+ * Caller is responsible for destroying it by calling free().
+ */
 char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, int nBufLen)
 {
    WCHAR *pwszData, *pwszBuffer;
@@ -518,11 +565,9 @@ INT32 LIBNXDB_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn
    return pszVal == NULL ? 0 : _tcstol(pszVal, NULL, 10);
 }
 
-
-//
-// Get field's value as signed 64-bit int
-//
-
+/**
+ * Get field's value as signed 64-bit int
+ */
 INT64 LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR *pszVal, szBuffer[256];
@@ -531,11 +576,9 @@ INT64 LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int iRow, int iColum
    return pszVal == NULL ? 0 : _tcstoll(pszVal, NULL, 10);
 }
 
-
-//
-// Get field's value as double
-//
-
+/**
+ * Get field's value as double
+ */
 double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR *pszVal, szBuffer[256];
@@ -544,11 +587,9 @@ double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iCol
    return pszVal == NULL ? 0 : _tcstod(pszVal, NULL);
 }
 
-
-//
-// Get field's value as IP address
-//
-
+/**
+ * Get field's value as IP address
+ */
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR *pszVal, szBuffer[256];
@@ -557,11 +598,9 @@ UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iCol
    return pszVal == NULL ? INADDR_NONE : ntohl(_t_inet_addr(pszVal));
 }
 
-
-//
-// Get field's value as integer array from byte array encoded in hex
-//
-
+/**
+ * Get field's value as integer array from byte array encoded in hex
+ */
 BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
                                             int *pnArray, int nSize, int nDefault)
 {

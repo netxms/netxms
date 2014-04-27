@@ -294,6 +294,41 @@ bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iB
 #endif
 
 /**
+ * Read string value from configuration table as UTF8 string
+ */
+bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault)
+{
+   DB_RESULT hResult;
+   bool bSuccess = false;
+
+   strncpy(szBuffer, szDefault, iBufSize);
+   if (_tcslen(szVar) > 127)
+      return false;
+
+   DB_HANDLE hdb = (g_dwFlags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, szVar, DB_BIND_STATIC);
+		hResult = DBSelectPrepared(hStmt);
+	   if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) > 0)
+			{
+				DBGetFieldUTF8(hResult, 0, 0, szBuffer, iBufSize);
+				bSuccess = true;
+			}
+		   DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+   if (g_dwFlags & AF_DB_CONNECTION_POOL_READY)
+      DBConnectionPoolReleaseConnection(hdb);
+
+   return bSuccess;
+}
+
+/**
  * Read integer value from configuration table
  */
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault)

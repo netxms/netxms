@@ -60,6 +60,7 @@ struct db_driver_t
 	LONG (* m_fpDrvGetFieldLength)(DBDRV_RESULT, int, int);
 	LONG (* m_fpDrvGetFieldLengthAsync)(DBDRV_RESULT, int);
 	WCHAR* (* m_fpDrvGetField)(DBDRV_RESULT, int, int, WCHAR *, int);
+	char* (* m_fpDrvGetFieldUTF8)(DBDRV_RESULT, int, int, char *, int);
 	WCHAR* (* m_fpDrvGetFieldAsync)(DBDRV_ASYNC_RESULT, int, WCHAR *, int);
 	int (* m_fpDrvGetNumRows)(DBDRV_RESULT);
 	void (* m_fpDrvFreeResult)(DBDRV_RESULT);

@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003 - 2013 Victor Kirhenshtein and Alex Kirhenshtein
+** Copyright (C) 2003 - 2014 Victor Kirhenshtein and Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -743,8 +743,20 @@ extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn
 	if (pResult == NULL)
       return NULL;
 
-   MultiByteToWideChar(CP_UTF8, 0, PQgetvalue((PGresult *)pResult, nRow, nColumn),
-                       -1, pBuffer, nBufLen);
+   MultiByteToWideChar(CP_UTF8, 0, PQgetvalue((PGresult *)pResult, nRow, nColumn), -1, pBuffer, nBufLen);
+   pBuffer[nBufLen - 1] = 0;
+	return pBuffer;
+}
+
+/**
+ * Get field value from result as UTF8 string
+ */
+extern "C" char EXPORT *DrvGetFieldUTF8(DBDRV_RESULT pResult, int nRow, int nColumn, char *pBuffer, int nBufLen)
+{
+	if (pResult == NULL)
+      return NULL;
+
+   strncpy(pBuffer, PQgetvalue((PGresult *)pResult, nRow, nColumn), nBufLen);
    pBuffer[nBufLen - 1] = 0;
 	return pBuffer;
 }

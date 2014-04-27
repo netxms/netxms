@@ -645,11 +645,11 @@ extern "C" LONG EXPORT DrvGetFieldLength(MYSQL_RESULT *hResult, int iRow, int iC
 }
 
 /**
- * Get field value from result
+ * Get field value from result - UNICODE and UTF8 implementation
  */
-extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColumn, WCHAR *pBuffer, int nBufSize)
+static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void *pBuffer, int nBufSize, bool utf8)
 {
-	WCHAR *pRet = NULL;
+	void *pRet = NULL;
 	
 	if (hResult->isPreparedStatement)
 	{
@@ -685,12 +685,23 @@ extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColum
          if (!isNull)
          {
 			   ((char *)b.buffer)[l] = 0;
-			   MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, pBuffer, nBufSize);
-			   pBuffer[nBufSize - 1] = 0;
+            if (utf8)
+            {
+			      strncpy((char *)pBuffer, (char *)b.buffer, nBufSize);
+   			   ((char *)pBuffer)[nBufSize - 1] = 0;
+            }
+            else
+            {
+			      MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, (WCHAR *)pBuffer, nBufSize);
+   			   ((WCHAR *)pBuffer)[nBufSize - 1] = 0;
+            }
          }
          else
          {
-            pBuffer[0] = 0;
+            if (utf8)
+               *((char *)pBuffer) = 0;
+            else
+               *((WCHAR *)pBuffer) = 0;
          }
 			pRet = pBuffer;
 		}
@@ -707,13 +718,37 @@ extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColum
 		{
 			if (row[iColumn] != NULL)
 			{
-				MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, pBuffer, nBufSize);
-				pBuffer[nBufSize - 1] = 0;
+            if (utf8)
+            {
+   				strncpy((char *)pBuffer, row[iColumn], nBufSize);
+   			   ((char *)pBuffer)[nBufSize - 1] = 0;
+            }
+            else
+            {
+   				MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, (WCHAR *)pBuffer, nBufSize);
+   			   ((WCHAR *)pBuffer)[nBufSize - 1] = 0;
+            }
 				pRet = pBuffer;
 			}
 		}
 	}
 	return pRet;
+}
+
+/**
+ * Get field value from result
+ */
+extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColumn, WCHAR *pBuffer, int nBufSize)
+{
+   return (WCHAR *)GetFieldInternal(hResult, iRow, iColumn, pBuffer, nBufSize, false);
+}
+
+/**
+ * Get field value from result as UTF8 string
+ */
+extern "C" char EXPORT *DrvGetFieldUTF8(MYSQL_RESULT *hResult, int iRow, int iColumn, char *pBuffer, int nBufSize)
+{
+   return (char *)GetFieldInternal(hResult, iRow, iColumn, pBuffer, nBufSize, true);
 }
 
 /**
