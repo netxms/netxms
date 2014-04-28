@@ -5366,7 +5366,10 @@ void ClientSession::updateAlarmComment(CSCPMessage *request)
       {
 			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
-			msg.SetVariable(VID_RCC, g_alarmMgr.updateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
+			msg.SetVariable(VID_RCC, 
+            byHelpdeskRef ?
+            g_alarmMgr.addAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
+            g_alarmMgr.updateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
 			safe_free(text);
       }
       else
