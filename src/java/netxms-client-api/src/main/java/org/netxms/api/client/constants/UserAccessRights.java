@@ -50,4 +50,5 @@ public class UserAccessRights
 	public static final int OBJECT_ACCESS_CONTROL       = 0x00000100;
 	public static final int OBJECT_ACCESS_TERM_ALARMS   = 0x00000200;
 	public static final int OBJECT_ACCESS_PUSH_DATA     = 0x00000400;
+   public static final int OBJECT_ACCESS_CREATE_ISSUE  = 0x00000800;
 }
