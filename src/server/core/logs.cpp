@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -27,7 +27,7 @@
  */
 static NXCORE_LOG s_logs[] =
 {
-	{ _T("AlarmLog"), _T("alarms"), _T("alarm_id"), _T("source_object_id"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
+	{ _T("AlarmLog"), _T("alarms"), _T("alarm_id"), _T("source_object_id"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
 			{ _T("alarm_id"), _T("Alarm ID"), LC_INTEGER },
 			{ _T("alarm_state"), _T("State"), LC_ALARM_STATE },
@@ -99,7 +99,7 @@ static NXCORE_LOG s_logs[] =
 struct LOG_HANDLE_REGISTRATION
 {
 	LogHandle *handle;
-	UINT32 sessionId;	
+	UINT32 sessionId;
 };
 int s_regListSize = 0;
 LOG_HANDLE_REGISTRATION *s_regList = NULL;
@@ -141,13 +141,13 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 
 /**
  * Open log from given log set by name
- * 
+ *
  * @return log handle on success, -1 on error, -2 if log not found
  */
 static int OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *session, UINT32 *rcc)
 {
 	for(int i = 0; logs[i].name != NULL; i++)
-	{	
+	{
 		if (!_tcsicmp(name, logs[i].name))
 		{
 			if (session->checkSysAccessRights(logs[i].requiredAccess))
