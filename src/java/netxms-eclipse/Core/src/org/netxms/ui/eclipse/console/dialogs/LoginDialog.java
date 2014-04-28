@@ -137,8 +137,7 @@ public class LoginDialog extends Dialog
       dialogArea.getBody().setLayout(dialogLayout);
 
       RGB customColor = BrandingManager.getInstance().getLoginTitleColor();
-      labelColor = (customColor != null) ? new Color(dialogArea.getDisplay(), customColor) : new Color(dialogArea.getDisplay(), 36,
-            66, 90);
+      labelColor = (customColor != null) ? new Color(dialogArea.getDisplay(), customColor) : new Color(dialogArea.getDisplay(), 255, 255, 255);
       dialogArea.addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -149,6 +148,7 @@ public class LoginDialog extends Dialog
 
       // Login image
       Label label = new Label(dialogArea.getBody(), SWT.NONE);
+      label.setBackground(labelColor);
       label.setImage(loginImage.createImage());
       label.addDisposeListener(new DisposeListener() {
          @Override

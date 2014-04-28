@@ -1146,6 +1146,11 @@ static void InitiateExtSubagentShutdown()
       _tprintf(_T("ERROR: Unable to send control message to master agent\n"));
 }
 
+static void DUMP()
+{
+_tprintf(_T(">>>>\n%s\n<<<<<\n"), (const TCHAR *)g_config->createXml());
+}
+
 /**
  * Application entry point
  */
@@ -1472,6 +1477,7 @@ int main(int argc, char *argv[])
 				if (dir != NULL)
 					nx_strncpy(g_szConfigIncludeDir, dir, MAX_PATH);
 				g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"));
+DUMP();
 				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
 				{
                if (g_szEncryptedSharedSecret[0] != 0)
