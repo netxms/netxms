@@ -63,6 +63,7 @@ public class SystemRights extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, Messages.get().SystemRights_DeleteAlarms);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, "Unlink helpdesk tickets");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.get().SystemRights_ConfigureActions);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.get().SystemRights_ViewEventConfig);
