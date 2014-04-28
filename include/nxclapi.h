@@ -627,11 +627,9 @@ enum
 
 #endif	/* LIBNXCL_CUSTOM_USER_RIGHTS */
 
-
-//
-// Object access rights
-//
-
+/**
+ * Object access rights
+ */
 #define OBJECT_ACCESS_READ          0x00000001
 #define OBJECT_ACCESS_MODIFY        0x00000002
 #define OBJECT_ACCESS_CREATE        0x00000004
@@ -645,19 +643,15 @@ enum
 #define OBJECT_ACCESS_PUSH_DATA     0x00000400
 #define OBJECT_ACCESS_CREATE_ISSUE  0x00000800
 
-
-//
-// Object sync flags
-//
-
+/**
+ * Object sync flags
+ */
 #define OBJECT_SYNC_SEND_UPDATES    0x0001
 #define OBJECT_SYNC_DUAL_CONFIRM    0x0002
 
-
-//
-// User/group flags
-//
-
+/**
+ * User/group flags
+ */
 #define UF_MODIFIED                 0x0001
 #define UF_DELETED                  0x0002
 #define UF_DISABLED                 0x0004

@@ -1128,7 +1128,7 @@ void AlarmManager::watchdogThread()
 }
 
 /**
- * Check if givel alram/note id pair is valid
+ * Check if given alram/note id pair is valid
  */
 static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 {
@@ -1154,6 +1154,97 @@ static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 /**
  * Update alarm's comment
  */
+UINT32 AlarmManager::doUpdateAlarmComment(NXC_ALARM *alarm, UINT32 noteId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk)
+{
+   bool newNote = false;
+   UINT32 rcc;
+
+	if (noteId != 0)
+	{
+      if (IsValidNoteId(alarm->dwAlarmId, noteId))
+		{
+			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+			DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
+			if (hStmt != NULL)
+			{
+				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
+				DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
+				DBBind(hStmt, 3, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
+				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, noteId);
+				rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+				DBFreeStatement(hStmt);
+			}
+			else
+			{
+				rcc = RCC_DB_FAILURE;
+			}
+			DBConnectionPoolReleaseConnection(hdb);
+		}
+		else
+		{
+			rcc = RCC_INVALID_ALARM_NOTE_ID;
+		}
+	}
+	else
+	{
+		// new note
+		newNote = true;
+		noteId = CreateUniqueId(IDG_ALARM_NOTE);
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_notes (note_id,alarm_id,change_time,user_id,note_text) VALUES (?,?,?,?,?)"));
+		if (hStmt != NULL)
+		{
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, noteId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, alarm->dwAlarmId);
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
+			DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
+			DBBind(hStmt, 5, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
+			rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+			DBFreeStatement(hStmt);
+		}
+		else
+		{
+			rcc = RCC_DB_FAILURE;
+		}
+		DBConnectionPoolReleaseConnection(hdb);
+	}
+	if (rcc == RCC_SUCCESS)
+	{
+      if(newNote)
+         alarm->noteCount++;
+		notifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
+      if (syncWithHelpdesk && (alarm->nHelpDeskState == ALARM_HELPDESK_OPEN))
+      {
+         AddHelpdeskIssueComment(alarm->szHelpDeskRef, text);
+      }
+	}
+
+   return rcc;
+}
+
+/**
+ * Add alarm's comment by helpdesk reference
+ */
+UINT32 AlarmManager::addAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+   bool newNote = false;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
+      {
+         rcc = doUpdateAlarmComment(&m_pAlarmList[i], 0, text, userId, false);
+         break;
+      }
+   unlock();
+
+   return rcc;
+}
+
+/**
+ * Update alarm's comment
+ */
 UINT32 AlarmManager::updateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
@@ -1163,65 +1254,7 @@ UINT32 AlarmManager::updateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCH
    for(int i = 0; i < m_numAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == alarmId)
       {
-			if (noteId != 0)
-			{
-				if (IsValidNoteId(alarmId, noteId))
-				{
-					DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-					DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
-					if (hStmt != NULL)
-					{
-						DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
-						DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
-						DBBind(hStmt, 3, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
-						DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, noteId);
-						rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
-						DBFreeStatement(hStmt);
-					}
-					else
-					{
-						rcc = RCC_DB_FAILURE;
-					}
-					DBConnectionPoolReleaseConnection(hdb);
-				}
-				else
-				{
-					rcc = RCC_INVALID_ALARM_NOTE_ID;
-				}
-			}
-			else
-			{
-				// new note
-				newNote = true;
-				noteId = CreateUniqueId(IDG_ALARM_NOTE);
-				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-				DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_notes (note_id,alarm_id,change_time,user_id,note_text) VALUES (?,?,?,?,?)"));
-				if (hStmt != NULL)
-				{
-					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, noteId);
-					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, alarmId);
-					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
-					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
-					DBBind(hStmt, 5, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
-					rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
-					DBFreeStatement(hStmt);
-				}
-				else
-				{
-					rcc = RCC_DB_FAILURE;
-				}
-				DBConnectionPoolReleaseConnection(hdb);
-			}
-			if (rcc == RCC_SUCCESS)
-			{
-            if(newNote)
-               m_pAlarmList[i].noteCount++;
-				notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
-            if (m_pAlarmList[i].nHelpDeskState == ALARM_HELPDESK_OPEN)
-            {
-               AddHelpdeskIssueComment(m_pAlarmList[i].szHelpDeskRef, text);
-            }
-			}
+         rcc = doUpdateAlarmComment(&m_pAlarmList[i], noteId, text, userId, true);
          break;
       }
    unlock();
