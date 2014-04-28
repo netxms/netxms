@@ -5037,7 +5037,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
    if (object != NULL)
    {
       // User should have "acknowledge alarm" right to the object
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
 			msg.SetVariable(VID_RCC, 
             byHelpdeskRef ?
@@ -5239,7 +5239,7 @@ void ClientSession::getHelpdeskUrl(CSCPMessage *request)
 }
 
 /**
- * Unlink helpdesk issue from alar,
+ * Unlink helpdesk issue from alarm
  */
 void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
 {
@@ -5269,7 +5269,7 @@ void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
    if (object != NULL)
    {
       // User should have "create issue" right to the object
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE_ISSUE))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS) && checkSysAccessRights(SYSTEM_ACCESS_UNLINK_ISSUES))
       {
          msg.SetVariable(VID_RCC, 
             byHelpdeskRef ? 
@@ -5361,8 +5361,8 @@ void ClientSession::updateAlarmComment(CSCPMessage *request)
    }
    if (object != NULL)
    {
-      // User should have "acknowledge alarm" right to the object
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      // User should have "update alarm" right to the object
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
 			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
@@ -5402,7 +5402,7 @@ void ClientSession::deleteAlarmComment(CSCPMessage *request)
    if (object != NULL)
    {
       // User should have "acknowledge alarm" right to the object
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
 			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
 			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmCommentByID(alarmId, commentId));

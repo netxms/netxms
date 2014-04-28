@@ -38,6 +38,7 @@ public class UserAccessRights
    public static final int SYSTEM_ACCESS_REPORTING_SERVER    = 0x02000000;
    public static final int SYSTEM_ACCESS_XMPP_COMMANDS       = 0x04000000;
    public static final int SYSTEM_ACCESS_MANAGE_IMAGE_LIB    = 0x08000000;
+   public static final int SYSTEM_ACCESS_UNLINK_ISSUES       = 0x10000000;
 	
 	public static final int OBJECT_ACCESS_READ          = 0x00000001;
 	public static final int OBJECT_ACCESS_MODIFY        = 0x00000002;
@@ -45,7 +46,7 @@ public class UserAccessRights
 	public static final int OBJECT_ACCESS_DELETE        = 0x00000008;
 	public static final int OBJECT_ACCESS_READ_ALARMS   = 0x00000010;
 	public static final int OBJECT_ACCESS_ACL           = 0x00000020;
-	public static final int OBJECT_ACCESS_ACK_ALARMS    = 0x00000040;
+	public static final int OBJECT_ACCESS_UPDATE_ALARMS = 0x00000040;
 	public static final int OBJECT_ACCESS_SEND_EVENTS   = 0x00000080;
 	public static final int OBJECT_ACCESS_CONTROL       = 0x00000100;
 	public static final int OBJECT_ACCESS_TERM_ALARMS   = 0x00000200;

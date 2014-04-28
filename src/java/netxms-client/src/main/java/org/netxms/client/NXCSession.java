@@ -2568,7 +2568,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
    
    /**
-    * Unlink helpdesk issue from alarm.
+    * Unlink helpdesk issue from alarm. User must have OBJECT_ACCESS_UPDATE_ALARMS access right
+    * on alarm's source object and SYSTEM_ACCESS_UNLINK_ISSUES system wide access right.
     * 
     * @param helpdeskReference
     * @throws IOException  if socket I/O error occurs
@@ -2583,7 +2584,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
 
    /**
-    * Unlink helpdesk issue from alarm.
+    * Unlink helpdesk issue from alarm. User must have OBJECT_ACCESS_UPDATE_ALARMS access right
+    * on alarm's source object and SYSTEM_ACCESS_UNLINK_ISSUES system wide access right.
     * 
     * @param helpdeskReference
     * @throws IOException  if socket I/O error occurs
