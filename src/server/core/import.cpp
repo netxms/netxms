@@ -286,7 +286,7 @@ static UINT32 ImportTrap(ConfigEntry *trap)
 	nx_strncpy(tc.szUserTag, trap->getSubEntryValue(_T("userTag"), 0, _T("")), MAX_USERTAG_LENGTH);
 
 	UINT32 oid[256];
-	tc.dwOidLen = SNMPParseOID(trap->getSubEntryValue(_T("oid"), 0, _T("")), oid, 256);
+	tc.dwOidLen = (UINT32)SNMPParseOID(trap->getSubEntryValue(_T("oid"), 0, _T("")), oid, 256);
 	tc.pdwObjectId = oid;
 	if (tc.dwOidLen == 0)
 		return RCC_INTERNAL_ERROR;
@@ -314,7 +314,7 @@ static UINT32 ImportTrap(ConfigEntry *trap)
 				{
 					// OID parameter
 					UINT32 temp[256];
-					tc.pMaps[i].dwOidLen = SNMPParseOID(parameter->getSubEntryValue(_T("oid"), 0, _T("")), temp, 256);
+					tc.pMaps[i].dwOidLen = (UINT32)SNMPParseOID(parameter->getSubEntryValue(_T("oid"), 0, _T("")), temp, 256);
 					tc.pMaps[i].pdwObjectId = (UINT32 *)nx_memdup(temp, sizeof(UINT32) * tc.pMaps[i].dwOidLen);
 				}
 				nx_strncpy(tc.pMaps[i].szDescription, parameter->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);

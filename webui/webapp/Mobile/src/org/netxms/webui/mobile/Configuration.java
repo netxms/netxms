@@ -23,7 +23,7 @@ public class Configuration implements ApplicationConfiguration
       @Override
       public EntryPoint create()
       {
-         return new MobileClientEntryPoint();
+         return new MobileApplication();
       }
    }
    

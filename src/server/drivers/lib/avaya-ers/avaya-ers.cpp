@@ -43,11 +43,11 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
    UINT32 oidName[MAX_OID_LEN], dwResult;
    VlanList *vlanList = (VlanList *)pArg;
 
-   UINT32 dwNameLen = pVar->GetName()->getLength();
-	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt(), VLAN_PRM_IFINDEX);
+   UINT32 dwNameLen = pVar->getName()->getLength();
+	VlanInfo *vlan = new VlanInfo(pVar->getValueAsInt(), VLAN_PRM_IFINDEX);
 
    // Get VLAN name
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
+   memcpy(oidName, pVar->getName()->getValue(), dwNameLen * sizeof(UINT32));
    oidName[dwNameLen - 2] = 2;
    TCHAR buffer[256];
 	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, buffer, sizeof(buffer), SG_STRING_RESULT);

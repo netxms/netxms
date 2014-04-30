@@ -28,9 +28,9 @@
  */
 SNMP_ObjectId::SNMP_ObjectId()
 {
-   m_dwLength = 0;
-   m_pdwValue = NULL;
-   m_pszTextValue = NULL;
+   m_length = 0;
+   m_value = NULL;
+   m_textValue = NULL;
 }
 
 /**
@@ -38,15 +38,15 @@ SNMP_ObjectId::SNMP_ObjectId()
  */
 SNMP_ObjectId::SNMP_ObjectId(SNMP_ObjectId *src)
 {
-   m_dwLength = src->m_dwLength;
-   m_pdwValue = (UINT32 *)nx_memdup(src->m_pdwValue, sizeof(UINT32) * m_dwLength);
-   if (src->m_pszTextValue != NULL)
+   m_length = src->m_length;
+   m_value = (UINT32 *)nx_memdup(src->m_value, sizeof(UINT32) * m_length);
+   if (src->m_textValue != NULL)
    {
-      m_pszTextValue = _tcsdup(src->m_pszTextValue);
+      m_textValue = _tcsdup(src->m_textValue);
    }
    else
    {
-      m_pszTextValue = NULL;
+      m_textValue = NULL;
       convertToText();
    }
 }
@@ -54,11 +54,11 @@ SNMP_ObjectId::SNMP_ObjectId(SNMP_ObjectId *src)
 /**
  * Create OID from existing binary value
  */
-SNMP_ObjectId::SNMP_ObjectId(UINT32 dwLength, const UINT32 *pdwValue)
+SNMP_ObjectId::SNMP_ObjectId(size_t length, const UINT32 *value)
 {
-   m_dwLength = dwLength;
-   m_pdwValue = (UINT32 *)nx_memdup(pdwValue, sizeof(UINT32) * dwLength);
-   m_pszTextValue = NULL;
+   m_length = (UINT32)length;
+   m_value = (UINT32 *)nx_memdup(value, sizeof(UINT32) * length);
+   m_textValue = NULL;
    convertToText();
 }
 
@@ -67,8 +67,8 @@ SNMP_ObjectId::SNMP_ObjectId(UINT32 dwLength, const UINT32 *pdwValue)
  */
 SNMP_ObjectId::~SNMP_ObjectId()
 {
-   safe_free(m_pdwValue);
-   safe_free(m_pszTextValue);
+   safe_free(m_value);
+   safe_free(m_textValue);
 }
 
 /**
@@ -76,8 +76,8 @@ SNMP_ObjectId::~SNMP_ObjectId()
  */
 void SNMP_ObjectId::convertToText()
 {
-   m_pszTextValue = (TCHAR *)realloc(m_pszTextValue, sizeof(TCHAR) * (m_dwLength * 6 + 1));
-   SNMPConvertOIDToText(m_dwLength, m_pdwValue, m_pszTextValue, m_dwLength * 6 + 1);
+   m_textValue = (TCHAR *)realloc(m_textValue, sizeof(TCHAR) * (m_length * 6 + 1));
+   SNMPConvertOIDToText(m_length, m_value, m_textValue, m_length * 6 + 1);
 }
 
 /**
@@ -85,27 +85,26 @@ void SNMP_ObjectId::convertToText()
  */
 int SNMP_ObjectId::compare(const TCHAR *pszOid)
 {
-   UINT32 dwBuffer[MAX_OID_LEN], dwLength;
-
-   dwLength = SNMPParseOID(pszOid, dwBuffer, MAX_OID_LEN);
-   if (dwLength == 0)
+   UINT32 dwBuffer[MAX_OID_LEN];
+   size_t length = SNMPParseOID(pszOid, dwBuffer, MAX_OID_LEN);
+   if (length == 0)
       return OID_ERROR;
-   return compare(dwBuffer, dwLength);
+   return compare(dwBuffer, length);
 }
 
 /**
  * Compare this OID to another
  */
-int SNMP_ObjectId::compare(const UINT32 *pdwOid, UINT32 dwLen)
+int SNMP_ObjectId::compare(const UINT32 *oid, size_t length)
 {
-   if ((pdwOid == NULL) || (dwLen == 0) || (m_pdwValue == NULL))
+   if ((oid == NULL) || (length == 0) || (m_value == NULL))
       return OID_ERROR;
 
-   if (memcmp(m_pdwValue, pdwOid, min(dwLen, m_dwLength) * sizeof(UINT32)))
+   if (memcmp(m_value, oid, min(length, m_length) * sizeof(UINT32)))
       return OID_NOT_EQUAL;
 
-   return (dwLen == m_dwLength) ? OID_EQUAL : 
-            ((dwLen < m_dwLength) ? OID_SHORTER : OID_LONGER);
+   return (length == m_length) ? OID_EQUAL : 
+            ((length < m_length) ? OID_SHORTER : OID_LONGER);
 }
 
 /**
@@ -121,11 +120,11 @@ int SNMP_ObjectId::compare(SNMP_ObjectId *oid)
 /**
  * Set new value
  */
-void SNMP_ObjectId::setValue(UINT32 *pdwValue, UINT32 dwLength)
+void SNMP_ObjectId::setValue(UINT32 *value, size_t length)
 {
-   safe_free(m_pdwValue);
-   m_dwLength = dwLength;
-   m_pdwValue = (UINT32 *)nx_memdup(pdwValue, sizeof(UINT32) * dwLength);
+   safe_free(m_value);
+   m_length = (UINT32)length;
+   m_value = (UINT32 *)nx_memdup(value, sizeof(UINT32) * length);
    convertToText();
 }
 
@@ -136,7 +135,7 @@ void SNMP_ObjectId::setValue(UINT32 *pdwValue, UINT32 dwLength)
  */
 void SNMP_ObjectId::extend(UINT32 subId)
 {
-   m_pdwValue = (UINT32 *)realloc(m_pdwValue, sizeof(UINT32) * (m_dwLength + 1));
-   m_pdwValue[m_dwLength++] = subId;
+   m_value = (UINT32 *)realloc(m_value, sizeof(UINT32) * (m_length + 1));
+   m_value[m_length++] = subId;
    convertToText();
 }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,7 +35,7 @@ SNMP_Engine::SNMP_Engine()
 	m_engineTime = 0;
 }
 
-SNMP_Engine::SNMP_Engine(BYTE *id, int idLen, int engineBoots, int engineTime)
+SNMP_Engine::SNMP_Engine(BYTE *id, size_t idLen, int engineBoots, int engineTime)
 {
 	m_idLen = min(idLen, SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_id, id, m_idLen);
@@ -51,11 +51,9 @@ SNMP_Engine::SNMP_Engine(SNMP_Engine *src)
 	m_engineTime = src->m_engineTime;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 SNMP_Engine::~SNMP_Engine()
 {
 }

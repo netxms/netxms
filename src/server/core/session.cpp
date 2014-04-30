@@ -8307,8 +8307,8 @@ static UINT32 WalkerCallback(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpo
 	bool convertToHex = true;
 
 	pVar->getValueAsPrintableString(szBuffer, 4096, &convertToHex);
-   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->GetName()->getValueAsText());
-	pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->GetType());
+   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->getName()->getValueAsText());
+	pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->getType());
    pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, szBuffer);
    ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars++;
    if (((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars == 50)

@@ -161,38 +161,34 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer)
 /**
  * Duplicate memory block
  */
-void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, UINT32 dwSize)
+void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size)
 {
-   void *pNewData;
+   void *newData;
 
-   pNewData = malloc(dwSize);
-   memcpy(pNewData, pData, dwSize);
-   return pNewData;
+   newData = malloc(size);
+   memcpy(newData, data, size);
+   return newData;
 }
 
-
-//
-// Swap two memory blocks
-//
-
-void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, UINT32 dwSize)
+/**
+ * Swap two memory blocks
+ */
+void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
 {
-   void *pTemp;
+   void *temp;
 
-   pTemp = malloc(dwSize);
-   memcpy(pTemp, pBlock1, dwSize);
-   memcpy(pBlock1, pBlock2, dwSize);
-   memcpy(pBlock2, pTemp, dwSize);
-   free(pTemp);
+   temp = malloc(size);
+   memcpy(temp, block1, size);
+   memcpy(block1, block2, size);
+   memcpy(block2, temp, size);
+   free(temp);
 }
-
-
-//
-// Copy string
-//
 
 #if defined(_WIN32) && defined(USE_WIN32_HEAP)
 
+/**
+ * Copy string
+ */
 char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
 {
 	char *newStr = (char *)malloc(strlen(src) + 1);
@@ -200,6 +196,9 @@ char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
 	return newStr;
 }
 
+/**
+ * Copy string
+ */
 WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 {
 	WCHAR *newStr = (WCHAR *)malloc((wcslen(src) + 1) * sizeof(WCHAR));
@@ -211,6 +210,9 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 
 #if !HAVE_WCSDUP && !defined(_WIN32)
 
+/**
+ * Copy string
+ */
 WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src)
 {
 	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
@@ -701,12 +703,12 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 /**
  * Convert byte array to text representation (wide character version)
  */
-WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, UINT32 dwSize, WCHAR *pStr)
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, size_t size, WCHAR *pStr)
 {
-   UINT32 i;
+   size_t i;
    WCHAR *pCurr;
 
-   for(i = 0, pCurr = pStr; i < dwSize; i++)
+   for(i = 0, pCurr = pStr; i < size; i++)
    {
       *pCurr++ = bin2hex(pData[i] >> 4);
       *pCurr++ = bin2hex(pData[i] & 15);
@@ -718,12 +720,12 @@ WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, UINT32 dwSize, WCHAR *p
 /**
  * Convert byte array to text representation (multibyte character version)
  */
-char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pStr)
+char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, size_t size, char *pStr)
 {
-   UINT32 i;
+   size_t i;
    char *pCurr;
 
-   for(i = 0, pCurr = pStr; i < dwSize; i++)
+   for(i = 0, pCurr = pStr; i < size; i++)
    {
       *pCurr++ = bin2hex(pData[i] >> 4);
       *pCurr++ = bin2hex(pData[i] & 15);
@@ -736,13 +738,13 @@ char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pSt
  * Convert string of hexadecimal digits to byte array (wide character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 dwSize)
+UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 size)
 {
    UINT32 i;
    const WCHAR *pCurr;
 
-   memset(pData, 0, dwSize);
-   for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)
+   memset(pData, 0, size);
+   for(i = 0, pCurr = pStr; (i < size) && (*pCurr != 0); i++)
    {
       pData[i] = hex2bin(*pCurr) << 4;
       pCurr++;
@@ -759,13 +761,13 @@ UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 dwS
  * Convert string of hexadecimal digits to byte array (multibyte character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 dwSize)
+UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 size)
 {
    UINT32 i;
    const char *pCurr;
 
-   memset(pData, 0, dwSize);
-   for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)
+   memset(pData, 0, size);
+   for(i = 0, pCurr = pStr; (i < size) && (*pCurr != 0); i++)
    {
       pData[i] = hex2bin(*pCurr) << 4;
       pCurr++;

@@ -141,7 +141,7 @@ void InstallService(TCHAR *execName, TCHAR *confFile)
 	           execName, confFile, g_windowsServiceName, g_windowsEventSourceName);
    if (g_debugLevel != (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
    {
-      int len = _tcslen(cmdLine);
+      size_t len = _tcslen(cmdLine);
       _sntprintf(&cmdLine[len], 8192 - len, _T(" -D %d"), g_debugLevel);
    }
 	

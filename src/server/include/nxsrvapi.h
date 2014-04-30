@@ -635,11 +635,11 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
 
 UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId();
 UINT32 LIBNXSRV_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
-                                  const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
-                                  UINT32 dwBufferSize, UINT32 dwFlags);
+                                  const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
+                                  size_t bufferSize, UINT32 dwFlags);
 UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
-                                     const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
-                                     UINT32 dwBufferSize, UINT32 dwFlags, UINT32 *dataLen);
+                                     const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
+                                     size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen);
 UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
 						                 UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
                                    void *pUserArg, BOOL bVerbose);

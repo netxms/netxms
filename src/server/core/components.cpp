@@ -180,7 +180,7 @@ UINT32 Component::fillMessage(CSCPMessage *msg, UINT32 baseId)
 static UINT32 EntityWalker(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	TCHAR buffer[256];
-	Component *element = new Component(var->GetName()->getValue()[12], var->getValueAsString(buffer, 256));
+	Component *element = new Component(var->getName()->getValue()[12], var->getValueAsString(buffer, 256));
 	UINT32 rc = element->updateFromSnmp(transport);
 	if (rc != SNMP_ERR_SUCCESS)
 	{

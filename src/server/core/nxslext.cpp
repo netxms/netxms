@@ -873,7 +873,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 {
 	UINT32 len;
 	static UINT32 requestId = 1;
-	UINT32 nameLen, varName[MAX_OID_LEN], result = SNMP_ERR_SUCCESS;
+	UINT32 varName[MAX_OID_LEN], result = SNMP_ERR_SUCCESS;
 
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -887,7 +887,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
 
    // Create PDU and send request
-   nameLen = SNMPParseOID(argv[1]->getValueAsString(&len), varName, MAX_OID_LEN);
+   size_t nameLen = SNMPParseOID(argv[1]->getValueAsString(&len), varName, MAX_OID_LEN);
    if (nameLen == 0)
 		return NXSL_ERR_BAD_CONDITION;
 
@@ -994,7 +994,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 		SNMP_Variable *var = new SNMP_Variable(argv[1]->getValueAsString(&len));
 		if (argc == 3)
 		{
-			var->SetValueFromString(ASN_OCTET_STRING, argv[2]->getValueAsString(&len));
+			var->setValueFromString(ASN_OCTET_STRING, argv[2]->getValueAsString(&len));
 		}
 		else
 		{
@@ -1005,7 +1005,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 					argv[3]->getValueAsString(&len));
 				dataType = ASN_OCTET_STRING;
 			}
-			var->SetValueFromString(dataType, argv[2]->getValueAsString(&len));
+			var->setValueFromString(dataType, argv[2]->getValueAsString(&len));
 		}
 		request->bindVariable(var);
 	}
@@ -1055,7 +1055,8 @@ finish:
 static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	static UINT32 requestId = 1;
-	UINT32 rootName[MAX_OID_LEN], rootNameLen, name[MAX_OID_LEN], nameLen, result;
+	UINT32 rootName[MAX_OID_LEN], name[MAX_OID_LEN], result;
+   size_t rootNameLen, nameLen;
 	SNMP_PDU *rqPDU, *rspPDU;
 	BOOL isRunning = TRUE;
 	int i = 0;
@@ -1072,7 +1073,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
 	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
 
    // Get root
-   rootNameLen = SNMPParseOID(argv[1]->getValueAsString(&rootNameLen), rootName, MAX_OID_LEN);
+   rootNameLen = SNMPParseOID(argv[1]->getValueAsCString(), rootName, MAX_OID_LEN);
    if (rootNameLen == 0)
       return SNMP_ERR_BAD_OID;
 
@@ -1095,22 +1096,22 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
              (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
          {
             SNMP_Variable *var = rspPDU->getVariable(0);
-            if ((var->GetType() != ASN_NO_SUCH_OBJECT) &&
-                (var->GetType() != ASN_NO_SUCH_INSTANCE))
+            if ((var->getType() != ASN_NO_SUCH_OBJECT) &&
+                (var->getType() != ASN_NO_SUCH_INSTANCE))
             {
                // Do we have to stop walking?
-               if ((var->GetName()->getLength() < rootNameLen) ||
-                   (memcmp(rootName, var->GetName()->getValue(), rootNameLen * sizeof(UINT32))) ||
-                   ((var->GetName()->getLength() == nameLen) &&
-                    (!memcmp(var->GetName()->getValue(), name, var->GetName()->getLength() * sizeof(UINT32)))))
+               if ((var->getName()->getLength() < rootNameLen) ||
+                   (memcmp(rootName, var->getName()->getValue(), rootNameLen * sizeof(UINT32))) ||
+                   ((var->getName()->getLength() == nameLen) &&
+                    (!memcmp(var->getName()->getValue(), name, var->getName()->getLength() * sizeof(UINT32)))))
                {
                   isRunning = FALSE;
                   delete rspPDU;
                   delete rqPDU;
                   break;
                }
-               memcpy(name, var->GetName()->getValue(), var->GetName()->getLength() * sizeof(UINT32));
-               nameLen = var->GetName()->getLength();
+               memcpy(name, var->getName()->getValue(), var->getName()->getLength() * sizeof(UINT32));
+               nameLen = var->getName()->getLength();
 					varList->set(i++, new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, var)));
 					rspPDU->unlinkVariables();
             }

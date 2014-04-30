@@ -87,13 +87,13 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
-   UINT32 nameLen = varbind->GetName()->getLength();
+   UINT32 nameLen = varbind->getName()->getLength();
 	UINT32 oidName[MAX_OID_LEN];
-	memcpy(oidName, varbind->GetName()->getValue(), nameLen * sizeof(UINT32));
+	memcpy(oidName, varbind->getName()->getValue(), nameLen * sizeof(UINT32));
 
 	NX_INTERFACE_INFO iface;
 	memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-	iface.dwIndex = varbind->GetValueAsUInt();
+	iface.dwIndex = varbind->getValueAsUInt();
 
 	oidName[10] = 2;	// nsIfName
 	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.szName, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT);

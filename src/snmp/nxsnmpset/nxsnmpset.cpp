@@ -82,7 +82,7 @@ static int SetVariables(int argc, TCHAR *argv[])
          if (SNMPIsCorrectOID(argv[i]))
          {
             pVar = new SNMP_Variable(argv[i]);
-            pVar->SetValueFromString(m_type, argv[i + 1]);
+            pVar->setValueFromString(m_type, argv[i + 1]);
             request->bindVariable(pVar);
          }
          else

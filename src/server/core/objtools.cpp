@@ -266,13 +266,13 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
       switch(nFmt)
       {
          case CFMT_MAC_ADDR:
-            pVar->GetValueAsMACAddr(szBuffer);
+            pVar->getValueAsMACAddr(szBuffer);
             break;
          case CFMT_IP_ADDR:
-            pVar->GetValueAsIPAddr(szBuffer);
+            pVar->getValueAsIPAddr(szBuffer);
             break;
          case CFMT_IFINDEX:   // Column is an interface index, convert to interface name
-            dwIndex = pVar->GetValueAsUInt();
+            dwIndex = pVar->getValueAsUInt();
             pInterface = pNode->findInterface(dwIndex, INADDR_ANY);
             if (pInterface != NULL)
             {
@@ -309,21 +309,22 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
 {
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
    SNMP_PDU *pRqPDU, *pRespPDU;
-   UINT32 i, dwResult, dwNameLen, pdwVarName[MAX_OID_LEN];
+   UINT32 i, dwResult, pdwVarName[MAX_OID_LEN];
+   size_t nameLen;
 
    // Create index (OID suffix) for columns
    if (((SNMP_ENUM_ARGS *)pArg)->dwFlags & TF_SNMP_INDEXED_BY_VALUE)
    {
-      _sntprintf(szSuffix, MAX_OID_LEN * 4, _T(".%u"), pVar->GetValueAsUInt());
+      _sntprintf(szSuffix, MAX_OID_LEN * 4, _T(".%u"), pVar->getValueAsUInt());
    }
    else
    {
       SNMP_ObjectId *pOid;
 
-      dwNameLen = SNMPParseOID(((SNMP_ENUM_ARGS *)pArg)->ppszOidList[0], pdwVarName, MAX_OID_LEN);
-      pOid = pVar->GetName();
-      SNMPConvertOIDToText(pOid->getLength() - dwNameLen,
-         (UINT32 *)&(pOid->getValue())[dwNameLen], szSuffix, MAX_OID_LEN * 4);
+      nameLen = SNMPParseOID(((SNMP_ENUM_ARGS *)pArg)->ppszOidList[0], pdwVarName, MAX_OID_LEN);
+      pOid = pVar->getName();
+      SNMPConvertOIDToText(pOid->getLength() - nameLen,
+         (UINT32 *)&(pOid->getValue())[nameLen], szSuffix, MAX_OID_LEN * 4);
    }
 
    // Get values for other columns
@@ -332,10 +333,10 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
    {
       _tcscpy(szOid, ((SNMP_ENUM_ARGS *)pArg)->ppszOidList[i]);
       _tcscat(szOid, szSuffix);
-      dwNameLen = SNMPParseOID(szOid, pdwVarName, MAX_OID_LEN);
-      if (dwNameLen != 0)
+      nameLen = SNMPParseOID(szOid, pdwVarName, MAX_OID_LEN);
+      if (nameLen != 0)
       {
-         pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, dwNameLen));
+         pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLen));
       }
    }
 

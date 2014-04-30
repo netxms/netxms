@@ -79,7 +79,7 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 	if (oid[0] != 0)
 	{
 		UINT32 oidBin[256];
-		UINT32 len = SNMPParseOID(oid, oidBin, 256);
+		size_t len = SNMPParseOID(oid, oidBin, 256);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(len, oidBin);
@@ -108,7 +108,7 @@ DCTableColumn::DCTableColumn(ConfigEntry *e)
    if ((oid != NULL) && (*oid != 0))
    {
 		UINT32 oidBin[256];
-		UINT32 len = SNMPParseOID(oid, oidBin, 256);
+		size_t len = SNMPParseOID(oid, oidBin, 256);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(len, oidBin);

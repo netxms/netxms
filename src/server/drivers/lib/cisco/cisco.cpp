@@ -31,7 +31,7 @@ static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->GetName()->getValue()[var->GetName()->getLength() - 1], VLAN_PRM_IFINDEX);
+	VlanInfo *vlan = new VlanInfo(var->getName()->getValue()[var->getName()->getLength() - 1], VLAN_PRM_IFINDEX);
 
 	TCHAR buffer[256];
 	vlan->setName(var->getValueAsString(buffer, 256));
@@ -85,12 +85,12 @@ static void ParseVlanMap(VlanList *vlanList, UINT32 ifIndex, BYTE *map, int offs
 static UINT32 HandlerTrunkPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-   UINT32 nameLen = var->GetName()->getLength();
-	UINT32 ifIndex = var->GetName()->getValue()[nameLen - 1];
+   size_t nameLen = var->getName()->getLength();
+	UINT32 ifIndex = var->getName()->getValue()[nameLen - 1];
 
 	// Check if port is acting as trunk
 	UINT32 oidName[256], value;
-   memcpy(oidName, var->GetName()->getValue(), nameLen * sizeof(UINT32));
+   memcpy(oidName, var->getName()->getValue(), nameLen * sizeof(UINT32));
    oidName[nameLen - 2] = 14;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.14
 	if (SnmpGet(version, transport, NULL, oidName, nameLen, &value, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 	   return SNMP_ERR_SUCCESS;	// Cannot get trunk state, ignore port
@@ -98,7 +98,7 @@ static UINT32 HandlerTrunkPorts(UINT32 version, SNMP_Variable *var, SNMP_Transpo
 	   return SNMP_ERR_SUCCESS;	// Not a trunk port, ignore
 
 	// Native VLAN
-	int vlanId = var->GetValueAsInt();
+	int vlanId = var->getValueAsInt();
 	if (vlanId != 0)
 		vlanList->addMemberPort(vlanId, ifIndex);
 
@@ -137,14 +137,14 @@ static UINT32 HandlerTrunkPorts(UINT32 version, SNMP_Variable *var, SNMP_Transpo
 static UINT32 HandlerAccessPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-   UINT32 nameLen = var->GetName()->getLength();
-	UINT32 ifIndex = var->GetName()->getValue()[nameLen - 1];
+   size_t nameLen = var->getName()->getLength();
+	UINT32 ifIndex = var->getName()->getValue()[nameLen - 1];
 
 	UINT32 oidName[256];
-   memcpy(oidName, var->GetName()->getValue(), nameLen * sizeof(UINT32));
+   memcpy(oidName, var->getName()->getValue(), nameLen * sizeof(UINT32));
 
 	// Entry type: 3=multi-vlan
-	if (var->GetValueAsInt() == 3)
+	if (var->getValueAsInt() == 3)
 	{
 		BYTE map[128];
 

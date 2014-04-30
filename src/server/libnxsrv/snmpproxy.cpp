@@ -49,18 +49,17 @@ SNMP_ProxyTransport::~SNMP_ProxyTransport()
 int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 {
    BYTE *pBuffer;
-   UINT32 dwSize;
    int nRet = -1;
 	CSCPMessage msg(m_pAgentConnection->getProtocolVersion());
 
-   dwSize = pdu->encode(&pBuffer, m_securityContext);
-   if (dwSize != 0)
+   size_t size = pdu->encode(&pBuffer, m_securityContext);
+   if (size != 0)
    {
 		msg.SetCode(CMD_SNMP_REQUEST);
 		msg.SetVariable(VID_IP_ADDRESS, m_dwIpAddr);
 		msg.SetVariable(VID_PORT, m_wPort);
-		msg.SetVariable(VID_PDU_SIZE, dwSize);
-		msg.SetVariable(VID_PDU, pBuffer, dwSize);
+		msg.SetVariable(VID_PDU_SIZE, (UINT32)size);
+		msg.SetVariable(VID_PDU, pBuffer, (UINT32)size);
       free(pBuffer);
 
 		m_pResponse = m_pAgentConnection->customRequest(&msg);

@@ -26,17 +26,15 @@
 /**
  * Convert OID to text
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(UINT32 dwLength, const UINT32 *pdwValue, TCHAR *pszBuffer, UINT32 dwBufferSize)
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const UINT32 *value, TCHAR *buffer, size_t bufferSize)
 {
-   UINT32 i, dwBufPos, dwNumChars;
-
-   pszBuffer[0] = 0;
-   for(i = 0, dwBufPos = 0; (i < dwLength) && (dwBufPos < dwBufferSize); i++)
+   buffer[0] = 0;
+   for(size_t i = 0, bufPos = 0; (i < length) && (bufPos < bufferSize); i++)
    {
-      dwNumChars = _sntprintf(&pszBuffer[dwBufPos], dwBufferSize - dwBufPos, _T(".%d"), pdwValue[i]);
-      dwBufPos += dwNumChars;
+      size_t numChars = _sntprintf(&buffer[bufPos], bufferSize - bufPos, _T(".%d"), value[i]);
+      bufPos += numChars;
    }
-	return pszBuffer;
+	return buffer;
 }
 
 /**
@@ -44,10 +42,10 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(UINT32 dwLength, const UINT32 *
  * Will return 0 if OID is invalid or empty, and OID length (in UINT32s) on success
  * Buffer size should be given in number of UINT32s
  */
-UINT32 LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, UINT32 *pdwBuffer, UINT32 dwBufferSize)
+size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, UINT32 *buffer, size_t bufferSize)
 {
-   TCHAR *pCurr = (TCHAR *)pszText, *pEnd, szNumber[32];
-   UINT32 dwLength = 0;
+   TCHAR *pCurr = (TCHAR *)text, *pEnd, szNumber[32];
+   size_t length = 0;
    int iNumLen;
 
    if (*pCurr == 0)
@@ -57,16 +55,16 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, UINT32 *pdwBuffer
    if (*pCurr == _T('.'))
       pCurr++;
 
-   for(pEnd = pCurr; (*pEnd != 0) && (dwLength < dwBufferSize); pCurr = pEnd + 1)
+   for(pEnd = pCurr; (*pEnd != 0) && (length < bufferSize); pCurr = pEnd + 1)
    {
       for(iNumLen = 0, pEnd = pCurr; (*pEnd >= _T('0')) && (*pEnd <= _T('9')); pEnd++, iNumLen++);
       if ((iNumLen > 15) || ((*pEnd != _T('.')) && (*pEnd != 0)))
          return 0;   // Number is definitely too large or not a number
       memcpy(szNumber, pCurr, sizeof(TCHAR) * iNumLen);
       szNumber[iNumLen] = 0;
-      pdwBuffer[dwLength++] = _tcstoul(szNumber, NULL, 10);
+      buffer[length++] = _tcstoul(szNumber, NULL, 10);
    }
-   return dwLength;
+   return length;
 }
 
 /**
@@ -75,14 +73,14 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, UINT32 *pdwBuffer
 bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid)
 {
    UINT32 buffer[MAX_OID_LEN];
-   UINT32 len = SNMPParseOID(oid, buffer, MAX_OID_LEN);
+   size_t len = SNMPParseOID(oid, buffer, MAX_OID_LEN);
    return (len > 0);
 }
 
 /**
  * Check if given OID is syntaxically correct
  */
-UINT32 LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid)
+size_t LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid)
 {
    UINT32 buffer[MAX_OID_LEN];
    return SNMPParseOID(oid, buffer, MAX_OID_LEN);

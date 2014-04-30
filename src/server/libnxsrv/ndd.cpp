@@ -156,7 +156,7 @@ static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
 {
 	NX_INTERFACE_INFO info;
 	memset(&info, 0, sizeof(NX_INTERFACE_INFO));
-	info.dwIndex = pVar->GetValueAsUInt();
+	info.dwIndex = pVar->getValueAsUInt();
 	((InterfaceList *)pArg)->add(&info);
    return SNMP_ERR_SUCCESS;
 }
@@ -166,7 +166,7 @@ static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
  */
 static UINT32 HandlerIndexIfXTable(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   SNMP_ObjectId *name = pVar->GetName();
+   SNMP_ObjectId *name = pVar->getName();
    UINT32 index = name->getValue()[name->getLength() - 1];
    if (((InterfaceList *)pArg)->findByIfIndex(index) == NULL)
    {
@@ -183,26 +183,26 @@ static UINT32 HandlerIndexIfXTable(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_T
  */
 static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   UINT32 dwIndex, dwNetMask, dwNameLen, dwResult;
+   UINT32 dwIndex, dwNetMask, dwResult;
    UINT32 oidName[MAX_OID_LEN];
 
-   dwNameLen = pVar->GetName()->getLength();
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
-   oidName[dwNameLen - 5] = 3;  // Retrieve network mask for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwNetMask, sizeof(UINT32), 0);
+   size_t nameLen = pVar->getName()->getLength();
+   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+   oidName[nameLen - 5] = 3;  // Retrieve network mask for this IP
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &dwNetMask, sizeof(UINT32), 0);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		TCHAR buffer[1024];
 		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"), 
-			pTransport, SNMPConvertOIDToText(dwNameLen, oidName, buffer, 1024), (int)dwResult);
+			pTransport, SNMPConvertOIDToText(nameLen, oidName, buffer, 1024), (int)dwResult);
 		// Continue walk even if we get error for some IP address
 		// For example, some Cisco ASA versions reports IP when walking, but does not
 		// allow to SNMP GET appropriate entry
       return SNMP_ERR_SUCCESS;
 	}
 
-   oidName[dwNameLen - 5] = 2;  // Retrieve interface index for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(UINT32), 0);
+   oidName[nameLen - 5] = 2;  // Retrieve interface index for this IP
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &dwIndex, sizeof(UINT32), 0);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		InterfaceList *ifList = (InterfaceList *)pArg;
@@ -217,13 +217,13 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
                // on a single interface
 					NX_INTERFACE_INFO iface;
 					memcpy(&iface, ifList->get(i), sizeof(NX_INTERFACE_INFO));
-					iface.dwIpAddr = ntohl(pVar->GetValueAsUInt());
+					iface.dwIpAddr = ntohl(pVar->getValueAsUInt());
 					iface.dwIpNetMask = dwNetMask;
 					ifList->add(&iface);
             }
 				else
 				{
-					ifList->get(i)->dwIpAddr = ntohl(pVar->GetValueAsUInt());
+					ifList->get(i)->dwIpAddr = ntohl(pVar->getValueAsUInt());
 					ifList->get(i)->dwIpNetMask = dwNetMask;
 				}
             break;
@@ -234,7 +234,7 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 	{
 		TCHAR buffer[1024];
 		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"), 
-			pTransport, SNMPConvertOIDToText(dwNameLen, oidName, buffer, 1024), (int)dwResult);
+			pTransport, SNMPConvertOIDToText(nameLen, oidName, buffer, 1024), (int)dwResult);
 		dwResult = SNMP_ERR_SUCCESS;	// continue walk
 	}
    return dwResult;
@@ -413,7 +413,7 @@ static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->GetName()->getValue()[var->GetName()->getLength() - 1], VLAN_PRM_BPORT);
+	VlanInfo *vlan = new VlanInfo(var->getName()->getValue()[var->getName()->getLength() - 1], VLAN_PRM_BPORT);
 
 	TCHAR buffer[256];
 	vlan->setName(var->getValueAsString(buffer, 256));
@@ -464,7 +464,7 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 static UINT32 HandlerVlanEgressPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-	UINT32 vlanId = var->GetName()->getValue()[var->GetName()->getLength() - 1];
+	UINT32 vlanId = var->getName()->getValue()[var->getName()->getLength() - 1];
 	VlanInfo *vlan = vlanList->findById(vlanId);
 	if (vlan != NULL)
 	{

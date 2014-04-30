@@ -142,8 +142,8 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
    UINT32 apIndex = name->getValue()[nameLen - 1];
 
    UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 4, 1, 3, 0 };
@@ -174,7 +174,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
          break;
    }
 
-   AccessPointInfo *info = new AccessPointInfo((BYTE *)var->GetValue(), AP_UNADOPTED, NULL, model, NULL);
+   AccessPointInfo *info = new AccessPointInfo((BYTE *)var->getValue(), AP_UNADOPTED, NULL, model, NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -189,8 +189,8 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
 
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
    UINT32 apIndex = name->getValue()[nameLen - 1];
 
    UINT32 numberOfRadios;
@@ -269,7 +269,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    AccessPointInfo *info;
    if (ret == SNMP_ERR_SUCCESS)
    {
-      info = new AccessPointInfo((BYTE *)var->GetValue(), AP_ADOPTED, NULL, model, serial);
+      info = new AccessPointInfo((BYTE *)var->getValue(), AP_ADOPTED, NULL, model, serial);
       apList->add(info);
    }
 
@@ -376,8 +376,8 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
 
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
    const UINT32 *value = name->getValue();
 
    UINT32 oid[32];
@@ -420,7 +420,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    {
       WirelessStationInfo *info = new WirelessStationInfo;
 
-      memcpy(info->macAddr, var->GetValue(), MAC_ADDR_LENGTH);
+      memcpy(info->macAddr, var->getValue(), MAC_ADDR_LENGTH);
       info->ipAddr = ipAddr;
       info->vlan = vlanInfex;
       nx_strncpy(info->ssid, ssid, MAX_OBJECT_NAME);

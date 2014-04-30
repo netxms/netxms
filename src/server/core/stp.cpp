@@ -27,12 +27,12 @@
  */
 static UINT32 STPPortListHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-	int state = var->GetValueAsInt();
+	int state = var->getValueAsInt();
 	if ((state != 2) && (state != 5))
 		return SNMP_ERR_SUCCESS;  // port state not "blocked" or "forwarding"
 
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
-	SNMP_ObjectId *oid = var->GetName();
+	SNMP_ObjectId *oid = var->getName();
 
 	return SNMP_ERR_SUCCESS;
 }

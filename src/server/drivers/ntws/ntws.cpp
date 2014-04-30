@@ -124,8 +124,8 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
 
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
 
    UINT32 oid[128];
    memcpy(oid, name->getValue(), nameLen * sizeof(UINT32));
@@ -151,7 +151,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
       if (response->getNumVariables() >= 2)
       {
          TCHAR model[256], name[256];
-         AccessPointInfo *ap = new AccessPointInfo((BYTE *)var->GetValue(), AP_ADOPTED, 
+         AccessPointInfo *ap = new AccessPointInfo((BYTE *)var->getValue(), AP_ADOPTED, 
             response->getVariable(1)->getValueAsString(name, 256), response->getVariable(0)->getValueAsString(model, 256), serial);
          apList->add(ap);
       }
@@ -169,14 +169,14 @@ static UINT32 HandlerRadioList(UINT32 version, SNMP_Variable *var, SNMP_Transpor
 {
    AccessPointInfo *ap = (AccessPointInfo *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
 
    UINT32 oid[128];
    memcpy(oid, name->getValue(), nameLen * sizeof(UINT32));
 
    RadioInterfaceInfo rif;
-   memcpy(rif.macAddr, var->GetValue(), MAC_ADDR_LENGTH);
+   memcpy(rif.macAddr, var->getValue(), MAC_ADDR_LENGTH);
    rif.index = (int)oid[nameLen - 1];
    _sntprintf(rif.name, sizeof(rif.name) / sizeof(TCHAR), _T("Radio%d"), rif.index);
    
@@ -193,9 +193,9 @@ static UINT32 HandlerRadioList(UINT32 version, SNMP_Variable *var, SNMP_Transpor
    {
       if (response->getNumVariables() >= 2)
       {
-         rif.powerDBm = response->getVariable(0)->GetValueAsInt();
+         rif.powerDBm = response->getVariable(0)->getValueAsInt();
          rif.powerMW = (int)pow(10.0, (double)rif.powerDBm / 10.0);
-         rif.channel = response->getVariable(1)->GetValueAsUInt();
+         rif.channel = response->getVariable(1)->getValueAsUInt();
          ap->addRadioInterface(&rif);
       }
       delete response;
@@ -260,8 +260,8 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
 
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
    const UINT32 *value = name->getValue();
 
    UINT32 oid[32];
@@ -304,7 +304,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    {
       WirelessStationInfo *info = new WirelessStationInfo;
 
-      memcpy(info->macAddr, var->GetValue(), MAC_ADDR_LENGTH);
+      memcpy(info->macAddr, var->getValue(), MAC_ADDR_LENGTH);
       info->ipAddr = ipAddr;
       info->vlan = vlanInfex;
       nx_strncpy(info->ssid, ssid, MAX_OBJECT_NAME);

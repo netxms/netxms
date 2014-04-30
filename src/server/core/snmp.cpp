@@ -31,8 +31,8 @@ static UINT32 HandlerArp(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
    BYTE bMac[64];
    UINT32 dwResult;
 
-   dwNameLen = pVar->GetName()->getLength();
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
+   dwNameLen = pVar->getName()->getLength();
+   memcpy(oidName, pVar->getName()->getValue(), dwNameLen * sizeof(UINT32));
 
    oidName[dwNameLen - 6] = 1;  // Retrieve interface index
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(UINT32), 0);
@@ -46,7 +46,7 @@ static UINT32 HandlerArp(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
       ((ARP_CACHE *)pArg)->dwNumEntries++;
       ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
                sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
-      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = ntohl(pVar->GetValueAsUInt());
+      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = ntohl(pVar->getValueAsUInt());
       memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
       ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIndex = dwIndex;
    }
@@ -133,14 +133,14 @@ static UINT32 HandlerRoute(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
    ROUTE route;
 	ROUTING_TABLE *rt = (ROUTING_TABLE *)pArg;
 
-   dwNameLen = pVar->GetName()->getLength();
+   dwNameLen = pVar->getName()->getLength();
 	if ((dwNameLen < 5) || (dwNameLen > MAX_OID_LEN))
 	{
-		DbgPrintf(4, _T("HandlerRoute(): strange dwNameLen %d (name=%s)"), dwNameLen, pVar->GetName()->getValueAsText());
+		DbgPrintf(4, _T("HandlerRoute(): strange dwNameLen %d (name=%s)"), dwNameLen, pVar->getName()->getValueAsText());
 		return SNMP_ERR_SUCCESS;
 	}
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
-   route.dwDestAddr = ntohl(pVar->GetValueAsUInt());
+   memcpy(oidName, pVar->getName()->getValue(), dwNameLen * sizeof(UINT32));
+   route.dwDestAddr = ntohl(pVar->getValueAsUInt());
 
    oidName[dwNameLen - 5] = 2;  // Interface index
    if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,

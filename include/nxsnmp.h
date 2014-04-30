@@ -357,26 +357,26 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_ObjectId
 {
 private:
-   UINT32 m_dwLength;
-   UINT32 *m_pdwValue;
-   TCHAR *m_pszTextValue;
+   UINT32 m_length;
+   UINT32 *m_value;
+   TCHAR *m_textValue;
 
    void convertToText();
 
 public:
    SNMP_ObjectId();
    SNMP_ObjectId(SNMP_ObjectId *src);
-   SNMP_ObjectId(UINT32 dwLength, const UINT32 *pdwValue);
+   SNMP_ObjectId(size_t length, const UINT32 *value);
    ~SNMP_ObjectId();
 
-   UINT32 getLength() { return m_dwLength; }
-   const UINT32 *getValue() { return m_pdwValue; }
-   const TCHAR *getValueAsText() { return CHECK_NULL(m_pszTextValue); }
-   void setValue(UINT32 *pdwValue, UINT32 dwLength);
+   size_t getLength() { return (size_t)m_length; }
+   const UINT32 *getValue() { return m_value; }
+   const TCHAR *getValueAsText() { return CHECK_NULL(m_textValue); }
+   void setValue(UINT32 *value, size_t length);
    void extend(UINT32 subId);
 
-   int compare(const TCHAR *pszOid);
-   int compare(const UINT32 *pdwOid, UINT32 dwLen);
+   int compare(const TCHAR *oid);
+   int compare(const UINT32 *oid, size_t length);
 	int compare(SNMP_ObjectId *oid);
 };
 
@@ -386,35 +386,36 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_Variable
 {
 private:
-   SNMP_ObjectId *m_pName;
-   UINT32 m_dwType;
-   UINT32 m_dwValueLength;
-   BYTE *m_pValue;
+   SNMP_ObjectId *m_name;
+   UINT32 m_type;
+   size_t m_valueLength;
+   BYTE *m_value;
 
 public:
    SNMP_Variable();
-   SNMP_Variable(const TCHAR *pszName);
-   SNMP_Variable(UINT32 *pdwName, UINT32 dwNameLen);
+   SNMP_Variable(const TCHAR *name);
+   SNMP_Variable(UINT32 *name, size_t nameLen);
+   SNMP_Variable(SNMP_Variable *src);
    ~SNMP_Variable();
 
-   BOOL Parse(BYTE *pData, UINT32 dwVarLength);
-   UINT32 Encode(BYTE *pBuffer, UINT32 dwBufferSize);
+   bool parse(BYTE *data, size_t varLength);
+   size_t encode(BYTE *buffer, size_t bufferSize);
 
-   SNMP_ObjectId *GetName() { return m_pName; }
-   UINT32 GetType() { return m_dwType; }
-   UINT32 GetValueLength() { return m_dwValueLength; }
-   const BYTE *GetValue() { return m_pValue; }
+   SNMP_ObjectId *getName() { return m_name; }
+   UINT32 getType() { return m_type; }
+   size_t getValueLength() { return m_valueLength; }
+   const BYTE *getValue() { return m_value; }
 
 	size_t getRawValue(BYTE *buffer, size_t bufSize);
-   UINT32 GetValueAsUInt();
-   LONG GetValueAsInt();
-   TCHAR *getValueAsString(TCHAR *pszBuffer, UINT32 dwBufferSize);
-   TCHAR *getValueAsPrintableString(TCHAR *buffer, UINT32 bufferSize, bool *convertToHex);
-   SNMP_ObjectId *GetValueAsObjectId();
-   TCHAR *GetValueAsMACAddr(TCHAR *pszBuffer);
-   TCHAR *GetValueAsIPAddr(TCHAR *pszBuffer);
+   UINT32 getValueAsUInt();
+   LONG getValueAsInt();
+   TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize);
+   TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex);
+   SNMP_ObjectId *getValueAsObjectId();
+   TCHAR *getValueAsMACAddr(TCHAR *buffer);
+   TCHAR *getValueAsIPAddr(TCHAR *buffer);
 
-   void SetValueFromString(UINT32 dwType, const TCHAR *pszValue);
+   void setValueFromString(UINT32 type, const TCHAR *value);
 };
 
 /**
@@ -424,18 +425,18 @@ class LIBNXSNMP_EXPORTABLE SNMP_Engine
 {
 private:
 	BYTE m_id[SNMP_MAX_ENGINEID_LEN];
-	int m_idLen;
+	size_t m_idLen;
 	int m_engineBoots;
 	int m_engineTime;
 
 public:
 	SNMP_Engine();
-	SNMP_Engine(BYTE *id, int idLen, int engineBoots = 0, int engineTime = 0);
+	SNMP_Engine(BYTE *id, size_t idLen, int engineBoots = 0, int engineTime = 0);
 	SNMP_Engine(SNMP_Engine *src);
 	~SNMP_Engine();
 
 	BYTE *getId() { return m_id; }
-	int getIdLen() { return m_idLen; }
+	size_t getIdLen() { return m_idLen; }
 	int getBoots() { return m_engineBoots; }
 	int getTime() { return m_engineTime; }
 
@@ -512,13 +513,12 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_PDU
 {
 private:
-   UINT32 m_dwVersion;
-   UINT32 m_dwCommand;
-   UINT32 m_dwNumVariables;
-   SNMP_Variable **m_ppVarList;
+   UINT32 m_version;
+   UINT32 m_command;
+   ObjectArray<SNMP_Variable> *m_variables;
    SNMP_ObjectId *m_pEnterprise;
-   int m_iTrapType;
-   int m_iSpecificTrap;
+   int m_trapType;
+   int m_specificTrap;
    UINT32 m_dwTimeStamp;
    UINT32 m_dwAgentAddr;
    UINT32 m_dwRqId;
@@ -527,7 +527,7 @@ private:
 	UINT32 m_msgId;
 	UINT32 m_msgMaxSize;
 	BYTE m_contextEngineId[SNMP_MAX_ENGINEID_LEN];
-	int m_contextEngineIdLen;
+	size_t m_contextEngineIdLen;
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
 	BYTE m_salt[8];
 	bool m_reportable;
@@ -540,37 +540,38 @@ private:
 	int m_securityModel;
 	BYTE m_signature[12];
 
-   BOOL parseVariable(BYTE *pData, UINT32 dwVarLength);
-   BOOL parseVarBinds(BYTE *pData, UINT32 dwPDULength);
-   BOOL parsePdu(BYTE *pdu, UINT32 pduLength);
-   BOOL parseTrapPDU(BYTE *pData, UINT32 dwPDULength);
-   BOOL parseTrap2PDU(BYTE *pData, UINT32 dwPDULength);
-   BOOL parsePduContent(BYTE *pData, UINT32 dwPDULength);
-   BOOL parseV3Header(BYTE *pData, UINT32 dwPDULength);
-   BOOL parseV3SecurityUsm(BYTE *pData, UINT32 dwPDULength);
-   BOOL parseV3ScopedPdu(BYTE *pData, UINT32 dwPDULength);
-	BOOL validateSignedMessage(BYTE *msg, UINT32 msgLen, SNMP_SecurityContext *securityContext);
-	UINT32 encodeV3Header(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityContext *securityContext);
-	UINT32 encodeV3SecurityParameters(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityContext *securityContext);
-	UINT32 encodeV3ScopedPDU(UINT32 pduType, BYTE *pdu, UINT32 pduSize, BYTE *buffer, UINT32 bufferSize);
-	void signMessage(BYTE *msg, UINT32 msgLen, SNMP_SecurityContext *securityContext);
-	BOOL decryptData(BYTE *data, UINT32 length, BYTE *decryptedData, SNMP_SecurityContext *securityContext);
+   bool parseVariable(BYTE *pData, size_t varLength);
+   bool parseVarBinds(BYTE *pData, size_t pduLength);
+   bool parsePdu(BYTE *pdu, size_t pduLength);
+   bool parseTrapPDU(BYTE *pData, size_t pduLength);
+   bool parseTrap2PDU(BYTE *pData, size_t pduLength);
+   bool parsePduContent(BYTE *pData, size_t pduLength);
+   bool parseV3Header(BYTE *pData, size_t pduLength);
+   bool parseV3SecurityUsm(BYTE *pData, size_t pduLength);
+   bool parseV3ScopedPdu(BYTE *pData, size_t pduLength);
+	bool validateSignedMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext);
+	size_t encodeV3Header(BYTE *buffer, size_t bufferSize, SNMP_SecurityContext *securityContext);
+	size_t encodeV3SecurityParameters(BYTE *buffer, size_t bufferSize, SNMP_SecurityContext *securityContext);
+	size_t encodeV3ScopedPDU(UINT32 pduType, BYTE *pdu, size_t pduSize, BYTE *buffer, size_t bufferSize);
+	void signMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext);
+	bool decryptData(BYTE *data, size_t length, BYTE *decryptedData, SNMP_SecurityContext *securityContext);
 
 public:
    SNMP_PDU();
    SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion = SNMP_VERSION_2C);
+   SNMP_PDU(SNMP_PDU *src);
    ~SNMP_PDU();
 
-   BOOL parse(BYTE *pRawData, UINT32 dwRawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
-   UINT32 encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
+   bool parse(BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
+   size_t encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
 
-   UINT32 getCommand() { return m_dwCommand; }
+   UINT32 getCommand() { return m_command; }
    SNMP_ObjectId *getTrapId() { return m_pEnterprise; }
-   int getTrapType() { return m_iTrapType; }
-   int getSpecificTrapType() { return m_iSpecificTrap; }
-   UINT32 getNumVariables() { return m_dwNumVariables; }
-   SNMP_Variable *getVariable(UINT32 dwIndex) { return (dwIndex < m_dwNumVariables) ? m_ppVarList[dwIndex] : NULL; }
-   UINT32 getVersion() { return m_dwVersion; }
+   int getTrapType() { return m_trapType; }
+   int getSpecificTrapType() { return m_specificTrap; }
+   int getNumVariables() { return m_variables->size(); }
+   SNMP_Variable *getVariable(int index) { return m_variables->get(index); }
+   UINT32 getVersion() { return m_version; }
    UINT32 getErrorCode() { return m_dwErrorCode; }
 
 	void setMessageId(UINT32 msgId) { m_msgId = msgId; }
@@ -588,14 +589,14 @@ public:
    UINT32 getRequestId() { return m_dwRqId; }
    void setRequestId(UINT32 dwId) { m_dwRqId = dwId; }
 
-	void setContextEngineId(BYTE *id, int len);
+	void setContextEngineId(BYTE *id, size_t len);
 	void setContextEngineId(const char *id);
 	void setContextName(const char *name);
 	const char *getContextName() { return m_contextName; }
-	int getContextEngineIdLength() { return m_contextEngineIdLen; }
+	size_t getContextEngineIdLength() { return m_contextEngineIdLen; }
 	BYTE *getContextEngineId() { return m_contextEngineId; }
 
-	void unlinkVariables() { safe_free_and_null(m_ppVarList); m_dwNumVariables = 0; }
+   void unlinkVariables() { m_variables->clear(); }
    void bindVariable(SNMP_Variable *pVar);
 };
 
@@ -657,12 +658,12 @@ private:
    SOCKET m_hSocket;
    struct sockaddr_in m_peerAddr;
 	bool m_connected;
-   UINT32 m_dwBufferSize;
-   UINT32 m_dwBytesInBuffer;
-   UINT32 m_dwBufferPos;
+   size_t m_dwBufferSize;
+   size_t m_dwBytesInBuffer;
+   size_t m_dwBufferPos;
    BYTE *m_pBuffer;
 
-   UINT32 preParsePDU();
+   size_t preParsePDU();
    int recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
    void clearBuffer();
 
@@ -684,14 +685,14 @@ public:
 /**
  * Functions
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(UINT32 dwLength, const UINT32 *pdwValue, TCHAR *pszBuffer, UINT32 dwBufferSize);
-UINT32 LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, UINT32 *pdwBuffer, UINT32 dwBufferSize);
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const UINT32 *value, TCHAR *buffer, size_t bufferSize);
+size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, UINT32 *buffer, size_t bufferSize);
 bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid);
-UINT32 LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid);
+size_t LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid);
 const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 dwError);
-UINT32 LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, UINT32 dwFlags);
-UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot);
-UINT32 LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, UINT32 *pdwTimestamp);
+UINT32 LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *pRoot, UINT32 dwFlags);
+UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *fileName, SNMP_MIBObject **ppRoot);
+UINT32 LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *fileName, UINT32 *pdwTimestamp);
 UINT32 LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType);
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(UINT32 type, TCHAR *buffer, size_t bufferSize);
 

@@ -28,7 +28,7 @@
 static UINT32 CDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
-	SNMP_ObjectId *oid = var->GetName();
+	SNMP_ObjectId *oid = var->getName();
 
 	UINT32 remoteIp;
 	var->getRawValue((BYTE *)&remoteIp, sizeof(UINT32));

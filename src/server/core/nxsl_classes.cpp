@@ -678,11 +678,11 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	SNMP_Variable *t = (SNMP_Variable *)object->getData();
 	if (!_tcscmp(attr, _T("type")))
 	{
-		value = new NXSL_Value((UINT32)t->GetType());
+		value = new NXSL_Value((UINT32)t->getType());
 	}
 	else if (!_tcscmp(attr, _T("name")))
 	{
-		value = new NXSL_Value(t->GetName()->getValueAsText());
+		value = new NXSL_Value(t->getName()->getValueAsText());
 	}
 	else if (!_tcscmp(attr, _T("value")))
 	{
@@ -699,13 +699,13 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	else if (!_tcscmp(attr, _T("valueAsIp")))
 	{
    	TCHAR strValue[128];
-		t->GetValueAsIPAddr(strValue);
+		t->getValueAsIPAddr(strValue);
 		value = new NXSL_Value(strValue);
 	}
 	else if (!_tcscmp(attr, _T("valueAsMac")))
 	{
    	TCHAR strValue[128];
-		t->GetValueAsMACAddr(strValue);
+		t->getValueAsMACAddr(strValue);
 		value = new NXSL_Value(strValue);
 	}
 

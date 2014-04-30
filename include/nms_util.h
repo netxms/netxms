@@ -232,8 +232,8 @@ public:
 	void addString(const TCHAR *pStr, UINT32 dwLen);
 	void addDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
 
-	void addMultiByteString(const char *pStr, UINT32 dwSize, int nCodePage);
-	void addWideCharString(const WCHAR *pStr, UINT32 dwSize);
+	void addMultiByteString(const char *pStr, UINT32 size, int nCodePage);
+	void addWideCharString(const WCHAR *pStr, UINT32 size);
 
    void addFormattedString(const TCHAR *format, ...);
    void addFormattedStringV(const TCHAR *format, va_list args);
@@ -994,26 +994,26 @@ extern "C"
 #define ResolveHostName ResolveHostNameA
 #endif
 
-   void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, UINT32 dwSize);
-   void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, UINT32 dwSize);
+   void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size);
+   void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);
 
-   WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, UINT32 dwSize, WCHAR *pStr);
-   char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pStr);
+   WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *data, size_t size, WCHAR *pStr);
+   char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *data, size_t size, char *pStr);
 #ifdef UNICODE
 #define BinToStr BinToStrW
 #else
 #define BinToStr BinToStrA
 #endif
 
-   UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 dwSize);
-   UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 dwSize);
+   UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *data, UINT32 size);
+   UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, UINT32 size);
 #ifdef UNICODE
 #define StrToBin StrToBinW
 #else
 #define StrToBin StrToBinA
 #endif
 
-   TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr);
+   TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *data, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
    void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *pszStr);
@@ -1074,7 +1074,7 @@ extern "C"
 #define LoadFileA LoadFile
 #endif
 
-   UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, UINT32 dwSize, UINT32 dwCRC);
+   UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, UINT32 size, UINT32 dwCRC);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
 	void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash);
    void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);

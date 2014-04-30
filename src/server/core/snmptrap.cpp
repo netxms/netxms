@@ -64,8 +64,8 @@ static BOOL LoadTrapCfg()
       for(i = 0; i < m_dwNumTraps; i++)
       {
          m_pTrapCfg[i].dwId = DBGetFieldULong(hResult, i, 0);
-         m_pTrapCfg[i].dwOidLen = SNMPParseOID(DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING),
-                                               pdwBuffer, MAX_OID_LEN);
+         m_pTrapCfg[i].dwOidLen = (UINT32)SNMPParseOID(DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING),
+                                                       pdwBuffer, MAX_OID_LEN);
          if (m_pTrapCfg[i].dwOidLen > 0)
          {
             m_pTrapCfg[i].pdwObjectId = (UINT32 *)nx_memdup(pdwBuffer, m_pTrapCfg[i].dwOidLen * sizeof(UINT32));
@@ -103,7 +103,7 @@ static BOOL LoadTrapCfg()
                }
                else
                {
-                  m_pTrapCfg[i].pMaps[j].dwOidLen = SNMPParseOID(pszOID, pdwBuffer, MAX_OID_LEN);
+                  m_pTrapCfg[i].pMaps[j].dwOidLen = (UINT32)SNMPParseOID(pszOID, pdwBuffer, MAX_OID_LEN);
                   if (m_pTrapCfg[i].pMaps[j].dwOidLen > 0)
                   {
                      m_pTrapCfg[i].pMaps[j].pdwObjectId = 
@@ -190,7 +190,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
 			// Extract by varbind OID
          for(j = 0; j < pdu->getNumVariables(); j++)
          {
-            iResult = pdu->getVariable(j)->GetName()->compare(
+            iResult = pdu->getVariable(j)->getName()->compare(
                   m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
                   m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
             if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
@@ -277,7 +277,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
 			bool convertToHex = true;
          dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                 (dwBufPos == 0) ? _T("") : _T("; "),
-                                pVar->GetName()->getValueAsText(), 
+                                pVar->getName()->getValueAsText(), 
 										  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 3000, &convertToHex) : pVar->getValueAsString(szBuffer, 3000));
       }
 
@@ -369,7 +369,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
 					bool convertToHex = true;
                dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                       (dwBufPos == 0) ? _T("") : _T("; "),
-                                      pVar->GetName()->getValueAsText(), 
+                                      pVar->getName()->getValueAsText(), 
 												  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->getValueAsString(szBuffer, 512));
             }
 
@@ -504,7 +504,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 				response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
 
 				SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
-				var->SetValueFromString(ASN_INTEGER, _T("2"));
+				var->setValueFromString(ASN_INTEGER, _T("2"));
 				response->bindVariable(var);
 				
 				SNMP_SecurityContext *context = new SNMP_SecurityContext();
@@ -520,7 +520,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 			}
 			else if (pdu->getCommand() == SNMP_REPORT)
 			{
-				DbgPrintf(6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), pdu->getVariable(0)->GetName()->getValueAsText());
+				DbgPrintf(6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), pdu->getVariable(0)->getName()->getValueAsText());
 			}
          delete pdu;
       }

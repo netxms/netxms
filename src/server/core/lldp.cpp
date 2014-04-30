@@ -28,10 +28,10 @@
 static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LLDP_LOCAL_PORT_INFO *port = new LLDP_LOCAL_PORT_INFO;
-   port->portNumber = var->GetName()->getValue()[11];
+   port->portNumber = var->getName()->getValue()[11];
 	port->localIdLen = var->getRawValue(port->localId, 256);
 
-	SNMP_ObjectId *oid = var->GetName();
+	SNMP_ObjectId *oid = var->getName();
 	UINT32 newOid[128];
 	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
@@ -146,7 +146,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 {
 	LinkLayerNeighbors *nbs = (LinkLayerNeighbors *)arg;
 	Node *node = (Node *)nbs->getData();
-	SNMP_ObjectId *oid = var->GetName();
+	SNMP_ObjectId *oid = var->getName();
 
 	// Get additional info for current record
 	UINT32 newOid[128];
@@ -172,7 +172,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
    {
 		// Build LLDP ID for remote system
 		TCHAR remoteId[256];
-      BuildLldpId(pRespPDU->getVariable(0)->GetValueAsInt(), var->GetValue(), var->GetValueLength(), remoteId, 256);
+      BuildLldpId(pRespPDU->getVariable(0)->getValueAsInt(), var->getValue(), (int)var->getValueLength(), remoteId, 256);
 		Node *remoteNode = FindNodeByLLDPId(remoteId);
 		if (remoteNode != NULL)
 		{
@@ -180,7 +180,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 
 			BYTE remoteIfId[1024];
 			size_t remoteIfIdLen = pRespPDU->getVariable(1)->getRawValue(remoteIfId, 1024);
-			Interface *ifRemote = FindRemoteInterface(remoteNode, pRespPDU->getVariable(2)->GetValueAsUInt(), remoteIfId, remoteIfIdLen, nbs);
+			Interface *ifRemote = FindRemoteInterface(remoteNode, pRespPDU->getVariable(2)->getValueAsUInt(), remoteIfId, remoteIfIdLen, nbs);
          if (ifRemote == NULL)
          {
             // Try to find remote interface by description

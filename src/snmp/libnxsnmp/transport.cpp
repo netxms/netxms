@@ -140,7 +140,7 @@ retry:
 						if ((*response)->getCommand() == SNMP_REPORT)
 						{
 		               SNMP_Variable *var = (*response)->getVariable(0);
-							const TCHAR *oid = var->GetName()->getValueAsText();
+							const TCHAR *oid = var->getName()->getValueAsText();
 							rc = SNMP_ERR_AGENT;
 							for(int i = 0; m_oidToErrorMap[i].oid != NULL; i++)
 							{
@@ -379,7 +379,7 @@ retry_wait:
 	struct sockaddr *senderAddr = (pSender != NULL) ? pSender : (struct sockaddr *)&srcAddrBuffer;
 	socklen_t *senderAddrLen = (piAddrSize != NULL) ? piAddrSize : &srcAddrLenBuffer;
    int rc = recvfrom(m_hSocket, (char *)&m_pBuffer[m_dwBufferPos + m_dwBytesInBuffer],
-                     m_dwBufferSize - (m_dwBufferPos + m_dwBytesInBuffer), 0,
+                     (int)(m_dwBufferSize - (m_dwBufferPos + m_dwBytesInBuffer)), 0,
                      senderAddr, senderAddrLen);
 
 	// Validate sender's address if socket is connected
@@ -404,9 +404,10 @@ retry_wait:
 /**
  * Pre-parse PDU
  */
-UINT32 SNMP_UDPTransport::preParsePDU()
+size_t SNMP_UDPTransport::preParsePDU()
 {
-   UINT32 dwType, dwLength, dwIdLength;
+   UINT32 dwType;
+   size_t dwLength, dwIdLength;
    BYTE *pbCurrPos;
 
    if (!BER_DecodeIdentifier(&m_pBuffer[m_dwBufferPos], m_dwBytesInBuffer, 
@@ -425,22 +426,22 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
                                    struct sockaddr *pSender, socklen_t *piAddrSize,
                                    SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
-   int iBytes;
-   UINT32 dwPDULength;
+   int bytes;
+   size_t pduLength;
 
    if (m_dwBytesInBuffer < 2)
    {
-      iBytes = recvData(dwTimeout, pSender, piAddrSize);
-      if (iBytes <= 0)
+      bytes = recvData(dwTimeout, pSender, piAddrSize);
+      if (bytes <= 0)
       {
          clearBuffer();
-         return iBytes;
+         return bytes;
       }
-      m_dwBytesInBuffer += iBytes;
+      m_dwBytesInBuffer += bytes;
    }
 
-   dwPDULength = preParsePDU();
-   if (dwPDULength == 0)
+   pduLength = preParsePDU();
+   if (pduLength == 0)
    {
       // Clear buffer
       clearBuffer();
@@ -448,22 +449,22 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
    }
 
    // Move existing data to the beginning of buffer if there are not enough space at the end
-   if (dwPDULength > m_dwBufferSize - m_dwBufferPos)
+   if (pduLength > m_dwBufferSize - m_dwBufferPos)
    {
       memmove(m_pBuffer, &m_pBuffer[m_dwBufferPos], m_dwBytesInBuffer);
       m_dwBufferPos = 0;
    }
 
    // Read entire PDU into buffer
-   while(m_dwBytesInBuffer < dwPDULength)
+   while(m_dwBytesInBuffer < pduLength)
    {
-      iBytes = recvData(dwTimeout, pSender, piAddrSize);
-      if (iBytes <= 0)
+      bytes = recvData(dwTimeout, pSender, piAddrSize);
+      if (bytes <= 0)
       {
          clearBuffer();
-         return iBytes;
+         return bytes;
       }
-      m_dwBytesInBuffer += iBytes;
+      m_dwBytesInBuffer += bytes;
    }
 
 	// Change security context if needed
@@ -474,16 +475,16 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 
    // Create new PDU object and remove parsed data from buffer
    *ppData = new SNMP_PDU;
-   if (!(*ppData)->parse(&m_pBuffer[m_dwBufferPos], dwPDULength, m_securityContext, m_enableEngineIdAutoupdate))
+   if (!(*ppData)->parse(&m_pBuffer[m_dwBufferPos], pduLength, m_securityContext, m_enableEngineIdAutoupdate))
    {
       delete *ppData;
       *ppData = NULL;
    }
-   m_dwBytesInBuffer -= dwPDULength;
+   m_dwBytesInBuffer -= pduLength;
    if (m_dwBytesInBuffer == 0)
       m_dwBufferPos = 0;
 
-   return dwPDULength;
+   return (int)pduLength;
 }
 
 /**
@@ -492,13 +493,12 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
 {
    BYTE *pBuffer;
-   UINT32 dwSize;
    int nBytes = 0;
 
-   dwSize = pPDU->encode(&pBuffer, m_securityContext);
-   if (dwSize != 0)
+   size_t size = pPDU->encode(&pBuffer, m_securityContext);
+   if (size != 0)
    {
-      nBytes = sendto(m_hSocket, (char *)pBuffer, dwSize, 0, (struct sockaddr *)&m_peerAddr, sizeof(struct sockaddr_in));
+      nBytes = sendto(m_hSocket, (char *)pBuffer, (int)size, 0, (struct sockaddr *)&m_peerAddr, sizeof(struct sockaddr_in));
       free(pBuffer);
    }
 

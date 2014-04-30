@@ -46,7 +46,8 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
 {
    SNMP_UDPTransport *pTransport;
    SNMP_PDU *pRqPDU, *pRespPDU;
-   UINT32 dwResult, dwRootLen, dwNameLen;
+   UINT32 dwResult;
+   size_t dwRootLen, dwNameLen;
    UINT32 pdwRootName[MAX_OID_LEN], pdwName[MAX_OID_LEN];
    TCHAR szBuffer[1024], typeName[256];
    int iExit = 0;
@@ -107,29 +108,29 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
                {
                   SNMP_Variable *pVar = pRespPDU->getVariable(0);
 
-                  if ((pVar->GetType() != ASN_NO_SUCH_OBJECT) &&
-                      (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
+                  if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
+                      (pVar->getType() != ASN_NO_SUCH_INSTANCE))
                   {
                      // Should we stop walking?
-                     if ((pVar->GetName()->getLength() < dwRootLen) ||
-                         (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(UINT32))) ||
-                         ((pVar->GetName()->getLength() == dwNameLen) &&
-                          (!memcmp(pVar->GetName()->getValue(), pdwName, pVar->GetName()->getLength() * sizeof(UINT32)))))
+                     if ((pVar->getName()->getLength() < dwRootLen) ||
+                         (memcmp(pdwRootName, pVar->getName()->getValue(), dwRootLen * sizeof(UINT32))) ||
+                         ((pVar->getName()->getLength() == dwNameLen) &&
+                          (!memcmp(pVar->getName()->getValue(), pdwName, pVar->getName()->getLength() * sizeof(UINT32)))))
                      {
                         bRunning = FALSE;
                         delete pRespPDU;
                         delete pRqPDU;
                         break;
                      }
-                     memcpy(pdwName, pVar->GetName()->getValue(), 
-                            pVar->GetName()->getLength() * sizeof(UINT32));
-                     dwNameLen = pVar->GetName()->getLength();
+                     memcpy(pdwName, pVar->getName()->getValue(), 
+                            pVar->getName()->getLength() * sizeof(UINT32));
+                     dwNameLen = pVar->getName()->getLength();
 
                      // Print OID and value
 							bool convert = true;
 							pVar->getValueAsPrintableString(szBuffer, 1024, &convert);
-							_tprintf(_T("%s [%s]: %s\n"), pVar->GetName()->getValueAsText(),
-										convert ? _T("Hex-STRING") : SNMPDataTypeName(pVar->GetType(), typeName, 256),
+							_tprintf(_T("%s [%s]: %s\n"), pVar->getName()->getValueAsText(),
+										convert ? _T("Hex-STRING") : SNMPDataTypeName(pVar->getType(), typeName, 256),
 										szBuffer);
                   }
                   else
