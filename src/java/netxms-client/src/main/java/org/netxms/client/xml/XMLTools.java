@@ -20,6 +20,7 @@ package org.netxms.client.xml;
 
 import java.util.UUID;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.convert.Registry;
 import org.simpleframework.xml.convert.RegistryStrategy;
 import org.simpleframework.xml.core.Persister;
@@ -39,6 +40,6 @@ public final class XMLTools
    {
       Registry registry = new Registry();
       registry.bind(UUID.class, UUIDConverter.class);
-      return new Persister(new RegistryStrategy(registry));
+      return new Persister(new AnnotationStrategy(new RegistryStrategy(registry)));
    }
 }

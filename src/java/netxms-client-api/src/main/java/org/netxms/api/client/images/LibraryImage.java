@@ -29,7 +29,7 @@ import org.netxms.base.NXCPMessage;
  * This class represents image in image library
  * 
  */
-public class LibraryImage
+public class LibraryImage implements Comparable
 {
 	private UUID guid;
 	private String name;
@@ -245,5 +245,11 @@ public class LibraryImage
 				+ ", binaryData=" + (binaryData == null ? "[null]" : "[not null]") + ", imageProtected=" + imageProtected
 				+ ", complete=" + complete + "]";
 	}
+
+   @Override
+   public int compareTo(Object arg0)
+   {
+      return name.compareToIgnoreCase(((LibraryImage)arg0).getName());
+   }
 
 }

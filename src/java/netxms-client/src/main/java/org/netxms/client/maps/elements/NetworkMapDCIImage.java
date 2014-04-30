@@ -58,9 +58,6 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 		super(id);
 		type = MAP_ELEMENT_DCI_IMAGE;
 		imageOptions = new DCIImageConfiguration();
-		imageOptions.setDci(null);
-		imageOptions.setDciRuleArray(null);
-		imageOptions.setDefaultImage(null);
 	}
 	
 	/* (non-Javadoc)
@@ -71,15 +68,15 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 	{
 		super.fillMessage(msg, baseId);
       
-      String DCIImageConfigXML = "";
+      String xml = "";
 		try
       {
-		   DCIImageConfigXML = imageOptions.createXml();
+		   xml = imageOptions.createXml();
       }
       catch(Exception e)
       {
       }
-      msg.setVariable(baseId + 10, DCIImageConfigXML);
+      msg.setVariable(baseId + 10, xml);
 	}
 
    /**
