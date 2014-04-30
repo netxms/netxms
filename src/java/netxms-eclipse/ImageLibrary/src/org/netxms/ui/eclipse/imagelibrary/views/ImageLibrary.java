@@ -18,6 +18,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.DisposeEvent;
@@ -84,6 +85,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	@Override
 	public void createPartControl(final Composite parent)
 	{
+	   System.out.println("Creation called");
+	   final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+	   
+	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM");
+	   if(currentIconSize == 0)
+	      currentIconSize = MIN_GRID_ICON_SIZE;
+	   
 		final FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
 
@@ -94,8 +102,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		DefaultGalleryGroupRenderer galleryGroupRenderer = new DefaultGalleryGroupRenderer();
 
 		galleryGroupRenderer.setMinMargin(2);
-		galleryGroupRenderer.setItemHeight(MIN_GRID_ICON_SIZE);
-		galleryGroupRenderer.setItemWidth(MIN_GRID_ICON_SIZE);
+		galleryGroupRenderer.setItemHeight(currentIconSize);
+		galleryGroupRenderer.setItemWidth(currentIconSize);
 		galleryGroupRenderer.setAutoMargin(true);
 		galleryGroupRenderer.setAlwaysExpanded(true);
 		gallery.setGroupRenderer(galleryGroupRenderer);
@@ -129,7 +137,9 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
+			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize);
 				ImageProvider.getInstance().removeUpdateListener(ImageLibrary.this);
+				
 			}
 		});
 	}
