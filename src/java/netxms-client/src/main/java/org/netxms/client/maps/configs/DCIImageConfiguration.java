@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.netxms.base.Glob;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -36,7 +37,7 @@ import org.simpleframework.xml.core.Persister;
 /**
  * Base class for DCI image configuration 
  */
-@Root(name="ruleList")
+@Root(name="dciImageConfiguration")
 public class DCIImageConfiguration
 {   
    public static final int OP_LE       = 0;
@@ -55,7 +56,7 @@ public class DCIImageConfiguration
    private SingleDciConfig dci = new SingleDciConfig();
    
    @Element(required = true)
-   private String defaultImage = "";
+   private UUID defaultImage = null;
    
    /**
     * Create DCI list object from XML document
@@ -66,7 +67,7 @@ public class DCIImageConfiguration
     */
    public static DCIImageConfiguration createFromXml(final String xml) throws Exception
    {
-      Serializer serializer = XMLTools.createSerializer();
+      Serializer serializer = XMLTools.createSerializer();    
       return serializer.read(DCIImageConfiguration.class, xml);
    }
    
@@ -133,7 +134,7 @@ public class DCIImageConfiguration
    /**
     * @return the defaultImage
     */
-   public String getDefaultImage()
+   public UUID getDefaultImage()
    {
       return defaultImage;
    }
@@ -141,7 +142,7 @@ public class DCIImageConfiguration
    /**
     * @param defaultImage the defaultImage to set
     */
-   public void setDefaultImage(String defaultImage)
+   public void setDefaultImage(UUID defaultImage)
    {
       this.defaultImage = defaultImage;
    }
@@ -162,9 +163,9 @@ public class DCIImageConfiguration
     * 
     * @return correct image according to last value
     */
-   public String getCorrectImage(DciValue dciValue)
+   public UUID getCorrectImage(DciValue dciValue)
    {
-      String image = null;
+      UUID image = null;
       if(containRuleList() && dciValue != null)
       {
          for(int i = 0; i < dciRuleList.length; i++)
@@ -204,7 +205,7 @@ public class DCIImageConfiguration
                      image = dciRuleList[i].getImage();
                   break;  
             }
-            if(image != null) 
+            if (image != null) 
                break;
          }
       }

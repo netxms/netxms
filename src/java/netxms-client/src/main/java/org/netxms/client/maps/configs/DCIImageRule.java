@@ -18,6 +18,8 @@
  */
 package org.netxms.client.maps.configs;
 
+import java.util.UUID;
+import org.netxms.base.NXCommon;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -36,7 +38,7 @@ public class DCIImageRule
 	private int comparisonType;
 
 	@Element(required=true)
-	private String image;
+	private UUID image;
 
 	@Element(required=true)
 	private String compareValue;
@@ -50,7 +52,7 @@ public class DCIImageRule
 	public DCIImageRule()
 	{
 	   comparisonType = -1;
-	   image = "";
+	   image = NXCommon.EMPTY_GUID;
 	   compareValue = "";
 	}
 
@@ -85,15 +87,15 @@ public class DCIImageRule
    /**
     * @return the image
     */
-   public String getImage()
+   public UUID getImage()
    {
-      return image == null ? "" : image;
+      return image;
    }
 
    /**
     * @param image the image to set
     */
-   public void setImage(String image)
+   public void setImage(UUID image)
    {
       this.image = image;
    }

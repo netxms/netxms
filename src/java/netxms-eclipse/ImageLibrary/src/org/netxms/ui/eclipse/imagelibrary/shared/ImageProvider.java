@@ -114,6 +114,9 @@ public class ImageProvider
 	 */
 	public Image getImage(final UUID guid)
 	{
+	   if (guid == null)
+	      return missingImage;
+	   
 		final Image image;
 		if (cache.containsKey(guid))
 		{
