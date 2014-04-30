@@ -173,7 +173,6 @@ static void CpuUsageCollector()
 
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 {
-	setlocale(LC_NUMERIC, "C");
 	while(m_stopCollectorThread == false)
 	{
 		CpuUsageCollector();
