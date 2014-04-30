@@ -93,13 +93,13 @@ static void SubAgentShutdown()
    ShutdownConnections();
 }
 
-static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *query)
+static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *query, bool parameterRequired)
 {
    NETXMS_SUBAGENT_PARAM *param = new NETXMS_SUBAGENT_PARAM();
 
-   _tcscpy(param->name, _T("DB."));
-   _tcscat(param->name, query->getName());
-   _tcscat(param->name, _T("(*)"));
+   _tcscpy(param->name, query->getName());
+   if(parameterRequired)
+      _tcscat(param->name, _T("(*)"));
 
    param->handler = H_DirectQueryConfigurable;
    param->arg = query->getName();
@@ -108,18 +108,16 @@ static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *q
 
    parameters->add(param);
 
-   AgentWriteDebugLog(1, _T("Added values %s, %s, %s"), param->name, param->arg, param->description);
-
    delete param;
 }
 
-static void AddDCIParamTable(StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable, Query *query)
+static void AddDCIParamTable(StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable, Query *query, bool parameterRequired)
 {
    NETXMS_SUBAGENT_TABLE *param = new NETXMS_SUBAGENT_TABLE();
 
-   _tcscpy(param->name, _T("DB."));
-   _tcscat(param->name, query->getName());
-   _tcscat(param->name, _T("(*)"));
+   _tcscpy(param->name, query->getName());
+   if(parameterRequired)
+      _tcscat(param->name, _T("(*)"));
    param->handler = H_DirectQueryConfigurableTable;
    param->arg = query->getName();
    _tcscpy(param->instanceColumns, _T(""));
@@ -156,8 +154,8 @@ static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Struct
          Query *query;
 			if (AddQueryFromConfig(queries->getValue(i), &query))
 			{
-            AddDCIParam(parameters, query);
-            AddDCIParamTable(parametersTable, query);
+            AddDCIParam(parameters, query, false);
+            AddDCIParamTable(parametersTable, query, false);
 			}
 			else
 			{
@@ -177,8 +175,8 @@ static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Struct
          Query *query;
 			if (AddConfigurableQueryFromConfig(configurableQueries->getValue(i), &query))
 			{
-            AddDCIParam(parameters, query);
-            AddDCIParamTable(parametersTable, query);
+            AddDCIParam(parameters, query, true);
+            AddDCIParamTable(parametersTable, query, true);
 			}
 			else
 			{
