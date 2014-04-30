@@ -1,6 +1,7 @@
 package org.netxms.ui.eclipse.imagelibrary.dialogs;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -15,7 +16,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.api.client.images.LibraryImage;
 import org.netxms.ui.eclipse.imagelibrary.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -30,16 +33,18 @@ public class ImagePropertiesDialog extends Dialog
 	private Combo categoryCombo;
 	private Set<String> categories;
 	private Shell shell;
+	private List<LibraryImage> imageLibrary;
 
 	/**
 	 * @param parentShell
 	 * @param knownCategories
 	 */
-	public ImagePropertiesDialog(Shell parentShell, Set<String> knownCategories)
+	public ImagePropertiesDialog(Shell parentShell, Set<String> knownCategories, List<LibraryImage> imageLibrary)
 	{
 		super(parentShell);
 		this.shell = parentShell;
 		this.categories = knownCategories;
+		this.imageLibrary = imageLibrary;
 	}
 
 	/* (non-Javadoc)
@@ -144,6 +149,17 @@ public class ImagePropertiesDialog extends Dialog
 		category = categoryCombo.getText();
 		name = nameInputField.getText();
 
+
+      for(int i=0; i < imageLibrary.size(); i++)
+      {
+         LibraryImage image = imageLibrary.get(i);
+         if(name.compareTo(image.getName()) == 0 && category.compareTo(image.getCategory()) == 0)
+         {
+            MessageDialogHelper.openError(getShell(), "Image already exists", String.format("Image %s in %s category already exists.", name, category));
+            return;
+         }
+      }
+		
 		super.okPressed();
 	}
 

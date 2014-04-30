@@ -75,6 +75,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	private NXCSession session;
 
 	private Set<String> knownCategories;
+	private List<LibraryImage> imageLibrary;
 
 	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
@@ -164,7 +165,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories);
+				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length > 0)
 				{
@@ -187,7 +188,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length == 1)
 				{
-					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories);
+					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
 					LibraryImage image = (LibraryImage)selection[0].getData();
 					dialog.setName(image.getName());
 					dialog.setDefaultCategory(image.getCategory());
@@ -505,7 +506,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<LibraryImage> imageLibrary = session.getImageLibrary();
+				imageLibrary = session.getImageLibrary();
 				Collections.sort(imageLibrary);
 				for(int i = 0; i < imageLibrary.size(); i++)
 				{
