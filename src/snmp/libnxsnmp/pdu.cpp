@@ -106,13 +106,13 @@ SNMP_PDU::SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion)
 }
 
 /**
- * Copy destructor
+ * Copy constructor
  */
 SNMP_PDU::SNMP_PDU(SNMP_PDU *src)
 {
    m_version = src->m_version;
    m_command = src->m_command;
-   m_variables = new ObjectArray<SNMP_Variable>(0, 16, true);
+   m_variables = new ObjectArray<SNMP_Variable>(src->m_variables->size(), 16, true);
    for(int i = 0; i < src->m_variables->size(); i++)
       m_variables->add(new SNMP_Variable(src->m_variables->get(i)));
    m_pEnterprise = (src->m_pEnterprise != NULL) ? new SNMP_ObjectId(src->m_pEnterprise) : NULL;
