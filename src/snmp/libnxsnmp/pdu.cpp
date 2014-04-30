@@ -108,7 +108,7 @@ SNMP_PDU::SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion)
 /**
  * Copy constructor
  */
-SNMP_PDU::SNMP_PDU(SNMP_PDU *src)
+SNMP_PDU::SNMP_PDU(SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeEngine)
 {
    m_version = src->m_version;
    m_command = src->m_command;
@@ -124,10 +124,12 @@ SNMP_PDU::SNMP_PDU(SNMP_PDU *src)
    m_trapType = src->m_trapType;
    m_specificTrap = src->m_specificTrap;
 	m_contextEngineIdLen = src->m_contextEngineIdLen;
+   memcpy(m_contextEngineId, src->m_contextEngineId, SNMP_MAX_ENGINEID_LEN); 
 	strcpy(m_contextName, src->m_contextName);
 	m_msgMaxSize = src->m_msgMaxSize;
    m_authObject = (src->m_authObject != NULL) ? strdup(src->m_authObject) : NULL;
 	m_reportable = src->m_reportable;
+   m_securityModel = src->m_securityModel;
 }
 
 /**
