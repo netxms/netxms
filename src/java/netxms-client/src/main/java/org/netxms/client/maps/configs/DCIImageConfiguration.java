@@ -26,6 +26,7 @@ import org.netxms.base.Glob;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
@@ -65,7 +66,7 @@ public class DCIImageConfiguration
     */
    public static DCIImageConfiguration createFromXml(final String xml) throws Exception
    {
-      Serializer serializer = new Persister();
+      Serializer serializer = XMLTools.createSerializer();
       return serializer.read(DCIImageConfiguration.class, xml);
    }
    
@@ -77,7 +78,7 @@ public class DCIImageConfiguration
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = new Persister();
+      Serializer serializer = XMLTools.createSerializer();
       Writer writer = new StringWriter();
       serializer.write(this, writer);
       return writer.toString();
