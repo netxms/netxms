@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -33,51 +33,16 @@ CONDITION g_condShutdown;
  */
 static BOOL SubAgentInit(Config *config)
 {
-	// Add database connections
-	ConfigEntry *databases = config->getEntry(_T("/DBQuery/Database"));
-   if (databases != NULL)
-   {
-      for(int i = 0; i < databases->getValueCount(); i++)
-		{
-         if (!AddDatabaseFromConfig(databases->getValue(i)))
-			{
-            AgentWriteLog(EVENTLOG_WARNING_TYPE,
-               _T("Unable to add database connection from configuration file. ")
-									 _T("Original configuration record: %s"), databases->getValue(i));
-			}
-		}
-   }
-
-	// Add queries
-	ConfigEntry *queries = config->getEntry(_T("/DBQuery/Query"));
-	if (queries != NULL)
-	{
-		for(int i = 0; i < queries->getValueCount(); i++)
-		{
-			if (!AddQueryFromConfig(queries->getValue(i)))
-			{
-            AgentWriteLog(EVENTLOG_WARNING_TYPE,
-                            _T("Unable to add query from configuration file. ")
-									 _T("Original configuration record: %s"), queries->getValue(i));
-			}
-		}
-	}
-
-   // Create shutdown condition and start poller threads
+	// Create shutdown condition and start poller threads
    g_condShutdown = ConditionCreate(TRUE);
-   StartPollingThreads();  
+   StartPollingThreads();
    return TRUE;
 }
 
 /**
  * Called by master agent at unload
  */
-static void SubAgentShutdown()
-{
-   ConditionSet(g_condShutdown);
-   StopPollingThreads();
-   ShutdownConnections();
-}
+static void SubAgentShutdown();
 
 /**
  * Parameters supported by agent
@@ -107,20 +72,147 @@ static NETXMS_SUBAGENT_INFO m_info =
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("DBQUERY"), NETXMS_VERSION_STRING,
    SubAgentInit, SubAgentShutdown, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
+	0,
+	NULL,
 	0, NULL,	// lists
-	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
-	m_tables,
+	0,
+	NULL,
    0, NULL,	// actions
 	0, NULL	// push parameters
 };
+
+/**
+ * Called by master agent at unload
+ */
+static void SubAgentShutdown()
+{
+   safe_free(m_info.parameters);
+   safe_free(m_info.tables);
+   ConditionSet(g_condShutdown);
+   StopPollingThreads();
+   ShutdownConnections();
+}
+
+static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *query)
+{
+   NETXMS_SUBAGENT_PARAM *param = new NETXMS_SUBAGENT_PARAM();
+
+   _tcscpy(param->name, _T("DB."));
+   _tcscat(param->name, query->getName());
+   _tcscat(param->name, _T("(*)"));
+
+   param->handler = H_DirectQueryConfigurable;
+   param->arg = query->getName();
+   param->dataType = DCI_DT_STRING;
+   _tcscpy(param->description,  query->getDescription());
+
+   parameters->add(param);
+
+   AgentWriteDebugLog(1, _T("Added values %s, %s, %s"), param->name, param->arg, param->description);
+
+   delete param;
+}
+
+static void AddDCIParamTable(StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable, Query *query)
+{
+   NETXMS_SUBAGENT_TABLE *param = new NETXMS_SUBAGENT_TABLE();
+
+   _tcscpy(param->name, _T("DB."));
+   _tcscat(param->name, query->getName());
+   _tcscat(param->name, _T("(*)"));
+   param->handler = H_DirectQueryConfigurableTable;
+   param->arg = query->getName();
+   _tcscpy(param->instanceColumns, _T(""));
+   _tcscpy(param->description,  query->getDescription());
+
+   parametersTable->add(param);
+
+   delete param;
+}
+
+static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable, Config * config)
+{
+   // Add database connections
+	ConfigEntry *databases = config->getEntry(_T("/DBQuery/Database"));
+   if (databases != NULL)
+   {
+      for(int i = 0; i < databases->getValueCount(); i++)
+		{
+         if (!AddDatabaseFromConfig(databases->getValue(i)))
+			{
+            AgentWriteLog(EVENTLOG_WARNING_TYPE,
+               _T("Unable to add database connection from configuration file. ")
+									 _T("Original configuration record: %s"), databases->getValue(i));
+			}
+		}
+   }
+
+	// Add queries
+	ConfigEntry *queries = config->getEntry(_T("/DBQuery/Query"));
+	if (queries != NULL)
+	{
+		for(int i = 0; i < queries->getValueCount(); i++)
+		{
+         Query *query;
+			if (AddQueryFromConfig(queries->getValue(i), &query))
+			{
+            AddDCIParam(parameters, query);
+            AddDCIParamTable(parametersTable, query);
+			}
+			else
+			{
+            AgentWriteLog(EVENTLOG_WARNING_TYPE,
+                            _T("Unable to add query from configuration file. ")
+									 _T("Original configuration record: %s"), queries->getValue(i));
+			}
+		}
+	}
+
+   // Add configurable queries
+	ConfigEntry *configurableQueries = config->getEntry(_T("/DBQuery/ConfigurableQuery"));
+	if (configurableQueries != NULL)
+	{
+		for(int i = 0; i < configurableQueries->getValueCount(); i++)
+		{
+         Query *query;
+			if (AddConfigurableQueryFromConfig(configurableQueries->getValue(i), &query))
+			{
+            AddDCIParam(parameters, query);
+            AddDCIParamTable(parametersTable, query);
+			}
+			else
+			{
+            AgentWriteLog(EVENTLOG_WARNING_TYPE,
+                            _T("Unable to add query from configuration file. ")
+									 _T("Original configuration record: %s"), queries->getValue(i));
+			}
+		}
+	}
+}
 
 /**
  * Entry point for NetXMS agent
  */
 DECLARE_SUBAGENT_ENTRY_POINT(DBQUERY)
 {
+   StructArray<NETXMS_SUBAGENT_PARAM> *parameters = NULL;
+   parameters = new StructArray<NETXMS_SUBAGENT_PARAM>(m_parameters, sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM));
+   StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable = NULL;
+   parametersTable = new StructArray<NETXMS_SUBAGENT_TABLE>(m_tables, sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE));
+
+   AddParameters(parameters, parametersTable, config);
+
+   m_info.numParameters = parameters->size();
+   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
+                     parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+
+   m_info.numTables = parametersTable->size();
+   m_info.tables = (NETXMS_SUBAGENT_TABLE *)nx_memdup(parametersTable->getBuffer(),
+                     parametersTable->size() * sizeof(NETXMS_SUBAGENT_TABLE));
+
+   delete parameters;
+   delete parametersTable;
+
    *ppInfo = &m_info;
    return TRUE;
 }
