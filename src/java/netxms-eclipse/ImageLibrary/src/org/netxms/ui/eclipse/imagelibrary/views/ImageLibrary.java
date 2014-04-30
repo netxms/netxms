@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -505,6 +506,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<LibraryImage> imageLibrary = session.getImageLibrary();
+				Collections.sort(imageLibrary);
 				for(int i = 0; i < imageLibrary.size(); i++)
 				{
 					LibraryImage image = imageLibrary.get(i);
