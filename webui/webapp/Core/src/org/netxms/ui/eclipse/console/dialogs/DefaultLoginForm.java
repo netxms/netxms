@@ -18,7 +18,8 @@
  */
 package org.netxms.ui.eclipse.console.dialogs;
 
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -33,6 +34,8 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
@@ -146,22 +149,11 @@ public class DefaultLoginForm extends Window implements LoginForm
 		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
 		
-		Image userImage = null;
-		try
-		{
-			ImageDescriptor d = ImageDescriptor.createFromURL(new URL("http://127.0.0.1/netxms_login.dat")); //$NON-NLS-1$
-			if (d != null)
-				userImage = d.createImage(false);
-		}
-		catch(Exception e)
-		{
-		   Activator.logError("Exception while reading custom image", e);
-		   userImage = null;
-		}
-		
+		final Image userImage = (properties.getProperty("loginFormImage") != null) ? loadUserImage() : null;		
 		final ImageDescriptor customImage = BrandingManager.getInstance().getLoginTitleImage();
 		final Image loginImage = (userImage != null) ? userImage : ((customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.png").createImage()); //$NON-NLS-1$
 		Label logo = new Label(content, SWT.NONE);
+		logo.setBackground(colors.create(FORM_BACKGROUND));
 		logo.setImage(loginImage);
 		
 		Composite loginArea = new Composite(content, SWT.NONE);
@@ -273,6 +265,45 @@ public class DefaultLoginForm extends Window implements LoginForm
 		textLogin.getTextControl().setFocus();
 		return content;
 	}
+	
+	/**
+	 * Load user image for login form
+	 * 
+	 * @return
+	 */
+	private Image loadUserImage()
+	{
+	   Image img = null;
+	   InputStream in = null;
+      try
+      {
+         in = getClass().getResourceAsStream(properties.getProperty("loginFormImage"));
+         if (in != null)
+         {
+            ImageLoader loader = new ImageLoader();
+            ImageData[] data = loader.load(in);
+            img = new Image(getShell().getDisplay(), data[0]);
+         }
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Exception while reading user image", e);
+      }
+      finally
+      {
+         if (in != null)
+         {
+            try
+            {
+               in.close();
+            }
+            catch(IOException e)
+            {
+            }
+         }
+      }
+      return img;
+	}
 
 	/**
 	 * @param gc
@@ -282,12 +313,10 @@ public class DefaultLoginForm extends Window implements LoginForm
 	{
 		gc.setBackground(colors.create(FORM_BACKGROUND));
       gc.fillRectangle(2, 2, size.x - 5, size.y - 5);
-		//gc.fillRoundRectangle(2, 2, size.x - 5, size.y - 5, 16, 16);
 
 		gc.setForeground(colors.create(FORM_BORDER));
 		gc.setLineWidth(2);
       gc.drawRectangle(1, 1, size.x - 3, size.y - 3);
-		//gc.drawRoundRectangle(1, 1, size.x - 3, size.y - 3, 16, 16);
 	}
 
 	/* (non-Javadoc)
