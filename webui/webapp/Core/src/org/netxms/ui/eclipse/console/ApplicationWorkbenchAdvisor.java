@@ -75,7 +75,6 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	public void initialize(IWorkbenchConfigurer configurer)
 	{
 		super.initialize(configurer);
-		BrandingManager.create();
 		configurer.setSaveAndRestore(true);
 	}
 
@@ -121,6 +120,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		}
 		catch(InvocationTargetException e)
 		{
+		   e.printStackTrace();
 			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
 		}
 		catch(Exception e)
@@ -195,7 +195,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			Window loginDialog;
 			do
 			{
-				loginDialog = BrandingManager.getInstance().getLoginForm(null, properties);
+				loginDialog = BrandingManager.getInstance().getLoginForm(Display.getCurrent().getActiveShell(), properties);
 				if (loginDialog.open() != Window.OK)
 					continue;
 				password = ((LoginForm)loginDialog).getPassword();

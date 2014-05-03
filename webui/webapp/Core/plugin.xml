@@ -258,5 +258,5 @@
             class="org.netxms.ui.eclipse.console.LongTapHandlerScript"
             id="org.netxms.ui.eclipse.console.LongTapHandlerScript">
       </resource>
-   </extension>   
+   </extension>
 </plugin>

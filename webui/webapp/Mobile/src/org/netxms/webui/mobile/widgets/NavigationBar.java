@@ -7,19 +7,16 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.tools.ColorCache;
-import org.netxms.webui.mobile.Activator;
+import org.netxms.webui.mobile.MobileApplication;
 
 /**
  * Navigation bar
@@ -44,13 +41,33 @@ public class NavigationBar extends Composite
       setBackground(colors.create(COLOR_BACKGROUND));
       setForeground(colors.create(COLOR_FOREGROUND));
       
-      GridLayout layout = new GridLayout();
-      setLayout(layout);
+      setLayout(new RowLayout(SWT.HORIZONTAL));
       
-      addAction(new Action("☰") {
+      addAction(new Action("NAV") {
          @Override
          public void run()
          {
+            MobileApplication.getPageManager().showNavigationPanel();
+         }
+
+         @Override
+         public String getId()
+         {
+            return "org.netxms.webui.mobile.actions.NavMenu";
+         }
+      });
+      
+      addAction(new Action("BACK") {
+         @Override
+         public void run()
+         {
+            MobileApplication.getPageManager().back();
+         }
+
+         @Override
+         public String getId()
+         {
+            return "org.netxms.webui.mobile.actions.NavBack";
          }
       });
    }

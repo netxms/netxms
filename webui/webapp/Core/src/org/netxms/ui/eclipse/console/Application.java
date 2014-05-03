@@ -68,7 +68,6 @@ public class Application implements IApplication
 		});
 		
 		SharedIcons.init(display);
-		ColorManager.create();
 		WorkbenchAdvisor advisor = new ApplicationWorkbenchAdvisor();
 		return PlatformUI.createAndRunWorkbench(display, advisor);
 	}

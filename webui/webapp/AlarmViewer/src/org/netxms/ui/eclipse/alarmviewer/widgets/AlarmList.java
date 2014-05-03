@@ -371,7 +371,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(viewPart.getSite().getShell());//PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell()
+            AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(viewPart.getSite().getShell());
             if (dlg.open() == Window.OK)
             {
                int time = dlg.getTime();

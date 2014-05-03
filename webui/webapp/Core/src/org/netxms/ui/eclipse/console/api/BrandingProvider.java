@@ -74,6 +74,15 @@ public interface BrandingProvider
 	 */
 	public Window getLoginForm(Shell parentShell, Properties properties);
 	
+   /**
+    * Get custom login form for mobile web UI. Form must implement LoginForm interface.
+    * 
+    * @param parentShell parent shell for login form
+    * @param properties system properties
+    * @return
+    */
+   public Window getMobileLoginForm(Shell parentShell, Properties properties);
+   
 	/**
 	 * Get custom "About" dialog. New dialog must be returned on each call.
 	 * 

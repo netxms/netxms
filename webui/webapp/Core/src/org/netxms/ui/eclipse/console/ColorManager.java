@@ -48,7 +48,7 @@ public class ColorManager
 	/**
 	 * Create color manager instance
 	 */
-	protected static void create()
+	protected static synchronized void create()
 	{
 		if (instance == null)
 			instance = new ColorManager();

@@ -33,10 +33,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.console.api.BrandingProvider;
 import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.console.dialogs.DefaultLoginForm;
+import org.netxms.ui.eclipse.console.dialogs.DefaultMobileLoginForm;
 
 /**
  * Branding manager. There should be only one instance of branding manager,
- * created early during console startup.
+ * created early during application startup.
  */
 public class BrandingManager
 {
@@ -55,7 +56,7 @@ public class BrandingManager
 	/**
 	 * Create branding manager instance
 	 */
-	protected static void create()
+	protected static synchronized void create()
 	{
 		if (instance == null)
 			instance = new BrandingManager();
@@ -198,6 +199,24 @@ public class BrandingManager
 		return new DefaultLoginForm(parentShell, properties);
 	}
 	
+   /**
+    * Get custom login form for mobile UI. It is guaranteed that returned form implements LoginForm interface.
+    * 
+    * @param parentShell parent shell for login form
+    * @param properties system properties
+    * @return custom login form or default login form if no branding provider defines one.
+    */
+   public Window getMobileLoginForm(Shell parentShell, Properties properties)
+   {
+      for(BrandingProvider p : providers.values())
+      {
+         Window form = p.getMobileLoginForm(parentShell, properties);
+         if ((form != null) && (form instanceof LoginForm))
+            return form;
+      }
+      return new DefaultMobileLoginForm(parentShell, properties);
+   }
+   
 	/**
 	 * Get custom "About" dialog.
 	 * 

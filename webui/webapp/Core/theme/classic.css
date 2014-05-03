@@ -65,7 +65,7 @@ Display {
 }
 
 *[BORDER] {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 /* Default theme for all composites */
@@ -73,17 +73,16 @@ Display {
 Composite {
   padding: 0px;
   opacity: 1;
-  background-color: white;
+  background-color: #f0f0f0;
   background-image: none;
   border: none;
   box-shadow: none;
 }
 
 Composite[BORDER] {
-  background-color: white;
+  background-color: #f0f0f0;
   background-image: none;
-  border: 1px solid #a4a4a4;
-  border-radius: 2px;
+  border: 1px solid #828790;
 }
 
 /* Button default theme */
@@ -95,14 +94,14 @@ Button {
   cursor: default;
   animation: none;
   color: #4a4a4a;
-  background-color: white;
+  background-color: #f0f0f0;
   opacity: 1;
   text-shadow: none;
 }
 
 Button[PUSH], Button[TOGGLE], Button[BORDER] {
   border: 1px solid #A4A4A4;
-  border-radius: 3px;
+  /* border-radius: 3px; */
   padding: 2px 5px;
   background-image: gradient(
     linear, left top, left bottom,
@@ -117,7 +116,7 @@ Button[PUSH], Button[TOGGLE], Button[BORDER] {
 
 Button[ARROW], Button[ARROW][BORDER] {
   border: 1px solid #A4A4A4;
-  border-radius: 3px;
+  /* border-radius: 3px; */
   padding: 4px;
   background-image: gradient(
     linear, left top, left bottom,
@@ -133,7 +132,7 @@ Button[ARROW], Button[ARROW][BORDER] {
 Button[ARROW]:default,
 Button[PUSH]:default,
 Button[TOGGLE]:default {
-  background-color: white;
+  background-color: #f0f0f0;
   background-image: gradient(
     linear, left top, left bottom,
     from( #ffffff ),
@@ -271,30 +270,23 @@ Button-FocusIndicator[CHECK], Button-FocusIndicator[RADIO] {
 /* Combo default theme */
 
 Combo {
-  border: 1px solid #c1c1c1;
+  border: 1px solid #828790;
   font: 11px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  background-color: #fcfcfc;
+  background-color: white;
   color: #464a4e;
-  border-radius: 2px;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e2e2e2 ),
-    color-stop( 15%, #f8f8f8 ),
-    to( #fbfbfb )
-  );
   text-shadow: none;
   box-shadow: none;
 }
 
 Combo[BORDER] {
-  border: 1px solid #c1c1c1;
-  border-radius: 2px;
+  border: 1px solid #828790;
+  border-radius: 0px;
   box-shadow: none;
 }
 
 Combo[BORDER]:focused {
   box-shadow: none;
-  border: 1px solid #c1c1c1;
+  border: 1px solid #828790;
 }
 
 Combo-Button {
@@ -302,7 +294,7 @@ Combo-Button {
   background-color: transparent;
   border: none;
   border-left: none;
-  border-radius: 0px 2px 2px 0px;
+  border-radius: 0px 0px 0px 0px;
   background-image: gradient(
     linear, left top, left bottom,
     from( #ffffff ),
@@ -331,8 +323,8 @@ Combo-Button-Icon:hover {
 }
 
 Combo-List {
-  border: 1px solid #c1c1c1;
-  border-radius: 0px 0px 2px 2px;
+  border: 1px solid #828790;
+/*  border-radius: 0px 0px 2px 2px; */
   box-shadow: 3px 3px 3px rgba( 0, 0, 0, 0.4 );
 }
 
@@ -403,14 +395,14 @@ CTabFolder-DropDownButton-Icon:hover {
 
 Group {
   color: #4a4a4a;
-  background-color: white;  
+  background-color: #f0f0f0;  
 }
 
 Group-Frame {
   margin: 8px 0px 0px;
   padding: 8px 2px 2px;
-  border: 1px solid #cccccc;
-  border-radius: 2px 2px 2px 2px;
+  border: 1px solid #828790;
+/*  border-radius: 2px 2px 2px 2px; */
 }
 
 Group-Label {
@@ -428,7 +420,7 @@ Group-Label {
 
 Label {
   color: #4a4a4a;
-  background-color: white;
+  background-color: #f0f0f0;
   background-image: none;
   border: none;
   text-decoration: none;
@@ -438,8 +430,8 @@ Label {
 }
 
 Label[BORDER] {
-  border: 1px solid #a4a4a4;
-  border-radius: 2px;
+  border: 1px solid #828790;
+  border-radius: 0px;
 }
 
 Label-SeparatorLine {
@@ -482,7 +474,7 @@ List {
 }
 
 List[BORDER] {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 List-Item {
@@ -559,8 +551,7 @@ Menu {
   animation: none;
   color: #0059a5;
   background-color: #f0f0f0;
-  border: 1px #979797;
-  border-radius: 2px;
+  border: 1px #828790;
   box-shadow: 2px 2px 2px rgba( 0, 0, 0, 0.5 );
 }
 
@@ -604,8 +595,7 @@ MenuItem-CascadeIcon {
 ProgressBar {
   background-color: #ffffff;
   background-image: none;
-  border: 1px solid #A4A4A4;
-  border-radius: 2px;
+  border: 1px solid #828790;
 }
 
 ProgressBar-Indicator {
@@ -637,9 +627,7 @@ Shell {
 
 Shell[TITLE], Shell[BORDER] {
   box-shadow: 5px 5px 3px rgba( 0, 0, 0, 0.5 );
-  background-color: white;
   border: 2px solid #005092;
-  border-radius: 5px 5px 0px 0px;
   padding: 5px;
 }
 
@@ -658,7 +646,7 @@ Shell-DisplayOverlay {
   animation: fadeIn 200ms linear, fadeOut 400ms ease-out;
   background-image: none;
   background-color: #808080;
-  opacity: 0.2;
+  opacity: 0.5;
 }
 
 /* Shell titlebar */
@@ -668,12 +656,12 @@ Shell-Titlebar {
   background-gradient-color: #0080c0;
   color: white;
   background-image: gradient( linear, left top, left bottom, from( #005fac ), to( #005092 ) );
-  padding: 2px 5px 2px;
+  padding: 2px 5px 4px;
   margin: 0px;
   height: 22px;
-  font: 12px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: bold 14px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   border: none;
-  border-radius: 1px 1px 0px 0px;
+  /*border-radius: 1px 1px 0px 0px;*/
   text-shadow: none;
 }
 
@@ -771,20 +759,10 @@ Spinner {
   border: none;
   padding: 1px 2px;
   color: #464a4e;
-  background-color: #fcfcfc;
+  background-color: white;
   background-image: none;
   text-shadow: none;
   box-shadow: none;
-}
-
-Spinner[BORDER]:focused {
-  box-shadow: none;
-  border: none;
-}
-
-Spinner[BORDER]:focused {
-  box-shadow: none;
-  border: 1px solid #a4a4a4;
 }
 
 Spinner-Field {
@@ -792,14 +770,8 @@ Spinner-Field {
 }
 
 Spinner[BORDER] {
-  border: 1px solid #a4a4a4;
-  border-radius: 2px 2px 2px 2px;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e2e2e2 ),
-    color-stop( 15%, #f8f8f8 ),
-    to( #fbfbfb )
-  );
+  border: 1px solid #828790;
+  /* border-radius: 2px 2px 2px 2px; */
 }
 
 Spinner-UpButton {
@@ -812,7 +784,7 @@ Spinner-UpButton {
   width: 18px;
   border: none;
   border-left: none;
-  border-radius: 0px 2px 0px 0px;
+  /* border-radius: 0px 2px 0px 0px; */
   cursor: default;
 }
 
@@ -843,7 +815,7 @@ Spinner-DownButton {
   width: 18px;
   border: none;
   border-left: none;
-  border-radius: 0px 0px 2px 0px;
+  /* border-radius: 0px 0px 2px 0px; */
   cursor: default;
 }
 
@@ -871,11 +843,11 @@ TabFolder {
 }
 
 TabFolder[BORDER] {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 TabFolder-ContentContainer {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 TabItem {
@@ -910,7 +882,7 @@ Table {
 }
 
 Table[BORDER] {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 TableItem {
@@ -1021,34 +993,27 @@ Text {
   border: none;
   padding: 2px 3px;
   color: #464a4e;
-  background-color: #fcfcfc;
+  background-color: white;
   background-image: none;
   text-shadow: none;
   box-shadow: none
 }
 
 Text[BORDER] {
-  border: 1px solid #a4a4a4;
-  border-radius: 2px 2px 2px 2px;
+  border: 1px solid #828790;
   box-shadow: none;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e2e2e2 ),
-    color-stop( 15%, #f8f8f8 ),
-    to( #fbfbfb )
-  );
 }
 
 Text[BORDER]:focused,
 TEXT[MULTI][BORDER]:focused {
   box-shadow: none;
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 Text[BORDER]:read-only,
 TEXT[MULTI][BORDER]:read-only {
   box-shadow: none;
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 Text[SINGLE] {
@@ -1068,7 +1033,7 @@ Text[MULTI][BORDER] {
 Text[BORDER]:focused,
 Text[MULTI]:focused,
 Text[MULTI][BORDER]:focused {
- border: 1px solid #a4a4a4;
+ border: 1px solid #828790;
   box-shadow: none;
 }
 
@@ -1094,7 +1059,7 @@ ToolBar.menuBar {
 }
 
 ToolBar[BORDER] {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
   border-radius: 2px;
 }
 
@@ -1152,7 +1117,7 @@ Tree {
 }
 
 Tree[BORDER] {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 TreeItem {
@@ -1354,7 +1319,7 @@ Scale-Thumb {
 
 DateTime {
   color: #464a4e;
-  background-color: #fcfcfc;
+  background-color: white;
   border: none;
   padding: 1px 2px;
   font: 11px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
@@ -1368,8 +1333,8 @@ DateTime-Field {
 }
 
 DateTime[BORDER] {
-  border: 1px solid #a4a4a4;
-  border-radius: 2px 2px 2px 2px;
+  border: 1px solid #828790;
+  /* border-radius: 2px 2px 2px 2px; */
   background-image: gradient(
     linear, left top, left bottom,
     from( #e2e2e2 ),
@@ -1379,7 +1344,7 @@ DateTime[BORDER] {
 }
 
 DateTime[BORDER]:focused {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 DateTime-Calendar-Day {
@@ -1465,7 +1430,7 @@ DateTime-UpButton {
   width: 18px;
   border: none;
   border-left: none;
-  border-radius: 0px 2px 0px 0px;
+  /* border-radius: 0px 2px 0px 0px; */
   cursor: default;
 }
 
@@ -1496,7 +1461,7 @@ DateTime-DownButton {
   width: 18px;
   border: none;
   border-left: none;
-  border-radius: 0px 0px 2px 0px;
+  /* border-radius: 0px 0px 2px 0px; */
   cursor: default;
 }
 
@@ -1514,7 +1479,7 @@ DateTime-DropDownButton {
   background-color: transparent;
   border: none;
   border-left: none;
-  border-radius: 0px 2px 2px 0px;
+  /* border-radius: 0px 2px 2px 0px; */
   background-image: gradient(
     linear, left top, left bottom,
     from( #ffffff ),
@@ -1605,7 +1570,7 @@ Sash {
 }
 
 Sash[BORDER] {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 Sash:hover {
@@ -1819,7 +1784,7 @@ ToolTip-Message {
 CCombo {
   border: none;
   font: 11px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  background-color: #fcfcfc;
+  background-color: white;
   color: #464a4e;
   border-radius: 0;
   background-image: none;
@@ -1828,25 +1793,9 @@ CCombo {
 }
 
 CCombo[BORDER] {
-  border: 1px solid #c1c1c1;
-  border-radius: 2px;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e2e2e2 ),
-    color-stop( 15%, #f8f8f8 ),
-    to( #fbfbfb )
-  );
+  border: 1px solid #828790;
+  /* border-radius: 2px; */
   box-shadow: none;
-}
-
-CCombo[BORDER]:focused {
-  box-shadow: none;
-  border: none;
-}
-
-CCombo[BORDER]:focused {
-  box-shadow: none;
-  border: 1px solid #c1c1c1;
 }
 
 CCombo-Button {
@@ -1854,7 +1803,7 @@ CCombo-Button {
   background-color: transparent;
   border: none;
   border-left: none;
-  border-radius: 0px 2px 2px 0px;
+  /* border-radius: 0px 2px 2px 0px; */
   background-image: gradient(
     linear, left top, left bottom,
     from( #ffffff ),
@@ -1892,7 +1841,7 @@ CCombo-Button[FLAT]:hover {
 
 CCombo-List {
   border: 1px solid #c1c1c1;
-  border-radius: 0px 0px 2px 2px;
+  /* border-radius: 0px 0px 2px 2px; */
   box-shadow: 3px 3px 3px rgba( 0, 0, 0, 0.4 );
 }
 
@@ -1911,7 +1860,7 @@ CCombo-FocusIndicator {
 
 CLabel {
   color: #4a4a4a;
-  background-color: white;
+  background-color: #f0f0f0;
   background-image: none;
   border: none;
   padding: 3px;
@@ -1921,9 +1870,12 @@ CLabel {
   text-shadow: none;
 }
 
+CLabel.SelectorWidget {
+  background-color: white;
+}
+
 CLabel[BORDER] {
-  border: 1px solid #a4a4a4;
-  border-radius: 2px;
+  border: 1px solid #828790;
 }
 
 /* Browser default theme */
@@ -1933,7 +1885,7 @@ Browser {
 }
 
 Browser[BORDER] {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #828790;
 }
 
 /* ScrollBar default theme */
@@ -1941,7 +1893,7 @@ Browser[BORDER] {
 ScrollBar {
   border: none;
   background-color: #f3f3f4;
-  border-radius: 3px 3px 3px 3px;
+  /* border-radius: 3px 3px 3px 3px; */
   width: 15px;
   background-image: none;
 }
@@ -1967,19 +1919,19 @@ ScrollBar-UpButton, ScrollBar-DownButton {
 /* Rounded Borders */
 
 ScrollBar-UpButton[HORIZONTAL] {
-  border-radius: 0px 3px 3px 0px;
+  /* border-radius: 0px 3px 3px 0px; */
 }
 
 ScrollBar-UpButton[VERTICAL] {
-  border-radius: 0px 0px 3px 3px;
+  /* border-radius: 0px 0px 3px 3px; */
 }
 
 ScrollBar-DownButton[HORIZONTAL] {
-  border-radius: 3px 0px 0px 3px;
+  /* border-radius: 3px 0px 0px 3px; */
 }
 
 ScrollBar-DownButton[VERTICAL] {
-  border-radius: 3px 3px 0px 0px;
+  /* border-radius: 3px 3px 0px 0px; */
 }
 
 /* Icons */
@@ -2134,8 +2086,8 @@ Label.gray {
 
 FileUpload {
   font: 12px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  border: 1px solid #A4A4A4;
-  border-radius: 3px;
+  border: 1px solid #828790;
+  /* border-radius: 3px; */
   padding: 2px 5px;
   spacing: 2px;
   color: #4a4a4a;
