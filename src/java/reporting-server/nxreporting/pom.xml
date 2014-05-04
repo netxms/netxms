@@ -6,11 +6,12 @@
 
     <groupId>com.radensolutions</groupId>
     <artifactId>nxreporting</artifactId>
-    <version>4.4.12</version>
+    <version>1.2.14</version>
 
     <properties>
-        <spring.version>3.2.2.RELEASE</spring.version>
-        <slf4j.version>1.7.3</slf4j.version>
+        <spring.version>4.0.4.RELEASE</spring.version>
+        <slf4j.version>1.7.7</slf4j.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
@@ -48,7 +49,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>3.4.0.GA</version>
+            <version>4.3.5.Final</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -85,7 +86,7 @@
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.1.7</version>
+            <version>2.2.1</version>
         </dependency>
 
         <!-- NetXMS client API -->
@@ -112,7 +113,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.2</version>
+            <version>4.11</version>
             <scope>test</scope>
         </dependency>
 
@@ -126,19 +127,19 @@
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
-            <version>2.1.1</version>
+            <version>2.2.2</version>
         </dependency>
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
-            <version>5.0.0</version>
+            <version>5.5.2</version>
         </dependency>
 
         <!-- DB Drivers -->
         <dependency>
-            <groupId>postgresql</groupId>
+            <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>9.1-901.jdbc4</version>
+            <version>9.3-1101-jdbc41</version>
             <scope>runtime</scope>
         </dependency>
         <!--
@@ -150,18 +151,11 @@
         </dependency>
         -->
 
-        <!-- NetXMS reporting fonts -->
         <dependency>
-            <groupId>com.radensolutions</groupId>
-            <artifactId>reporting-fonts</artifactId>
-            <version>1.0.0</version>
-            <scope>runtime</scope>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4.7</version>
         </dependency>
-		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>mail</artifactId>
-			<version>1.4</version>
-		</dependency>
     </dependencies>
 
     <build>
@@ -177,17 +171,17 @@
         </resources>
         <plugins>
             <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-compiler-plugin</artifactId>
-               <configuration>
-                  <source>1.6</source>
-                  <target>1.6</target>
-               </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
+                <version>1.3</version>
                 <configuration>
                     <mainClass>com.radensolutions.reporting.application.StandaloneLauncher</mainClass>
                 </configuration>
@@ -229,35 +223,35 @@
                 </configuration>
             </plugin>
         </plugins>
-		<pluginManagement>
-			<plugins>
-			<!-- Ignore/Execute plugin execution -->
-				<plugin>
-				<groupId>org.eclipse.m2e</groupId>
-				<artifactId>lifecycle-mapping</artifactId>
-				<version>1.0.0</version>
-				<configuration>
-				    <lifecycleMappingMetadata>
-				        <pluginExecutions>
-				            <!-- copy-dependency plugin -->
-				            <pluginExecution>
-				                <pluginExecutionFilter>
-				                    <groupId>org.apache.maven.plugins</groupId>
-				                    <artifactId>maven-dependency-plugin</artifactId>
-				                    <versionRange>[1.0.0,)</versionRange>
-				                    <goals>
-				                        <goal>copy-dependencies</goal>
-				                    </goals>
-				                </pluginExecutionFilter>
-				                <action>
-				                    <ignore />
-				                </action>
-				            </pluginExecution>
-				        </pluginExecutions>
-				    </lifecycleMappingMetadata>
-				</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
+        <pluginManagement>
+            <plugins>
+                <!-- Ignore/Execute plugin execution -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <!-- copy-dependency plugin -->
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-dependency-plugin</artifactId>
+                                        <versionRange>[1.0.0,)</versionRange>
+                                        <goals>
+                                            <goal>copy-dependencies</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore/>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 </project>
