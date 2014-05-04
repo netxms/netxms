@@ -5128,8 +5128,8 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 						}
 					}
 
-					ifLocal->setPeer((Node *)object, ifRemote);
-					ifRemote->setPeer(this, ifLocal);
+               ifLocal->setPeer((Node *)object, ifRemote, ni->protocol);
+               ifRemote->setPeer(this, ifLocal, ni->protocol);
 					sendPollerMsg(dwRqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
 					              ifLocal->Name(), object->Name(), ifRemote->Name());
 					DbgPrintf(5, _T("Local interface %s:%s linked to remote interface %s:%s"),
@@ -5293,7 +5293,7 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 				info.ifRemote = ifRemote->getIfIndex();
 				info.objectId = ifLocal->getPeerNodeId();
 				info.isPtToPt = true;
-				info.protocol = LL_PROTO_FDB;
+            info.protocol = ifLocal->getPeerDiscoveryProtocol();
 				nbs->addConnection(&info);
 			}
 		}

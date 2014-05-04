@@ -139,12 +139,13 @@ public:
  */
 enum LinkLayerProtocol
 {
-   LL_PROTO_FDB  = 0,   /* obtained from switch forwarding database */
-   LL_PROTO_CDP  = 1,   /* Cisco Discovery Protocol */
-   LL_PROTO_LLDP = 2,   /* Link Layer Discovery Protocol */
-   LL_PROTO_NDP  = 3,   /* Nortel Discovery Protocol */
-   LL_PROTO_EDP  = 4,   /* Extreme Discovery Protocol */
-   LL_PROTO_STP  = 5    /* Spanning Tree Protocol */
+   LL_PROTO_UNKNOWN = 0, /* unknown source */
+   LL_PROTO_FDB  = 1,    /* obtained from switch forwarding database */
+   LL_PROTO_CDP  = 2,    /* Cisco Discovery Protocol */
+   LL_PROTO_LLDP = 3,    /* Link Layer Discovery Protocol */
+   LL_PROTO_NDP  = 4,    /* Nortel Discovery Protocol */
+   LL_PROTO_EDP  = 5,    /* Extreme Discovery Protocol */
+   LL_PROTO_STP  = 6     /* Spanning Tree Protocol */
 };
 
 /**

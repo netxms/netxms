@@ -100,11 +100,11 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
       AddSTPNeighbors(node, nbs);
 		node->addHostConnections(nbs);
 	}
-   else
-   {
-      // interfaces of end nodes should be linked to switches already,
-	   // so we just walk node's interfaces and copy connection point information
-	   node->addExistingConnections(nbs);
-   }
+
+   // Add existing connections from interfaces. Mostly useful
+   // for end nodes, because interfaces of end nodes should be linked to switches already,
+   // but can be useful in other situations (for example, STP topology data can be obtained only on one side),
+   // so we just walk node's interfaces and copy connection point information
+   node->addExistingConnections(nbs);
 	return nbs;
 }

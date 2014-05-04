@@ -977,6 +977,7 @@ typedef struct
 #define VID_RS_REPORT_NAME          ((UINT32)469)
 #define VID_HELPDESK_LINK_ACTIVE    ((UINT32)470)
 #define VID_URL                     ((UINT32)471)
+#define VID_PEER_PROTOCOL           ((UINT32)472)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

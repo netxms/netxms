@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -114,6 +114,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return getPeerMacAddress(iface);
 			case InterfacesTab.COLUMN_PEER_IP_ADDRESS:
 				return getPeerIpAddress(iface);
+         case InterfacesTab.COLUMN_PEER_PROTOCOL:
+            return getPeerProtocol(iface);
 		}
 		return null;
 	}
@@ -141,6 +143,16 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 		Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
 		return (peer != null) ? peer.getMacAddress().toString() : null;
 	}
+
+   /**
+    * @param iface
+    * @return
+    */
+   private String getPeerProtocol(Interface iface)
+   {
+      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      return (peer != null) ? iface.getPeerDiscoveryProtocol().toString() : null;
+   }
 
 	/**
 	 * @param iface

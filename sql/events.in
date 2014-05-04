@@ -818,7 +818,8 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'    9) Peer interface index' CONCAT CRLF CONCAT
 		'   10) Peer interface name' CONCAT CRLF CONCAT
 		'   11) Peer interface IP address' CONCAT CRLF CONCAT
-		'   12) Peer interface MAC address'
+		'   12) Peer interface MAC address' CONCAT CRLF CONCAT
+      '   13) Discovery protocol'
 	);
 
 /*

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ public class Connection extends OverviewPageElement
 	private NXCSession session;
 	private CLabel nodeLabel;
 	private CLabel interfaceLabel;
+   private CLabel protocolLabel;
 	private WorkbenchLabelProvider labelProvider;
 	
 	/**
@@ -88,6 +89,14 @@ public class Connection extends OverviewPageElement
 		gd.horizontalIndent = 15;
 		interfaceLabel.setLayoutData(gd);
 		
+      protocolLabel = new CLabel(area, SWT.NONE);
+      protocolLabel.setBackground(area.getBackground());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalIndent = 15;
+      protocolLabel.setLayoutData(gd);
+      
 		return area;
 	}
 	
@@ -128,10 +137,12 @@ public class Connection extends OverviewPageElement
 			AbstractObject peerIface = session.findObjectById(peerInterfaceId);
 			interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
 			interfaceLabel.setImage(labelProvider.getImage(peerIface));
+			protocolLabel.setText(iface.getPeerDiscoveryProtocol().toString());
 		}
 		else
 		{
 			interfaceLabel.setText(Messages.get().Connection_NA);
+			protocolLabel.setText("");
 		}
 	}
 
