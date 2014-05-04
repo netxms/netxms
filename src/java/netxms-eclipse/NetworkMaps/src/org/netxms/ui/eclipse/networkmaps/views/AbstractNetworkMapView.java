@@ -229,6 +229,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		viewer.setContentProvider(new MapContentProvider(viewer));
 		labelProvider = new MapLabelProvider(viewer);
 		viewer.setLabelProvider(labelProvider);
+      viewer.setBackgroundColor(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND).getRGB());
 
 		try
 		{
