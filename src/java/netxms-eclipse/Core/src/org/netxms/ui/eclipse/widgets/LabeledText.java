@@ -70,8 +70,8 @@ public class LabeledText extends Composite
 	{
 		super(parent, style);
 		this.toolkit = toolkit;
-		toolkit.adapt(this);
 		createContent(textStyle);
+      toolkit.adapt(this);
 	}
 	
 	/**

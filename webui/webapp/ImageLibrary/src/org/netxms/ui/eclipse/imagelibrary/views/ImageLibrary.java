@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.DisposeEvent;
@@ -75,6 +77,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	private NXCSession session;
 
 	private Set<String> knownCategories;
+	private List<LibraryImage> imageLibrary;
 
 	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
@@ -84,6 +87,12 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	@Override
 	public void createPartControl(final Composite parent)
 	{
+	   final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+	   
+	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM");
+	   if(currentIconSize == 0)
+	      currentIconSize = MIN_GRID_ICON_SIZE;
+	   
 		final FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
 
@@ -95,8 +104,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		DefaultGalleryGroupRenderer galleryGroupRenderer = new DefaultGalleryGroupRenderer();
 
 		galleryGroupRenderer.setMinMargin(2);
-		galleryGroupRenderer.setItemHeight(MIN_GRID_ICON_SIZE);
-		galleryGroupRenderer.setItemWidth(MIN_GRID_ICON_SIZE);
+		galleryGroupRenderer.setItemHeight(currentIconSize);
+		galleryGroupRenderer.setItemWidth(currentIconSize);
 		galleryGroupRenderer.setAutoMargin(true);
 		galleryGroupRenderer.setAlwaysExpanded(true);
 		gallery.setGroupRenderer(galleryGroupRenderer);
@@ -130,6 +139,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
+			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize);
 				ImageProvider.getInstance(display).removeUpdateListener(ImageLibrary.this);
 			}
 		});
@@ -152,7 +162,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories);
+				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length > 0)
 				{
@@ -175,7 +185,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length == 1)
 				{
-					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories);
+					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
 					LibraryImage image = (LibraryImage)selection[0].getData();
 					dialog.setName(image.getName());
 					dialog.setDefaultCategory(image.getCategory());
@@ -243,13 +253,31 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 	}
 
- 	protected void verifyImageFile(String fileName)
- 	{
- 		if (fileName != null)
- 		{
- 			new Image(getSite().getShell().getDisplay(), fileName);
- 		}
- 	}
+   /**
+    * Verify if image can be created from given file
+    */
+	protected void verifyImageFile(final String fileName) throws Exception
+	{
+	   final Display display = getSite().getShell().getDisplay();
+	   final Exception[] result = new Exception[1];
+	   display.syncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            try
+            {
+               new Image(display, fileName).dispose();
+               result[0] = null;
+            }
+            catch(Exception e)
+            {
+               result[0] = e;
+            }
+         }
+      });
+	   if (result[0] != null)
+	      throw result[0];
+	}
 
 	/**
 	 * @param galleryItem
@@ -261,19 +289,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	{
 		final LibraryImage image = (LibraryImage)galleryItem.getData();
 
-      new ConsoleJob(Messages.get().ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  verifyImageFile(fileName);
-               }
-            });
 				if (fileName != null)
 				{
+	            verifyImageFile(fileName);
 					FileInputStream stream = null;
 					try
 					{
@@ -298,13 +320,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 
 				session.modifyImage(image, new ProgressListener() {
 					private long prevDone = 0;
-					
+
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
 						monitor.beginTask(Messages.get(getDisplay()).ImageLibrary_UpdateImage, (int)workTotal);
 					}
-					
+
 					@Override
 					public void markProgress(long workDone)
 					{
@@ -334,18 +356,11 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-      new ConsoleJob(Messages.get().ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  verifyImageFile(fileName);
-               }
-            });
-
+            verifyImageFile(fileName);
 				final LibraryImage image = new LibraryImage();
 
 				final long fileSize = new File(fileName).length();
@@ -355,7 +370,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					stream = new FileInputStream(fileName);
 					byte imageData[] = new byte[(int)fileSize];
 					stream.read(imageData);
-	
+
 					image.setBinaryData(imageData);
 					image.setName(name);
 					image.setCategory(category);
@@ -368,13 +383,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 
 				session.createImage(image, new ProgressListener() {
 					private long prevDone = 0;
-					
+
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
 						monitor.beginTask(Messages.get(getDisplay()).ImageLibrary_UploadImage, (int)workTotal);
 					}
-					
+
 					@Override
 					public void markProgress(long workDone)
 					{
@@ -382,7 +397,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 						prevDone = workDone;
 					}
 				});
-				
+
 				// TODO: check
             ImageProvider.getInstance(display).syncMetaData();
 				refreshImages();	/* TODO: update local copy */
@@ -503,7 +518,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<LibraryImage> imageLibrary = session.getImageLibrary();
+				imageLibrary = session.getImageLibrary();
+				Collections.sort(imageLibrary);
 				for(int i = 0; i < imageLibrary.size(); i++)
 				{
 					LibraryImage image = imageLibrary.get(i);
@@ -575,7 +591,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 					catch(SWTException e)
 					{
-						Activator.logError("Exception in ImageLibrary.refreshUI()", e);
+						Activator.logError("Exception in ImageLibrary.refreshUI()", e); //$NON-NLS-1$
 						imageItem.setImage(ImageProvider.getInstance(getSite().getShell().getDisplay()).getImage(null)); // show as "missing"
 					}
 				}

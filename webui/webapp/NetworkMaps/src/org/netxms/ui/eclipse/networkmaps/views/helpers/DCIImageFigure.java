@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.configs.DCIImageConfiguration;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
@@ -56,9 +55,9 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
 
 		try
 		{
-			UUID guid = UUID.fromString(dciImageConfiguration.getCorrectImage(latDCIValue));
-         org.eclipse.swt.graphics.Rectangle bounds = ImageProvider.getInstance(Display.getCurrent()).getImage(guid).getBounds();
-         setSize(bounds.width, bounds.height);
+         UUID guid = dciImageConfiguration.getCorrectImage(latDCIValue);
+			org.eclipse.swt.graphics.Rectangle bounds = ImageProvider.getInstance().getImage(guid).getBounds();
+			setSize(bounds.width, bounds.height);
 		}
 		catch(IllegalArgumentException e)
 		{			
@@ -76,8 +75,8 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
 	   DciValue latDCIValue = dciValueProvider.getLastDciData(dciImageConfiguration.getDci());
 	   try
       {
-	      UUID guid = UUID.fromString(dciImageConfiguration.getCorrectImage(latDCIValue));
-         Image image = ImageProvider.getInstance(Display.getCurrent()).getImage(guid);
+	      UUID guid = dciImageConfiguration.getCorrectImage(latDCIValue);
+         Image image = ImageProvider.getInstance().getImage(guid);
          Rectangle rect = new Rectangle(getBounds());
          gc.drawImage(image, rect.x, rect.y);
       }

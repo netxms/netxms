@@ -109,7 +109,7 @@ public class EditDCIImageRuleDialog extends Dialog
       image.setLayoutData(gd);
       try
       {
-         selectedImage = UUID.fromString(rule.getImage());
+         selectedImage = rule.getImage();
          image.setImageGuid(selectedImage, true);
       }
       catch (Exception e) 
@@ -159,7 +159,7 @@ public class EditDCIImageRuleDialog extends Dialog
          return;
       }
 	   
-	   rule.setImage(selectedImage.toString());
+	   rule.setImage(selectedImage);
       rule.setComparisonType(operation.getSelectionIndex());
 	   rule.setCompareValue(compareValue);
 	   rule.setComment(comment.getText());

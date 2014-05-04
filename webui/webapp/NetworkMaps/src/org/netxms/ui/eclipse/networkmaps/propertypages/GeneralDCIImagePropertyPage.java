@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       image.setLayoutData(gd);
       try
       {
-         selectedImage = UUID.fromString(config.getDefaultImage());
+         selectedImage = config.getDefaultImage();
          image.setImageGuid(selectedImage, true);
       }
       catch (Exception e) {
@@ -143,7 +143,8 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       dciConf.setInstance(dataColumn.getText());    
       
       config.setDci(dciConf);      
-      config.setDefaultImage(selectedImage.toString());
+      config.setDefaultImage(selectedImage);
+      container.setImageOptions(config);
       
       return true;
    }

@@ -56,6 +56,16 @@ public class ImageProvider
 	   return (ImageProvider)ConsoleSharedData.getProperty(display, "ImageProvider");
 	}
 
+   /**
+    * Get image provider's instance for current display
+    * 
+    * @return
+    */
+   public static ImageProvider getInstance()
+   {
+      return (ImageProvider)ConsoleSharedData.getProperty("ImageProvider");
+   }
+	
 	private Image missingImage;
 	private Set<ImageUpdateListener> updateListeners;
 
@@ -138,6 +148,9 @@ public class ImageProvider
 	 */
 	public Image getImage(final UUID guid)
 	{
+	   if (guid == null)
+	      return missingImage;
+	   
 		final Image image;
 		if (cache.containsKey(guid))
 		{

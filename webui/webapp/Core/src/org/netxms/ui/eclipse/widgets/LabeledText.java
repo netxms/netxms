@@ -70,8 +70,8 @@ public class LabeledText extends Composite
 	{
 		super(parent, style | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
 		this.toolkit = toolkit;
-		toolkit.adapt(this);
 		createContent(textStyle);
+      toolkit.adapt(this);
 	}
 	
 	/**

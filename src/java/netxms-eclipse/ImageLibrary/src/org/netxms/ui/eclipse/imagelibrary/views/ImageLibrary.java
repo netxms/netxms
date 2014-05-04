@@ -79,15 +79,12 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 
 	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(final Composite parent)
 	{
-	   System.out.println("Creation called");
 	   final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 	   
 	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM");
@@ -141,14 +138,11 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			{
 			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize);
 				ImageProvider.getInstance().removeUpdateListener(ImageLibrary.this);
-				
 			}
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -256,12 +250,12 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 	}
 
-	protected void verifyImageFile(String fileName)
+   /**
+    * Verify if image can be created from given file
+    */
+	protected void verifyImageFile(String fileName) throws Exception
 	{
-		if (fileName != null)
-		{
-			new Image(getSite().getShell().getDisplay(), fileName);
-		}
+		new Image(getSite().getShell().getDisplay(), fileName).dispose();
 	}
 
 	/**
@@ -278,9 +272,9 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-				verifyImageFile(fileName);
 				if (fileName != null)
 				{
+	            verifyImageFile(fileName);
 					FileInputStream stream = null;
 					try
 					{
@@ -320,7 +314,6 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				// ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				ImageProvider.getInstance().syncMetaData();
 				refreshImages(); /* TODO: update single element */
 
@@ -385,7 +378,6 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				// /ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				// TODO: check
 				ImageProvider.getInstance().syncMetaData();
 				refreshImages(); /* TODO: update local copy */
@@ -580,16 +572,12 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					catch(SWTException e)
 					{
 						Activator.logError("Exception in ImageLibrary.refreshUI()", e); //$NON-NLS-1$
-						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
-																												// as
-																												// "missing"
+						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
 					}
 				}
 				else
 				{
-					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
-																											// as
-																											// "missing"
+					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
 				}
 				imageItem.setData(image);
 			}
