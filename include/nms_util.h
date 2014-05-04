@@ -416,6 +416,7 @@ private:
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
 
 protected:
+   bool m_storePointers;
 	void (*m_objectDestructor)(void *);
 
    Array(void *data, int initial, int grow, size_t elementSize);
@@ -426,7 +427,7 @@ public:
 	virtual ~Array();
 
 	int add(void *element);
-   void *get(int index) { return ((index >= 0) && (index < m_size)) ? ((m_elementSize <= sizeof(void *)) ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   void *get(int index) { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
    int indexOf(void *element);
 	void set(int index, void *element);
 	void replace(int index, void *element);
@@ -475,14 +476,14 @@ private:
 	static void destructor(void *element) { }
 
 public:
-	IntegerArray(int initial = 0, int grow = 16) : Array(initial, grow, false) { m_objectDestructor = destructor; }
+	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
 	virtual ~IntegerArray() { }
 
-	int add(T value) { return Array::add(CAST_TO_POINTER(value, void *)); }
-	T get(int index) { return CAST_FROM_POINTER(Array::get(index), T); }
-	int indexOf(T value) { return Array::indexOf(CAST_TO_POINTER(value, void *)); }
-	void set(int index, T value) { Array::set(index, CAST_TO_POINTER(value, void *)); }
-	void replace(int index, T value) { Array::replace(index, CAST_TO_POINTER(value, void *)); }
+   int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   T get(int index) { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
+   int indexOf(T value) { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
 
    T *getBuffer() { return (T*)__getBuffer(); }
 };

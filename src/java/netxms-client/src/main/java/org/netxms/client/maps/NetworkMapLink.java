@@ -511,4 +511,15 @@ public class NetworkMapLink
    {
       this.connectorName2 = connectorName2;
    }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "NetworkMapLink [name=" + name + ", type=" + type + ", element1=" + element1 + ", element2=" + element2
+            + ", connectorName1=" + connectorName1 + ", connectorName2=" + connectorName2 + ", color=" + color + ", statusObject="
+            + statusObject + ", routing=" + routing + ", flags=" + flags + "]";
+   }
 }

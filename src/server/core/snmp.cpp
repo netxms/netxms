@@ -27,20 +27,20 @@
  */
 static UINT32 HandlerArp(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   UINT32 oidName[MAX_OID_LEN], dwNameLen, dwIndex = 0;
+   UINT32 oidName[MAX_OID_LEN], dwIndex = 0;
    BYTE bMac[64];
    UINT32 dwResult;
 
-   dwNameLen = pVar->getName()->getLength();
-   memcpy(oidName, pVar->getName()->getValue(), dwNameLen * sizeof(UINT32));
+   size_t nameLen = pVar->getName()->getLength();
+   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
 
-   oidName[dwNameLen - 6] = 1;  // Retrieve interface index
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(UINT32), 0);
+   oidName[nameLen - 6] = 1;  // Retrieve interface index
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &dwIndex, sizeof(UINT32), 0);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   oidName[dwNameLen - 6] = 2;  // Retrieve MAC address for this IP
-	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, bMac, 64, SG_RAW_RESULT);
+   oidName[nameLen - 6] = 2;  // Retrieve MAC address for this IP
+	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, bMac, 64, SG_RAW_RESULT);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
@@ -129,36 +129,36 @@ void SnmpGetInterfaceStatus(UINT32 dwVersion, SNMP_Transport *pTransport, UINT32
  */
 static UINT32 HandlerRoute(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   UINT32 oidName[MAX_OID_LEN], dwNameLen, dwResult;
+   UINT32 oidName[MAX_OID_LEN], dwResult;
    ROUTE route;
 	ROUTING_TABLE *rt = (ROUTING_TABLE *)pArg;
 
-   dwNameLen = pVar->getName()->getLength();
-	if ((dwNameLen < 5) || (dwNameLen > MAX_OID_LEN))
+   size_t nameLen = pVar->getName()->getLength();
+	if ((nameLen < 5) || (nameLen > MAX_OID_LEN))
 	{
-		DbgPrintf(4, _T("HandlerRoute(): strange dwNameLen %d (name=%s)"), dwNameLen, pVar->getName()->getValueAsText());
+		DbgPrintf(4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, pVar->getName()->getValueAsText());
 		return SNMP_ERR_SUCCESS;
 	}
-   memcpy(oidName, pVar->getName()->getValue(), dwNameLen * sizeof(UINT32));
+   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
    route.dwDestAddr = ntohl(pVar->getValueAsUInt());
 
-   oidName[dwNameLen - 5] = 2;  // Interface index
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
+   oidName[nameLen - 5] = 2;  // Interface index
+   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
                            &route.dwIfIndex, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   oidName[dwNameLen - 5] = 7;  // Next hop
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
+   oidName[nameLen - 5] = 7;  // Next hop
+   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
                            &route.dwNextHop, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   oidName[dwNameLen - 5] = 8;  // Route type
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
+   oidName[nameLen - 5] = 8;  // Route type
+   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
                            &route.dwRouteType, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   oidName[dwNameLen - 5] = 11;  // Destination mask
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
+   oidName[nameLen - 5] = 11;  // Destination mask
+   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
                            &route.dwDestMask, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
       return dwResult;
 

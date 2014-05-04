@@ -68,4 +68,13 @@ public class NetworkMapObject extends NetworkMapElement
 		super.fillMessage(msg, baseId);
 		msg.setVariableInt32(baseId + 10, (int)objectId);
 	}
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "NetworkMapObject [objectId=" + objectId + ", id=" + id + ", type=" + type + ", x=" + x + ", y=" + y + "]";
+   }
 }

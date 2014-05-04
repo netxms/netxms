@@ -4388,9 +4388,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
       int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_OBJECTS);
       long[] idList = response.getVariableAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
-      if (idList.length != count) throw new NXCException(RCC.INTERNAL_ERROR);
+      if (idList.length != count) 
+         throw new NXCException(RCC.INTERNAL_ERROR);
 
-      NetworkMapPage page = new NetworkMapPage(msg.getMessageId()+"L2Topology");
+      NetworkMapPage page = new NetworkMapPage(msg.getMessageId() + ".L2Topology");
       for(int i = 0; i < count; i++)
       {
          page.addElement(new NetworkMapObject(page.createElementId(), idList[i]));

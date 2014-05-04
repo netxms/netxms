@@ -51,7 +51,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 	protected void buildMapPage()
 	{
 		if (mapPage == null)
-			mapPage = new NetworkMapPage(ID+rootObject.getObjectName());
+			mapPage = new NetworkMapPage(ID + rootObject.getObjectName());
 		
 		new ConsoleJob(String.format(Messages.get().Layer2Topology_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override

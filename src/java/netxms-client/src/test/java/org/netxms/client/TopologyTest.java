@@ -18,6 +18,10 @@
  */
 package org.netxms.client;
 
+import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapElement;
+
 
 /**
  * Tests for network topology functions
@@ -25,6 +29,7 @@ package org.netxms.client;
 public class TopologyTest extends SessionTest
 {
    private static final long SUBNET_ID = 796;
+   private static final long NODE_ID = 603;
    
    public void testAddressMap() throws Exception
    {
@@ -33,6 +38,19 @@ public class TopologyTest extends SessionTest
       long[] map = session.getSubnetAddressMap(SUBNET_ID);
       for(int i = 0; i < map.length; i++)
          System.out.println(i + ": " + map[i]);
+      
+      session.disconnect();
+   }
+
+   public void testLinkLayerTopology() throws Exception
+   {
+      final NXCSession session = connect();
+
+      NetworkMapPage page = session.queryLayer2Topology(NODE_ID);
+      for(NetworkMapElement e : page.getElements())
+         System.out.println(e.toString());
+      for(NetworkMapLink l : page.getLinks())
+         System.out.println(l.toString());
       
       session.disconnect();
    }
