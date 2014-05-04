@@ -139,11 +139,12 @@ public:
  */
 enum LinkLayerProtocol
 {
-   LL_PROTO_FDB  = 0,	/* obtained from switch forwarding database */
-   LL_PROTO_CDP  = 1,	/* Cisco Discovery Protocol */
-   LL_PROTO_LLDP = 2,	/* Link Layer Discovery Protocol */
-   LL_PROTO_NDP  = 3,	/* Nortel Discovery Protocol */
-   LL_PROTO_EDP  = 4		/* Extreme Discovery Protocol */
+   LL_PROTO_FDB  = 0,   /* obtained from switch forwarding database */
+   LL_PROTO_CDP  = 1,   /* Cisco Discovery Protocol */
+   LL_PROTO_LLDP = 2,   /* Link Layer Discovery Protocol */
+   LL_PROTO_NDP  = 3,   /* Nortel Discovery Protocol */
+   LL_PROTO_EDP  = 4,   /* Extreme Discovery Protocol */
+   LL_PROTO_STP  = 5    /* Spanning Tree Protocol */
 };
 
 /**
@@ -264,6 +265,7 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node);
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
+void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen);
 
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, InterfaceList *ifList);

@@ -2,6 +2,7 @@
 * 1.2.14
 *
 
+- STP (Spanning Tree Protocol) information used for topology discovery
 - New NXSL function inList
 - New methods in NXSL class Node: enableAgent, enableConfigurationPoll,
   enableIcmp, enableSnmp, enableStatusPoll, enableTopologyPoll
@@ -17,7 +18,7 @@
    - Colored background for DCIs with active thresholds in DCI summary tables
    - IP route visualisation improved
    - On table DCI threshold property page columns can be chosen from dropdown
-- Fixed issues: #417, #528, #535, #536, #552
+- Fixed issues: #71, #417, #528, #535, #536, #552
 
 
 *

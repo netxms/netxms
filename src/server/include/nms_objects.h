@@ -1082,6 +1082,7 @@ public:
 	const TCHAR *getSysDescription() { return CHECK_NULL_EX(m_sysDescription); }
    time_t getBootTime() { return m_bootTime; }
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
+   const BYTE *getBridgeId() { return m_baseBridgeAddress; }
 	const TCHAR *getDriverName() { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
 	WORD getAgentPort() { return m_wAgentPort; }
 	WORD getAuthMethod() { return m_wAuthMethod; }
@@ -2129,6 +2130,7 @@ const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName)
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, UINT32 ipAddr);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
+Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
 Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, UINT32 ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);

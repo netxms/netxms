@@ -793,6 +793,22 @@ Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 }
 
 /**
+ * Bridge ID comparator
+ */
+static bool BridgeIdComparator(NetObj *object, void *bridgeId)
+{
+	return ((Node *)object)->isBridge() && !memcmp(((Node *)object)->getBridgeId(), bridgeId, MAC_ADDR_LENGTH);
+}
+
+/**
+ * Find node by bridge ID (bridge base address)
+ */
+Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId)
+{
+	return (Node *)g_idxNodeById.find(BridgeIdComparator, (void *)bridgeId);
+}
+
+/**
  * Find subnet by IP address
  */
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr)
