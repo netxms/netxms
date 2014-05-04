@@ -164,7 +164,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
 {
    TCHAR *pszArgList[32], szBuffer[256];
    char szFormat[] = "sssssssssssssssssssssssssssssssss";
-   UINT32 i, j;
+   UINT32 i;
    SNMP_Variable *pVar;
    int iResult;
 
@@ -188,15 +188,19 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
       else
       {
 			// Extract by varbind OID
+         size_t j;
          for(j = 0; j < pdu->getNumVariables(); j++)
          {
-            iResult = pdu->getVariable(j)->getName()->compare(
+            iResult = pdu->getVariable((int)j)->getName()->compare(
                   m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
                   m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
             if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
             {
 					bool convertToHex = true;
-					pszArgList[i] = _tcsdup((s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? pdu->getVariable(j)->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pdu->getVariable(j)->getValueAsString(szBuffer, 256));
+					pszArgList[i] = _tcsdup(
+                  (s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? 
+                     pdu->getVariable((int)j)->getValueAsPrintableString(szBuffer, 256, &convertToHex) : 
+                     pdu->getVariable((int)j)->getValueAsString(szBuffer, 256));
                break;
             }
          }
@@ -235,7 +239,7 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
  */
 static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
-   UINT32 i, dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
+   UINT32 dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
    TCHAR *pszTrapArgs, szBuffer[4096];
    SNMP_Variable *pVar;
    Node *pNode;
@@ -271,9 +275,9 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
       dwBufSize = pdu->getNumVariables() * 4096 + 16;
       pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
       pszTrapArgs[0] = 0;
-		for(i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < pdu->getNumVariables(); i++)
+		for(size_t i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < pdu->getNumVariables(); i++)
       {
-         pVar = pdu->getVariable(i);
+         pVar = pdu->getVariable((int)i);
 			bool convertToHex = true;
          dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                 (dwBufPos == 0) ? _T("") : _T("; "),
@@ -310,75 +314,83 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
    if (pNode != NULL)
    {
       DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), pNode->Name(), pNode->Id());
-
-      // Pass trap to loaded modules
-      for(i = 0; i < g_dwNumModules; i++)
+      if (pNode->Status() != STATUS_UNMANAGED)
       {
-         if (g_pModuleList[i].pfTrapHandler != NULL)
-         {
-            if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
-				{
-					processed = TRUE;
-               break;   // Trap was processed by the module
-				}
-         }
-      }
+         UINT32 i;
 
-      // Find if we have this trap in our list
-      MutexLock(m_mutexTrapCfgAccess);
-
-      // Try to find closest match
-      for(i = 0, dwMatchLen = 0; i < m_dwNumTraps; i++)
-      {
-         if (m_pTrapCfg[i].dwOidLen > 0)
+         // Pass trap to loaded modules
+         for(i = 0; i < g_dwNumModules; i++)
          {
-            iResult = pdu->getTrapId()->compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
-            if (iResult == OID_EQUAL)
+            if (g_pModuleList[i].pfTrapHandler != NULL)
             {
-               dwMatchLen = m_pTrapCfg[i].dwOidLen;
-               dwMatchIdx = i;
-               break;   // Find exact match
+               if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
+				   {
+					   processed = TRUE;
+                  break;   // Trap was processed by the module
+				   }
             }
-            else if (iResult == OID_SHORTER)
+         }
+
+         // Find if we have this trap in our list
+         MutexLock(m_mutexTrapCfgAccess);
+
+         // Try to find closest match
+         for(i = 0, dwMatchLen = 0; i < m_dwNumTraps; i++)
+         {
+            if (m_pTrapCfg[i].dwOidLen > 0)
             {
-               if (m_pTrapCfg[i].dwOidLen > dwMatchLen)
+               iResult = pdu->getTrapId()->compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
+               if (iResult == OID_EQUAL)
                {
                   dwMatchLen = m_pTrapCfg[i].dwOidLen;
                   dwMatchIdx = i;
+                  break;   // Find exact match
+               }
+               else if (iResult == OID_SHORTER)
+               {
+                  if (m_pTrapCfg[i].dwOidLen > dwMatchLen)
+                  {
+                     dwMatchLen = m_pTrapCfg[i].dwOidLen;
+                     dwMatchIdx = i;
+                  }
                }
             }
          }
-      }
 
-      if (dwMatchLen > 0)
-      {
-         GenerateTrapEvent(pNode->Id(), dwMatchIdx, pdu);
-      }
-      else     // Process unmatched traps
-      {
-         // Handle unprocessed traps
-         if (!processed)
+         if (dwMatchLen > 0)
          {
-            // Build trap's parameters string
-            dwBufSize = pdu->getNumVariables() * 4096 + 16;
-            pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
-            pszTrapArgs[0] = 0;
-            for(i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < pdu->getNumVariables(); i++)
-            {
-               pVar = pdu->getVariable(i);
-					bool convertToHex = true;
-               dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
-                                      (dwBufPos == 0) ? _T("") : _T("; "),
-                                      pVar->getName()->getValueAsText(), 
-												  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->getValueAsString(szBuffer, 512));
-            }
-
-            // Generate default event for unmatched traps
-            PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", pdu->getTrapId()->getValueAsText(), pszTrapArgs);
-            free(pszTrapArgs);
+            GenerateTrapEvent(pNode->Id(), dwMatchIdx, pdu);
          }
+         else     // Process unmatched traps
+         {
+            // Handle unprocessed traps
+            if (!processed)
+            {
+               // Build trap's parameters string
+               dwBufSize = pdu->getNumVariables() * 4096 + 16;
+               pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
+               pszTrapArgs[0] = 0;
+               for(i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < (UINT32)pdu->getNumVariables(); i++)
+               {
+                  pVar = pdu->getVariable(i);
+					   bool convertToHex = true;
+                  dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
+                                         (dwBufPos == 0) ? _T("") : _T("; "),
+                                         pVar->getName()->getValueAsText(), 
+												     s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->getValueAsString(szBuffer, 512));
+               }
+
+               // Generate default event for unmatched traps
+               PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", pdu->getTrapId()->getValueAsText(), pszTrapArgs);
+               free(pszTrapArgs);
+            }
+         }
+         MutexUnlock(m_mutexTrapCfgAccess);
       }
-      MutexUnlock(m_mutexTrapCfgAccess);
+      else
+      {
+         DbgPrintf(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), pNode->Name(), pNode->Id());
+      }
    }
    else if (g_dwFlags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {

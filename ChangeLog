@@ -12,6 +12,7 @@
 - SMS driver for websms.ru service
 - Macro expansion supported in pattern in agent parameters File.Size and File.Count
 - Attribute "instance" added to NXSL class "DCI"
+- Traps from unmanaged nodes ignored
 - Management console:
    - DCI values can be shown on network map links
    - DCI value can be shown on map as immage, that checnges depending on DCI value
@@ -19,7 +20,7 @@
    - Colored background for DCIs with active thresholds in DCI summary tables
    - IP route visualisation improved
    - On table DCI threshold property page columns can be chosen from dropdown
-- Fixed issues: #71, #417, #528, #535, #536, #552
+- Fixed issues: #71, #417, #528, #535, #536, #552, #560
 
 
 *
