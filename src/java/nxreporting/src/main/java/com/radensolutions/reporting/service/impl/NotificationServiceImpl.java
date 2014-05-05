@@ -1,18 +1,17 @@
 package com.radensolutions.reporting.service.impl;
 
-import static java.util.Collections.checkedList;
-
-import java.util.List;
-import java.util.UUID;
-
+import com.radensolutions.reporting.domain.Notification;
+import com.radensolutions.reporting.service.NotificationService;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.radensolutions.reporting.domain.Notification;
-import com.radensolutions.reporting.service.NotificationService;
+import java.util.List;
+import java.util.UUID;
+
+import static java.util.Collections.checkedList;
 
 @SuppressWarnings("unchecked")
 @Service

@@ -1,14 +1,13 @@
 package com.radensolutions.reporting.infrastructure;
 
+import com.radensolutions.reporting.domain.ReportDefinition;
+import com.radensolutions.reporting.domain.ReportResult;
+import org.netxms.api.client.reporting.ReportRenderFormat;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-
-import org.netxms.api.client.reporting.ReportRenderFormat;
-
-import com.radensolutions.reporting.domain.ReportDefinition;
-import com.radensolutions.reporting.domain.ReportResult;
 
 public interface ReportManager
 {
@@ -18,7 +17,7 @@ public interface ReportManager
 
 	void compileDeployedReports();
 
-	boolean execute(int userId, UUID reportId, UUID jobId, Map<String, Object> parameters, Locale locale);
+	boolean execute(int userId, UUID reportId, UUID jobId, Map<String, String> parameters, Locale locale);
 
 	List<ReportResult> listResults(UUID reportId, int userId);
 

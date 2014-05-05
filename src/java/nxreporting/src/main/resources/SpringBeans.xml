@@ -14,10 +14,12 @@
     <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
 
     <!-- Configuration loader -->
-    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" lazy-init="false">
         <property name="ignoreUnresolvablePlaceholders" value="true"/>
+        <property name="ignoreResourceNotFound" value="true"/>
         <property name="locations">
             <list>
+                <value>classpath:nxreporting_default.properties</value>
                 <value>classpath:nxreporting.properties</value>
             </list>
         </property>
@@ -34,30 +36,28 @@
         <property name="password" value="${system.datasource.password}"/>
     </bean>
     <bean id="sessionFactory"
-          class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+          class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
         <property name="dataSource" ref="dataSource"/>
         <property name="configLocation">
             <value>classpath:hibernate.cfg.xml</value>
-        </property>
-        <property name="configurationClass">
-            <value>org.hibernate.cfg.AnnotationConfiguration</value>
         </property>
         <property name="hibernateProperties">
             <props>
                 <prop key="hibernate.dialect">${system.datasource.dialect}</prop>
                 <prop key="hibernate.show_sql">true</prop>
-                <prop key="hibernate.hbm2ddl.auto">create</prop>
+                <!--<prop key="hibernate.hbm2ddl.auto">create</prop>-->
             </props>
         </property>
     </bean>
     <tx:annotation-driven/>
     <bean id="transactionManager"
-          class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+          class="org.springframework.orm.hibernate4.HibernateTransactionManager">
         <property name="sessionFactory" ref="sessionFactory"/>
     </bean>
 
     <!-- Reporting Data Source -->
-    <bean id="reportingDataSource" class="com.radensolutions.reporting.application.ReportingDataSource" destroy-method="close">
+    <bean id="reportingDataSource" class="com.radensolutions.reporting.application.ReportingDataSource"
+          destroy-method="close">
         <property name="driverClassName" value="${report.datasource.driverClassName}"/>
         <property name="url" value="${report.datasource.url}"/>
         <property name="username" value="${report.datasource.username}"/>
@@ -66,12 +66,14 @@
         <property name="initialSize" value="5"/>
         <property name="maxActive" value="30"/>
     </bean>
-    
-     <!-- SMTP Data Source -->
-    <bean id="SMTP" class="com.radensolutions.reporting.application.SMTP">
-        <property name="hostname" value="${smtp.datasource.hostname}"/>
-        <property name="port" value="${smtp.datasource.port}"/>
-        <property name="from" value="${smtp.datasource.fromAddress}"/>
+
+    <!-- Mail Sender -->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="${smtp.hostname}"/>
+    </bean>
+
+    <bean id="templateMessage" class="org.springframework.mail.SimpleMailMessage">
+        <property name="from" value="${smtp.from}"/>
     </bean>
 
     <!-- Auto deployer -->

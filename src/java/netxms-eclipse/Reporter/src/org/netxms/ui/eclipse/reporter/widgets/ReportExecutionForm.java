@@ -367,7 +367,7 @@ public class ReportExecutionForm extends Composite
 			TableWrapData td = new TableWrapData();
 			td.align = TableWrapData.FILL;
 			td.grabHorizontal = true;
-			System.out.println(parameter.getSpan());
+			System.out.println("Span = " + parameter.getSpan());
 			// td.colspan = parameter.getSpan();
 			editor.setLayoutData(td);
 			fields.add(editor);

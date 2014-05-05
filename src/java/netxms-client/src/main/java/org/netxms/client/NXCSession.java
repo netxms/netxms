@@ -7343,13 +7343,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public void scheduleReport(ReportingJob reportingJob, Map<String, String> parameters) throws NetXMSClientException, IOException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_SCHEDULE_EXECUTION);
-		msg.setVariableInt32(NXCPCodes.VID_USER_ID, reportingJob.getUserId());
 		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportingJob.getReportId());
 		msg.setVariable(NXCPCodes.VID_RS_JOB_ID, reportingJob.getJobId());
 		msg.setVariableInt32(NXCPCodes.VID_RS_JOB_TYPE, reportingJob.getType());
 		msg.setVariableInt64(NXCPCodes.VID_TIMESTAMP, reportingJob.getStartTime().getTime());
 		msg.setVariableInt32(NXCPCodes.VID_DAY_OF_WEEK, reportingJob.getDaysOfWeek());
 		msg.setVariableInt32(NXCPCodes.VID_DAY_OF_MONTH, reportingJob.getDaysOfMonth());
+		msg.setVariable(NXCPCodes.VID_COMMENTS, reportingJob.getComments());
 
 		msg.setVariableInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
 		long varId = NXCPCodes.VID_PARAM_LIST_BASE;
@@ -7370,7 +7370,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_LIST_SCHEDULES);
       msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
-      msg.setVariableInt32(NXCPCodes.VID_USER_ID, userId);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
 		
