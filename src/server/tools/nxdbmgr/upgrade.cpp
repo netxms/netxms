@@ -360,6 +360,18 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V311 to V312
+ */
+static BOOL H_UpgradeFromV311(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("EnableReportingServer"), _T("0"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("ReportingServerHostname"), _T("localhost"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("ReportingServerPort"), _T("4710"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='312' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V310 to V311
  */
 static BOOL H_UpgradeFromV310(int currVersion, int newVersion)
@@ -7547,6 +7559,7 @@ static struct
    { 308, 309, H_UpgradeFromV308 },
    { 309, 310, H_UpgradeFromV309 },
    { 310, 311, H_UpgradeFromV310 },
+   { 311, 312, H_UpgradeFromV311 },
    { 0, 0, NULL }
 };
 

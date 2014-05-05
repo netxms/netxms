@@ -8,17 +8,20 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.api.client.reporting.ReportDefinition;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -164,18 +167,35 @@ public class ReportNavigator extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				final List<UUID> notGeneratedReport = new ArrayList<UUID>(0);
 				final List<ReportDefinition> definitions = new ArrayList<ReportDefinition>();
 				final List<UUID> reportIds = session.listReports();
 				for(UUID reportId : reportIds)
 				{
-					final ReportDefinition definition = session.getReportDefinition(reportId);
-					definitions.add(definition);
+					try
+					{
+						final ReportDefinition definition = session.getReportDefinition(reportId);
+						definitions.add(definition);
+					}
+					catch (NetXMSClientException e)
+					{
+						if (e.getErrorCode() == RCC.INTERNAL_ERROR)
+							notGeneratedReport.add(reportId);
+					}
 				}
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
 						reportTree.setInput(definitions);
+						if (notGeneratedReport.size() > 0)
+						{
+							String errorMessage = "Can't load compiled report: ";
+							for (int i = 0; i < notGeneratedReport.size(); i++)
+								errorMessage += notGeneratedReport.get(i).toString() + (i == notGeneratedReport.size() - 1 ? "" : ", ");
+								
+							MessageDialog.openError(null, "Error", errorMessage);
+						}
 					}
 				});
 			}

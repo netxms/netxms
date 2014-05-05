@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2013 Raden Solutions
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -52,16 +53,23 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.api.client.reporting.ReportDefinition;
 import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.api.client.reporting.ReportRenderFormat;
 import org.netxms.api.client.reporting.ReportResult;
+import org.netxms.api.client.reporting.ReportingJob;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
+import org.netxms.ui.eclipse.reporter.propertypages.General;
+import org.netxms.ui.eclipse.reporter.propertypages.Notification;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportResultLabelProvider;
+import org.netxms.ui.eclipse.reporter.widgets.helpers.ScheduleLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -70,23 +78,33 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Report execution widget. Provides form with report-specific parameters.
  */
+@SuppressWarnings("restriction")
 public class ReportExecutionForm extends Composite
 {
+	public static final int SCHEDULE_TYPE = 0;
+	public static final int SCHEDULE_START_TIME = 1;
+	public static final int SCHEDULE_OWNER = 2;
+	public static final int SCHEDULE_COMMENTS = 3;
+	
+	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+	
 	private IWorkbenchPart workbenchPart = null;
-	private ReportDefinition report;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
-	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
-	private SortableTableViewer resultList;
 	private ImageCache imageCache;
+	private SortableTableViewer resultList;
+	private SortableTableViewer scheduleList;
+	
+	private ReportDefinition report;
 	private List<ReportParameter> parameters;
-
+	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
+	
 	/**
 	 * @param parent
 	 * @param style
 	 */
 	public ReportExecutionForm(Composite parent, int style, ReportDefinition report)
-	{
+	{		
 		super(parent, style);
 		this.report = report;
 
@@ -102,7 +120,7 @@ public class ReportExecutionForm extends Composite
 		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
 
-		/* Parameters section */
+		// Parameters section
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Parameters");
 		section.setDescription("Provide parameters necessary to run this report in fields below");
@@ -119,42 +137,23 @@ public class ReportExecutionForm extends Composite
 		section.setClient(paramArea);
 		createParamEntryFields(paramArea);
 
-		/* Action section */
+		// Schedules section
 		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText("Actions");
-		section.setDescription("Select desired action from the list below");
+		section.setText("Schedules");
+		section.setDescription("Scheduling of report generation");
 		td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
+		td.grabVertical = true;
 		section.setLayoutData(td);
-
-		final Composite actionArea = toolkit.createComposite(section);
+		
+		final Composite scheduleArea = toolkit.createComposite(section);
 		layout = new TableWrapLayout();
-		actionArea.setLayout(layout);
-		section.setClient(actionArea);
-
-		ImageHyperlink link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
-		link.setImage(SharedIcons.IMG_EXECUTE);
-		link.setText("Execute report");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				executeReport();
-			}
-		});
-
-		link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
-		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/schedule.png")));
-		link.setText("Schedule report execution");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-			}
-		});
-
-		/* results section */
+		scheduleArea.setLayout(layout);
+		section.setClient(scheduleArea);
+		createSchedulesSection(scheduleArea);
+		
+		// Results section
 		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Results");
 		section.setDescription("The following execution results are available for rendering");
@@ -163,14 +162,164 @@ public class ReportExecutionForm extends Composite
 		td.grabHorizontal = true;
 		td.grabVertical = true;
 		section.setLayoutData(td);
-
+		
 		final Composite resultArea = toolkit.createComposite(section);
 		layout = new TableWrapLayout();
 		resultArea.setLayout(layout);
 		section.setClient(resultArea);
 		createResultsSection(resultArea);
 
+		session.addListener(new SessionListener() {
+			
+			@Override
+			public void notificationHandler(SessionNotification n) 
+			{
+				if (n.getCode() == SessionNotification.RS_SCHEDULES_MODIFIED)
+				{
+					refreshScheduleList();
+				} 
+				else if (n.getCode() == SessionNotification.RS_RESULTS_MODIFIED) 
+				{
+					refreshResultList();
+				}
+			}
+		});
+		
+		refreshScheduleList();
 		refreshResultList();
+	}
+	
+	/**
+	 * Create "Schedules" section's content
+	 * 
+	 * @param parent
+	 *            parent composite
+	 */
+	/**
+	 * @param section
+	 * @return
+	 */
+	private void createSchedulesSection(Composite parent)
+	{
+		GridLayout layout = new GridLayout(2, false);
+		parent.setLayout(layout);
+
+		final String[] names = { "Type", "Start time", "Owner", "Comments" };
+		final int[] widths = { 60, 140, 100, 300 };
+		scheduleList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
+		GridData gd = new GridData();
+		gd.horizontalSpan = 1;
+		gd.verticalSpan = 2;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		scheduleList.getControl().setLayoutData(gd);
+		scheduleList.setContentProvider(new ArrayContentProvider());
+		scheduleList.setLabelProvider(new ScheduleLabelProvider());
+
+		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
+		link.setText("Delete");
+		link.addHyperlinkListener(new HyperlinkAdapter(){
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				deleteSchedules();
+			}
+		});
+		link.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, true, 1, 2));
+		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/schedule.png"))); //$NON-NLS-1$
+		link.setText("Add Schedule");
+		link.addHyperlinkListener(new HyperlinkAdapter(){
+
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				addScheduleReport();
+			}
+		});
+	}
+	
+	/**
+	 * Create "Results" section's content
+	 * 
+	 * @param parent
+	 *            parent composite
+	 */
+	private void createResultsSection(Composite parent)
+	{
+		GridLayout layout = new GridLayout(2, false);
+		parent.setLayout(layout);
+
+		final String[] names = { "Execution Time", "Started By" };
+		final int[] widths = { 200, 200 };
+		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
+		GridData gd = new GridData();
+		gd.horizontalSpan = 1;
+		gd.verticalSpan = 4;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		resultList.getControl().setLayoutData(gd);
+		resultList.setContentProvider(new ArrayContentProvider());
+		resultList.setLabelProvider(new ReportResultLabelProvider());
+
+		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/pdf.png"))); //$NON-NLS-1$
+		link.setText("Render to PDF");
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				final ReportResult firstElement = (ReportResult)((IStructuredSelection)resultList.getSelection()).getFirstElement();
+				if (firstElement != null)
+				{
+					renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.PDF);
+				}
+			}
+		});
+
+		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/xls.png"))); //$NON-NLS-1$
+		link.setText("Render to Excel");
+		link.addHyperlinkListener(new HyperlinkAdapter()
+		{
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				final ReportResult firstElement = (ReportResult) ((IStructuredSelection) resultList.getSelection()).getFirstElement();
+				if (firstElement != null)
+				{
+					renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.XLS);
+				}
+			}
+		});
+
+		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
+		link.setText("Delete");
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				deleteResults();
+			}
+		});
+		link.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, true, 1, 2));
+		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(SharedIcons.IMG_EXECUTE);
+		link.setText("Execute Report");
+		link.addHyperlinkListener(new HyperlinkAdapter()
+		{
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				executeReport();
+			}
+		});
 	}
 
 	/**
@@ -217,7 +366,7 @@ public class ReportExecutionForm extends Composite
 			TableWrapData td = new TableWrapData();
 			td.align = TableWrapData.FILL;
 			td.grabHorizontal = true;
-			System.out.println(parameter.getSpan());
+			System.out.println("Span = " + parameter.getSpan());
 			// td.colspan = parameter.getSpan();
 			editor.setLayoutData(td);
 			fields.add(editor);
@@ -234,6 +383,9 @@ public class ReportExecutionForm extends Composite
 		}
 	}
 
+	/**
+	 * @param elements
+	 */
 	private void sortFieldProviders(IConfigurationElement[] elements)
 	{
 		Arrays.sort(elements, new Comparator<IConfigurationElement>() {
@@ -274,71 +426,13 @@ public class ReportExecutionForm extends Composite
 	}
 
 	/**
-	 * Create "Results" section's content
-	 * 
-	 * @param parent
-	 *            parent composite
+	 * @param jobId
+	 * @param executionTime
+	 * @param format
 	 */
-	private void createResultsSection(Composite parent)
-	{
-		GridLayout layout = new GridLayout();
-		parent.setLayout(layout);
-
-		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(SharedIcons.IMG_REFRESH);
-		link.setText("Refresh");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				refreshResultList();
-			}
-		});
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.RIGHT;
-		link.setLayoutData(gd);
-
-		final String[] names = { "Execution Time", "Job ID" };
-		final int[] widths = { 130, 250 };
-		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.grabExcessVerticalSpace = true;
-		resultList.getControl().setLayoutData(gd);
-		resultList.setContentProvider(new ArrayContentProvider());
-		resultList.setLabelProvider(new ReportResultLabelProvider());
-
-		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/pdf.png")));
-		link.setText("Render to PDF");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				final ReportResult firstElement = (ReportResult)((IStructuredSelection)resultList.getSelection()).getFirstElement();
-				if (firstElement != null)
-				{
-					renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.PDF);
-				}
-			}
-		});
-
-		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-		link.setText("Delete");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				deleteResults();
-			}
-		});
-	}
-
 	protected void renderReport(final UUID jobId, Date executionTime, final ReportRenderFormat format)
 	{
+	   /*
 		StringBuilder nameTemplate = new StringBuilder();
 		nameTemplate.append(report.getName());
 		nameTemplate.append(" ");
@@ -347,6 +441,9 @@ public class ReportExecutionForm extends Composite
 		nameTemplate.append(format.getExtension());
 
 		FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
+		fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
+		fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" });
+		fileDialog.setFileName(nameTemplate.toString());
 		final String fileName = fileDialog.open();
 
 		if (fileName != null)
@@ -408,6 +505,7 @@ public class ReportExecutionForm extends Composite
 				}
 			}.start();
 		}
+		*/
 	}
 
 	/**
@@ -419,24 +517,22 @@ public class ReportExecutionForm extends Composite
 		if (parameters != null)
 		{
 			for(int i = 0; i < parameters.size(); i++)
-			{
 				execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
-			}
 		}
 
 		new ConsoleJob("Execute report", workbenchPart, Activator.PLUGIN_ID, null) {
-
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				session.executeReport(report.getId(), execParameters);
 				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
 					{
-						MessageDialogHelper.openInformation(getShell(), "Report Execution", report.getName()
-								+ " execution started successfully.");
+						MessageDialogHelper.openInformation(getShell(), "Report Execution", 
+								 report.getName() + " execution started successfully.");
+
+						refreshResultList();
 					}
 				});
 			}
@@ -494,6 +590,43 @@ public class ReportExecutionForm extends Composite
 		}.start();
 
 	}
+	
+	/**
+	 * Refresh schedule list
+	 */
+	private void refreshScheduleList()
+	{
+		new ConsoleJob("Refresh schedule list for report" + report.getName(),
+				workbenchPart, Activator.PLUGIN_ID, null)
+		{
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final List<ReportingJob> results = session.listScheduledJobs(report.getId());
+				getDisplay().asyncExec(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (ReportExecutionForm.this.isDisposed())
+						{
+							return;
+						}
+
+						scheduleList.setInput(results.toArray());
+						ReportExecutionForm.this.getParent().layout(true, true);
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get schedule list for report" + report.getName();
+			}
+		}.start();
+
+	}
 
 	/**
 	 * Delete selected report results
@@ -544,7 +677,99 @@ public class ReportExecutionForm extends Composite
 				return null;
 			}
 		}.start();
+	}
 
+	/**
+	 * Add schedule
+	 */
+	protected void addScheduleReport()
+	{
+		final Map<String, String> execParameters = new HashMap<String, String>();
+		if (parameters != null)
+		{
+			for (int i = 0; i < parameters.size(); i++)
+				execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
+		}
+		
+		final ReportingJob reportJob = new ReportingJob(report.getId());
+		final PropertyDialog dialog = PropertyDialog.createDialogOn(workbenchPart.getSite().getShell(), General.ID, reportJob);
+		dialog.getShell().setText("Scheduling");
+		if (dialog.open() == Window.OK)
+		{
+			new ConsoleJob("Scheduling report", workbenchPart, Activator.PLUGIN_ID, null)
+			{
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					if (General.getReportingJob() != null)
+						session.scheduleReport(General.getReportingJob(), execParameters);
+
+					if (Notification.sendNotify() && Notification.getMails().size() > 0)
+						session.sendReportNotification(reportJob.getJobId(), Notification.getMails(), Notification.getAttachFormatCode(), report.getName());
+					
+					// clear static variables
+					Notification.clear();
+				}
+	
+				@Override
+				protected String getErrorMessage()
+				{
+					return String.format("Cannot schedule report %s", report.getName());
+				}
+			}.start();
+		}
+	}
+	
+	/**
+	 * Delete selected schedules
+	 */
+	private void deleteSchedules()
+	{
+		IStructuredSelection selection = (IStructuredSelection) scheduleList.getSelection();
+		if (selection.size() == 0)
+		{
+			return;
+		}
+
+		if (!MessageDialogHelper.openConfirm(getShell(), "Delete schedules", "Do you really want to delete selected schedules?"))
+		{
+			return;
+		}
+
+		final List<UUID> schedulesIdList = new ArrayList<UUID>(selection.size());
+		for (Object o : selection.toList())
+		{
+			schedulesIdList.add(((ReportingJob) o).getJobId());
+		}
+
+		new ConsoleJob("Delete report schedules", workbenchPart, Activator.PLUGIN_ID, null)
+		{
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				for (UUID uuid : schedulesIdList)
+				{
+					session.deleteReportSchedule(report.getId(), uuid);
+				}
+				getDisplay().asyncExec(new Runnable()
+				{
+
+					@Override
+					public void run()
+					{
+						if (!ReportExecutionForm.this.isDisposed())
+							refreshResultList();
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot delete report schedules";
+			}
+		}.start();
 	}
 
 	/**
@@ -555,6 +780,17 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void openReport(String fileName, ReportRenderFormat format)
 	{
-		/* TODO: implement for web ui */
+	   /*
+		final Program program = Program.findProgram(format.getExtension());
+		if (program != null)
+		{
+			program.execute(fileName);
+		}
+		else
+		{
+			MessageDialogHelper.openError(getShell(), "Error",
+					"Report was rendered successfully, but external viewer cannot be opened");
+		}
+		*/
 	}
 }

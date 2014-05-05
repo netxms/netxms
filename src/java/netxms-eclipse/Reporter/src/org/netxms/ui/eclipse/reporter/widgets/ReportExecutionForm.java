@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2013 Raden Solutions
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -80,12 +79,13 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Report execution widget. Provides form with report-specific parameters.
  */
+@SuppressWarnings("restriction")
 public class ReportExecutionForm extends Composite
 {
 	public static final int SCHEDULE_TYPE = 0;
 	public static final int SCHEDULE_START_TIME = 1;
-	public static final int SCHEDULE_TIME_FROM = 2;
-	public static final int SCHEDULE_TIME_TO = 3;
+	public static final int SCHEDULE_OWNER = 2;
+	public static final int SCHEDULE_COMMENTS = 3;
 	
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
@@ -205,8 +205,8 @@ public class ReportExecutionForm extends Composite
 		GridLayout layout = new GridLayout(2, false);
 		parent.setLayout(layout);
 
-		final String[] names = { "Type", "Start time", "Time From/Offset", "Time To/Offset" };
-		final int[] widths = { 60, 140, 100, 100 };
+		final String[] names = { "Type", "Start time", "Owner", "Comments" };
+		final int[] widths = { 60, 140, 100, 300 };
 		scheduleList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		GridData gd = new GridData();
 		gd.horizontalSpan = 1;
@@ -681,7 +681,6 @@ public class ReportExecutionForm extends Composite
 	/**
 	 * Add schedule
 	 */
-	@SuppressWarnings("restriction")
 	protected void addScheduleReport()
 	{
 		final Map<String, String> execParameters = new HashMap<String, String>();
@@ -691,7 +690,7 @@ public class ReportExecutionForm extends Composite
 				execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
 		}
 		
-		final ReportingJob reportJob = new ReportingJob(report.getId(), session.getUserId());
+		final ReportingJob reportJob = new ReportingJob(report.getId());
 		final PropertyDialog dialog = PropertyDialog.createDialogOn(workbenchPart.getSite().getShell(), General.ID, reportJob);
 		dialog.getShell().setText("Scheduling");
 		if (dialog.open() == Window.OK)
