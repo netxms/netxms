@@ -741,14 +741,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\report.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\report_job.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\reporting.cpp"
 				>
 			</File>
@@ -992,10 +984,6 @@
 			</File>
 			<File
 				RelativePath="..\include\nxcore_logs.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\nxcore_reports.h"
 				>
 			</File>
 			<File

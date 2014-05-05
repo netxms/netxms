@@ -360,6 +360,61 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V310 to V311
+ */
+static BOOL H_UpgradeFromV310(int currVersion, int newVersion)
+{
+   IntegerArray<UINT32> deleteList;
+
+   // reports
+   DB_RESULT hResult = SQLSelect(_T("SELECT id FROM reports"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         deleteList.add(DBGetFieldULong(hResult, i, 0));
+      DBFreeResult(hResult);
+   }
+
+   // report groups
+   hResult = SQLSelect(_T("SELECT id FROM containers WHERE object_class=25"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         deleteList.add(DBGetFieldULong(hResult, i, 0));
+      DBFreeResult(hResult);
+   }
+
+   for(int i = 0; i < deleteList.size(); i++)
+   {
+      TCHAR query[256];
+
+      _sntprintf(query, 256, _T("DELETE FROM object_properties WHERE object_id=%d"), deleteList.get(i));
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 256, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), deleteList.get(i));
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 256, _T("DELETE FROM acl WHERE object_id=%d"), deleteList.get(i));
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 256, _T("DELETE FROM container_members WHERE object_id=%d OR container_id=%d"), deleteList.get(i), deleteList.get(i));
+      CHK_EXEC(SQLQuery(query));
+   }
+
+   static TCHAR batch[] =
+      _T("DROP TABLE reports\n")
+      _T("DROP TABLE report_results\n")
+      _T("DELETE FROM containers WHERE object_class=25\n")
+      _T("DELETE FROM object_properties WHERE object_id=8\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='311' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V309 to V310
  */
 static BOOL H_UpgradeFromV309(int currVersion, int newVersion)
@@ -7491,6 +7546,7 @@ static struct
    { 307, 308, H_UpgradeFromV307 },
    { 308, 309, H_UpgradeFromV308 },
    { 309, 310, H_UpgradeFromV309 },
+   { 310, 311, H_UpgradeFromV310 },
    { 0, 0, NULL }
 };
 

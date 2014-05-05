@@ -156,9 +156,6 @@ typedef void * NXC_SESSION;
 #define OBJECT_NETWORKMAP           21
 #define OBJECT_DASHBOARDROOT        22
 #define OBJECT_DASHBOARD            23
-#define OBJECT_REPORTROOT           24
-#define OBJECT_REPORTGROUP          25
-#define OBJECT_REPORT               26
 #define OBJECT_BUSINESSSERVICEROOT  27
 #define OBJECT_BUSINESSSERVICE      28
 #define OBJECT_NODELINK             29

@@ -75,12 +75,6 @@ public class ObjectIcons
 				return Activator.getImageDescriptor("icons/dashboard.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_DASHBOARDROOT:
 				return Activator.getImageDescriptor("icons/dashboard_root.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_REPORT:
-				return Activator.getImageDescriptor("icons/report.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_REPORTGROUP:
-				return Activator.getImageDescriptor("icons/report_group.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_REPORTROOT:
-				return Activator.getImageDescriptor("icons/report_root.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
 			case AbstractObject.OBJECT_BUSINESSSERVICE:
 				return Activator.getImageDescriptor("icons/business_service.png"); //$NON-NLS-1$

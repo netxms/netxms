@@ -147,9 +147,6 @@ import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.Report;
-import org.netxms.client.objects.ReportGroup;
-import org.netxms.client.objects.ReportRoot;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -477,15 +474,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
             break;
          case AbstractObject.OBJECT_RACK:
             object = new Rack(msg, this);
-            break;
-         case AbstractObject.OBJECT_REPORT:
-            object = new Report(msg, this);
-            break;
-         case AbstractObject.OBJECT_REPORTGROUP:
-            object = new ReportGroup(msg, this);
-            break;
-         case AbstractObject.OBJECT_REPORTROOT:
-            object = new ReportRoot(msg, this);
             break;
          case AbstractObject.OBJECT_SERVICEROOT:
             object = new ServiceRoot(msg, this);
@@ -6605,50 +6593,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public boolean isObjectsSynchronized()
    {
       return objectsSynchronized;
-   }
-
-   /**
-    * Execute report.
-    *
-    * @param reportId   report object ID
-    * @param parameters report parameters
-    * @return job ID
-    * @throws IOException  if socket or file I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public long executeReport(long reportId, Map<String, String> parameters) throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_REPORT);
-      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) reportId);
-      msg.setVariableInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
-      long varId = NXCPCodes.VID_PARAM_LIST_BASE;
-      for(Entry<String, String> e : parameters.entrySet())
-      {
-         msg.setVariable(varId++, e.getKey());
-         msg.setVariable(varId++, e.getValue());
-      }
-      sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
-   }
-
-   /**
-    * Delete report execution results. Logged in user must have CONTROL access right on
-    * report object to perform this operation.
-    *
-    * @param reportId     report object ID
-    * @param resultIdList result identifiers to be deleted
-    * @throws IOException  if socket or file I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void deleteReportResults(long reportId, Collection<Long> resultIdList) throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_REPORT_RESULTS);
-      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) reportId);
-      msg.setVariableInt32(NXCPCodes.VID_NUM_RESULTS, resultIdList.size());
-      msg.setVariable(NXCPCodes.VID_RESULT_ID_LIST, resultIdList.toArray(new Long[resultIdList.size()]));
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
    }
 
    /**

@@ -393,11 +393,9 @@ CREATE TABLE network_services
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** VPN connectors
 */
-
 CREATE TABLE vpn_connectors
 (
 	id integer not null,
@@ -406,11 +404,9 @@ CREATE TABLE vpn_connectors
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** VPN connector networks
 */
-
 CREATE TABLE vpn_connector_networks
 (
 	vpn_id integer not null,
@@ -1483,31 +1479,8 @@ CREATE TABLE job_history
 ) TABLE_TYPE;
 
 /*
-** Reports
-*/
-CREATE TABLE reports
-(
-	id integer not null,
-	definition SQL_TEXT null,
-	PRIMARY KEY(id)
-) TABLE_TYPE;
-
-/*
-** Report Results
-*/
-CREATE TABLE report_results
-(
-	report_id integer not null,
-	generated integer not null,
-	job_id integer not null,
-	PRIMARY KEY(report_id, job_id)
-) TABLE_TYPE;
-
-
-/*
 ** License repository
 */
-
 CREATE TABLE licenses
 (
 	id integer not null,
@@ -1515,11 +1488,9 @@ CREATE TABLE licenses
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Mapping tables
 */
-
 CREATE TABLE mapping_tables
 (
 	id integer not null,
@@ -1529,11 +1500,9 @@ CREATE TABLE mapping_tables
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Mapping tables content
 */
-
 CREATE TABLE mapping_data
 (
 	table_id integer not null,

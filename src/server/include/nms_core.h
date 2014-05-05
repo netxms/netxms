@@ -450,9 +450,6 @@ private:
 	DECLARE_THREAD_STARTER(findIpAddress)
 	DECLARE_THREAD_STARTER(processConsoleCommand)
 	DECLARE_THREAD_STARTER(sendMib)
-	DECLARE_THREAD_STARTER(getReportResults)
-	DECLARE_THREAD_STARTER(deleteReportResults)
-	DECLARE_THREAD_STARTER(renderReport)
 	DECLARE_THREAD_STARTER(getNetworkPath)
 	DECLARE_THREAD_STARTER(getAlarmEvents)
 	DECLARE_THREAD_STARTER(openHelpdeskIssue)
@@ -645,10 +642,6 @@ private:
 	void getVlans(CSCPMessage *msg);
 	void receiveFile(CSCPMessage *request);
 	void deleteFile(CSCPMessage *request);
-	void executeReport(CSCPMessage *msg);
-	void getReportResults(CSCPMessage *msg);
-	void deleteReportResults(CSCPMessage *msg);
-	void renderReport(CSCPMessage *request);
 	void getNetworkPath(CSCPMessage *request);
 	void getNodeComponents(CSCPMessage *request);
 	void getNodeSoftware(CSCPMessage *request);
