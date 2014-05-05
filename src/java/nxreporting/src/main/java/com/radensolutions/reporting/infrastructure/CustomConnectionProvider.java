@@ -11,7 +11,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class StrongholdConnectionProvider implements ConnectionProvider {
+public class CustomConnectionProvider implements ConnectionProvider {
 
     private String driver;
     private String URL;

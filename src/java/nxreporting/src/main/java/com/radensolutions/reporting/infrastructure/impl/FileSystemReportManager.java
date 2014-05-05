@@ -195,7 +195,7 @@ public class FileSystemReportManager implements ReportManager {
         Connection connection = null;
         try {
             connection = dataSource.getConnection();
-            ret = realExecute(userId, reportId, jobId, parameters, locale, ret, connection);
+            ret = realExecute(userId, reportId, jobId, parameters, locale, connection);
         } catch (SQLException e) {
             log.error("Can't get report connection", e);
         } finally {
@@ -210,7 +210,8 @@ public class FileSystemReportManager implements ReportManager {
         return ret;
     }
 
-    private boolean realExecute(int userId, UUID reportId, UUID jobId, Map<String, String> parameters, Locale locale, boolean ret, Connection connection) {
+    private boolean realExecute(int userId, UUID reportId, UUID jobId, Map<String, String> parameters, Locale locale, Connection connection) {
+        boolean ret = false;
         final JasperReport report = loadReport(reportId);
         if (connection != null && report != null) {
             final File reportDirectory = getReportDirectory(reportId);
@@ -226,8 +227,6 @@ public class FileSystemReportManager implements ReportManager {
 
             prepareParameters(parameters, report, localParameters);
 
-            System.out.println(localParameters);
-
             final File outputDirectory = getOutputDirectory(reportId);
             final String outputFile = new File(outputDirectory, jobId.toString() + ".jrprint").getPath();
             try {
@@ -242,7 +241,6 @@ public class FileSystemReportManager implements ReportManager {
                 session.sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
                 List<Notification> notify = notificationService.load(jobId);
                 session.sendMailNotification(notify);
-
             } catch (JRException e) {
                 log.error("Can't execute report", e);
             }

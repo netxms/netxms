@@ -76,15 +76,6 @@
         <property name="from" value="${smtp.from}"/>
     </bean>
 
-    <!-- Auto deployer -->
-    <!--
-    <bean id="autoDeployer" class="com.radensolutions.reporting.infrastructure.impl.FileSystemDeployer"
-          scope="singleton" init-method="start" destroy-method="stop">
-        <property name="scanDirectory" value="${nxreporting.audodeploy}"/>
-        <property name="workspaceDirectory" value="${nxreporting.workspace}"/>
-    </bean>
-    -->
-
     <!-- Integration beans -->
     <bean id="connector" class="com.radensolutions.reporting.infrastructure.impl.TcpConnector" scope="singleton"/>
     <bean id="reportManager" class="com.radensolutions.reporting.infrastructure.impl.FileSystemReportManager">

@@ -45,7 +45,6 @@ public class QuartzReportScheduler implements ReportScheduler {
         mergedProperties.putAll(defaultQuartzProperties);
         mergedProperties.putAll(localDefaultProperties);
         mergedProperties.putAll(localProperties);
-        System.out.println("###" + mergedProperties);
         final StdSchedulerFactory factory = new StdSchedulerFactory(mergedProperties);
         scheduler = factory.getScheduler();
         scheduler.start();
