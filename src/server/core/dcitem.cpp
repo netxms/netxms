@@ -646,9 +646,12 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 }
 
 /**
- * Process new value
+ * Process new collected value. Should return true on success.
+ * If returns false, current poll result will be converted into data collection error.
+ *
+ * @return true on success
  */
-void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
+bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
 {
 	static int updateRawValueTypes[] = { DB_SQLTYPE_VARCHAR, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
 	static int updateValueTypes[] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
@@ -661,10 +664,8 @@ void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    if (m_pNode == NULL)
    {
       unlock();
-      return;
+      return false;
    }
-
-   m_dwErrorCount = 0;
 
    // Create new ItemValue object and transform it as needed
    pValue = new ItemValue((const TCHAR *)originalValue, (UINT32)tmTimeStamp);
@@ -675,7 +676,15 @@ void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
    if ((m_pNode->Type() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
-      transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp);
+   {
+      if (!transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp))
+      {
+         unlock();
+         return false;
+      }
+   }
+
+   m_dwErrorCount = 0;
 
    m_prevRawValue = rawValue;
    m_tPrevValueTimeStamp = tmTimeStamp;
@@ -725,6 +734,7 @@ void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    }
 
    unlock();
+   return true;
 }
 
 /**
@@ -774,8 +784,10 @@ void DCItem::processNewError()
 /**
  * Transform received value
  */
-void DCItem::transform(ItemValue &value, time_t nElapsedTime)
+bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 {
+   bool success = true;
+
    switch(m_deltaCalculation)
    {
       case DCM_SIMPLE:
@@ -891,8 +903,10 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
                     (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_dwId);
+         success = false;
       }
    }
+   return success;
 }
 
 /**

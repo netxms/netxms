@@ -21,7 +21,7 @@
    - Colored background for DCIs with active thresholds in DCI summary tables
    - IP route visualisation improved
    - On table DCI threshold property page columns can be chosen from dropdown
-- Fixed issues: #71, #417, #528, #535, #536, #552, #560
+- Fixed issues: #71, #417, #528, #535, #536, #552, #558, #560
 
 
 *

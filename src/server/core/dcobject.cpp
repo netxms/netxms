@@ -865,10 +865,14 @@ void DCObject::updateFromTemplate(DCObject *src)
 }
 
 /**
- * Process new collected value
+ * Process new collected value. Should return true on success.
+ * If returns false, current poll result will be converted into data collection error.
+ *
+ * @return true on success
  */
-void DCObject::processNewValue(time_t nTimeStamp, void *value)
+bool DCObject::processNewValue(time_t nTimeStamp, void *value)
 {
+   return false;
 }
 
 /**

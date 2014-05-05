@@ -295,9 +295,12 @@ bool DCTable::deleteAllData()
 }
 
 /**
- * Process new collected value
+ * Process new collected value. Should return true on success.
+ * If returns false, current poll result will be converted into data collection error.
+ *
+ * @return true on success
  */
-void DCTable::processNewValue(time_t nTimeStamp, void *value)
+bool DCTable::processNewValue(time_t nTimeStamp, void *value)
 {
    lock();
 
@@ -305,14 +308,20 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
    if (m_pNode == NULL)
    {
       unlock();
-      return;
+      return false;
    }
 
    // Transform input value
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
    if ((m_pNode->Type() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
-      transform((Table *)value);
+   {
+      if (!transform((Table *)value))
+      {
+         unlock();
+         return false;
+      }
+   }
 
    m_dwErrorCount = 0;
    if (m_lastValue != NULL)
@@ -336,7 +345,7 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
       if (!DBBegin(hdb))
       {
    	   DBConnectionPoolReleaseConnection(hdb);
-         return;
+         return true;
       }
 
       INT64 recordId = ((INT64)time(NULL) << 30) | (((INT64)tableId & 0xFFFF) << 14);
@@ -420,15 +429,16 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 	   DBConnectionPoolReleaseConnection(hdb);
    }
    checkThresholds((Table *)value);
+   return true;
 }
 
 /**
  * Transform received value
  */
-void DCTable::transform(Table *value)
+bool DCTable::transform(Table *value)
 {
    if (m_transformationScript == NULL)
-      return;
+      return true;
 
    NXSL_Value *nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
    m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
@@ -439,6 +449,7 @@ void DCTable::transform(Table *value)
    m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
    m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
 
+   bool success = true;
    if (!m_transformationScript->run(1, &nxslValue))
    {
       TCHAR szBuffer[1024];
@@ -446,7 +457,9 @@ void DCTable::transform(Table *value)
 		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
                  (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
       PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_dwId);
+      success = false;
    }
+   return success;
 }
 
 /**

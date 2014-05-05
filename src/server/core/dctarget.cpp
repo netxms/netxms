@@ -365,11 +365,12 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
 /**
  * Process new DCI value
  */
-void DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, void *value)
+bool DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, void *value)
 {
 	lockDciAccess(false);
-	dco->processNewValue(currTime, value);
+	bool result = dco->processNewValue(currTime, value);
 	unlockDciAccess();
+   return result;
 }
 
 /**

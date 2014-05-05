@@ -241,7 +241,7 @@ public:
    virtual void deleteFromDB();
    virtual bool loadThresholdsFromDB();
 
-   virtual void processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value);
    virtual void processNewError();
 
 	virtual bool hasValue();
@@ -322,7 +322,7 @@ protected:
 	TCHAR *m_instanceFilterSource;
 	NXSL_VM *m_instanceFilter;
 
-   void transform(ItemValue &value, time_t nElapsedTime);
+   bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
    void clearCache();
 
@@ -362,8 +362,8 @@ public:
 	void filterInstanceList(StringList *instances);
 	void expandInstance();
 
-   void processNewValue(time_t nTimeStamp, void *value);
-   void processNewError();
+   virtual bool processNewValue(time_t nTimeStamp, void *value);
+   virtual void processNewError();
 
 	virtual bool hasValue();
 
@@ -536,7 +536,7 @@ protected:
 	static int m_cacheAllocated;
 	static MUTEX m_cacheMutex;
 
-   void transform(Table *value);
+   bool transform(Table *value);
    void checkThresholds(Table *value);
    
    bool loadThresholds();
@@ -558,7 +558,7 @@ public:
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDB();
 
-   virtual void processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value);
    virtual void processNewError();
 
    virtual void createMessage(CSCPMessage *pMsg);
