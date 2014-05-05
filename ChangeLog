@@ -5,6 +5,7 @@
 - STP (Spanning Tree Protocol) information used for topology discovery
 - Information source for interface peers (CDP, STP, etc.) shown in console
 - New NXSL function inList
+- New NXSL operator abort
 - New methods in NXSL class Node: enableAgent, enableConfigurationPoll,
   enableIcmp, enableSnmp, enableStatusPoll, enableTopologyPoll
 - Fixed server crash if SNMP proxy unavailable

@@ -24,7 +24,7 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">array break case const continue default do else exit for foreach global if ilike imatch like match print println return sub switch use while</Keywords>
+            <Keywords name="Keywords1">abort array break case const continue default do else exit for foreach global if ilike imatch like match print println return sub switch use while</Keywords>
             <Keywords name="Keywords2">classof int32 int64 real string typeof uint32 uint64</Keywords>
             <Keywords name="Keywords3">FALSE false TRUE true NULL null</Keywords>
             <Keywords name="Keywords4"></Keywords>

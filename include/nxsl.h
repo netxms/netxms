@@ -73,6 +73,7 @@
 #define NXSL_ERR_NO_SUCH_STAT_PARAM       29
 #define NXSL_ERR_NO_SUCH_METHOD           30
 #define NXSL_ERR_NO_SUCH_CONSTANT         31
+#define NXSL_ERR_EXECUTION_ABORTED        32
 
 /**
  * Special return codes for external functions

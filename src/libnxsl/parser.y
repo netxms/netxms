@@ -36,6 +36,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 	NXSL_Instruction *pInstruction;
 }
 
+%token T_ABORT
 %token T_ARRAY
 %token T_BREAK
 %token T_CASE
@@ -620,7 +621,11 @@ SimpleStatement:
 ;
 
 SimpleStatementKeyword:
-	T_EXIT
+	T_ABORT
+{
+	$$ = new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_ABORT);
+}
+|	T_EXIT
 {
 	$$ = new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_EXIT);
 }

@@ -27,7 +27,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         31
+#define MAX_ERROR_NUMBER         32
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -70,7 +70,8 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Statistical data for given instance is not collected yet"),
 	_T("Requested statistical parameter does not exist"),
 	_T("Unknown object's method"),
-   _T("Constant not defined")
+   _T("Constant not defined"),
+   _T("Execution aborted")
 };
 
 /**
@@ -890,6 +891,28 @@ void NXSL_VM::execute()
 			if (m_pDataStack->getSize() > 0)
          {
             dwNext = m_instructionSet->size();
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+      case OPCODE_ABORT:
+			if (m_pDataStack->getSize() > 0)
+         {
+            pValue = (NXSL_Value *)m_pDataStack->pop();
+            if (pValue->isInteger())
+            {
+               error(pValue->getValueAsInt32());
+            }
+            else if (pValue->isNull())
+            {
+               error(NXSL_ERR_EXECUTION_ABORTED);
+            }
+            else
+            {
+               error(NXSL_ERR_NOT_INTEGER);
+            }
          }
          else
          {
