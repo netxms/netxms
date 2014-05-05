@@ -65,6 +65,10 @@ public class StrongholdConnectionProvider implements ConnectionProvider {
     }
 
     @Override
+    public void initialize() throws SQLException {
+    }
+
+    @Override
     public void shutdown() throws SQLException {
         if (connectionProvider != null) {
             connectionProvider.shutdown();

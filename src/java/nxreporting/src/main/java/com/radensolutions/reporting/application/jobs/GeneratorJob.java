@@ -1,18 +1,17 @@
 package com.radensolutions.reporting.application.jobs;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
-
+import com.radensolutions.reporting.application.ReportingServerFactory;
+import com.radensolutions.reporting.infrastructure.ReportManager;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.radensolutions.reporting.application.ReportingServerFactory;
-import com.radensolutions.reporting.infrastructure.ReportManager;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 public class GeneratorJob implements Job
 {
@@ -21,7 +20,7 @@ public class GeneratorJob implements Job
 	private final ReportManager reportManager;
 	private UUID jobId;
 	private UUID reportId;
-	private Map<String, Object> parameters = new HashMap<String, Object>();
+	private Map<String, String> parameters = new HashMap<String, String>();
 	private String userName;
 	private int userId;
 	private long startTimeOffset;
@@ -64,12 +63,12 @@ public class GeneratorJob implements Job
 		this.reportId = reportId;
 	}
 
-	public Map<String, Object> getParameters()
+	public Map<String, String> getParameters()
 	{
 		return parameters;
 	}
 
-	public void setParameters(Map<String, Object> parameters)
+	public void setParameters(Map<String, String> parameters)
 	{
 		this.parameters = parameters;
 	}

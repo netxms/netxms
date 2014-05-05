@@ -1,5 +1,6 @@
 package org.netxms.ui.eclipse.reporter.widgets;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 

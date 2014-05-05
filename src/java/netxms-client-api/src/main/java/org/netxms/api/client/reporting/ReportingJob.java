@@ -18,10 +18,8 @@
  */
 package org.netxms.api.client.reporting;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
-
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -33,7 +31,7 @@ public class ReportingJob
 	static public final int TYPE_DAILY = 1;
 	static public final int TYPE_WEEKLY = 2;
 	static public final int TYPE_MONTHLY = 3;
-	
+
 	private UUID reportId;
 	private UUID jobId;
 	private int daysOfWeek;
@@ -41,31 +39,23 @@ public class ReportingJob
 	private int userId;
 	private int type = TYPE_ONCE;
 	private Date startTime;
-	
-	// time format - "year;month;day;hour;minute"
-	private String timeFrom;
-	private String timeTo;
+	private String comments;
 
 	/**
 	 * Create reportingJob
 	 * 
 	 * @param reportGuid
-	 * @param userId
 	 */
-	public ReportingJob(UUID reportId, int userId)
+	public ReportingJob(UUID reportId)
 	{
-	   jobId = UUID.randomUUID();
-	   this.reportId = reportId;
-	   this.userId = userId;
-	   startTime = new Date();
-	   daysOfWeek = 0;
-	   daysOfMonth = 0;
-	   type = TYPE_ONCE;
-	   SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy;MM;dd;HH;mm");
-	   timeFrom = dateFormat.format(new Date());
-	   timeTo = dateFormat.format(new Date());	
+		jobId = UUID.randomUUID();
+		this.reportId = reportId;
+		startTime = new Date();
+		daysOfWeek = 0;
+		daysOfMonth = 0;
+		type = TYPE_ONCE;
 	}
-	
+
 	/**
 	 * Create reportingJob object from NXCP message
 	 * 
@@ -81,10 +71,9 @@ public class ReportingJob
 		daysOfWeek = msg.getVariableAsInteger(varId + 4);
 		daysOfMonth = msg.getVariableAsInteger(varId + 5);
 		type = msg.getVariableAsInteger(varId + 6);
-		timeFrom = msg.getVariableAsString(varId + 7);
-		timeTo = msg.getVariableAsString(varId + 8);
+		comments = msg.getVariableAsString(varId + 7);
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -176,22 +165,6 @@ public class ReportingJob
 	/**
 	 * @return
 	 */
-	public String getTimeFrom()
-	{
-		return timeFrom;
-	}
-
-	/**
-	 * @return
-	 */
-	public String getTimeTo()
-	{
-		return timeTo;
-	}
-
-	/**
-	 * @return
-	 */
 	public Date getStartTime()
 	{
 		return startTime;
@@ -205,13 +178,20 @@ public class ReportingJob
 		this.startTime = startTime;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+	public String getComments()
+	{
+		return comments == null ? "" : comments;
+	}
+
+	public void setComments(String comments)
+	{
+		this.comments = comments;
+	}
+
 	@Override
 	public String toString()
 	{
-		return "ReportingJob [reportId=" + reportId + ", jobId=" + jobId + ", startTime=" + startTime +  ", timeFrom=" + timeFrom + 
-				", timeTo=" + timeTo + ", daysOfWeek=" + daysOfWeek + ", daysOfMonth=" + daysOfMonth + "]";
+		return "ReportingJob [reportId=" + reportId + ", jobId=" + jobId + ", daysOfWeek=" + daysOfWeek + ", daysOfMonth="
+				+ daysOfMonth + ", userId=" + userId + ", type=" + type + ", startTime=" + startTime + ", comments=" + comments + "]";
 	}
 }
