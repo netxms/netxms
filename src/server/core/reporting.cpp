@@ -180,6 +180,7 @@ CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession
    UINT32 originalId = request->GetId();
    UINT32 rqId = m_connector->generateMessageId();
    request->SetId(rqId);
+   request->SetVariable(VID_USER_ID, session->getUserId());
 
    // File transfer requests
    if (request->GetCode() == CMD_RS_RENDER_RESULT)
