@@ -1,6 +1,6 @@
 @echo off
 call set_build_number.cmd
-set version=1.2.14-RC3-%build_number%-atm
+set version=1.2.14-RC5-%build_number%-cortex
 rem set version=1.2.14
 
 cd win32.win32.x86
