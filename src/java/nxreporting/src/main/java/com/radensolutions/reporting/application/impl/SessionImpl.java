@@ -8,7 +8,6 @@ import com.radensolutions.reporting.domain.ReportResult;
 import com.radensolutions.reporting.infrastructure.Connector;
 import com.radensolutions.reporting.infrastructure.ReportManager;
 import com.radensolutions.reporting.service.NotificationService;
-import com.radensolutions.reporting.service.ReportResultService;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.api.client.reporting.ReportRenderFormat;
 import org.netxms.base.CommonRCC;
@@ -21,8 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class SessionImpl implements Session {
@@ -35,8 +32,6 @@ public class SessionImpl implements Session {
     private ReportScheduler scheduler;
     @Autowired
     private NotificationService notificationService;
-    @Autowired
-    private ReportResultService reportResultService;
 
     public SessionImpl(Connector connector) {
         this.connector = connector;
@@ -280,35 +275,6 @@ public class SessionImpl implements Session {
             connector.sendBroadcast(msg);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * Send an email notification
-     */
-    public void sendMailNotification(List<Notification> notify) {
-        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        Date today = Calendar.getInstance().getTime();
-        String reportDate = df.format(today);
-
-        for (int i = 0; i < notify.size(); i++) {
-            String text = String.format("Your report '%s' rendered (%s) and available for downloading from server. \n\n\nThis message was sent by NetXMS",
-                    notify.get(i).getReportName(), reportDate);
-
-            byte[] output = null;
-            ReportRenderFormat formatCode = null;
-            if (notify.get(i).getAttachFormatCode() != 0) {
-                formatCode = ReportRenderFormat.valueOf(notify.get(i).getAttachFormatCode());
-                UUID reportId = reportResultService.findReportId(notify.get(i).getJobId());
-                if (reportId != null) {
-                    output = reportManager.renderResult(reportId, notify.get(i).getJobId(), formatCode);
-                } else {
-                    logger.error("Cannot find report guid");
-                }
-            }
-            //TODO: send mail
-//			mail.send("You report is ready", text, notify.get(i).getMail(), output, formatCode);
-            logger.error("test1");
         }
     }
 }

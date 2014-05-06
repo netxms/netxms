@@ -8,6 +8,7 @@ import com.radensolutions.reporting.domain.ReportDefinition;
 import com.radensolutions.reporting.domain.ReportParameter;
 import com.radensolutions.reporting.domain.ReportResult;
 import com.radensolutions.reporting.infrastructure.ReportManager;
+import com.radensolutions.reporting.infrastructure.SmtpSender;
 import com.radensolutions.reporting.service.NotificationService;
 import com.radensolutions.reporting.service.ReportResultService;
 import net.sf.jasperreports.engine.*;
@@ -31,6 +32,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class FileSystemReportManager implements ReportManager {
@@ -44,6 +47,7 @@ public class FileSystemReportManager implements ReportManager {
     Logger log = LoggerFactory.getLogger(FileSystemReportManager.class);
 
     private String workspace;
+
     @Autowired
     @Qualifier("reportingDataSource")
     private DataSource dataSource;
@@ -51,6 +55,8 @@ public class FileSystemReportManager implements ReportManager {
     private ReportResultService reportResultService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private SmtpSender smtpSender;
 
     public void setWorkspace(String workspace) {
         this.workspace = workspace;
@@ -240,7 +246,7 @@ public class FileSystemReportManager implements ReportManager {
                 Session session = ReportingServerFactory.getApp().getSession(ReportingServerFactory.getApp().getConnector());
                 session.sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
                 List<Notification> notify = notificationService.load(jobId);
-                session.sendMailNotification(notify);
+                sendMailNotification(notify);
             } catch (JRException e) {
                 log.error("Can't execute report", e);
             }
@@ -468,5 +474,38 @@ public class FileSystemReportManager implements ReportManager {
             };
         }
         return labels;
+    }
+
+    /**
+     * Send an email notification
+     */
+    private void sendMailNotification(List<Notification> notify) {
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        Date today = Calendar.getInstance().getTime();
+        String reportDate = df.format(today);
+
+        for (Notification notification : notify) {
+            String text = String.format("Report \"%s\" successfully generated on %s and can be accessed using management console.",
+                    notification.getReportName(), reportDate);
+
+            String fileName = null;
+            byte[] renderResult = null;
+            if (notification.getAttachFormatCode() != 0) {
+                ReportRenderFormat formatCode = ReportRenderFormat.valueOf(notification.getAttachFormatCode());
+                UUID jobId = notification.getJobId();
+                UUID reportId = reportResultService.findReportId(jobId);
+                if (reportId != null) {
+                    renderResult = renderResult(reportId, jobId, formatCode);
+                    String time = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+                    fileName = String.format("%s %s.%s", notification.getReportName(), time, formatCode == ReportRenderFormat.PDF ? "pdf" : "xls");
+                    text += "\n\nPlease find attached copy of the report.";
+                } else {
+                    log.error("Cannot find report by guid");
+                }
+            }
+            text += "\n\nThis message is generated automatically by NetXMS.";
+
+            smtpSender.mail(notification.getMail(), "New report is available", text, fileName, renderResult);
+        }
     }
 }

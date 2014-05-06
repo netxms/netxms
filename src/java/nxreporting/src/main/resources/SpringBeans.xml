@@ -45,7 +45,7 @@
             <props>
                 <prop key="hibernate.dialect">${system.datasource.dialect}</prop>
                 <prop key="hibernate.show_sql">true</prop>
-                <!--<prop key="hibernate.hbm2ddl.auto">create</prop>-->
+                <prop key="hibernate.hbm2ddl.auto">create</prop>
             </props>
         </property>
     </bean>
@@ -72,7 +72,7 @@
         <property name="host" value="${smtp.hostname}"/>
     </bean>
 
-    <bean id="templateMessage" class="org.springframework.mail.SimpleMailMessage">
+    <bean id="smtpSender" class="com.radensolutions.reporting.infrastructure.impl.SmtpSenderImpl">
         <property name="from" value="${smtp.from}"/>
     </bean>
 
