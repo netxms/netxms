@@ -447,14 +447,42 @@ static int GetStepSize(TCHAR *str)
 }
 
 /**
+ * Get last day of current month
+ */
+static int GetLastMonthDay(struct tm *currTime)
+{
+   switch(currTime->tm_mon)
+   {
+      case 1:  // February
+         if (((currTime->tm_year % 4) == 0) && (((currTime->tm_year % 100) != 0) || (((currTime->tm_year + 1900) % 400) == 0)))
+            return 29;
+         return 28;
+      case 0:  // January
+      case 2:  // March
+      case 4:  // May
+      case 6:  // July
+      case 7:  // August
+      case 9:  // October
+      case 11: // December
+         return 31;
+      default:
+         return 30;
+   }
+}
+
+/**
  * Match schedule element
  * NOTE: We assume that pattern can be modified during processing
  */
-static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime = 0)
+static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime = 0)
 {
    TCHAR *ptr, *curr;
    int nStep, nCurr, nPrev;
    bool bRun = true, bRange = false;
+
+   // Check for "last" pattern
+   if (*pszPattern == _T('L'))
+      return nValue == maxValue;
 
 	// Check if time() step was specified (% - special syntax)
 	ptr = _tcschr(pszPattern, _T('%'));
@@ -479,6 +507,17 @@ static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime 
             bRange = true;
             *ptr = 0;
             nPrev = _tcstol(curr, NULL, 10);
+            break;
+         case 'L':  // special case for last day ow week in a month (like 5L - last Friday)
+            if (bRange || (localTime == NULL))
+               return false;  // Range with L is not supported; nL form supported only for day of week
+            *ptr = 0;
+            nCurr = _tcstol(curr, NULL, 10);
+            if ((nValue == nCurr) && (localTime->tm_mday + 7 > GetLastMonthDay(localTime)))
+               return true;
+            ptr++;
+            if (*ptr != ',')
+               bRun = false;
             break;
          case 0:
             bRun = false;
@@ -563,22 +602,22 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
 
    // Minute
    const TCHAR *pszCurr = ExtractWord(realSchedule, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_min))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_min, 59, NULL))
       return false;
 
    // Hour
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_hour))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_hour, 23, NULL))
       return false;
 
    // Day of month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_mday))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_mday, GetLastMonthDay(pCurrTime), NULL))
       return false;
 
    // Month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1, 12, NULL))
       return false;
 
    // Day of week
@@ -586,7 +625,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
    for(int i = 0; szValue[i] != 0; i++)
       if (szValue[i] == _T('7'))
          szValue[i] = _T('0');
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_wday))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_wday, 7, pCurrTime))
       return false;
 
    // Seconds
@@ -596,7 +635,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
    {
       if (bWithSeconds)
          *bWithSeconds = TRUE;
-      return MatchScheduleElement(szValue, pCurrTime->tm_sec, currTimestamp);
+      return MatchScheduleElement(szValue, pCurrTime->tm_sec, 59, NULL, currTimestamp);
    }
 
    return true;
