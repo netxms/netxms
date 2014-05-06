@@ -81,16 +81,21 @@ public class TimestampFieldEditor extends FieldEditor
 		final Calendar c = Calendar.getInstance();
 		c.setTime(date);
 
-		datePicker = new DateTime(area, SWT.DATE | SWT.DROP_DOWN);
+		datePicker = new DateTime(area, SWT.DATE | SWT.DROP_DOWN | SWT.BORDER);
+		toolkit.adapt(datePicker);
 		datePicker.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
 
 		if (type == Type.TIMESTAMP)
 		{
-			timePicker = new DateTime(area, SWT.TIME);
+			timePicker = new DateTime(area, SWT.TIME | SWT.BORDER);
+	      toolkit.adapt(timePicker);
 			timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
 		}
 	}
 
+	/**
+	 * 
+	 */
 	private void parseType()
 	{
 		final String parameterType = parameter.getType();

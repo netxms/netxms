@@ -23,7 +23,6 @@ public class StandardTypesControlFactory implements CustomControlFactory
 	{
 		FieldEditor fieldEditor = null;
 		final String type = parameter.getType();
-		System.out.println(parameter);
 		if (type.equals("START_DATE") || type.equals("END_DATE"))
 		{
 			fieldEditor = new DateFieldEditor(parameter, toolkit, parent);

@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public enum ReportRenderFormat
 {
-	PDF(1, "pdf"), XLS(2, "xls");
+	NONE(0, "none"), PDF(1, "pdf"), XLS(2, "xls");
 
 	private final int code;
 	private final String extension;
@@ -65,7 +65,7 @@ public enum ReportRenderFormat
 	 */
 	public static final ReportRenderFormat valueOf(Integer code)
 	{
-		return lookupTable.containsKey(code) ? lookupTable.get(code) : PDF;
+		return lookupTable.containsKey(code) ? lookupTable.get(code) : NONE;
 	}
 
 	/**

@@ -48,6 +48,4 @@ public interface ReportingServerManager
 	void deleteReportSchedule(UUID reportId, UUID jobId) throws NetXMSClientException, IOException;
 
 	File renderReport(UUID reportId, UUID jobId, ReportRenderFormat format) throws NetXMSClientException, IOException;
-	
-	void sendReportNotification(UUID scheduleJobId, List<String> mails, ReportRenderFormat format, String reportName) throws NetXMSClientException, IOException;
 }

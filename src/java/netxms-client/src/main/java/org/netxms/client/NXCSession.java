@@ -22,7 +22,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,8 +35,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,7 +61,6 @@ import org.netxms.api.client.images.LibraryImage;
 import org.netxms.api.client.mt.MappingTable;
 import org.netxms.api.client.mt.MappingTableDescriptor;
 import org.netxms.api.client.reporting.ReportDefinition;
-import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.api.client.reporting.ReportRenderFormat;
 import org.netxms.api.client.reporting.ReportResult;
 import org.netxms.api.client.reporting.ReportingJob;
@@ -4151,36 +4147,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    }
    
    /**
-    * Change report's definition (wrapper for modifyObject())
-    *
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   @Deprecated
-   public void setReportDefinition(final long objectId, final String definition) throws IOException, NXCException
-   {
-      NXCObjectModificationData data = new NXCObjectModificationData(objectId);
-      data.setReportDefinition(definition);
-      modifyObject(data);
-   }
-
-   /**
-    * Change report's definition (wrapper for modifyObject())
-    *
-    * @throws FileNotFoundException if given file does not exist or is inaccessible
-    * @throws IOException           if socket or file I/O error occurs
-    * @throws NXCException          if NetXMS server returns an error or operation was timed out
-    */
-   @Deprecated
-   public void setReportDefinition(final long objectId, final File file)
-      throws FileNotFoundException, IOException, NXCException
-   {
-      NXCObjectModificationData data = new NXCObjectModificationData(objectId);
-      data.setReportDefinition(file);
-      modifyObject(data);
-   }
-
-   /**
     * Move object to different zone. Only nodes and clusters can be moved
     * between zones.
     *
@@ -7226,27 +7192,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportId);
       msg.setVariable(NXCPCodes.VID_LOCALE, Locale.getDefault().getLanguage());
       sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-      final ReportDefinition definition = new ReportDefinition();
-      definition.setId(reportId);
-      definition.setName(response.getVariableAsString(NXCPCodes.VID_NAME));
-      definition.setNumberOfColumns(response.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS));
-      int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
-      long base = NXCPCodes.VID_ROW_DATA_BASE;
-      for(int i = 0; i < count; i++, base += 10)
-      {
-         ReportParameter parameter = ReportParameter.createFromMessage(response, base);
-         definition.addParameter(parameter);
-      }
-      Collections.sort(definition.getParameters(), new Comparator<ReportParameter>()
-      {
-         @Override
-         public int compare(ReportParameter o1, ReportParameter o2)
-         {
-            return o1.getIndex() - o2.getIndex();
-         }
-      });
-      return definition;
+      return new ReportDefinition(reportId, waitForRCC(msg.getMessageId()));
    }
 
    /*
@@ -7340,16 +7286,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException
     */
    @Override
-	public void scheduleReport(ReportingJob reportingJob, Map<String, String> parameters) throws NetXMSClientException, IOException
+	public void scheduleReport(ReportingJob job, Map<String, String> parameters) throws NetXMSClientException, IOException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_SCHEDULE_EXECUTION);
-		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, reportingJob.getReportId());
-		msg.setVariable(NXCPCodes.VID_RS_JOB_ID, reportingJob.getJobId());
-		msg.setVariableInt32(NXCPCodes.VID_RS_JOB_TYPE, reportingJob.getType());
-		msg.setVariableInt64(NXCPCodes.VID_TIMESTAMP, reportingJob.getStartTime().getTime());
-		msg.setVariableInt32(NXCPCodes.VID_DAY_OF_WEEK, reportingJob.getDaysOfWeek());
-		msg.setVariableInt32(NXCPCodes.VID_DAY_OF_MONTH, reportingJob.getDaysOfMonth());
-		msg.setVariable(NXCPCodes.VID_COMMENTS, reportingJob.getComments());
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_SCHEDULE_EXECUTION);
+		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, job.getReportId());
+		msg.setVariable(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
+		msg.setVariableInt32(NXCPCodes.VID_RS_JOB_TYPE, job.getType());
+		msg.setVariableInt64(NXCPCodes.VID_TIMESTAMP, job.getStartTime().getTime());
+		msg.setVariableInt32(NXCPCodes.VID_DAY_OF_WEEK, job.getDaysOfWeek());
+		msg.setVariableInt32(NXCPCodes.VID_DAY_OF_MONTH, job.getDaysOfMonth());
+		msg.setVariable(NXCPCodes.VID_COMMENTS, job.getComments());
 
 		msg.setVariableInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
 		long varId = NXCPCodes.VID_PARAM_LIST_BASE;
@@ -7360,6 +7306,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		}
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+
+		// FIXME: combine into one message
+		if (job.isNotifyOnCompletion())
+		{
+         msg = newMessage(NXCPCodes.CMD_RS_ADD_REPORT_NOTIFY);
+         msg.setVariable(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
+         msg.setVariableInt32(NXCPCodes.VID_RENDER_FORMAT, job.getRenderFormat().getCode());
+         msg.setVariable(NXCPCodes.VID_RS_REPORT_NAME, job.getComments());  // FIXME: is this correct?
+         msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, job.getEmailRecipients().size());
+         varId = NXCPCodes.VID_ITEM_LIST;
+         for(String s : job.getEmailRecipients())
+            msg.setVariable(varId++, s);
+         sendMessage(msg);
+         waitForRCC(msg.getMessageId());
+		}
 	}
 
    /* (non-Javadoc)
@@ -7396,28 +7357,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
-	/**
-	 * Send notification in reporting server. When job is done then send a notice to mail
-	 * 
-	 * @param mails
-	 * @param attachReportToMail
-	 * @throws NetXMSClientException
-	 * @throws IOException
-	 */
-	public void sendReportNotification(UUID scheduleJobId, List<String> mails, ReportRenderFormat format, String reportName) throws NetXMSClientException, IOException
-	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_ADD_REPORT_NOTIFY);
-		msg.setVariable(NXCPCodes.VID_RS_JOB_ID, scheduleJobId);
-		msg.setVariableInt32(NXCPCodes.VID_RENDER_FORMAT, (format != null ? format.getCode() : 0));
-		msg.setVariable(NXCPCodes.VID_RS_REPORT_NAME, reportName);
-		msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, mails.size());
-		long varId = NXCPCodes.VID_ITEM_LIST;
-		for (int i = 0; i < mails.size(); i++)
-			msg.setVariable(varId + i, mails.get(i));
-		sendMessage(msg);
-		waitForRCC(msg.getMessageId());
-	}
    
    /**
     * @param clientAddress the clientAddress to set

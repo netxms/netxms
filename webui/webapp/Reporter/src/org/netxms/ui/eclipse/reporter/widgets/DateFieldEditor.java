@@ -1,37 +1,58 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.reporter.widgets;
 
 import java.util.Calendar;
 import java.util.Date;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DateTime;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.forms.events.HyperlinkAdapter;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.reporter.Activator;
-import org.netxms.ui.eclipse.reporter.dialogs.CalendarDialog;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
+/**
+ * Field editor for START_DATE and END_DATE field types
+ */
 public class DateFieldEditor extends FieldEditor
 {
-	public final static int FIELD_YEAR = 0;
-	public final static int FIELD_MONTH = 1;
-	public final static int FIELD_DAY = 2;
-	public final static int FIELD_HOUR = 3;
-	public final static int FIELD_MINUTE = 4;
+	private final static int FIELD_YEAR = 0;
+	private final static int FIELD_MONTH = 1;
+	private final static int FIELD_DAY = 2;
 	
-	private Composite parentArea;
 	private Combo[] dateElements;
-	private String[] dateElementNames;
-	private ImageCache imageCache;
-	
-	private long offset = 0;
 	
 	/** 
 	 * Constructor
@@ -51,56 +72,53 @@ public class DateFieldEditor extends FieldEditor
 	@Override
 	protected void createContent(Composite parent)
 	{
-		imageCache = new ImageCache(this);
-		dateElementNames = new String[] {"Year", "Month", "Day", "Hours", "Minutes"};
-		toolkit = new FormToolkit(getDisplay());
-		parentArea = new Composite(parent, SWT.NONE);
+		final ImageCache imageCache = new ImageCache(this);
+		
+		final Composite content = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 6;
+		layout.numColumns = 4;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
 		layout.makeColumnsEqualWidth = true;
-		parentArea.setLayout(layout);
+		content.setLayout(layout);
 		
 		Calendar dateTime = Calendar.getInstance();
-		try {
+		try 
+		{
 			dateTime.setTime(new Date(Long.parseLong(parameter.getDefaultValue()) * 1000));
-		} catch (NumberFormatException e) {
+		} 
+		catch (NumberFormatException e) 
+		{
 			dateTime.setTime(new Date());
 		}
 		
+      final String[] dateElementNames = { "Year", "Month", "Day" };
 		dateElements = new Combo[dateElementNames.length];
-		for (int idx = 0; idx <  dateElementNames.length; idx++)
+		for(int idx = 0; idx <  dateElementNames.length; idx++)
 		{
-			Combo cb = WidgetHelper.createLabeledCombo(parentArea, SWT.BORDER, dateElementNames[idx], WidgetHelper.DEFAULT_LAYOUT_DATA);
+			Combo cb = WidgetHelper.createLabeledCombo(content, SWT.BORDER, dateElementNames[idx], WidgetHelper.DEFAULT_LAYOUT_DATA);
 			cb.setText(getDateTimeText(idx, dateTime));
-			if (idx != FIELD_MINUTE)
-			{
-				cb.add("current"); //$NON-NLS-1$
-				cb.add("previous"); //$NON-NLS-1$
-				cb.add("next"); //$NON-NLS-1$
-			}
+			cb.add("current"); //$NON-NLS-1$
+			cb.add("previous"); //$NON-NLS-1$
+			cb.add("next"); //$NON-NLS-1$
 			dateElements[idx] = cb;
 		}
 		
-		Button openCalendar = new Button(parentArea, SWT.PUSH);
-		GridData gd = new GridData(22, 22);
-		gd.verticalAlignment = SWT.DOWN;
-		openCalendar.setLayoutData(gd);
-		openCalendar.setImage(imageCache.add(Activator.getImageDescriptor("icons/calendar.png"))); //$NON-NLS-1$
-		openCalendar.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected (SelectionEvent e) 
-			{
-				CalendarDialog dialog = new CalendarDialog(getShell());
-				if(dialog.open() == Window.OK) {
-					Calendar date = Calendar.getInstance();
-					date.setTime(dialog.getDateValue());
-					for (int idx = 0; idx <  dateElementNames.length; idx++)
-						dateElements[idx].setText(getDateTimeText(idx, date));
-				}
-			}
+		final ImageHyperlink link = toolkit.createImageHyperlink(content, SWT.NONE);
+		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/calendar.png"))); //$NON-NLS-1$
+		link.setToolTipText("Calendar");
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            createPopupCalendar(link);
+         }
 		});
+      GridData gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
+      gd.horizontalAlignment = SWT.LEFT;
+      link.setLayoutData(gd);
 	}
 
 	/* (non-Javadoc)
@@ -110,7 +128,7 @@ public class DateFieldEditor extends FieldEditor
 	public String getValue()
 	{
 		String value = null;
-		for (int idx = 0; idx < 5; idx++)
+		for (int idx = 0; idx < 3; idx++)
 		{
 			if (idx == 0)
 				value = dateElements[idx].getText();
@@ -139,12 +157,6 @@ public class DateFieldEditor extends FieldEditor
 			case FIELD_DAY:
 				value = dateTime.get(Calendar.DAY_OF_MONTH);
 				break;
-			case FIELD_HOUR:
-				value = dateTime.get(Calendar.HOUR_OF_DAY);
-				break;
-			case FIELD_MINUTE:
-				value = dateTime.get(Calendar.MINUTE);
-				break;
 			default:
 				value = 0;
 				break;
@@ -153,10 +165,49 @@ public class DateFieldEditor extends FieldEditor
 	}
 	
 	/**
-	 * @return the offset
+	 * Create popup calendar widget
 	 */
-	public long getOffset()
+	private void createPopupCalendar(Control anchor)
 	{
-		return offset;
+	   final Shell popup = new Shell(getShell(), SWT.NO_TRIM | SWT.ON_TOP);
+	   final DateTime calendar = new DateTime(popup, SWT.CALENDAR | SWT.SHORT);
+	   
+	   Point size = calendar.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+	   popup.setSize(size);
+	   calendar.setSize(size);
+	   
+	   calendar.addFocusListener(new FocusListener() {
+         @Override
+         public void focusLost(FocusEvent e)
+         {
+            popup.close();
+         }
+         
+         @Override
+         public void focusGained(FocusEvent e)
+         {
+         }
+      });
+	   
+	   calendar.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            Calendar date = Calendar.getInstance();
+            date.set(calendar.getYear(), calendar.getMonth(), calendar.getDay(), calendar.getHours(), calendar.getMinutes(), calendar.getSeconds());
+            for (int idx = 0; idx <  dateElements.length; idx++)
+               dateElements[idx].setText(getDateTimeText(idx, date));
+            popup.close();
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+         }
+      });
+	   
+	   Rectangle rect = getDisplay().map(anchor.getParent(), null, anchor.getBounds());
+	   popup.setLocation(rect.x, rect.y + rect.height);
+	   popup.open();
 	}
 }

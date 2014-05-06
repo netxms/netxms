@@ -33,11 +33,15 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ReportNavigator extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.reporter.views.ReportNavigator"; //$NON-NLS-1$
+	
 	private NXCSession session;
 	private TreeViewer reportTree;
 	private RefreshAction actionRefresh;
 	private SessionListener sessionListener;
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -121,7 +125,7 @@ public class ReportNavigator extends ViewPart
 	}
 
 	/**
-	 * Create popup menu for object browser
+	 * Create popup menu for report list
 	 */
 	private void createPopupMenu()
 	{
@@ -151,6 +155,9 @@ public class ReportNavigator extends ViewPart
 	{
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 */
 	@Override
 	public void setFocus()
 	{
@@ -203,11 +210,14 @@ public class ReportNavigator extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Failed to reports from the server";
+				return "Failed to load reports from the server";
 			}
 		}.start();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
 	@Override
 	public void dispose()
 	{

@@ -1,7 +1,6 @@
 package org.netxms.ui.eclipse.reporter.propertypages;
 
 import java.util.Calendar;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -11,11 +10,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.api.client.reporting.ReportingJob;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -23,39 +19,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class General extends PropertyPage
 {
-	private final class GranularitySelectorListener implements SelectionListener
-	{
-		private boolean dailyVisible;
-		private boolean weeklyVisible;
-		private boolean monthlyVisible;
-		private Boolean onceVisible;
-		private int type;
-
-		private GranularitySelectorListener(int type, Boolean onceVisible, boolean dailyVisible, boolean weeklyVisible, boolean monthlyVisible)
-		{
-			this.type = type;
-			this.onceVisible = onceVisible;
-			this.dailyVisible = dailyVisible;
-			this.weeklyVisible = weeklyVisible;
-			this.monthlyVisible = monthlyVisible;
-		}
-
-		@Override
-		public void widgetSelected(SelectionEvent e)
-		{
-			General.this.type = this.type;
-			changeVisibility(onceVisible, dailyVisible, weeklyVisible, monthlyVisible);
-		}
-
-		@Override
-		public void widgetDefaultSelected(SelectionEvent e)
-		{
-		}
-	}
-	
 	public static final String ID = "org.netxms.ui.eclipse.reporter.propertypages.General"; //$NON-NLS-1$
-	
-	final  NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
 	private Composite dailyComposite;
 	private Composite weeklyComposite;
@@ -69,13 +33,12 @@ public class General extends PropertyPage
 	
 	private Button[] monthlyButtons;
 	private Button[] weeklyButtons;
-	private Composite dialogArea;
 	
 	public int type;
 	private DateTime executionDate;
 	private DateTime executionTime;
 	
-	private static ReportingJob reportingJob = null;
+	private ReportingJob job = null;
 
 	/*
 	 * (non-Javadoc)
@@ -85,49 +48,49 @@ public class General extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		reportingJob = (ReportingJob)getElement().getAdapter(ReportingJob.class);
-		dialogArea = new Composite(parent, SWT.NONE);
+		job = (ReportingJob)getElement().getAdapter(ReportingJob.class);
+
+      final Composite dialogArea = new Composite(parent, SWT.NONE);
+      GridLayout dialogLayout = new GridLayout();
+      dialogLayout.marginWidth = 0;
+      dialogLayout.marginHeight = 0;
+      dialogLayout.numColumns = 4;
+      dialogLayout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      dialogArea.setLayout(dialogLayout);
 		
-		GridLayout layout = new GridLayout();
-		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-		dialogArea.setLayout(layout);
-		
-		Group group = new Group(dialogArea, SWT.NONE);
-		group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		group.setLayout(new GridLayout(4, false));
-		group.setText("Start Time");
-		
-		onceButton = new Button(group, SWT.RADIO);
+		onceButton = new Button(dialogArea, SWT.RADIO);
 		onceButton.setText("Once");
 		onceButton.addSelectionListener(new GranularitySelectorListener(ReportingJob.TYPE_ONCE, true, false, false, false));
 		
-		dailyButton = new Button(group, SWT.RADIO);
+		dailyButton = new Button(dialogArea, SWT.RADIO);
 		dailyButton.setText("Daily");
 		dailyButton.addSelectionListener(new GranularitySelectorListener(ReportingJob.TYPE_DAILY, false, true, false, false));
 		
-		weeklyButton = new Button(group, SWT.RADIO);
+		weeklyButton = new Button(dialogArea, SWT.RADIO);
 		weeklyButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1));
 		weeklyButton.setText("Weekly");
 		weeklyButton.addSelectionListener(new GranularitySelectorListener(ReportingJob.TYPE_WEEKLY, false, false, true, false));
 		
-		monthlyButton = new Button(group, SWT.RADIO);
+		monthlyButton = new Button(dialogArea, SWT.RADIO);
 		monthlyButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1));
 		monthlyButton.setText("Monthly");
 		monthlyButton.addSelectionListener(new GranularitySelectorListener(ReportingJob.TYPE_MONTHLY, false, false, false, true));
 
-		onceComposite = createOnce(group);
-		dailyComposite = createDaily(group);
-		weeklyComposite = createWeekly(group);
-		monthlyComposite = createMonthly(group);
+		onceComposite = createOnce(dialogArea);
+		dailyComposite = createDaily(dialogArea);
+		weeklyComposite = createWeekly(dialogArea);
+		monthlyComposite = createMonthly(dialogArea);
 		
 		type = ReportingJob.TYPE_ONCE;
 		onceButton.setSelection(true);
 
-		dialogArea.layout(true, true);
 		return dialogArea;
 	}
 
+	/**
+	 * @param group
+	 * @return
+	 */
 	private Composite createOnce(Composite group)
 	{
 		final Composite onceComposite = new Composite(group, SWT.NONE);
@@ -157,6 +120,10 @@ public class General extends PropertyPage
 		return onceComposite;
 	}
 
+	/**
+	 * @param group
+	 * @return
+	 */
 	private Composite createDaily(Composite group)
 	{
 		final Composite dailyComposite = new Composite(group, SWT.NONE);
@@ -184,6 +151,10 @@ public class General extends PropertyPage
 		return dailyComposite;
 	}
 
+	/**
+	 * @param group
+	 * @return
+	 */
 	protected Composite createWeekly(Composite group)
 	{	
 		final Composite weeklyComposite = new Composite(group, SWT.NONE);
@@ -219,6 +190,10 @@ public class General extends PropertyPage
 		return weeklyComposite;
 	}
 
+	/**
+	 * @param group
+	 * @return
+	 */
 	private Composite createMonthly(Composite group)
 	{
 		final Composite monthlyComposite = new Composite(group, SWT.NONE);
@@ -288,7 +263,7 @@ public class General extends PropertyPage
 					outWeeklyMask <<= 1;
 					outWeeklyMask += weeklyButtons[i].getSelection() ? 1 : 0;
 				}
-				reportingJob.setDaysOfWeek(outWeeklyMask);
+				job.setDaysOfWeek(outWeeklyMask);
 				break;
 			}
 			case ReportingJob.TYPE_MONTHLY:
@@ -301,29 +276,35 @@ public class General extends PropertyPage
 					outMonthlyMask <<= 1;
 					outMonthlyMask += monthlyButtons[i].getSelection() ? 1 : 0;
 				}
-				reportingJob.setDaysOfMonth(outMonthlyMask);
+				job.setDaysOfMonth(outMonthlyMask);
 				break;
 			}
 			default:
 				break;
 		}
-		reportingJob.setStartTime(calendar.getTime());
-		reportingJob.setType(type);
+		job.setStartTime(calendar.getTime());
+		job.setType(type);
 		return true;
 	}
 	
-	protected void changeVisibility(boolean onceVisible, boolean dailyVisible, boolean weeklyVisible, boolean monthlyVisible)
+	/**
+	 * @param onceVisible
+	 * @param dailyVisible
+	 * @param weeklyVisible
+	 * @param monthlyVisible
+	 */
+	private void changeVisibility(boolean onceVisible, boolean dailyVisible, boolean weeklyVisible, boolean monthlyVisible)
 	{
 		onceComposite.setVisible(onceVisible);
-		((GridData) onceComposite.getLayoutData()).exclude = !onceVisible;
+		((GridData)onceComposite.getLayoutData()).exclude = !onceVisible;
 		dailyComposite.setVisible(dailyVisible);
-		((GridData) dailyComposite.getLayoutData()).exclude = !dailyVisible;
+		((GridData)dailyComposite.getLayoutData()).exclude = !dailyVisible;
 		weeklyComposite.setVisible(weeklyVisible);
-		((GridData) weeklyComposite.getLayoutData()).exclude = !weeklyVisible;
+		((GridData)weeklyComposite.getLayoutData()).exclude = !weeklyVisible;
 		monthlyComposite.setVisible(monthlyVisible);
-		((GridData) monthlyComposite.getLayoutData()).exclude = !monthlyVisible;
+		((GridData)monthlyComposite.getLayoutData()).exclude = !monthlyVisible;
 
-		dialogArea.layout(true, true);
+		getShell().layout(true, true);
 		getShell().pack();
 	}
 
@@ -349,11 +330,36 @@ public class General extends PropertyPage
 		applyChanges(true);
 	}
 
-	/**
-	 * @return the reportingJob
-	 */
-	public static ReportingJob getReportingJob()
-	{
-		return reportingJob;
-	}
+   /**
+    *
+    */
+   private final class GranularitySelectorListener implements SelectionListener
+   {
+      private boolean dailyVisible;
+      private boolean weeklyVisible;
+      private boolean monthlyVisible;
+      private Boolean onceVisible;
+      private int type;
+
+      private GranularitySelectorListener(int type, Boolean onceVisible, boolean dailyVisible, boolean weeklyVisible, boolean monthlyVisible)
+      {
+         this.type = type;
+         this.onceVisible = onceVisible;
+         this.dailyVisible = dailyVisible;
+         this.weeklyVisible = weeklyVisible;
+         this.monthlyVisible = monthlyVisible;
+      }
+
+      @Override
+      public void widgetSelected(SelectionEvent e)
+      {
+         General.this.type = this.type;
+         changeVisibility(onceVisible, dailyVisible, weeklyVisible, monthlyVisible);
+      }
+
+      @Override
+      public void widgetDefaultSelected(SelectionEvent e)
+      {
+      }
+   }
 }

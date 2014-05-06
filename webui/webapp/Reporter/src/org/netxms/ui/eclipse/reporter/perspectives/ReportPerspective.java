@@ -16,7 +16,7 @@ public class ReportPerspective implements IPerspectiveFactory
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.reporter.ReportPerspective"); //$NON-NLS-1$
 
 		layout.addView(ReportNavigator.ID, IPageLayout.LEFT, 0, null);
-		layout.addView(ReportView.ID, IPageLayout.RIGHT, 0.25f, ReportNavigator.ID);
+		layout.addView(ReportView.ID, IPageLayout.RIGHT, 0.20f, ReportNavigator.ID);
 	}
 
 }

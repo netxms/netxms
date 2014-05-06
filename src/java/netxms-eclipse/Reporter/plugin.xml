@@ -26,7 +26,7 @@
       <perspective
             class="org.netxms.ui.eclipse.reporter.perspectives.ReportPerspective"
             icon="icons/report.png"
-            id="&quot;org.netxms.ui.eclipse.reporter.ReportPerspective&quot;"
+            id="org.netxms.ui.eclipse.reporter.ReportPerspective"
             name="%perspective.name.Reports">
       </perspective>
    </extension>
@@ -49,9 +49,9 @@
          </enabledWhen>
       </page>
       <page
-            class="org.netxms.ui.eclipse.reporter.propertypages.Notification"
-            id="org.netxms.ui.eclipse.reporter.propertypages.Notification#1"
-            name="Notification">
+            class="org.netxms.ui.eclipse.reporter.propertypages.Notifications"
+            id="org.netxms.ui.eclipse.reporter.propertypages.Notifications#1"
+            name="Notifications">
          <enabledWhen>
             <instanceof
                   value="org.netxms.api.client.reporting.ReportingJob">

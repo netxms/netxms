@@ -18,7 +18,9 @@
  */
 package org.netxms.api.client.reporting;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import org.netxms.base.NXCPMessage;
 
@@ -40,6 +42,9 @@ public class ReportingJob
 	private int type = TYPE_ONCE;
 	private Date startTime;
 	private String comments;
+	private boolean notifyOnCompletion = false;
+	private ReportRenderFormat renderFormat = ReportRenderFormat.NONE;
+	private List<String> emailRecipients= new ArrayList<String>(0);
 
 	/**
 	 * Create reportingJob
@@ -75,6 +80,38 @@ public class ReportingJob
 	}
 
 	/**
+    * @return the renderFormat
+    */
+   public ReportRenderFormat getRenderFormat()
+   {
+      return renderFormat;
+   }
+
+   /**
+    * @param renderFormat the renderFormat to set
+    */
+   public void setRenderFormat(ReportRenderFormat renderFormat)
+   {
+      this.renderFormat = renderFormat;
+   }
+
+   /**
+    * @return the emailRecipients
+    */
+   public List<String> getEmailRecipients()
+   {
+      return emailRecipients;
+   }
+
+   /**
+    * @param emailRecipients the emailRecipients to set
+    */
+   public void setEmailRecipients(List<String> emailRecipients)
+   {
+      this.emailRecipients = emailRecipients;
+   }
+
+   /**
 	 * @return
 	 */
 	public UUID getReportId()
@@ -178,16 +215,41 @@ public class ReportingJob
 		this.startTime = startTime;
 	}
 
+	/**
+	 * @return
+	 */
 	public String getComments()
 	{
 		return comments == null ? "" : comments;
 	}
 
+	/**
+	 * @param comments
+	 */
 	public void setComments(String comments)
 	{
 		this.comments = comments;
 	}
 
+	/**
+    * @return the notifyOnCompletion
+    */
+   public boolean isNotifyOnCompletion()
+   {
+      return notifyOnCompletion;
+   }
+
+   /**
+    * @param notifyOnCompletion the notifyOnCompletion to set
+    */
+   public void setNotifyOnCompletion(boolean notifyOnCompletion)
+   {
+      this.notifyOnCompletion = notifyOnCompletion;
+   }
+
+   /* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString()
 	{

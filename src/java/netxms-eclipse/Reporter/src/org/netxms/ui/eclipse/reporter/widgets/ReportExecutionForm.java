@@ -39,6 +39,8 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -52,8 +54,6 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
-import org.eclipse.ui.forms.widgets.TableWrapData;
-import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
@@ -68,12 +68,12 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
 import org.netxms.ui.eclipse.reporter.propertypages.General;
-import org.netxms.ui.eclipse.reporter.propertypages.Notification;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportResultLabelProvider;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ScheduleLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -86,6 +86,10 @@ public class ReportExecutionForm extends Composite
 	public static final int SCHEDULE_START_TIME = 1;
 	public static final int SCHEDULE_OWNER = 2;
 	public static final int SCHEDULE_COMMENTS = 3;
+	
+	public static final int RESULT_EXEC_TIME = 0;
+   public static final int RESULT_STARTED_BY = 1;
+   public static final int RESULT_STATUS = 2;
 	
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
@@ -117,7 +121,7 @@ public class ReportExecutionForm extends Composite
 		form = toolkit.createScrolledForm(this);
 		form.setText(report.getName());
 
-		TableWrapLayout layout = new TableWrapLayout();
+		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
 
@@ -125,16 +129,14 @@ public class ReportExecutionForm extends Composite
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Parameters");
 		section.setDescription("Provide parameters necessary to run this report in fields below");
-		TableWrapData td = new TableWrapData();
-		td.align = TableWrapData.FILL;
-		td.grabHorizontal = true;
-		td.colspan = 2;
-		section.setLayoutData(td);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		section.setLayoutData(gd);
 
 		final Composite paramArea = toolkit.createComposite(section);
-		layout = new TableWrapLayout();
-		layout.numColumns = 2;
-		paramArea.setLayout(layout);
 		section.setClient(paramArea);
 		createParamEntryFields(paramArea);
 
@@ -142,15 +144,14 @@ public class ReportExecutionForm extends Composite
 		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Schedules");
 		section.setDescription("Scheduling of report generation");
-		td = new TableWrapData();
-		td.align = TableWrapData.FILL;
-		td.grabHorizontal = true;
-		td.grabVertical = true;
-		section.setLayoutData(td);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+		section.setLayoutData(gd);
 		
 		final Composite scheduleArea = toolkit.createComposite(section);
-		layout = new TableWrapLayout();
-		scheduleArea.setLayout(layout);
 		section.setClient(scheduleArea);
 		createSchedulesSection(scheduleArea);
 		
@@ -158,20 +159,18 @@ public class ReportExecutionForm extends Composite
 		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Results");
 		section.setDescription("The following execution results are available for rendering");
-		td = new TableWrapData();
-		td.align = TableWrapData.FILL;
-		td.grabHorizontal = true;
-		td.grabVertical = true;
-		section.setLayoutData(td);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+		section.setLayoutData(gd);
 		
 		final Composite resultArea = toolkit.createComposite(section);
-		layout = new TableWrapLayout();
-		resultArea.setLayout(layout);
 		section.setClient(resultArea);
 		createResultsSection(resultArea);
 
-		session.addListener(new SessionListener() {
-			
+		session.addListener(new SessionListener() {			
 			@Override
 			public void notificationHandler(SessionNotification n) 
 			{
@@ -205,8 +204,8 @@ public class ReportExecutionForm extends Composite
 		GridLayout layout = new GridLayout(2, false);
 		parent.setLayout(layout);
 
-		final String[] names = { "Type", "Start time", "Owner", "Comments" };
-		final int[] widths = { 60, 140, 100, 300 };
+		final String[] names = { "Type", "Schedule", "Owner", "Comments" };
+		final int[] widths = { 100, 140, 100, 300 };
 		scheduleList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		GridData gd = new GridData();
 		gd.horizontalSpan = 1;
@@ -218,11 +217,20 @@ public class ReportExecutionForm extends Composite
 		scheduleList.getControl().setLayoutData(gd);
 		scheduleList.setContentProvider(new ArrayContentProvider());
 		scheduleList.setLabelProvider(new ScheduleLabelProvider());
+		
+		WidgetHelper.restoreTableViewerSettings(scheduleList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ScheduleList");
+		scheduleList.getControl().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTableViewerSettings(scheduleList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ScheduleList");
+         }
+      });
 
 		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		link.setText("Delete");
-		link.addHyperlinkListener(new HyperlinkAdapter(){
+		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
@@ -233,12 +241,11 @@ public class ReportExecutionForm extends Composite
 		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/schedule.png"))); //$NON-NLS-1$
 		link.setText("Add Schedule");
-		link.addHyperlinkListener(new HyperlinkAdapter(){
-
+		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				addScheduleReport();
+				addSchedule();
 			}
 		});
 	}
@@ -254,8 +261,8 @@ public class ReportExecutionForm extends Composite
 		GridLayout layout = new GridLayout(2, false);
 		parent.setLayout(layout);
 
-		final String[] names = { "Execution Time", "Started By" };
-		final int[] widths = { 200, 200 };
+		final String[] names = { "Execution Time", "Started by", "Status" };
+		final int[] widths = { 180, 140, 100 };
 		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		GridData gd = new GridData();
 		gd.horizontalSpan = 1;
@@ -268,6 +275,15 @@ public class ReportExecutionForm extends Composite
 		resultList.setContentProvider(new ArrayContentProvider());
 		resultList.setLabelProvider(new ReportResultLabelProvider());
 
+      WidgetHelper.restoreTableViewerSettings(resultList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ResultList");
+      resultList.getControl().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTableViewerSettings(resultList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ResultList");
+         }
+      });
+		
 		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/pdf.png"))); //$NON-NLS-1$
 		link.setText("Render to PDF");
@@ -330,6 +346,11 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void createParamEntryFields(Composite parent)
 	{
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.verticalSpacing = 10;
+      parent.setLayout(layout);
+      
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.reporter.customfields"); //$NON-NLS-1$
 		sortFieldProviders(elements);
@@ -354,7 +375,7 @@ public class ReportExecutionForm extends Composite
 				}
 				catch(CoreException e)
 				{
-					// TODO: log error
+				   Activator.logError("Cannot create CustomControlFactory instance", e);
 				}
 			}
 			if (editor == null)
@@ -362,15 +383,19 @@ public class ReportExecutionForm extends Composite
 				editor = new StringFieldEditor(parameter, toolkit, parent);
 			}
 
-			editors.put(parameter.getName(), editor);
+			GridData gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.verticalAlignment = SWT.CENTER;
+			gd.grabExcessHorizontalSpace = true;
+			gd.grabExcessVerticalSpace = false;
+			gd.horizontalSpan = parameter.getSpan();
+			editor.setLayoutData(gd);
+			
+			if (layout.numColumns < parameter.getSpan())
+			   layout.numColumns = parameter.getSpan();
 
-			TableWrapData td = new TableWrapData();
-			td.align = TableWrapData.FILL;
-			td.grabHorizontal = true;
-			System.out.println("Span = " + parameter.getSpan());
-			// td.colspan = parameter.getSpan();
-			editor.setLayoutData(td);
-			fields.add(editor);
+         editors.put(parameter.getName(), editor);
+         fields.add(editor);
 		}
 
 		for(ReportParameter parameter : parameters)
@@ -446,65 +471,65 @@ public class ReportExecutionForm extends Composite
 		fileDialog.setFileName(nameTemplate.toString());
 		final String fileName = fileDialog.open();
 
-		if (fileName != null)
-		{
-			new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
+		if (fileName == null)
+		   return;
+		
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final File reportFile = session.renderReport(report.getId(), jobId, format);
+
+				// save
+				FileInputStream inputStream = null;
+				FileOutputStream outputStream = null;
+				try
 				{
-					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					final File reportFile = session.renderReport(report.getId(), jobId, format);
+					inputStream = new FileInputStream(reportFile);
+					outputStream = new FileOutputStream(fileName);
 
-					// save
-					FileInputStream inputStream = null;
-					FileOutputStream outputStream = null;
-					try
+					byte[] buffer = new byte[1024];
+					int size = 0;
+					do
 					{
-						inputStream = new FileInputStream(reportFile);
-						outputStream = new FileOutputStream(fileName);
-
-						byte[] buffer = new byte[1024];
-						int size = 0;
-						do
+						size = inputStream.read(buffer);
+						if (size > 0)
 						{
-							size = inputStream.read(buffer);
-							if (size > 0)
-							{
-								outputStream.write(buffer, 0, size);
-							}
-						} while(size == buffer.length);
+							outputStream.write(buffer, 0, size);
+						}
+					} while(size == buffer.length);
 
+					outputStream.close();
+					outputStream = null;
+
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							openReport(fileName, format);
+						}
+					});
+				}
+				finally
+				{
+					if (inputStream != null)
+					{
+						inputStream.close();
+					}
+					if (outputStream != null)
+					{
 						outputStream.close();
-						outputStream = null;
-
-						getDisplay().asyncExec(new Runnable() {
-							@Override
-							public void run()
-							{
-								openReport(fileName, format);
-							}
-						});
-					}
-					finally
-					{
-						if (inputStream != null)
-						{
-							inputStream.close();
-						}
-						if (outputStream != null)
-						{
-							outputStream.close();
-						}
 					}
 				}
+			}
 
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot render report " + report.getName() + " job " + jobId;
-				}
-			}.start();
-		}
+			@Override
+			protected String getErrorMessage()
+			{
+				return String.format("Cannot render report %1$s (job ID %2$s)", report.getName(), jobId);
+			}
+		}.start();
 	}
 
 	/**
@@ -539,7 +564,7 @@ public class ReportExecutionForm extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot execute report " + report.getName();
+				return String.format("Cannot execute report %s", report.getName());
 			}
 		}.start();
 	}
@@ -584,7 +609,7 @@ public class ReportExecutionForm extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get result list for report " + report.getName();
+				return String.format("Cannot get result list for report %s", report.getName());
 			}
 		}.start();
 
@@ -595,25 +620,17 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void refreshScheduleList()
 	{
-		new ConsoleJob("Refresh schedule list for report" + report.getName(),
-				workbenchPart, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob(String.format("Refresh schedule list for report %s", report.getName()), workbenchPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<ReportingJob> results = session.listScheduledJobs(report.getId());
-				getDisplay().asyncExec(new Runnable()
-				{
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						if (ReportExecutionForm.this.isDisposed())
-						{
-							return;
-						}
-
-						scheduleList.setInput(results.toArray());
-						ReportExecutionForm.this.getParent().layout(true, true);
+						if (!scheduleList.getControl().isDisposed())
+						   scheduleList.setInput(results.toArray());
 					}
 				});
 			}
@@ -621,7 +638,7 @@ public class ReportExecutionForm extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get schedule list for report" + report.getName();
+				return String.format("Cannot get schedule list for report %s", report.getName());
 			}
 		}.start();
 
@@ -651,7 +668,6 @@ public class ReportExecutionForm extends Composite
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Delete report execution results", workbenchPart, Activator.PLUGIN_ID, null) {
-
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -659,8 +675,7 @@ public class ReportExecutionForm extends Composite
 				{
 					session.deleteReportResult(report.getId(), uuid);
 				}
-				getDisplay().asyncExec(new Runnable() {
-
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -673,7 +688,7 @@ public class ReportExecutionForm extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return null;
+				return "Cannot delete report results";
 			}
 		}.start();
 	}
@@ -681,7 +696,7 @@ public class ReportExecutionForm extends Composite
 	/**
 	 * Add schedule
 	 */
-	protected void addScheduleReport()
+	protected void addSchedule()
 	{
 		final Map<String, String> execParameters = new HashMap<String, String>();
 		if (parameters != null)
@@ -690,33 +705,25 @@ public class ReportExecutionForm extends Composite
 				execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
 		}
 		
-		final ReportingJob reportJob = new ReportingJob(report.getId());
-		final PropertyDialog dialog = PropertyDialog.createDialogOn(workbenchPart.getSite().getShell(), General.ID, reportJob);
-		dialog.getShell().setText("Scheduling");
-		if (dialog.open() == Window.OK)
-		{
-			new ConsoleJob("Scheduling report", workbenchPart, Activator.PLUGIN_ID, null)
+		final ReportingJob job = new ReportingJob(report.getId());
+		final PropertyDialog dialog = PropertyDialog.createDialogOn(workbenchPart.getSite().getShell(), General.ID, job);
+		dialog.getShell().setText("Report Execution Schedule");
+		if (dialog.open() != Window.OK)
+		   return;
+		
+		new ConsoleJob("Adding report schedule", workbenchPart, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					if (General.getReportingJob() != null)
-						session.scheduleReport(General.getReportingJob(), execParameters);
+				session.scheduleReport(job, execParameters);
+			}
 
-					if (Notification.sendNotify() && Notification.getMails().size() > 0)
-						session.sendReportNotification(reportJob.getJobId(), Notification.getMails(), Notification.getAttachFormatCode(), report.getName());
-					
-					// clear static variables
-					Notification.clear();
-				}
-	
-				@Override
-				protected String getErrorMessage()
-				{
-					return String.format("Cannot schedule report %s", report.getName());
-				}
-			}.start();
-		}
+			@Override
+			protected String getErrorMessage()
+			{
+				return String.format("Cannot schedule report %s", report.getName());
+			}
+		}.start();
 	}
 	
 	/**
