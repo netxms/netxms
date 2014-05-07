@@ -432,10 +432,10 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
 }
 
 /**
- * Expand file name
+ * Expand file name. Source and destiation may point to same location.
  * Can be used strftime placeholders and external commands enclosed in ``
  */
-const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand)
+const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommands)
 {
 	time_t t;
 	struct tm *ltm;
@@ -456,7 +456,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)
 	{
-		if (temp[i] == _T('`') && allowShellCommand)
+		if (temp[i] == _T('`') && allowShellCommands)
 		{
 			int j = ++i;
 			while((temp[j] != _T('`')) && (temp[j] != 0))
