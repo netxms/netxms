@@ -26,8 +26,7 @@
     </bean>
 
     <!--
-        Reporting Data Source
-        TODO: Handle multiple reporting data sources
+        Reporting Server Data Source
     -->
     <bean id="dataSource" class="com.radensolutions.reporting.application.ReportingDataSource" destroy-method="close">
         <property name="driverClassName" value="${system.datasource.driverClassName}"/>
@@ -55,13 +54,26 @@
         <property name="sessionFactory" ref="sessionFactory"/>
     </bean>
 
-    <!-- Reporting Data Source -->
+    <!--
+        Reporting Data Source
+        TODO: Handle multiple reporting data sources
+    -->
     <bean id="reportingDataSource" class="com.radensolutions.reporting.application.ReportingDataSource"
           destroy-method="close">
         <property name="driverClassName" value="${report.datasource.driverClassName}"/>
         <property name="url" value="${report.datasource.url}"/>
         <property name="username" value="${report.datasource.username}"/>
         <property name="password" value="${report.datasource.password}"/>
+        <property name="removeAbandoned" value="true"/>
+        <property name="initialSize" value="5"/>
+        <property name="maxActive" value="30"/>
+    </bean>
+    <bean id="reportingDataSource2" class="com.radensolutions.reporting.application.ReportingDataSource"
+          destroy-method="close">
+        <property name="driverClassName" value="${report.datasource2.driverClassName}"/>
+        <property name="url" value="${report.datasource2.url}"/>
+        <property name="username" value="${report.datasource2.username}"/>
+        <property name="password" value="${report.datasource2.password}"/>
         <property name="removeAbandoned" value="true"/>
         <property name="initialSize" value="5"/>
         <property name="maxActive" value="30"/>
@@ -81,6 +93,8 @@
     <bean id="reportManager" class="com.radensolutions.reporting.infrastructure.impl.FileSystemReportManager">
         <property name="workspace" value="${nxreporting.workspace}"/>
     </bean>
+    <bean id="settingsProvider" class="com.radensolutions.reporting.infrastructure.impl.PropertyFileSettingsProvider"
+          scope="singleton"/>
 
     <!-- Business logic beans -->
     <bean id="scheduler" class="com.radensolutions.reporting.application.impl.QuartzReportScheduler" scope="singleton"/>

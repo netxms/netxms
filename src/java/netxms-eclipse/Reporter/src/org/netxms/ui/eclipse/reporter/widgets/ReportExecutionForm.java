@@ -389,6 +389,7 @@ public class ReportExecutionForm extends Composite
 			gd.grabExcessHorizontalSpace = true;
 			gd.grabExcessVerticalSpace = false;
 			gd.horizontalSpan = parameter.getSpan();
+			System.out.println("span=" + gd.horizontalSpan);
 			editor.setLayoutData(gd);
 			
 			if (layout.numColumns < parameter.getSpan())

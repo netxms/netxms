@@ -51,6 +51,12 @@ public class FileSystemReportManager implements ReportManager {
     @Autowired
     @Qualifier("reportingDataSource")
     private DataSource dataSource;
+
+    // TODO: rework
+    @Autowired
+    @Qualifier("reportingDataSource2")
+    private DataSource dataSource2;
+
     @Autowired
     private ReportResultService reportResultService;
     @Autowired
@@ -104,7 +110,7 @@ public class FileSystemReportManager implements ReportManager {
                     index = getPropertyFromMap(propertiesMap, "index", index);
                     final JRExpression defaultValue = jrParameter.getDefaultValueExpression();
                     String dependsOn = getPropertyFromMap(propertiesMap, "dependsOn", "");
-                    int span = getPropertyFromMap(propertiesMap, "span", index);
+                    int span = getPropertyFromMap(propertiesMap, "span", 1);
                     if (span < 1) {
                         span = 1;
                     }
@@ -118,7 +124,7 @@ public class FileSystemReportManager implements ReportManager {
                     parameter.setDefaultValue(defaultValue == null ? null : defaultValue.getText());
                     parameter.setDependsOn(dependsOn);
                     parameter.setSpan(span);
-                    definition.setParameter(parameter);
+                    definition.putParameter(parameter);
                     index++;
                 }
             }
@@ -198,9 +204,19 @@ public class FileSystemReportManager implements ReportManager {
     public boolean execute(int userId, UUID reportId, UUID jobId, final Map<String, String> parameters, Locale locale) {
         boolean ret = false;
 
+        //TODO: report now loaded twice, fix that!
+        DataSource ds = dataSource;
+        final JasperReport report = loadReport(reportId);
+        if (report != null) {
+            String dsn = report.getPropertiesMap().getProperty("datasource");
+            if ("secondary".equalsIgnoreCase(dsn)) {
+                ds = dataSource2;
+            }
+        }
+
         Connection connection = null;
         try {
-            connection = dataSource.getConnection();
+            connection = ds.getConnection();
             ret = realExecute(userId, reportId, jobId, parameters, locale, connection);
         } catch (SQLException e) {
             log.error("Can't get report connection", e);
@@ -266,7 +282,6 @@ public class FileSystemReportManager implements ReportManager {
             final Class<?> valueClass = jrParameter.getValueClass();
 
             String logicalType = jrParameter.getPropertiesMap().getProperty("logicalType");
-            System.out.println("logical type == " + logicalType);
 
             if ("START_DATE".equalsIgnoreCase(logicalType)) {
                 Date date = DateParameterParser.getDateTime(input, false);
