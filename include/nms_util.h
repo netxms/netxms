@@ -608,7 +608,7 @@ class TableRow
 private:
    ObjectArray<TableCell> *m_cells;
    UINT32 m_objectId;
-   
+
 public:
    TableRow(int columnCount);
    TableRow(TableRow *src);
@@ -616,7 +616,7 @@ public:
 
    void addColumn() { m_cells->add(new TableCell); }
    void deleteColumn(int index) { m_cells->remove(index); }
-   
+
    void set(int index, const TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->set(value, status); }
    void setPreallocated(int index, TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status); }
 
@@ -1056,7 +1056,7 @@ extern "C"
 #define RegexpMatch RegexpMatchA
 #endif
 
-	const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize);
+	const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
 	void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
    bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);

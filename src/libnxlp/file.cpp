@@ -228,7 +228,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 
 	while(1)
 	{
-		ExpandFileName(getFileName(), fname, MAX_PATH);
+		ExpandFileName(getFileName(), fname, MAX_PATH, true);
 		if (CALL_STAT(fname, &st) == 0)
 		{
 #ifdef _WIN32
@@ -261,7 +261,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						goto stop_parser;
 
 					// Check if file name was changed
-					ExpandFileName(getFileName(), temp, MAX_PATH);
+					ExpandFileName(getFileName(), temp, MAX_PATH, true);
 					if (_tcscmp(temp, fname))
 					{
 						if (logger != NULL)
@@ -279,7 +279,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						readFromStart = true;
 						break;
 					}
-#else					
+#else
 					if (NX_FSTAT(fh, &st) < 0)
 					{
 						if (logger != NULL)
@@ -296,7 +296,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						readFromStart = true;
 						break;
 					}
-					
+
 					if (st.st_size != stn.st_size)
 					{
 						if (logger != NULL)
@@ -304,7 +304,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						readFromStart = true;
 						break;
 					}
-						
+
 					if ((size_t)st.st_size != size)
 					{
 						if ((size_t)st.st_size < size)

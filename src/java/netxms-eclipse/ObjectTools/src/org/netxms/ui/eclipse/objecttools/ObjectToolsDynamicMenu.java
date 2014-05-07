@@ -450,7 +450,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
 		
-		final String fileName = substituteMacros(parameters[0], node);
+		final String fileName = parameters[0];
 		final int maxFileSize = Integer.parseInt(parameters[1]);
 		final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
 		

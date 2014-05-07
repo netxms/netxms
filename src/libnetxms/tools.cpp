@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -435,7 +435,7 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
  * Expand file name
  * Can be used strftime placeholders and external commands enclosed in ``
  */
-const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize)
+const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand)
 {
 	time_t t;
 	struct tm *ltm;
@@ -456,7 +456,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)
 	{
-		if (temp[i] == _T('`'))
+		if (temp[i] == _T('`') && allowShellCommand)
 		{
 			int j = ++i;
 			while((temp[j] != _T('`')) && (temp[j] != 0))
@@ -604,8 +604,8 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer,
 {
    TCHAR *msgBuf;
 
-   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                     FORMAT_MESSAGE_FROM_SYSTEM | 
+   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                     FORMAT_MESSAGE_FROM_SYSTEM |
                      FORMAT_MESSAGE_IGNORE_INSERTS,
                      NULL, dwError,
                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
@@ -645,7 +645,7 @@ int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
    if (!nochdir)
       chdir("/");
 
-   if (!noclose) 
+   if (!noclose)
    {
       fclose(stdin);          // don't need stdin, stdout, stderr
       fclose(stdout);
@@ -942,7 +942,7 @@ retry:
 
 /**
  * Extended recv() - receive data with timeout
- * 
+ *
  * @param hSocket socket handle
  * @param data data buffer
  * @param len buffer length in bytes
@@ -1438,14 +1438,14 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const
 				break;
 		}
 	}
-	
+
 	if (state == 1)
 	{
 		buffer[pos] = 0;
 		StrStripW(buffer);
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -1494,14 +1494,14 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const 
 				break;
 		}
 	}
-	
+
 	if (state == 1)
 	{
 		buffer[pos] = 0;
 		StrStripA(buffer);
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -1608,7 +1608,7 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
 	ICEDecryptData(encrypted, 32, decrypted, key);
 	decrypted[31] = 0;
-	
+
 #ifdef UNICODE
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, 32);
 	decryptedPasswd[31] = 0;
@@ -1704,8 +1704,8 @@ int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...)
    HANDLE hFile;
    UINT32 dwAccess, dwDisp;
 
-   dwAccess = (nFlags & O_RDONLY) ? GENERIC_READ : 
-                 (nFlags & O_WRONLY) ? GENERIC_WRITE : 
+   dwAccess = (nFlags & O_RDONLY) ? GENERIC_READ :
+                 (nFlags & O_WRONLY) ? GENERIC_WRITE :
                     (nFlags & O_RDWR) ? (GENERIC_READ | GENERIC_WRITE) : 0;
    if ((nFlags & (O_CREAT | O_TRUNC)) == (O_CREAT | O_TRUNC))
       dwDisp = CREATE_ALWAYS;
@@ -1990,7 +1990,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(out, &csbi);
-	
+
 	const TCHAR *curr = text;
 	while(*curr != 0)
 	{

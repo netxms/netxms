@@ -36,7 +36,7 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 
 	m_requestId = requestId;
 
-	m_remoteFile = Event::expandText(NULL, node->Id(), remoteFile, NULL, NULL);
+	m_remoteFile = _tcsdup(remoteFile);
 
 	TCHAR buffer[1024];
 	buildServerFileName(node->Id(), m_remoteFile, buffer, 1024);

@@ -728,6 +728,9 @@ void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 		TCHAR fileNameCode[MAX_PATH];
 		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
 		pRequest->GetVariableStr(VID_NAME, fileNameCode, MAX_PATH);
+		//prepare file name
+		ExpandFileName(fileName, fileName, MAX_PATH, false);
+
 		DebugPrintf(m_dwIndex, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
                   fileName, pRequest->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
 		bool result = sendFile(pRequest->GetId(), fileName, (int)pRequest->GetVariableLong(VID_FILE_OFFSET));
@@ -775,10 +778,9 @@ void CommSession::cancelFileMonitoring(CSCPMessage *pRequest, CSCPMessage *pMsg)
 	}
 }
 
-//
-// Get local file details
-//
-
+/**
+ * Get local file details
+ */
 void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
 	if (m_bMasterServer)
@@ -791,6 +793,8 @@ void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
 #endif
 
 		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+      //prepare file name
+		ExpandFileName(fileName, fileName, MAX_PATH, false);
 		if (_tstat(fileName, &fs) == 0)
 		{
 			pMsg->SetVariable(VID_FILE_SIZE, (QWORD)fs.st_size);
