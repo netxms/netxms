@@ -14,7 +14,7 @@ def readPropertyFile(name):
             line = line.rstrip("\r\n")
             s = line.split("=")
             if len(s) == 2:
-                data[s[0].strip()] = s[1].strip()
+                data[s[0].strip()] = s[1]
     except IOError:
         data = {}
     return data
