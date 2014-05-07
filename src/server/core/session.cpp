@@ -5015,7 +5015,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
       // User should have "acknowledge alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			msg.SetVariable(VID_RCC, 
+			msg.SetVariable(VID_RCC,
             byHelpdeskRef ?
             g_alarmMgr.ackByHDRef(hdref, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)) :
             g_alarmMgr.ackById(alarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
@@ -5247,9 +5247,9 @@ void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
       // User should have "create issue" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS) && checkSysAccessRights(SYSTEM_ACCESS_UNLINK_ISSUES))
       {
-         msg.SetVariable(VID_RCC, 
-            byHelpdeskRef ? 
-            g_alarmMgr.unlinkIssueByHDRef(hdref, this) : 
+         msg.SetVariable(VID_RCC,
+            byHelpdeskRef ?
+            g_alarmMgr.unlinkIssueByHDRef(hdref, this) :
             g_alarmMgr.unlinkIssueById(alarmId, this));
       }
       else
@@ -5342,7 +5342,7 @@ void ClientSession::updateAlarmComment(CSCPMessage *request)
       {
 			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
-			msg.SetVariable(VID_RCC, 
+			msg.SetVariable(VID_RCC,
             byHelpdeskRef ?
             g_alarmMgr.addAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
             g_alarmMgr.updateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
@@ -7268,28 +7268,28 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
 
                // name
                DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 1, szBuffer);
+               msg.SetVariable(dwId + 1, szBuffer);
 
                msg.SetVariable(dwId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
 
                // data
                pszStr = DBGetField(hResult, i, 3, NULL, 0);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 3, pszStr);
+               msg.SetVariable(dwId + 3, pszStr);
                free(pszStr);
 
                msg.SetVariable(dwId + 4, DBGetFieldULong(hResult, i, 4));
 
                // description
                DBGetField(hResult, i, 5, szBuffer, MAX_DB_STRING);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 5, szBuffer);
+               msg.SetVariable(dwId + 5, szBuffer);
 
                // matching OID
                DBGetField(hResult, i, 6, szBuffer, MAX_DB_STRING);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 6, szBuffer);
+               msg.SetVariable(dwId + 6, szBuffer);
 
                // confirmation text
                DBGetField(hResult, i, 7, szBuffer, MAX_DB_STRING);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 7, szBuffer);
+               msg.SetVariable(dwId + 7, szBuffer);
 
                dwNumMsgRec++;
                dwId += 10;
@@ -7330,14 +7330,18 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=%d"), dwToolId);
-      hResult = DBSelect(hdb, szQuery);
+      DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=?"));
+      if (statment == NULL)
+         goto failure;
+      DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+      hResult = DBSelectPrepared(statment);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -7345,31 +7349,36 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 				msg.SetVariable(VID_TOOL_ID, dwToolId);
 
             DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING);
-            DecodeSQLStringAndSetVariable(&msg, VID_NAME, szBuffer);
+            msg.SetVariable(VID_NAME, szBuffer);
 
             nType = DBGetFieldLong(hResult, 0, 1);
             msg.SetVariable(VID_TOOL_TYPE, (WORD)nType);
 
             pszStr = DBGetField(hResult, 0, 2, NULL, 0);
-            DecodeSQLStringAndSetVariable(&msg, VID_TOOL_DATA, pszStr);
+            msg.SetVariable(VID_TOOL_DATA, pszStr);
             free(pszStr);
 
             DBGetField(hResult, 0, 3, szBuffer, MAX_DB_STRING);
-            DecodeSQLStringAndSetVariable(&msg, VID_DESCRIPTION, szBuffer);
+            msg.SetVariable(VID_DESCRIPTION, szBuffer);
 
             msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
 
             DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING);
-            DecodeSQLStringAndSetVariable(&msg, VID_TOOL_OID, szBuffer);
+            msg.SetVariable(VID_TOOL_OID, szBuffer);
 
             DBGetField(hResult, 0, 6, szBuffer, MAX_DB_STRING);
-            DecodeSQLStringAndSetVariable(&msg, VID_CONFIRMATION_TEXT, szBuffer);
+            msg.SetVariable(VID_CONFIRMATION_TEXT, szBuffer);
 
             DBFreeResult(hResult);
 
             // Access list
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
-            hResult = DBSelect(hdb, szQuery);
+            DBFreeStatement(statment);
+            statment = DBPrepare(hdb, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=?"));
+            if (statment == NULL)
+               goto failure;
+            DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+            hResult = DBSelectPrepared(statment);
             if (hResult != NULL)
             {
                iNumRows = DBGetNumRows(hResult);
@@ -7387,10 +7396,15 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                // Column information for table tools
                if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
                {
-                  _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT col_name,col_oid,col_format,col_substr ")
-                                     _T("FROM object_tools_table_columns WHERE tool_id=%d ")
-                                     _T("ORDER BY col_number"), dwToolId);
-                  hResult = DBSelect(hdb, szQuery);
+                  DBFreeStatement(statment);
+                  statment = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format,col_substr ")
+                                                          _T("FROM object_tools_table_columns WHERE tool_id=? ")
+                                                          _T("ORDER BY col_number"));
+                  if (statment == NULL)
+                     goto failure;
+                  DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+                  hResult = DBSelectPrepared(statment);
                   if (hResult != NULL)
                   {
                      iNumRows = DBGetNumRows(hResult);
@@ -7398,7 +7412,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                      for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < iNumRows; i++)
                      {
                         DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING);
-                        DecodeSQLStringAndSetVariable(&msg, dwId++, szBuffer);
+                        msg.SetVariable(dwId++, szBuffer);
                         msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
                         msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
                         msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 3));
@@ -7429,7 +7443,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
       }
-      DBConnectionPoolReleaseConnection(hdb);
+      DBFreeStatement(statment);
    }
    else
    {
@@ -7438,7 +7452,15 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
    }
 
    // Send response
+   DBConnectionPoolReleaseConnection(hdb);
    sendMessage(&msg);
+   return;
+
+failure:
+   DBConnectionPoolReleaseConnection(hdb);
+   msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   sendMessage(&msg);
+   return;
 }
 
 /**
@@ -8498,10 +8520,9 @@ void ClientSession::sendAgentCfgList(UINT32 dwRqId)
 }
 
 
-//
-// Open (get all data) server-stored agent's config
-//
-
+/**
+ *  Open (get all data) server-stored agent's config
+ */
 void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -8552,10 +8573,9 @@ void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
 }
 
 
-//
-// Save changes to server-stored agent's configuration
-//
-
+/**
+ *  Save changes to server-stored agent's configuration
+ */
 void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -8652,10 +8672,9 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
 }
 
 
-//
-// Delete agent's configuration
-//
-
+/**
+ * Delete agent's configuration
+ */
 void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -8705,10 +8724,9 @@ void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
 }
 
 
-//
-// Swap sequence numbers of two agent configs
-//
-
+/**
+ * Swap sequence numbers of two agent configs
+ */
 void ClientSession::SwapAgentConfigs(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

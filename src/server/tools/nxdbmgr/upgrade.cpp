@@ -360,6 +360,52 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V313 to V314
+ */
+static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
+{
+   //Replace in all file download(7) object tools double back shalsh to simple backslash
+   DB_RESULT hResult = SQLSelect(_T("SELECT tool_id, tool_data FROM object_tools WHERE tool_type=7"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR* toolData = DBGetField(hResult, i, 1, NULL, 0);
+         TranslateStr(toolData, _T("\\\\"), _T("\\"));
+
+         DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE object_tools SET tool_data=?  WHERE tool_id=?"));
+         if (statment == NULL)
+            return FALSE;
+         DBBind(statment, 1, DB_SQLTYPE_TEXT, toolData, DB_BIND_DYNAMIC);
+         DBBind(statment, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+         if(!DBExecute(statment))
+            return FALSE;
+         DBFreeStatement(statment);
+      }
+      DBFreeResult(hResult);
+   }
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='314' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V312 to V313
+ */
+static BOOL H_UpgradeFromV312(int currVersion, int newVersion)
+{
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_name")));
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_data")));
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("description")));
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("confirmation_text")));
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("matching_oid")));
+   CHK_EXEC(ConvertStrings(_T("object_tools_table_columns"), _T("tool_id"), _T("col_number"), _T("col_name"), false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='313' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V311 to V312
  */
 static BOOL H_UpgradeFromV311(int currVersion, int newVersion)
@@ -7560,6 +7606,8 @@ static struct
    { 309, 310, H_UpgradeFromV309 },
    { 310, 311, H_UpgradeFromV310 },
    { 311, 312, H_UpgradeFromV311 },
+   { 312, 313, H_UpgradeFromV312 },
+   { 313, 314, H_UpgradeFromV313 },
    { 0, 0, NULL }
 };
 

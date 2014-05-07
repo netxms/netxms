@@ -50,6 +50,18 @@ struct SNMP_ENUM_ARGS
 };
 
 /**
+ * Rollback all querys, release BD connection, free prepared statment if not NULL and return RCC_DB_FAILURE code
+ */
+static UINT32 ReturnDBFailure(DB_HANDLE hdb, DB_STATEMENT statment)
+{
+   DBRollback(hdb);
+   DBConnectionPoolReleaseConnection(hdb);
+   if(statment != NULL)
+      DBFreeStatement(statment);
+   return RCC_DB_FAILURE;
+}
+
+/**
  * Check if tool with given id exist and is a table tool
  */
 BOOL IsTableTool(UINT32 dwToolId)
@@ -59,8 +71,16 @@ BOOL IsTableTool(UINT32 dwToolId)
    LONG nType;
    BOOL bResult = FALSE;
 
-   _sntprintf(szBuffer, 256, _T("SELECT tool_type FROM object_tools WHERE tool_id=%d"), dwToolId);
-   hResult = DBSelect(g_hCoreDB, szBuffer);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_type FROM object_tools WHERE tool_id=?"));
+   if (statment == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+   hResult = DBSelectPrepared(statment);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -70,13 +90,15 @@ BOOL IsTableTool(UINT32 dwToolId)
       }
       DBFreeResult(hResult);
    }
+   DBConnectionPoolReleaseConnection(hdb);
+   DBFreeStatement(statment);
    return bResult;
 }
 
 
-//
-// Check if user has access to the tool
-//
+/**
+ * Check if user has access to the tool
+ */
 
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId)
 {
@@ -89,8 +111,16 @@ BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId)
    if (dwUserId == 0)
       return TRUE;
 
-   _sntprintf(szBuffer, 256, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
-   hResult = DBSelect(g_hCoreDB, szBuffer);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=?"));
+   if (statment == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+   hResult = DBSelectPrepared(statment);
    if (hResult != NULL)
    {
 		nRows = DBGetNumRows(hResult);
@@ -113,18 +143,20 @@ BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId)
       }
       DBFreeResult(hResult);
    }
+   DBConnectionPoolReleaseConnection(hdb);
+   DBFreeStatement(statment);
    return bResult;
 }
 
 
-//
-// Agent table tool execution thread
-//
+/**
+ * Agent table tool execution thread
+ */
 
 static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 {
    CSCPMessage msg;
-   TCHAR *pszEnum, *pszRegEx, *pszLine, szBuffer[4096];
+   TCHAR *pszEnum, *pszRegEx, *pszLine, szBuffer[256];
    AgentConnection *pConn;
    UINT32 i, j, dwNumRows, dwNumCols, dwResult, dwLen;
    int *pnSubstrPos, nPos;
@@ -157,9 +189,16 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
    if ((pszEnum != NULL) && (pszRegEx != NULL))
    {
       // Load column information
-      _sntprintf(szBuffer, 4096, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=%d ORDER BY col_number"),
-                 ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
-      hResult = DBSelect(g_hCoreDB, szBuffer);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
+      if (statment == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         return THREAD_OK;
+      }
+      DBBind(statment, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
+
+      hResult = DBSelectPrepared(statment);
       if (hResult != NULL)
       {
          dwNumCols = DBGetNumRows(hResult);
@@ -169,7 +208,6 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
             for(i = 0; i < dwNumCols; i++)
             {
                DBGetField(hResult, i, 0, szBuffer, 256);
-               DecodeSQLString(szBuffer);
 					table.addColumn(szBuffer, DBGetFieldULong(hResult, i, 1));
                pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
             }
@@ -234,6 +272,8 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
       {
          msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
+      DBFreeStatement(statment);
    }
    else
    {
@@ -249,9 +289,9 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 }
 
 
-//
-// Add SNMP variable value to results list
-//
+/**
+ * Add SNMP variable value to results list
+ */
 
 static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
                           LONG nFmt, Node *pNode)
@@ -300,9 +340,9 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
 }
 
 
-//
-// Handler for SNMP table enumeration
-//
+/**
+ * Handler for SNMP table enumeration
+ */
 
 static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
                           SNMP_Transport *pTransport, void *pArg)
@@ -366,26 +406,34 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
 }
 
 
-//
-// SNMP table tool execution thread
-//
+/**
+ * SNMP table tool execution thread
+ */
 
 static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
 {
-   TCHAR szBuffer[256];
    DB_RESULT hResult;
    CSCPMessage msg;
    UINT32 i, dwNumCols;
+   TCHAR szBuffer[256];
    SNMP_ENUM_ARGS args;
 	Table table;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Prepare data message
    msg.SetCode(CMD_TABLE_DATA);
    msg.SetId(((TOOL_STARTUP_INFO *)pArg)->dwRqId);
 
-   _sntprintf(szBuffer, 256, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=%d ORDER BY col_number"),
-              ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
-   hResult = DBSelect(g_hCoreDB, szBuffer);
+   DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
+   if (statment == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return THREAD_OK;
+   }
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
+
+   hResult = DBSelectPrepared(statment);
    if (hResult != NULL)
    {
       dwNumCols = DBGetNumRows(hResult);
@@ -400,7 +448,6 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          for(i = 0; i < dwNumCols; i++)
          {
             DBGetField(hResult, i, 0, szBuffer, 256);
-            DecodeSQLString(szBuffer);
             args.ppszOidList[i] = DBGetField(hResult, i, 1, NULL, 0);
             args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
 				table.addColumn(szBuffer, args.pnFormatList[i]);
@@ -436,6 +483,9 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
    }
 
+   DBConnectionPoolReleaseConnection(hdb);
+   DBFreeStatement(statment);
+
    // Send responce to client
    ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
    ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
@@ -445,20 +495,26 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
 }
 
 
-//
-// Execute table tool
-//
-
+/**
+ * Execute table tool
+ */
 UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSession *pSession)
 {
    LONG nType;
    UINT32 dwRet = RCC_SUCCESS;
    TOOL_STARTUP_INFO *pStartup;
-   TCHAR szBuffer[256];
    DB_RESULT hResult;
 
-   _sntprintf(szBuffer, 256, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=%d"), dwToolId);
-   hResult = DBSelect(g_hCoreDB, szBuffer);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=?"));
+   if (statment == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+   hResult = DBSelectPrepared(statment);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -471,7 +527,6 @@ UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSessi
             pStartup->dwToolId = dwToolId;
             pStartup->dwRqId = dwRqId;
             pStartup->pszToolData = DBGetField(hResult, 0, 1, NULL, 0);
-            DecodeSQLString(pStartup->pszToolData);
             pStartup->dwFlags = DBGetFieldULong(hResult, 0, 2);
             pStartup->pNode = pNode;
             pStartup->pSession = pSession;
@@ -493,27 +548,52 @@ UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSessi
    {
       dwRet = RCC_DB_FAILURE;
    }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   DBFreeStatement(statment);
    return dwRet;
 }
 
 
-//
-// Delete object tool from database
-//
-
+/**
+ * Delete object tool from database
+ */
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId)
 {
-   TCHAR szQuery[256];
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools WHERE tool_id=%d"), dwToolId);
-   DBQuery(g_hCoreDB, szQuery);
+	if (!DBBegin(hdb))
+	{
+		DBConnectionPoolReleaseConnection(hdb);
+		return RCC_DB_FAILURE;
+	}
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
-   DBQuery(g_hCoreDB, szQuery);
+   DB_STATEMENT statment = DBPrepare(hdb, _T("DELETE FROM object_tools WHERE tool_id=?"));
+   if (statment == NULL)
+      return ReturnDBFailure(hdb, statment);
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+   if(!DBExecute(statment))
+      return ReturnDBFailure(hdb, statment);
+   DBFreeStatement(statment);
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
-   DBQuery(g_hCoreDB, szQuery);
+   statment = DBPrepare(hdb, _T("DELETE FROM object_tools_acl WHERE tool_id=?"));
+   if (statment == NULL)
+      return ReturnDBFailure(hdb, statment);
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+   if(!DBExecute(statment))
+      return ReturnDBFailure(hdb, statment);
+   DBFreeStatement(statment);
 
+   statment = DBPrepare(hdb, _T("DELETE FROM object_tools_table_columns WHERE tool_id=?"));
+   if (statment == NULL)
+      return ReturnDBFailure(hdb, statment);
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+   if(!DBExecute(statment))
+      return ReturnDBFailure(hdb, statment);
+   DBFreeStatement(statment);
+
+   DBCommit(hdb);
+	DBConnectionPoolReleaseConnection(hdb);
    NotifyClientSessions(NX_NOTIFY_OBJTOOL_DELETED, dwToolId);
    return RCC_SUCCESS;
 }
@@ -525,8 +605,8 @@ UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT flags FROM object_tools WHERE tool_id=?"));
-   if (hStmt == NULL)
+   DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT flags FROM object_tools WHERE tool_id=?"));
+   if (statment == NULL)
    {
       DBConnectionPoolReleaseConnection(hdb);
       return RCC_DB_FAILURE;
@@ -535,8 +615,8 @@ UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled)
    UINT32 rcc = RCC_SUCCESS;
    UINT32 flags = 0;
 
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
-   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(statment);
    if (hResult != NULL)
    {
       flags = DBGetFieldULong(hResult, 0, 0);
@@ -546,7 +626,7 @@ UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled)
    {
       rcc = RCC_DB_FAILURE;
    }
-   DBFreeStatement(hStmt);
+   DBFreeStatement(statment);
 
    if (rcc == RCC_SUCCESS)
    {
@@ -559,83 +639,107 @@ UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled)
          flags |= TF_DISABLED;
       }
       rcc = RCC_DB_FAILURE;
-      hStmt = DBPrepare(hdb, _T("UPDATE object_tools SET flags=? WHERE tool_id=?"));
-      if (hStmt != NULL)
+      statment = DBPrepare(hdb, _T("UPDATE object_tools SET flags=? WHERE tool_id=?"));
+      if (statment != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, flags);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolId);
-         if (DBExecute(hStmt))
+         DBBind(statment, 1, DB_SQLTYPE_INTEGER, flags);
+         DBBind(statment, 2, DB_SQLTYPE_INTEGER, toolId);
+         if (DBExecute(statment))
          {
             NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, toolId);
             rcc = RCC_SUCCESS;
          }
-         DBFreeStatement(hStmt);
+         DBFreeStatement(statment);
       }
    }
+
+	DBConnectionPoolReleaseConnection(hdb);
    return rcc;
 }
 
 /**
- * Update object tool from NXCP message
+ * Update/Insert object tool from NXCP message
  */
 UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 {
    DB_RESULT hResult;
    BOOL bUpdate = FALSE;
-   TCHAR *pszName, *pszData, *pszDescription, *pszOID, *pszTmp, *pszConfirm;
-   TCHAR szBuffer[MAX_DB_STRING], szQuery[4096];
+   TCHAR szBuffer[MAX_DB_STRING];
    UINT32 i, dwToolId, dwAclSize, *pdwAcl;
-   int nType;
+   DB_STATEMENT statment;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+	if (!DBBegin(hdb))
+	{
+		DBConnectionPoolReleaseConnection(hdb);
+		return RCC_DB_FAILURE;
+	}
 
    // Check if tool already exist
    dwToolId = pMsg->GetVariableLong(VID_TOOL_ID);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT tool_id FROM object_tools WHERE tool_id=%d"), dwToolId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   statment = DBPrepare(hdb, _T("SELECT tool_id FROM object_tools WHERE tool_id=?"));
+   if (statment == NULL)
+      return ReturnDBFailure(hdb, statment);
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+   hResult = DBSelectPrepared(statment);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
          bUpdate = TRUE;
       DBFreeResult(hResult);
    }
+   DBFreeStatement(statment);
 
    // Insert or update common properties
-   pMsg->GetVariableStr(VID_NAME, szBuffer, MAX_DB_STRING);
-   pszName = EncodeSQLString(szBuffer);
-   pMsg->GetVariableStr(VID_DESCRIPTION, szBuffer, MAX_DB_STRING);
-   pszDescription = EncodeSQLString(szBuffer);
-   pMsg->GetVariableStr(VID_TOOL_OID, szBuffer, MAX_DB_STRING);
-   pszOID = EncodeSQLString(szBuffer);
-   pMsg->GetVariableStr(VID_CONFIRMATION_TEXT, szBuffer, MAX_DB_STRING);
-   pszConfirm = EncodeSQLString(szBuffer);
-   pszTmp = pMsg->GetVariableStr(VID_TOOL_DATA);
-   pszData = EncodeSQLString(pszTmp);
-   free(pszTmp);
-   nType = pMsg->GetVariableShort(VID_TOOL_TYPE);
+   /* prep */
+   int nType = pMsg->GetVariableShort(VID_TOOL_TYPE);
+   int bindID = 1;
    if (bUpdate)
-      _sntprintf(szQuery, 4096, _T("UPDATE object_tools SET tool_name='%s',tool_type=%d,")
-                                _T("tool_data='%s',description='%s',flags=%d,")
-                                _T("matching_oid='%s',confirmation_text='%s' ")
-                                _T("WHERE tool_id=%d"),
-                pszName, nType, pszData, pszDescription,
-                pMsg->GetVariableLong(VID_FLAGS), pszOID, pszConfirm, dwToolId);
+   {
+      statment = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
+                             _T("tool_data=?,description=?,flags=?,")
+                             _T("matching_oid=?,confirmation_text=? ")
+                             _T("WHERE tool_id=?"));
+      if (statment == NULL)
+         return ReturnDBFailure(hdb, statment);
+   }
    else
-      _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,")
-                                _T("tool_data,description,flags,matching_oid,")
-                                _T("confirmation_text) VALUES ")
-                                _T("(%d,'%s',%d,'%s','%s',%d,'%s','%s')"),
-                dwToolId, pszName, nType, pszData,
-                pszDescription, pMsg->GetVariableLong(VID_FLAGS),
-                pszOID, pszConfirm);
-   free(pszName);
-   free(pszDescription);
-   free(pszData);
-   free(pszOID);
-   free(pszConfirm);
-   DBQuery(g_hCoreDB, szQuery);
+   {
+      statment = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,")
+                             _T("tool_data,description,flags,matching_oid,")
+                             _T("confirmation_text) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?)"));
+      if (statment == NULL)
+         return ReturnDBFailure(hdb, statment);
+      DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
+   }
+
+   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_NAME), DB_BIND_DYNAMIC);
+   DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, nType);
+   DBBind(statment, bindID++, DB_SQLTYPE_TEXT, pMsg->GetVariableStr(VID_TOOL_DATA), DB_BIND_DYNAMIC);
+   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_DESCRIPTION), DB_BIND_DYNAMIC);
+   DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, pMsg->GetVariableLong(VID_FLAGS));
+   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_TOOL_OID), DB_BIND_DYNAMIC);
+   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_CONFIRMATION_TEXT), DB_BIND_DYNAMIC);
+
+   if(bUpdate)
+      DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
+
+   if(!DBExecute(statment))
+      return ReturnDBFailure(hdb, statment);
+   DBFreeStatement(statment);
 
    // Update ACL
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
-   DBQuery(g_hCoreDB, szQuery);
+   statment = DBPrepare(hdb, _T("DELETE FROM object_tools_acl WHERE tool_id=?"));
+   if (statment == NULL)
+      return ReturnDBFailure(hdb, statment);
+   DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
+   if(!DBExecute(statment))
+      return ReturnDBFailure(hdb, statment);
+   DBFreeStatement(statment);
+
    dwAclSize = pMsg->GetVariableLong(VID_ACL_SIZE);
    if (dwAclSize > 0)
    {
@@ -643,15 +747,27 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
       pMsg->getFieldAsInt32Array(VID_ACL, dwAclSize, pdwAcl);
       for(i = 0; i < dwAclSize; i++)
       {
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (%d,%d)"),
-                   dwToolId, pdwAcl[i]);
-         DBQuery(g_hCoreDB, szQuery);
+         statment = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"));
+         if (statment == NULL)
+            return ReturnDBFailure(hdb, statment);
+         DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+         DBBind(statment, 2, DB_SQLTYPE_INTEGER, pdwAcl[i]);
+         if(!DBExecute(statment))
+            return ReturnDBFailure(hdb, statment);
+         DBFreeStatement(statment);
       }
    }
 
    // Update columns configuration
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
-   DBQuery(g_hCoreDB, szQuery);
+   statment = DBPrepare(hdb, _T("DELETE FROM object_tools_table_columns WHERE tool_id=?"));
+   if (statment == NULL)
+      return ReturnDBFailure(hdb, statment);
+   DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
+
+   if(!DBExecute(statment))
+      return ReturnDBFailure(hdb, statment);
+   DBFreeStatement(statment);
+
    if ((nType == TOOL_TYPE_TABLE_SNMP) ||
        (nType == TOOL_TYPE_TABLE_AGENT))
    {
@@ -661,18 +777,28 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
       for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < dwNumColumns; i++, dwId += 2)
       {
          pMsg->GetVariableStr(dwId++, szBuffer, MAX_DB_STRING);
-         pszName = EncodeSQLString(szBuffer);
-         pMsg->GetVariableStr(dwId++, szBuffer, MAX_DB_STRING);
-         _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools_table_columns (tool_id,")
-                                   _T("col_number,col_name,col_oid,col_format,col_substr) ")
-                                   _T("VALUES (%d,%d,'%s','%s',%d,%d)"),
-                    dwToolId, i, pszName, szBuffer, pMsg->GetVariableShort(dwId),
-                    pMsg->GetVariableShort(dwId + 1));
-         free(pszName);
-         DBQuery(g_hCoreDB, szQuery);
+         /* prepared stmt */
+         statment = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
+                                _T("col_number,col_name,col_oid,col_format,col_substr) ")
+                                _T("VALUES (?,?,?,?,?,?)"));
+         if (statment == NULL)
+            return ReturnDBFailure(hdb, statment);
+
+         DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+         DBBind(statment, 2, DB_SQLTYPE_INTEGER, i);
+         DBBind(statment, 3, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(dwId++), DB_BIND_DYNAMIC);
+         DBBind(statment, 4, DB_SQLTYPE_VARCHAR, szBuffer, DB_BIND_TRANSIENT);
+         DBBind(statment, 5, DB_SQLTYPE_INTEGER, pMsg->GetVariableShort(dwId));
+         DBBind(statment, 6, DB_SQLTYPE_INTEGER, pMsg->GetVariableShort(dwId + 1));
+
+         if(!DBExecute(statment))
+            return ReturnDBFailure(hdb, statment);
+         DBFreeStatement(statment);
       }
    }
 
+   DBCommit(hdb);
+	DBConnectionPoolReleaseConnection(hdb);
    NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, dwToolId);
    return RCC_SUCCESS;
 }
