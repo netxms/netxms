@@ -1043,6 +1043,7 @@ typedef struct
    ConfigEntry *stack[MAX_STACK_DEPTH];
    String charData[MAX_STACK_DEPTH];
    bool trimValue[MAX_STACK_DEPTH];
+   bool merge;
 } XML_PARSER_STATE;
 
 /**
@@ -1098,7 +1099,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
             nx_strncpy(entryName, name, MAX_PATH);
 #endif
          // Only do merge on top level by default, otherwise add sub-entry with same name
-         bool merge = XMLGetAttrBoolean(attrs, "merge", (ps->level == 1));
+         bool merge = ps->merge;
          ps->stack[ps->level] = merge ? ps->stack[ps->level - 1]->findEntry(entryName) : NULL;
          if (ps->stack[ps->level] == NULL)
          {
@@ -1159,7 +1160,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 /**
  * Load config from XML in memory
  */
-bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name, const char *topLevelTag)
+bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name, const char *topLevelTag, bool merge)
 {
    XML_PARSER_STATE state;
 
@@ -1173,6 +1174,7 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
    state.level = 0;
    state.parser = parser;
    state.file = (name != NULL) ? name : _T("<mem>");
+   state.merge = merge;
 
    bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
    if (!success)

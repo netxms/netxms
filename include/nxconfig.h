@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
@@ -59,7 +59,7 @@ public:
 	int getId() { return m_id; }
 	int getValueCount() { return m_valueCount; }
 	int getConcatenatedValuesLength();
-	
+
 	const TCHAR *getValue(int index = 0);
 	INT32 getValueAsInt(int index = 0, INT32 defaultValue = 0);
 	UINT32 getValueAsUInt(int index = 0, UINT32 defaultValue = 0);
@@ -121,7 +121,7 @@ private:
 
 protected:
 	virtual void onError(const TCHAR *errorMessage);
-	
+
 	void error(const TCHAR *format, ...);
 	ConfigEntry *createEntry(const TCHAR *path);
 
@@ -135,7 +135,7 @@ public:
 	void setTopLevelTag(const TCHAR *topLevelTag) { m_root->setName(topLevelTag); }
 
 	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL);
-	bool loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name = NULL, const char *topLevelTag = NULL);
+	bool loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name = NULL, const char *topLevelTag = NULL, bool merge = true);
 	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors = true);
 	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors = true);
 
