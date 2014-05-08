@@ -1098,8 +1098,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          else
             nx_strncpy(entryName, name, MAX_PATH);
 #endif
-         // Only do merge on top level by default, otherwise add sub-entry with same name
-         bool merge = ps->merge;
+         bool merge = XMLGetAttrBoolean(attrs, "merge", ps->merge);
          ps->stack[ps->level] = merge ? ps->stack[ps->level - 1]->findEntry(entryName) : NULL;
          if (ps->stack[ps->level] == NULL)
          {
