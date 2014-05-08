@@ -138,7 +138,6 @@ protected:
    int m_nCommentLevel;
    int m_nStrSize;
    char m_szStr[MAX_STRING_SIZE];
-   BOOL m_bErrorState;
 
 public:
 	NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode);
@@ -148,16 +147,11 @@ public:
 
 	int getCurrLine() { return m_nCurrLine; }
 	void error(const char *pszText);
-
-   void setErrorState() { m_bErrorState = TRUE; }
-   BOOL isErrorState() { return m_bErrorState; }
 };
 
-
-//
-// Compiler class
-//
-
+/**
+ * Compiler class
+ */
 class NXSL_Compiler
 {
 protected:

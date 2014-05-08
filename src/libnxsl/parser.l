@@ -207,11 +207,13 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 				else
 				{
 					LexerError("Character code must be in range 0x00 .. 0xFF", yyscanner);
+					return -1;
 				}
 			}
 			else
 			{
 				LexerError("Invalid hex number", yyscanner);
+				return -1;
 			}
 		}
 <STR>\"		{
