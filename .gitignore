@@ -148,9 +148,6 @@ target
 /src/java/nxshell/.classpath
 /src/java/nxshell/.project
 /src/java/nxshell/.settings
-/src/java/report-generator/.classpath
-/src/java/report-generator/.project
-/src/java/report-generator/.settings
 /src/libexpat/libexpat/x64
 /src/libnetxms/x64
 /src/libnxsl/lex.parser.cpp
