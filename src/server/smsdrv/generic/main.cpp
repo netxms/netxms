@@ -146,15 +146,15 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 						*p = 0; p++;
 						switch (tolower(*p))
 						{
-						case _T('n'): // none
-							parity = NOPARITY;
-							break;
-						case _T('o'): // odd
-							parity = ODDPARITY;
-							break;
-						case _T('e'): // even
-							parity = EVENPARITY;
-							break;
+						   case _T('n'): // none
+							   parity = NOPARITY;
+							   break;
+						   case _T('o'): // odd
+							   parity = ODDPARITY;
+							   break;
+						   case _T('e'): // even
+							   parity = EVENPARITY;
+							   break;
 						}
 						
 						// stop bits
@@ -195,8 +195,9 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 			parityAsText = _T("NONE");
 			break;
 	}
-	DbgPrintf(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d"),
-	          portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
+	DbgPrintf(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d, pduMode=%s"),
+	          portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1, 
+             (s_operationMode == OM_PDU) ? _T("true") : _T("false"));
 	
 	if (s_serial.open(portName))
 	{
