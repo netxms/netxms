@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ public class TimestampFieldEditor extends FieldEditor
 		if (type == Type.TIMESTAMP)
 		{
 			timePicker = new DateTime(area, SWT.TIME | SWT.BORDER);
-	      toolkit.adapt(timePicker);
+			toolkit.adapt(timePicker);
 			timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
 		}
 	}
@@ -99,11 +99,11 @@ public class TimestampFieldEditor extends FieldEditor
 	private void parseType()
 	{
 		final String parameterType = parameter.getType();
-		if (parameterType.equals("START_DATE"))
+		if (parameterType.equals("START_DATE")) //$NON-NLS-1$
 		{
 			type = Type.START_DATE;
 		}
-		else if (parameterType.equals("END_DATE"))
+		else if (parameterType.equals("END_DATE")) //$NON-NLS-1$
 		{
 			type = Type.END_DATE;
 		}

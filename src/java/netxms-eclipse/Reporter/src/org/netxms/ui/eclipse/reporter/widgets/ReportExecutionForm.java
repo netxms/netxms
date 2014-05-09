@@ -108,10 +108,11 @@ public class ReportExecutionForm extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ReportExecutionForm(Composite parent, int style, ReportDefinition report)
+	public ReportExecutionForm(Composite parent, int style, ReportDefinition report, IWorkbenchPart workbenchPart)
 	{		
 		super(parent, style);
 		this.report = report;
+		this.workbenchPart = workbenchPart;
 
 		imageCache = new ImageCache(this);
 		setLayout(new FillLayout());
@@ -389,7 +390,6 @@ public class ReportExecutionForm extends Composite
 			gd.grabExcessHorizontalSpace = true;
 			gd.grabExcessVerticalSpace = false;
 			gd.horizontalSpan = parameter.getSpan();
-			System.out.println("span=" + gd.horizontalSpan);
 			editor.setLayoutData(gd);
 			
 			if (layout.numColumns < parameter.getSpan())
@@ -459,16 +459,29 @@ public class ReportExecutionForm extends Composite
 	 */
 	protected void renderReport(final UUID jobId, Date executionTime, final ReportRenderFormat format)
 	{
-		StringBuilder nameTemplate = new StringBuilder();
+		final StringBuilder nameTemplate = new StringBuilder();
 		nameTemplate.append(report.getName());
-		nameTemplate.append(" ");
-		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime));
-		nameTemplate.append(".");
+		nameTemplate.append(" "); //$NON-NLS-1$
+		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime)); //$NON-NLS-1$
+		nameTemplate.append("."); //$NON-NLS-1$
 		nameTemplate.append(format.getExtension());
 
 		FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
-		fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
-		fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" });
+		switch(format)
+		{
+			case PDF:
+				fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
+				fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+				break;
+			case XLS:
+				fileDialog.setFilterNames(new String[] { "Excel Files", "All Files" });
+				fileDialog.setFilterExtensions(new String[] { "*.xls", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+				break;
+			default:
+				fileDialog.setFilterNames(new String[] { "All Files" });
+				fileDialog.setFilterExtensions(new String[] { "*.*" }); //$NON-NLS-1$
+				break;
+		}
 		fileDialog.setFileName(nameTemplate.toString());
 		final String fileName = fileDialog.open();
 
@@ -568,15 +581,6 @@ public class ReportExecutionForm extends Composite
 				return String.format("Cannot execute report %s", report.getName());
 			}
 		}.start();
-	}
-
-	/**
-	 * @param workbenchPart
-	 *            the workbenchPart to set
-	 */
-	public void setWorkbenchPart(IWorkbenchPart workbenchPart)
-	{
-		this.workbenchPart = workbenchPart;
 	}
 
 	/**

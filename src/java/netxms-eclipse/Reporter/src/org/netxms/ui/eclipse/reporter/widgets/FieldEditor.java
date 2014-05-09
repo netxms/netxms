@@ -79,11 +79,17 @@ public abstract class FieldEditor extends Composite
 	 */
 	abstract public String getValue();
 
+	/**
+	 * @param editor
+	 */
 	public void setDependantEditor(FieldEditor editor)
 	{
 		this.dependantEditor = editor;
 	}
 
+	/**
+	 * @param parentEditor
+	 */
 	public void parentEditorChanged(FieldEditor parentEditor)
 	{
 	}

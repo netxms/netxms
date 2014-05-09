@@ -107,10 +107,11 @@ public class ReportExecutionForm extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ReportExecutionForm(Composite parent, int style, ReportDefinition report)
+	public ReportExecutionForm(Composite parent, int style, ReportDefinition report, IWorkbenchPart workbenchPart)
 	{		
 		super(parent, style);
 		this.report = report;
+		this.workbenchPart = workbenchPart;
 
 		imageCache = new ImageCache(this);
 		setLayout(new FillLayout());
@@ -459,13 +460,13 @@ public class ReportExecutionForm extends Composite
 	{
 		final StringBuilder nameTemplate = new StringBuilder();
 		nameTemplate.append(report.getName());
-		nameTemplate.append(" ");
-		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime));
-		nameTemplate.append(".");
+		nameTemplate.append(" "); //$NON-NLS-1$
+		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime)); //$NON-NLS-1$
+		nameTemplate.append("."); //$NON-NLS-1$
 		nameTemplate.append(format.getExtension());
 
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -540,15 +541,6 @@ public class ReportExecutionForm extends Composite
 				return String.format("Cannot execute report %s", report.getName());
 			}
 		}.start();
-	}
-
-	/**
-	 * @param workbenchPart
-	 *            the workbenchPart to set
-	 */
-	public void setWorkbenchPart(IWorkbenchPart workbenchPart)
-	{
-		this.workbenchPart = workbenchPart;
 	}
 
 	/**
