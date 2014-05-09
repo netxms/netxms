@@ -98,7 +98,7 @@ Threshold::Threshold(Threshold *src)
  * This constructor assumes that SELECT query look as following:
  * SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
  *        sample_count,script,event_code,current_state,rearm_event_code,
- *        repeat_interval,current_severity,last_event_timestamp FROM thresholds
+ *        repeat_interval,current_severity,last_event_timestamp,match_count FROM thresholds
  */
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 {
@@ -124,7 +124,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 	m_repeatInterval = DBGetFieldLong(hResult, iRow, 10);
 	m_currentSeverity = (BYTE)DBGetFieldLong(hResult, iRow, 11);
 	m_lastEventTimestamp = (time_t)DBGetFieldULong(hResult, iRow, 12);
-	m_numMatches = 0;
+	m_numMatches = DBGetFieldLong(hResult, iRow, 13);
 }
 
 /**
@@ -183,8 +183,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
 			_T("check_function,check_operation,sample_count,script,event_code,")
 			_T("sequence_number,current_state,rearm_event_code,repeat_interval,")
-			_T("current_severity,last_event_timestamp,threshold_id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+			_T("current_severity,last_event_timestamp,match_count,threshold_id) ")
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	else
 	{
@@ -192,7 +192,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 			_T("UPDATE thresholds SET item_id=?,fire_value=?,rearm_value=?,check_function=?,")
          _T("check_operation=?,sample_count=?,script=?,event_code=?,")
          _T("sequence_number=?,current_state=?,rearm_event_code=?,")
-			_T("repeat_interval=?,current_severity=?,last_event_timestamp=? WHERE threshold_id=?"));
+			_T("repeat_interval=?,current_severity=?,last_event_timestamp=?,")
+         _T("match_count=? WHERE threshold_id=?"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -211,7 +212,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_repeatInterval);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_lastEventTimestamp);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_id);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_numMatches);
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

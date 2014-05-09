@@ -360,11 +360,26 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V314 to V315
+ */
+static BOOL H_UpgradeFromV314(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE thresholds ADD match_count integer\n")
+      _T("UPDATE thresholds SET match_count=0 WHERE current_state=0\n")
+      _T("UPDATE thresholds SET match_count=1 WHERE current_state<>0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='315' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V313 to V314
  */
 static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
 {
-   //Replace in all file download(7) object tools double back shalsh to simple backslash
+   // Replace double backslash with single backslash in all "file download" (code 7) object tools
    DB_RESULT hResult = SQLSelect(_T("SELECT tool_id, tool_data FROM object_tools WHERE tool_type=7"));
    if (hResult != NULL)
    {
@@ -7608,6 +7623,7 @@ static struct
    { 311, 312, H_UpgradeFromV311 },
    { 312, 313, H_UpgradeFromV312 },
    { 313, 314, H_UpgradeFromV313 },
+   { 314, 315, H_UpgradeFromV314 },
    { 0, 0, NULL }
 };
 

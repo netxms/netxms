@@ -282,7 +282,7 @@ bool DCItem::loadThresholdsFromDB()
 	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
               _T("check_operation,sample_count,script,event_code,current_state,")
               _T("rearm_event_code,repeat_interval,current_severity,")
-				  _T("last_event_timestamp FROM thresholds WHERE item_id=? ")
+				  _T("last_event_timestamp,match_count FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
 	if (hStmt != NULL)
 	{

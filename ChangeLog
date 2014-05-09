@@ -15,6 +15,7 @@
 - Attribute "instance" added to NXSL class "DCI"
 - Added "L" extension to DCI custom schedules
 - Traps from unmanaged nodes ignored
+- Fixed repeated threshold violation events after server restart
 - Management console:
    - DCI values can be shown on network map links
    - DCI value can be shown on map as immage, that checnges depending on DCI value

@@ -883,6 +883,7 @@ CREATE TABLE thresholds
 	repeat_interval integer not null,
 	current_state integer not null,
 	current_severity integer not null,
+   match_count integer not null,
 	last_event_timestamp integer not null,
 	PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
