@@ -581,10 +581,10 @@ protected:
    UINT32 setupEncryption(RSA *pServerKey);
 	UINT32 connectToService(UINT32 service);
 
-   void Lock() { MutexLock(m_mutexDataLock); }
-   void Unlock() { MutexUnlock(m_mutexDataLock); }
+   void lock() { MutexLock(m_mutexDataLock); }
+   void unlock() { MutexUnlock(m_mutexDataLock); }
 
-   virtual void PrintMsg(const TCHAR *format, ...);
+   virtual void printMessage(const TCHAR *format, ...);
    virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
    virtual bool onMessage(CSCPMessage *msg);
 

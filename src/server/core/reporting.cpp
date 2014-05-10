@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2013 Alex Kirhenshtein
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ public:
    {
    }
 
-   virtual void PrintMsg(const TCHAR *format, ...)
+   virtual void printMessage(const TCHAR *format, ...)
    {
       va_list args;
       va_start(args, format);
@@ -157,7 +157,7 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
       {
          if (m_connector->connect(0) == ISC_ERR_SUCCESS)
          {
-            DbgPrintf(6, _T("Connection to Reporting Server restored"));
+            DbgPrintf(2, _T("Connection to Reporting Server restored"));
          }
       }
 	}
