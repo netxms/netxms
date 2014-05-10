@@ -360,6 +360,45 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V315 to V316
+ */
+static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE access_points ADD ap_state integer\n")
+      _T("UPDATE access_points SET ap_state=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_ADOPTED, _T("SYS_AP_ADOPTED"), SEVERITY_NORMAL, EF_LOG,
+      _T("Access point %2 changed state to ADOPTED"),
+		_T("Generated when access point state changes to ADOPTED.\r\n")
+		_T("Parameters:\r\n")
+		_T("    1) Access point object ID\r\n")
+		_T("    2) Access point name\r\n")
+		_T("    3) Access point MAC address\r\n")
+		_T("    4) Access point IP address\r\n")
+		_T("    5) Access point vendor name\r\n")
+		_T("    6) Access point model\r\n")
+		_T("    7) Access point serial number")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNADOPTED, _T("SYS_AP_UNADOPTED"), SEVERITY_MAJOR, EF_LOG,
+      _T("Access point %2 changed state to UNADOPTED"),
+		_T("Generated when access point state changes to UNADOPTED.\r\n")
+		_T("Parameters:\r\n")
+		_T("    1) Access point object ID\r\n")
+		_T("    2) Access point name\r\n")
+		_T("    3) Access point MAC address\r\n")
+		_T("    4) Access point IP address\r\n")
+		_T("    5) Access point vendor name\r\n")
+		_T("    6) Access point model\r\n")
+		_T("    7) Access point serial number")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='316' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V314 to V315
  */
 static BOOL H_UpgradeFromV314(int currVersion, int newVersion)
@@ -7624,6 +7663,7 @@ static struct
    { 312, 313, H_UpgradeFromV312 },
    { 313, 314, H_UpgradeFromV313 },
    { 314, 315, H_UpgradeFromV314 },
+   { 315, 316, H_UpgradeFromV315 },
    { 0, 0, NULL }
 };
 

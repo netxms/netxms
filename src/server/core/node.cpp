@@ -1312,7 +1312,6 @@ restart_agent_check:
 		}
 	}
 
-
    // Get uptime and update boot time
    if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
    {
@@ -2314,10 +2313,9 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 				for(int i = 0; i < aps->size(); i++)
 				{
 					AccessPointInfo *info = aps->get(i);
-					if (info->getState() != AP_ADOPTED)
-						continue;
+					if (info->getState() == AP_ADOPTED)
+   					adopted++;
 
-					adopted++;
 					AccessPoint *ap = FindAccessPointByMAC(info->getMacAddr());
 					if (ap == NULL)
 					{
@@ -2341,9 +2339,13 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 						DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_szName, ap->Name(), ap->Id());
 					}
 					ap->attachToNode(m_dwId);
-					ap->updateRadioInterfaces(info->getRadioInterfaces());
-					ap->updateInfo(NULL, info->getModel(), info->getSerial());
+					if (info->getState() == AP_ADOPTED)
+               {
+					   ap->updateRadioInterfaces(info->getRadioInterfaces());
+					   ap->updateInfo(NULL, info->getModel(), info->getSerial());
+               }
 					ap->unhide();
+               ap->updateState(info->getState());
 				}
 
 				LockData();

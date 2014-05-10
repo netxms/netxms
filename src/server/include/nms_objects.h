@@ -844,6 +844,7 @@ protected:
 	TCHAR *m_model;
 	TCHAR *m_serialNumber;
 	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
+   AccessPointState m_state;
 
 public:
    AccessPoint();
@@ -862,10 +863,12 @@ public:
 	BYTE *getMacAddr() { return m_macAddr; }
 	bool isMyRadio(int rfIndex);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
+   AccessPointState getState() { return m_state; }
 
 	void attachToNode(UINT32 nodeId);
 	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
+   void updateState(AccessPointState state);
 };
 
 /**

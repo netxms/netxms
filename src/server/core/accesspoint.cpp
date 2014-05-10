@@ -32,6 +32,7 @@ AccessPoint::AccessPoint() : DataCollectionTarget()
 	m_model = NULL;
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
+   m_state = AP_ADOPTED;
 }
 
 /**
@@ -45,6 +46,7 @@ AccessPoint::AccessPoint(const TCHAR *name, BYTE *macAddr) : DataCollectionTarge
 	m_model = NULL;
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
+   m_state = AP_ADOPTED;
 	m_isHidden = true;
 }
 
@@ -73,7 +75,7 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
    }
 
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,node_id FROM access_points WHERE id=%d"), (int)m_dwId);
+	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,node_id,ap_state FROM access_points WHERE id=%d"), (int)m_dwId);
 	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 	if (hResult == NULL)
 		return FALSE;
@@ -83,6 +85,7 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 	m_model = DBGetField(hResult, 0, 2, NULL, 0);
 	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
 	UINT32 nodeId = DBGetFieldULong(hResult, 0, 4);
+   m_state = (DBGetFieldLong(hResult, 0, 5) == AP_ADOPTED) ? AP_ADOPTED : AP_UNADOPTED;
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -133,9 +136,9 @@ BOOL AccessPoint::SaveToDB(DB_HANDLE hdb)
    BOOL bResult;
 	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("access_points"), _T("id"), m_dwId))
-		hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=?,ap_state=? WHERE id=?"));
 	else
-		hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,id) VALUES (?,?,?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,id) VALUES (?,?,?,?,?,?,?)"));
 	if (hStmt != NULL)
 	{
 		TCHAR macStr[16];
@@ -144,7 +147,8 @@ BOOL AccessPoint::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
-		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_state);
+		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_dwId);
 
 		bResult = DBExecute(hStmt);
 
@@ -197,6 +201,7 @@ void AccessPoint::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
 	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+   msg->SetVariable(VID_STATE, (UINT16)m_state);
 
    if (m_radioInterfaces != NULL)
    {
@@ -341,4 +346,24 @@ void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHA
 
 	Modify();
 	UnlockData();
+}
+
+/**
+ * Update access point state
+ */
+void AccessPoint::updateState(AccessPointState state)
+{
+   if (state == m_state)
+      return;
+
+	LockData();
+   m_state = state;
+   if (m_iStatus != STATUS_UNMANAGED)
+      m_iStatus = (state == AP_ADOPTED) ? STATUS_NORMAL : STATUS_MAJOR;
+   Modify();
+	UnlockData();
+
+   static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
+   PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : EVENT_AP_UNADOPTED, m_nodeId, "ishasss", names,
+      m_dwId, m_szName, m_macAddr, m_dwIpAddr, CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
 }

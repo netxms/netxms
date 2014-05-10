@@ -185,11 +185,9 @@ CREATE TABLE zones
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Mobile device objects
 */
-
 CREATE TABLE mobile_devices
 (
 	id integer not null,
@@ -204,11 +202,9 @@ CREATE TABLE mobile_devices
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Access point objects
 */
-
 CREATE TABLE access_points
 (
 	id integer not null,
@@ -217,14 +213,13 @@ CREATE TABLE access_points
 	vendor varchar(64) null,
 	model varchar(128) null,
 	serial_number varchar(64) null,
+   ap_state integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
-
 
 /*
 ** Rack objects
 */
-
 CREATE TABLE racks
 (
 	id integer not null,
@@ -232,11 +227,9 @@ CREATE TABLE racks
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Nodes information
 */
-
 CREATE TABLE nodes
 (
 	id integer not null,
