@@ -22,14 +22,15 @@
 
 #include "netscreen.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Driver name
+ */
 static TCHAR s_driverName[] = _T("NETSCREEN");
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
+/**
+ * Driver version
+ */
+static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 /**
  * Get driver name

@@ -23,9 +23,13 @@
 #include "symbol-ws.h"
 
 /**
- * Static data
+ * Driver name
  */
 static TCHAR s_driverName[] = _T("SYMBOL-WS");
+
+/**
+ * Driver version
+ */
 static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 /**
@@ -64,18 +68,6 @@ bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
    TCHAR buffer[1024];
    return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.1.6.1.10.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS;
-}
-
-/**
- * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
- *
- * @param snmp SNMP transport
- * @param attributes Node's custom attributes
- */
-void SymbolDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
-{
 }
 
 /**
@@ -337,7 +329,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    return ret;
 }
 
-/*
+/**
  * Get access points
  *
  * @param snmp SNMP transport
@@ -420,7 +412,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    {
       WirelessStationInfo *info = new WirelessStationInfo;
 
-      memcpy(info->macAddr, var->getValue(), MAC_ADDR_LENGTH);
+      var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
       info->ipAddr = ipAddr;
       info->vlan = vlanInfex;
       nx_strncpy(info->ssid, ssid, MAX_OBJECT_NAME);
@@ -432,7 +424,8 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    return ret;
 }
 
-/*
+/**
+ * Get registered wireless stations (clients)
  *
  * @param snmp SNMP transport
  * @param attributes Node custom attributes

@@ -25,7 +25,7 @@
 /**
  * Access point info constructor
  */
-AccessPointInfo::AccessPointInfo(BYTE *macAddr, int state, const TCHAR *name, const TCHAR *model, const TCHAR *serial)
+AccessPointInfo::AccessPointInfo(BYTE *macAddr, AccessPointState state, const TCHAR *name, const TCHAR *model, const TCHAR *serial)
 {
 	memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
 	m_state = state;
