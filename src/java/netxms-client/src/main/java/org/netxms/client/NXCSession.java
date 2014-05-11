@@ -283,6 +283,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private int defaultDciPollingInterval;
    private boolean strictAlarmStatusFlow;
    private boolean timedAlarmAckEnabled;
+   private int minViewRefreshInterval;
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
 
@@ -1661,10 +1662,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          helpdeskLinkActive = response.getVariableAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
 
          defaultDciPollingInterval = response.getVariableAsInteger(NXCPCodes.VID_POLLING_INTERVAL);
-         if (defaultDciPollingInterval == 0) defaultDciPollingInterval = 60;
+         if (defaultDciPollingInterval == 0) 
+            defaultDciPollingInterval = 60;
 
          defaultDciRetentionTime = response.getVariableAsInteger(NXCPCodes.VID_RETENTION_TIME);
-         if (defaultDciRetentionTime == 0) defaultDciRetentionTime = 30;
+         if (defaultDciRetentionTime == 0) 
+            defaultDciRetentionTime = 30;
+         
+         minViewRefreshInterval = response.getVariableAsInteger(NXCPCodes.VID_VIEW_REFRESH_INTERVAL);
+         if (minViewRefreshInterval <= 0)
+            minViewRefreshInterval = 200;
 
          strictAlarmStatusFlow = response.getVariableAsBoolean(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
          timedAlarmAckEnabled = response.getVariableAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
@@ -7053,6 +7060,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       return defaultDciPollingInterval;
    }
    
+   /**
+    * @return the minViewRefreshInterval
+    */
+   public int getMinViewRefreshInterval()
+   {
+      return minViewRefreshInterval;
+   }
+
    /**
     * @return true if alarm status flow set to "strict" mode
     */

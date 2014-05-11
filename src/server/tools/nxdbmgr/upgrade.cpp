@@ -360,6 +360,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V316 to V317
+ */
+static BOOL H_UpgradeFromV316(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("MinViewRefreshInterval"), _T("1000"), 1, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='317' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V315 to V316
  */
 static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
@@ -7664,6 +7674,7 @@ static struct
    { 313, 314, H_UpgradeFromV313 },
    { 314, 315, H_UpgradeFromV314 },
    { 315, 316, H_UpgradeFromV315 },
+   { 316, 317, H_UpgradeFromV316 },
    { 0, 0, NULL }
 };
 

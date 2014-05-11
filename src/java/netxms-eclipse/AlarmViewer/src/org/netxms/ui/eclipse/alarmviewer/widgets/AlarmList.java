@@ -83,6 +83,7 @@ import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -108,6 +109,7 @@ public class AlarmList extends Composite
 	private final IViewPart viewPart;
 	private NXCSession session = null;
 	private NXCListener clientListener = null;
+	private RefreshTimer refreshTimer;
 	private SortableTableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
 	private Point toolTipLocation;
@@ -228,6 +230,17 @@ public class AlarmList extends Composite
 		});
 		
 		refresh();
+		
+		refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
+         @Override
+         public void run()
+         {
+            synchronized(alarmList)
+            {
+               alarmViewer.refresh();
+            }
+         }
+      });
 
 		// Add client library listener
 		clientListener = new NXCListener() {
@@ -242,7 +255,7 @@ public class AlarmList extends Composite
 						{
 							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
 						}
-						scheduleAlarmViewerUpdate();
+						refreshTimer.execute();
 						break;
 					case NXCNotification.ALARM_TERMINATED:
 					case NXCNotification.ALARM_DELETED:
@@ -250,7 +263,7 @@ public class AlarmList extends Composite
 						{
 							alarmList.remove(((Alarm)n.getObject()).getId());
 						}
-						scheduleAlarmViewerUpdate();
+                  refreshTimer.execute();
 						break;
 					default:
 						break;
@@ -320,26 +333,6 @@ public class AlarmList extends Composite
 		return alarmViewer;
 	}
 		
-	/**
-	 * Schedule alarm viewer update
-	 */
-	private void scheduleAlarmViewerUpdate()
-	{
-		getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run()
-			{
-				if (!alarmViewer.getControl().isDisposed())
-				{
-					synchronized(alarmList)
-					{
-						alarmViewer.refresh();
-					}
-				}
-			}
-		});
-	}
-	
 	/**
 	 * Create actions
 	 */
@@ -478,7 +471,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(viewPart.getSite().getShell());//PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell()
+            AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(viewPart.getSite().getShell());
             if (dlg.open() == Window.OK)
             {
                int time = dlg.getTime();

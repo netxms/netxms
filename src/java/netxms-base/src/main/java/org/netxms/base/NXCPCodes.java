@@ -800,6 +800,7 @@ public class NXCPCodes
    public static final long VID_HELPDESK_LINK_ACTIVE = 470;
    public static final long VID_URL = 471;
    public static final long VID_PEER_PROTOCOL = 472;
+   public static final long VID_VIEW_REFRESH_INTERVAL = 473;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

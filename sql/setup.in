@@ -84,6 +84,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LogAllSNMPTraps','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MailEncoding','iso-8859-1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinPasswordLength','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinViewRefreshInterval','1000',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MobileDeviceListenerPort','4747',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfBusinessServicePollers','10',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfConditionPollers','10',1,1);

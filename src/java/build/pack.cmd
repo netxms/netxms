@@ -1,6 +1,6 @@
 @echo off
 call set_build_number.cmd
-set version=1.2.14-RC5-%build_number%-cortex
+set version=1.2.14-RC6-%build_number%
 rem set version=1.2.14
 
 cd win32.win32.x86
