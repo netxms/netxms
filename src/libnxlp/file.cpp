@@ -297,13 +297,23 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						break;
 					}
 
-					if (st.st_size != stn.st_size)
+#ifdef _WIN32
+					if (st.st_size > stn.st_size)
 					{
 						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file size differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file size for fstat(%d) is greater then for stat(%s), assume file rename"), fh, fname);
 						readFromStart = true;
 						break;
 					}
+#else
+					if ((st.st_ino != stn.st_ino) || (st.st_dev != stn.st_dev))
+					{
+						if (logger != NULL)
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file device or inode differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+						readFromStart = true;
+						break;
+					}
+#endif
 
 					if ((size_t)st.st_size != size)
 					{
