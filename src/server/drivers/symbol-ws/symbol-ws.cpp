@@ -77,7 +77,7 @@ bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    int ret = CLUSTER_MODE_UNKNOWN;
 
@@ -121,7 +121,7 @@ int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, vo
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return true;
 }
@@ -336,7 +336,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
@@ -431,7 +431,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
 

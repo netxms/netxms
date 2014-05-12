@@ -111,7 +111,7 @@ static UINT32 CountingSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNM
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool MikrotikDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+bool MikrotikDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    int count = 0;
    SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), CountingSnmpWalkerCallback, &count, FALSE);
@@ -195,7 +195,7 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"),
@@ -241,7 +241,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.1"), // mtxrWlRtabAddr

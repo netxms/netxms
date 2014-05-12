@@ -88,7 +88,7 @@ bool Ping3Driver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *Ping3Driver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *Ping3Driver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
    InterfaceList *ifList = NULL;
 

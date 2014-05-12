@@ -73,7 +73,7 @@ bool NtwsDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
+void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
 }
 
@@ -84,7 +84,7 @@ void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int NtwsDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+int NtwsDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return CLUSTER_MODE_UNKNOWN;
 }
@@ -96,7 +96,7 @@ int NtwsDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool NtwsDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+bool NtwsDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return true;
 }
@@ -211,7 +211,7 @@ static UINT32 HandlerRadioList(UINT32 version, SNMP_Variable *var, SNMP_Transpor
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
@@ -322,7 +322,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
 
