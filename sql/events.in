@@ -838,7 +838,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_AP_ADOPTED, 'SYS_AP_UNADOPTED',
+		EVENT_AP_UNADOPTED, 'SYS_AP_UNADOPTED',
 		EVENT_SEVERITY_MAJOR, 1,
 		'Access point %2 changed state to UNADOPTED',
 		'Generated when access point state changes to UNADOPTED.' CONCAT CRLF CONCAT

@@ -1196,14 +1196,13 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
    xml = LoadFile(file, &size);
    if (xml != NULL)
    {
-      success = loadXmlConfigFromMemory((char *) xml, (int) size, file, topLevelTag);
+      success = loadXmlConfigFromMemory((char *)xml, (int)size, file, topLevelTag);
+      free(xml);
    }
    else
    {
       success = false;
    }
-   safe_free(xml);
-
    return success;
 }
 
