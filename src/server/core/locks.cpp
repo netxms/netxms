@@ -56,7 +56,7 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
 	{ UNLOCKED, _T("deprecated: Action Configuration Database"), _T("") },
    { UNLOCKED, _T("SNMP Trap Configuration"), _T("") },
    { UNLOCKED, _T("Package Database"), _T("") },
-   { UNLOCKED, _T("Object Tools Configuration"), _T("") }
+   { UNLOCKED, _T("deprecated: Object Tools Configuration"), _T("") }
 };
 
 
