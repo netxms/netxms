@@ -67,7 +67,6 @@ static UINT32 ReturnDBFailure(DB_HANDLE hdb, DB_STATEMENT statment)
 BOOL IsTableTool(UINT32 dwToolId)
 {
    DB_RESULT hResult;
-   TCHAR szBuffer[256];
    LONG nType;
    BOOL bResult = FALSE;
 
@@ -103,7 +102,6 @@ BOOL IsTableTool(UINT32 dwToolId)
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId)
 {
    DB_RESULT hResult;
-   TCHAR szBuffer[256];
 	int i, nRows;
 	UINT32 dwId;
    BOOL bResult = FALSE;

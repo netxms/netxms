@@ -162,6 +162,10 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
          memset(macAddr, 0, sizeof(macAddr));
          response->getVariable(0)->getRawValue(macAddr, sizeof(macAddr));
 
+         // At least some Mikrotik devices returns empty BSSID - use radio interface MAC in that case
+         if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
+            response->getVariable(3)->getRawValue(macAddr, MAC_ADDR_LENGTH);
+
          TCHAR name[MAX_OBJECT_NAME];
          AccessPointInfo *ap = new AccessPointInfo(macAddr, AP_ADOPTED, var->getValueAsString(name, MAX_OBJECT_NAME), _T(""), _T(""));
       
@@ -169,6 +173,7 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
          memset(&radio, 0, sizeof(RadioInterfaceInfo));
          response->getVariable(2)->getValueAsString(radio.name, 64);
          response->getVariable(3)->getRawValue(radio.macAddr, MAC_ADDR_LENGTH);
+         radio.index = apIndex;
 
          int freq = response->getVariable(1)->getValueAsInt();
          for(int i = 0; i < 14; i++)
@@ -181,6 +186,7 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
          }
 
          ap->addRadioInterface(&radio);
+         apList->add(ap);
       }
       delete response;
    }
@@ -214,14 +220,15 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
 {
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
+   SNMP_ObjectId *name = var->getName();
+   UINT32 apIndex = name->getValue()[name->getLength() - 1];
+
    WirelessStationInfo *info = new WirelessStationInfo;
    var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
    info->ipAddr = 0;
    info->vlan = 1;
-   info->rfIndex = 0;
+   info->rfIndex = apIndex;
 
-   SNMP_ObjectId *name = var->getName();
-   UINT32 apIndex = name->getValue()[name->getLength() - 1];
    TCHAR oid[256];
    _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4.%u"), apIndex);
    if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, info->ssid, sizeof(info->ssid), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
@@ -230,7 +237,6 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    }
 
    wsList->add(info);
-
    return SNMP_ERR_SUCCESS;
 }
 

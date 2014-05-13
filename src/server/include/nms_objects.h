@@ -1115,6 +1115,8 @@ public:
 	Interface *findInterfaceByIP(UINT32 ipAddr);
 	Interface *findInterfaceBySlotAndPort(UINT32 slot, UINT32 port);
 	Interface *findBridgePort(UINT32 bridgePortNumber);
+   AccessPoint *findAccessPointByMAC(const BYTE *macAddr);
+   AccessPoint *findAccessPointByRadioId(int rfIndex);
 	BOOL isMyIP(UINT32 dwIpAddr);
    void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int *adminState, int *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, int *adminState, int *operState);
@@ -2085,7 +2087,6 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, UINT32 dwNodeAddr);
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
-AccessPoint NXCORE_EXPORTABLE *FindAccessPointByRadioId(int rfIndex);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(UINT32 dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID);

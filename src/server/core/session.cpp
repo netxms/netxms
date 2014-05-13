@@ -7325,7 +7325,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
    CSCPMessage msg;
    DB_RESULT hResult;
    UINT32 dwToolId, dwId, *pdwAcl;
-   TCHAR *pszStr, szQuery[1024], szBuffer[MAX_DB_STRING];
+   TCHAR *pszStr, szBuffer[MAX_DB_STRING];
    int i, iNumRows, nType;
 
    // Prepare response message

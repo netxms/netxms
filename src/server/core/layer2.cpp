@@ -77,7 +77,8 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 	for(int i = 0; (i < nodes->size()) && (iface == NULL); i++)
 	{
 		Node *node = (Node *)nodes->get(i);
-		ForwardingDatabase *fdb = node->getSwitchForwardingDatabase();
+		
+      ForwardingDatabase *fdb = node->getSwitchForwardingDatabase();
 		if (fdb != NULL)
 		{
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
@@ -111,6 +112,13 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 			}
 			fdb->decRefCount();
 		}
+
+      if (node->isWirelessController())
+      {
+			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): node %s [%d] is a wireless controller, checking associated stations"),
+			          macAddrText, node->Name(), (int)node->Id());
+      }
+
       node->decRefCount();
 	}
 	delete nodes;

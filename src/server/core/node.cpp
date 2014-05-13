@@ -737,22 +737,19 @@ Interface *Node::findInterfaceBySlotAndPort(UINT32 slot, UINT32 port)
  */
 Interface *Node::findInterfaceByMAC(const BYTE *macAddr)
 {
-   UINT32 i;
-   Interface *pInterface;
-
+   Interface *iface = NULL;
    LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
-         pInterface = (Interface *)m_pChildList[i];
-			if (!memcmp(pInterface->getMacAddr(), macAddr, MAC_ADDR_LENGTH))
+			if (!memcmp(((Interface *)m_pChildList[i])->getMacAddr(), macAddr, MAC_ADDR_LENGTH))
          {
-            UnlockChildList();
-            return pInterface;
+            iface = (Interface *)m_pChildList[i];
+            break;
          }
       }
    UnlockChildList();
-   return NULL;
+   return iface;
 }
 
 /**
@@ -826,6 +823,46 @@ Interface *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, bool
 		}
    UnlockChildList();
    return cp;
+}
+
+/**
+ * Find attached access point by MAC address
+ */
+AccessPoint *Node::findAccessPointByMAC(const BYTE *macAddr)
+{
+   AccessPoint *ap = NULL;
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_ACCESSPOINT)
+      {
+         if (!memcmp(((AccessPoint *)m_pChildList[i])->getMacAddr(), macAddr, MAC_ADDR_LENGTH))
+         {
+            ap = (AccessPoint *)m_pChildList[i];
+            break;
+         }
+      }
+   UnlockChildList();
+   return ap;
+}
+
+/**
+ * Find access point by radio ID (radio interface index)
+ */
+AccessPoint *Node::findAccessPointByRadioId(int rfIndex)
+{
+   AccessPoint *ap = NULL;
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_ACCESSPOINT)
+      {
+         if (((AccessPoint *)m_pChildList[i])->isMyRadio(rfIndex))
+         {
+            ap = (AccessPoint *)m_pChildList[i];
+            break;
+         }
+      }
+   UnlockChildList();
+   return ap;
 }
 
 /**
@@ -2304,6 +2341,8 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 			m_dwFlags |= NF_IS_WIFI_CONTROLLER;
 			UnlockData();
 
+         int clusterMode = m_driver->getClusterMode(pTransport, &m_customAttributes, m_driverData);
+
 			ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, &m_customAttributes, m_driverData);
 			if (aps != NULL)
 			{
@@ -2316,7 +2355,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 					if (info->getState() == AP_ADOPTED)
    					adopted++;
 
-					AccessPoint *ap = FindAccessPointByMAC(info->getMacAddr());
+               AccessPoint *ap = (clusterMode == CLUSTER_MODE_STANDALONE) ? findAccessPointByMAC(info->getMacAddr()) : FindAccessPointByMAC(info->getMacAddr());
 					if (ap == NULL)
 					{
 						String name;
@@ -5181,7 +5220,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				{
 					WirelessStationInfo *ws = stations->get(i);
 
-					AccessPoint *ap = FindAccessPointByRadioId(ws->rfIndex);
+					AccessPoint *ap = findAccessPointByRadioId(ws->rfIndex);
 					if (ap != NULL)
 					{
 						ws->apObjectId = ap->Id();
@@ -5195,6 +5234,14 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 
 					Node *node = FindNodeByMAC(ws->macAddr);
 					ws->nodeId = (node != NULL) ? node->Id() : 0;
+               if ((node != NULL) && (ws->ipAddr == 0))
+               {
+                  Interface *iface = node->findInterfaceByMAC(ws->macAddr);
+                  if ((iface != NULL) && (iface->IpAddr() != 0))
+                     ws->ipAddr = iface->IpAddr();
+                  else
+                     ws->ipAddr = node->IpAddr();
+               }
 				}
 			}
 
