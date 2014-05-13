@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,8 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Interface;
+import org.netxms.client.constants.ConnectionPointType;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -262,37 +263,65 @@ public class HostSearchResults extends ViewPart
 		{
 			Node host = (Node)session.findObjectById(cp.getLocalNodeId());
 			Node bridge = (Node)session.findObjectById(cp.getNodeId());
-			Interface iface = (Interface)session.findObjectById(cp.getInterfaceId());
+			AbstractObject iface = session.findObjectById(cp.getInterfaceId());
 			
 			if ((bridge != null) && (iface != null))
 			{
-				if (host != null)
-				{
-					MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
-					      String.format(Messages.get().HostSearchResults_NodeConnected,
-					            host.getObjectName(), cp.isDirectlyConnected() ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
-					            bridge.getObjectName(), iface.getObjectName()));
-				}
-				else
-				{
-				   if (cp.getLocalIpAddress() != null)
-				   {
-	               MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
-	                     String.format(Messages.get().HostSearchResults_NodeIpMacConnected,
-	                           cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
-	                           cp.isDirectlyConnected() ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
-	                           bridge.getObjectName(), iface.getObjectName()));
-				   }
-				   else
-				   {
+			   if (cp.getType() == ConnectionPointType.WIRELESS)
+			   {
+               if (host != null)
+               {
                   MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
-                        String.format(Messages.get().HostSearchResults_NodeMacConnected,
-                              cp.getLocalMacAddress(),
-                              cp.isDirectlyConnected() ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
-                              bridge.getObjectName(), iface.getObjectName()));
-				   }
-				}
-				
+                        String.format("Node %1$s is connected to wireless access point %2$s/%3$s",
+                              host.getObjectName(), bridge.getObjectName(), iface.getObjectName()));
+               }
+               else
+               {
+                  if (cp.getLocalIpAddress() != null)
+                  {
+                     MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
+                           String.format("Node with IP address %1$s and MAC address %2$s is connected to wireless access point %3$s/%4$s",
+                                 cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
+                                 bridge.getObjectName(), iface.getObjectName()));
+                  }
+                  else
+                  {
+                     MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
+                           String.format("Node with MAC address %1$s is connected to wireless access point %2$s/%3$s",
+                                 cp.getLocalMacAddress(), bridge.getObjectName(), iface.getObjectName()));
+                  }
+               }
+			   }
+			   else
+			   {
+   				if (host != null)
+   				{
+   					MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
+   					      String.format(Messages.get().HostSearchResults_NodeConnected,
+   					            host.getObjectName(), cp.getType() == ConnectionPointType.DIRECT ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
+   					            bridge.getObjectName(), iface.getObjectName()));
+   				}
+   				else
+   				{
+   				   if (cp.getLocalIpAddress() != null)
+   				   {
+   	               MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
+   	                     String.format(Messages.get().HostSearchResults_NodeIpMacConnected,
+   	                           cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
+   	                           cp.getType() == ConnectionPointType.DIRECT ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
+   	                           bridge.getObjectName(), iface.getObjectName()));
+   				   }
+   				   else
+   				   {
+                     MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
+                           String.format(Messages.get().HostSearchResults_NodeMacConnected,
+                                 cp.getLocalMacAddress(),
+                                 cp.getType() == ConnectionPointType.DIRECT ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
+                                 bridge.getObjectName(), iface.getObjectName()));
+   				   }
+   				}
+			   }
+			   
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				IViewPart part = page.showView(ID);
 				((HostSearchResults)part).addResult(cp);

@@ -805,15 +805,15 @@ Interface *Node::findBridgePort(UINT32 bridgePortNumber)
 /**
  * Find connection point for node
  */
-Interface *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, bool *exactMatch)
+NetObj *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type)
 {
-	Interface *cp = NULL;
+	NetObj *cp = NULL;
    LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
          Interface *iface = (Interface *)m_pChildList[i];
-			cp = FindInterfaceConnectionPoint(iface->getMacAddr(), exactMatch);
+			cp = FindInterfaceConnectionPoint(iface->getMacAddr(), type);
 			if (cp != NULL)
 			{
 				*localIfId = iface->Id();
@@ -6031,4 +6031,27 @@ void Node::writeWsListToMessage(CSCPMessage *msg)
 		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)0);
 	}
 	UnlockData();
+}
+
+/**
+ * Get wireless stations registered on this AP/controller.
+ * Returned list must be destroyed by caller.
+ */
+ObjectArray<WirelessStationInfo> *Node::getWirelessStations()
+{
+   ObjectArray<WirelessStationInfo> *ws = NULL;
+
+   LockData();
+   if ((m_wirelessStations != NULL) && (m_wirelessStations->size() > 0))
+   {
+      ws = new ObjectArray<WirelessStationInfo>(m_wirelessStations->size(), 16, true);
+      for(int i = 0; i < m_wirelessStations->size(); i++)
+      {
+         WirelessStationInfo *wsi = new WirelessStationInfo;
+         memcpy(wsi, m_wirelessStations->get(i), sizeof(WirelessStationInfo));
+         ws->add(wsi);
+      }
+   }
+   UnlockData();
+   return ws;
 }

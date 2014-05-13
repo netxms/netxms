@@ -745,7 +745,7 @@ public class NXCPCodes
 	public static final long VID_OPER_STATE = 415;
 	public static final long VID_EXPECTED_STATE = 416;
 	public static final long VID_LINK_COLOR = 417;
-	public static final long VID_EXACT_MATCH = 418;
+	public static final long VID_CONNECTION_TYPE = 418;
 	public static final long VID_RESOLVED_BY_USER = 419;
 	public static final long VID_IS_STICKY = 420;
 	public static final long VID_DATE_FORMAT = 421;

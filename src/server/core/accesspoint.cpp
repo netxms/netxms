@@ -84,7 +84,7 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
 	m_model = DBGetField(hResult, 0, 2, NULL, 0);
 	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
-	UINT32 nodeId = DBGetFieldULong(hResult, 0, 4);
+	m_nodeId = DBGetFieldULong(hResult, 0, 4);
    m_state = (DBGetFieldLong(hResult, 0, 5) == AP_ADOPTED) ? AP_ADOPTED : AP_UNADOPTED;
 	DBFreeResult(hResult);
 
@@ -99,14 +99,14 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 	BOOL success = FALSE;
    if (!m_isDeleted)
    {
-      NetObj *object = FindObjectById(nodeId);
+      NetObj *object = FindObjectById(m_nodeId);
       if (object == NULL)
       {
-         nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
+         nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, m_nodeId);
       }
       else if (object->Type() != OBJECT_NODE)
       {
-         nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
+         nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_nodeId);
       }
       else
       {
@@ -326,6 +326,14 @@ void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
 		}
 	}
 	UnlockData();
+}
+
+/**
+ * Get access point's parent node
+ */
+Node *AccessPoint::getParentNode()
+{
+   return (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 }
 
 /**

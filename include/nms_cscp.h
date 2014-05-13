@@ -919,7 +919,7 @@ typedef struct
 #define VID_OPER_STATE              ((UINT32)415)
 #define VID_EXPECTED_STATE          ((UINT32)416)
 #define VID_LINK_COLOR              ((UINT32)417)
-#define VID_EXACT_MATCH             ((UINT32)418)
+#define VID_CONNECTION_TYPE         ((UINT32)418)
 #define VID_RESOLVED_BY_USER        ((UINT32)419)
 #define VID_IS_STICKY               ((UINT32)420)
 #define VID_DATE_FORMAT             ((UINT32)421)

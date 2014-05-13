@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
+import org.netxms.client.constants.ConnectionPointType;
 
 /**
  * Connection point information
@@ -36,7 +37,7 @@ public class ConnectionPoint
 	private long nodeId;
 	private long interfaceId;
 	private int interfaceIndex;
-	private boolean directlyConnected; 
+	private ConnectionPointType type; 
 	private Object data;
 	
 	/**
@@ -53,7 +54,7 @@ public class ConnectionPoint
 		localInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_INTERFACE_ID);
 		localMacAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
 		localIpAddress = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
-		directlyConnected = msg.getVariableAsBoolean(NXCPCodes.VID_EXACT_MATCH);
+		type = ConnectionPointType.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_CONNECTION_TYPE));
 	}
 
 	/**
@@ -125,18 +126,18 @@ public class ConnectionPoint
 	}
 
 	/**
-	 * @return the directlyConnected
-	 */
-	public boolean isDirectlyConnected()
-	{
-		return directlyConnected;
-	}
-
-	/**
 	 * @return the localIpAddress
 	 */
 	public InetAddress getLocalIpAddress()
 	{
 		return localIpAddress;
 	}
+
+   /**
+    * @return the type
+    */
+   public ConnectionPointType getType()
+   {
+      return type;
+   }
 }

@@ -864,6 +864,7 @@ public:
 	bool isMyRadio(int rfIndex);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getState() { return m_state; }
+   Node *getParentNode();
 
 	void attachToNode(UINT32 nodeId);
 	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
@@ -1117,6 +1118,7 @@ public:
 	Interface *findBridgePort(UINT32 bridgePortNumber);
    AccessPoint *findAccessPointByMAC(const BYTE *macAddr);
    AccessPoint *findAccessPointByRadioId(int rfIndex);
+   ObjectArray<WirelessStationInfo> *getWirelessStations();
 	BOOL isMyIP(UINT32 dwIpAddr);
    void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int *adminState, int *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, int *adminState, int *operState);
@@ -1208,7 +1210,7 @@ public:
 	nxmap_ObjList *getL2Topology();
 	nxmap_ObjList *buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
 	ForwardingDatabase *getSwitchForwardingDatabase();
-	Interface *findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, bool *exactMatch);
+	NetObj *findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
 	void addHostConnections(LinkLayerNeighbors *nbs);
 	void addExistingConnections(LinkLayerNeighbors *nbs);
 

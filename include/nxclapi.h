@@ -316,11 +316,9 @@ typedef void * NXC_SESSION;
 #define SA_PROPAGATE_RELATIVE             3
 #define SA_PROPAGATE_TRANSLATED           4
 
-
-//
-// Network map types
-//
-
+/**
+ * Network map types
+ */
 #define MAP_TYPE_CUSTOM          0
 #define MAP_TYPE_LAYER2_TOPOLOGY 1
 #define MAP_TYPE_IP_TOPOLOGY     2
@@ -360,11 +358,16 @@ enum
 #define DFF_ALLOW_SNMP                 0x0002
 #define DFF_ONLY_RANGE                 0x0004
 
+/**
+ * Connection point types
+ */
+#define CP_TYPE_INDIRECT      0
+#define CP_TYPE_DIRECT        1
+#define CP_TYPE_WIRELESS      2
 
-//
-// Events
-//
-
+/**
+ * Events
+ */
 #define NXC_EVENT_CONNECTION_BROKEN    1
 #define NXC_EVENT_NEW_ELOG_RECORD      2
 #define NXC_EVENT_USER_DB_CHANGED      3

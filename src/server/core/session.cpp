@@ -11174,14 +11174,14 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			debugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
-			Interface *iface = NULL;
+			NetObj *cp = NULL;
 			UINT32 localNodeId, localIfId;
 			BYTE localMacAddr[MAC_ADDR_LENGTH];
-			bool exactMatch;
+			int type;
 			if (object->Type() == OBJECT_NODE)
 			{
 				localNodeId = objectId;
-				iface = ((Node *)object)->findConnectionPoint(&localIfId, localMacAddr, &exactMatch);
+				cp = ((Node *)object)->findConnectionPoint(&localIfId, localMacAddr, &type);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else if (object->Type() == OBJECT_INTERFACE)
@@ -11189,7 +11189,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				localNodeId = ((Interface *)object)->getParentNode()->Id();
 				localIfId = objectId;
 				memcpy(localMacAddr, ((Interface *)object)->getMacAddr(), MAC_ADDR_LENGTH);
-				iface = FindInterfaceConnectionPoint(localMacAddr, &exactMatch);
+				cp = FindInterfaceConnectionPoint(localMacAddr, &type);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
          else if (object->Type() == OBJECT_ACCESSPOINT)
@@ -11197,7 +11197,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				localNodeId = 0;
 				localIfId = 0;
 				memcpy(localMacAddr, ((AccessPoint *)object)->getMacAddr(), MAC_ADDR_LENGTH);
-				iface = FindInterfaceConnectionPoint(localMacAddr, &exactMatch);
+				cp = FindInterfaceConnectionPoint(localMacAddr, &type);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
@@ -11205,17 +11205,28 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 
-			debugPrintf(5, _T("findNodeConnection: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
-			if (iface != NULL)
+			debugPrintf(5, _T("findNodeConnection: cp=%p type=%d"), cp, type);
+			if (cp != NULL)
 			{
-				msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
-				msg.SetVariable(VID_INTERFACE_ID, iface->Id());
-				msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
-				msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
-				msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
-				msg.SetVariable(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
-				msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-				debugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+            Node *node = (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+            if (node != NULL)
+            {
+               msg.SetVariable(VID_OBJECT_ID, node->Id());
+				   msg.SetVariable(VID_INTERFACE_ID, cp->Id());
+               msg.SetVariable(VID_IF_INDEX, (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
+				   msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+				   msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+				   msg.SetVariable(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
+				   msg.SetVariable(VID_CONNECTION_TYPE, (UINT16)type);
+               if (cp->Type() == OBJECT_INTERFACE)
+                  debugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->Id(), cp->Id(), cp->Name(), ((Interface *)cp)->getIfIndex());
+               else
+                  debugPrintf(5, _T("findNodeConnection: nodeId=%d apId=%d apName=%s"), node->Id(), cp->Id(), cp->Name());
+            }
+            else
+            {
+      			msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+            }
 			}
 		}
 		else
@@ -11243,12 +11254,12 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
 	request->GetVariableBinary(VID_MAC_ADDR, macAddr, 6);
-	bool exactMatch;
-	Interface *iface = FindInterfaceConnectionPoint(macAddr, &exactMatch);
+	int type;
+	NetObj *cp = FindInterfaceConnectionPoint(macAddr, &type);
 	msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
-	debugPrintf(5, _T("findMacAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
-	if (iface != NULL)
+	debugPrintf(5, _T("findMacAddress: cp=%p type=%d"), cp, type);
+	if (cp != NULL)
 	{
 		UINT32 localNodeId, localIfId;
 
@@ -11264,15 +11275,26 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 			localNodeId = 0;
 		}
 
-		msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
-		msg.SetVariable(VID_INTERFACE_ID, iface->Id());
-		msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
-		msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
-		msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
-		msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-		msg.SetVariable(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (UINT32)0);
-		msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-		debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+      Node *node = (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+      if (node != NULL)
+      {
+		   msg.SetVariable(VID_OBJECT_ID, node->Id());
+		   msg.SetVariable(VID_INTERFACE_ID, cp->Id());
+         msg.SetVariable(VID_IF_INDEX, (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
+	      msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+		   msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+		   msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+		   msg.SetVariable(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (UINT32)0);
+		   msg.SetVariable(VID_CONNECTION_TYPE, (UINT16)type);
+         if (cp->Type() == OBJECT_INTERFACE)
+            debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->Id(), cp->Id(), cp->Name(), ((Interface *)cp)->getIfIndex());
+         else
+            debugPrintf(5, _T("findMacAddress: nodeId=%d apId=%d apName=%s"), node->Id(), cp->Id(), cp->Name());
+      }
+      else
+      {
+		   msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+      }
 	}
 
 	sendMessage(&msg);
@@ -11321,11 +11343,11 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 	// Find switch port
 	if (found)
 	{
-		bool exactMatch;
-		iface = FindInterfaceConnectionPoint(macAddr, &exactMatch);
+		int type;
+		NetObj *cp = FindInterfaceConnectionPoint(macAddr, &type);
 
-		debugPrintf(5, _T("findIpAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
-		if (iface != NULL)
+		debugPrintf(5, _T("findIpAddress: cp=%p type=%d"), cp, type);
+		if (cp != NULL)
 		{
 			UINT32 localNodeId, localIfId;
 
@@ -11341,15 +11363,22 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 				localNodeId = 0;
 			}
 
-			msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
-			msg.SetVariable(VID_INTERFACE_ID, iface->Id());
-			msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
-			msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
-			msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
-			msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-			msg.SetVariable(VID_IP_ADDRESS, ipAddr);
-			msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-			debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifIndex=%d"), IpToStr(ipAddr, ipAddrText), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+         Node *node = (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+         if (node != NULL)
+         {
+		      msg.SetVariable(VID_OBJECT_ID, node->Id());
+			   msg.SetVariable(VID_INTERFACE_ID, cp->Id());
+            msg.SetVariable(VID_IF_INDEX, (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
+			   msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+			   msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+			   msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+			   msg.SetVariable(VID_IP_ADDRESS, ipAddr);
+			   msg.SetVariable(VID_CONNECTION_TYPE, (UINT16)type);
+            if (cp->Type() == OBJECT_INTERFACE)
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifName=%s ifIndex=%d"), IpToStr(ipAddr, ipAddrText), node->Id(), cp->Id(), cp->Name(), ((Interface *)cp)->getIfIndex());
+            else
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d apId=%d apName=%s"), IpToStr(ipAddr, ipAddrText), node->Id(), cp->Id(), cp->Name());
+         }
 		}
 	}
 

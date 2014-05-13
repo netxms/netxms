@@ -62,19 +62,21 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool inclu
 /**
  * Find connection point for interface
  */
-Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
+NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 {
 	TCHAR macAddrText[32];
 	DbgPrintf(6, _T("Called FindInterfaceConnectionPoint(%s)"), MACToStr(macAddr, macAddrText));
 
-	Interface *iface = NULL;
+   *type = CP_TYPE_INDIRECT;
+
+	NetObj *cp = NULL;
 	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true);
 
 	Node *bestMatchNode = NULL;
 	UINT32 bestMatchIfIndex = 0;
 	int bestMatchCount = 0x7FFFFFFF;
 
-	for(int i = 0; (i < nodes->size()) && (iface == NULL); i++)
+	for(int i = 0; (i < nodes->size()) && (cp == NULL); i++)
 	{
 		Node *node = (Node *)nodes->get(i);
 		
@@ -89,11 +91,13 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 				int count = fdb->getMacCountOnPort(ifIndex);
 				if (count == 1)
 				{
-					iface = node->findInterface(ifIndex, INADDR_ANY);
+					Interface *iface = node->findInterface(ifIndex, INADDR_ANY);
 					if (iface != NULL)
 					{
 						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
 									 iface->Name(), (int)iface->Id(), iface->getParentNode()->Name(), (int)iface->getParentNode()->Id());
+                  cp = iface;
+                  *type = CP_TYPE_DIRECT;
 					}
 					else
 					{
@@ -117,20 +121,61 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
       {
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): node %s [%d] is a wireless controller, checking associated stations"),
 			          macAddrText, node->Name(), (int)node->Id());
+         ObjectArray<WirelessStationInfo> *wsList = node->getWirelessStations();
+         if (wsList != NULL)
+         {
+			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): %d wireless stations registered on node %s [%d]"),
+                      macAddrText, wsList->size(), node->Name(), (int)node->Id());
+
+            for(int i = 0; i < wsList->size(); i++)
+            {
+               WirelessStationInfo *ws = wsList->get(i);
+               if (!memcmp(ws->macAddr, macAddr, MAC_ADDR_LENGTH))
+               {
+                  AccessPoint *ap = (AccessPoint *)FindObjectById(ws->apObjectId, OBJECT_ACCESSPOINT);
+                  if (ap != NULL)
+                  {
+						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] AP %s"), macAddrText,
+									    node->Name(), (int)node->Id(), ap->Name());
+                     cp = ap;
+                     *type = CP_TYPE_WIRELESS;
+                  }
+                  else
+                  {
+                     Interface *iface = node->findInterface(ws->rfIndex, INADDR_ANY);
+                     if (iface != NULL)
+                     {
+						      DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] interface %s"),
+                           macAddrText, node->Name(), (int)node->Id(), iface->Name());
+                        cp = iface;
+                        *type = CP_TYPE_WIRELESS;
+                     }
+                     else
+                     {
+						      DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] but cannot determine AP or interface"), 
+                           macAddrText, node->Name(), (int)node->Id());
+                     }
+                  }
+                  break;
+               }
+            }
+
+            delete wsList;
+         }
+         else
+         {
+			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): unable to get wireless stations from node %s [%d]"),
+			             macAddrText, node->Name(), (int)node->Id());
+         }
       }
 
       node->decRefCount();
 	}
 	delete nodes;
 
-	if (iface != NULL)
+	if ((cp == NULL) && (bestMatchNode != NULL))
 	{
-		*exactMatch = true;
+		cp = bestMatchNode->findInterface(bestMatchIfIndex, INADDR_ANY);
 	}
-	else if (bestMatchNode != NULL)
-	{
-		*exactMatch = false;
-		iface = bestMatchNode->findInterface(bestMatchIfIndex, INADDR_ANY);
-	}
-	return iface;
+	return cp;
 }
