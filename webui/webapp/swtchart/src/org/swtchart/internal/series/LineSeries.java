@@ -705,46 +705,40 @@ public class LineSeries extends Series implements ILineSeries
 		gc.setForeground(color);
 		gc.setBackground(color);
 
-        switch (symbolType) {
-        case CIRCLE:
-            gc.fillOval(h - symbolSize, v - symbolSize, symbolSize * 2,
-                    symbolSize * 2);
-            break;
-        case SQUARE:
-            gc.fillRectangle(h - symbolSize, v - symbolSize, symbolSize * 2,
-                    symbolSize * 2);
-            break;
-        case DIAMOND:
-            int[] diamondArray = { h, v - symbolSize, h + symbolSize, v, h,
-                    v + symbolSize, h - symbolSize, v };
-            gc.fillPolygon(diamondArray);
-            break;
-        case TRIANGLE:
-            int[] triangleArray = { h, v - symbolSize, h + symbolSize,
-                    v + symbolSize, h - symbolSize, v + symbolSize };
-            gc.fillPolygon(triangleArray);
-            break;
-        case INVERTED_TRIANGLE:
-            int[] invertedTriangleArray = { h, v + symbolSize, h + symbolSize,
-                    v - symbolSize, h - symbolSize, v - symbolSize };
-            gc.fillPolygon(invertedTriangleArray);
-            break;
-        case CROSS:
-            //gc.setLineStyle(SWT.LINE_SOLID);
-            gc.drawLine(h - symbolSize, v - symbolSize, h + symbolSize, v
-                    + symbolSize);
-            gc.drawLine(h - symbolSize, v + symbolSize, h + symbolSize, v
-                    - symbolSize);
-            break;
-        case PLUS:
-            //gc.setLineStyle(SWT.LINE_SOLID);
-            gc.drawLine(h, v - symbolSize, h, v + symbolSize);
-            gc.drawLine(h - symbolSize, v, h + symbolSize, v);
-            break;
-        case NONE:
-        default:
-            break;
-        }
-        gc.setAntialias(oldAntialias);
-    }
+		switch(symbolType)
+		{
+			case CIRCLE:
+				gc.fillOval(h - symbolSize, v - symbolSize, symbolSize * 2, symbolSize * 2);
+				break;
+			case SQUARE:
+				gc.fillRectangle(h - symbolSize, v - symbolSize, symbolSize * 2, symbolSize * 2);
+				break;
+			case DIAMOND:
+				int[] diamondArray = { h, v - symbolSize, h + symbolSize, v, h, v + symbolSize, h - symbolSize, v };
+				gc.fillPolygon(diamondArray);
+				break;
+			case TRIANGLE:
+				int[] triangleArray = { h, v - symbolSize, h + symbolSize, v + symbolSize, h - symbolSize, v + symbolSize };
+				gc.fillPolygon(triangleArray);
+				break;
+			case INVERTED_TRIANGLE:
+				int[] invertedTriangleArray = { h, v + symbolSize, h + symbolSize, v - symbolSize, h - symbolSize, v - symbolSize };
+				gc.fillPolygon(invertedTriangleArray);
+				break;
+			case CROSS:
+				//gc.setLineStyle(SWT.LINE_SOLID);
+				gc.drawLine(h - symbolSize, v - symbolSize, h + symbolSize, v + symbolSize);
+				gc.drawLine(h - symbolSize, v + symbolSize, h + symbolSize, v - symbolSize);
+				break;
+			case PLUS:
+				//gc.setLineStyle(SWT.LINE_SOLID);
+				gc.drawLine(h, v - symbolSize, h, v + symbolSize);
+				gc.drawLine(h - symbolSize, v, h + symbolSize, v);
+				break;
+			case NONE:
+			default:
+				break;
+		}
+		gc.setAntialias(oldAntialias);
+	}
 }

@@ -429,13 +429,13 @@ public class Legend extends Canvas implements ILegend, PaintListener
       int shift = Util.getExtentInGC(getFont(), "Max: 000000.000000").x;
       int x = r.x + extendedInfoOffset + MARGIN * 2;
       
-      gc.drawText(String.format("Max: %1.2f", series.getMaxY()), x, r.y, true);
+      gc.drawText(String.format("Max: %s", Chart.roundedDecimalValue(series.getMaxY(), 0.0005)), x, r.y, true);
       x += shift;
 
-      gc.drawText(String.format("Avg: %1.2f", series.getAvgY()), x, r.y, true);
+      gc.drawText(String.format("Avg: %s", Chart.roundedDecimalValue(series.getAvgY(), 0.0005)), x, r.y, true);
       x += shift;
 
-      gc.drawText(String.format("Min: %1.2f", series.getMinY()), x, r.y, true);
+      gc.drawText(String.format("Min: %s", Chart.roundedDecimalValue(series.getMinY(), 0.0005)), x, r.y, true);
    }
 
    /*
