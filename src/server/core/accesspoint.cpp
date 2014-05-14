@@ -88,7 +88,7 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
 	m_nodeId = DBGetFieldULong(hResult, 0, 4);
    m_state = (DBGetFieldLong(hResult, 0, 5) == AP_ADOPTED) ? AP_ADOPTED : AP_UNADOPTED;
-   m_prevState = m_state;
+   m_prevState = (m_state != AP_DOWN) ? m_state : AP_ADOPTED;
 	DBFreeResult(hResult);
 
    // Load DCI and access list
