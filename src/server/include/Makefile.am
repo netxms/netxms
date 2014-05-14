@@ -10,6 +10,7 @@
 
 serverincludedir = $(includedir)/server
 serverinclude_HEADERS = \
+	hdlink.h \
 	local_admin.h \
 	netxms_mt.h \
 	nms_actions.h \
