@@ -845,6 +845,7 @@ protected:
 	TCHAR *m_serialNumber;
 	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
    AccessPointState m_state;
+   AccessPointState m_prevState;
 
 public:
    AccessPoint();

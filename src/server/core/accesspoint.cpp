@@ -33,6 +33,7 @@ AccessPoint::AccessPoint() : DataCollectionTarget()
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
    m_state = AP_ADOPTED;
+   m_prevState = m_state;
 }
 
 /**
@@ -47,6 +48,7 @@ AccessPoint::AccessPoint(const TCHAR *name, BYTE *macAddr) : DataCollectionTarge
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
    m_state = AP_ADOPTED;
+   m_prevState = m_state;
 	m_isHidden = true;
 }
 
@@ -86,6 +88,7 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
 	m_nodeId = DBGetFieldULong(hResult, 0, 4);
    m_state = (DBGetFieldLong(hResult, 0, 5) == AP_ADOPTED) ? AP_ADOPTED : AP_UNADOPTED;
+   m_prevState = m_state;
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -387,9 +390,13 @@ void AccessPoint::updateState(AccessPointState state)
       return;
 
 	LockData();
+   if (state == AP_DOWN)
+      m_prevState = m_state;
    m_state = state;
    if (m_iStatus != STATUS_UNMANAGED)
+   {
       m_iStatus = (state == AP_ADOPTED) ? STATUS_NORMAL : ((state == AP_UNADOPTED) ? STATUS_MAJOR : STATUS_CRITICAL);
+   }
    Modify();
 	UnlockData();
 
@@ -447,7 +454,13 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 						long value = _tcstol(buffer, &eptr, 10);
 						if ((*eptr == 0) && (value >= 0))
 						{
-							if (value >= 10000)
+							if (value < 10000)
+                     {
+            				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
+                        if (state == AP_DOWN)
+                           state = m_prevState;  /* FIXME: get actual AP state here */
+                     }
+                     else
 							{
             				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
                         state = AP_DOWN;
@@ -476,7 +489,13 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 			UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize);
 			if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
 				nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
-			if (dwPingStatus != ICMP_SUCCESS)
+			if (dwPingStatus == ICMP_SUCCESS)
+         {
+				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
+            if (state == AP_DOWN)
+               state = m_prevState;  /* FIXME: get actual AP state here */
+         }
+         else
 			{
 				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
             state = AP_DOWN;

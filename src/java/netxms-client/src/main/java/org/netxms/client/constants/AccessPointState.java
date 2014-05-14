@@ -27,8 +27,10 @@ import org.netxms.base.Logger;
  */
 public enum AccessPointState
 {
+   UNKNOWN(-1),
    ADOPTED(0),
-   UNADOPTED(1);
+   UNADOPTED(1),
+   DOWN(2);
 
    private int value;
    private static Map<Integer, AccessPointState> lookupTable = new HashMap<Integer, AccessPointState>();
@@ -67,7 +69,7 @@ public enum AccessPointState
       if (element == null)
       {
          Logger.warning(AccessPointState.class.getName(), "Unknown element " + value);
-         return ADOPTED; // fallback
+         return UNKNOWN; // fallback
       }
       return element;
    }
