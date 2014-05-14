@@ -9,7 +9,8 @@
 - New methods in NXSL class Node: enableAgent, enableConfigurationPoll,
   enableIcmp, enableSnmp, enableStatusPoll, enableTopologyPoll
 - Fixed server crash if SNMP proxy unavailable
-- New MIBs: FROGFOOT-RESOURCES-MIB, MIKROTIK-MIB
+- New MIBs: AIRESPACE-REF-MIB, AIRESPACE-SWITCHING-MIB, 
+     AIRESPACE-WIRELESS-MIB, FROGFOOT-RESOURCES-MIB, MIKROTIK-MIB
 - SMS driver for websms.ru service
 - Macro expansion supported in pattern in agent parameters File.Size and File.Count
 - Attribute "instance" added to NXSL class "DCI"
@@ -17,6 +18,7 @@
 - Traps from unmanaged nodes ignored
 - Fixed repeated threshold violation events after server restart
 - Added driver for Mikrotik routers
+- Added driver for Cisco Wireless Controller 4400 (former Airespace)
 - Management console:
    - DCI values can be shown on network map links
    - DCI value can be shown on map as immage, that checnges depending on DCI value

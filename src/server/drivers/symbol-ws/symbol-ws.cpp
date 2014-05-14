@@ -411,12 +411,14 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    if (ret == SNMP_ERR_SUCCESS)
    {
       WirelessStationInfo *info = new WirelessStationInfo;
+      memset(info, 0, sizeof(WirelessStationInfo));
 
       var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
       info->ipAddr = ipAddr;
       info->vlan = vlanInfex;
       nx_strncpy(info->ssid, ssid, MAX_OBJECT_NAME);
       info->rfIndex = rfIndex;
+      info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
 
       wsList->add(info);
    }

@@ -8,5 +8,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = lib at baystack cat2900xl catalyst cisco-esw cisco-sb dell-pwc dlink \
-          ers8000 mikrotik netscreen ntws ping3 procurve symbol-ws
+SUBDIRS = lib airespace at baystack cat2900xl catalyst cisco-esw cisco-sb \
+	  dell-pwc dlink ers8000 mikrotik netscreen ntws ping3 procurve \
+	  symbol-ws

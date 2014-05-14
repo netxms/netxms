@@ -866,6 +866,27 @@ AccessPoint *Node::findAccessPointByRadioId(int rfIndex)
 }
 
 /**
+ * Find attached access point by BSSID
+ */
+AccessPoint *Node::findAccessPointByBSSID(const BYTE *bssid)
+{
+   AccessPoint *ap = NULL;
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_ACCESSPOINT)
+      {
+         if (!memcmp(((AccessPoint *)m_pChildList[i])->getMacAddr(), bssid, MAC_ADDR_LENGTH) ||
+             ((AccessPoint *)m_pChildList[i])->isMyRadio(bssid))
+         {
+            ap = (AccessPoint *)m_pChildList[i];
+            break;
+         }
+      }
+   UnlockChildList();
+   return ap;
+}
+
+/**
  * Check if given IP address is one of node's interfaces
  */
 BOOL Node::isMyIP(UINT32 dwIpAddr)
@@ -5220,7 +5241,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				{
 					WirelessStationInfo *ws = stations->get(i);
 
-					AccessPoint *ap = findAccessPointByRadioId(ws->rfIndex);
+               AccessPoint *ap = (ws->apMatchPolicy == AP_MATCH_BY_BSSID) ? findAccessPointByBSSID(ws->bssid) : findAccessPointByRadioId(ws->rfIndex);
 					if (ap != NULL)
 					{
 						ws->apObjectId = ap->Id();

@@ -152,6 +152,12 @@ public:
 };
 
 /**
+ * Wireless station AP match policy
+ */
+#define AP_MATCH_BY_RFINDEX   0
+#define AP_MATCH_BY_BSSID     1
+
+/**
  * Wireless station information
  */
 struct WirelessStationInfo
@@ -160,6 +166,8 @@ struct WirelessStationInfo
    BYTE macAddr[MAC_ADDR_LENGTH];
 	UINT32 ipAddr;	// IP address, must be in host byte order
 	int rfIndex;	// radio interface index
+   BYTE bssid[MAC_ADDR_LENGTH];
+   short apMatchPolicy;
 	TCHAR ssid[MAX_OBJECT_NAME];
    int vlan;
 

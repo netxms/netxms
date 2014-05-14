@@ -2471,6 +2471,7 @@ AC_CONFIG_FILES([
 	src/server/Makefile
 	src/server/core/Makefile
 	src/server/drivers/Makefile
+	src/server/drivers/airespace/Makefile
 	src/server/drivers/at/Makefile
 	src/server/drivers/baystack/Makefile
 	src/server/drivers/cat2900xl/Makefile

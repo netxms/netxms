@@ -308,6 +308,28 @@ bool AccessPoint::isMyRadio(int rfIndex)
 }
 
 /**
+ * Check if given radio MAC address (BSSID) is on this access point
+ */
+bool AccessPoint::isMyRadio(const BYTE *macAddr)
+{
+	bool result = false;
+	LockData();
+	if (m_radioInterfaces != NULL)
+	{
+		for(int i = 0; i < m_radioInterfaces->size(); i++)
+		{
+         if (!memcmp(m_radioInterfaces->get(i)->macAddr, macAddr, MAC_ADDR_LENGTH))
+			{
+				result = true;
+				break;
+			}
+		}
+	}
+	UnlockData();
+	return result;
+}
+
+/**
  * Get radio name
  */
 void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)

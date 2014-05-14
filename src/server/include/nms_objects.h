@@ -862,6 +862,7 @@ public:
 
 	BYTE *getMacAddr() { return m_macAddr; }
 	bool isMyRadio(int rfIndex);
+	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getState() { return m_state; }
    Node *getParentNode();
@@ -1117,6 +1118,7 @@ public:
 	Interface *findInterfaceBySlotAndPort(UINT32 slot, UINT32 port);
 	Interface *findBridgePort(UINT32 bridgePortNumber);
    AccessPoint *findAccessPointByMAC(const BYTE *macAddr);
+   AccessPoint *findAccessPointByBSSID(const BYTE *bssid);
    AccessPoint *findAccessPointByRadioId(int rfIndex);
    ObjectArray<WirelessStationInfo> *getWirelessStations();
 	BOOL isMyIP(UINT32 dwIpAddr);
