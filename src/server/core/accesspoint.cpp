@@ -389,11 +389,104 @@ void AccessPoint::updateState(AccessPointState state)
 	LockData();
    m_state = state;
    if (m_iStatus != STATUS_UNMANAGED)
-      m_iStatus = (state == AP_ADOPTED) ? STATUS_NORMAL : STATUS_MAJOR;
+      m_iStatus = (state == AP_ADOPTED) ? STATUS_NORMAL : ((state == AP_UNADOPTED) ? STATUS_MAJOR : STATUS_CRITICAL);
    Modify();
 	UnlockData();
 
    static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
-   PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : EVENT_AP_UNADOPTED, m_nodeId, "ishasss", names,
-      m_dwId, m_szName, m_macAddr, m_dwIpAddr, CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
+   PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN), 
+      m_nodeId, "ishasss", names,
+      m_dwId, m_szName, m_macAddr, m_dwIpAddr, 
+      CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
+}
+
+/**
+ * Do status poll
+ */
+void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller)
+{
+   m_pollRequestor = session;
+   AccessPointState state = m_state;
+
+   sendPollerMsg(rqId, _T("   Starting status poll on access point %s\r\n"), m_szName);
+   sendPollerMsg(rqId, _T("      Current access point status is %s\r\n"), g_szStatusText[m_iStatus]);
+
+   /* TODO: read status from controller via driver and use ping as last resort only */
+
+   if (m_dwIpAddr != 0)
+   {
+		UINT32 icmpProxy = 0;
+
+      if (IsZoningEnabled() && (controller->getZoneId() != 0))
+		{
+			Zone *zone = (Zone *)g_idxZoneByGUID.get(controller->getZoneId());
+			if (zone != NULL)
+			{
+				icmpProxy = zone->getIcmpProxy();
+			}
+		}
+
+		if (icmpProxy != 0)
+		{
+			sendPollerMsg(rqId, _T("      Starting ICMP ping via proxy\r\n"));
+			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping via proxy [%u]"), m_dwId, m_szName, icmpProxy);
+			Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+			if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+			{
+				DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node found: %s"), m_dwId, m_szName, proxyNode->Name());
+				AgentConnection *conn = proxyNode->createAgentConnection();
+				if (conn != NULL)
+				{
+					TCHAR parameter[64], buffer[64];
+
+					_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+					if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+					{
+						DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy response: \"%s\""), m_dwId, m_szName, buffer);
+						TCHAR *eptr;
+						long value = _tcstol(buffer, &eptr, 10);
+						if ((*eptr == 0) && (value >= 0))
+						{
+							if (value >= 10000)
+							{
+            				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
+                        state = AP_DOWN;
+							}
+						}
+					}
+					conn->disconnect();
+					delete conn;
+				}
+				else
+				{
+					DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_dwId, m_szName);
+					sendPollerMsg(rqId, POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
+				}
+			}
+			else
+			{
+				DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node not available"), m_dwId, m_szName);
+				sendPollerMsg(rqId, POLLER_ERROR _T("      ICMP proxy not available\r\n"));
+			}
+		}
+		else	// not using ICMP proxy
+		{
+			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
+			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,%d,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_icmpPingTimeout, g_icmpPingSize);
+			UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize);
+			if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
+				nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
+			if (dwPingStatus != ICMP_SUCCESS)
+			{
+				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
+            state = AP_DOWN;
+			}
+			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping result %d, state=%d"), m_dwId, m_szName, dwPingStatus, state);
+		}
+   }
+
+   updateState(state);
+
+   sendPollerMsg(rqId, _T("      Access point status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
+	sendPollerMsg(rqId, _T("   Finished status poll on access point %s\r\n"), m_szName);
 }

@@ -117,16 +117,19 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
    oid[11] = 1;   // bsnAPDot3MacAddress
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
+   oid[11] = 19;  // bsnApIpAddress
+   request->bindVariable(new SNMP_Variable(oid, nameLen));
+
    oid[11] = 6;   // bsnAPOperationStatus
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    oid[11] = 3;   // bsnAPName
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
-   oid[11] = 7;   // bsnAPModel
+   oid[11] = 16;  // bsnAPModel
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
-   oid[11] = 17;   // bsnAPSerialNumber
+   oid[11] = 17;  // bsnAPSerialNumber
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    oid[9] = 2;    // bsnAPIfTable
@@ -145,34 +148,36 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {
-      if (response->getNumVariables() == 7)
+      if (response->getNumVariables() == 8)
       {
          BYTE macAddr[16];
          memset(macAddr, 0, sizeof(macAddr));
          var->getRawValue(macAddr, sizeof(macAddr));
 
-         TCHAR name[MAX_OBJECT_NAME], model[MAX_OBJECT_NAME], serial[MAX_OBJECT_NAME];
+         TCHAR ipAddr[32], name[MAX_OBJECT_NAME], model[MAX_OBJECT_NAME], serial[MAX_OBJECT_NAME];
          AccessPointInfo *ap = 
             new AccessPointInfo(
-               macAddr, 
-               (response->getVariable(1)->getValueAsInt() == 1) ? AP_ADOPTED : AP_UNADOPTED,
-               response->getVariable(2)->getValueAsString(name, MAX_OBJECT_NAME), 
-               response->getVariable(3)->getValueAsString(model, MAX_OBJECT_NAME), 
-               response->getVariable(4)->getValueAsString(serial, MAX_OBJECT_NAME));
+               macAddr,
+               ntohl(_t_inet_addr(response->getVariable(1)->getValueAsString(ipAddr, 32))),
+               (response->getVariable(2)->getValueAsInt() == 1) ? AP_ADOPTED : AP_UNADOPTED,
+               response->getVariable(3)->getValueAsString(name, MAX_OBJECT_NAME),
+               _T("Cisco"),   // vendor
+               response->getVariable(4)->getValueAsString(model, MAX_OBJECT_NAME),
+               response->getVariable(5)->getValueAsString(serial, MAX_OBJECT_NAME));
 
          RadioInterfaceInfo radio;
          memset(&radio, 0, sizeof(RadioInterfaceInfo));
          _tcscpy(radio.name, _T("slot0"));
          radio.index = 0;
          response->getVariable(0)->getRawValue(radio.macAddr, MAC_ADDR_LENGTH);
-         radio.channel = response->getVariable(5)->getValueAsInt();
+         radio.channel = response->getVariable(6)->getValueAsInt();
          ap->addRadioInterface(&radio);
 
-         if ((response->getVariable(6)->getType() != ASN_NO_SUCH_INSTANCE) && (response->getVariable(6)->getType() != ASN_NO_SUCH_OBJECT))
+         if ((response->getVariable(7)->getType() != ASN_NO_SUCH_INSTANCE) && (response->getVariable(7)->getType() != ASN_NO_SUCH_OBJECT))
          {
             _tcscpy(radio.name, _T("slot1"));
             radio.index = 1;
-            radio.channel = response->getVariable(6)->getValueAsInt();
+            radio.channel = response->getVariable(7)->getValueAsInt();
             ap->addRadioInterface(&radio);
          }
 

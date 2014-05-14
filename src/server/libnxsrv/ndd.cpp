@@ -25,11 +25,13 @@
 /**
  * Access point info constructor
  */
-AccessPointInfo::AccessPointInfo(BYTE *macAddr, AccessPointState state, const TCHAR *name, const TCHAR *model, const TCHAR *serial)
+AccessPointInfo::AccessPointInfo(BYTE *macAddr, UINT32 ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial)
 {
 	memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
+   m_ipAddr = ipAddr;
 	m_state = state;
 	m_name = (name != NULL) ? _tcsdup(name) : NULL;
+	m_vendor = (vendor != NULL) ? _tcsdup(vendor) : NULL;
 	m_model = (model != NULL) ? _tcsdup(model) : NULL;
 	m_serial = (serial != NULL) ? _tcsdup(serial) : NULL;
 	m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(4, 4, true);
@@ -41,6 +43,7 @@ AccessPointInfo::AccessPointInfo(BYTE *macAddr, AccessPointState state, const TC
 AccessPointInfo::~AccessPointInfo()
 {
    safe_free(m_name);
+   safe_free(m_vendor);
 	safe_free(m_model);
 	safe_free(m_serial);
 	delete m_radioInterfaces;

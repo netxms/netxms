@@ -1267,7 +1267,12 @@ restart_agent_check:
             ((NetworkService *)ppPollList[i])->statusPoll(pSession, dwRqId,
                                                           (Node *)pPollerNode, pQueue);
             break;
+         case OBJECT_ACCESSPOINT:
+			   DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
+            ((AccessPoint *)ppPollList[i])->statusPoll(pSession, dwRqId, pQueue, this);
+            break;
          default:
+            DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name(), ppPollList[i]->Type());
             break;
       }
       ppPollList[i]->decRefCount();
@@ -2376,6 +2381,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 					if (info->getState() == AP_ADOPTED)
    					adopted++;
 
+               bool newAp = false;
                AccessPoint *ap = (clusterMode == CLUSTER_MODE_STANDALONE) ? findAccessPointByMAC(info->getMacAddr()) : FindAccessPointByMAC(info->getMacAddr());
 					if (ap == NULL)
 					{
@@ -2397,12 +2403,14 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 						ap = new AccessPoint((const TCHAR *)name, info->getMacAddr());
 						NetObjInsert(ap, TRUE);
 						DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_szName, ap->Name(), ap->Id());
+                  newAp = true;
 					}
 					ap->attachToNode(m_dwId);
-					if (info->getState() == AP_ADOPTED)
+               ap->setIpAddr(info->getIpAddr());
+					if ((info->getState() == AP_ADOPTED) || newAp)
                {
 					   ap->updateRadioInterfaces(info->getRadioInterfaces());
-					   ap->updateInfo(NULL, info->getModel(), info->getSerial());
+                  ap->updateInfo(info->getVendor(), info->getModel(), info->getSerial());
                }
 					ap->unhide();
                ap->updateState(info->getState());

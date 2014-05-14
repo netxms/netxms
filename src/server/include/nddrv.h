@@ -96,7 +96,8 @@ enum
 enum AccessPointState
 {
    AP_ADOPTED = 0,
-   AP_UNADOPTED = 1
+   AP_UNADOPTED = 1,
+   AP_DOWN = 2
 };
 
 /**
@@ -131,21 +132,25 @@ class LIBNXSRV_EXPORTABLE AccessPointInfo
 {
 private:
    BYTE m_macAddr[MAC_ADDR_LENGTH];
+   UINT32 m_ipAddr;
    AccessPointState m_state;
    TCHAR *m_name;
+   TCHAR *m_vendor;
    TCHAR *m_model;
    TCHAR *m_serial;
 	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
 
 public:
-   AccessPointInfo(BYTE *macAddr, AccessPointState state, const TCHAR *name, const TCHAR *model, const TCHAR *serial);
+   AccessPointInfo(BYTE *macAddr, UINT32 ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial);
    ~AccessPointInfo();
 
 	void addRadioInterface(RadioInterfaceInfo *iface);
 
 	BYTE *getMacAddr() { return m_macAddr; }
+   UINT32 getIpAddr() { return m_ipAddr; }
 	AccessPointState getState() { return m_state; }
 	const TCHAR *getName() { return m_name; }
+	const TCHAR *getVendor() { return m_vendor; }
 	const TCHAR *getModel() { return m_model; }
 	const TCHAR *getSerial() { return m_serial; }
 	ObjectArray<RadioInterfaceInfo> *getRadioInterfaces() { return m_radioInterfaces; }

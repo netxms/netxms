@@ -851,6 +851,21 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'    6) Access point model' CONCAT CRLF CONCAT
 		'    7) Access point serial number'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_AP_DOWN, 'SYS_AP_DOWN',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'Access point %2 changed state to DOWN',
+		'Generated when access point state changes to DOWN.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'    1) Access point object ID' CONCAT CRLF CONCAT
+		'    2) Access point name' CONCAT CRLF CONCAT
+		'    3) Access point MAC address' CONCAT CRLF CONCAT
+		'    4) Access point IP address' CONCAT CRLF CONCAT
+		'    5) Access point vendor name' CONCAT CRLF CONCAT
+		'    6) Access point model' CONCAT CRLF CONCAT
+		'    7) Access point serial number'
+	);
 
 /*
 ** SNMP traps

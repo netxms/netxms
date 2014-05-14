@@ -360,6 +360,27 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V317 to V318
+ */
+static BOOL H_UpgradeFromV317(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_DOWN, _T("SYS_AP_DOWN"), SEVERITY_CRITICAL, EF_LOG,
+      _T("Access point %2 changed state to DOWN"),
+		_T("Generated when access point state changes to DOWN.\r\n")
+		_T("Parameters:\r\n")
+		_T("    1) Access point object ID\r\n")
+		_T("    2) Access point name\r\n")
+		_T("    3) Access point MAC address\r\n")
+		_T("    4) Access point IP address\r\n")
+		_T("    5) Access point vendor name\r\n")
+		_T("    6) Access point model\r\n")
+		_T("    7) Access point serial number")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='318' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V316 to V317
  */
 static BOOL H_UpgradeFromV316(int currVersion, int newVersion)
@@ -7675,6 +7696,7 @@ static struct
    { 314, 315, H_UpgradeFromV314 },
    { 315, 316, H_UpgradeFromV315 },
    { 316, 317, H_UpgradeFromV316 },
+   { 317, 318, H_UpgradeFromV317 },
    { 0, 0, NULL }
 };
 

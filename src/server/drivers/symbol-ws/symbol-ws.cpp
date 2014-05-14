@@ -166,7 +166,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
          break;
    }
 
-   AccessPointInfo *info = new AccessPointInfo((BYTE *)var->getValue(), AP_UNADOPTED, NULL, model, NULL);
+   AccessPointInfo *info = new AccessPointInfo((BYTE *)var->getValue(), 0, AP_UNADOPTED, NULL, NULL, model, NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -261,7 +261,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    AccessPointInfo *info;
    if (ret == SNMP_ERR_SUCCESS)
    {
-      info = new AccessPointInfo((BYTE *)var->getValue(), AP_ADOPTED, NULL, model, serial);
+      info = new AccessPointInfo((BYTE *)var->getValue(), 0, AP_ADOPTED, NULL, NULL, model, serial);
       apList->add(info);
    }
 

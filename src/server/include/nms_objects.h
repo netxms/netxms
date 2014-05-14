@@ -860,12 +860,16 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
+   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller);
+
 	BYTE *getMacAddr() { return m_macAddr; }
 	bool isMyRadio(int rfIndex);
 	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getState() { return m_state; }
    Node *getParentNode();
+
+   void setIpAddr(UINT32 ipAddr) { LockData(); m_dwIpAddr = ipAddr; Modify(); UnlockData(); }
 
 	void attachToNode(UINT32 nodeId);
 	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
