@@ -185,7 +185,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    size_t nameLen = name->getLength();
    UINT32 apIndex = name->getValue()[nameLen - 1];
 
-   UINT32 numberOfRadios;
+   UINT32 numberOfRadios = 0;
    TCHAR serial[128];
 
    UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 2, 1, 3, 0 }; // wsCcRfApModelNumber

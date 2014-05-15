@@ -182,7 +182,7 @@ static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Struct
 			{
             AgentWriteLog(EVENTLOG_WARNING_TYPE,
                             _T("Unable to add query from configuration file. ")
-									 _T("Original configuration record: %s"), queries->getValue(i));
+									 _T("Original configuration record: %s"), configurableQueries->getValue(i));
 			}
 		}
 	}

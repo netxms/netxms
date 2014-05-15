@@ -386,12 +386,11 @@ void SlmCheck::execute()
 	if (m_isTemplate)
 		return;
 
-	UINT32 oldStatus;
+	UINT32 oldStatus = m_iStatus;
 
 	switch (m_type)
 	{
 		case check_script:
-			oldStatus = m_iStatus;
 			if (m_pCompiledScript != NULL)
 			{
 				NXSL_VariableSystem *pGlobals = NULL;

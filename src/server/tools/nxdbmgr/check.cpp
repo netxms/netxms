@@ -900,7 +900,7 @@ void CheckDatabase()
    else
    {
       TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
-      BOOL bLocked;
+      BOOL bLocked = FALSE;
 
       // Check if database is locked
       hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));

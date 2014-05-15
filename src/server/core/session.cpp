@@ -4327,7 +4327,7 @@ void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
 void ClientSession::createObject(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   NetObj *object, *pParent;
+   NetObj *object = NULL, *pParent;
    int iClass, iServiceType;
    TCHAR szObjectName[MAX_OBJECT_NAME], nodePrimaryName[MAX_DNS_NAME], deviceId[MAX_OBJECT_NAME];
    TCHAR *pszRequest, *pszResponse, *pszComments;
@@ -10520,7 +10520,7 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	TCHAR name[MAX_PATH], fname[MAX_PATH];
-	bool musicFile;
+	bool musicFile = false;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -10539,7 +10539,7 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
       }
    }
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFile)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFile)
 	{
       _tcscpy(fname, g_szDataDir);
       _tcscat(fname, DDIR_FILES);
@@ -11177,7 +11177,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 			NetObj *cp = NULL;
 			UINT32 localNodeId, localIfId;
 			BYTE localMacAddr[MAC_ADDR_LENGTH];
-			int type;
+			int type = 0;
 			if (object->Type() == OBJECT_NODE)
 			{
 				localNodeId = objectId;

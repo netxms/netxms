@@ -316,7 +316,7 @@ void NXSL_VM::setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)
 
 	pVar = m_pGlobals->find(pszName);
    if (pVar == NULL)
-		pVar = m_pGlobals->create(pszName, pValue);
+		m_pGlobals->create(pszName, pValue);
 	else
 		pVar->setValue(pValue);
 }

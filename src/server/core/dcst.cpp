@@ -239,7 +239,6 @@ bool SummaryTable::filter(DataCollectionTarget *object)
       return true;   // no filtering
 
    bool result = true;
-   NXSL_ServerEnv *env = new NXSL_ServerEnv;
    m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
    if (object->Type() == OBJECT_NODE)
       m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));

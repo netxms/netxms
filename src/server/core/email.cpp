@@ -416,9 +416,9 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 		}
 		else
 		{
+			DbgPrintf(6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
 			free(pEnvelope->pszText);
 			free(pEnvelope);
-			DbgPrintf(6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
 		}
    }
    return THREAD_OK;

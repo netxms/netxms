@@ -83,7 +83,7 @@ UINT32 SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 
    UINT32 rc;
    int bytes;
 
-   if ((request == NULL) || (response == NULL) || (numRetries == 0))
+   if ((request == NULL) || (response == NULL) || (numRetries <= 0))
       return SNMP_ERR_PARAM;
 
    *response = NULL;
