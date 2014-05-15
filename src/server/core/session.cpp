@@ -5245,7 +5245,7 @@ void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
    }
    if (object != NULL)
    {
-      // User should have "create issue" right to the object
+      // User should have "update alarms" right to the object and "unlink issues" global right
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS) && checkSysAccessRights(SYSTEM_ACCESS_UNLINK_ISSUES))
       {
          msg.SetVariable(VID_RCC,

@@ -60,6 +60,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.api.client.constants.UserAccessRights;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -126,6 +127,7 @@ public class AlarmList extends Composite
 	private Action actionShowObjectDetails;
    private Action actionCreateIssue;
    private Action actionShowIssue;
+   private Action actionUnlinkIssue;
 	private Action actionExportToCsv;
 	private MenuManager timeAcknowledgeMenu;
 	private List<Action> timeAcknowledge;
@@ -455,6 +457,14 @@ public class AlarmList extends Composite
          }
       };
       
+      actionUnlinkIssue = new Action("Unlink from helpdesk ticket") {
+         @Override
+         public void run()
+         {
+            unlinkIssue();
+         }
+      };
+      
 		actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
 			@Override
 			public void run()
@@ -665,6 +675,8 @@ public class AlarmList extends Composite
 	         else
 	         {
 	            manager.add(actionShowIssue);
+	            if ((session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES) != 0)
+	               manager.add(actionUnlinkIssue);
 	         }
 			}
 		}
@@ -951,6 +963,31 @@ public class AlarmList extends Composite
          protected String getErrorMessage()
          {
             return "Cannot get URL for helpdesk ticket";
+         }
+      }.start();
+   }
+
+   /**
+    * Unlink helpdesk ticket (issue) from selected alarm
+    */
+   private void unlinkIssue()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      final long id = ((Alarm)selection.getFirstElement()).getId();
+      new ConsoleJob("Unlink alarm from helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.unlinkHelpdeskIssue(id);
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot unlink alarm from helpdesk ticket";
          }
       }.start();
    }

@@ -215,8 +215,49 @@ void JiraLink::disconnect()
  */
 bool JiraLink::checkConnection()
 {
+   bool success = false;
+
    lock();
-   bool success = (connect() == RCC_SUCCESS);
+   
+   if (m_curl != NULL)
+   {
+      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
+      memset(data, 0, sizeof(RequestData));
+      curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
+
+      curl_easy_setopt(m_curl, CURLOPT_POST, (long)0);
+
+      char url[MAX_PATH];
+      strcpy(url, m_serverUrl);
+      strcat(url, "/rest/auth/1/session");
+      curl_easy_setopt(m_curl, CURLOPT_URL, url);
+      if (curl_easy_perform(m_curl) == CURLE_OK)
+      {
+         data->data[data->size] = 0;
+         DbgPrintf(7, _T("Jira: GET request completed, data: %hs"), data->data);
+         long response = 500;
+         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
+         if (response == 200)
+         {
+            success = true;
+         }
+         else
+         {
+            DbgPrintf(4, _T("Jira: check connection HTTP response code %03d"), response);
+         }
+      }
+      else
+      {
+         DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+      }
+      free(data);
+   }
+
+   if (!success)
+   {
+      success = (connect() == RCC_SUCCESS);
+   }
+
    unlock();
    return success;
 }
@@ -230,95 +271,97 @@ bool JiraLink::checkConnection()
  */
 UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
 {
+   if (!checkConnection())
+      return RCC_HDLINK_COMM_FAILURE;
+
    UINT32 rcc = RCC_HDLINK_COMM_FAILURE;
    lock();
    DbgPrintf(4, _T("Jira: create helpdesk issue with description \"%s\""), description);
-   if ((m_curl != NULL) || ((rcc = connect()) == RCC_SUCCESS))
+
+   RequestData *data = (RequestData *)malloc(sizeof(RequestData));
+   memset(data, 0, sizeof(RequestData));
+   curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
+
+   curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
+
+   // Build request
+   json_t *root = json_object();
+   json_t *fields = json_object();
+   json_t *project = json_object();
+   json_object_set_new(project, "key", json_string(m_projectCode));
+   json_object_set_new(fields, "project", project);
+#ifdef UNICODE
+   char *mbdescr = UTF8StringFromWideString(description);
+   json_object_set_new(fields, "summary", json_string(mbdescr));
+   json_object_set_new(fields, "description", json_string(mbdescr));
+   free(mbdescr);
+#else
+   json_object_set_new(fields, "summary", json_string(description));
+   json_object_set_new(fields, "description", json_string(description));
+#endif
+   json_t *issuetype = json_object();
+   json_object_set_new(issuetype, "name", json_string(m_issueType));
+   json_object_set_new(fields, "issuetype", issuetype);
+   json_object_set_new(root, "fields", fields);
+   char *request = json_dumps(root, 0);
+   curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
+   json_decref(root);
+
+   char url[MAX_PATH];
+   strcpy(url, m_serverUrl);
+   strcat(url, "/rest/api/2/issue");
+   curl_easy_setopt(m_curl, CURLOPT_URL, url);
+
+   if (curl_easy_perform(m_curl) == CURLE_OK)
    {
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
-      curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
-
-      curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
-
-      // Build request
-      json_t *root = json_object();
-      json_t *fields = json_object();
-      json_t *project = json_object();
-      json_object_set_new(project, "key", json_string(m_projectCode));
-      json_object_set_new(fields, "project", project);
-#ifdef UNICODE
-      char *mbdescr = UTF8StringFromWideString(description);
-      json_object_set_new(fields, "summary", json_string(mbdescr));
-      json_object_set_new(fields, "description", json_string(mbdescr));
-      free(mbdescr);
-#else
-      json_object_set_new(fields, "summary", json_string(description));
-      json_object_set_new(fields, "description", json_string(description));
-#endif
-      json_t *issuetype = json_object();
-      json_object_set_new(issuetype, "name", json_string(m_issueType));
-      json_object_set_new(fields, "issuetype", issuetype);
-      json_object_set_new(root, "fields", fields);
-      char *request = json_dumps(root, 0);
-      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
-      json_decref(root);
-
-      char url[MAX_PATH];
-      strcpy(url, m_serverUrl);
-      strcat(url, "/rest/api/2/issue");
-      curl_easy_setopt(m_curl, CURLOPT_URL, url);
-
-      if (curl_easy_perform(m_curl) == CURLE_OK)
+      data->data[data->size] = 0;
+      DbgPrintf(7, _T("Jira: POST request completed, data: %hs"), data->data);
+      long response = 500;
+      curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
+      if (response == 201)
       {
-         data->data[data->size] = 0;
-         DbgPrintf(7, _T("Jira: POST request completed, data: %hs"), data->data);
-         long response = 500;
-         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
-         if (response == 201)
-         {
-            rcc = RCC_HDLINK_INTERNAL_ERROR;
+         rcc = RCC_HDLINK_INTERNAL_ERROR;
 
-            json_error_t error;
-            json_t *root = json_loads(data->data, 0, &error);
-            if (root != NULL)
+         json_error_t error;
+         json_t *root = json_loads(data->data, 0, &error);
+         if (root != NULL)
+         {
+            json_t *key = json_object_get(root, "key");
+            if (json_is_string(key))
             {
-               json_t *key = json_object_get(root, "key");
-               if (json_is_string(key))
-               {
 #ifdef UNICODE
-                  MultiByteToWideChar(CP_UTF8, 0, json_string_value(key), -1, hdref, MAX_HELPDESK_REF_LEN);
-                  hdref[MAX_HELPDESK_REF_LEN - 1] = 0;
+               MultiByteToWideChar(CP_UTF8, 0, json_string_value(key), -1, hdref, MAX_HELPDESK_REF_LEN);
+               hdref[MAX_HELPDESK_REF_LEN - 1] = 0;
 #else
-                  nx_strncpy(hdref, json_string_value(key), MAX_HELPDESK_REF_LEN);
+               nx_strncpy(hdref, json_string_value(key), MAX_HELPDESK_REF_LEN);
 #endif
-                  rcc = RCC_SUCCESS;
-                  DbgPrintf(4, _T("Jira: created new issue with reference \"%s\""), hdref);
-               }
-               else
-               {
-                  DbgPrintf(4, _T("Jira: cannot create issue (cannot extract issue key)"));
-               }
-               json_decref(root);
+               rcc = RCC_SUCCESS;
+               DbgPrintf(4, _T("Jira: created new issue with reference \"%s\""), hdref);
             }
             else
             {
-               DbgPrintf(4, _T("Jira: cannot create issue (error parsing server response)"));
+               DbgPrintf(4, _T("Jira: cannot create issue (cannot extract issue key)"));
             }
+            json_decref(root);
          }
          else
          {
-            DbgPrintf(4, _T("Jira: cannot create issue (HTTP response code %03d)"), response);
-            rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
+            DbgPrintf(4, _T("Jira: cannot create issue (error parsing server response)"));
          }
       }
       else
       {
-         DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+         DbgPrintf(4, _T("Jira: cannot create issue (HTTP response code %03d)"), response);
+         rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
       }
-      free(request);
-      free(data);
    }
+   else
+   {
+      DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+   }
+   free(request);
+   free(data);
+
    unlock();
    return rcc;
 }
@@ -332,64 +375,67 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
  */
 UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
 {
+   if (!checkConnection())
+      return RCC_HDLINK_COMM_FAILURE;
+
    UINT32 rcc = RCC_HDLINK_COMM_FAILURE;
+   
    lock();
    DbgPrintf(4, _T("Jira: add comment to issue \"%s\" (comment text \"%s\")"), hdref, comment);
-   if ((m_curl != NULL) || ((rcc = connect()) == RCC_SUCCESS))
+
+   RequestData *data = (RequestData *)malloc(sizeof(RequestData));
+   memset(data, 0, sizeof(RequestData));
+   curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
+
+   curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
+
+   // Build request
+   json_t *root = json_object();
+#ifdef UNICODE
+   char *mbtext = UTF8StringFromWideString(comment);
+   json_object_set_new(root, "body", json_string(mbtext));
+   free(mbtext);
+#else
+   json_object_set_new(root, "body", json_string(comment));
+#endif
+   char *request = json_dumps(root, 0);
+   curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
+   json_decref(root);
+
+   char url[MAX_PATH];
+#ifdef UNICODE
+   char *mbref = UTF8StringFromWideString(hdref);
+   snprintf(url, MAX_PATH, "%s/rest/api/2/issue/%s/comment", m_serverUrl, mbref);
+   free(mbref);
+#else
+   snprintf(url, MAX_PATH, "%s/rest/api/2/issue/%s/comment", m_serverUrl, hdref);
+#endif
+   curl_easy_setopt(m_curl, CURLOPT_URL, url);
+
+   if (curl_easy_perform(m_curl) == CURLE_OK)
    {
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
-      curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
-
-      curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
-
-      // Build request
-      json_t *root = json_object();
-#ifdef UNICODE
-      char *mbtext = UTF8StringFromWideString(comment);
-      json_object_set_new(root, "body", json_string(mbtext));
-      free(mbtext);
-#else
-      json_object_set_new(root, "body", json_string(comment));
-#endif
-      char *request = json_dumps(root, 0);
-      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
-      json_decref(root);
-
-      char url[MAX_PATH];
-#ifdef UNICODE
-      char *mbref = UTF8StringFromWideString(hdref);
-      snprintf(url, MAX_PATH, "%s/rest/api/2/issue/%s/comment", m_serverUrl, mbref);
-      free(mbref);
-#else
-      snprintf(url, MAX_PATH, "%s/rest/api/2/issue/%s/comment", m_serverUrl, hdref);
-#endif
-      curl_easy_setopt(m_curl, CURLOPT_URL, url);
-
-      if (curl_easy_perform(m_curl) == CURLE_OK)
+      data->data[data->size] = 0;
+      DbgPrintf(7, _T("Jira: POST request completed, data: %hs"), data->data);
+      long response = 500;
+      curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
+      if (response == 201)
       {
-         data->data[data->size] = 0;
-         DbgPrintf(7, _T("Jira: POST request completed, data: %hs"), data->data);
-         long response = 500;
-         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
-         if (response == 201)
-         {
-            rcc = RCC_SUCCESS;
-            DbgPrintf(4, _T("Jira: added comment to issue \"%s\""), hdref);
-         }
-         else
-         {
-            DbgPrintf(4, _T("Jira: cannot add comment to issue (HTTP response code %03d)"), response);
-            rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
-         }
+         rcc = RCC_SUCCESS;
+         DbgPrintf(4, _T("Jira: added comment to issue \"%s\""), hdref);
       }
       else
       {
-         DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+         DbgPrintf(4, _T("Jira: cannot add comment to issue (HTTP response code %03d)"), response);
+         rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
       }
-      free(request);
-      free(data);
    }
+   else
+   {
+      DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+   }
+   free(request);
+   free(data);
+
    unlock();
    return rcc;
 }
