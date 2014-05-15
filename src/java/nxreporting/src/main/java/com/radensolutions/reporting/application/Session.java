@@ -1,7 +1,6 @@
 package com.radensolutions.reporting.application;
 
 import org.netxms.base.NXCPMessage;
-
 import java.io.OutputStream;
 
 public interface Session

@@ -1,21 +1,19 @@
 package com.radensolutions.reporting.application.jobs;
 
-import com.radensolutions.reporting.application.ReportingServerFactory;
-import com.radensolutions.reporting.infrastructure.ReportManager;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import com.radensolutions.reporting.application.ReportingServerFactory;
+import com.radensolutions.reporting.infrastructure.ReportManager;
 
 public class GeneratorJob implements Job
 {
-
 	private static final Logger log = LoggerFactory.getLogger(GeneratorJob.class);
 	private final ReportManager reportManager;
 	private UUID jobId;
@@ -23,8 +21,6 @@ public class GeneratorJob implements Job
 	private Map<String, String> parameters = new HashMap<String, String>();
 	private String userName;
 	private int userId;
-	private long startTimeOffset;
-	private long endTimeOffset;
 
 	public GeneratorJob()
 	{
@@ -93,26 +89,9 @@ public class GeneratorJob implements Job
 		this.userId = userId;
 	}
 
-	public long getStartTimeOffset()
-	{
-		return startTimeOffset;
-	}
-
-	public void setStartTimeOffset(long startTimeOffset)
-	{
-		this.startTimeOffset = startTimeOffset;
-	}
-
-	public long getEndTimeOffset()
-	{
-		return endTimeOffset;
-	}
-
-	public void setEndTimeOffset(long endTimeOffset)
-	{
-		this.endTimeOffset = endTimeOffset;
-	}
-
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString()
 	{
