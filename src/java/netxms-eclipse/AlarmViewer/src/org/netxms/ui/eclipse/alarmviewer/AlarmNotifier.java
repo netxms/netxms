@@ -233,7 +233,7 @@ public class AlarmNotifier
     */
    private static boolean isMelodyExists(String melodyName, URL workspaceUrl)
    {
-      if ((!melodyName.equals("")) && (workspaceUrl != null)) //$NON-NLS-1$
+      if (!melodyName.isEmpty() && (workspaceUrl != null))
       {
          File f = new File(workspaceUrl.getPath(), melodyName);
          return f.isFile();
@@ -274,7 +274,7 @@ public class AlarmNotifier
 
       String fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity()]); //$NON-NLS-1$
 
-      if (!fileName.equals("") && fileName != null) //$NON-NLS-1$
+      if ((fileName != null) && !fileName.isEmpty())
       {
          try
          {

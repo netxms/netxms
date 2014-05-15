@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,9 +39,10 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LinkDciValueProvider
 {
+   private static LinkDciValueProvider instance;
+   
 	private Set<MapDCIInstance> dciIDList = Collections.synchronizedSet(new HashSet<MapDCIInstance>());
 	private Map<Long, DciValue> cachedDciValues = new HashMap<Long, DciValue>();
-	private static LinkDciValueProvider instance;
 	private NXCSession session = null;
 	private Thread syncThread = null;
 	private volatile boolean syncRunning = true;
@@ -49,13 +50,12 @@ public class LinkDciValueProvider
 	/**
 	 * Constructor
 	 */
-	public static LinkDciValueProvider getinstance()
+	public static synchronized LinkDciValueProvider getinstance()
 	{
-	   if(instance == null)
+	   if (instance == null)
 	   {
 	      instance = new LinkDciValueProvider();
-	   }
-	   
+	   }	   
       return instance;
 	}
 	

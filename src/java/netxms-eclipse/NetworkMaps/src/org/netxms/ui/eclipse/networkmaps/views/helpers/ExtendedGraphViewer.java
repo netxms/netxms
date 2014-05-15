@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -207,7 +207,7 @@ public class ExtendedGraphViewer extends GraphViewer
 				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
 				graph.getRootLayer().translateToRelative(mousePoint);
 				IFigure figureUnderMouse = graph.getFigureAt(mousePoint.x, mousePoint.y);
-				if ((figureUnderMouse == null) || (figureUnderMouse == graph))
+				if ((figureUnderMouse == null) || (figureUnderMouse == zestRootLayer) || (figureUnderMouse == graph.getRootLayer()))
 				{
 					if ((me.getState() & SWT.MOD1) == 0) 
 					{
