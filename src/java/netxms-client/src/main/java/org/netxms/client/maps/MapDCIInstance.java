@@ -174,40 +174,66 @@ public class MapDCIInstance
          msg.setVariable(base++, instance);         
       }
    }  
-   
-   
+
    /**
-    * Compares to instances of this object
-    * 
-    * @param dciID if of 
-    * @return 
+    * @param id
     */
-   public boolean equals(MapDCIInstance instance)
-   {
-      if(instance.getType() == getType())
-         return false;
-      
-      boolean result = (instance.getDciID() == getDciID());
-      
-      if(result && (instance.getType() == DataCollectionItem.DCO_TYPE_TABLE))
-      {
-         result = (instance.getColumn().compareTo(getColumn()) == 0);
-         result &= (instance.getInstance().compareTo(getInstance()) == 0);
-      }
-      
-      return result;
-   }
-   
    public void addMap(String id)
    {
       mapList.add(id);
    }
    
+   /**
+    * @param id
+    * @return
+    */
    public boolean removeMap(String id)
    {
       mapList.remove(id);
       if(mapList.size() == 0)
          return true;
       return false;
+   }
+   
+   /* (non-Javadoc)
+    * @see java.lang.Object#hashCode()
+    */
+   @Override
+   public int hashCode()
+   {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + (((column == null) || (type == DataCollectionItem.DCO_TYPE_TABLE)) ? 0 : column.hashCode());
+      result = prime * result + (int)(dciID ^ (dciID >>> 32));
+      result = prime * result + (((instance == null) || (type == DataCollectionItem.DCO_TYPE_TABLE)) ? 0 : instance.hashCode());
+      result = prime * result + (int)(nodeID ^ (nodeID >>> 32));
+      result = prime * result + type;
+      return result;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#equals(java.lang.Object)
+    */
+   @Override
+   public boolean equals(Object object)
+   {
+      if (object == this)
+         return true;
+      
+      if ((object == null) || !(object instanceof MapDCIInstance))
+         return false;
+      
+      MapDCIInstance i = (MapDCIInstance)object;
+      if (i.type != type)
+         return false;
+      
+      boolean result = (i.dciID == dciID);
+    
+      if (result && (i.type == DataCollectionItem.DCO_TYPE_TABLE))
+      {
+         result = i.column.equals(column) && i.instance.equals(instance);
+      }
+      
+      return result;
    }
 }
