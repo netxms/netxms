@@ -182,7 +182,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		super.init(site);
 
-      dciValueProvider = LinkDciValueProvider.getinstance();
+      dciValueProvider = LinkDciValueProvider.getInstance();
 
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
       disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND");

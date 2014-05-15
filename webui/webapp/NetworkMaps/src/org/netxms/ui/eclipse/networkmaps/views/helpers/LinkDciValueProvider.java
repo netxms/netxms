@@ -51,7 +51,7 @@ public class LinkDciValueProvider
    /**
     * Get instance
     */
-   public static LinkDciValueProvider getinstance()
+   public static LinkDciValueProvider getInstance()
 	{
       LinkDciValueProvider instance = (LinkDciValueProvider)RWT.getUISession().getAttribute("LinkDciValueProvider.instance");
 	   if(instance == null)

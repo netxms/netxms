@@ -51,7 +51,7 @@ public class DCIContainerFigure extends DecorationLayerAbstractFigure
 	   super(container, viewer);
 	   
 		this.container = container;
-		dciValueProvider = LinkDciValueProvider.getinstance();		
+		dciValueProvider = LinkDciValueProvider.getInstance();		
 		String text = dciValueProvider.getDciDataAsString(container.getDciAsList());
       
       backgroundColor = labelProvider.getColors().create(ColorConverter.rgbFromInt(container.getBackgroundColor()));

@@ -48,7 +48,7 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
 	   super(element, viewer);
 	   
 		dciImageConfiguration = element.getImageOptions();
-		dciValueProvider = LinkDciValueProvider.getinstance();  
+		dciValueProvider = LinkDciValueProvider.getInstance();  
 		
 		//get last DCI value
       DciValue latDCIValue = dciValueProvider.getLastDciData(dciImageConfiguration.getDci());

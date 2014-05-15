@@ -50,7 +50,7 @@ public class LinkDciValueProvider
 	/**
 	 * Constructor
 	 */
-	public static synchronized LinkDciValueProvider getinstance()
+	public static LinkDciValueProvider getInstance()
 	{
 	   if (instance == null)
 	   {
