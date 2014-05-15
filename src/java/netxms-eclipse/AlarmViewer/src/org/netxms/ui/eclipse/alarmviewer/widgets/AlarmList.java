@@ -334,7 +334,7 @@ public class AlarmList extends Composite
 	{
 		return alarmViewer;
 	}
-		
+
 	/**
 	 * Create actions
 	 */
