@@ -47,53 +47,60 @@ public abstract class ConditionEditor extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ConditionEditor(Composite parent, FormToolkit toolkit)
+	protected ConditionEditor(Composite parent, FormToolkit toolkit)
 	{
-		super(parent, SWT.NONE);
-		
+		super(parent, SWT.NONE);		
 		this.toolkit = toolkit;
-
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 4;
-		setLayout(layout);
-		
-		logicalOperation = new Label(this, SWT.NONE);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.CENTER;
-		gd.widthHint = 30;
-		logicalOperation.setLayoutData(gd);
-		
-		operation = new Combo(this, SWT.READ_ONLY);
-		toolkit.adapt(operation);
-		for(String s : getOperations())
-			operation.add(s);
-		operation.select(0);
-		operation.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				operationSelectionChanged(operation.getSelectionIndex());
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		createContent(this);
-		
-		ImageHyperlink link = new ImageHyperlink(this, SWT.NONE);
-		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				ConditionEditor.this.dispose();
-				deleteHandler.run();
-			}
-		});
+	}
+	
+	/**
+	 * Initialize editor
+	 */
+	public void initialize()
+	{
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 4;
+      setLayout(layout);
+      
+      logicalOperation = new Label(this, SWT.NONE);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.CENTER;
+      gd.widthHint = 30;
+      logicalOperation.setLayoutData(gd);
+      
+      operation = new Combo(this, SWT.READ_ONLY);
+      toolkit.adapt(operation);
+      for(String s : getOperations())
+         operation.add(s);
+      operation.select(0);
+      operation.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            operationSelectionChanged(operation.getSelectionIndex());
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
+      createContent(this);
+      
+      ImageHyperlink link = new ImageHyperlink(this, SWT.NONE);
+      link.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      link.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            ConditionEditor.this.dispose();
+            deleteHandler.run();
+         }
+      });
+      
+      layout(true, true);
 	}
 	
 	/**

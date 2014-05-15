@@ -26,8 +26,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.logviewer.Messages;
 
 /**
- * @author Victor
- *
+ * Label provider for ordering columns list
  */
 public class OrderingListLabelProvider implements ITableLabelProvider
 {

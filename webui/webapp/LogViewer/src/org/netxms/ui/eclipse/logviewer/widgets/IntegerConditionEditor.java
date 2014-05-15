@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.logviewer.Messages;
  */
 public class IntegerConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.get().IntegerConditionEditor_Equal, Messages.get().IntegerConditionEditor_NotEqual, "<", "<=", ">=", ">", Messages.get().IntegerConditionEditor_Between };  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	private final String[] OPERATIONS = { Messages.get().IntegerConditionEditor_Equal, Messages.get().IntegerConditionEditor_NotEqual, "<", "<=", ">=", ">", Messages.get().IntegerConditionEditor_Between };  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
 	private Text value1;
 	private Text value2;

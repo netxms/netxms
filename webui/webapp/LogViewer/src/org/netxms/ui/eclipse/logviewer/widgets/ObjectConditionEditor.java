@@ -43,8 +43,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.get().ObjectConditionEditor_Is, Messages.get().ObjectConditionEditor_IsNot, Messages.get().ObjectConditionEditor_Within, Messages.get().ObjectConditionEditor_NotWithin };
-	private static final String EMPTY_SELECTION_TEXT = Messages.get().ObjectConditionEditor_None;
+	private final String[] OPERATIONS = { Messages.get().ObjectConditionEditor_Is, Messages.get().ObjectConditionEditor_IsNot, Messages.get().ObjectConditionEditor_Within, Messages.get().ObjectConditionEditor_NotWithin };
+	private final String EMPTY_SELECTION_TEXT = Messages.get().ObjectConditionEditor_None;
 	
 	private WorkbenchLabelProvider labelProvider;
 	private long objectId = 0;

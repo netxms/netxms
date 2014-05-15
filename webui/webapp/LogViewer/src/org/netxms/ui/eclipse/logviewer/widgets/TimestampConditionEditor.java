@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.logviewer.Messages;
  */
 public class TimestampConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.get().TimestampConditionEditor_Between, Messages.get().TimestampConditionEditor_Before, Messages.get().TimestampConditionEditor_After };
+	private final String[] OPERATIONS = { Messages.get().TimestampConditionEditor_Between, Messages.get().TimestampConditionEditor_Before, Messages.get().TimestampConditionEditor_After };
 	
 	private DateTime datePicker1;
 	private DateTime timePicker1;

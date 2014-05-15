@@ -43,13 +43,30 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LogLabelProvider implements ITableLabelProvider
 {
-	public static final String[] ALARM_STATE_TEXTS = { Messages.get().LogLabelProvider_Outstanding, Messages.get().LogLabelProvider_Acknowledged, Messages.get().LogLabelProvider_Resolved, Messages.get().LogLabelProvider_Terminated };
-	public static final String[] ALARM_HD_STATE_TEXTS = { Messages.get().LogLabelProvider_Ignored, Messages.get().LogLabelProvider_Open, Messages.get().LogLabelProvider_Closed };
+	public final String[] ALARM_STATE_TEXTS = { Messages.get().LogLabelProvider_Outstanding, Messages.get().LogLabelProvider_Acknowledged, Messages.get().LogLabelProvider_Resolved, Messages.get().LogLabelProvider_Terminated };
+	public final String[] ALARM_HD_STATE_TEXTS = { Messages.get().LogLabelProvider_Ignored, Messages.get().LogLabelProvider_Open, Messages.get().LogLabelProvider_Closed };
 	
 	private LogColumn[] columns;
 	private NXCSession session;
 	private Image[] alarmStateImages;
 	private WorkbenchLabelProvider wbLabelProvider;
+	
+	/**
+	 * Get empty instance (not suitable to be real label provider - needed only to provide access to localized texts)
+	 * 
+	 * @return instance of log label provider
+	 */
+	public static LogLabelProvider getEmptyInstance()
+	{
+	   return new LogLabelProvider();
+	}
+	
+	/**
+	 * Private empty constructor 
+	 */
+	private LogLabelProvider()
+	{
+	}
 	
 	/**
 	 * @param logHandle

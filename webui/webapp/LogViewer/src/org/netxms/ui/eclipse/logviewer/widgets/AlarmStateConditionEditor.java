@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
  */
 public class AlarmStateConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.get().AlarmStateConditionEditor_Is, Messages.get().AlarmStateConditionEditor_IsNot };
+	private final String[] OPERATIONS = { Messages.get().AlarmStateConditionEditor_Is, Messages.get().AlarmStateConditionEditor_IsNot };
 	
 	private Combo state;
 	
@@ -66,7 +66,7 @@ public class AlarmStateConditionEditor extends ConditionEditor
 		state = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
 		toolkit.adapt(state);
 		for(int i = Alarm.STATE_OUTSTANDING; i <= Alarm.STATE_TERMINATED; i++)
-			state.add(LogLabelProvider.ALARM_STATE_TEXTS[i]);
+			state.add(LogLabelProvider.getEmptyInstance().ALARM_STATE_TEXTS[i]);
 		state.select(0);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
