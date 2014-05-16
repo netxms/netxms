@@ -20,6 +20,8 @@
 - Added driver for Mikrotik routers
 - Added driver for Cisco Wireless Controller 4400 (former Airespace)
 - Wireless controller and access point support improved
+- Log monitoring subagent sends Windows event source, severity, and code
+  to the server as part of NetXMS event
 - Management console:
    - DCI values can be shown on network map links
    - DCI value can be shown on map as immage, that checnges depending on DCI value

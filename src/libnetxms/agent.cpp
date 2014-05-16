@@ -101,11 +101,9 @@ void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va
    }
 }
 
-
-//
-// Send trap from agent to server
-//
-
+/**
+ * Send trap from agent to server
+ */
 void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...)
 {
    va_list args;
@@ -118,6 +116,9 @@ void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, 
    }
 }
 
+/**
+ * Send trap from agent to server
+ */
 void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList)
 {
    if (s_fpSendTrap2 != NULL)

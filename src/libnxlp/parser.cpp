@@ -186,7 +186,7 @@ bool LogParser::addRule(LogParserRule *rule)
 /**
  * Create and add rule
  */
-bool LogParser::addRule(const TCHAR *regexp, DWORD eventCode, const TCHAR *eventName, int numParams)
+bool LogParser::addRule(const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName, int numParams)
 {
 	return addRule(new LogParserRule(this, regexp, eventCode, eventName, numParams));
 }
@@ -226,8 +226,8 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
 /**
  * Match log record
  */
-bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD eventId,
-										 DWORD level, const TCHAR *line, DWORD objectId)
+bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId,
+										 UINT32 level, const TCHAR *line, UINT32 objectId)
 {
 	int i;
 	const TCHAR *state;
@@ -284,7 +284,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD ev
 /**
  * Match simple log line
  */
-bool LogParser::matchLine(const TCHAR *line, DWORD objectId)
+bool LogParser::matchLine(const TCHAR *line, UINT32 objectId)
 {
 	return matchLogRecord(false, NULL, 0, 0, line, objectId);
 }
@@ -292,7 +292,7 @@ bool LogParser::matchLine(const TCHAR *line, DWORD objectId)
 /**
  * Match log event (text with additional attributes - source, severity, event id)
  */
-bool LogParser::matchEvent(const TCHAR *source, DWORD eventId, DWORD level, const TCHAR *line, DWORD objectId)
+bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId)
 {
 	return matchLogRecord(true, source, eventId, level, line, objectId);
 }
@@ -405,7 +405,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		name = XMLGetAttr(attrs, "name");
 #ifdef UNICODE
 		ps->macroName = L"";
-		ps->macroName.addMultiByteString(name, (DWORD)strlen(name), CP_UTF8);
+		ps->macroName.addMultiByteString(name, (UINT32)strlen(name), CP_UTF8);
 #else
 		ps->macroName = CHECK_NULL_A(name);
 #endif
@@ -430,7 +430,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->ruleContext = L"";
 		const char *context = XMLGetAttr(attrs, "context");
 		if (context != NULL)
-			ps->ruleContext.addMultiByteString(context, (DWORD)strlen(context), CP_UTF8);
+			ps->ruleContext.addMultiByteString(context, (UINT32)strlen(context), CP_UTF8);
 #else
 		ps->ruleContext = XMLGetAttr(attrs, "context");
 #endif
@@ -544,7 +544,7 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "rule"))
 	{
-		DWORD eventCode;
+		UINT32 eventCode;
 		const TCHAR *eventName = NULL;
 		TCHAR *eptr;
 		LogParserRule *rule;
@@ -581,7 +581,7 @@ static void EndElement(void *userData, const char *name)
 
 		if (!ps->id.isEmpty())
 		{
-			DWORD start, end;
+			UINT32 start, end;
 			TCHAR *eptr;
 
 			start = _tcstoul(ps->id, &eptr, 0);
@@ -679,7 +679,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
  * Create parser configuration from XML. Returns array of identical parsers,
  * one for each <file> tag in source XML. Resulting parsers only differs with file names.
  */
-ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize, bool (*eventResolver)(const TCHAR *, DWORD *))
+ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize, bool (*eventResolver)(const TCHAR *, UINT32 *))
 {
 	ObjectArray<LogParser> *parsers = NULL;
 	bool success;
@@ -732,7 +732,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 /**
  * Resolve event name
  */
-DWORD LogParser::resolveEventName(const TCHAR *name, DWORD defVal)
+UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
 {
 	if (m_eventNameList != NULL)
 	{
@@ -745,7 +745,7 @@ DWORD LogParser::resolveEventName(const TCHAR *name, DWORD defVal)
 
 	if (m_eventResolver != NULL)
 	{
-		DWORD val;
+		UINT32 val;
 
 		if (m_eventResolver(name, &val))
 			return val;
