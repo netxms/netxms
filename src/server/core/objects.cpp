@@ -1826,7 +1826,8 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
              (iChildClass == OBJECT_NODE) ||
              (iChildClass == OBJECT_CLUSTER) ||
              (iChildClass == OBJECT_MOBILEDEVICE) ||
-             (iChildClass == OBJECT_CONDITION))
+             (iChildClass == OBJECT_CONDITION) ||
+             (iChildClass == OBJECT_SUBNET))
             return true;
          break;
       case OBJECT_RACK:
