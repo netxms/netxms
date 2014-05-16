@@ -18,6 +18,7 @@
 - Traps from unmanaged nodes ignored
 - Fixed repeated threshold violation events after server restart
 - Added driver for Mikrotik routers
+- Added driver for Ubiquity Networks wireless access points
 - Added driver for Cisco Wireless Controller 4400 (former Airespace)
 - Wireless controller and access point support improved
 - Log monitoring subagent sends Windows event source, severity, and code

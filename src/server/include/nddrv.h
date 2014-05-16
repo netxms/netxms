@@ -175,6 +175,9 @@ struct WirelessStationInfo
    short apMatchPolicy;
 	TCHAR ssid[MAX_OBJECT_NAME];
    int vlan;
+   int signalStrength;
+   UINT32 txRate;
+   UINT32 rxRate;
 
 	// This part filled by core
 	UINT32 apObjectId;

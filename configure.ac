@@ -2490,6 +2490,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/ping3/Makefile
 	src/server/drivers/procurve/Makefile
 	src/server/drivers/symbol-ws/Makefile
+	src/server/drivers/ubnt/Makefile
 	src/server/hdlink/Makefile
 	src/server/hdlink/jira/Makefile
 	src/server/include/Makefile
