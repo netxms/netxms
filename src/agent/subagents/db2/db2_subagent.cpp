@@ -19,10 +19,10 @@
 
 #include "db2_subagent.h"
 
-DB_DRIVER g_drvHandle = NULL;
-CONDITION g_sdownCondition = NULL;
-PTHREAD_INFO g_threads = NULL;;
-UINT32 g_numOfThreads = 0;
+static DB_DRIVER s_driver = NULL;
+static CONDITION s_condShutdown = NULL;
+static PTHREAD_INFO s_threads = NULL;
+static int s_threadCount = 0;
 
 static NETXMS_SUBAGENT_PARAM m_agentParams[] =
 {
@@ -516,23 +516,21 @@ static QUERY g_queries[] =
    { { DCI_NULL }, _T("\0") }
 };
 
-static BOOL DB2Init(Config* config)
+/**
+ * Subagent initialization
+ */
+static BOOL DB2Init(Config *config)
 {
-   AgentWriteDebugLog(7, _T("%s: initializing"), SUBAGENT_NAME);
+   AgentWriteDebugLog(5, _T("%s: initializing"), SUBAGENT_NAME);
 
-#ifdef _WIN32
-   g_drvHandle = DBLoadDriver(_T("db2.ddr"), NULL, TRUE, NULL, NULL);
-#else
-   g_drvHandle = DBLoadDriver(LIBDIR _T("/netxms/dbdrv/db2.ddr"), NULL, TRUE, NULL, NULL);
-#endif
-
-   if (g_drvHandle == NULL)
+   s_driver = DBLoadDriver(_T("db2.ddr"), NULL, TRUE, NULL, NULL);
+   if (s_driver == NULL)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load the database driver"), SUBAGENT_NAME);
       return FALSE;
    }
 
-   AgentWriteDebugLog(7, _T("%s: loaded the database driver"), SUBAGENT_NAME);
+   AgentWriteDebugLog(5, _T("%s: loaded the database driver"), SUBAGENT_NAME);
 
    ConfigEntry* db2IniEntry = config->getEntry(_T("/db2"));
 
@@ -558,7 +556,7 @@ static BOOL DB2Init(Config* config)
 
       db2Info->db2Id = 1;
 
-      g_numOfThreads = 1;
+      s_threadCount = 1;
       arrDb2Info = new PDB2_INFO[1];
       arrDb2Info[0] = db2Info;
    }
@@ -580,15 +578,15 @@ static BOOL DB2Init(Config* config)
          return FALSE;
       }
 
-      ConfigEntryList* db2SubXmlSubEntries = db2SubXmlEntry->getSubEntries(_T("db2#*"));
-      numOfPossibleThreads = db2SubXmlSubEntries->getSize();
+      ObjectArray<ConfigEntry> *db2SubXmlSubEntries = db2SubXmlEntry->getSubEntries(_T("db2#*"));
+      numOfPossibleThreads = db2SubXmlSubEntries->size();
       AgentWriteDebugLog(7, _T("%s: '%s' loaded with number of db2 entries: %d"), SUBAGENT_NAME, pathToXml, numOfPossibleThreads);
       arrDb2Info = new PDB2_INFO[numOfPossibleThreads];
       TCHAR entryName[STR_MAX];
 
       for(int i = 0; i < numOfPossibleThreads; i++)
       {
-         ConfigEntry* entry = db2SubXmlSubEntries->getEntry(i);
+         ConfigEntry *entry = db2SubXmlSubEntries->get(i);
          _tcscpy(entryName, _T("db2sub/"));
          _tcscat_s(entryName, STR_MAX, entry->getName());
 
@@ -598,58 +596,62 @@ static BOOL DB2Init(Config* config)
             continue;
          }
 
-         arrDb2Info[g_numOfThreads] = db2Info;
-         g_numOfThreads++;
+         arrDb2Info[s_threadCount] = db2Info;
+         s_threadCount++;
       }
+      delete db2SubXmlSubEntries;
    }
 
-   if(g_numOfThreads > 0)
+   if (s_threadCount > 0)
    {
-      AgentWriteDebugLog(7, _T("%s: loaded %d configuration section(s)"), SUBAGENT_NAME, g_numOfThreads);
-      g_threads = new THREAD_INFO[g_numOfThreads];
-      g_sdownCondition = ConditionCreate(TRUE);
+      AgentWriteDebugLog(7, _T("%s: loaded %d configuration section(s)"), SUBAGENT_NAME, s_threadCount);
+      s_threads = new THREAD_INFO[s_threadCount];
+      s_condShutdown = ConditionCreate(TRUE);
    }
 
-   for(int i = 0; i < g_numOfThreads; i++)
+   for(int i = 0; i < s_threadCount; i++)
    {
-      //g_threads[i] = new THREAD_INFO;
-      g_threads[i].mutex = MutexCreate();
-      g_threads[i].db2Info = arrDb2Info[i];
-      g_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, 0, (void*) &g_threads[i]);
+      //s_threads[i] = new THREAD_INFO;
+      s_threads[i].mutex = MutexCreate();
+      s_threads[i].db2Info = arrDb2Info[i];
+      s_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, 0, (void*) &s_threads[i]);
    }
 
    delete[] arrDb2Info;
 
-   if (g_numOfThreads > 0)
+   if (s_threadCount > 0)
    {
-      AgentWriteDebugLog(7, _T("%s: starting with %d query thread(s)"), SUBAGENT_NAME, g_numOfThreads);
+      AgentWriteDebugLog(3, _T("%s: starting with %d query thread(s)"), SUBAGENT_NAME, s_threadCount);
       return TRUE;
    }
 
    return FALSE;
 }
 
+/**
+ * Subagent shutdown
+ */
 static void DB2Shutdown()
 {
    AgentWriteDebugLog(9, _T("%s: terminating"), SUBAGENT_NAME);
-   ConditionSet(g_sdownCondition);
+   ConditionSet(s_condShutdown);
 
-   for(int i = 0; i < g_numOfThreads; i++)
+   for(int i = 0; i < s_threadCount; i++)
    {
-      ThreadJoin(g_threads[i].threadHandle);
-      MutexDestroy(g_threads[i].mutex);
-      delete g_threads[i].db2Info;
+      ThreadJoin(s_threads[i].threadHandle);
+      MutexDestroy(s_threads[i].mutex);
+      delete s_threads[i].db2Info;
    }
-   delete[] g_threads;
+   delete[] s_threads;
 
-   DBUnloadDriver(g_drvHandle);
-   ConditionDestroy(g_sdownCondition);
+   DBUnloadDriver(s_driver);
+   ConditionDestroy(s_condShutdown);
 
-   g_drvHandle = NULL;
-   g_sdownCondition = NULL;
-   g_threads = NULL;
+   s_driver = NULL;
+   s_condShutdown = NULL;
+   s_threads = NULL;
 
-   AgentWriteDebugLog(7, _T("%s: terminated"), SUBAGENT_NAME);
+   AgentWriteDebugLog(3, _T("%s: terminated"), SUBAGENT_NAME);
 }
 
 static BOOL DB2CommandHandler(UINT32 dwCommand, CSCPMessage* pRequest, CSCPMessage* pResponse, void* session)
@@ -668,7 +670,7 @@ static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
    while(TRUE)
    {
       dbHandle = DBConnect(
-         g_drvHandle, db2Info->db2DbAlias, db2Info->db2DbName, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
+         s_driver, db2Info->db2DbAlias, db2Info->db2DbName, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
 
       if (dbHandle == NULL)
       {
@@ -677,7 +679,7 @@ static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
             _T("%s: failed to connect to the database \"%s\" (%s), reconnecting in %ds"),
             SUBAGENT_NAME, db2Info->db2DbName, connectError, reconnectInterval);
 
-         if (ConditionWait(g_sdownCondition, (reconnectInterval * 1000)))
+         if (ConditionWait(s_condShutdown, (reconnectInterval * 1000)))
          {
             break;
          }
@@ -747,7 +749,7 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
 
       MutexUnlock(threadInfo->mutex);
 
-      if (ConditionWait(g_sdownCondition, queryInterval * 1000))
+      if (ConditionWait(s_condShutdown, queryInterval * 1000))
       {
          break;
       }
@@ -779,11 +781,11 @@ static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
 
    THREAD_INFO threadInfo;
 
-   for(int i = 0; i < g_numOfThreads; i++)
+   for(int i = 0; i < s_threadCount; i++)
    {
-      if (g_threads[i].db2Info->db2Id == dbId)
+      if (s_threads[i].db2Info->db2Id == dbId)
       {
-         threadInfo = g_threads[i];
+         threadInfo = s_threads[i];
          break;
       }
 
@@ -798,13 +800,14 @@ static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
 
 static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, const TCHAR* entryName)
 {
-   ConfigEntryList* entryList = configEntry->getSubEntries(_T("*"));
-
-   if (entryList->getSize() == 0)
+   ObjectArray<ConfigEntry> *entryList = configEntry->getSubEntries(_T("*"));
+   if (entryList->size() == 0)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: entry '%s' contained no values"), SUBAGENT_NAME, entryName);
+      delete entryList;
       return NULL;
    }
+   delete entryList;
 
    const PDB2_INFO db2Info = new DB2_INFO();
    BOOL noErr = TRUE;
@@ -900,6 +903,9 @@ static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, cons
    return db2Info;
 }
 
+/**
+ * Subagent entry point
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(DB2)
 {
    AgentWriteDebugLog(7, _T("%s: started"), SUBAGENT_NAME);
@@ -907,18 +913,15 @@ DECLARE_SUBAGENT_ENTRY_POINT(DB2)
    return TRUE;
 }
 
+#ifdef _WIN32
+
 /**
  * DLL entry point
  */
-
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-   if (fdwReason == DLL_PROCESS_ATTACH)
-   {
-      DisableThreadLibraryCalls(hinstDll);
-   }
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 

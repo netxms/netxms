@@ -18,22 +18,20 @@
 **
 **/
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "db2drv.h"
 
 DECLARE_DRIVER_HEADER("DB2")
 
-
-//
-// Constants
-//
-
+/**
+ * Data buffer size
+ */
 #define DATA_BUFFER_SIZE      65536
 
-
-//
-// Convert DB2 state to NetXMS database error code and get error text
-//
-
+/**
+ * Convert DB2 state to NetXMS database error code and get error text
+ */
 static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_WCHAR *errorText)
 {
 	SQLRETURN nRet;
@@ -47,11 +45,11 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 	{
 #if UNICODE_UCS2
 		if (
-			(!wcscmp(buffer, L"08003")) ||	// Connection does not exist
-			(!wcscmp(buffer, L"08S01")) ||	// Communication link failure
-			(!wcscmp(buffer, L"HYT00")) ||	// Timeout expired
-			(!wcscmp(buffer, L"HYT01")) ||	// Connection timeout expired
-			(!wcscmp(buffer, L"08506")))	// SQL30108N: A connection failed but has been re-established.
+			(!wcscmp((WCHAR *)buffer, L"08003")) ||	// Connection does not exist
+			(!wcscmp((WCHAR *)buffer, L"08S01")) ||	// Communication link failure
+			(!wcscmp((WCHAR *)buffer, L"HYT00")) ||	// Timeout expired
+			(!wcscmp((WCHAR *)buffer, L"HYT01")) ||	// Connection timeout expired
+			(!wcscmp((WCHAR *)buffer, L"08506")))	// SQL30108N: A connection failed but has been re-established.
 #else
 		char state[16];
 		ucs2_to_mb(buffer, -1, state, 16);
@@ -267,7 +265,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			// Execute statement
-			SQLWCHAR *temp = UCS2StringFromMBString(query);
+			SQLWCHAR *temp = (SQLWCHAR *)UCS2StringFromMBString(query);
 			iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
 			free(temp);
 			if ((iResult != SQL_SUCCESS) && 
@@ -830,7 +828,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_W
 					(iResult == SQL_SUCCESS_WITH_INFO))
 				{
 					name[len] = 0;
-					pResult->columnNames[i] = MBStringFromUCS2String(name);
+					pResult->columnNames[i] = MBStringFromUCS2String((UCS2CHAR *)name);
 				}
 				else
 				{
