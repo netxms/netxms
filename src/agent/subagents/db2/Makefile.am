@@ -6,7 +6,7 @@ db2_la_CPPFLAGS    = -I@top_srcdir@/include
 db2_la_LDFLAGS     = -module -avoid-version
 db2_la_LIBADD      = ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
-EXTRA_DIST         = db2_subagent.h db2dci.h
+EXTRA_DIST         = db2_subagent.h db2dci.h db2.vcproj
 
 if !STATIC_BUILD
 install-exec-hook:
