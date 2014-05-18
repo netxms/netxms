@@ -26,7 +26,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.window.Window;
-import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -39,6 +38,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -103,7 +103,7 @@ public class AlarmDetails extends ViewPart
 	private CLabel alarmSeverity;
 	private CLabel alarmState;
 	private CLabel alarmSource;
-	private Label alarmText;
+	private Text alarmText;
 	private Composite editorsArea;
 	private ImageHyperlink linkAddComment;
 	private Map<Long, AlarmCommentsEditor> editors = new HashMap<Long, AlarmCommentsEditor>();
@@ -299,9 +299,9 @@ public class AlarmDetails extends ViewPart
 
 		int bs = toolkit.getBorderStyle();
 		toolkit.setBorderStyle(SWT.NONE);
-		alarmText = toolkit.createLabel(textContainer, "", SWT.NONE); //$NON-NLS-1$
+		alarmText = toolkit.createText(textContainer, "", SWT.MULTI); //$NON-NLS-1$
 		toolkit.setBorderStyle(bs);
-		alarmText.setData(RWT.MARKUP_ENABLED, Boolean.TRUE);
+		alarmText.setEditable(false);
 		textContainer.setContent(alarmText);
 
 		alarmState = new CLabel(clientArea, SWT.NONE);
@@ -646,7 +646,7 @@ public class AlarmDetails extends ViewPart
 		alarmSource.setImage((object != null) ? wbLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);
 		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		alarmText.setText(alarm.getMessage().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\r", "").replace("\n", "<br/>"));
+      alarmText.setText(alarm.getMessage());
 	}
 
 	/* (non-Javadoc)

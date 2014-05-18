@@ -1004,14 +1004,8 @@ Text[BORDER] {
   box-shadow: none;
 }
 
-Text[BORDER]:focused,
-TEXT[MULTI][BORDER]:focused {
-  box-shadow: none;
-  border: 1px solid #828790;
-}
-
 Text[BORDER]:read-only,
-TEXT[MULTI][BORDER]:read-only {
+Text[MULTI][BORDER]:read-only {
   box-shadow: none;
   border: 1px solid #828790;
 }
@@ -1031,9 +1025,13 @@ Text[MULTI][BORDER] {
 }
 
 Text[BORDER]:focused,
-Text[MULTI]:focused,
 Text[MULTI][BORDER]:focused {
- border: 1px solid #828790;
+  border: 1px solid #828790;
+  box-shadow: none;
+}
+
+Text[MULTI]:focused {
+  border: none;
   box-shadow: none;
 }
 

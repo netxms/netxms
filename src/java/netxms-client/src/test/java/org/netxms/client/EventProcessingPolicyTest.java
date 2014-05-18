@@ -36,4 +36,13 @@ public class EventProcessingPolicyTest extends SessionTest
 		
 		session.disconnect();
 	}
+	
+	public void testSendEvent() throws Exception
+	{
+      final NXCSession session = connect();
+
+      session.sendEvent(100000, new String[] { "test message\nline #2\nline #3" });
+      
+      session.disconnect();
+	}
 }
