@@ -22,6 +22,7 @@ mkdir netxms-base/usr/bin
 mkdir netxms-base/usr/lib
 cat netxms-base.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-base/DEBIAN/control
 cp -P /usr/lib/libnetxms.so* netxms-base/usr/lib/
+cp -P /usr/lib/libnxjansson.so* netxms-base/usr/lib/
 cp -P /usr/lib/libnxsqlite.so* netxms-base/usr/lib/
 cp -P /usr/lib/libnxtre.so* netxms-base/usr/lib/
 
@@ -99,7 +100,6 @@ cp /usr/lib/netxms/ndd/*.ndd netxms-server/usr/lib/netxms/ndd/
 cp -P /usr/lib/libavaya-ers.so* netxms-server/usr/lib/
 cp -P /usr/lib/libcisco.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxcore.so* netxms-server/usr/lib/
-cp -P /usr/lib/libnxjansson.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsl.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsms_dummy.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsms_generic.so* netxms-server/usr/lib/
