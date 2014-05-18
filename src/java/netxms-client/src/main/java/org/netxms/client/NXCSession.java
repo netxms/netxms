@@ -369,10 +369,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @param addr
     * @return
     */
-   private long int32FromInetAddress(InetAddress addr)
+   private static long int32FromInetAddress(InetAddress addr)
    {
       byte[] bytes = addr.getAddress();
-      return ((long) bytes[0] << 24) | ((long) bytes[1] << 16) | ((long) bytes[2] << 8) | (long) bytes[3];
+      return (((long)bytes[0] & 0xFF) << 24)  | (((long)bytes[1] & 0xFF) << 16) | (((long)bytes[2] & 0xFF) << 8) | ((long)bytes[3] & 0xFF);
    }
 
    /**
