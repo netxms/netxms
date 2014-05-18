@@ -1617,8 +1617,6 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	int gmtOffset;
 #if HAVE_LOCALTIME_R
 	struct tm tmbuff;
-#endif
-#if HAVE_LOCALTIME_R
 	struct tm *loc = localtime_r(&t, &tmbuff);
 #else
 	struct tm *loc = localtime(&t);
@@ -1636,9 +1634,10 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 
    time_t t = time(NULL);
 #if HAVE_GMTIME_R
-	struct tm *gmt = gmtime_r(&t, &tmbuff);
+   struct tm tmbuff;
+   struct tm *gmt = gmtime_r(&t, &tmbuff);
 #else
-	struct tm *gmt = gmtime(&t);
+   struct tm *gmt = gmtime(&t);
 #endif
    gmt->tm_isdst = -1;
    int gmtOffset = (int)((t - mktime(gmt)) / 3600);
